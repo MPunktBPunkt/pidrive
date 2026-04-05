@@ -1,0 +1,23 @@
+[Unit]
+Description=PiDrive - Car Infotainment
+After=multi-user.target
+
+[Service]
+Type=simple
+User=pi
+Environment=SDL_FBDEV=/dev/fb0
+Environment=SDL_VIDEODRIVER=fbcon
+Environment=SDL_NOMOUSE=1
+WorkingDirectory=/home/pi/pidrive/pidrive
+ExecStartPre=/bin/sleep 5
+ExecStartPre=/bin/chvt 3
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
+Restart=always
+RestartSec=5
+StandardInput=tty
+TTYPath=/dev/tty3
+TTYReset=yes
+TTYVHangup=yes
+
+[Install]
+WantedBy=multi-user.target

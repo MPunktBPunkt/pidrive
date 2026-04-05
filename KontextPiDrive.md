@@ -1,36 +1,23 @@
-# PiDrive — Kontext & Projektdokumentation
+# PiDrive — Kontext & Projektdokumentation v0.3.1
 
 ## Projektbeschreibung
 
-**PiDrive** ist ein Raspberry Pi-basiertes Car-Infotainment-System. Es emuliert einen iPod gegenüber dem BMW iDrive (oder ähnlichen Fahrzeug-Systemen) über den iDrive-iPod-Adapter und zeigt gleichzeitig eine eigene Menüoberfläche auf einem kleinen TFT-Display.
-
-### Grundidee
-
-Das Fahrzeug kommuniziert über das iPod-Protokoll mit dem Pi. Der Pi stellt sich als iPod vor und empfängt Steuerbefehle vom iDrive (Vor/Zurück, Menü). Diese Befehle werden im Pi interpretiert und lösen Aktionen aus über den File-Trigger `/tmp/pidrive_cmd`.
-
-### Sinn des Projekts
-
-Ein vollwertiges Infotainment-System auf Basis eines Raspberry Pi, das:
-- Spotify Connect Lautsprecher im Auto darstellt
-- Über das originale iDrive bedienbar ist
-- Ein eigenes Display mit Menüoberfläche hat
-- Webradio, MP3-Bibliothek und DAB+/FM (geplant) unterstützt
-- Im Auto über USB-Tethering (Handy-Internet) verbunden ist
+**PiDrive** ist ein Raspberry Pi-basiertes Car-Infotainment-System. Es emuliert einen iPod gegenüber dem BMW iDrive (oder ähnlichen Fahrzeug-Systemen) und zeigt eine eigene Menüoberfläche auf einem TFT-Display.
 
 ### GitHub Repository
-
 ```
-https://github.com/DEIN-USER/pidrive
+https://github.com/MPunktBPunkt/pidrive
 ```
 
 **Schnellinstallation:**
 ```bash
-curl -sL https://raw.githubusercontent.com/DEIN-USER/pidrive/main/install.sh | sudo bash
+curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
 ```
 
 **Update:**
 ```bash
 cd ~/pidrive && git pull && sudo systemctl restart pidrive
+# oder im Menü: System -> Update -> Update installieren
 ```
 
 ---
@@ -39,31 +26,30 @@ cd ~/pidrive && git pull && sudo systemctl restart pidrive
 
 | Komponente | Details |
 |---|---|
-| **Raspberry Pi** | Pi 3 Model B Rev 1.2 (Testgerät), Pi 4 geplant |
-| **Display** | Joy-IT RB-TFT3.5, 480×320 Pixel, XPT2046 Touch Controller |
-| **Verbindung Display** | SPI (GPIO Header, erste 26 Pins) |
-| **Touch Controller** | ADS7846/XPT2046 — vermutlich Hardware-Defekt am Testgerät |
+| Raspberry Pi | Pi 3 Model B Rev 1.2, Pi 4 geplant |
+| Display | Joy-IT RB-TFT3.5, 480x320, XPT2046 Touch |
+| Verbindung | SPI (erste 26 GPIO-Pins) |
+| Touch | ADS7846/XPT2046 — Hardware-Defekt am Testgeraet |
+| RTL-SDR | Fuer DAB+ und FM Radio |
 
-### Display GPIO-Pinbelegung (Joy-IT RB-TFT3.5 V3)
+### GPIO-Pinbelegung (Joy-IT RB-TFT3.5)
 
 | Funktion | GPIO | Pin |
 |---|---|---|
-| DC (Data/Control) | GPIO 24 | Pin 18 |
-| Reset | GPIO 25 | Pin 22 |
-| PENIRQ (Touch) | GPIO 17 | Pin 11 |
-| Key 1 | GPIO 23 | Pin 16 |
-| Key 2 | GPIO 24 | Pin 18 |
-| Key 3 | GPIO 25 | Pin 22 |
-| Hintergrundbeleuchtung | GPIO 18 | Pin 12 |
+| DC | GPIO 24 | 18 |
+| Reset | GPIO 25 | 22 |
+| PENIRQ (Touch) | GPIO 17 | 11 |
+| Key 1 | GPIO 23 | 16 |
+| Key 2 | GPIO 24 | 18 |
+| Key 3 | GPIO 25 | 22 |
+| Backlight | GPIO 18 | 12 |
 
 ---
 
 ## Software-Stack
 
 ### Betriebssystem
-
-- **Raspbian Bullseye** (11) — 32-Bit (armhf)
-- Upgrade von Buster (10) durchgeführt
+- Raspbian Bullseye (11), 32-Bit (armhf)
 - Kernel: 6.18.20-v7+
 
 ### Installierte Pakete
@@ -72,38 +58,21 @@ cd ~/pidrive && git pull && sudo systemctl restart pidrive
 sudo apt install python3-pygame python3-pip git mpv \
   avahi-utils avahi-daemon evtest fbset \
   bluetooth bluez pulseaudio pulseaudio-module-bluetooth \
-  rfkill wpasupplicant dhcpcd5 -y
+  rfkill wpasupplicant dhcpcd5 rtl-sdr sox -y
 
 pip3 install mutagen --break-system-packages
+
+# Optional fuer DAB+
+sudo apt install welle.io
 ```
 
-| Paket | Zweck |
-|---|---|
-| python3-pygame 1.9.6 | UI-Rendering auf Framebuffer |
-| python3-evdev | Touch-Input (evdev) |
-| mpv | Webradio + MP3 Wiedergabe |
-| mutagen | MP3 ID3-Tags + Album-Art lesen |
-| avahi-utils | mDNS/Zeroconf (Spotify Discovery) |
-| fbset | Framebuffer-Auflösung prüfen |
-
 ### Display-Treiber
-
-**LCD-show von goodtft** (empfohlen von Joy-IT):
 
 ```bash
 git clone https://github.com/goodtft/LCD-show.git
 chmod -R 755 LCD-show
 cd LCD-show/
 sudo ./LCD35-show
-```
-
-Dieser Treiber installiert `fb_ili9486`, konfiguriert `fbcp` als Systemdienst,
-setzt `/boot/config.txt` automatisch und aktiviert ADS7846 Touch-Treiber.
-
-### Raspotify (Spotify Connect)
-
-```bash
-curl -sL https://dtcooper.github.io/raspotify/install.sh | sh
 ```
 
 ---
@@ -115,29 +84,36 @@ curl -sL https://dtcooper.github.io/raspotify/install.sh | sh
 ├── README.md
 ├── LICENSE                  (GPL-v3)
 ├── .gitignore
-├── install.sh               (curl | bash Schnellinstallation)
-├── setup_pidrive.sh         (vollständiges Setup-Script)
+├── install.sh               (Schnellinstallation)
+├── setup_pidrive.sh         (vollstaendiges Setup-Script)
 ├── pidrive_ctrl.py          (SSH Tastatur-Steuerung)
 ├── config.txt.example
-├── KontextPiDrive.md        (diese Datei)
+├── KontextPiDrive.md
+├── systemd/
+│   └── pidrive.service      (Systemd Service-Datei)
 └── pidrive/
-    ├── main.py              (Hauptprogramm & Main-Loop)
-    ├── ui.py                (UI-Basisklassen)
-    ├── status.py            (System-Status Cache)
-    ├── trigger.py           (File-Trigger Handler)
-    ├── VERSION
+    ├── main.py
+    ├── ui.py
+    ├── status.py
+    ├── trigger.py
+    ├── log.py
+    ├── VERSION              (aktuell: 0.3.1)
     ├── config/
-    │   ├── stations.json    (Webradio-Stationen)
-    │   └── settings.json    (Einstellungen)
+    │   ├── stations.json    (Webradio)
+    │   ├── dab_stations.json (DAB+ nach Scan)
+    │   ├── fm_stations.json  (FM Sender)
+    │   └── settings.json
     └── modules/
-        ├── musik.py         (Spotify + Track-Anzeige)
-        ├── webradio.py      (Streaming via mpv)
-        ├── library.py       (MP3 + Album-Art)
-        ├── dabfm.py         (DAB+/FM Platzhalter)
-        ├── wifi.py          (WiFi Steuerung)
-        ├── bluetooth.py     (BT + Audio-Ausgang)
-        ├── audio.py         (Audioausgang)
-        └── system.py        (System-Info, Neustart)
+        ├── musik.py
+        ├── webradio.py
+        ├── library.py
+        ├── dab.py           (DAB+ mit welle.io)
+        ├── fm.py            (FM mit rtl_fm)
+        ├── wifi.py
+        ├── bluetooth.py
+        ├── audio.py
+        ├── system.py
+        └── update.py        (OTA Updates)
 ```
 
 ---
@@ -146,11 +122,8 @@ curl -sL https://dtcooper.github.io/raspotify/install.sh | sh
 
 ```ini
 dtparam=audio=on
-
-# PFLICHT: Auto-Detect deaktivieren (blockiert SPI Display!)
-camera_auto_detect=0
-display_auto_detect=0
-
+camera_auto_detect=0   # PFLICHT: blockiert sonst SPI Display!
+display_auto_detect=0  # PFLICHT
 max_framebuffers=2
 disable_overscan=1
 
@@ -161,11 +134,7 @@ arm_boost=1
 dtparam=spi=on
 dtparam=i2c_arm=on
 enable_uart=1
-
-# Joy-IT TFT3.5 Display Treiber (beinhaltet Touch-Overlay)
 dtoverlay=tft35a:rotate=90
-
-# HDMI fuer fbcp Spiegelung
 hdmi_force_hotplug=1
 hdmi_group=2
 hdmi_mode=87
@@ -173,45 +142,36 @@ hdmi_cvt=480 320 60 6 0 0 0
 hdmi_drive=2
 ```
 
-**Wichtige Erkenntnisse:**
-- `camera_auto_detect=1` und `display_auto_detect=1` blockieren den SPI-Display!
-- `dtoverlay=tft35a:rotate=90` enthält den ADS7846 Touch-Treiber
-- `dtoverlay=vc4-kms-v3d` / `vc4-fkms-v3d` muss deaktiviert sein
-
 ---
 
 ## Framebuffer-Architektur
 
 ```
-HDMI Framebuffer (fb0)  <- PiDrive zeichnet hierauf
-640x480 (HDMI-Aufloesung)
+HDMI Framebuffer (fb0, 640x480)  <- PiDrive zeichnet hierauf
         |
-    fbcp (Dienst, von LCD-show installiert)
+    fbcp (Dienst)
         |
-SPI Display Framebuffer (fb1)
-480x320 (Display-Aufloesung)
+SPI Display Framebuffer (fb1, 480x320)
         |
     Joy-IT TFT3.5
 ```
 
-### Rotation und Skalierung im Script
+### Rotation im Script
 
 ```python
-# Virtueller Surface: 320x480 (Hochformat)
-virt = pygame.Surface((320, 480))
-# Echter Framebuffer: 640x480
-real = pygame.display.set_mode((640, 480))
-# Rotation 90 Grad -> 480x320, dann skalieren auf 640x480
-rotated = pygame.transform.rotate(virt, 90)
+virt    = pygame.Surface((320, 480))      # Virtueller Canvas
+real    = pygame.display.set_mode((640, 480))  # Framebuffer
+rotated = pygame.transform.rotate(virt, 90)    # 480x320
 scaled  = pygame.transform.scale(rotated, (640, 480))
 real.blit(scaled, (0, 0))
+pygame.display.flip()
 ```
 
 ---
 
 ## Systemdienste
 
-### pidrive.service
+### pidrive.service (`systemd/pidrive.service`)
 
 ```ini
 [Unit]
@@ -226,6 +186,7 @@ Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
 ExecStartPre=/bin/sleep 5
+ExecStartPre=/bin/chvt 3        # USB-Tastatur auf tty3 umleiten
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
 Restart=always
 RestartSec=5
@@ -238,76 +199,126 @@ TTYVHangup=yes
 WantedBy=multi-user.target
 ```
 
-### raspotify Konfiguration
-
-Wichtige Einstellungen in `/etc/raspotify/conf`:
-
-```bash
-LIBRESPOT_NAME="PiDrive"
-LIBRESPOT_BITRATE=320
-LIBRESPOT_DISABLE_AUDIO_CACHE=
-# PFLICHT auskommentiert: sonst kein Login nach Reboot!
-#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=
-LIBRESPOT_ENABLE_VOLUME_NORMALISATION=
-LIBRESPOT_SYSTEM_CACHE=/var/cache/raspotify
-LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh
-```
-
-**Timing-Fix** in `/lib/systemd/system/raspotify.service`:
-```ini
-Wants=network-online.target sound.target
-After=network-online.target sound.target avahi-daemon.service
-```
-
-```bash
-sudo systemctl enable systemd-networkd-wait-online.service
-```
-
 ### Weitere Services
 
 | Service | Zweck |
 |---|---|
-| `rfkill-unblock.service` | WiFi + BT beim Boot entsperren |
-| `wlan-autostart.service` | WLAN automatisch verbinden |
-| `raspotify.service` | Spotify Connect |
+| rfkill-unblock.service | WiFi + BT beim Boot entsperren |
+| raspotify.service | Spotify Connect |
 
 ---
 
-## Spotify OAuth-Einrichtung (einmalig)
+## Spotify OAuth (einmalig)
 
 ```bash
 sudo systemctl stop raspotify
 sudo mkdir -p /var/cache/raspotify
 
-# SSH-Tunnel auf PC (ZUERST in neuem Terminal!):
-# ssh -L 5588:127.0.0.1:5588 pi@<PI-IP> -N
+# SSH-Tunnel auf PC (ZUERST!):
+ssh -L 5588:127.0.0.1:5588 pi@<IP> -N
 
-# OAuth starten
 /usr/bin/librespot --name "PiDrive" --enable-oauth \
   --system-cache /var/cache/raspotify
 ```
 
-URL im Browser oeffnen, Spotify Login, Token wird gespeichert.
+### raspotify Konfiguration (`/etc/raspotify/conf`)
 
 ```bash
-sudo systemctl start raspotify
-avahi-browse -a | grep -i spotify  # -> PiDrive sollte erscheinen
+LIBRESPOT_NAME="PiDrive"
+LIBRESPOT_BITRATE=320
+LIBRESPOT_DISABLE_AUDIO_CACHE=
+#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=   # AUSKOMMENTIERT - sonst kein Login!
+LIBRESPOT_ENABLE_VOLUME_NORMALISATION=
+LIBRESPOT_SYSTEM_CACHE=/var/cache/raspotify
+LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh
+```
+
+### Timing-Fix (`/lib/systemd/system/raspotify.service`)
+
+```ini
+Wants=network-online.target sound.target
+After=network-online.target sound.target avahi-daemon.service
 ```
 
 ---
 
 ## Spotify Track-Anzeige
 
-Via `/usr/local/bin/spotify_event.sh`:
-
-```bash
-#!/bin/bash
-if [ "$PLAYER_EVENT" = "track_changed" ] || [ "$PLAYER_EVENT" = "playing" ]; then
-    echo "${PLAYER_EVENT}|${NAME}|${ARTISTS}|${ALBUM}" > /tmp/spotify_status
-fi
+`/usr/local/bin/spotify_event.sh` schreibt bei Wiedergabe:
+```
+track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 ```
 
-PiDrive liest `/tmp/spotify_status` (status.py) und zeigt Titel/Artist/Album an.
+`status.py` liest `/tmp/spotify_status` alle 6 Sekunden.
+
+---
+
+## DAB+ (RTL-SDR + welle.io)
+
+### Voraussetzungen
+- RTL-SDR Stick angeschlossen (USB)
+- `welle-cli` installiert (`sudo apt install welle.io`)
+
+### Sendersuche
+- Menü: Musik → DAB+ → Sendersuche
+- Scannt alle Band-III Kanaele (5A - 13F)
+- Ergebnis gespeichert in `config/dab_stations.json`
+- Beim naechsten Start sofort verfuegbar
+
+### Wiedergabe
+- `welle-cli | mpv` Pipeline
+- Automatisch mit gespeicherter Senderliste
+
+---
+
+## FM Radio (RTL-SDR + rtl_fm)
+
+### Voraussetzungen
+- RTL-SDR Stick angeschlossen
+- `rtl-sdr` Paket installiert (`sudo apt install rtl-sdr`)
+
+### Stationen
+- Voreingestellt in `config/fm_stations.json`
+- Manuelle Frequenzeingabe: ↑↓ fuer 0.1 MHz, ←→ fuer 1.0 MHz
+- Neue Stationen speicherbar
+
+### Wiedergabe
+- `rtl_fm | mpv` Pipeline, 200 kHz Bandbreite, WFM Demodulation
+
+---
+
+## Logging
+
+```bash
+# Live verfolgen
+tail -f /var/log/pidrive/pidrive.log
+
+# Service-Journal
+journalctl -u pidrive -f
+
+# Spezifisch filtern
+grep "MENU\|TRIGGER\|ACTION\|ERROR" /var/log/pidrive/pidrive.log
+```
+
+Log-Rotation: max 512 KB pro Datei, 2 Backups (max 1.5 MB gesamt).
+
+---
+
+## OTA Update
+
+```bash
+# Manuell
+cd ~/pidrive && git pull && sudo systemctl restart pidrive
+
+# Im Menue
+# System -> Update -> Auf Updates pruefen
+# System -> Update -> Update installieren
+```
+
+Versions-Check via:
+```
+https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/pidrive/VERSION
+```
 
 ---
 
@@ -319,8 +330,9 @@ PiDrive
 |   |-- Spotify (Toggle + Track-Anzeige)
 |   |-- Wiedergabe (Titel | Artist | Album)
 |   |-- Bibliothek (MP3 mit Album-Art)
-|   |-- Webradio (konfigurierbare Stationen)
-|   +-- DAB+ / FM (In Planung)
+|   |-- Webradio (stations.json)
+|   |-- DAB+ (RTL-SDR, dab_stations.json)
+|   +-- FM Radio (RTL-SDR, fm_stations.json)
 |-- WiFi
 |   |-- WiFi An/Aus
 |   |-- Verbunden mit (SSID)
@@ -337,8 +349,8 @@ PiDrive
     |-- Hostname
     |-- System-Info (CPU-Temp, Uptime)
     |-- Version
-    |-- Neustart (mit Bestaetigung)
-    +-- Ausschalten (mit Bestaetigung)
+    |-- Neustart / Ausschalten
+    +-- Update (OTA via GitHub)
 ```
 
 ---
@@ -346,57 +358,15 @@ PiDrive
 ## File-Trigger (`/tmp/pidrive_cmd`)
 
 ```bash
-echo "up"           > /tmp/pidrive_cmd
-echo "down"         > /tmp/pidrive_cmd
-echo "enter"        > /tmp/pidrive_cmd
-echo "back"         > /tmp/pidrive_cmd
-echo "cat:0"        > /tmp/pidrive_cmd   # Musik
-echo "cat:1"        > /tmp/pidrive_cmd   # WiFi
-echo "cat:2"        > /tmp/pidrive_cmd   # Bluetooth
-echo "cat:3"        > /tmp/pidrive_cmd   # System
-echo "wifi_on"      > /tmp/pidrive_cmd
-echo "wifi_off"     > /tmp/pidrive_cmd
-echo "bt_on"        > /tmp/pidrive_cmd
-echo "bt_off"       > /tmp/pidrive_cmd
-echo "audio_klinke" > /tmp/pidrive_cmd
-echo "audio_hdmi"   > /tmp/pidrive_cmd
-echo "audio_bt"     > /tmp/pidrive_cmd
-echo "audio_all"    > /tmp/pidrive_cmd
-echo "spotify_on"   > /tmp/pidrive_cmd
-echo "spotify_off"  > /tmp/pidrive_cmd
-echo "radio_stop"   > /tmp/pidrive_cmd
-echo "reboot"       > /tmp/pidrive_cmd
-echo "shutdown"     > /tmp/pidrive_cmd
+echo "up/down/enter/back/left/right" > /tmp/pidrive_cmd
+echo "cat:0/1/2/3"                  > /tmp/pidrive_cmd
+echo "wifi_on/wifi_off"             > /tmp/pidrive_cmd
+echo "bt_on/bt_off"                 > /tmp/pidrive_cmd
+echo "audio_klinke/hdmi/bt/all"     > /tmp/pidrive_cmd
+echo "spotify_on/spotify_off"       > /tmp/pidrive_cmd
+echo "radio_stop/library_stop"      > /tmp/pidrive_cmd
+echo "reboot/shutdown"              > /tmp/pidrive_cmd
 ```
-
----
-
-## Audio-Architektur
-
-```
-Raspberry Pi 3B Audio
-|-- HDMI (hw:0,0) -> Karte b1
-|-- Klinke 3.5mm (hw:1,0) -> Karte Headphones
-+-- Bluetooth (PulseAudio bluez Sink)
-        |
-    PulseAudio
-        |-- Einzelausgang: Klinke / HDMI / BT
-        +-- Combined Sink: Alle gleichzeitig
-```
-
----
-
-## Konsolen-Unterdrückung
-
-Damit TTY nicht ueber das Display laeuft:
-
-```bash
-echo 0 > /sys/class/vtconsole/vtcon1/bind
-echo 0 > /sys/class/graphics/fbcon/cursor_blink
-con2fbmap 1 1
-```
-
-In `/etc/rc.local` vor `exit 0` fuer Autostart.
 
 ---
 
@@ -404,27 +374,48 @@ In `/etc/rc.local` vor `exit 0` fuer Autostart.
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display zeigt nichts | camera_auto_detect=1 | In config.txt auf 0 |
-| pygame Unable to open console terminal | Ueber SSH gestartet | Als systemd Service auf tty3 |
-| No overlays loaded | display_auto_detect=1 | Auf 0 setzen |
-| pygame border_radius Fehler | pygame 1.9.6 | draw.rect() ohne border_radius |
-| GIL-Fehler mit threading | pygame 1.9.6 + sudo | Kein threading, Popen statt Thread |
-| Raspotify verbindet nicht | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
-| Raspotify startet zu frueh | network.target | network-online.target |
-| WLAN nach Reboot aus | rfkill blockiert | rfkill-unblock.service |
-| Touch reagiert nicht | ADS7846 Hardware-Defekt | GPIO-Buttons als Alternative |
-| Menue zu klein | HDMI 640x480 != Display | pygame.transform.scale auf 640x480 |
-| Spotify nicht in App sichtbar | Kein Auth-Token | OAuth einrichten |
+| Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
+| pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
+| GIL-Fehler | pygame 1.9.6 + threading | Kein threading, Popen |
+| Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
+| Raspotify zu frueh | network.target | network-online.target |
+| WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
+| Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
+| Tastatur reagiert nicht | falscher TTY | chvt 3 (im Service) |
+| Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
+| DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
+| FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
+
+---
+
+## Changelog
+
+### v0.3.1 (aktuell)
+- UI-Fix: eigene Surface fuer linke Spalte (kein Text-Ueberlauf mehr)
+- USB-Tastatur: chvt 3 automatisch via Service
+- pidrive.service im systemd/ Ordner des Repos
+- install.sh kopiert Service-Datei aus Repo
+
+### v0.3.0
+- DAB+ Radio (welle.io, Sendersuche & Speicherung)
+- FM Radio (rtl_fm, manuelle Frequenzeingabe)
+- OTA Updates aus dem Menue
+- Logging-Modul (rotierend)
+
+### v0.2.0
+- Modulare Struktur
+- Spotify Track-Anzeige
+- Webradio, MP3 Bibliothek mit Album-Art
+- Bluetooth Audio-Ausgang
 
 ---
 
 ## Roadmap
 
-- [ ] DAB+ Support (RTL-SDR + welle.io)
-- [ ] FM Radio (RTL-SDR)
-- [ ] GPIO-Button Navigation (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- [ ] BMW iDrive ESP32 Integration (handle_track() Trigger)
+- [ ] GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
+- [ ] BMW iDrive ESP32 Integration
 - [ ] USB-Tethering Autostart
 - [ ] Hotspot-Modus
-- [ ] OTA Updates via git pull
-- [ ] Lautstaerke-Anzeige im Display
+- [ ] DAB+ Programminfo (RDS-aehnliche Anzeige)
+- [ ] FM RDS Text-Anzeige
+- [ ] Equalizer
