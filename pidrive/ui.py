@@ -1,6 +1,7 @@
 """
-ui.py - Basisklassen fuer das iPod-Interface
-PiDrive Project - GPL-v3
+ui.py - Basisklassen fuer das PiDrive-Interface
+PiDrive - Raspberry Pi Car Infotainment - GPL-v3
+pygame 1.9 kompatibel
 """
 
 import pygame
@@ -36,6 +37,8 @@ C_RED     = (255, 70,  70 )
 C_ORANGE  = (255, 160, 40 )
 C_PURPLE  = (160, 80,  255)
 C_BT_BLUE = (100, 160, 255)
+C_DAB     = (0,   180, 180)
+C_FM      = (255, 120, 0  )
 
 # ── Fonts ─────────────────────────────────────────────────────
 _font_cache = {}
@@ -61,7 +64,6 @@ def get_font(size, bold=False):
 
 # ── Draw Helpers ──────────────────────────────────────────────
 def draw_rect(surf, color, rect):
-    """pygame 1.9 kompatibles Rechteck."""
     pygame.draw.rect(surf, color, pygame.Rect(rect))
 
 def draw_wifi_icon(surf, x, y, connected, active, size=16):
@@ -93,18 +95,16 @@ def draw_bt_icon(surf, x, y, active, connected=False, size=16):
 
 # ── Item & Category ───────────────────────────────────────────
 class Item:
-    """Ein Menueintrag."""
     def __init__(self, label, sub=None, action=None,
                  submenu=None, toggle=None, state=None):
         self.label   = label
-        self.sub     = sub        # str oder callable -> str
-        self.action  = action     # callable
-        self.submenu = submenu    # Liste von Items
-        self.toggle  = toggle     # callable (schaltet um)
-        self.state   = state      # callable -> bool
+        self.sub     = sub
+        self.action  = action
+        self.submenu = submenu
+        self.toggle  = toggle
+        self.state   = state
 
 class Category:
-    """Eine Hauptkategorie in der linken Spalte."""
     def __init__(self, label, color, items):
         self.label = label
         self.color = color
@@ -116,7 +116,7 @@ class StatusBar:
         self.screen = screen
         self.S      = status
 
-    def draw(self, title="iPod", audio_out=""):
+    def draw(self, title="PiDrive", audio_out=""):
         S = self.S
         draw_rect(self.screen, C_HEADER, (0, 0, W, STATUS_H))
         pygame.draw.line(self.screen, C_ACCENT,
@@ -141,13 +141,13 @@ class StatusBar:
         x += 20
 
         if audio_out and audio_out != "auto":
-            ao = get_font(12).render(audio_out[:6], True, C_ORANGE)
+            ao = get_font(11).render(audio_out[:6], True, C_ORANGE)
             self.screen.blit(ao, (x, STATUS_H//2 - ao.get_height()//2))
             x += ao.get_width() + 4
 
         if S.get("conn") and S.get("ssid") and x < W - 60:
             ssid = S["ssid"][:8] + ".." if len(S["ssid"]) > 8 else S["ssid"]
-            st = get_font(12).render(ssid, True, C_GREEN)
+            st = get_font(11).render(ssid, True, C_GREEN)
             self.screen.blit(st, (x, STATUS_H//2 - st.get_height()//2))
 
 # ── Split-Screen UI ───────────────────────────────────────────
@@ -161,7 +161,7 @@ class SplitUI:
         self.item_sel   = 0
         self.item_scroll= 0
         self.focus      = "right"
-        self.stack      = []   # [(title, items, sel, scroll)]
+        self.stack      = []
         self.statusbar  = StatusBar(screen, status)
 
     def _items(self):
@@ -177,38 +177,43 @@ class SplitUI:
         self.screen.fill(C_BG)
         self._draw_left()
         self._draw_right()
-        title = self.stack[-1][0] if self.stack else "iPod"
+        title = self.stack[-1][0] if self.stack else "PiDrive"
         self.statusbar.draw(title, self.settings.get("audio_output", "auto"))
-        pygame.display.flip()
+        # Kein pygame.display.flip() hier — wird in main.py gemacht
 
     def _draw_left(self):
+        """Linke Spalte mit Subsurface — verhindert Ueberlaufen in rechte Spalte."""
+        # Hintergrund der gesamten linken Spalte
         draw_rect(self.screen, C_LEFT, (0, STATUS_H, LEFT_W, H - STATUS_H))
         pygame.draw.line(self.screen, C_DIVIDER,
                          (LEFT_W - 1, STATUS_H), (LEFT_W - 1, H), 1)
 
-        # Clipping: linke Spalte darf nicht in rechte hineinragen
-        clip_rect = pygame.Rect(0, STATUS_H, LEFT_W - 2, H - STATUS_H)
-        self.screen.set_clip(clip_rect)
+        # Subsurface: zeichnen ist auf linke Spalte begrenzt
+        sub = self.screen.subsurface(
+            pygame.Rect(0, STATUS_H, LEFT_W - 1, H - STATUS_H))
 
-        y = STATUS_H
+        y_offset = 0
         for i, cat in enumerate(self.categories):
             is_sel = (i == self.cat_sel)
+            r = pygame.Rect(0, y_offset, LEFT_W - 1, CAT_IH)
+
             if is_sel:
-                draw_rect(self.screen, cat.color, (0, y, LEFT_W - 1, CAT_IH))
-                draw_rect(self.screen, C_WHITE, (LEFT_W - 3, y, 3, CAT_IH))
+                sub.fill(cat.color, r)
+                sub.fill(C_WHITE, pygame.Rect(LEFT_W - 4, y_offset, 3, CAT_IH))
             else:
-                draw_rect(self.screen, C_LEFT, (0, y, LEFT_W - 1, CAT_IH))
+                sub.fill(C_LEFT, r)
+
             txt_col = C_WHITE if is_sel else C_GRAY
             lbl = get_font(12, bold=is_sel).render(cat.label, True, txt_col)
-            lx = max(2, LEFT_W//2 - lbl.get_width()//2)
-            self.screen.blit(lbl, (lx, y + CAT_IH//2 - lbl.get_height()//2))
-            if not is_sel:
-                pygame.draw.line(self.screen, C_DIVIDER,
-                                 (6, y + CAT_IH - 1), (LEFT_W - 8, y + CAT_IH - 1), 1)
-            y += CAT_IH
+            lx = max(2, (LEFT_W - 1)//2 - lbl.get_width()//2)
+            ly = y_offset + CAT_IH//2 - lbl.get_height()//2
+            sub.blit(lbl, (lx, ly))
 
-        # Clipping wieder aufheben
-        self.screen.set_clip(None)
+            if not is_sel:
+                pygame.draw.line(sub, C_DIVIDER,
+                                 (6, y_offset + CAT_IH - 1),
+                                 (LEFT_W - 9, y_offset + CAT_IH - 1), 1)
+            y_offset += CAT_IH
 
     def _draw_right(self):
         rx, rw = LEFT_W, RIGHT_W
@@ -222,35 +227,39 @@ class SplitUI:
             real_idx = self.item_scroll + i
             is_sel = (real_idx == self.item_sel)
             if is_sel:
-                draw_rect(self.screen, C_SEL, (rx + 4, y + 2, rw - 8, SUB_IH - 4))
+                draw_rect(self.screen, C_SEL,
+                          (rx + 4, y + 2, rw - 8, SUB_IH - 4))
                 draw_rect(self.screen, self.categories[self.cat_sel].color,
                           (rx + 4, y + 2, 3, SUB_IH - 4))
 
             if item.state:
                 active = item.state()
                 col = C_GREEN if active else C_RED
-                pygame.draw.circle(self.screen, col, (W - 14, y + SUB_IH//2), 7)
+                pygame.draw.circle(self.screen, col,
+                                   (W - 14, y + SUB_IH//2), 7)
                 st = get_font(12).render("Ein" if active else "Aus", True, col)
                 self.screen.blit(st, (W - 14 - st.get_width() - 8,
                                       y + SUB_IH//2 - st.get_height()//2))
             elif item.submenu or item.action:
-                arr = get_font(12).render(">", True, C_DARK if not is_sel else C_WHITE)
+                arr = get_font(12).render(">", True,
+                              C_DARK if not is_sel else C_WHITE)
                 self.screen.blit(arr, (W - arr.get_width() - 10,
                                        y + SUB_IH//2 - arr.get_height()//2))
 
             lbl = get_font(18, bold=True).render(item.label, True,
-                                                  C_WHITE if is_sel else (200, 202, 215))
+                            C_WHITE if is_sel else (200, 202, 215))
             self.screen.blit(lbl, (rx + 14, y + 8))
 
             if item.sub:
                 s = item.sub() if callable(item.sub) else item.sub
                 sl = get_font(12).render(str(s)[:30], True,
-                                         C_GREEN if is_sel else C_GRAY)
+                              C_GREEN if is_sel else C_GRAY)
                 self.screen.blit(sl, (rx + 14, y + 34))
 
             if not is_sel:
                 pygame.draw.line(self.screen, C_DIVIDER,
-                                 (rx + 12, y + SUB_IH - 1), (W - 8, y + SUB_IH - 1), 1)
+                                 (rx + 12, y + SUB_IH - 1),
+                                 (W - 8, y + SUB_IH - 1), 1)
             y += SUB_IH
 
         # Scrollbar
@@ -331,7 +340,6 @@ class SplitUI:
             self.item_sel, self.item_scroll = s, sc
 
     def touch(self, vx, vy):
-        """Touch-Koordinaten verarbeiten (im virtuellen 320x480 Raum)."""
         if self.stack and vy > H - 44:
             self._pop()
             return
@@ -353,22 +361,22 @@ class SplitUI:
 
 # ── Hilfs-Dialoge ─────────────────────────────────────────────
 def show_message(screen, title, text, color=C_BLUE):
-    """Kurze Nachricht anzeigen."""
     screen.fill(C_BG)
     draw_rect(screen, C_HEADER, (0, 0, W, STATUS_H))
     pygame.draw.line(screen, color, (0, STATUS_H - 1), (W, STATUS_H - 1), 2)
-    t2 = get_font(14, bold=True).render("iPod", True, C_WHITE)
-    screen.blit(t2, (W//2 - t2.get_width()//2, STATUS_H//2 - t2.get_height()//2))
+    t2 = get_font(14, bold=True).render("PiDrive", True, C_WHITE)
+    screen.blit(t2, (W//2 - t2.get_width()//2,
+                      STATUS_H//2 - t2.get_height()//2))
     draw_rect(screen, C_LEFT, (20, H//2 - 52, W - 40, 104))
-    pygame.draw.rect(screen, color, pygame.Rect(20, H//2 - 52, W - 40, 104), 1)
-    t = get_font(16, bold=True).render(title, True, C_WHITE)
+    pygame.draw.rect(screen, color,
+                     pygame.Rect(20, H//2 - 52, W - 40, 104), 1)
+    t = get_font(16, bold=True).render(title[:22], True, C_WHITE)
     m = get_font(13).render(text[:36], True, C_GRAY)
     screen.blit(t, (W//2 - t.get_width()//2, H//2 - 28))
     screen.blit(m, (W//2 - m.get_width()//2, H//2 + 8))
     pygame.display.flip()
 
 def pick_list(screen, title, items, color=C_BLUE):
-    """Auswahlliste anzeigen, gibt gewaehltes Item zurueck."""
     IH, BH = 52, 44
     mv = (H - STATUS_H - BH) // IH
     sc = sel = 0
@@ -378,7 +386,8 @@ def pick_list(screen, title, items, color=C_BLUE):
         draw_rect(screen, C_HEADER, (0, 0, W, STATUS_H))
         pygame.draw.line(screen, color, (0, STATUS_H - 1), (W, STATUS_H - 1), 2)
         t = get_font(14, bold=True).render(title, True, C_WHITE)
-        screen.blit(t, (W//2 - t.get_width()//2, STATUS_H//2 - t.get_height()//2))
+        screen.blit(t, (W//2 - t.get_width()//2,
+                         STATUS_H//2 - t.get_height()//2))
 
         y = STATUS_H + 4
         vis = items[sc: sc + mv]
@@ -412,7 +421,8 @@ def pick_list(screen, title, items, color=C_BLUE):
                 elif ev.key == pygame.K_DOWN and sel < len(items) - 1:
                     sel += 1
                     if sel >= sc + mv: sc = sel - mv + 1
-                elif ev.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_RIGHT):
+                elif ev.key in (pygame.K_RETURN, pygame.K_KP_ENTER,
+                                pygame.K_RIGHT):
                     return items[sel]
                 elif ev.key in (pygame.K_ESCAPE, pygame.K_LEFT):
                     return None
