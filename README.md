@@ -1,6 +1,6 @@
-# PiDrive 🎵
+# PiDrive 🚗🎵
 
-PiDrive — Raspberry Pi Car Infotainment — für den Einsatz im Auto mit BMW iDrive oder ähnlichen Systemen.
+Raspberry Pi Car Infotainment — Spotify Connect, Webradio, MP3 Bibliothek für BMW iDrive und ähnliche Systeme.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
@@ -48,23 +48,21 @@ Das Fahrzeug kommuniziert über das iPod-Protokoll mit dem Pi. Der Pi stellt sic
 ### Schnellinstallation (von GitHub)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/DEIN-USER/pidrive/main/install.sh | sudo bash
+curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
 ```
 
 ### Manuelle Installation
 
 ```bash
-# Repository klonen
-git clone https://github.com/DEIN-USER/pidrive ~/pidrive
+git clone https://github.com/MPunktBPunkt/pidrive ~/pidrive
 cd ~/pidrive
-
-# Installationsscript ausführen
 sudo bash setup_pidrive.sh
 ```
 
 ### Display-Treiber einrichten
 
 ```bash
+git clone https://github.com/goodtft/LCD-show ~/LCD-show
 cd ~/LCD-show
 sudo ./LCD35-show
 # Pi startet automatisch neu
@@ -75,13 +73,13 @@ sudo ./LCD35-show
 ```bash
 sudo systemctl stop raspotify
 
+# SSH-Tunnel auf PC öffnen (neues Terminal):
+ssh -L 5588:127.0.0.1:5588 pi@<PI-IP> -N
+
 # OAuth starten
 /usr/bin/librespot --name "PiDrive" --enable-oauth \
   --system-cache /var/cache/raspotify
-
-# SSH-Tunnel auf PC öffnen (neues Terminal):
-# ssh -L 5588:127.0.0.1:5588 pi@<PI-IP>
-# Dann angezeigte URL im Browser öffnen → Spotify Login
+# Angezeigte URL im Browser öffnen → Spotify Login
 ```
 
 ### Update
@@ -89,7 +87,7 @@ sudo systemctl stop raspotify
 ```bash
 cd ~/pidrive
 git pull
-sudo systemctl restart ipod
+sudo systemctl restart pidrive
 ```
 
 ---
@@ -100,9 +98,10 @@ sudo systemctl restart ipod
 pidrive/
 ├── pidrive/
 │   ├── main.py          # Hauptprogramm & Main-Loop
-│   ├── ui.py            # UI-Basisklassen (SplitUI, Items, Dialoge)
+│   ├── ui.py            # UI-Basisklassen
 │   ├── status.py        # System-Status Cache
 │   ├── trigger.py       # File-Trigger Handler
+│   ├── log.py           # Logging (rotierend, max 512KB)
 │   ├── modules/
 │   │   ├── musik.py     # Spotify & Wiedergabe
 │   │   ├── webradio.py  # Webradio (mpv)
@@ -115,9 +114,9 @@ pidrive/
 │   └── config/
 │       ├── stations.json   # Webradio-Stationen
 │       └── settings.json   # Einstellungen
-├── ipod_ctrl.py         # SSH Tastatur-Steuerung
+├── pidrive_ctrl.py      # SSH Tastatur-Steuerung
 ├── install.sh           # GitHub Schnellinstallation
-├── setup_pidrive.sh    # Vollständiges Setup-Script
+├── setup_pidrive.sh     # Vollständiges Setup-Script
 ├── config.txt.example   # Beispiel /boot/config.txt
 └── README.md
 ```
@@ -127,7 +126,7 @@ pidrive/
 ## Menü-Struktur
 
 ```
-iPod
+PiDrive
 ├── Musik
 │   ├── Spotify (Toggle Ein/Aus + Track-Anzeige)
 │   ├── Wiedergabe (aktueller Titel/Artist/Album)
@@ -158,47 +157,93 @@ iPod
 
 ## Steuerung
 
-### SSH-Terminal (ipod_ctrl.py)
+### USB-Tastatur direkt am Pi
 
-```bash
-python3 ~/ipod_ctrl.py
-```
+Eine USB-Tastatur direkt am Pi anschliessen — funktioniert sofort:
 
 | Taste | Funktion |
 |---|---|
-| W / ↑ | Hoch |
-| S / ↓ | Runter |
-| D / Enter / → | Auswählen |
-| A / ESC / ← | Zurück |
-| 1–4 | Direkt zu Kategorie |
-| F1–F4 | Audio: Klinke/HDMI/BT/Alle |
-| R | Neustart |
-| Q | ipod_ctrl beenden |
+| ↑ / W | Hoch |
+| ↓ / S | Runter |
+| → / Enter / D | Auswählen |
+| ← / ESC / A | Zurück |
+| F1 | Audio: Klinke |
+| F2 | Audio: HDMI |
+| F3 | Audio: Bluetooth |
+| F4 | Audio: Alle |
 
-### File-Trigger (`/tmp/ipod_cmd`)
+### SSH-Terminal (pidrive_ctrl.py)
 
 ```bash
-echo "up"           > /tmp/ipod_cmd   # Navigation
-echo "down"         > /tmp/ipod_cmd
-echo "enter"        > /tmp/ipod_cmd
-echo "back"         > /tmp/ipod_cmd
-echo "cat:0"        > /tmp/ipod_cmd   # Musik
-echo "cat:1"        > /tmp/ipod_cmd   # WiFi
-echo "cat:2"        > /tmp/ipod_cmd   # Bluetooth
-echo "cat:3"        > /tmp/ipod_cmd   # System
-echo "wifi_on"      > /tmp/ipod_cmd   # WiFi ein
-echo "wifi_off"     > /tmp/ipod_cmd   # WiFi aus
-echo "bt_on"        > /tmp/ipod_cmd   # BT ein
-echo "bt_off"       > /tmp/ipod_cmd   # BT aus
-echo "audio_klinke" > /tmp/ipod_cmd   # Klinke
-echo "audio_hdmi"   > /tmp/ipod_cmd   # HDMI
-echo "audio_bt"     > /tmp/ipod_cmd   # Bluetooth
-echo "audio_all"    > /tmp/ipod_cmd   # Alle kombiniert
-echo "spotify_on"   > /tmp/ipod_cmd   # Spotify starten
-echo "spotify_off"  > /tmp/ipod_cmd   # Spotify stoppen
-echo "radio_stop"   > /tmp/ipod_cmd   # Radio stoppen
-echo "reboot"       > /tmp/ipod_cmd   # Neustart
-echo "shutdown"     > /tmp/ipod_cmd   # Ausschalten
+python3 ~/pidrive_ctrl.py
+```
+
+Gleiche Tasten wie USB-Tastatur + `1`–`4` für direkte Kategoriewahl, `R` für Neustart, `Q` zum Beenden.
+
+### File-Trigger (`/tmp/pidrive_cmd`)
+
+```bash
+echo "up"           > /tmp/pidrive_cmd   # Navigation
+echo "down"         > /tmp/pidrive_cmd
+echo "enter"        > /tmp/pidrive_cmd
+echo "back"         > /tmp/pidrive_cmd
+echo "cat:0"        > /tmp/pidrive_cmd   # Musik
+echo "cat:1"        > /tmp/pidrive_cmd   # WiFi
+echo "cat:2"        > /tmp/pidrive_cmd   # Bluetooth
+echo "cat:3"        > /tmp/pidrive_cmd   # System
+echo "wifi_on"      > /tmp/pidrive_cmd   # WiFi ein
+echo "wifi_off"     > /tmp/pidrive_cmd   # WiFi aus
+echo "bt_on"        > /tmp/pidrive_cmd   # Bluetooth ein
+echo "bt_off"       > /tmp/pidrive_cmd   # Bluetooth aus
+echo "audio_klinke" > /tmp/pidrive_cmd   # Klinke
+echo "audio_hdmi"   > /tmp/pidrive_cmd   # HDMI
+echo "audio_bt"     > /tmp/pidrive_cmd   # Bluetooth
+echo "audio_all"    > /tmp/pidrive_cmd   # Alle kombiniert
+echo "spotify_on"   > /tmp/pidrive_cmd   # Spotify starten
+echo "spotify_off"  > /tmp/pidrive_cmd   # Spotify stoppen
+echo "radio_stop"   > /tmp/pidrive_cmd   # Radio stoppen
+echo "reboot"       > /tmp/pidrive_cmd   # Neustart
+echo "shutdown"     > /tmp/pidrive_cmd   # Ausschalten
+```
+
+---
+
+## Logging & Debugging
+
+PiDrive schreibt alle Ereignisse in eine rotierende Logdatei (max 512 KB, 2 Backups):
+
+```bash
+# Live-Log verfolgen
+tail -f /var/log/pidrive/pidrive.log
+
+# Service-Log (journald)
+journalctl -u pidrive -f
+
+# Letzte 50 Zeilen
+journalctl -u pidrive -n 50 --no-pager
+
+# Nur Fehler
+journalctl -u pidrive -p err
+
+# Menü-Navigation verfolgen
+grep "MENU" /var/log/pidrive/pidrive.log
+
+# Trigger-Befehle verfolgen
+grep "TRIGGER" /var/log/pidrive/pidrive.log
+
+# Aktionen verfolgen
+grep "ACTION" /var/log/pidrive/pidrive.log
+```
+
+**Beispiel-Log:**
+```
+2026-04-05 11:23:01 [INFO] PiDrive gestartet
+2026-04-05 11:23:02 [INFO] STATUS  wifi=True bt=False spotify=True audio=Klinke
+2026-04-05 11:23:15 [INFO] MENU  Musik -> WiFi | WiFi
+2026-04-05 11:23:18 [INFO] TRIGGER  wifi_off
+2026-04-05 11:23:18 [INFO] ACTION  WiFi: ausschalten
+2026-04-05 11:23:22 [INFO] TRIGGER  cat:0
+2026-04-05 11:23:22 [INFO] MENU  -> Kategorie: Musik
 ```
 
 ---
@@ -224,27 +269,25 @@ Stationen in `pidrive/config/stations.json` bearbeiten:
 MP3-Dateien nach `~/Musik` kopieren (oder Pfad in `settings.json` ändern):
 
 ```bash
-# Pfad ändern
 nano ~/pidrive/pidrive/config/settings.json
 # "music_path": "/mnt/usb/Musik"
 ```
 
-Unterstützte Formate: MP3, M4A, FLAC, OGG, WAV
-
+Unterstützte Formate: MP3, M4A, FLAC, OGG, WAV.
 Album-Art wird automatisch aus ID3-Tags gelesen (APIC-Frame).
 
 ---
 
 ## /boot/config.txt
 
-Wichtige Einstellungen:
+Wichtige Einstellungen (vollständig in `config.txt.example`):
 
 ```ini
 # PFLICHT: Auto-Detect deaktivieren (blockiert SPI Display!)
 camera_auto_detect=0
 display_auto_detect=0
 
-# Display-Treiber
+# Display-Treiber (wird von LCD35-show gesetzt)
 dtoverlay=tft35a:rotate=90
 
 # HDMI für fbcp
@@ -252,6 +295,7 @@ hdmi_force_hotplug=1
 hdmi_group=2
 hdmi_mode=87
 hdmi_cvt=480 320 60 6 0 0 0
+hdmi_drive=2
 ```
 
 ---
@@ -260,12 +304,12 @@ hdmi_cvt=480 320 60 6 0 0 0
 
 | Problem | Lösung |
 |---|---|
-| Display dunkel nach Reboot | `sudo systemctl start ipod` |
+| Display dunkel nach Reboot | `sudo systemctl start pidrive` |
 | Spotify nicht sichtbar in App | `LIBRESPOT_DISABLE_CREDENTIAL_CACHE` auskommentieren |
 | pygame border_radius Fehler | pygame 1.9.6 — bereits behoben |
-| GIL-Fehler | kein threading verwendet — bereits behoben |
 | WLAN nach Reboot aus | rfkill-unblock.service aktivieren |
-| Touch reagiert nicht | Hardware-Defekt möglich; GPIO-Buttons als Alternative |
+| Touch reagiert nicht | Hardware-Defekt möglich; USB-Tastatur als Alternative |
+| Raspotify startet ohne Internet | `network-online.target` in Service setzen |
 
 ---
 
@@ -274,10 +318,11 @@ hdmi_cvt=480 320 60 6 0 0 0
 ```bash
 # System
 sudo apt install python3-pygame python3-pip git mpv \
-  avahi-daemon bluez pulseaudio pulseaudio-module-bluetooth
+  avahi-daemon bluez pulseaudio pulseaudio-module-bluetooth \
+  rfkill wpasupplicant dhcpcd5
 
 # Python
-pip3 install mutagen
+pip3 install mutagen --break-system-packages
 ```
 
 ---
@@ -295,5 +340,5 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 - [ ] GPIO-Button Navigation (Key1-3)
 - [ ] BMW iDrive ESP32 Integration
 - [ ] USB-Tethering Autostart
-- [ ] OTA Updates via GitHub
 - [ ] Hotspot-Modus
+- [ ] OTA Updates via GitHub
