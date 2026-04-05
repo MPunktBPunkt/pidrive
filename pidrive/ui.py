@@ -185,6 +185,11 @@ class SplitUI:
         draw_rect(self.screen, C_LEFT, (0, STATUS_H, LEFT_W, H - STATUS_H))
         pygame.draw.line(self.screen, C_DIVIDER,
                          (LEFT_W - 1, STATUS_H), (LEFT_W - 1, H), 1)
+
+        # Clipping: linke Spalte darf nicht in rechte hineinragen
+        clip_rect = pygame.Rect(0, STATUS_H, LEFT_W - 2, H - STATUS_H)
+        self.screen.set_clip(clip_rect)
+
         y = STATUS_H
         for i, cat in enumerate(self.categories):
             is_sel = (i == self.cat_sel)
@@ -195,12 +200,15 @@ class SplitUI:
                 draw_rect(self.screen, C_LEFT, (0, y, LEFT_W - 1, CAT_IH))
             txt_col = C_WHITE if is_sel else C_GRAY
             lbl = get_font(12, bold=is_sel).render(cat.label, True, txt_col)
-            self.screen.blit(lbl, (LEFT_W//2 - lbl.get_width()//2,
-                                    y + CAT_IH//2 - lbl.get_height()//2))
+            lx = max(2, LEFT_W//2 - lbl.get_width()//2)
+            self.screen.blit(lbl, (lx, y + CAT_IH//2 - lbl.get_height()//2))
             if not is_sel:
                 pygame.draw.line(self.screen, C_DIVIDER,
                                  (6, y + CAT_IH - 1), (LEFT_W - 8, y + CAT_IH - 1), 1)
             y += CAT_IH
+
+        # Clipping wieder aufheben
+        self.screen.set_clip(None)
 
     def _draw_right(self):
         rx, rw = LEFT_W, RIGHT_W
