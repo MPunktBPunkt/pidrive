@@ -46,6 +46,7 @@ def play_station(station, S):
             stderr=subprocess.DEVNULL
         )
         S["radio_playing"] = True
+        S["radio_type"] = "WEB"
         S["radio_station"] = station["name"]
     except FileNotFoundError:
         # mpv nicht installiert
