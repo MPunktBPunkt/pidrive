@@ -1,0 +1,22 @@
+# /boot/config.txt Beispiel fuer PiDrive
+# Raspberry Pi 3B + Joy-IT TFT3.5
+
+dtparam=audio=on
+camera_auto_detect=0
+display_auto_detect=0
+max_framebuffers=2
+disable_overscan=1
+
+[pi4]
+arm_boost=1
+
+[all]
+dtparam=spi=on
+dtparam=i2c_arm=on
+enable_uart=1
+dtoverlay=tft35a:rotate=90
+hdmi_force_hotplug=1
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt=480 320 60 6 0 0 0
+hdmi_drive=2

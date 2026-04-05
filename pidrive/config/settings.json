@@ -1,0 +1,11 @@
+{
+  "device_name": "PiDrive",
+  "music_path": "/home/pi/Musik",
+  "volume": 90,
+  "display_brightness": 100,
+  "audio_output": "auto",
+  "spotify_enabled": true,
+  "webradio_enabled": true,
+  "dabfm_enabled": false,
+  "theme": "dark"
+}
