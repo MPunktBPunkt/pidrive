@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.3.1-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.2-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -69,6 +69,14 @@ sudo bash install.sh
 git clone https://github.com/goodtft/LCD-show ~/LCD-show
 cd ~/LCD-show && sudo ./LCD35-show
 # Pi startet automatisch neu
+```
+
+### Spotify Name in Raspotify setzen
+
+```bash
+sudo nano /etc/raspotify/conf
+# LIBRESPOT_NAME="PiDrive"
+sudo systemctl restart raspotify
 ```
 
 ### Spotify OAuth einrichten (einmalig)
@@ -321,6 +329,7 @@ Vollständige Konfiguration: `config.txt.example`
 | WLAN nach Reboot aus | rfkill-unblock.service aktivieren |
 | Touch reagiert nicht | Hardware-Defekt; USB-Tastatur als Alternative |
 | Raspotify startet ohne Internet | `network-online.target` in Service |
+| Konsole überlagert Display | stdout von Service auf null | `StandardOutput=null` im Service |
 | USB-Tastatur reagiert nicht | `sudo chvt 3` (wird automatisch via Service gesetzt) |
 
 ---
@@ -343,6 +352,11 @@ sudo apt install welle.io
 ---
 
 ## Changelog
+
+### v0.3.2
+- Konsole überlagert nicht mehr das Display (`StandardOutput=null`)
+- Spotify Name korrekt auf "PiDrive" (statt FakeIpod)
+- pidrive.service: `StandardOutput=null`, `StandardError=journal`
 
 ### v0.3.1
 - UI-Fix: Kategorie-Text läuft nicht mehr in rechte Spalte

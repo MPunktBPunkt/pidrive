@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.3.1
+# PiDrive — Kontext & Projektdokumentation v0.3.2
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.1)
+    ├── VERSION              (aktuell: 0.3.2)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -191,6 +191,8 @@ ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
 Restart=always
 RestartSec=5
 StandardInput=tty
+StandardOutput=null             # Kein Konsolen-Overlay auf Display
+StandardError=journal           # Fehler weiterhin in journald
 TTYPath=/dev/tty3
 TTYReset=yes
 TTYVHangup=yes
@@ -224,7 +226,7 @@ ssh -L 5588:127.0.0.1:5588 pi@<IP> -N
 ### raspotify Konfiguration (`/etc/raspotify/conf`)
 
 ```bash
-LIBRESPOT_NAME="PiDrive"
+LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod!
 LIBRESPOT_BITRATE=320
 LIBRESPOT_DISABLE_AUDIO_CACHE=
 #LIBRESPOT_DISABLE_CREDENTIAL_CACHE=   # AUSKOMMENTIERT - sonst kein Login!
@@ -382,6 +384,8 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 | WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
 | Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
 | Tastatur reagiert nicht | falscher TTY | chvt 3 (im Service) |
+| Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
+| Spotify zeigt FakeIpod | alter Name in conf | LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod! |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
@@ -390,7 +394,7 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 
 ## Changelog
 
-### v0.3.1 (aktuell)
+### v0.3.2 (aktuell)
 - UI-Fix: eigene Surface fuer linke Spalte (kein Text-Ueberlauf mehr)
 - USB-Tastatur: chvt 3 automatisch via Service
 - pidrive.service im systemd/ Ordner des Repos

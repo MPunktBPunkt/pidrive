@@ -187,6 +187,12 @@ ok "Spotify onevent Script"
 
 if [ -f /etc/raspotify/conf ]; then
     sed -i 's/^LIBRESPOT_DISABLE_CREDENTIAL_CACHE=/#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=/' /etc/raspotify/conf
+    # Name sicherstellen (kein FakeIpod)
+    if grep -q "LIBRESPOT_NAME" /etc/raspotify/conf; then
+        sed -i 's/^LIBRESPOT_NAME=.*/LIBRESPOT_NAME="PiDrive"/' /etc/raspotify/conf
+    else
+        echo 'LIBRESPOT_NAME="PiDrive"' >> /etc/raspotify/conf
+    fi
     grep -q "^LIBRESPOT_ONEVENT" /etc/raspotify/conf || \
         echo "LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh" >> /etc/raspotify/conf
     if [ -f /lib/systemd/system/raspotify.service ]; then
