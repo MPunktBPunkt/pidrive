@@ -182,38 +182,33 @@ class SplitUI:
         # Kein pygame.display.flip() hier — wird in main.py gemacht
 
     def _draw_left(self):
-        """Linke Spalte mit Subsurface — verhindert Ueberlaufen in rechte Spalte."""
-        # Hintergrund der gesamten linken Spalte
-        draw_rect(self.screen, C_LEFT, (0, STATUS_H, LEFT_W, H - STATUS_H))
-        pygame.draw.line(self.screen, C_DIVIDER,
-                         (LEFT_W - 1, STATUS_H), (LEFT_W - 1, H), 1)
+        """Linke Spalte auf eigener Surface — kein Ueberlaufen in rechte Spalte."""
+        surf = pygame.Surface((LEFT_W - 1, H - STATUS_H))
+        surf.fill(C_LEFT)
 
-        # Subsurface: zeichnen ist auf linke Spalte begrenzt
-        sub = self.screen.subsurface(
-            pygame.Rect(0, STATUS_H, LEFT_W - 1, H - STATUS_H))
-
-        y_offset = 0
+        y = 0
         for i, cat in enumerate(self.categories):
             is_sel = (i == self.cat_sel)
-            r = pygame.Rect(0, y_offset, LEFT_W - 1, CAT_IH)
-
+            r = pygame.Rect(0, y, LEFT_W - 1, CAT_IH)
             if is_sel:
-                sub.fill(cat.color, r)
-                sub.fill(C_WHITE, pygame.Rect(LEFT_W - 4, y_offset, 3, CAT_IH))
+                surf.fill(cat.color, r)
+                surf.fill(C_WHITE, pygame.Rect(LEFT_W - 4, y, 3, CAT_IH))
             else:
-                sub.fill(C_LEFT, r)
-
+                surf.fill(C_LEFT, r)
             txt_col = C_WHITE if is_sel else C_GRAY
             lbl = get_font(12, bold=is_sel).render(cat.label, True, txt_col)
             lx = max(2, (LEFT_W - 1)//2 - lbl.get_width()//2)
-            ly = y_offset + CAT_IH//2 - lbl.get_height()//2
-            sub.blit(lbl, (lx, ly))
-
+            ly = y + CAT_IH//2 - lbl.get_height()//2
+            surf.blit(lbl, (lx, ly))
             if not is_sel:
-                pygame.draw.line(sub, C_DIVIDER,
-                                 (6, y_offset + CAT_IH - 1),
-                                 (LEFT_W - 9, y_offset + CAT_IH - 1), 1)
-            y_offset += CAT_IH
+                pygame.draw.line(surf, C_DIVIDER,
+                                 (6, y + CAT_IH - 1),
+                                 (LEFT_W - 9, y + CAT_IH - 1), 1)
+            y += CAT_IH
+
+        self.screen.blit(surf, (0, STATUS_H))
+        pygame.draw.line(self.screen, C_DIVIDER,
+                         (LEFT_W - 1, STATUS_H), (LEFT_W - 1, H), 1)
 
     def _draw_right(self):
         rx, rw = LEFT_W, RIGHT_W
