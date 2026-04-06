@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.2)
+    ├── VERSION              (aktuell: 0.3.3)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -186,7 +186,6 @@ Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
 ExecStartPre=/bin/sleep 5
-ExecStartPre=/bin/chvt 3        # USB-Tastatur auf tty3 umleiten
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
 Restart=always
 RestartSec=5
@@ -230,6 +229,8 @@ LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod!
 LIBRESPOT_BITRATE=320
 LIBRESPOT_DISABLE_AUDIO_CACHE=
 #LIBRESPOT_DISABLE_CREDENTIAL_CACHE=   # AUSKOMMENTIERT - sonst kein Login!
+LIBRESPOT_BACKEND=alsa
+LIBRESPOT_DEVICE=hw:1,0
 LIBRESPOT_ENABLE_VOLUME_NORMALISATION=
 LIBRESPOT_SYSTEM_CACHE=/var/cache/raspotify
 LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh
@@ -385,6 +386,8 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 | Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
 | Tastatur reagiert nicht | falscher TTY | chvt 3 (im Service) |
 | Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
+| PiDrive Restart-Schleife | chvt 3 sendet HUP | ExecStartPre=/bin/chvt 3 aus Service entfernen |
+| Spotify spielt nicht | PulseAudio nicht erreichbar | LIBRESPOT_BACKEND=alsa + DEVICE=hw:1,0 |
 | Spotify zeigt FakeIpod | alter Name in conf | LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod! |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
@@ -394,7 +397,7 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 
 ## Changelog
 
-### v0.3.2 (aktuell)
+### v0.3.3 (aktuell)
 - UI-Fix: eigene Surface fuer linke Spalte (kein Text-Ueberlauf mehr)
 - USB-Tastatur: chvt 3 automatisch via Service
 - pidrive.service im systemd/ Ordner des Repos

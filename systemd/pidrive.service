@@ -10,7 +10,6 @@ Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
 ExecStartPre=/bin/sleep 5
-ExecStartPre=/bin/chvt 3
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
 Restart=always
 RestartSec=5

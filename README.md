@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.3.2-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.3-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -112,6 +112,14 @@ sudo systemctl restart pidrive
 ```
 
 Oder direkt im Menü: **System → Update → Update installieren**
+
+**Hinweis nach Service-Änderungen** (z.B. neue `pidrive.service`):
+```bash
+cd ~/pidrive && git pull
+sudo cp ~/pidrive/systemd/pidrive.service /etc/systemd/system/pidrive.service
+sudo systemctl daemon-reload
+sudo systemctl restart pidrive
+```
 
 ---
 
@@ -329,6 +337,8 @@ Vollständige Konfiguration: `config.txt.example`
 | WLAN nach Reboot aus | rfkill-unblock.service aktivieren |
 | Touch reagiert nicht | Hardware-Defekt; USB-Tastatur als Alternative |
 | Raspotify startet ohne Internet | `network-online.target` in Service |
+| Spotify spielt nicht | PulseAudio nicht erreichbar | `LIBRESPOT_BACKEND=alsa` + `LIBRESPOT_DEVICE=hw:1,0` |
+| PiDrive Restart-Schleife | `chvt 3` sendet HUP-Signal | `ExecStartPre=/bin/chvt 3` aus Service entfernen |
 | Konsole überlagert Display | stdout von Service auf null | `StandardOutput=null` im Service |
 | USB-Tastatur reagiert nicht | `sudo chvt 3` (wird automatisch via Service gesetzt) |
 
@@ -352,6 +362,12 @@ sudo apt install welle.io
 ---
 
 ## Changelog
+
+### v0.3.3
+- Bugfix: `chvt 3` aus Service entfernt (verursachte HUP-Signal Restart-Schleife)
+- chvt 3 läuft weiterhin via rc.local beim Boot
+- Spotify: ALSA Backend (`hw:1,0`) statt PulseAudio
+- Raspotify: `ProtectHome=false`, `PrivateUsers=false`
 
 ### v0.3.2
 - Konsole überlagert nicht mehr das Display (`StandardOutput=null`)
