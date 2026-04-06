@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.3.3-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.4-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -112,6 +112,11 @@ sudo systemctl restart pidrive
 ```
 
 Oder direkt im Menü: **System → Update → Update installieren**
+
+**Manueller Neustart** (beim Entwickeln):
+```bash
+sudo chvt 3 && sudo systemctl restart pidrive
+```
 
 **Hinweis nach Service-Änderungen** (z.B. neue `pidrive.service`):
 ```bash
@@ -338,7 +343,7 @@ Vollständige Konfiguration: `config.txt.example`
 | Touch reagiert nicht | Hardware-Defekt; USB-Tastatur als Alternative |
 | Raspotify startet ohne Internet | `network-online.target` in Service |
 | Spotify spielt nicht | PulseAudio nicht erreichbar | `LIBRESPOT_BACKEND=alsa` + `LIBRESPOT_DEVICE=hw:1,0` |
-| PiDrive Restart-Schleife | `chvt 3` sendet HUP-Signal | `ExecStartPre=/bin/chvt 3` aus Service entfernen |
+| PiDrive Restart-Schleife | tty3 nicht aktiv | `After=rc-local.service` im Service; manuell: `sudo chvt 3 && sudo systemctl restart pidrive` |
 | Konsole überlagert Display | stdout von Service auf null | `StandardOutput=null` im Service |
 | USB-Tastatur reagiert nicht | `sudo chvt 3` (wird automatisch via Service gesetzt) |
 
@@ -362,6 +367,12 @@ sudo apt install welle.io
 ---
 
 ## Changelog
+
+### v0.3.4
+- Startup: 8s Warte-Zeit in main.py (statt ExecStartPre sleep)
+- Service: `After=rc-local.service` - chvt 3 laeuft garantiert zuerst
+- Mehr Logging beim Start (TTY, Framebuffer, Display-Fehler-Hinweis)
+- Manueller Neustart: `sudo chvt 3 && sudo systemctl restart pidrive`
 
 ### v0.3.3
 - Bugfix: `chvt 3` aus Service entfernt (verursachte HUP-Signal Restart-Schleife)

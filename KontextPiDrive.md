@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.3)
+    ├── VERSION              (aktuell: 0.3.4)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -176,7 +176,7 @@ pygame.display.flip()
 ```ini
 [Unit]
 Description=PiDrive - Car Infotainment
-After=multi-user.target
+After=multi-user.target rc-local.service
 
 [Service]
 Type=simple
@@ -386,7 +386,7 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 | Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
 | Tastatur reagiert nicht | falscher TTY | chvt 3 (im Service) |
 | Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
-| PiDrive Restart-Schleife | chvt 3 sendet HUP | ExecStartPre=/bin/chvt 3 aus Service entfernen |
+| PiDrive Restart-Schleife | tty3 nicht aktiv | After=rc-local.service + manuell: sudo chvt 3 && systemctl restart pidrive |
 | Spotify spielt nicht | PulseAudio nicht erreichbar | LIBRESPOT_BACKEND=alsa + DEVICE=hw:1,0 |
 | Spotify zeigt FakeIpod | alter Name in conf | LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod! |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
@@ -397,7 +397,7 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 
 ## Changelog
 
-### v0.3.3 (aktuell)
+### v0.3.4 (aktuell)
 - UI-Fix: eigene Surface fuer linke Spalte (kein Text-Ueberlauf mehr)
 - USB-Tastatur: chvt 3 automatisch via Service
 - pidrive.service im systemd/ Ordner des Repos

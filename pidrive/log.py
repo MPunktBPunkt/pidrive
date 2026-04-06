@@ -62,8 +62,16 @@ def setup(level=logging.DEBUG):
     sh.setLevel(logging.INFO)   # Konsole: nur INFO+
     _logger.addHandler(sh)
 
+    import subprocess, os
+    try:
+        tty = subprocess.run("tty", capture_output=True, text=True).stdout.strip()
+    except:
+        tty = "unbekannt"
     _logger.info("=" * 50)
     _logger.info("PiDrive gestartet")
+    _logger.info(f"  TTY:     {tty}")
+    _logger.info(f"  FB:      {os.environ.get('SDL_FBDEV', '-')}")
+    _logger.info(f"  Driver:  {os.environ.get('SDL_VIDEODRIVER', '-')}")
     _logger.info("=" * 50)
 
     return _logger

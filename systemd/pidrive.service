@@ -1,6 +1,6 @@
 [Unit]
 Description=PiDrive - Car Infotainment
-After=multi-user.target
+After=multi-user.target rc-local.service
 
 [Service]
 Type=simple

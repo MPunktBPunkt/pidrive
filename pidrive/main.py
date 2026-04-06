@@ -131,14 +131,25 @@ def handle_key(ui, key, S, settings):
         log.menu_change(ui.categories[cat_before].label, cat_name, item_name)
 
 def main():
-    log.info("pygame initialisieren...")
+    log.info("=" * 40)
+    log.info(f"PiDrive startet - warte auf TTY + Display...")
+    log.info(f"TTY:     /dev/tty3")
+    log.info(f"Display: SDL_FBDEV={os.environ.get('SDL_FBDEV')}")
+    log.info("=" * 40)
+
+    # Warten bis rc.local (chvt 3) fertig ist und tty3 aktiv ist
+    time.sleep(8)
+    log.info("Warte-Zeit abgelaufen - starte pygame...")
+
     pygame.init()
+    log.info("pygame init OK")
 
     try:
         real = pygame.display.set_mode((FB_W, FB_H))
-        log.info(f"Framebuffer: {FB_W}x{FB_H}")
+        log.info(f"Framebuffer: {FB_W}x{FB_H} OK")
     except Exception as e:
         log.error(f"Display-Fehler: {e}")
+        log.error("Hinweis: sudo chvt 3 ausfuehren und Service neu starten")
         sys.exit(1)
 
     virt = pygame.Surface((W, H))
