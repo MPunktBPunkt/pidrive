@@ -32,6 +32,87 @@ from modules import (musik, wifi, bluetooth, audio, system,
 
 logger = log.setup()
 
+# ── System-Check ──────────────────────────────────────────────
+def system_check():
+    """Prueft ob alle Voraussetzungen erfuellt sind."""
+    import subprocess
+    ok = True
+
+    log.info("--- System-Check ---")
+
+    # Framebuffer
+    if os.path.exists("/dev/fb0"):
+        log.info("  ✓ /dev/fb0 vorhanden")
+    else:
+        log.error("  ✗ /dev/fb0 fehlt! Display-Treiber installiert?")
+        ok = False
+
+    # fbcp (Framebuffer Copy Service)
+    try:
+        r = subprocess.run("pgrep fbcp", shell=True,
+                          capture_output=True, text=True)
+        if r.returncode == 0:
+            log.info("  ✓ fbcp laeuft")
+        else:
+            log.warn("  ⚠ fbcp laeuft nicht (SPI Display evtl. dunkel)")
+    except Exception:
+        pass
+
+    # TTY3 aktiv
+    try:
+        r = subprocess.run("fgconsole", shell=True,
+                          capture_output=True, text=True, timeout=2)
+        tty_nr = r.stdout.strip()
+        if tty_nr == "3":
+            log.info(f"  ✓ tty3 aktiv (fgconsole={tty_nr})")
+        else:
+            log.warn(f"  ⚠ tty{tty_nr} aktiv, erwartet tty3")
+            log.warn("    Tastatur evtl. nicht erreichbar")
+    except Exception:
+        log.warn("  ⚠ fgconsole nicht verfuegbar")
+
+    # pygame
+    try:
+        import pygame
+        log.info(f"  ✓ pygame {pygame.version.ver}")
+    except Exception as e:
+        log.error(f"  ✗ pygame fehlt: {e}")
+        ok = False
+
+    # Raspotify
+    try:
+        r = subprocess.run("systemctl is-active raspotify",
+                          shell=True, capture_output=True, text=True)
+        status = r.stdout.strip()
+        if status == "active":
+            log.info("  ✓ raspotify laeuft")
+        else:
+            log.warn(f"  ⚠ raspotify: {status}")
+    except Exception:
+        pass
+
+    # WLAN
+    try:
+        r = subprocess.run("ip a show wlan0",
+                          shell=True, capture_output=True, text=True)
+        if "inet " in r.stdout:
+            ip = [l.split()[1] for l in r.stdout.splitlines()
+                  if "inet " in l][0]
+            log.info(f"  ✓ WLAN verbunden: {ip}")
+        else:
+            log.warn("  ⚠ WLAN nicht verbunden")
+    except Exception:
+        pass
+
+    # Logfile schreibbar
+    if os.access("/var/log/pidrive", os.W_OK):
+        log.info("  ✓ Log-Verzeichnis schreibbar")
+    else:
+        log.warn("  ⚠ Log-Verzeichnis nicht schreibbar")
+
+    log.info(f"--- System-Check {'OK' if ok else 'FEHLER'} ---")
+    return ok
+
 SETTINGS_FILE = os.path.join(BASE_DIR, "config/settings.json")
 
 def load_settings():
@@ -131,6 +212,9 @@ def handle_key(ui, key, S, settings):
         log.menu_change(ui.categories[cat_before].label, cat_name, item_name)
 
 def main():
+    # System-Check vor dem Start
+    system_check()
+
     log.info("=" * 40)
     log.info(f"PiDrive startet - warte auf TTY + Display...")
     log.info(f"TTY:     /dev/tty3")
