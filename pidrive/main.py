@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.3.0
+main.py - PiDrive Hauptprogramm v0.3.6
 Raspberry Pi Car Infotainment - GPL-v3
-
-Start:    python3 main.py
-Service:  sudo systemctl start pidrive
-Logs:     tail -f /var/log/pidrive/pidrive.log
-Tastatur: USB (Pfeiltasten+Enter+ESC) oder SSH via pidrive_ctrl.py
 """
 
 import pygame
@@ -37,8 +32,15 @@ def system_check():
     """Prueft ob alle Voraussetzungen erfuellt sind."""
     import subprocess
     ok = True
-
     log.info("--- System-Check ---")
+
+    # Version
+    try:
+        with open(os.path.join(BASE_DIR, "VERSION")) as f:
+            ver = f.read().strip()
+        log.info(f"  ✓ PiDrive Version: {ver}")
+    except Exception:
+        log.warn("  ⚠ VERSION Datei nicht lesbar")
 
     # Framebuffer
     if os.path.exists("/dev/fb0"):
@@ -47,33 +49,52 @@ def system_check():
         log.error("  ✗ /dev/fb0 fehlt! Display-Treiber installiert?")
         ok = False
 
-    # fbcp (Framebuffer Copy Service)
+    # fb0 lesbar?
+    if os.access("/dev/fb0", os.R_OK | os.W_OK):
+        log.info("  ✓ /dev/fb0 les/schreibbar")
+    else:
+        log.warn("  ⚠ /dev/fb0 keine Berechtigung (Gruppe video?)")
+
+    # fbcp
     try:
         r = subprocess.run("pgrep fbcp", shell=True,
-                          capture_output=True, text=True)
+                           capture_output=True, text=True)
         if r.returncode == 0:
             log.info("  ✓ fbcp laeuft")
         else:
-            log.warn("  ⚠ fbcp laeuft nicht (SPI Display evtl. dunkel)")
+            log.warn("  ⚠ fbcp laeuft nicht (SPI Display dunkel)")
     except Exception:
         pass
 
-    # TTY3 aktiv
+    # tty3 aktiv?
     try:
         r = subprocess.run("fgconsole", shell=True,
-                          capture_output=True, text=True, timeout=2)
+                           capture_output=True, text=True, timeout=2)
         tty_nr = r.stdout.strip()
         if tty_nr == "3":
-            log.info(f"  ✓ tty3 aktiv (fgconsole={tty_nr})")
+            log.info(f"  ✓ tty3 aktiv")
         else:
-            log.warn(f"  ⚠ tty{tty_nr} aktiv, erwartet tty3")
-            log.warn("    Tastatur evtl. nicht erreichbar")
+            log.warn(f"  ⚠ tty{tty_nr} aktiv (erwartet: 3) - chvt 3 noetig")
     except Exception:
         log.warn("  ⚠ fgconsole nicht verfuegbar")
 
+    # /dev/tty3 vorhanden?
+    if os.path.exists("/dev/tty3"):
+        log.info("  ✓ /dev/tty3 vorhanden")
+        if os.access("/dev/tty3", os.R_OK | os.W_OK):
+            log.info("  ✓ /dev/tty3 Berechtigung OK")
+        else:
+            log.warn("  ⚠ /dev/tty3 keine Berechtigung")
+    else:
+        log.error("  ✗ /dev/tty3 fehlt!")
+        ok = False
+
+    # SDL Umgebung
+    log.info(f"  ✓ SDL_FBDEV={os.environ.get('SDL_FBDEV', '-')}")
+    log.info(f"  ✓ SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER', '-')}")
+
     # pygame
     try:
-        import pygame
         log.info(f"  ✓ pygame {pygame.version.ver}")
     except Exception as e:
         log.error(f"  ✗ pygame fehlt: {e}")
@@ -82,7 +103,7 @@ def system_check():
     # Raspotify
     try:
         r = subprocess.run("systemctl is-active raspotify",
-                          shell=True, capture_output=True, text=True)
+                           shell=True, capture_output=True, text=True)
         status = r.stdout.strip()
         if status == "active":
             log.info("  ✓ raspotify laeuft")
@@ -94,21 +115,21 @@ def system_check():
     # WLAN
     try:
         r = subprocess.run("ip a show wlan0",
-                          shell=True, capture_output=True, text=True)
+                           shell=True, capture_output=True, text=True)
         if "inet " in r.stdout:
             ip = [l.split()[1] for l in r.stdout.splitlines()
                   if "inet " in l][0]
-            log.info(f"  ✓ WLAN verbunden: {ip}")
+            log.info(f"  ✓ WLAN: {ip}")
         else:
             log.warn("  ⚠ WLAN nicht verbunden")
     except Exception:
         pass
 
-    # Logfile schreibbar
+    # Log schreibbar
     if os.access("/var/log/pidrive", os.W_OK):
         log.info("  ✓ Log-Verzeichnis schreibbar")
     else:
-        log.warn("  ⚠ Log-Verzeichnis nicht schreibbar")
+        log.warn("  ⚠ Log nicht schreibbar")
 
     log.info(f"--- System-Check {'OK' if ok else 'FEHLER'} ---")
     return ok
@@ -119,7 +140,7 @@ def load_settings():
     try:
         with open(SETTINGS_FILE) as f:
             s = json.load(f)
-            log.info(f"Settings geladen")
+            log.info("Settings geladen")
             return s
     except Exception as e:
         log.warn(f"Settings Defaults ({e})")
@@ -146,7 +167,6 @@ KEY_NAMES = {
 
 def build_menu(screen, S, settings):
     log.info("Menue aufbauen...")
-
     musik_items = musik.build_category(screen, S, settings)
     musik_items += [
         Item("Bibliothek",
@@ -166,18 +186,15 @@ def build_menu(screen, S, settings):
                          if S.get("radio_type") == "FM" else "UKW",
              submenu=fm.build_items(screen, S, settings)),
     ]
-
     system_items = (audio.build_items(screen, S, settings) +
                     system.build_items(screen, S, settings) +
                     update.build_items(screen, S, settings))
-
     categories = [
         Category("Musik",     C_PURPLE,  musik_items),
         Category("WiFi",      C_BLUE,    wifi.build_items(screen, S, settings)),
         Category("Bluetooth", C_BT_BLUE, bluetooth.build_items(screen, S, settings)),
         Category("System",    C_ORANGE,  system_items),
     ]
-
     log.info(f"Menue: {len(categories)} Kategorien")
     ui = SplitUI(screen, categories, S, settings)
     ui.settings = settings
@@ -186,10 +203,8 @@ def build_menu(screen, S, settings):
 def handle_key(ui, key, S, settings):
     name = KEY_NAMES.get(key, f"KEY_{key}")
     log.key_event(name)
-
     cat_before  = ui.cat_sel
     item_before = ui.item_sel
-
     if key in (pygame.K_UP, pygame.K_w):        ui.key_up()
     elif key in (pygame.K_DOWN, pygame.K_s):     ui.key_down()
     elif key in (pygame.K_RETURN, pygame.K_KP_ENTER,
@@ -204,7 +219,6 @@ def handle_key(ui, key, S, settings):
         trigger._handle("audio_bt", ui, S_module, settings)
     elif key == pygame.K_F4:
         trigger._handle("audio_all", ui, S_module, settings)
-
     if ui.cat_sel != cat_before or ui.item_sel != item_before:
         cat_name  = ui.categories[ui.cat_sel].label
         items     = ui._items()
@@ -212,50 +226,57 @@ def handle_key(ui, key, S, settings):
         log.menu_change(ui.categories[cat_before].label, cat_name, item_name)
 
 def main():
-    # System-Check vor dem Start
+    # System-Check
     system_check()
 
-    log.info("=" * 40)
-    log.info(f"PiDrive startet - warte auf TTY + Display...")
-    log.info(f"TTY:     /dev/tty3")
-    log.info(f"Display: SDL_FBDEV={os.environ.get('SDL_FBDEV')}")
-    log.info("=" * 40)
-
-    # Warten bis rc.local (chvt 3) fertig ist und tty3 aktiv ist
-    time.sleep(8)
-    log.info("Warte-Zeit abgelaufen - starte pygame...")
-
+    # pygame initialisieren
+    # HINWEIS: ExecStartPre=/bin/sleep 5 im Service gibt systemd Zeit
+    # tty3 korrekt einzurichten BEVOR main.py startet.
+    # Kein zusaetzlicher sleep hier noetig.
+    log.info("pygame.init() ...")
     pygame.init()
-    log.info("pygame init OK")
+    log.info("pygame.init() OK")
 
+    log.info("pygame.display.set_mode() ...")
     try:
         real = pygame.display.set_mode((FB_W, FB_H))
-        log.info(f"Framebuffer: {FB_W}x{FB_H} OK")
+        log.info(f"Display: {FB_W}x{FB_H} OK")
     except Exception as e:
         log.error(f"Display-Fehler: {e}")
-        log.error("Hinweis: sudo chvt 3 ausfuehren und Service neu starten")
+        log.error("Moegliche Ursachen:")
+        log.error("  1. tty3 nicht aktiv -> sudo chvt 3")
+        log.error("  2. fbcon nicht geladen")
+        log.error("  3. Keine Berechtigung auf /dev/fb0")
         sys.exit(1)
 
     virt = pygame.Surface((W, H))
     pygame.mouse.set_visible(False)
+    log.info("Display initialisiert")
 
     settings = load_settings()
     S_module.refresh(force=True)
     S = S_module.S
-    S["radio_type"] = ""  # WEB / DAB / FM
+    S["radio_type"] = ""
     log.status_update(S["wifi"], S["bt"], S["spotify"],
                       settings.get("audio_output", "auto"))
 
     ui = build_menu(virt, S, settings)
+    log.info("Menue bereit")
+
     clock      = pygame.time.Clock()
     t_dn       = None
     t_t        = 0
     save_timer = time.time()
     stat_timer = time.time()
 
-    log.info("PiDrive v0.3.0 bereit")
-    log.info("USB-Tastatur: Pfeiltasten + Enter + ESC")
-    log.info(f"File-Trigger: echo 'cmd' > /tmp/pidrive_cmd")
+    try:
+        with open(os.path.join(BASE_DIR, "VERSION")) as f:
+            ver = f.read().strip()
+    except Exception:
+        ver = "?"
+    log.info(f"PiDrive v{ver} laeuft!")
+    log.info("Tastatur: Pfeiltasten + Enter + ESC")
+    log.info("Trigger:  echo 'cmd' > /tmp/pidrive_cmd")
 
     while True:
         S_module.refresh()
@@ -283,15 +304,12 @@ def main():
             if ev.type == pygame.QUIT:
                 save_settings(settings)
                 pygame.quit(); sys.exit()
-
             if ev.type == pygame.KEYDOWN:
                 handle_key(ui, ev.key, S, settings)
-
             if ev.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
                 t_dn = (int(ev.x * FB_W), int(ev.y * FB_H)) \
                        if ev.type == pygame.FINGERDOWN else ev.pos
                 t_t = time.time()
-
             if ev.type in (pygame.MOUSEBUTTONUP, pygame.FINGERUP):
                 if t_dn:
                     end = (int(ev.x * FB_W), int(ev.y * FB_H)) \
@@ -306,16 +324,15 @@ def main():
                     else:
                         ui.touch(vx, vy)
                     t_dn = None
-
         clock.tick(30)
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        log.info("PiDrive beendet")
+        log.info("PiDrive beendet (KeyboardInterrupt)")
     except Exception as e:
-        log.error(f"Fehler: {e}")
+        log.error(f"Unbehandelter Fehler: {e}")
         import traceback
         log.error(traceback.format_exc())
         raise

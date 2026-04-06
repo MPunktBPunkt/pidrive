@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.5)
+    ├── VERSION              (aktuell: 0.3.6)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -397,7 +397,7 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 
 ## Changelog
 
-### v0.3.5 (aktuell)
+### v0.3.6 (aktuell)
 - UI-Fix: eigene Surface fuer linke Spalte (kein Text-Ueberlauf mehr)
 - USB-Tastatur: chvt 3 automatisch via Service
 - pidrive.service im systemd/ Ordner des Repos
