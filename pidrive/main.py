@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.4.0
+main.py - PiDrive Hauptprogramm v0.4.1
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -343,24 +343,58 @@ def main():
     # System-Check
     system_check()
 
-    # pygame initialisieren
-    # SDL_AUDIODRIVER=dummy (oben gesetzt) verhindert dass SDL versucht
-    # ALSA/hw:1,0 zu oeffnen — das wuerde exit(0) ausloesen wenn
-    # raspotify das Device bereits belegt haelt.
-    # Mit dummy-Audio-Treiber kann pygame.init() vollstaendig durchlaufen.
-    log.info("pygame.init() ...")
-    pygame.init()
-    log.info("pygame.init() OK")
+    # ── Signal-Handler registrieren ──────────────────────────────────────────
+    # SIGHUP (1) = das Signal das SDL zum exit(0) bringt
+    # Wir fangen es ab um es im Log sichtbar zu machen statt still zu sterben
+    import signal as _signal
+    def _sighup_handler(signum, frame):
+        log.error("SIGHUP empfangen! SDL/VT sendet HUP — Prozess wuerde sterben.")
+        log.error("  -> TIOCSCTTY war aktiv und VT3 hat HUP ausgeloest.")
+        log.error("  -> v0.4.1 Fix: kein TIOCSCTTY mehr in launcher.py")
+        # Nicht beenden — nur loggen und weiter
+    _signal.signal(_signal.SIGHUP, _sighup_handler)
+    log.info("Signal-Handler: SIGHUP abgefangen (Debug v0.4.1)")
 
+    # ── pygame initialisieren ─────────────────────────────────────────────────
+    # SDL_AUDIODRIVER=dummy: verhindert ALSA-Konflikt mit raspotify
+    # Kein TIOCSCTTY in launcher.py: verhindert SIGHUP durch VT-Events
+    log.info("pygame.init() — Schritt 1: SDL Umgebung pruefen...")
+    log.info(f"  SDL_VIDEODRIVER = {os.environ.get('SDL_VIDEODRIVER', 'NICHT GESETZT')}")
+    log.info(f"  SDL_AUDIODRIVER = {os.environ.get('SDL_AUDIODRIVER', 'NICHT GESETZT')}")
+    log.info(f"  SDL_FBDEV       = {os.environ.get('SDL_FBDEV', 'NICHT GESETZT')}")
+
+    # Controlling Terminal Status vor pygame.init()
+    try:
+        _fd = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
+        os.close(_fd)
+        log.warn("pygame.init() — WARNUNG: Controlling Terminal vorhanden!")
+        log.warn("  -> SIGHUP-Risiko durch VT_SETMODE(VT_PROCESS)")
+    except OSError:
+        log.info("pygame.init() — Schritt 2: kein Controlling Terminal (korrekt)")
+
+    log.info("pygame.init() — Schritt 3: pygame.init() aufrufen...")
+    try:
+        result = pygame.init()
+        log.info(f"pygame.init() OK — Module: {result[0]} OK, {result[1]} Fehler")
+        err = pygame.get_error()
+        if err:
+            log.warn(f"  pygame Fehler nach init: {err}")
+    except SystemExit as e:
+        log.error(f"pygame.init() -> SystemExit({e.code}) — SDL hat exit() aufgerufen!")
+        log.error("  Moegliche Ursachen:")
+        log.error("  1. SIGHUP durch Controlling Terminal (TIOCSCTTY)")
+        log.error("  2. VT_SETMODE(VT_PROCESS) fehlgeschlagen")
+        log.error("  3. /dev/tty3 nicht foreground")
+        raise
+
+    log.info("pygame.init() — Schritt 4: pygame.display.set_mode()...")
     try:
         real = pygame.display.set_mode((FB_W, FB_H))
-        log.info(f"Display: {FB_W}x{FB_H} OK")
+        log.info(f"Display: {FB_W}x{FB_H} OK — Treiber: {pygame.display.get_driver()}")
     except Exception as e:
         log.error(f"Display-Fehler: {e}")
-        log.error("Moegliche Ursachen:")
-        log.error("  1. tty3 nicht aktiv -> sudo chvt 3")
-        log.error("  2. fbcon nicht geladen")
-        log.error("  3. Keine Berechtigung auf /dev/fb0")
+        log.error("  SDL_VIDEODRIVER=fbcon braucht VT3 im Vordergrund")
+        log.error("  Pruefe: sudo chvt 3 && fgconsole")
         sys.exit(1)
 
     virt = pygame.Surface((W, H))

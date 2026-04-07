@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.4.0
+launcher.py - PiDrive TTY-Launcher v0.4.1
 Richtet /dev/tty3 als Controlling Terminal ein und startet main.py.
 Laeuft als root via systemd, gibt tty3-Kontext an main.py weiter.
 
@@ -145,8 +145,10 @@ TTY = "/dev/tty3"
 
 def setup_tty():
     """
-    Richtet /dev/tty3 als Controlling Terminal ein.
-    Danach zeigt open('/dev/tty') auf /dev/tty3 — genau was SDL/fbcon braucht.
+    Richtet /dev/tty3 als stdin ein und bringt VT3 in den Vordergrund.
+    KEIN TIOCSCTTY: SDL fbcon braucht kein Controlling Terminal, aber
+    VT_SETMODE(VT_PROCESS) schlaegt fehl wenn SIGHUP durch ctty-Zuweisung kommt.
+    Erkennntis v0.4.1: TIOCSCTTY verursacht SIGHUP -> exit in SDL. Weglassen!
     """
     linfo("--- TTY Setup ---")
 
@@ -160,53 +162,59 @@ def setup_tty():
     except Exception as e:
         lwarn(f"  ⚠ chvt 3 fehler: {e}")
 
-    # /dev/tty3 oeffnen (O_NOCTTY = noch NICHT als ctty setzen)
+    # ── Schritt 1: tty3 oeffnen ─────────────────────────────────────────────
+    # O_NOCTTY: NICHT als Controlling Terminal setzen (kein SIGHUP-Risiko!)
+    # v0.4.1 Erkenntnis: TIOCSCTTY fuehrt zu SIGHUP bei VT-Events
+    #   -> SDL VT_SETMODE(VT_PROCESS) stirbt dann mit exit(0)
+    #   -> Loesung: kein TIOCSCTTY, kein setsid(), nur O_NOCTTY + stdin
+    linfo("  Schritt 1: /dev/tty3 oeffnen (O_NOCTTY)...")
     try:
         fd = os.open(TTY, os.O_RDWR | os.O_NOCTTY)
         linfo(f"  ✓ {TTY} geoeffnet (fd={fd})")
     except OSError as e:
-        lerror(f"  ✗ {TTY} oeffnen fehlgeschlagen: {e.strerror}")
+        lerror(f"  ✗ {TTY} oeffnen fehlgeschlagen: {e.strerror} (errno {e.errno})")
         lerror("    Launcher kann nicht fortfahren.")
         sys.exit(1)
 
-    # Neue Session — macht diesen Prozess zum Session-Leader
+    # ── Schritt 2: stdin auf tty3 → USB-Tastatur-Input ───────────────────
+    linfo("  Schritt 2: stdin → /dev/tty3 (fuer USB-Tastatur)...")
     try:
-        os.setsid()
-        linfo(f"  ✓ setsid() OK (neue Session, SID={os.getsid(0)})")
+        os.dup2(fd, 0)
+        linfo(f"  ✓ stdin → {TTY}")
     except OSError as e:
-        lwarn(f"  ⚠ setsid() fehlgeschlagen: {e} (evtl. bereits Session-Leader)")
-
-    # TIOCSCTTY — tty3 als Controlling Terminal registrieren
-    # Danach: open("/dev/tty") == /dev/tty3
-    try:
-        fcntl.ioctl(fd, termios.TIOCSCTTY, 1)
-        linfo(f"  ✓ TIOCSCTTY: {TTY} ist jetzt Controlling Terminal")
-    except OSError as e:
-        lerror(f"  ✗ TIOCSCTTY fehlgeschlagen: {e.strerror} (errno {e.errno})")
-        lerror("    SDL wird 'Unable to open a console terminal' melden.")
+        lerror(f"  ✗ dup2 fehlgeschlagen: {e.strerror}")
         os.close(fd)
         sys.exit(1)
-
-    # tcsetpgrp — Prozess als foreground process group setzen
-    # PFLICHT fuer SDL VT_SETMODE(VT_PROCESS): Kernel prueft foreground pgid.
-    # Ohne diesen Aufruf ruft SDL fbcon intern exit(0) auf.
-    try:
-        os.tcsetpgrp(fd, os.getpgrp())
-        linfo(f"  ✓ tcsetpgrp: pgid={os.getpgrp()} ist foreground")
-    except OSError as e:
-        lwarn(f"  ⚠ tcsetpgrp: {e.strerror} — SDL koennte fehlschlagen")
-
-    # stdin auf tty3 — fuer USB-Tastatur-Input
-    os.dup2(fd, 0)
-    linfo(f"  ✓ stdin → {TTY}")
 
     if fd > 0:
         os.close(fd)
 
-    # Verifikation
+    # ── Schritt 3: Verifikation ──────────────────────────────────────────
+    linfo("  Schritt 3: Verifikation...")
     try:
-        ctty = os.readlink("/proc/self/fd/0")
-        linfo(f"  ✓ /proc/self/fd/0 → {ctty}")
+        fd0_target = os.readlink("/proc/self/fd/0")
+        linfo(f"  ✓ /proc/self/fd/0 → {fd0_target}")
+    except Exception as e:
+        lwarn(f"  ⚠ readlink fd/0: {e}")
+
+    # Kein Controlling Terminal prüfen (wollen wir nicht haben!)
+    try:
+        import fcntl as _fcntl
+        fd_ctty = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
+        os.close(fd_ctty)
+        lwarn("  ⚠ /dev/tty offen — Controlling Terminal vorhanden (unerwartet)")
+    except OSError:
+        linfo("  ✓ kein Controlling Terminal — korrekt fuer SDL fbcon (kein SIGHUP)")
+
+    # fgconsole noch einmal prüfen
+    try:
+        r = subprocess.run("fgconsole", shell=True,
+                           capture_output=True, text=True, timeout=2)
+        vt = r.stdout.strip()
+        if vt == "3":
+            linfo(f"  ✓ VT3 ist foreground — SDL kann zeichnen")
+        else:
+            lwarn(f"  ⚠ VT{vt} ist foreground (erwartet 3)")
     except Exception:
         pass
 

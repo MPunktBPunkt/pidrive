@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.4.0
+# PiDrive — Kontext & Projektdokumentation v0.4.1
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.4.0)
+    ├── VERSION              (aktuell: 0.4.1)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -144,6 +144,19 @@ hdmi_drive=2
 ```
 
 ---
+
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.4.1)
+
+SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
+Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
+bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
+SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
+
+Diagnose (v0.4.1):
+- Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
+- Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
+- Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
+- chvt 3 reicht: VT3 muss nur foreground sein, nicht Controlling Terminal
 
 ## SDL_AUDIODRIVER=dummy — Erklaerung
 
@@ -515,7 +528,7 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.4.0 (aktuell)
+### v0.4.1 (aktuell)
 - Kritischer Bugfix: pygame.init() durch pygame.display.init() + pygame.font.init() ersetzt
 - SDL exit(0) bei ALSA-Konflikt behoben (raspotify belegte hw:1,0)
 - scanner.py: PMR446 (8 Kanaele, 446 MHz), Freenet (4, 149 MHz), LPD433 (69, 433 MHz)
