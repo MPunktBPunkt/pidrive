@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.3.8
+main.py - PiDrive Hauptprogramm v0.4.0
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -13,9 +13,12 @@ import json
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-os.environ["SDL_FBDEV"]       = "/dev/fb0"
-os.environ["SDL_VIDEODRIVER"] = "fbcon"
-os.environ["SDL_NOMOUSE"]     = "1"
+os.environ["SDL_FBDEV"]        = "/dev/fb0"
+os.environ["SDL_VIDEODRIVER"]  = "fbcon"
+os.environ["SDL_NOMOUSE"]      = "1"
+os.environ["SDL_AUDIODRIVER"]  = "dummy"  # Verhindert ALSA-Konflikt mit raspotify
+                                           # SDL_Init(EVERYTHING) wuerde sonst exit(0)
+                                           # aufrufen wenn hw:1,0 von raspotify belegt
 
 import log
 import status as S_module
@@ -340,14 +343,14 @@ def main():
     # System-Check
     system_check()
 
-    # pygame initialisieren — NUR display + font, KEIN pygame.init()!
-    # pygame.init() = SDL_Init(SDL_INIT_EVERYTHING) initialisiert auch Audio.
-    # Wenn ALSA/raspotify hw:1,0 bereits belegt, ruft SDL intern exit(0) auf —
-    # komplett an Python vorbei, kein Fehler-Log, Service stirbt mit "Succeeded".
-    log.info("pygame.display.init() ...")
-    pygame.display.init()
-    pygame.font.init()
-    log.info("pygame.display.init() OK")
+    # pygame initialisieren
+    # SDL_AUDIODRIVER=dummy (oben gesetzt) verhindert dass SDL versucht
+    # ALSA/hw:1,0 zu oeffnen — das wuerde exit(0) ausloesen wenn
+    # raspotify das Device bereits belegt haelt.
+    # Mit dummy-Audio-Treiber kann pygame.init() vollstaendig durchlaufen.
+    log.info("pygame.init() ...")
+    pygame.init()
+    log.info("pygame.init() OK")
 
     try:
         real = pygame.display.set_mode((FB_W, FB_H))

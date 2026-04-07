@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.3.8
+# PiDrive Install Script v0.3.7
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.3.8           ║
+║        PiDrive Installer v0.4.0           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -279,6 +279,20 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     ok "Raspotify konfiguriert"
 fi
+
+# ── Zeitzone und fake-hwclock ──────────────────────────────────────────────
+info "Zeitzone und Uhr..."
+
+# Zeitzone Deutschland
+timedatectl set-timezone Europe/Berlin 2>/dev/null ||     ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime 2>/dev/null || true
+ok "Zeitzone: Europe/Berlin"
+
+# fake-hwclock: Pi merkt sich letzte bekannte Zeit beim Shutdown
+# Verhindert apt "Datei noch nicht gueltig" nach Stromunterbrechung
+if ! dpkg -l fake-hwclock 2>/dev/null | grep -q "^ii"; then
+    apt-get install -y -qq fake-hwclock 2>/dev/null || true
+fi
+fake-hwclock save 2>/dev/null && ok "fake-hwclock: aktuelle Zeit gespeichert" || true
 
 # ── RTL-SDR Check ─────────────────────────────────────────────────────────
 info "RTL-SDR pruefen..."

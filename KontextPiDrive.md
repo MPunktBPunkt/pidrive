@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.3.8
+# PiDrive — Kontext & Projektdokumentation v0.4.0
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.8)
+    ├── VERSION              (aktuell: 0.4.0)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -144,6 +144,20 @@ hdmi_drive=2
 ```
 
 ---
+
+## SDL_AUDIODRIVER=dummy — Erklaerung
+
+pygame.init() ruft intern SDL_Init(SDL_INIT_EVERYTHING) auf.
+Ohne Einschraenkung versucht SDL dabei auch ALSA zu oeffnen (hw:1,0).
+Wenn raspotify dieses Device bereits belegt, ruft SDL intern exit(0) auf —
+komplett an Python vorbei, kein Exception, kein Log, Service stirbt mit "Succeeded".
+
+Loesung (in main.py, vor allen Imports von pygame):
+```python
+os.environ["SDL_AUDIODRIVER"] = "dummy"
+```
+SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
+Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
 ## Framebuffer-Architektur
 
@@ -326,11 +340,11 @@ track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 
 | Dienst | Frequenz | Kanaele | Bandbreite | Modulation |
 |---|---|---|---|---|
-| PMR446 | 446.006–446.094 MHz | 8 fest | 12.5 kHz | NFM |
-| Freenet | 149.025–149.088 MHz | 4 fest | 12.5 kHz | NFM |
-| LPD433 | 433.075–434.775 MHz | 69 fest | 12.5 kHz | NFM |
-| VHF manuell | 136–174 MHz | stufenlos | 25 kHz | NFM |
-| UHF manuell | 400–470 MHz | stufenlos | 25 kHz | NFM |
+| PMR446 | 446.006–446.094 MHz | 8 fest | 12.5 kHz | NFM | Kanal waehlen + Scan ↑↓ |
+| Freenet | 149.025–149.088 MHz | 4 fest | 12.5 kHz | NFM | Kanal waehlen |
+| LPD433 | 433.075–434.775 MHz | 69 fest | 12.5 kHz | NFM | Kanal waehlen + Scan ↑↓ |
+| VHF manuell | 136–174 MHz | stufenlos | 25 kHz | NFM | Manuell + Scan ↑↓ |
+| UHF manuell | 400–470 MHz | stufenlos | 25 kHz | NFM | Manuell + Scan ↑↓ |
 
 Wiedergabe: `rtl_fm | mpv` Pipeline, identisch mit FM Radio.
 Alle lizenzfreien Dienste koennen ohne Genehmigung emfpangen werden.
@@ -501,7 +515,7 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.3.8 (aktuell)
+### v0.4.0 (aktuell)
 - Kritischer Bugfix: pygame.init() durch pygame.display.init() + pygame.font.init() ersetzt
 - SDL exit(0) bei ALSA-Konflikt behoben (raspotify belegte hw:1,0)
 - scanner.py: PMR446 (8 Kanaele, 446 MHz), Freenet (4, 149 MHz), LPD433 (69, 433 MHz)

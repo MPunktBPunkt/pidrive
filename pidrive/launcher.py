@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.3.7
+launcher.py - PiDrive TTY-Launcher v0.4.0
 Richtet /dev/tty3 als Controlling Terminal ein und startet main.py.
 Laeuft als root via systemd, gibt tty3-Kontext an main.py weiter.
 
@@ -186,6 +186,15 @@ def setup_tty():
         lerror("    SDL wird 'Unable to open a console terminal' melden.")
         os.close(fd)
         sys.exit(1)
+
+    # tcsetpgrp — Prozess als foreground process group setzen
+    # PFLICHT fuer SDL VT_SETMODE(VT_PROCESS): Kernel prueft foreground pgid.
+    # Ohne diesen Aufruf ruft SDL fbcon intern exit(0) auf.
+    try:
+        os.tcsetpgrp(fd, os.getpgrp())
+        linfo(f"  ✓ tcsetpgrp: pgid={os.getpgrp()} ist foreground")
+    except OSError as e:
+        lwarn(f"  ⚠ tcsetpgrp: {e.strerror} — SDL koennte fehlschlagen")
 
     # stdin auf tty3 — fuer USB-Tastatur-Input
     os.dup2(fd, 0)

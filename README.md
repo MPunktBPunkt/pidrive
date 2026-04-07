@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.3.8-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.4.0-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -296,7 +296,7 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.3.8
+### v0.4.0
 - Kritischer Bugfix: `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
 - Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
 - Neues Modul `scanner.py`: PMR446 (8 Kanäle), Freenet (4), LPD433 (69), VHF manuell (136–174 MHz), UHF manuell (400–470 MHz)
