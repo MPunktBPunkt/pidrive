@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.3.6
+# PiDrive — Kontext & Projektdokumentation v0.3.7
 
 ## Projektbeschreibung
 
@@ -16,7 +16,7 @@ curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh 
 
 **Update:**
 ```bash
-cd ~/pidrive && git pull && sudo cp ~/pidrive/systemd/pidrive.service /etc/systemd/system/pidrive.service && sudo systemctl daemon-reload && sudo reboot
+curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
 ```
 
 ---
@@ -83,20 +83,21 @@ sudo ./LCD35-show
 ├── README.md
 ├── LICENSE                  (GPL-v3)
 ├── .gitignore
-├── install.sh               (Schnellinstallation)
+├── install.sh               (Schnellinstallation, 10 Schritte)
 ├── setup_pidrive.sh         (vollstaendiges Setup-Script)
 ├── pidrive_ctrl.py          (SSH Tastatur-Steuerung)
 ├── config.txt.example
 ├── KontextPiDrive.md
 ├── systemd/
-│   └── pidrive.service      (Systemd Service-Datei)
+│   └── pidrive.service      (User=root, launcher.py)
 └── pidrive/
+    ├── launcher.py          (TTY-Setup: setsid + TIOCSCTTY, startet main.py)
     ├── main.py
     ├── ui.py
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.6)
+    ├── VERSION              (aktuell: 0.3.7)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -177,15 +178,28 @@ fbcp &           # Framebuffer Copy starten
 echo 0 > /sys/class/vtconsole/vtcon1/bind
 echo 0 > /sys/class/graphics/fbcon/cursor_blink
 con2fbmap 1 1
-chvt 3           # WICHTIG: tty3 aktivieren fuer USB-Tastatur + pygame
+chvt 3           # VT3 in den Vordergrund (fuer SDL/fbcon)
+chmod 660 /dev/tty3   # PFLICHT: pi (tty-Gruppe) braucht Lesezugriff fuer launcher.py
 exit 0
 ```
 
 **Reihenfolge beim Boot:**
-1. rc-local.service: `sleep 7` → `fbcp` → `chvt 3`
+1. rc-local.service: `sleep 7` → `fbcp` → `chvt 3` → `chmod 660 /dev/tty3`
 2. pidrive.service: `After=rc-local.service` wartet auf rc.local
-3. `ExecStartPre=/bin/sleep 5` gibt tty3 Zeit zum Einrichten
-4. main.py startet, System-Check, pygame init
+3. `ExecStartPre=/bin/sleep 3` gibt tty3 Zeit zum Einrichten
+4. launcher.py: Berechtigungs-Check → setsid → TIOCSCTTY → exec main.py
+
+---
+
+## udev-Regel (persistent, ueberschreibt kein Reboot)
+
+```bash
+# /etc/udev/rules.d/99-pidrive-tty.rules
+KERNEL=="tty3", GROUP="tty", MODE="0660"
+```
+
+Wird von install.sh automatisch angelegt. Stellt sicher dass `/dev/tty3`
+nach jedem Reboot 660-Berechtigungen hat, unabhaengig von rc.local.
 
 ---
 
@@ -200,31 +214,42 @@ After=multi-user.target rc-local.service
 
 [Service]
 Type=simple
-User=pi
+User=root
 Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
-ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
+ExecStartPre=/bin/sleep 3
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 Restart=always
 RestartSec=5
-StandardInput=tty
-StandardOutput=null             # Kein Konsolen-Overlay auf Display
-StandardError=journal           # Fehler weiterhin in journald
-TTYPath=/dev/tty3
-TTYReset=yes
-TTYVHangup=no                   # Kein HUP bei TTY-Unterbrechung
+StandardOutput=null
+StandardError=journal
 ```
 
-**WICHTIG - Manueller Neustart:**
+**Warum User=root:** launcher.py braucht root fuer setsid() und TIOCSCTTY.
+Kein `StandardInput=tty`, kein TTYPath, kein HUP-Problem.
+
+**Manueller Neustart:**
 ```bash
-# Beim Reboot: automatisch korrekt
-sudo reboot
-
-# Manuell (Entwicklung):
-sudo systemctl stop pidrive && sudo chvt 3 && sudo systemctl start pidrive
+sudo systemctl restart pidrive
 ```
+
+### launcher.py (NEU in v0.3.7)
+
+Laeuft als erstes, richtet den TTY-Kontext ein:
+
+1. Berechtigungs-Check: `/dev/fb0`, `/dev/tty3`, O_RDWR-Test, fgconsole
+2. `chvt 3` — VT3 in den Vordergrund
+3. `open("/dev/tty3", O_RDWR | O_NOCTTY)` — tty3 oeffnen
+4. `os.setsid()` — neue Session (Prozess wird Session-Leader)
+5. `fcntl.ioctl(fd, TIOCSCTTY, 1)` — tty3 als Controlling Terminal
+6. `os.dup2(fd, 0)` — stdin auf tty3 (fuer USB-Tastatur)
+7. `os.execv(python3, [python3, "main.py"])` — main.py erbt Kontext
+
+Danach zeigt `open("/dev/tty")` auf `/dev/tty3` — genau was SDL/fbcon braucht.
+
+Alle Schritte werden nach `/var/log/pidrive/pidrive.log` geloggt (Tag: `[LAUNCH/INFO]`).
 
 ### raspotify.service
 
@@ -289,40 +314,29 @@ track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 
 ## DAB+ (RTL-SDR + welle.io)
 
-### Voraussetzungen
-- RTL-SDR Stick angeschlossen (USB)
-- `welle-cli` installiert (`sudo apt install welle.io`)
-
-### Sendersuche
 - Menü: Musik → DAB+ → Sendersuche
 - Scannt alle Band-III Kanaele (5A - 13F)
 - Ergebnis gespeichert in `config/dab_stations.json`
-
-### Wiedergabe
-- `welle-cli | mpv` Pipeline (kein GUI!)
+- Wiedergabe: `welle-cli | mpv` Pipeline
 
 ---
 
 ## FM Radio (RTL-SDR + rtl_fm)
 
-### Voraussetzungen
-- RTL-SDR Stick angeschlossen
-- `rtl-sdr` Paket installiert
-
-### Stationen
 - Voreingestellt in `config/fm_stations.json`
 - Manuelle Frequenzeingabe: ↑↓ fuer 0.1 MHz, ←→ fuer 1.0 MHz
-
-### Wiedergabe
-- `rtl_fm | mpv` Pipeline, 200 kHz Bandbreite, WFM
+- Wiedergabe: `rtl_fm | mpv` Pipeline, 200 kHz Bandbreite, WFM
 
 ---
 
 ## Logging
 
 ```bash
-# Live verfolgen
+# Live verfolgen (launcher + main, alles in einer Datei)
 tail -f /var/log/pidrive/pidrive.log
+
+# Launcher-Schritte filtern
+grep "LAUNCH" /var/log/pidrive/pidrive.log
 
 # Service-Journal
 journalctl -u pidrive -f
@@ -336,24 +350,33 @@ sudo truncate -s 0 /var/log/pidrive/pidrive.log
 
 Log-Rotation: max 512 KB pro Datei, 2 Backups.
 
-**Startup-Log Beispiel (erfolgreich):**
+**Startup-Log Beispiel (erfolgreich, v0.3.7):**
 ```
-PiDrive gestartet
-  TTY:     /dev/tty3
-  FB:      /dev/fb0
---- System-Check ---
-  ✓ PiDrive Version: 0.3.6
-  ✓ /dev/fb0 vorhanden
-  ✓ fbcp laeuft
-  ✓ tty3 aktiv
-  ✓ /dev/tty3 Berechtigung OK
-  ✓ pygame 1.9.6
-  ✓ raspotify laeuft
-  ✓ WLAN: 192.168.178.92/24
---- System-Check OK ---
-pygame.init() OK
-Display: 640x480 OK
-PiDrive v0.3.6 laeuft!
+[LAUNCH/INFO] PiDrive Launcher gestartet
+[LAUNCH/INFO]   UID: 0 (root)
+[LAUNCH/INFO]   Gruppen: root, tty, video
+[LAUNCH/INFO] --- Berechtigungs-Check ---
+[LAUNCH/INFO]   ✓ Framebuffer: /dev/fb0  [crw-rw---- root:video (0660)]
+[LAUNCH/INFO]   ✓ Framebuffer: O_RDWR erfolgreich
+[LAUNCH/INFO]   ✓ TTY3: /dev/tty3  [crw-rw---- root:tty (0660)]
+[LAUNCH/INFO]   ✓ TTY3: O_RDWR erfolgreich
+[LAUNCH/INFO]   ✓ Aktives VT: tty3
+[LAUNCH/INFO] --- TTY Setup ---
+[LAUNCH/INFO]   ✓ chvt 3 OK
+[LAUNCH/INFO]   ✓ /dev/tty3 geoeffnet (fd=3)
+[LAUNCH/INFO]   ✓ setsid() OK
+[LAUNCH/INFO]   ✓ TIOCSCTTY: /dev/tty3 ist jetzt Controlling Terminal
+[LAUNCH/INFO]   ✓ stdin → /dev/tty3
+[LAUNCH/INFO] Starte: /usr/bin/python3 .../main.py
+[INFO] PiDrive gestartet
+[INFO] --- System-Check ---
+[INFO]   ✓ PiDrive Version: 0.3.7
+[INFO]   ✓ /dev/fb0 OK
+[INFO]   ✓ fbcp laeuft
+[INFO]   ✓ Aktives VT: tty3
+[INFO]   ✓ /dev/tty3 O_RDWR: erfolgreich
+[INFO] --- System-Check OK ---
+[INFO] PiDrive v0.3.7 laeuft!
 ```
 
 ---
@@ -361,21 +384,16 @@ PiDrive v0.3.6 laeuft!
 ## OTA Update
 
 ```bash
-# Manuell (kompletter Update-Prozess)
+# Schnellste Methode (install.sh macht alles):
+curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
+
+# Manuell:
 cd ~/pidrive && git pull
 sudo cp ~/pidrive/systemd/pidrive.service /etc/systemd/system/pidrive.service
 sudo systemctl daemon-reload
-sudo reboot
+sudo systemctl restart pidrive
 
-# Im Menue
-# System -> Update -> Auf Updates pruefen
-# System -> Update -> Update installieren
-```
-
-**Lokale Aenderungen vor git pull verwerfen:**
-```bash
-git checkout pidrive/log.py   # einzelne Datei
-git checkout .                # alle Dateien
+# Im Menue: System -> Update -> Auf Updates pruefen
 ```
 
 ---
@@ -440,7 +458,7 @@ python3 ~/pidrive_ctrl.py
 
 ### Manueller Neustart (Entwicklung)
 ```bash
-sudo systemctl stop pidrive && sudo chvt 3 && sudo systemctl start pidrive
+sudo systemctl restart pidrive
 ```
 
 ---
@@ -450,56 +468,45 @@ sudo systemctl stop pidrive && sudo chvt 3 && sudo systemctl start pidrive
 | Problem | Ursache | Loesung |
 |---|---|---|
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
+| Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
+| Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
-| GIL-Fehler | pygame 1.9.6 + threading | Kein threading, Popen |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
 | Raspotify kein Audio | PulseAudio als root | LIBRESPOT_BACKEND=alsa + DEVICE=hw:1,0 |
 | Raspotify ProtectHome | Service Hardening | ProtectHome=false, PrivateUsers=false |
 | WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
 | Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
-| Tastatur reagiert nicht | falscher TTY | chvt 3 (in rc.local) |
 | Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
-| Spotify zeigt FakeIpod | alter Name in conf | LIBRESPOT_NAME="PiDrive" |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
-| HUP beim Service-Start | TTYVHangup=yes | TTYVHangup=no |
-| pidrive startet nicht nach git pull | lokale Aenderungen | git checkout . |
-| Manueller Restart schlaegt fehl | tty3 nicht aktiv | sudo chvt 3 zuerst |
-| UnboundLocalError: os in log.py | import innerhalb Funktion | import os am Dateianfang |
 
 ---
 
 ## Changelog
 
-### v0.3.6 (aktuell)
+### v0.3.7 (aktuell)
+- launcher.py: Neues TTY-Setup Script (setsid + TIOCSCTTY)
+- launcher.py: Berechtigungs-Check mit O_RDWR-Test fuer fb0 und tty3
+- launcher.py: Vollstaendiges Logging nach pidrive.log (Tag: LAUNCH)
+- Service: User=root, kein StandardInput=tty mehr, kein HUP-Problem
+- install.sh: 10 Schritte, Service Stop/Start, udev-Regel, tty-Gruppe
+- install.sh: rc.local mit chvt 3 + chmod 660 /dev/tty3
+- main.py: system_check() mit uid, groups, stdin-Ziel, O_RDWR-Test
+
+### v0.3.6
 - log.py: Import-Bug behoben (UnboundLocalError: os)
 - main.py: Detailliertes Startup-Logging mit System-Check
-- main.py: Version im Log beim Start
-- Service: TTYVHangup=no (kein HUP bei TTY-Unterbrechung)
-- Service: After=rc-local.service
+- Service: TTYVHangup=no, After=rc-local.service
 
 ### v0.3.5
 - System-Check beim Start (fb0, fbcp, tty3, pygame, WLAN, Raspotify)
-
-### v0.3.4
-- Startup: Warte-Zeit in main.py
-- Service: After=rc-local.service
 
 ### v0.3.3
 - Bugfix: chvt 3 aus Service (HUP-Signal Schleife)
 - Spotify: ALSA Backend (hw:1,0)
 - Raspotify: ProtectHome=false, PrivateUsers=false
-
-### v0.3.2
-- Konsole ueberlagert nicht mehr Display (StandardOutput=null)
-- Spotify Name auf "PiDrive" korrigiert
-
-### v0.3.1
-- UI-Fix: eigene Surface fuer linke Spalte
-- pidrive.service im systemd/ Ordner des Repos
-- install.sh kopiert Service aus Repo
 
 ### v0.3.0
 - DAB+ Radio (welle.io, Sendersuche & Speicherung)

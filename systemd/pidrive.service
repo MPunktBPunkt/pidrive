@@ -4,18 +4,17 @@ After=multi-user.target rc-local.service
 
 [Service]
 Type=simple
-User=pi
+User=root
 Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
 
-# openvt startet main.py DIREKT auf VT3 - kein systemd TTY-Management noetig.
-# Das vermeidet den HUP-Signal-Loop der durch StandardInput=tty entstand.
-# /dev/tty3 muss 660 haben (chmod in rc.local) damit pi lesen kann.
-# ExecStartPre gibt rc.local Zeit chvt 3 + chmod abzuschliessen.
+# launcher.py richtet /dev/tty3 als Controlling Terminal ein
+# (setsid + TIOCSCTTY) und startet main.py.
+# Kein openvt, kein StandardInput=tty, kein HUP-Problem.
 ExecStartPre=/bin/sleep 3
-ExecStart=/usr/bin/openvt -c 3 -w -- /usr/bin/python3 /home/pi/pidrive/pidrive/main.py
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 
 Restart=always
 RestartSec=5

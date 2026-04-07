@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.3.6-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.7-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -55,6 +55,8 @@ PiDrive verwandelt einen Raspberry Pi in ein vollwertiges Car-Infotainment-Syste
 curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
 ```
 
+Das Script erledigt in 10 Schritten alles automatisch: Pakete, Repo, rc.local, udev-Regel für TTY3, Service einrichten und starten.
+
 ### Manuelle Installation
 
 ```bash
@@ -71,14 +73,6 @@ cd ~/LCD-show && sudo ./LCD35-show
 # Pi startet automatisch neu
 ```
 
-### Spotify Name in Raspotify setzen
-
-```bash
-sudo nano /etc/raspotify/conf
-# LIBRESPOT_NAME="PiDrive"
-sudo systemctl restart raspotify
-```
-
 ### Spotify OAuth einrichten (einmalig)
 
 ```bash
@@ -93,36 +87,24 @@ ssh -L 5588:127.0.0.1:5588 pi@<PI-IP> -N
 # Angezeigte URL im Browser öffnen → Spotify Login
 ```
 
-### RTL-SDR für DAB+ und FM
-
-```bash
-sudo apt install rtl-sdr sox
-
-# Für DAB+ zusätzlich welle-cli:
-sudo apt install welle.io
-# oder manuell kompilieren: https://github.com/AlbrechtL/welle.io
-```
-
 ### Update
 
 ```bash
-cd ~/pidrive
-git pull
-sudo systemctl restart pidrive
+curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
+```
+
+Oder manuell:
+```bash
+cd ~/pidrive && git pull
+sudo cp systemd/pidrive.service /etc/systemd/system/pidrive.service
+sudo systemctl daemon-reload && sudo systemctl restart pidrive
 ```
 
 Oder direkt im Menü: **System → Update → Update installieren**
 
-**Manueller Neustart** (beim Entwickeln):
-```bash
-sudo chvt 3 && sudo systemctl restart pidrive
-```
+### Manueller Neustart (Entwicklung)
 
-**Hinweis nach Service-Änderungen** (z.B. neue `pidrive.service`):
 ```bash
-cd ~/pidrive && git pull
-sudo cp ~/pidrive/systemd/pidrive.service /etc/systemd/system/pidrive.service
-sudo systemctl daemon-reload
 sudo systemctl restart pidrive
 ```
 
@@ -133,6 +115,7 @@ sudo systemctl restart pidrive
 ```
 pidrive/
 ├── pidrive/
+│   ├── launcher.py      # TTY-Setup (setsid + TIOCSCTTY), startet main.py
 │   ├── main.py          # Hauptprogramm & Main-Loop
 │   ├── ui.py            # UI-Basisklassen
 │   ├── status.py        # System-Status Cache
@@ -155,9 +138,9 @@ pidrive/
 │       ├── fm_stations.json   # FM Sender
 │       └── settings.json      # Einstellungen
 ├── systemd/
-│   └── pidrive.service  # Systemd Service
+│   └── pidrive.service  # Systemd Service (User=root, launcher.py)
 ├── pidrive_ctrl.py      # SSH Tastatur-Steuerung
-├── install.sh           # Schnellinstallation
+├── install.sh           # Schnellinstallation (10 Schritte)
 ├── setup_pidrive.sh     # Vollständiges Setup-Script
 ├── config.txt.example   # Beispiel /boot/config.txt
 ├── KontextPiDrive.md    # Vollständige Projektdokumentation
@@ -203,8 +186,6 @@ PiDrive
 
 ### USB-Tastatur direkt am Pi
 
-Einfach USB-Tastatur anschließen — funktioniert sofort nach dem Start:
-
 | Taste | Funktion |
 |---|---|
 | ↑ / W | Hoch |
@@ -216,7 +197,7 @@ Einfach USB-Tastatur anschließen — funktioniert sofort nach dem Start:
 | F3 | Audio: Bluetooth |
 | F4 | Audio: Alle |
 
-### SSH-Terminal (pidrive_ctrl.py)
+### SSH-Terminal
 
 ```bash
 python3 ~/pidrive_ctrl.py
@@ -234,13 +215,6 @@ echo "cat:1"        > /tmp/pidrive_cmd   # WiFi
 echo "cat:2"        > /tmp/pidrive_cmd   # Bluetooth
 echo "cat:3"        > /tmp/pidrive_cmd   # System
 echo "wifi_on"      > /tmp/pidrive_cmd
-echo "wifi_off"     > /tmp/pidrive_cmd
-echo "bt_on"        > /tmp/pidrive_cmd
-echo "bt_off"       > /tmp/pidrive_cmd
-echo "audio_klinke" > /tmp/pidrive_cmd
-echo "audio_hdmi"   > /tmp/pidrive_cmd
-echo "audio_bt"     > /tmp/pidrive_cmd
-echo "audio_all"    > /tmp/pidrive_cmd
 echo "spotify_on"   > /tmp/pidrive_cmd
 echo "spotify_off"  > /tmp/pidrive_cmd
 echo "radio_stop"   > /tmp/pidrive_cmd
@@ -253,65 +227,20 @@ echo "shutdown"     > /tmp/pidrive_cmd
 ## Logging & Debugging
 
 ```bash
-# Live-Log
+# Live-Log (launcher.py + main.py, alles in einer Datei)
 tail -f /var/log/pidrive/pidrive.log
 
-# Service-Log
+# Service-Log (journald)
 journalctl -u pidrive -f
 
 # Nur Fehler
 journalctl -u pidrive -p err
 
+# Launcher-Schritte filtern
+grep "LAUNCH" /var/log/pidrive/pidrive.log
+
 # Menü-Navigation
 grep "MENU" /var/log/pidrive/pidrive.log
-
-# Trigger-Befehle
-grep "TRIGGER" /var/log/pidrive/pidrive.log
-```
-
----
-
-## DAB+ Einrichtung
-
-```bash
-# RTL-SDR Stick anschliessen, dann prüfen:
-lsusb | grep -i rtl
-
-# welle-cli installieren:
-sudo apt install welle.io
-
-# Im Menü: Musik → DAB+ → Sendersuche
-# Gefundene Sender werden gespeichert in:
-# ~/pidrive/pidrive/config/dab_stations.json
-```
-
----
-
-## FM Radio Einrichtung
-
-```bash
-# rtl_fm verfügbar?
-which rtl_fm
-
-# Voreingestellte Stationen: pidrive/config/fm_stations.json
-# Manuelle Frequenzeingabe: Musik → FM Radio → Manuell
-# Pfeiltasten: ±0.1 MHz / Links-Rechts: ±1.0 MHz
-```
-
----
-
-## Webradio Stationen
-
-Bearbeite `pidrive/config/stations.json`:
-
-```json
-[
-  {
-    "name": "Bayern 3",
-    "url": "https://dispatcher.rndfnk.com/br/br3/live/mp3/low",
-    "genre": "Pop/Rock"
-  }
-]
 ```
 
 ---
@@ -335,29 +264,26 @@ Vollständige Konfiguration: `config.txt.example`
 
 ## Bekannte Probleme
 
-| Problem | Lösung |
-|---|---|
-| Display dunkel | `sudo systemctl start pidrive` |
-| Spotify nicht sichtbar | `LIBRESPOT_DISABLE_CREDENTIAL_CACHE` auskommentieren |
-| WLAN nach Reboot aus | rfkill-unblock.service aktivieren |
-| Touch reagiert nicht | Hardware-Defekt; USB-Tastatur als Alternative |
-| Raspotify startet ohne Internet | `network-online.target` in Service |
-| Spotify spielt nicht | PulseAudio nicht erreichbar | `LIBRESPOT_BACKEND=alsa` + `LIBRESPOT_DEVICE=hw:1,0` |
-| PiDrive Restart-Schleife | tty3 nicht aktiv | `After=rc-local.service` im Service; manuell: `sudo chvt 3 && sudo systemctl restart pidrive` |
-| Konsole überlagert Display | stdout von Service auf null | `StandardOutput=null` im Service |
-| USB-Tastatur reagiert nicht | `sudo chvt 3` (wird automatisch via Service gesetzt) |
+| Problem | Ursache | Lösung |
+|---|---|---|
+| Display dunkel nach Boot | fbcp noch nicht gestartet | `sleep 7` in rc.local abwarten |
+| "Unable to open console terminal" | `/dev/tty3` nicht lesbar | udev-Regel: `KERNEL=="tty3", MODE="0660"` |
+| Service Restart-Schleife | HUP bei TTY-Zuweisung | launcher.py mit setsid+TIOCSCTTY (v0.3.7) |
+| Spotify nicht sichtbar | Credential-Cache deaktiviert | `LIBRESPOT_DISABLE_CREDENTIAL_CACHE` auskommentieren |
+| Spotify kein Ton | PulseAudio als root | `LIBRESPOT_BACKEND=alsa` + `DEVICE=hw:1,0` |
+| WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
+| Raspotify startet zu früh | falsches network target | `network-online.target` im Service |
+| Touch reagiert nicht | Hardware-Defekt (XPT2046) | USB-Tastatur als Alternative |
 
 ---
 
 ## Abhängigkeiten
 
 ```bash
-# System
 sudo apt install python3-pygame python3-pip git mpv \
   avahi-daemon bluez pulseaudio pulseaudio-module-bluetooth \
   rfkill rtl-sdr sox
 
-# Python
 pip3 install mutagen --break-system-packages
 
 # Optional für DAB+
@@ -368,45 +294,37 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.3.6
-- System-Check beim Start (fb0, fbcp, tty3, pygame, WLAN, Raspotify)
-- Alle Check-Ergebnisse im Log sichtbar
-- Klare Fehlermeldungen wenn etwas fehlt
+### v0.3.7
+- `launcher.py`: Richtet `/dev/tty3` als Controlling Terminal ein (setsid + TIOCSCTTY)
+- Behebt dauerhaft die "Unable to open a console terminal" Bootschleife
+- Launcher loggt alle Schritte und Berechtigungen nach `pidrive.log`
+- Service: `User=root`, kein `StandardInput=tty` mehr
+- `install.sh`: udev-Regel für `/dev/tty3`, `tty`-Gruppe, 10 Schritte mit Stop/Start
+- `main.py`: erweiterter System-Check mit uid, groups, O_RDWR-Test, stdin-Ziel
 
-### v0.3.4
-- Startup: 8s Warte-Zeit in main.py (statt ExecStartPre sleep)
-- Service: `After=rc-local.service` - chvt 3 laeuft garantiert zuerst
-- Mehr Logging beim Start (TTY, Framebuffer, Display-Fehler-Hinweis)
-- Manueller Neustart: `sudo chvt 3 && sudo systemctl restart pidrive`
+### v0.3.6
+- log.py: Import-Bug behoben (UnboundLocalError: os)
+- main.py: Detailliertes Startup-Logging mit System-Check
+- Service: `TTYVHangup=no`, `After=rc-local.service`
+
+### v0.3.5
+- System-Check beim Start (fb0, fbcp, tty3, pygame, WLAN, Raspotify)
 
 ### v0.3.3
-- Bugfix: `chvt 3` aus Service entfernt (verursachte HUP-Signal Restart-Schleife)
-- chvt 3 läuft weiterhin via rc.local beim Boot
-- Spotify: ALSA Backend (`hw:1,0`) statt PulseAudio
-- Raspotify: `ProtectHome=false`, `PrivateUsers=false`
-
-### v0.3.2
-- Konsole überlagert nicht mehr das Display (`StandardOutput=null`)
-- Spotify Name korrekt auf "PiDrive" (statt FakeIpod)
-- pidrive.service: `StandardOutput=null`, `StandardError=journal`
-
-### v0.3.1
-- UI-Fix: Kategorie-Text läuft nicht mehr in rechte Spalte
-- USB-Tastatur: `chvt 3` automatisch beim Service-Start
-- `pidrive.service` im `systemd/` Ordner des Repos
-- `install.sh` kopiert Service aus Repo
+- Bugfix: chvt 3 aus Service entfernt (HUP-Signal Schleife)
+- Spotify: ALSA Backend (hw:1,0)
+- Raspotify: ProtectHome=false, PrivateUsers=false
 
 ### v0.3.0
-- DAB+ Radio (RTL-SDR + welle.io, Sendersuche & Speicherung)
-- FM Radio (RTL-SDR + rtl_fm, manuelle Frequenzeingabe)
-- OTA Updates direkt aus dem Menü (System → Update)
-- Logging-Modul (rotierend, max 512KB)
+- DAB+ Radio (RTL-SDR + welle.io)
+- FM Radio (RTL-SDR + rtl_fm)
+- OTA Updates aus dem Menü
+- Logging-Modul (rotierend)
 
 ### v0.2.0
-- Modulare Struktur (ui, status, trigger, modules/)
+- Modulare Struktur
 - Spotify Track-Anzeige
-- Webradio
-- MP3 Bibliothek mit Album-Art
+- Webradio, MP3 Bibliothek mit Album-Art
 - Bluetooth Audio-Ausgang
 
 ---
@@ -423,5 +341,6 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 - [ ] BMW iDrive ESP32 Integration
 - [ ] USB-Tethering Autostart
 - [ ] Hotspot-Modus
-- [ ] DAB+ Programminfo (Artist, Titel vom DAB-Stream)
+- [ ] DAB+ Programminfo
 - [ ] FM RDS Anzeige
+- [ ] Equalizer
