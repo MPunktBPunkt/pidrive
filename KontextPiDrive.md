@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.3.2
+# PiDrive — Kontext & Projektdokumentation v0.3.6
 
 ## Projektbeschreibung
 
@@ -16,8 +16,7 @@ curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh 
 
 **Update:**
 ```bash
-cd ~/pidrive && git pull && sudo systemctl restart pidrive
-# oder im Menü: System -> Update -> Update installieren
+cd ~/pidrive && git pull && sudo cp ~/pidrive/systemd/pidrive.service /etc/systemd/system/pidrive.service && sudo systemctl daemon-reload && sudo reboot
 ```
 
 ---
@@ -149,7 +148,7 @@ hdmi_drive=2
 ```
 HDMI Framebuffer (fb0, 640x480)  <- PiDrive zeichnet hierauf
         |
-    fbcp (Dienst)
+    fbcp (Dienst, gestartet via rc.local)
         |
 SPI Display Framebuffer (fb1, 480x320)
         |
@@ -159,13 +158,34 @@ SPI Display Framebuffer (fb1, 480x320)
 ### Rotation im Script
 
 ```python
-virt    = pygame.Surface((320, 480))      # Virtueller Canvas
-real    = pygame.display.set_mode((640, 480))  # Framebuffer
-rotated = pygame.transform.rotate(virt, 90)    # 480x320
+virt    = pygame.Surface((320, 480))
+real    = pygame.display.set_mode((640, 480))
+rotated = pygame.transform.rotate(virt, 90)
 scaled  = pygame.transform.scale(rotated, (640, 480))
 real.blit(scaled, (0, 0))
 pygame.display.flip()
 ```
+
+---
+
+## /etc/rc.local (Boot-Reihenfolge)
+
+```bash
+#!/bin/sh -e
+sleep 7          # Warten bis Display bereit
+fbcp &           # Framebuffer Copy starten
+echo 0 > /sys/class/vtconsole/vtcon1/bind
+echo 0 > /sys/class/graphics/fbcon/cursor_blink
+con2fbmap 1 1
+chvt 3           # WICHTIG: tty3 aktivieren fuer USB-Tastatur + pygame
+exit 0
+```
+
+**Reihenfolge beim Boot:**
+1. rc-local.service: `sleep 7` → `fbcp` → `chvt 3`
+2. pidrive.service: `After=rc-local.service` wartet auf rc.local
+3. `ExecStartPre=/bin/sleep 5` gibt tty3 Zeit zum Einrichten
+4. main.py startet, System-Check, pygame init
 
 ---
 
@@ -194,10 +214,42 @@ StandardOutput=null             # Kein Konsolen-Overlay auf Display
 StandardError=journal           # Fehler weiterhin in journald
 TTYPath=/dev/tty3
 TTYReset=yes
-TTYVHangup=yes
+TTYVHangup=no                   # Kein HUP bei TTY-Unterbrechung
+```
 
-[Install]
-WantedBy=multi-user.target
+**WICHTIG - Manueller Neustart:**
+```bash
+# Beim Reboot: automatisch korrekt
+sudo reboot
+
+# Manuell (Entwicklung):
+sudo systemctl stop pidrive && sudo chvt 3 && sudo systemctl start pidrive
+```
+
+### raspotify.service
+
+```bash
+LIBRESPOT_NAME="PiDrive"
+LIBRESPOT_BITRATE=320
+LIBRESPOT_DISABLE_AUDIO_CACHE=
+#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=   # AUSKOMMENTIERT - sonst kein Login!
+LIBRESPOT_ENABLE_VOLUME_NORMALISATION=
+LIBRESPOT_SYSTEM_CACHE=/var/cache/raspotify
+LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh
+LIBRESPOT_BACKEND=alsa
+LIBRESPOT_DEVICE=hw:1,0
+```
+
+**Timing-Fix (`/lib/systemd/system/raspotify.service`):**
+```ini
+Wants=network-online.target sound.target
+After=network-online.target sound.target avahi-daemon.service
+```
+
+**Raspotify Service Hardening deaktivieren:**
+```ini
+ProtectHome=false
+PrivateUsers=false
 ```
 
 ### Weitere Services
@@ -220,27 +272,6 @@ ssh -L 5588:127.0.0.1:5588 pi@<IP> -N
 
 /usr/bin/librespot --name "PiDrive" --enable-oauth \
   --system-cache /var/cache/raspotify
-```
-
-### raspotify Konfiguration (`/etc/raspotify/conf`)
-
-```bash
-LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod!
-LIBRESPOT_BITRATE=320
-LIBRESPOT_DISABLE_AUDIO_CACHE=
-#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=   # AUSKOMMENTIERT - sonst kein Login!
-LIBRESPOT_BACKEND=alsa
-LIBRESPOT_DEVICE=hw:1,0
-LIBRESPOT_ENABLE_VOLUME_NORMALISATION=
-LIBRESPOT_SYSTEM_CACHE=/var/cache/raspotify
-LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh
-```
-
-### Timing-Fix (`/lib/systemd/system/raspotify.service`)
-
-```ini
-Wants=network-online.target sound.target
-After=network-online.target sound.target avahi-daemon.service
 ```
 
 ---
@@ -266,11 +297,9 @@ track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 - Menü: Musik → DAB+ → Sendersuche
 - Scannt alle Band-III Kanaele (5A - 13F)
 - Ergebnis gespeichert in `config/dab_stations.json`
-- Beim naechsten Start sofort verfuegbar
 
 ### Wiedergabe
-- `welle-cli | mpv` Pipeline
-- Automatisch mit gespeicherter Senderliste
+- `welle-cli | mpv` Pipeline (kein GUI!)
 
 ---
 
@@ -278,15 +307,14 @@ track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 
 ### Voraussetzungen
 - RTL-SDR Stick angeschlossen
-- `rtl-sdr` Paket installiert (`sudo apt install rtl-sdr`)
+- `rtl-sdr` Paket installiert
 
 ### Stationen
 - Voreingestellt in `config/fm_stations.json`
 - Manuelle Frequenzeingabe: ↑↓ fuer 0.1 MHz, ←→ fuer 1.0 MHz
-- Neue Stationen speicherbar
 
 ### Wiedergabe
-- `rtl_fm | mpv` Pipeline, 200 kHz Bandbreite, WFM Demodulation
+- `rtl_fm | mpv` Pipeline, 200 kHz Bandbreite, WFM
 
 ---
 
@@ -301,26 +329,53 @@ journalctl -u pidrive -f
 
 # Spezifisch filtern
 grep "MENU\|TRIGGER\|ACTION\|ERROR" /var/log/pidrive/pidrive.log
+
+# Log loeschen
+sudo truncate -s 0 /var/log/pidrive/pidrive.log
 ```
 
-Log-Rotation: max 512 KB pro Datei, 2 Backups (max 1.5 MB gesamt).
+Log-Rotation: max 512 KB pro Datei, 2 Backups.
+
+**Startup-Log Beispiel (erfolgreich):**
+```
+PiDrive gestartet
+  TTY:     /dev/tty3
+  FB:      /dev/fb0
+--- System-Check ---
+  ✓ PiDrive Version: 0.3.6
+  ✓ /dev/fb0 vorhanden
+  ✓ fbcp laeuft
+  ✓ tty3 aktiv
+  ✓ /dev/tty3 Berechtigung OK
+  ✓ pygame 1.9.6
+  ✓ raspotify laeuft
+  ✓ WLAN: 192.168.178.92/24
+--- System-Check OK ---
+pygame.init() OK
+Display: 640x480 OK
+PiDrive v0.3.6 laeuft!
+```
 
 ---
 
 ## OTA Update
 
 ```bash
-# Manuell
-cd ~/pidrive && git pull && sudo systemctl restart pidrive
+# Manuell (kompletter Update-Prozess)
+cd ~/pidrive && git pull
+sudo cp ~/pidrive/systemd/pidrive.service /etc/systemd/system/pidrive.service
+sudo systemctl daemon-reload
+sudo reboot
 
 # Im Menue
 # System -> Update -> Auf Updates pruefen
 # System -> Update -> Update installieren
 ```
 
-Versions-Check via:
-```
-https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/pidrive/VERSION
+**Lokale Aenderungen vor git pull verwerfen:**
+```bash
+git checkout pidrive/log.py   # einzelne Datei
+git checkout .                # alle Dateien
 ```
 
 ---
@@ -373,6 +428,23 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 
 ---
 
+## Steuerung
+
+### USB-Tastatur (direkt am Pi)
+Pfeiltasten + Enter + ESC — funktioniert nach Reboot automatisch.
+
+### SSH-Steuerung
+```bash
+python3 ~/pidrive_ctrl.py
+```
+
+### Manueller Neustart (Entwicklung)
+```bash
+sudo systemctl stop pidrive && sudo chvt 3 && sudo systemctl start pidrive
+```
+
+---
+
 ## Bekannte Probleme & Loesungen
 
 | Problem | Ursache | Loesung |
@@ -382,26 +454,52 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 | GIL-Fehler | pygame 1.9.6 + threading | Kein threading, Popen |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
+| Raspotify kein Audio | PulseAudio als root | LIBRESPOT_BACKEND=alsa + DEVICE=hw:1,0 |
+| Raspotify ProtectHome | Service Hardening | ProtectHome=false, PrivateUsers=false |
 | WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
 | Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
-| Tastatur reagiert nicht | falscher TTY | chvt 3 (im Service) |
+| Tastatur reagiert nicht | falscher TTY | chvt 3 (in rc.local) |
 | Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
-| PiDrive Restart-Schleife | tty3 nicht aktiv | After=rc-local.service + manuell: sudo chvt 3 && systemctl restart pidrive |
-| Spotify spielt nicht | PulseAudio nicht erreichbar | LIBRESPOT_BACKEND=alsa + DEVICE=hw:1,0 |
-| Spotify zeigt FakeIpod | alter Name in conf | LIBRESPOT_NAME="PiDrive"   # Muss PiDrive sein, nicht FakeIpod! |
+| Spotify zeigt FakeIpod | alter Name in conf | LIBRESPOT_NAME="PiDrive" |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
+| HUP beim Service-Start | TTYVHangup=yes | TTYVHangup=no |
+| pidrive startet nicht nach git pull | lokale Aenderungen | git checkout . |
+| Manueller Restart schlaegt fehl | tty3 nicht aktiv | sudo chvt 3 zuerst |
+| UnboundLocalError: os in log.py | import innerhalb Funktion | import os am Dateianfang |
 
 ---
 
 ## Changelog
 
 ### v0.3.6 (aktuell)
-- UI-Fix: eigene Surface fuer linke Spalte (kein Text-Ueberlauf mehr)
-- USB-Tastatur: chvt 3 automatisch via Service
+- log.py: Import-Bug behoben (UnboundLocalError: os)
+- main.py: Detailliertes Startup-Logging mit System-Check
+- main.py: Version im Log beim Start
+- Service: TTYVHangup=no (kein HUP bei TTY-Unterbrechung)
+- Service: After=rc-local.service
+
+### v0.3.5
+- System-Check beim Start (fb0, fbcp, tty3, pygame, WLAN, Raspotify)
+
+### v0.3.4
+- Startup: Warte-Zeit in main.py
+- Service: After=rc-local.service
+
+### v0.3.3
+- Bugfix: chvt 3 aus Service (HUP-Signal Schleife)
+- Spotify: ALSA Backend (hw:1,0)
+- Raspotify: ProtectHome=false, PrivateUsers=false
+
+### v0.3.2
+- Konsole ueberlagert nicht mehr Display (StandardOutput=null)
+- Spotify Name auf "PiDrive" korrigiert
+
+### v0.3.1
+- UI-Fix: eigene Surface fuer linke Spalte
 - pidrive.service im systemd/ Ordner des Repos
-- install.sh kopiert Service-Datei aus Repo
+- install.sh kopiert Service aus Repo
 
 ### v0.3.0
 - DAB+ Radio (welle.io, Sendersuche & Speicherung)
@@ -423,6 +521,6 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 - [ ] BMW iDrive ESP32 Integration
 - [ ] USB-Tethering Autostart
 - [ ] Hotspot-Modus
-- [ ] DAB+ Programminfo (RDS-aehnliche Anzeige)
+- [ ] DAB+ Programminfo
 - [ ] FM RDS Text-Anzeige
 - [ ] Equalizer
