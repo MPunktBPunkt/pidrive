@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.3.7-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.8-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -131,6 +131,7 @@ pidrive/
 │   │   ├── bluetooth.py # Bluetooth Kopplung & Audio
 │   │   ├── audio.py     # Audioausgang Steuerung
 │   │   ├── system.py    # System-Info, Neustart, etc.
+│   │   ├── scanner.py   # Funkscanner (PMR446, Freenet, LPD433, VHF, UHF)
 │   │   └── update.py    # OTA Update via GitHub
 │   └── config/
 │       ├── stations.json      # Webradio-Stationen
@@ -159,7 +160,8 @@ PiDrive
 │   ├── Bibliothek (MP3 mit Album-Art)
 │   ├── Webradio (konfigurierbare Stationen)
 │   ├── DAB+ (RTL-SDR, Sendersuche)
-│   └── FM Radio (UKW, manuelle Frequenz)
+│   ├── FM Radio (UKW, manuelle Frequenz)
+│   └── Scanner (PMR446/Freenet/LPD433/VHF/UHF)
 ├── WiFi
 │   ├── WiFi An/Aus
 │   ├── Verbunden mit (SSID)
@@ -293,6 +295,15 @@ sudo apt install welle.io
 ---
 
 ## Changelog
+
+### v0.3.8
+- Kritischer Bugfix: `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
+- Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
+- Neues Modul `scanner.py`: PMR446 (8 Kanäle), Freenet (4), LPD433 (69), VHF manuell (136–174 MHz), UHF manuell (400–470 MHz)
+- RTL-SDR Check in System-Check und install.sh `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
+- Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
+- RTL-SDR Check in System-Check (Startup-Log) und install.sh
+- install.sh: RTL-SDR USB Stick + rtl_fm + welle-cli werden geprueft und gemeldet
 
 ### v0.3.7
 - `launcher.py`: Richtet `/dev/tty3` als Controlling Terminal ein (setsid + TIOCSCTTY)

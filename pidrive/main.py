@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.3.7
+main.py - PiDrive Hauptprogramm v0.3.8
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -21,9 +21,9 @@ import log
 import status as S_module
 import trigger
 from ui import (SplitUI, Category, Item, W, H, FB_W, FB_H,
-                C_PURPLE, C_BLUE, C_BT_BLUE, C_ORANGE, C_DAB, C_FM)
+                C_PURPLE, C_BLUE, C_BT_BLUE, C_ORANGE, C_DAB, C_FM, C_SCANNER)
 from modules import (musik, wifi, bluetooth, audio, system,
-                     webradio, dab, fm, library, update)
+                     webradio, dab, fm, library, update, scanner)
 
 logger = log.setup()
 
@@ -201,6 +201,37 @@ def system_check():
     except Exception:
         pass
 
+    # ── RTL-SDR ────────────────────────────────────────────────
+    try:
+        r = subprocess.run("lsusb", shell=True,
+                           capture_output=True, text=True, timeout=3)
+        rtl_found = any(k in r.stdout.lower()
+                        for k in ["rtl", "realtek", "2838", "0bda"])
+        if rtl_found:
+            log.info("  ✓ RTL-SDR: USB Stick erkannt")
+        else:
+            log.warn("  ⚠ RTL-SDR: kein USB Stick gefunden (DAB+/FM deaktiviert)")
+    except Exception:
+        pass
+    try:
+        r = subprocess.run("which rtl_fm", shell=True,
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            log.info("  ✓ rtl_fm: vorhanden")
+        else:
+            log.warn("  ⚠ rtl_fm fehlt -> sudo apt install rtl-sdr")
+    except Exception:
+        pass
+    try:
+        r = subprocess.run("which welle-cli", shell=True,
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            log.info("  ✓ welle-cli: vorhanden (DAB+)")
+        else:
+            log.warn("  ⚠ welle-cli fehlt -> sudo apt install welle.io")
+    except Exception:
+        pass
+
     # ── Log ────────────────────────────────────────────────────
     if os.access("/var/log/pidrive", os.W_OK):
         log.info("  ✓ Log-Verzeichnis schreibbar")
@@ -261,6 +292,10 @@ def build_menu(screen, S, settings):
              sub=lambda: S.get("radio_station", "")[:20]
                          if S.get("radio_type") == "FM" else "UKW",
              submenu=fm.build_items(screen, S, settings)),
+        Item("Scanner",
+             sub=lambda: S.get("radio_station", "")[:20]
+                         if S.get("radio_type") == "SCANNER" else "PMR/VHF/UHF",
+             submenu=scanner.build_items(screen, S, settings)),
     ]
     system_items = (audio.build_items(screen, S, settings) +
                     system.build_items(screen, S, settings) +
@@ -305,15 +340,15 @@ def main():
     # System-Check
     system_check()
 
-    # pygame initialisieren
-    # HINWEIS: ExecStartPre=/bin/sleep 5 im Service gibt systemd Zeit
-    # tty3 korrekt einzurichten BEVOR main.py startet.
-    # Kein zusaetzlicher sleep hier noetig.
-    log.info("pygame.init() ...")
-    pygame.init()
-    log.info("pygame.init() OK")
+    # pygame initialisieren — NUR display + font, KEIN pygame.init()!
+    # pygame.init() = SDL_Init(SDL_INIT_EVERYTHING) initialisiert auch Audio.
+    # Wenn ALSA/raspotify hw:1,0 bereits belegt, ruft SDL intern exit(0) auf —
+    # komplett an Python vorbei, kein Fehler-Log, Service stirbt mit "Succeeded".
+    log.info("pygame.display.init() ...")
+    pygame.display.init()
+    pygame.font.init()
+    log.info("pygame.display.init() OK")
 
-    log.info("pygame.display.set_mode() ...")
     try:
         real = pygame.display.set_mode((FB_W, FB_H))
         log.info(f"Display: {FB_W}x{FB_H} OK")

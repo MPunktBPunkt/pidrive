@@ -280,6 +280,26 @@ if [ -f /etc/raspotify/conf ]; then
     ok "Raspotify konfiguriert"
 fi
 
+# ── RTL-SDR Check ─────────────────────────────────────────────────────────
+info "RTL-SDR pruefen..."
+if lsusb 2>/dev/null | grep -qiE "rtl|realtek|2838|0bda"; then
+    ok "RTL-SDR USB Stick erkannt — DAB+ und FM verfuegbar"
+else
+    warn "RTL-SDR USB Stick nicht gefunden"
+    warn "  -> DAB+ und FM benoetigen einen RTL-SDR Stick (z.B. RTL2832U)"
+    warn "  -> Jetzt anschliessen oder spaeter: Musik → DAB+ / FM Radio"
+fi
+if which rtl_fm >/dev/null 2>&1; then
+    ok "rtl_fm vorhanden"
+else
+    warn "rtl_fm nicht installiert -> sudo apt install rtl-sdr"
+fi
+if which welle-cli >/dev/null 2>&1; then
+    ok "welle-cli vorhanden (DAB+)"
+else
+    warn "welle-cli nicht installiert -> sudo apt install welle.io"
+fi
+
 # Service starten (nach Installation ohne Reboot testbar)
 info "pidrive.service starten..."
 if systemctl start pidrive 2>/dev/null; then

@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.3.7
+# PiDrive — Kontext & Projektdokumentation v0.3.8
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.3.7)
+    ├── VERSION              (aktuell: 0.3.8)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -113,6 +113,7 @@ sudo ./LCD35-show
         ├── bluetooth.py
         ├── audio.py
         ├── system.py
+        ├── scanner.py       (PMR446, Freenet, LPD433, VHF, UHF)
         └── update.py        (OTA Updates)
 ```
 
@@ -321,6 +322,19 @@ track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 
 ---
 
+## Scanner (RTL-SDR + rtl_fm)
+
+| Dienst | Frequenz | Kanaele | Bandbreite | Modulation |
+|---|---|---|---|---|
+| PMR446 | 446.006–446.094 MHz | 8 fest | 12.5 kHz | NFM |
+| Freenet | 149.025–149.088 MHz | 4 fest | 12.5 kHz | NFM |
+| LPD433 | 433.075–434.775 MHz | 69 fest | 12.5 kHz | NFM |
+| VHF manuell | 136–174 MHz | stufenlos | 25 kHz | NFM |
+| UHF manuell | 400–470 MHz | stufenlos | 25 kHz | NFM |
+
+Wiedergabe: `rtl_fm | mpv` Pipeline, identisch mit FM Radio.
+Alle lizenzfreien Dienste koennen ohne Genehmigung emfpangen werden.
+
 ## FM Radio (RTL-SDR + rtl_fm)
 
 - Voreingestellt in `config/fm_stations.json`
@@ -408,7 +422,8 @@ PiDrive
 |   |-- Bibliothek (MP3 mit Album-Art)
 |   |-- Webradio (stations.json)
 |   |-- DAB+ (RTL-SDR, dab_stations.json)
-|   +-- FM Radio (RTL-SDR, fm_stations.json)
+|   |-- FM Radio (RTL-SDR, fm_stations.json)
+|   +-- Scanner (PMR446/Freenet/LPD433/VHF/UHF)
 |-- WiFi
 |   |-- WiFi An/Aus
 |   |-- Verbunden mit (SSID)
@@ -486,7 +501,18 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.3.7 (aktuell)
+### v0.3.8 (aktuell)
+- Kritischer Bugfix: pygame.init() durch pygame.display.init() + pygame.font.init() ersetzt
+- SDL exit(0) bei ALSA-Konflikt behoben (raspotify belegte hw:1,0)
+- scanner.py: PMR446 (8 Kanaele, 446 MHz), Freenet (4, 149 MHz), LPD433 (69, 433 MHz)
+- scanner.py: VHF manuell (136-174 MHz, 25 kHz NFM), UHF manuell (400-470 MHz, 25 kHz NFM)
+- RTL-SDR Check in system_check() und install.sh pygame.display.init() + pygame.font.init() ersetzt
+- pygame.init() = SDL_Init(SDL_INIT_EVERYTHING) initialisiert auch Audio
+- Wenn ALSA/raspotify hw:1,0 belegt: SDL ruft intern exit(0) auf, kein Python-Fehler
+- RTL-SDR Check in system_check(): lsusb, rtl_fm, welle-cli
+- install.sh: RTL-SDR USB Stick wird geprueft und gemeldet
+
+### v0.3.7
 - launcher.py: Neues TTY-Setup Script (setsid + TIOCSCTTY)
 - launcher.py: Berechtigungs-Check mit O_RDWR-Test fuer fb0 und tty3
 - launcher.py: Vollstaendiges Logging nach pidrive.log (Tag: LAUNCH)
