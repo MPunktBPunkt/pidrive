@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.3.6
+main.py - PiDrive Hauptprogramm v0.3.7
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -28,9 +28,64 @@ from modules import (musik, wifi, bluetooth, audio, system,
 logger = log.setup()
 
 # ── System-Check ──────────────────────────────────────────────
+def _stat_perms(path):
+    """Gibt Berechtigungen als lesbaren String zurueck, z.B. 'crw-rw---- root:tty (0660)'."""
+    import stat as stat_mod
+    import grp
+    import pwd
+    try:
+        st = os.stat(path)
+        mode = st.st_mode
+        perm_oct  = oct(mode)[-4:]
+        perm_str  = stat_mod.filemode(mode)
+        try:
+            owner = pwd.getpwuid(st.st_uid).pw_name
+        except Exception:
+            owner = str(st.st_uid)
+        try:
+            group = grp.getgrgid(st.st_gid).gr_name
+        except Exception:
+            group = str(st.st_gid)
+        return f"{perm_str} {owner}:{group} ({perm_oct})"
+    except Exception as e:
+        return f"stat fehler: {e}"
+
+def _proc_groups():
+    """Gibt Gruppennamen des aktuellen Prozesses zurueck."""
+    import grp
+    try:
+        gids = os.getgroups()
+        names = []
+        for gid in gids:
+            try:
+                names.append(grp.getgrgid(gid).gr_name)
+            except Exception:
+                names.append(str(gid))
+        return ", ".join(names)
+    except Exception as e:
+        return f"fehler: {e}"
+
+def _stdin_target():
+    """Wohin zeigt stdin (/proc/self/fd/0)?"""
+    try:
+        return os.readlink("/proc/self/fd/0")
+    except Exception:
+        return "unbekannt"
+
+def _try_open_tty3():
+    """Versucht /dev/tty3 O_RDWR zu oeffnen - genau wie systemd/openvt es braucht."""
+    import fcntl
+    try:
+        fd = os.open("/dev/tty3", os.O_RDWR | os.O_NOCTTY)
+        os.close(fd)
+        return True, "OK"
+    except OSError as e:
+        return False, f"{e.strerror} (errno {e.errno})"
+
 def system_check():
     """Prueft ob alle Voraussetzungen erfuellt sind."""
     import subprocess
+    import pwd
     ok = True
     log.info("--- System-Check ---")
 
@@ -42,65 +97,86 @@ def system_check():
     except Exception:
         log.warn("  ⚠ VERSION Datei nicht lesbar")
 
-    # Framebuffer
+    # ── Prozess-Kontext ────────────────────────────────────────
+    try:
+        uid  = os.getuid()
+        gid  = os.getgid()
+        try:
+            uname = pwd.getpwuid(uid).pw_name
+        except Exception:
+            uname = str(uid)
+        log.info(f"  ✓ Prozess laeuft als: {uname} (uid={uid} gid={gid})")
+        log.info(f"  ✓ Gruppen: {_proc_groups()}")
+    except Exception as e:
+        log.warn(f"  ⚠ Prozessinfo fehler: {e}")
+
+    # ── stdin ──────────────────────────────────────────────────
+    stdin_dest = _stdin_target()
+    log.info(f"  ✓ stdin (fd 0) -> {stdin_dest}")
+
+    # ── Framebuffer ────────────────────────────────────────────
     if os.path.exists("/dev/fb0"):
-        log.info("  ✓ /dev/fb0 vorhanden")
+        perms = _stat_perms("/dev/fb0")
+        if os.access("/dev/fb0", os.R_OK | os.W_OK):
+            log.info(f"  ✓ /dev/fb0 OK  [{perms}]")
+        else:
+            log.warn(f"  ⚠ /dev/fb0 keine Berechtigung  [{perms}]")
     else:
         log.error("  ✗ /dev/fb0 fehlt! Display-Treiber installiert?")
         ok = False
 
-    # fb0 lesbar?
-    if os.access("/dev/fb0", os.R_OK | os.W_OK):
-        log.info("  ✓ /dev/fb0 les/schreibbar")
-    else:
-        log.warn("  ⚠ /dev/fb0 keine Berechtigung (Gruppe video?)")
-
-    # fbcp
+    # ── fbcp ───────────────────────────────────────────────────
     try:
         r = subprocess.run("pgrep fbcp", shell=True,
                            capture_output=True, text=True)
         if r.returncode == 0:
-            log.info("  ✓ fbcp laeuft")
+            log.info(f"  ✓ fbcp laeuft (pid: {r.stdout.strip()})")
         else:
-            log.warn("  ⚠ fbcp laeuft nicht (SPI Display dunkel)")
+            log.warn("  ⚠ fbcp laeuft nicht (SPI Display bleibt dunkel)")
     except Exception:
         pass
 
-    # tty3 aktiv?
+    # ── Aktives VT ─────────────────────────────────────────────
     try:
         r = subprocess.run("fgconsole", shell=True,
                            capture_output=True, text=True, timeout=2)
         tty_nr = r.stdout.strip()
         if tty_nr == "3":
-            log.info(f"  ✓ tty3 aktiv")
+            log.info(f"  ✓ Aktives VT: tty{tty_nr} (korrekt)")
         else:
-            log.warn(f"  ⚠ tty{tty_nr} aktiv (erwartet: 3) - chvt 3 noetig")
+            log.warn(f"  ⚠ Aktives VT: tty{tty_nr} (erwartet 3) -> chvt 3 noetig!")
     except Exception:
         log.warn("  ⚠ fgconsole nicht verfuegbar")
 
-    # /dev/tty3 vorhanden?
+    # ── /dev/tty3 Berechtigungen ───────────────────────────────
     if os.path.exists("/dev/tty3"):
-        log.info("  ✓ /dev/tty3 vorhanden")
-        if os.access("/dev/tty3", os.R_OK | os.W_OK):
-            log.info("  ✓ /dev/tty3 Berechtigung OK")
+        perms = _stat_perms("/dev/tty3")
+        log.info(f"  ✓ /dev/tty3 vorhanden  [{perms}]")
+
+        # O_RDWR Test - genau was systemd/openvt braucht
+        can_open, reason = _try_open_tty3()
+        if can_open:
+            log.info("  ✓ /dev/tty3 O_RDWR: erfolgreich")
         else:
-            log.warn("  ⚠ /dev/tty3 keine Berechtigung")
+            log.warn(f"  ⚠ /dev/tty3 O_RDWR fehlgeschlagen: {reason}")
+            log.warn("    -> Fix: chmod 660 /dev/tty3 in rc.local")
+            ok = False
     else:
         log.error("  ✗ /dev/tty3 fehlt!")
         ok = False
 
-    # SDL Umgebung
-    log.info(f"  ✓ SDL_FBDEV={os.environ.get('SDL_FBDEV', '-')}")
-    log.info(f"  ✓ SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER', '-')}")
+    # ── SDL Umgebung ───────────────────────────────────────────
+    log.info(f"  ✓ SDL_FBDEV={os.environ.get('SDL_FBDEV', 'NICHT GESETZT')}")
+    log.info(f"  ✓ SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER', 'NICHT GESETZT')}")
 
-    # pygame
+    # ── pygame ─────────────────────────────────────────────────
     try:
         log.info(f"  ✓ pygame {pygame.version.ver}")
     except Exception as e:
         log.error(f"  ✗ pygame fehlt: {e}")
         ok = False
 
-    # Raspotify
+    # ── Raspotify ──────────────────────────────────────────────
     try:
         r = subprocess.run("systemctl is-active raspotify",
                            shell=True, capture_output=True, text=True)
@@ -112,7 +188,7 @@ def system_check():
     except Exception:
         pass
 
-    # WLAN
+    # ── WLAN ───────────────────────────────────────────────────
     try:
         r = subprocess.run("ip a show wlan0",
                            shell=True, capture_output=True, text=True)
@@ -125,13 +201,13 @@ def system_check():
     except Exception:
         pass
 
-    # Log schreibbar
+    # ── Log ────────────────────────────────────────────────────
     if os.access("/var/log/pidrive", os.W_OK):
         log.info("  ✓ Log-Verzeichnis schreibbar")
     else:
         log.warn("  ⚠ Log nicht schreibbar")
 
-    log.info(f"--- System-Check {'OK' if ok else 'FEHLER'} ---")
+    log.info(f"--- System-Check {'OK' if ok else 'FEHLER (Details oben)'} ---")
     return ok
 
 SETTINGS_FILE = os.path.join(BASE_DIR, "config/settings.json")

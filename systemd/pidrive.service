@@ -9,16 +9,18 @@ Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
-ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main.py
+
+# openvt startet main.py DIREKT auf VT3 - kein systemd TTY-Management noetig.
+# Das vermeidet den HUP-Signal-Loop der durch StandardInput=tty entstand.
+# /dev/tty3 muss 660 haben (chmod in rc.local) damit pi lesen kann.
+# ExecStartPre gibt rc.local Zeit chvt 3 + chmod abzuschliessen.
+ExecStartPre=/bin/sleep 3
+ExecStart=/usr/bin/openvt -c 3 -w -- /usr/bin/python3 /home/pi/pidrive/pidrive/main.py
+
 Restart=always
 RestartSec=5
-StandardInput=tty
 StandardOutput=null
 StandardError=journal
-TTYPath=/dev/tty3
-TTYReset=yes
-TTYVHangup=no
 
 [Install]
 WantedBy=multi-user.target

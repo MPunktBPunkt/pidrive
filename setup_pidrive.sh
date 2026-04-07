@@ -586,9 +586,9 @@ else
 fi
 
 # Berechtigungen
-usermod -a -G video,input,render "$REAL_USER" 2>/dev/null || true
+usermod -a -G video,input,render,tty "$REAL_USER" 2>/dev/null || true
 chmod 666 /dev/fb0 2>/dev/null || true
-chmod 666 /dev/tty1 2>/dev/null || true
+chmod 660 /dev/tty3 2>/dev/null || true
 ok "Berechtigungen gesetzt (video, input, render Gruppe)"
 
 # Trigger-Verzeichnis
