@@ -1,6 +1,7 @@
 [Unit]
 Description=PiDrive - Car Infotainment
 After=multi-user.target rc-local.service
+Conflicts=getty@tty1.service getty@tty2.service
 
 [Service]
 Type=simple
@@ -10,10 +11,11 @@ Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
 
-# launcher.py richtet /dev/tty3 als Controlling Terminal ein
-# (setsid + TIOCSCTTY) und startet main.py.
-# Kein openvt, kein StandardInput=tty, kein HUP-Problem.
+# Schritt 1: Warten bis rc.local fertig (fbcp, chmod tty3)
+# Schritt 2: VT3 in den Vordergrund BEVOR launcher.py startet
+# Ohne chvt 3 hier bleibt VT2 aktiv -> SDL set_mode() haengt in VT_WAITACTIVE
 ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/chvt 3
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 
 Restart=always

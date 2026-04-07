@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.4.1
+launcher.py - PiDrive TTY-Launcher v0.4.2
 Richtet /dev/tty3 als Controlling Terminal ein und startet main.py.
 Laeuft als root via systemd, gibt tty3-Kontext an main.py weiter.
 
@@ -151,6 +151,11 @@ def setup_tty():
     Erkennntis v0.4.1: TIOCSCTTY verursacht SIGHUP -> exit in SDL. Weglassen!
     """
     linfo("--- TTY Setup ---")
+
+    # SIGHUP ignorieren VOR TIOCSCTTY — Kernel sendet SIGHUP beim ctty-Wechsel
+    import signal as _sig
+    _sig.signal(_sig.SIGHUP, _sig.SIG_IGN)
+    linfo("  ✓ SIGHUP ignoriert (fuer TIOCSCTTY + VT_SETMODE)")
 
     # chvt 3 — VT3 in den Vordergrund
     try:

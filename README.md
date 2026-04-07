@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.4.1-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.4.2-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -296,11 +296,12 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.4.1
-- Kritischer Bugfix: `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
-- Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
-- Neues Modul `scanner.py`: PMR446 (8 Kanäle), Freenet (4), LPD433 (69), VHF manuell (136–174 MHz), UHF manuell (400–470 MHz)
-- RTL-SDR Check in System-Check und install.sh `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
+### v0.4.2
+- Service: `ExecStartPre=/bin/chvt 3` — VT3 muss vor SDL aktiv sein
+- Service: `Conflicts=getty@tty1/tty2` — kein VT-Rueckfall durch getty
+- launcher.py: `SIGHUP=SIG_IGN` vor TIOCSCTTY — verhindert exit(0) in SDL
+- Erstmals stabiler Service-Start: pygame + set_mode() laufen durch
+- Offenes Problem: Display dunkel (fb0 hat Inhalt, Ursache in Diagnose) `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
 - Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
 - RTL-SDR Check in System-Check (Startup-Log) und install.sh
 - install.sh: RTL-SDR USB Stick + rtl_fm + welle-cli werden geprueft und gemeldet

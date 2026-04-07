@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.4.1
+main.py - PiDrive Hauptprogramm v0.4.2
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -386,6 +386,16 @@ def main():
         log.error("  2. VT_SETMODE(VT_PROCESS) fehlgeschlagen")
         log.error("  3. /dev/tty3 nicht foreground")
         raise
+
+    # chvt 3 nochmal direkt vor set_mode() — systemd kann nach dem Launcher
+    # zurueck auf VT2 gewechselt haben. SDL zeichnet sonst auf ein nicht-
+    # sichtbares VT (Display bleibt dunkel trotz laufendem Prozess).
+    try:
+        import subprocess as _sp
+        _sp.run(["/bin/chvt", "3"], timeout=3)
+        log.info("chvt 3 vor set_mode() OK")
+    except Exception as e:
+        log.warn(f"chvt 3 fehlgeschlagen: {e}")
 
     log.info("pygame.init() — Schritt 4: pygame.display.set_mode()...")
     try:

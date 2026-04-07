@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.4.1
+# PiDrive — Kontext & Projektdokumentation v0.4.2
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.4.1)
+    ├── VERSION              (aktuell: 0.4.2)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -145,14 +145,14 @@ hdmi_drive=2
 
 ---
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.4.1)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.4.2)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.4.1):
+Diagnose (v0.4.2):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -248,6 +248,7 @@ Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
 ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/chvt 3
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 Restart=always
 RestartSec=5
@@ -509,9 +510,12 @@ sudo systemctl restart pidrive
 
 | Problem | Ursache | Loesung |
 |---|---|---|
+| Display dunkel, Hintergrundbeleuchtung an | fb0 hat Inhalt (1.2MB), fbcp laeuft, pygame laeuft — Ursache offen | naechster Debug-Schritt |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
+| Service stirbt mit exit(0) nach pygame.init() | SDL sendet SIGHUP via TIOCSCTTY + kein VT3 foreground | ExecStartPre=chvt 3 + SIGHUP=SIG_IGN (v0.4.2) |
+| set_mode() haengt ewig | VT2 foreground, SDL wartet auf VT_WAITACTIVE(3) | chvt 3 als ExecStartPre im Service (v0.4.2) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -528,16 +532,32 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.4.1 (aktuell)
+### v0.4.2 (aktuell)
+- Service: ExecStartPre=/bin/chvt 3 — VT3 muss VOR SDL set_mode() aktiv sein
+- Service: Conflicts=getty@tty1/tty2 — verhindert VT-Rueckfall durch getty
+- launcher.py: SIGHUP=SIG_IGN vor TIOCSCTTY — Kernel sendet HUP beim ctty-Wechsel, SDL wuerde sonst mit exit(0) sterben
+- Erstmals stabil: systemd Service laeuft durch, pygame.init() + set_mode() erfolgreich
+- Offenes Problem: Display bleibt dunkel (fb0 hat Inhalt, fbcp laeuft — Ursache unklar)
+
+### v0.4.1
+- launcher.py: Diagnose-Version — TIOCSCTTY entfernt, Step-Logging
+- main.py: SIGHUP-Handler sichtbar im Log, SDL Umgebungspruefung vor pygame.init()
+- Erkenntnis: TIOCSCTTY allein reicht nicht — VT3 muss foreground sein
+
+### v0.4.0
+- SDL_AUDIODRIVER=dummy gesetzt vor pygame.init()
+- pygame.init() laeuft jetzt vollstaendig durch (kein selektives init mehr noetig)
+
+### v0.3.9
+- launcher.py: tcsetpgrp() Fix — SDL fbcon exit(0) bei VT_SETMODE behoben
+- scanner.py: Scan aufwaerts/abwaerts fuer PMR446, LPD433, VHF, UHF
+- install.sh: Zeitzone Europe/Berlin + fake-hwclock
+
+### v0.3.8
 - Kritischer Bugfix: pygame.init() durch pygame.display.init() + pygame.font.init() ersetzt
 - SDL exit(0) bei ALSA-Konflikt behoben (raspotify belegte hw:1,0)
-- scanner.py: PMR446 (8 Kanaele, 446 MHz), Freenet (4, 149 MHz), LPD433 (69, 433 MHz)
-- scanner.py: VHF manuell (136-174 MHz, 25 kHz NFM), UHF manuell (400-470 MHz, 25 kHz NFM)
-- RTL-SDR Check in system_check() und install.sh pygame.display.init() + pygame.font.init() ersetzt
-- pygame.init() = SDL_Init(SDL_INIT_EVERYTHING) initialisiert auch Audio
-- Wenn ALSA/raspotify hw:1,0 belegt: SDL ruft intern exit(0) auf, kein Python-Fehler
-- RTL-SDR Check in system_check(): lsusb, rtl_fm, welle-cli
-- install.sh: RTL-SDR USB Stick wird geprueft und gemeldet
+- scanner.py: PMR446, Freenet, LPD433, VHF, UHF
+- RTL-SDR Check in system_check() und install.sh
 
 ### v0.3.7
 - launcher.py: Neues TTY-Setup Script (setsid + TIOCSCTTY)
@@ -574,6 +594,44 @@ sudo systemctl restart pidrive
 - Bluetooth Audio-Ausgang
 
 ---
+
+## Aktuell offenes Problem (Stand v0.4.2)
+
+**Display bleibt dunkel** — Hintergrundbeleuchtung leuchtet, aber kein Bild.
+
+Was bekannt ist:
+- `fb0` hat 1.228.800 Bytes Inhalt (640x480x4 = korrekte Groesse)
+- `fbcp` laeuft (PID aktiv)
+- pygame laeuft, `Display: 640x480 OK — Treiber: fbcon` im Log
+- `fgconsole` zeigt VT2 (nicht VT3) — VT3 wird aktiviert, aber Bild erscheint nicht
+
+Hypothesen fuer naechsten Debug-Schritt:
+1. fb0 Inhalt ist schwarz (pygame zeichnet auf falschen fb oder Farben stimmen nicht)
+2. fbcp kopiert fb0->fb1 aber SPI-Timing stimmt nach langer Laufzeit nicht
+3. Rotation/Skalierung in pygame erzeugt schwarzes Bild
+4. fbcp laeuft aber hat falschen Quell-/Ziel-Framebuffer
+
+Diagnosebefehle:
+```bash
+# Pixel-Werte in fb0 pruefen (nicht alles schwarz?)
+sudo python3 -c "
+d = open('/dev/fb0','rb').read(100)
+print([hex(b) for b in d[:20]])
+"
+# fbcp neu starten
+sudo pkill fbcp && sleep 1 && fbcp &
+# Screenshot von fb0 als PNG
+sudo python3 -c "
+import struct, zlib, sys
+w,h = 640,480
+raw = open('/dev/fb0','rb').read(w*h*4)
+# BGRA -> RGBA
+px = bytearray()
+for i in range(0,len(raw),4):
+    px += bytes([raw[i+2],raw[i+1],raw[i],raw[i+3]])
+print('Non-zero bytes:', sum(1 for b in raw if b != 0))
+"
+```
 
 ## Roadmap
 
