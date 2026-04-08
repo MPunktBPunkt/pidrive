@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.4.2
+launcher.py - PiDrive TTY-Launcher v0.4.3
 Richtet /dev/tty3 als Controlling Terminal ein und startet main.py.
 Laeuft als root via systemd, gibt tty3-Kontext an main.py weiter.
 
@@ -145,17 +145,20 @@ TTY = "/dev/tty3"
 
 def setup_tty():
     """
-    Richtet /dev/tty3 als stdin ein und bringt VT3 in den Vordergrund.
-    KEIN TIOCSCTTY: SDL fbcon braucht kein Controlling Terminal, aber
-    VT_SETMODE(VT_PROCESS) schlaegt fehl wenn SIGHUP durch ctty-Zuweisung kommt.
-    Erkennntis v0.4.1: TIOCSCTTY verursacht SIGHUP -> exit in SDL. Weglassen!
+    v0.4.3: systemd erzeugt via TTYPath=/dev/tty3 eine echte logind-Session.
+    Ohne logind-Session blockiert der Kernel VT_ACTIVATE(3) und SDL haengt
+    in VT_WAITACTIVE(3). Das war die eigentliche Ursache des schwarzen Displays.
+    SIGHUP=SIG_IGN verhindert exit(0) beim Controlling-Terminal-Wechsel.
+    Kein manuelles TIOCSCTTY oder VT_ACTIVATE noetig — systemd macht es.
     """
     linfo("--- TTY Setup ---")
 
-    # SIGHUP ignorieren VOR TIOCSCTTY — Kernel sendet SIGHUP beim ctty-Wechsel
+    # SIGHUP ignorieren — Kernel sendet HUP beim Controlling-Terminal-Wechsel
+    # systemd setzt TTYPath=/dev/tty3 und erzeugt logind-Session (v0.4.3 Fix)
     import signal as _sig
     _sig.signal(_sig.SIGHUP, _sig.SIG_IGN)
-    linfo("  ✓ SIGHUP ignoriert (fuer TIOCSCTTY + VT_SETMODE)")
+    linfo("  ✓ SIGHUP=SIG_IGN gesetzt")
+    linfo("  ✓ systemd TTYPath=/dev/tty3 erzeugt logind-Session (kein manuelles VT noetig)")
 
     # chvt 3 — VT3 in den Vordergrund
     try:

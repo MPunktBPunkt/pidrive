@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.4.2
+# PiDrive — Kontext & Projektdokumentation v0.4.3
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.4.2)
+    ├── VERSION              (aktuell: 0.4.3)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -145,14 +145,14 @@ hdmi_drive=2
 
 ---
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.4.2)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.4.3)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.4.2):
+Diagnose (v0.4.3):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -514,8 +514,8 @@ sudo systemctl restart pidrive
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt mit exit(0) nach pygame.init() | SDL sendet SIGHUP via TIOCSCTTY + kein VT3 foreground | ExecStartPre=chvt 3 + SIGHUP=SIG_IGN (v0.4.2) |
-| set_mode() haengt ewig | VT2 foreground, SDL wartet auf VT_WAITACTIVE(3) | chvt 3 als ExecStartPre im Service (v0.4.2) |
+| Service stirbt mit exit(0) nach pygame.init() | SDL sendet SIGHUP via TIOCSCTTY + kein VT3 foreground | ExecStartPre=chvt 3 + SIGHUP=SIG_IGN (v0.4.3) |
+| set_mode() haengt ewig | VT2 foreground, SDL wartet auf VT_WAITACTIVE(3) | chvt 3 als ExecStartPre im Service (v0.4.3) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -532,7 +532,7 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.4.2 (aktuell)
+### v0.4.3 (aktuell)
 - Service: ExecStartPre=/bin/chvt 3 — VT3 muss VOR SDL set_mode() aktiv sein
 - Service: Conflicts=getty@tty1/tty2 — verhindert VT-Rueckfall durch getty
 - launcher.py: SIGHUP=SIG_IGN vor TIOCSCTTY — Kernel sendet HUP beim ctty-Wechsel, SDL wuerde sonst mit exit(0) sterben
@@ -595,7 +595,7 @@ sudo systemctl restart pidrive
 
 ---
 
-## Aktuell offenes Problem (Stand v0.4.2)
+## Aktuell offenes Problem (Stand v0.4.3)
 
 **Display bleibt dunkel** — Hintergrundbeleuchtung leuchtet, aber kein Bild.
 

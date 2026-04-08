@@ -1,21 +1,29 @@
 [Unit]
 Description=PiDrive - Car Infotainment
 After=multi-user.target rc-local.service
-Conflicts=getty@tty1.service getty@tty2.service
+Conflicts=getty@tty1.service getty@tty2.service getty@tty3.service
 
 [Service]
 Type=simple
 User=root
+
+# TTYPath erzeugt eine echte logind-Session auf VT3.
+# Das ist der entscheidende Fix: ohne logind-Session blockiert der Kernel
+# VT_ACTIVATE(3) und SDL haengt in VT_WAITACTIVE(3) ewig.
+# SIGHUP=SIG_IGN in launcher.py verhindert den frueheren exit(0).
+TTYPath=/dev/tty3
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty
+
 Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
+Environment=SDL_AUDIODRIVER=dummy
 WorkingDirectory=/home/pi/pidrive/pidrive
 
-# Schritt 1: Warten bis rc.local fertig (fbcp, chmod tty3)
-# Schritt 2: VT3 in den Vordergrund BEVOR launcher.py startet
-# Ohne chvt 3 hier bleibt VT2 aktiv -> SDL set_mode() haengt in VT_WAITACTIVE
 ExecStartPre=/bin/sleep 3
-ExecStartPre=/bin/chvt 3
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 
 Restart=always
