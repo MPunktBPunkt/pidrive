@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.6           ║
+║        PiDrive Installer v0.5.7           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -142,8 +142,8 @@ EOF
     ok "rc.local erstellt"
 else
     # vtcon1-Block
-    if ! grep -q "vtcon1" "$RC"; then
-        sed -i '/^exit 0/i sleep 7\nfbcp \&\necho 0 > /sys/class/vtconsole/vtcon1/bind\necho 0 > /sys/class/graphics/fbcon/cursor_blink\ncon2fbmap 1 1\n' "$RC"
+    if ! grep -q "vtcon0" "$RC"; then
+        sed -i '/^exit 0/i sleep 7\nfbcp \&\necho 0 > /sys/class/vtconsole/vtcon0/bind\necho 0 > /sys/class/vtconsole/vtcon1/bind\necho 0 > /sys/class/graphics/fbcon/cursor_blink\ncon2fbmap 1 1\n' "$RC"
         ok "rc.local Block hinzugefuegt"
     else
         # chvt 3 nachruesten falls fehlend
@@ -226,6 +226,8 @@ Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=$INSTALL_DIR/pidrive
 ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon0/bind || true'
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind || true'
 ExecStart=/usr/bin/python3 $INSTALL_DIR/pidrive/launcher.py
 Restart=always
 RestartSec=5
