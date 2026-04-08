@@ -43,6 +43,31 @@ def check_service():
     if not pid or pid == "0": warn("Kein PID"); return
     ok(f"Main PID: {pid}")
 
+    # ── WICHTIGSTER CHECK: Ist der Prozess wirklich Python? ─────────────
+    S(f"EXE-CHECK — laeuft wirklich Python? (PID {pid})")
+    try:
+        exe = os.readlink(f"/proc/{pid}/exe")
+        if "python" in exe:
+            ok(f"exe → {exe}  ← Python laeuft korrekt!")
+        elif "systemd" in exe:
+            err(f"exe → {exe}  ← KEIN Python! systemd-Helper haengt!")
+            err("  PAMName=login + StandardInput=tty + User=root blockiert ExecStart")
+            err("  Loesung: PAMName+TTYPath+StandardInput aus Service entfernen")
+        else:
+            warn(f"exe → {exe}  ← kein Python erkannt")
+    except Exception as e:
+        warn(f"exe nicht lesbar (sudo noetig?): {e}")
+
+    # cmdline
+    try:
+        cmdline = open(f"/proc/{pid}/cmdline").read().replace('',' ').strip()
+        if "launcher.py" in cmdline:
+            ok(f"cmdline: {cmdline[:80]}")
+        else:
+            warn(f"cmdline: {cmdline[:80]}  ← launcher.py nicht sichtbar!")
+    except Exception as e:
+        warn(f"cmdline: {e}")
+
     # FDs des laufenden Prozesses — KERN-DIAGNOSE
     S(f"PROZESS FD-STATUS (PID {pid}) — welches TTY wirklich benutzt wird")
     for fd_n, fd_nm in [(0,"stdin"),(1,"stdout"),(2,"stderr")]:

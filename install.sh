@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.2           ║
+║        PiDrive Installer v0.5.3           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -317,12 +317,58 @@ else
     warn "welle-cli nicht installiert -> sudo apt install welle.io"
 fi
 
-# Service starten (nach Installation ohne Reboot testbar)
+# Service starten + ausfuehrliche Verifikation
 info "pidrive.service starten..."
 if systemctl start pidrive 2>/dev/null; then
-    sleep 3
+    sleep 5  # Launcher braucht Zeit fuer setsid+TIOCSCTTY
     if systemctl is-active --quiet pidrive; then
         ok "pidrive.service laeuft!"
+
+        # ── KRITISCHER TEST: Ist der Prozess wirklich Python? ──────────────
+        PID=$(systemctl show pidrive --property=MainPID --value 2>/dev/null)
+        if [ -n "$PID" ] && [ "$PID" != "0" ]; then
+            ok "Main PID: $PID"
+
+            # exe pruefen — muss /usr/bin/python3 sein, NICHT systemd!
+            EXE=$(readlink -f /proc/$PID/exe 2>/dev/null || echo "unbekannt")
+            if echo "$EXE" | grep -q "python"; then
+                ok "PID $PID exe: $EXE  ← Python laeuft!"
+            elif echo "$EXE" | grep -q "systemd"; then
+                err "PID $PID exe: $EXE  ← KEIN Python! systemd-Helper haengt."
+                err "  → PAMName/StandardInput/TTYPath Kombination blockiert Prozessstart."
+                err "  → service-Datei pruefen: PAMName=login entfernen?"
+            else
+                warn "PID $PID exe: $EXE  ← unbekannt, kein Python?"
+            fi
+
+            # cmdline pruefen
+            CMDLINE=$(tr '\0' ' ' < /proc/$PID/cmdline 2>/dev/null | head -c 80)
+            if echo "$CMDLINE" | grep -q "launcher.py"; then
+                ok "cmdline: $CMDLINE"
+            else
+                warn "cmdline: '$CMDLINE'  ← launcher.py nicht sichtbar"
+            fi
+
+            # stdin pruefen
+            STDIN=$(readlink /proc/$PID/fd/0 2>/dev/null || echo "unbekannt")
+            if echo "$STDIN" | grep -q "tty3"; then
+                ok "stdin (fd 0) → $STDIN  ← TTY gebunden"
+            else
+                warn "stdin (fd 0) → $STDIN  ← kein TTY (normal wenn kein PAMName)"
+            fi
+
+            # Neue Log-Eintraege pruefen
+            sleep 3
+            LOG_NEW=$(grep "LAUNCH\|PiDrive gestartet\|pygame" /var/log/pidrive/pidrive.log 2>/dev/null | tail -3)
+            if [ -n "$LOG_NEW" ]; then
+                ok "Neue Log-Eintraege vorhanden:"
+                echo "$LOG_NEW" | while read line; do info "  $line"; done
+            else
+                warn "Keine neuen Log-Eintraege — Prozess haengt vor erstem log.info()"
+            fi
+        else
+            warn "Kein PID ermittelt"
+        fi
     else
         warn "pidrive.service nicht aktiv — pruefe Log unten"
     fi

@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.5.2
+launcher.py - PiDrive TTY-Launcher v0.5.3
 
-systemd mit PAMName=login + TTYPath=/dev/tty3 sollte stdin automatisch
-auf tty3 setzen — tut es aber nicht zuverlaessig wenn tty3 beim Start
-noch nicht vollstaendig bereit ist.
+PAMName=login haengt auf systemd 247/Bullseye (interner Helper startet nie Python).
+Loesung: launcher.py richtet TTY komplett selbst ein.
 
-Loesung: tty3 explizit oeffnen und stdin uebergeben.
-Nur stdin (fd 0) wird auf tty3 gesetzt — stdout bleibt /dev/null
-damit kein Text auf dem Display erscheint.
-
-SIGHUP=SIG_IGN verhindert exit() beim VT-Wechsel.
+Ablauf:
+  1. SIGHUP=SIG_IGN (verhindert exit bei VT-Events)
+  2. setsid() — neue Session, Prozess wird Session-Leader
+  3. tty3 oeffnen + TIOCSCTTY — tty3 als Controlling Terminal
+  4. tcsetpgrp — wir sind foreground process group
+  5. stdin auf tty3 — fuer USB-Tastatur
+  6. execv main.py
 """
 
 import os
 import sys
 import signal
+import fcntl
+import termios
 from datetime import datetime
 
 LOG_FILE = "/var/log/pidrive/pidrive.log"
+TTY      = "/dev/tty3"
 
 def _log(level, msg):
     line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} [LAUNCH/{level}] {msg}\n"
@@ -37,48 +41,82 @@ def lerror(msg): _log("ERROR", msg)
 
 def main():
     linfo("=" * 50)
-    linfo(f"PiDrive Launcher v0.5.1  PID={os.getpid()}  UID={os.getuid()}")
+    linfo(f"PiDrive Launcher v0.5.3  PID={os.getpid()}  UID={os.getuid()}")
 
-    # SIGHUP ignorieren — Sicherheitsnetz
+    # ── 1. SIGHUP ignorieren ──────────────────────────────────────────────
+    # Muss VOR setsid/TIOCSCTTY passieren — der Kernel sendet HUP beim
+    # Controlling-Terminal-Wechsel. Mit SIG_IGN sterben wir nicht.
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
-    linfo("  SIGHUP=SIG_IGN gesetzt")
+    linfo("  ✓ SIGHUP=SIG_IGN")
 
-    # ── tty3 explizit oeffnen ─────────────────────────────────────────────
-    # systemd setzt stdin nicht immer auf tty3 obwohl StandardInput=tty
-    # konfiguriert ist (Race Condition wenn tty3 noch nicht bereit).
-    # Loesung: selbst oeffnen. NUR stdin (fd 0) — stdout bleibt /dev/null.
+    # ── 2. tty3 oeffnen ───────────────────────────────────────────────────
     try:
-        fd = os.open("/dev/tty3", os.O_RDWR | os.O_NOCTTY)
-        os.dup2(fd, 0)   # stdin → /dev/tty3  (fuer SDL + USB-Tastatur)
-        if fd > 0:
-            os.close(fd)
-        linfo("  ✓ stdin → /dev/tty3")
+        fd = os.open(TTY, os.O_RDWR | os.O_NOCTTY)
+        linfo(f"  ✓ {TTY} geoeffnet (fd={fd})")
     except OSError as e:
-        lwarn(f"  ⚠ tty3 oeffnen fehlgeschlagen: {e.strerror} — weiter mit /dev/null")
+        lerror(f"  ✗ {TTY} oeffnen fehlgeschlagen: {e.strerror}")
+        sys.exit(1)
 
-    # ── Verifikation ──────────────────────────────────────────────────────
+    # ── 3. Neue Session ───────────────────────────────────────────────────
     try:
-        linfo(f"  stdin (fd 0) → {os.readlink('/proc/self/fd/0')}")
+        os.setsid()
+        linfo(f"  ✓ setsid() OK  SID={os.getsid(0)}")
+    except OSError as e:
+        lwarn(f"  ⚠ setsid(): {e}")
+
+    # ── 4. TIOCSCTTY — tty3 als Controlling Terminal ──────────────────────
+    try:
+        fcntl.ioctl(fd, termios.TIOCSCTTY, 1)
+        linfo(f"  ✓ TIOCSCTTY: {TTY} ist Controlling Terminal")
+    except OSError as e:
+        lerror(f"  ✗ TIOCSCTTY: {e.strerror} (errno {e.errno})")
+        os.close(fd)
+        sys.exit(1)
+
+    # ── 5. foreground process group ───────────────────────────────────────
+    try:
+        os.tcsetpgrp(fd, os.getpgrp())
+        linfo(f"  ✓ tcsetpgrp pgid={os.getpgrp()} foreground")
+    except OSError as e:
+        lwarn(f"  ⚠ tcsetpgrp: {e}")
+
+    # ── 6. stdin auf tty3 ─────────────────────────────────────────────────
+    os.dup2(fd, 0)
+    linfo(f"  ✓ stdin → {TTY}")
+    if fd > 0:
+        os.close(fd)
+
+    # Verifikation
+    try:
+        linfo(f"  ✓ /proc/self/fd/0 → {os.readlink('/proc/self/fd/0')}")
     except Exception:
         pass
 
-    # logind-Session pruefen
+    # logind-Session Check (info only)
     try:
         import subprocess
         r = subprocess.run("loginctl | grep tty3", shell=True,
                            capture_output=True, text=True, timeout=2)
         if "tty3" in r.stdout:
-            linfo("  ✓ logind-Session auf tty3 vorhanden")
+            linfo("  ✓ logind-Session auf tty3")
         else:
-            lwarn("  ⚠ Noch keine logind-Session auf tty3")
-            lwarn("    (wird evtl. erst nach pygame.init() registriert)")
+            linfo("  ℹ keine logind-Session (normal ohne PAMName)")
     except Exception:
         pass
 
-    # ── main.py starten ───────────────────────────────────────────────────
+    # fgconsole
+    try:
+        import subprocess
+        r = subprocess.run("fgconsole", shell=True,
+                           capture_output=True, text=True, timeout=2)
+        vt = r.stdout.strip()
+        (linfo if vt == "3" else lwarn)(f"  {'✓' if vt=='3' else '⚠'} Aktives VT: tty{vt}")
+    except Exception:
+        pass
+
+    # ── 7. main.py starten ────────────────────────────────────────────────
     here   = os.path.dirname(os.path.abspath(__file__))
     target = os.path.join(here, "main.py")
-
     if not os.path.exists(target):
         lerror(f"main.py nicht gefunden: {target}")
         sys.exit(1)
