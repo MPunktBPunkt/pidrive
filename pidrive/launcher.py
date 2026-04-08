@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.5.3
+launcher.py - PiDrive TTY-Launcher v0.5.4
 
 PAMName=login haengt auf systemd 247/Bullseye (interner Helper startet nie Python).
 Loesung: launcher.py richtet TTY komplett selbst ein.
@@ -120,6 +120,19 @@ def main():
     if not os.path.exists(target):
         lerror(f"main.py nicht gefunden: {target}")
         sys.exit(1)
+
+    # VT3 aktivieren direkt vor execv — via ioctl, nicht chvt (chvt haengt
+    # wenn wir TIOCSCTTY gesetzt haben und SIGHUP ignorieren).
+    # Beim Restart nach Crash schaltet SDL zurueck auf VT2 — dieser Fix
+    # stellt sicher dass jeder Neustart auf VT3 beginnt.
+    try:
+        import fcntl as _fc_vt
+        _fd_vt = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
+        _fc_vt.ioctl(_fd_vt, 0x5606, 3)  # VT_ACTIVATE 3
+        os.close(_fd_vt)
+        linfo("  ✓ VT_ACTIVATE 3 (vor execv)")
+    except Exception as e:
+        lwarn(f"  ⚠ VT_ACTIVATE: {e}")
 
     linfo(f"Starte: {sys.executable} {target}")
     linfo("=" * 50)

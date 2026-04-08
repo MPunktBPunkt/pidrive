@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.3           ║
+║        PiDrive Installer v0.5.4           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -159,6 +159,14 @@ else
             ok "chmod 660 /dev/tty3 zu rc.local hinzugefuegt"
         else
             ok "rc.local: chmod 660 /dev/tty3 vorhanden"
+
+# Doppeltes chvt 3 aus rc.local entfernen (Altlast)
+if grep -c "^chvt 3" "$RC" 2>/dev/null | grep -q "^[2-9]"; then
+    # Alle chvt 3 Zeilen entfernen dann einmalig vor chmod einfuegen
+    sed -i '/^chvt 3/d' "$RC"
+    sed -i "/^chmod 660 \/dev\/tty3/i chvt 3" "$RC"
+    ok "rc.local: doppeltes chvt 3 bereinigt (war Altlast)"
+fi
         fi
     fi
 fi
@@ -172,6 +180,29 @@ echo 'KERNEL=="tty3", GROUP="tty", MODE="0660"' > "$UDEV_RULE"
 udevadm control --reload-rules
 udevadm trigger /dev/tty3 2>/dev/null || true
 ok "udev-Regel gesetzt: /dev/tty3 → 0660"
+
+# ══════════════════════════════════════════════════════════════
+# SCHRITT 7b: logind.conf — VT-Verwaltung fuer SDL freigeben
+# ══════════════════════════════════════════════════════════════
+info "logind.conf konfigurieren..."
+LOGIND_CONF="/etc/systemd/logind.conf"
+# HandleVTSwitches=no: logind blockiert VT-Wechsel nicht mehr
+# NAutoVTs=0: logind startet keine Auto-VTs (kein getty auf VT1-6)
+if ! grep -q "^HandleVTSwitches=no" "$LOGIND_CONF" 2>/dev/null; then
+    # Entferne alte auskommentierte Eintraege und setze neue
+    sed -i 's/^#*HandleVTSwitches=.*/HandleVTSwitches=no/' "$LOGIND_CONF" 2>/dev/null ||         echo "HandleVTSwitches=no" >> "$LOGIND_CONF"
+    ok "logind: HandleVTSwitches=no gesetzt"
+else
+    ok "logind: HandleVTSwitches=no bereits aktiv"
+fi
+if ! grep -q "^NAutoVTs=0" "$LOGIND_CONF" 2>/dev/null; then
+    sed -i 's/^#*NAutoVTs=.*/NAutoVTs=0/' "$LOGIND_CONF" 2>/dev/null ||         echo "NAutoVTs=0" >> "$LOGIND_CONF"
+    ok "logind: NAutoVTs=0 gesetzt"
+else
+    ok "logind: NAutoVTs=0 bereits aktiv"
+fi
+systemctl daemon-reload
+systemctl restart systemd-logind 2>/dev/null || true
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 8: Systemdienste einrichten

@@ -7,10 +7,8 @@ Conflicts=getty@tty1.service getty@tty2.service getty@tty3.service
 Type=simple
 User=root
 
-# KEIN PAMName, KEIN TTYPath, KEIN StandardInput=tty !
-# PAMName=login + StandardInput=tty + User=root haengt auf systemd 247/Bullseye:
-# systemd forkt internen PAM-Helper der nie fertig wird -> Python startet nie.
-# Stattdessen: launcher.py richtet TTY selbst ein (setsid + TIOCSCTTY).
+# Kein PAMName/TTYPath/StandardInput - haengt systemd 247 PAM-Helper
+# setsid+TIOCSCTTY in launcher.py - funktioniert seit v0.5.3
 
 Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
@@ -18,16 +16,11 @@ Environment=SDL_NOMOUSE=1
 Environment=SDL_AUDIODRIVER=dummy
 WorkingDirectory=/home/pi/pidrive/pidrive
 
-# Schritt 1: rc.local abwarten (fbcp, chvt 3)
-# Schritt 2: fbcon vom Framebuffer trennen -> pygame hat alleinigen Zugriff auf fb0
-# Schritt 3: VT3 aktivieren bevor launcher.py startet
 ExecStartPre=/bin/sleep 3
-ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind'
-ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/graphics/fbcon/cursor_blink'
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 
 Restart=always
-RestartSec=5
+RestartSec=10
 StandardOutput=null
 StandardError=journal
 

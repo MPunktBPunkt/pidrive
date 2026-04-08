@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.5.3
+main.py - PiDrive Hauptprogramm v0.5.4
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -343,26 +343,22 @@ def main():
     # System-Check
     system_check()
 
-    # pygame initialisieren
-    # SDL_AUDIODRIVER=dummy: kein ALSA-Konflikt mit raspotify
-    # SIGHUP=SIG_IGN in launcher.py verhindert exit() bei VT-Events
-    log.info("pygame.init() ...")
-    pygame.init()
-    log.info("pygame.init() OK")
+    # Selektive pygame-Initialisierung (display + font, kein mixer)
+    # pygame.init() initialisiert alle Module inkl. Mixer.
+    # Bei pygame 1.9.6 + Python 3.9 + echter TTY fuehrt das zu einem
+    # GIL-Fehler (PyEval_SaveThread). Ob Mixer, Signal-Handler oder
+    # TTY-Kontext die genaue Ursache ist, ist noch offen —
+    # selektives Init ist der sicherste Test.
+    log.info("pygame.display.init() ...")
+    pygame.display.init()
+    log.info(f"  display: {pygame.display.get_init()}")
+    pygame.font.init()
+    log.info(f"  font:    {pygame.font.get_init()}")
+    log.info("pygame init OK (display+font, kein mixer)")
 
-    # fbcon vom Framebuffer trennen (falls noch gebunden)
-    # vtcon1/bind=1 bedeutet fbcon ueberschreibt fb0 mit schwarzem Hintergrund.
-    # Nach bind=0 hat pygame alleinigen Zugriff auf fb0.
-    try:
-        with open("/sys/class/vtconsole/vtcon1/bind", "w") as f:
-            f.write("0")
-        log.info("vtcon1/bind=0 OK — fbcon vom Framebuffer getrennt")
-    except Exception as e:
-        log.warn(f"vtcon1/bind: {e}")
-
-    # VT3 aktivieren via ioctl — NACH pygame.init(), VOR set_mode()
-    # SDL_VideoInit (in pygame.init) merkt sich das aktuelle VT,
-    # danach kann VT_ACTIVATE(3) greifen.
+    # ── VT3 aktivieren ────────────────────────────────────────────────────
+    # Muss NACH pygame.init() passieren (SDL_VideoInit merkt sich aktuelles VT).
+    # Direkt vor set_mode() — kein Code dazwischen der VT zurueckschalten koennte.
     try:
         import fcntl as _fcntl_vt
         _fd_vt = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
@@ -371,6 +367,46 @@ def main():
         log.info("VT_ACTIVATE 3 OK")
     except Exception as e:
         log.warn(f"VT_ACTIVATE: {e}")
+
+    # fgconsole loggen — zeigt ob VT3 wirklich aktiv ist
+    try:
+        import subprocess as _sp
+        _fg = _sp.run("fgconsole", shell=True,
+                      capture_output=True, text=True, timeout=1).stdout.strip()
+        log.info(f"fgconsole nach VT_ACTIVATE: {_fg} {'(korrekt)' if _fg=='3' else '(PROBLEM: nicht 3!)'}")
+    except Exception:
+        pass
+
+    # ── fbcon vom Framebuffer trennen ────────────────────────────────────
+    # NACH VT_ACTIVATE — verhindert dass unbind den VT-Zustand aendert.
+    # vtcon1/bind=0: fbcon gibt fb0 frei -> pygame hat alleinigen Zugriff.
+    try:
+        with open("/sys/class/vtconsole/vtcon1/bind", "w") as _vf:
+            _vf.write("0")
+        with open("/sys/class/graphics/fbcon/cursor_blink", "w") as _cf:
+            _cf.write("0")
+        log.info("vtcon1/bind=0, cursor_blink=0 OK")
+    except Exception as e:
+        log.warn(f"vtcon1 unbind: {e}")
+
+    # Hartes VT-Logging direkt vor set_mode()
+    # set_mode() ruft intern VT_WAITACTIVE(3) — haengt wenn VT3 nicht foreground
+    try:
+        import subprocess as _sp_vt
+        _fg = _sp_vt.run("fgconsole", shell=True, capture_output=True,
+                          text=True, timeout=2).stdout.strip()
+        _active = open("/sys/class/tty/tty0/active").read().strip()
+        log.info(f"VT-Status vor set_mode(): fgconsole={_fg}  tty0/active={_active}")
+        if _fg != "3":
+            log.warn(f"  VT{_fg} ist foreground, nicht VT3 — set_mode() wird haengen!")
+            # Nochmals VT_ACTIVATE versuchen
+            import fcntl as _fc2
+            _fd2 = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
+            _fc2.ioctl(_fd2, 0x5606, 3)
+            os.close(_fd2)
+            log.info("  VT_ACTIVATE 3 nochmals abgeschickt")
+    except Exception as e:
+        log.warn(f"VT-Status Abfrage: {e}")
 
     log.info("pygame.display.set_mode() ...")
     try:

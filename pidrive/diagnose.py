@@ -202,7 +202,7 @@ def summary():
     ses = run("loginctl list-sessions 2>/dev/null")
     svc = run("systemctl is-active pidrive")
     fcp = bool(run("pgrep fbcp"))
-    cfg = run("grep -E 'TTYPath|PAMName|StandardInput' /etc/systemd/system/pidrive.service 2>/dev/null")
+    cfg = run("grep -E '^TTYPath|^PAMName|^StandardInput' /etc/systemd/system/pidrive.service 2>/dev/null")
     pid = run("systemctl show pidrive --property=MainPID --value")
     stdin_t = ""
     if pid and pid != "0":
