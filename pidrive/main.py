@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.4.3
+main.py - PiDrive Hauptprogramm v0.5.0
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -343,71 +343,19 @@ def main():
     # System-Check
     system_check()
 
-    # ── Signal-Handler registrieren ──────────────────────────────────────────
-    # SIGHUP (1) = das Signal das SDL zum exit(0) bringt
-    # Wir fangen es ab um es im Log sichtbar zu machen statt still zu sterben
-    import signal as _signal
-    def _sighup_handler(signum, frame):
-        log.error("SIGHUP empfangen! SDL/VT sendet HUP — Prozess wuerde sterben.")
-        log.error("  -> TIOCSCTTY war aktiv und VT3 hat HUP ausgeloest.")
-        log.error("  -> v0.4.1 Fix: kein TIOCSCTTY mehr in launcher.py")
-        # Nicht beenden — nur loggen und weiter
-    _signal.signal(_signal.SIGHUP, _sighup_handler)
-    log.info("Signal-Handler: SIGHUP abgefangen (Debug v0.4.1)")
+    # pygame initialisieren
+    # SDL_AUDIODRIVER=dummy: kein ALSA-Konflikt mit raspotify
+    # PAMName=login im Service: echte logind-Session -> kein SIGHUP mehr
+    log.info("pygame.init() ...")
+    pygame.init()
+    log.info("pygame.init() OK")
 
-    # ── pygame initialisieren ─────────────────────────────────────────────────
-    # SDL_AUDIODRIVER=dummy: verhindert ALSA-Konflikt mit raspotify
-    # Kein TIOCSCTTY in launcher.py: verhindert SIGHUP durch VT-Events
-    log.info("pygame.init() — Schritt 1: SDL Umgebung pruefen...")
-    log.info(f"  SDL_VIDEODRIVER = {os.environ.get('SDL_VIDEODRIVER', 'NICHT GESETZT')}")
-    log.info(f"  SDL_AUDIODRIVER = {os.environ.get('SDL_AUDIODRIVER', 'NICHT GESETZT')}")
-    log.info(f"  SDL_FBDEV       = {os.environ.get('SDL_FBDEV', 'NICHT GESETZT')}")
-
-    # Controlling Terminal Status vor pygame.init()
-    try:
-        _fd = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
-        os.close(_fd)
-        log.warn("pygame.init() — WARNUNG: Controlling Terminal vorhanden!")
-        log.warn("  -> SIGHUP-Risiko durch VT_SETMODE(VT_PROCESS)")
-    except OSError:
-        log.info("pygame.init() — Schritt 2: kein Controlling Terminal (korrekt)")
-
-    log.info("pygame.init() — Schritt 3: pygame.init() aufrufen...")
-    try:
-        result = pygame.init()
-        log.info(f"pygame.init() OK — Module: {result[0]} OK, {result[1]} Fehler")
-        err = pygame.get_error()
-        if err:
-            log.warn(f"  pygame Fehler nach init: {err}")
-    except SystemExit as e:
-        log.error(f"pygame.init() -> SystemExit({e.code}) — SDL hat exit() aufgerufen!")
-        log.error("  Moegliche Ursachen:")
-        log.error("  1. SIGHUP durch Controlling Terminal (TIOCSCTTY)")
-        log.error("  2. VT_SETMODE(VT_PROCESS) fehlgeschlagen")
-        log.error("  3. /dev/tty3 nicht foreground")
-        raise
-
-    # VT3 aktivieren via ioctl — NACH pygame.init(), VOR set_mode()
-    # Kein subprocess/chvt (haengt ohne ctty), direkter ioctl auf /dev/tty0.
-    # Mit TTYPath=/dev/tty3 im Service erzeugt systemd eine logind-Session,
-    # sodass VT_ACTIVATE(3) vom Kernel auch wirklich ausgefuehrt wird.
-    try:
-        import fcntl as _fcntl_vt
-        _fd_vt = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
-        _fcntl_vt.ioctl(_fd_vt, 0x5606, 3)  # VT_ACTIVATE 3
-        os.close(_fd_vt)
-        log.info("VT_ACTIVATE 3 OK")
-    except Exception as e:
-        log.warn(f"VT_ACTIVATE fehlgeschlagen: {e}")
-
-    log.info("pygame.init() — Schritt 4: pygame.display.set_mode()...")
+    log.info("pygame.display.set_mode() ...")
     try:
         real = pygame.display.set_mode((FB_W, FB_H))
         log.info(f"Display: {FB_W}x{FB_H} OK — Treiber: {pygame.display.get_driver()}")
     except Exception as e:
         log.error(f"Display-Fehler: {e}")
-        log.error("  SDL_VIDEODRIVER=fbcon braucht VT3 im Vordergrund")
-        log.error("  Pruefe: sudo chvt 3 && fgconsole")
         sys.exit(1)
 
     virt = pygame.Surface((W, H))

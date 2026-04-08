@@ -118,8 +118,12 @@ def check_service():
     if "TTYPath=/dev/tty3" in tty_cfg:
         ok("TTYPath=/dev/tty3 konfiguriert")
     else:
-        err("TTYPath=/dev/tty3 fehlt! logind-Session wird nicht erzeugt.")
-        err("Fix: TTYPath=/dev/tty3 in pidrive.service hinzufuegen")
+        err("TTYPath=/dev/tty3 fehlt!")
+    if "PAMName=login" in tty_cfg:
+        ok("PAMName=login konfiguriert — logind-Session wird erzeugt")
+    else:
+        err("PAMName=login fehlt! Ohne PAM-Session blockiert Kernel VT_SETMODE -> SIGHUP")
+        err("Fix: PAMName=login in [Service] hinzufuegen")
     print(f"  TTY-Config: {tty_cfg.replace(chr(10), ' | ')}")
 
 # ── VT Aktivierungstest ───────────────────────────────────────────────────────
@@ -198,12 +202,15 @@ def main():
         "grep TTYPath /etc/systemd/system/pidrive.service 2>/dev/null")
 
     all_ok = True
+    pam_ok = "PAMName=login" in run(
+        "grep PAMName /etc/systemd/system/pidrive.service 2>/dev/null")
     checks = [
         (fg == "3",    "VT3 foreground"),
         ("tty3" in sessions, "logind-Session auf tty3"),
         (service == "active", "pidrive.service laeuft"),
         (fbcp_ok,    "fbcp laeuft"),
         (tty_ok,     "TTYPath=/dev/tty3 im Service"),
+        (pam_ok,     "PAMName=login im Service"),
     ]
     for result, label in checks:
         if result:

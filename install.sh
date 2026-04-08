@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.4.3           ║
+║        PiDrive Installer v0.5.0           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -325,6 +325,17 @@ if systemctl start pidrive 2>/dev/null; then
     fi
 else
     warn "Start fehlgeschlagen (evtl. noch kein Display-Treiber)"
+fi
+
+# ══════════════════════════════════════════════════════════════
+# DIAGNOSE
+# ══════════════════════════════════════════════════════════════
+echo ""
+echo -e "${BOLD}${CYAN}Automatische Diagnose...${NC}"
+if [ -f "$INSTALL_DIR/pidrive/diagnose.py" ]; then
+    python3 "$INSTALL_DIR/pidrive/diagnose.py" 2>/dev/null || true
+else
+    warn "diagnose.py nicht gefunden"
 fi
 
 # ══════════════════════════════════════════════════════════════

@@ -1,32 +1,30 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.4.3
-Richtet /dev/tty3 als Controlling Terminal ein und startet main.py.
-Laeuft als root via systemd, gibt tty3-Kontext an main.py weiter.
+launcher.py - PiDrive TTY-Launcher v0.5.0
 
-Log: /var/log/pidrive/pidrive.log  (und journalctl -u pidrive)
+v0.5.0: Stark vereinfacht dank PAMName=login im Service.
+systemd erzeugt eine echte logind-Session auf VT3 — kein manuelles
+TIOCSCTTY, setsid() oder VT_ACTIVATE noetig. SDL bekommt den VT
+sauber uebergeben.
+
+SIGHUP=SIG_IGN bleibt als Sicherheitsnetz.
 """
 
 import os
 import sys
-import fcntl
-import termios
-import subprocess
-import stat
-import grp
-import pwd
+import signal
 from datetime import datetime
 
-# ── Logging (vor log.py Import, da das erst in main.py initialisiert wird) ──
+# ── Minimales Logging (vor main.py Import) ──────────────────────────────────
 
 LOG_FILE = "/var/log/pidrive/pidrive.log"
 
 def _ts():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def _write(level, msg):
+def _log(level, msg):
     line = f"{_ts()} [LAUNCH/{level}] {msg}\n"
-    sys.stderr.write(line)          # → journalctl -u pidrive
+    sys.stderr.write(line)
     try:
         os.makedirs("/var/log/pidrive", exist_ok=True)
         with open(LOG_FILE, "a") as f:
@@ -34,204 +32,42 @@ def _write(level, msg):
     except Exception:
         pass
 
-def linfo(msg):  _write("INFO",  msg)
-def lwarn(msg):  _write("WARN",  msg)
-def lerror(msg): _write("ERROR", msg)
+def linfo(msg):  _log("INFO",  msg)
+def lwarn(msg):  _log("WARN",  msg)
+def lerror(msg): _log("ERROR", msg)
 
 
-# ── Berechtigungs-Check ──────────────────────────────────────────────────────
+# ── Start ────────────────────────────────────────────────────────────────────
 
-def check_permissions():
-    """Prueft alle notwendigen Berechtigungen und loggt Details."""
+def main():
     linfo("=" * 50)
-    linfo("PiDrive Launcher gestartet")
-    linfo(f"  Python:  {sys.version.split()[0]}")
-    linfo(f"  PID:     {os.getpid()}")
-    linfo(f"  UID:     {os.getuid()} ({_uid_name(os.getuid())})")
-    linfo(f"  GID:     {os.getgid()}")
-    linfo(f"  Gruppen: {_group_names()}")
-    linfo("=" * 50)
+    linfo("PiDrive Launcher v0.5.0 gestartet")
+    linfo(f"  PID: {os.getpid()}, UID: {os.getuid()}")
 
-    ok = True
+    # SIGHUP ignorieren — Sicherheitsnetz falls Kernel HUP sendet
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    linfo("  SIGHUP=SIG_IGN gesetzt")
 
-    # /dev/fb0
-    linfo("--- Berechtigungs-Check ---")
-    _check_device("/dev/fb0",  need_rw=True,  label="Framebuffer")
-
-    # /dev/tty3
-    tty_ok = _check_device("/dev/tty3", need_rw=True, label="TTY3")
-    if not tty_ok:
-        ok = False
-        lerror("  Fix: sudo chmod 660 /dev/tty3")
-        lerror("       oder udev-Regel: KERNEL==\"tty3\", MODE=\"0660\"")
-
-    # stdin
+    # Kontext von systemd pruefen (PAMName=login erzeugt logind-Session)
     try:
-        stdin_target = os.readlink("/proc/self/fd/0")
-    except Exception:
-        stdin_target = "unbekannt"
-    linfo(f"  stdin (fd 0) -> {stdin_target}")
-
-    # aktives VT
-    try:
-        r = subprocess.run("fgconsole", shell=True,
+        import subprocess
+        r = subprocess.run("loginctl | grep tty3", shell=True,
                            capture_output=True, text=True, timeout=2)
-        vt = r.stdout.strip()
-        if vt == "3":
-            linfo(f"  ✓ Aktives VT: tty{vt}")
+        if "tty3" in r.stdout:
+            linfo("  ✓ logind-Session auf tty3 vorhanden (PAMName=login OK)")
         else:
-            lwarn(f"  ⚠ Aktives VT: tty{vt} (erwartet 3) — chvt 3 folgt")
-    except Exception:
-        lwarn("  ⚠ fgconsole nicht verfuegbar")
-
-    linfo(f"--- Berechtigungs-Check {'OK' if ok else 'FEHLER'} ---")
-    return ok
-
-def _check_device(path, need_rw, label):
-    """Prueft ein Device und gibt True zurueck wenn alles OK."""
-    if not os.path.exists(path):
-        lerror(f"  ✗ {label} ({path}) fehlt!")
-        return False
-    try:
-        s = os.stat(path)
-        mode_oct  = oct(s.st_mode)[-4:]
-        mode_str  = _mode_str(s.st_mode)
-        owner     = _uid_name(s.st_uid)
-        group     = _gid_name(s.st_gid)
-        linfo(f"  ✓ {label}: {path}  [{mode_str} {owner}:{group} ({mode_oct})]")
-    except Exception as e:
-        lwarn(f"  ⚠ {label}: stat fehler: {e}")
-
-    # O_RDWR oeffnen testen
-    try:
-        fd = os.open(path, os.O_RDWR | os.O_NOCTTY)
-        os.close(fd)
-        linfo(f"  ✓ {label}: O_RDWR erfolgreich")
-        return True
-    except OSError as e:
-        lerror(f"  ✗ {label}: O_RDWR fehlgeschlagen: {e.strerror} (errno {e.errno})")
-        return False
-
-def _uid_name(uid):
-    try:    return pwd.getpwuid(uid).pw_name
-    except: return str(uid)
-
-def _gid_name(gid):
-    try:    return grp.getgrgid(gid).gr_name
-    except: return str(gid)
-
-def _group_names():
-    try:
-        return ", ".join(_gid_name(g) for g in os.getgroups())
-    except:
-        return "unbekannt"
-
-def _mode_str(mode):
-    """z.B. 'crw-rw----'"""
-    chars = ["c" if stat.S_ISCHR(mode) else
-             "b" if stat.S_ISBLK(mode) else "-"]
-    for who in [(stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR),
-                (stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP),
-                (stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH)]:
-        chars += ["r" if mode & who[0] else "-",
-                  "w" if mode & who[1] else "-",
-                  "x" if mode & who[2] else "-"]
-    return "".join(chars)
-
-
-# ── Controlling Terminal einrichten ─────────────────────────────────────────
-
-TTY = "/dev/tty3"
-
-def setup_tty():
-    """
-    v0.4.3: systemd erzeugt via TTYPath=/dev/tty3 eine echte logind-Session.
-    Ohne logind-Session blockiert der Kernel VT_ACTIVATE(3) und SDL haengt
-    in VT_WAITACTIVE(3). Das war die eigentliche Ursache des schwarzen Displays.
-    SIGHUP=SIG_IGN verhindert exit(0) beim Controlling-Terminal-Wechsel.
-    Kein manuelles TIOCSCTTY oder VT_ACTIVATE noetig — systemd macht es.
-    """
-    linfo("--- TTY Setup ---")
-
-    # SIGHUP ignorieren — Kernel sendet HUP beim Controlling-Terminal-Wechsel
-    # systemd setzt TTYPath=/dev/tty3 und erzeugt logind-Session (v0.4.3 Fix)
-    import signal as _sig
-    _sig.signal(_sig.SIGHUP, _sig.SIG_IGN)
-    linfo("  ✓ SIGHUP=SIG_IGN gesetzt")
-    linfo("  ✓ systemd TTYPath=/dev/tty3 erzeugt logind-Session (kein manuelles VT noetig)")
-
-    # chvt 3 — VT3 in den Vordergrund
-    try:
-        r = subprocess.run(["/bin/chvt", "3"], timeout=3)
-        if r.returncode == 0:
-            linfo("  ✓ chvt 3 OK")
-        else:
-            lwarn(f"  ⚠ chvt 3 returncode: {r.returncode}")
-    except Exception as e:
-        lwarn(f"  ⚠ chvt 3 fehler: {e}")
-
-    # ── Schritt 1: tty3 oeffnen ─────────────────────────────────────────────
-    # O_NOCTTY: NICHT als Controlling Terminal setzen (kein SIGHUP-Risiko!)
-    # v0.4.1 Erkenntnis: TIOCSCTTY fuehrt zu SIGHUP bei VT-Events
-    #   -> SDL VT_SETMODE(VT_PROCESS) stirbt dann mit exit(0)
-    #   -> Loesung: kein TIOCSCTTY, kein setsid(), nur O_NOCTTY + stdin
-    linfo("  Schritt 1: /dev/tty3 oeffnen (O_NOCTTY)...")
-    try:
-        fd = os.open(TTY, os.O_RDWR | os.O_NOCTTY)
-        linfo(f"  ✓ {TTY} geoeffnet (fd={fd})")
-    except OSError as e:
-        lerror(f"  ✗ {TTY} oeffnen fehlgeschlagen: {e.strerror} (errno {e.errno})")
-        lerror("    Launcher kann nicht fortfahren.")
-        sys.exit(1)
-
-    # ── Schritt 2: stdin auf tty3 → USB-Tastatur-Input ───────────────────
-    linfo("  Schritt 2: stdin → /dev/tty3 (fuer USB-Tastatur)...")
-    try:
-        os.dup2(fd, 0)
-        linfo(f"  ✓ stdin → {TTY}")
-    except OSError as e:
-        lerror(f"  ✗ dup2 fehlgeschlagen: {e.strerror}")
-        os.close(fd)
-        sys.exit(1)
-
-    if fd > 0:
-        os.close(fd)
-
-    # ── Schritt 3: Verifikation ──────────────────────────────────────────
-    linfo("  Schritt 3: Verifikation...")
-    try:
-        fd0_target = os.readlink("/proc/self/fd/0")
-        linfo(f"  ✓ /proc/self/fd/0 → {fd0_target}")
-    except Exception as e:
-        lwarn(f"  ⚠ readlink fd/0: {e}")
-
-    # Kein Controlling Terminal prüfen (wollen wir nicht haben!)
-    try:
-        import fcntl as _fcntl
-        fd_ctty = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
-        os.close(fd_ctty)
-        lwarn("  ⚠ /dev/tty offen — Controlling Terminal vorhanden (unerwartet)")
-    except OSError:
-        linfo("  ✓ kein Controlling Terminal — korrekt fuer SDL fbcon (kein SIGHUP)")
-
-    # fgconsole noch einmal prüfen
-    try:
-        r = subprocess.run("fgconsole", shell=True,
-                           capture_output=True, text=True, timeout=2)
-        vt = r.stdout.strip()
-        if vt == "3":
-            linfo(f"  ✓ VT3 ist foreground — SDL kann zeichnen")
-        else:
-            lwarn(f"  ⚠ VT{vt} ist foreground (erwartet 3)")
+            lwarn("  ⚠ Keine logind-Session auf tty3 — PAMName=login im Service pruefen!")
     except Exception:
         pass
 
-    linfo("--- TTY Setup OK ---")
+    # stdin pruefen
+    try:
+        stdin_target = os.readlink("/proc/self/fd/0")
+        linfo(f"  stdin → {stdin_target}")
+    except Exception:
+        pass
 
-
-# ── main.py starten ──────────────────────────────────────────────────────────
-
-def launch():
+    # main.py starten — erbt den kompletten systemd/logind Kontext
     here   = os.path.dirname(os.path.abspath(__file__))
     target = os.path.join(here, "main.py")
 
@@ -242,25 +78,16 @@ def launch():
     linfo(f"Starte: {sys.executable} {target}")
     linfo("=" * 50)
 
-    # execv ersetzt diesen Prozess — main.py erbt den tty3-Kontext
     os.execv(sys.executable, [sys.executable, target])
 
 
-# ── Einstiegspunkt ───────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
     try:
-        perm_ok = check_permissions()
-        if not perm_ok:
-            lwarn("Berechtigungsfehler erkannt — versuche trotzdem fortzufahren")
-        setup_tty()
-        launch()
-    except KeyboardInterrupt:
-        linfo("Launcher abgebrochen (KeyboardInterrupt)")
+        main()
     except SystemExit:
         raise
     except Exception as e:
         import traceback
-        lerror(f"Unbehandelter Fehler im Launcher: {e}")
+        lerror(f"Launcher Fehler: {e}")
         lerror(traceback.format_exc())
         sys.exit(1)

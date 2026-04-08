@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.4.3
+# PiDrive — Kontext & Projektdokumentation v0.5.0
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.4.3)
+    ├── VERSION              (aktuell: 0.5.0)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -145,14 +145,33 @@ hdmi_drive=2
 
 ---
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.4.3)
+## PAMName=login — Der entscheidende Fix (v0.5.0)
+
+SDL setzt intern VT_SETMODE(VT_PROCESS). Der Kernel prueft dabei:
+"Ist dieser Prozess Session-Leader des aktiven VT?"
+
+Ohne PAMName=login im Service:
+- systemd erzeugt KEINE logind-Session
+- Kernel betrachtet Prozess nicht als Session-Leader
+- VT_SETMODE(VT_PROCESS) schlaegt fehl
+- Kernel sendet SIGHUP → Service stirbt → Bootschleife
+
+Mit PAMName=login:
+- systemd erzeugt eine echte PAM/logind-Session auf VT3
+- Prozess ist Session-Leader
+- VT_SETMODE(VT_PROCESS) funktioniert
+- kein SIGHUP, kein Haenger, Display zeigt Bild
+
+Diagnose: loginctl zeigt jetzt eine Session auf tty3.
+
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.5.0)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.4.3):
+Diagnose (v0.5.0):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -247,8 +266,7 @@ Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 WorkingDirectory=/home/pi/pidrive/pidrive
-ExecStartPre=/bin/sleep 3
-ExecStartPre=/bin/chvt 3
+# PAMName=login erzeugt logind-Session -> kein ExecStartPre sleep noetig
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 Restart=always
 RestartSec=5
@@ -514,8 +532,8 @@ sudo systemctl restart pidrive
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt mit exit(0) nach pygame.init() | SDL sendet SIGHUP via TIOCSCTTY + kein VT3 foreground | ExecStartPre=chvt 3 + SIGHUP=SIG_IGN (v0.4.3) |
-| set_mode() haengt ewig | VT2 foreground, SDL wartet auf VT_WAITACTIVE(3) | chvt 3 als ExecStartPre im Service (v0.4.3) |
+| Service stirbt mit exit(0) nach pygame.init() | Keine logind-Session -> VT_SETMODE fehlgeschlagen -> SIGHUP | PAMName=login im Service (v0.5.0) |
+| set_mode() haengt ewig | VT2 foreground, SDL wartet auf VT_WAITACTIVE(3) | PAMName=login -> logind-Session -> VT3 aktiv (v0.5.0) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -532,7 +550,7 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.4.3 (aktuell)
+### v0.5.0 (aktuell)
 - Service: ExecStartPre=/bin/chvt 3 — VT3 muss VOR SDL set_mode() aktiv sein
 - Service: Conflicts=getty@tty1/tty2 — verhindert VT-Rueckfall durch getty
 - launcher.py: SIGHUP=SIG_IGN vor TIOCSCTTY — Kernel sendet HUP beim ctty-Wechsel, SDL wuerde sonst mit exit(0) sterben
@@ -595,43 +613,24 @@ sudo systemctl restart pidrive
 
 ---
 
-## Aktuell offenes Problem (Stand v0.4.3)
+## Aktuell offenes Problem (Stand v0.5.0)
 
-**Display bleibt dunkel** — Hintergrundbeleuchtung leuchtet, aber kein Bild.
+**Display bleibt dunkel** — nach PAMName=login Fix laeuft pygame stabil,
+aber das SPI-Display zeigt noch kein Bild.
 
-Was bekannt ist:
-- `fb0` hat 1.228.800 Bytes Inhalt (640x480x4 = korrekte Groesse)
-- `fbcp` laeuft (PID aktiv)
-- pygame laeuft, `Display: 640x480 OK — Treiber: fbcon` im Log
-- `fgconsole` zeigt VT2 (nicht VT3) — VT3 wird aktiviert, aber Bild erscheint nicht
+Was diagnose.py zeigt (nach v0.5.0 Installation):
+- fb0: 62% non-zero — pygame zeichnet korrekt
+- fb1: 50% non-zero — fbcp kopiert
+- Hintergrundbeleuchtung an
 
-Hypothesen fuer naechsten Debug-Schritt:
-1. fb0 Inhalt ist schwarz (pygame zeichnet auf falschen fb oder Farben stimmen nicht)
-2. fbcp kopiert fb0->fb1 aber SPI-Timing stimmt nach langer Laufzeit nicht
-3. Rotation/Skalierung in pygame erzeugt schwarzes Bild
-4. fbcp laeuft aber hat falschen Quell-/Ziel-Framebuffer
-
-Diagnosebefehle:
+Naechster Schritt: Farbtiefe pruefen
 ```bash
-# Pixel-Werte in fb0 pruefen (nicht alles schwarz?)
-sudo python3 -c "
-d = open('/dev/fb0','rb').read(100)
-print([hex(b) for b in d[:20]])
-"
-# fbcp neu starten
-sudo pkill fbcp && sleep 1 && fbcp &
-# Screenshot von fb0 als PNG
-sudo python3 -c "
-import struct, zlib, sys
-w,h = 640,480
-raw = open('/dev/fb0','rb').read(w*h*4)
-# BGRA -> RGBA
-px = bytearray()
-for i in range(0,len(raw),4):
-    px += bytes([raw[i+2],raw[i+1],raw[i],raw[i+3]])
-print('Non-zero bytes:', sum(1 for b in raw if b != 0))
-"
+cat /sys/class/graphics/fb0/bits_per_pixel
+cat /sys/class/graphics/fb1/bits_per_pixel
 ```
+
+Verdacht: fb0 ist 16bpp (RGB565), pygame schreibt 32bpp (BGRA).
+Wenn das zutrifft: pygame muss mit `pygame.display.set_mode((W,H), 0, 16)` initialisieren.
 
 ## Roadmap
 
