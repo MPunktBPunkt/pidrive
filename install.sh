@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.0           ║
+║        PiDrive Installer v0.5.1           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -182,7 +182,10 @@ info "8/10 Systemdienste einrichten..."
 if [ -f "$INSTALL_DIR/systemd/pidrive.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive.service" "$SERVICE_DIR/pidrive.service"
     # Pfade auf aktuellen User anpassen (falls nicht pi)
-    sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive.service"
+    # Nur ExecStart und WorkingDirectory anpassen — keine anderen Zeilen anfassen
+    # Aggressives sed auf die ganze Datei wuerde TTY/PAM-Zeilen beschaedigen
+    sed -i "s|^WorkingDirectory=.*|WorkingDirectory=$REAL_HOME/pidrive/pidrive|" "$SERVICE_DIR/pidrive.service"
+    sed -i "s|^ExecStart=.*|ExecStart=/usr/bin/python3 $REAL_HOME/pidrive/pidrive/launcher.py|" "$SERVICE_DIR/pidrive.service"
     ok "pidrive.service aus Repo kopiert und angepasst"
 else
     warn "pidrive.service nicht im Repo — erstelle Fallback"

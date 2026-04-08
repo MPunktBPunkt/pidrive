@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.5.0
+launcher.py - PiDrive TTY-Launcher v0.5.1
 
-v0.5.0: Stark vereinfacht dank PAMName=login im Service.
-systemd erzeugt eine echte logind-Session auf VT3 — kein manuelles
-TIOCSCTTY, setsid() oder VT_ACTIVATE noetig. SDL bekommt den VT
-sauber uebergeben.
+systemd mit PAMName=login + TTYPath=/dev/tty3 sollte stdin automatisch
+auf tty3 setzen — tut es aber nicht zuverlaessig wenn tty3 beim Start
+noch nicht vollstaendig bereit ist.
 
-SIGHUP=SIG_IGN bleibt als Sicherheitsnetz.
+Loesung: tty3 explizit oeffnen und stdin uebergeben.
+Nur stdin (fd 0) wird auf tty3 gesetzt — stdout bleibt /dev/null
+damit kein Text auf dem Display erscheint.
+
+SIGHUP=SIG_IGN verhindert exit() beim VT-Wechsel.
 """
 
 import os
@@ -15,15 +18,10 @@ import sys
 import signal
 from datetime import datetime
 
-# ── Minimales Logging (vor main.py Import) ──────────────────────────────────
-
 LOG_FILE = "/var/log/pidrive/pidrive.log"
 
-def _ts():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
 def _log(level, msg):
-    line = f"{_ts()} [LAUNCH/{level}] {msg}\n"
+    line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} [LAUNCH/{level}] {msg}\n"
     sys.stderr.write(line)
     try:
         os.makedirs("/var/log/pidrive", exist_ok=True)
@@ -37,37 +35,47 @@ def lwarn(msg):  _log("WARN",  msg)
 def lerror(msg): _log("ERROR", msg)
 
 
-# ── Start ────────────────────────────────────────────────────────────────────
-
 def main():
     linfo("=" * 50)
-    linfo("PiDrive Launcher v0.5.0 gestartet")
-    linfo(f"  PID: {os.getpid()}, UID: {os.getuid()}")
+    linfo(f"PiDrive Launcher v0.5.1  PID={os.getpid()}  UID={os.getuid()}")
 
-    # SIGHUP ignorieren — Sicherheitsnetz falls Kernel HUP sendet
+    # SIGHUP ignorieren — Sicherheitsnetz
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     linfo("  SIGHUP=SIG_IGN gesetzt")
 
-    # Kontext von systemd pruefen (PAMName=login erzeugt logind-Session)
+    # ── tty3 explizit oeffnen ─────────────────────────────────────────────
+    # systemd setzt stdin nicht immer auf tty3 obwohl StandardInput=tty
+    # konfiguriert ist (Race Condition wenn tty3 noch nicht bereit).
+    # Loesung: selbst oeffnen. NUR stdin (fd 0) — stdout bleibt /dev/null.
+    try:
+        fd = os.open("/dev/tty3", os.O_RDWR | os.O_NOCTTY)
+        os.dup2(fd, 0)   # stdin → /dev/tty3  (fuer SDL + USB-Tastatur)
+        if fd > 0:
+            os.close(fd)
+        linfo("  ✓ stdin → /dev/tty3")
+    except OSError as e:
+        lwarn(f"  ⚠ tty3 oeffnen fehlgeschlagen: {e.strerror} — weiter mit /dev/null")
+
+    # ── Verifikation ──────────────────────────────────────────────────────
+    try:
+        linfo(f"  stdin (fd 0) → {os.readlink('/proc/self/fd/0')}")
+    except Exception:
+        pass
+
+    # logind-Session pruefen
     try:
         import subprocess
         r = subprocess.run("loginctl | grep tty3", shell=True,
                            capture_output=True, text=True, timeout=2)
         if "tty3" in r.stdout:
-            linfo("  ✓ logind-Session auf tty3 vorhanden (PAMName=login OK)")
+            linfo("  ✓ logind-Session auf tty3 vorhanden")
         else:
-            lwarn("  ⚠ Keine logind-Session auf tty3 — PAMName=login im Service pruefen!")
+            lwarn("  ⚠ Noch keine logind-Session auf tty3")
+            lwarn("    (wird evtl. erst nach pygame.init() registriert)")
     except Exception:
         pass
 
-    # stdin pruefen
-    try:
-        stdin_target = os.readlink("/proc/self/fd/0")
-        linfo(f"  stdin → {stdin_target}")
-    except Exception:
-        pass
-
-    # main.py starten — erbt den kompletten systemd/logind Kontext
+    # ── main.py starten ───────────────────────────────────────────────────
     here   = os.path.dirname(os.path.abspath(__file__))
     target = os.path.join(here, "main.py")
 
@@ -77,7 +85,6 @@ def main():
 
     linfo(f"Starte: {sys.executable} {target}")
     linfo("=" * 50)
-
     os.execv(sys.executable, [sys.executable, target])
 
 
@@ -88,6 +95,5 @@ if __name__ == "__main__":
         raise
     except Exception as e:
         import traceback
-        lerror(f"Launcher Fehler: {e}")
-        lerror(traceback.format_exc())
+        lerror(f"Launcher Fehler: {e}\n{traceback.format_exc()}")
         sys.exit(1)

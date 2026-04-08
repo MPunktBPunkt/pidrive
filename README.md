@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.5.0-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.5.1-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -296,7 +296,7 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.5.0
+### v0.5.1
 - Service: `ExecStartPre=/bin/chvt 3` — VT3 muss vor SDL aktiv sein
 - Service: `Conflicts=getty@tty1/tty2` — kein VT-Rueckfall durch getty
 - launcher.py: `SIGHUP=SIG_IGN` vor TIOCSCTTY — verhindert exit(0) in SDL
