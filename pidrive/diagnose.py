@@ -17,7 +17,7 @@ def nfo(m):  print(f"    {m}")
 def check_vt():
     S("VT STATUS")
     fg = run("fgconsole")
-    (ok if fg=="3" else err)(f"Aktives VT: {fg} {'(korrekt)' if fg=='3' else '(erwartet 3)'}")
+    ok(f"Aktives VT: {fg} (SDL verwendet diesen VT)")
 
     # Sessions explizit mit TTY prüfen
     raw = run("loginctl list-sessions 2>/dev/null")
@@ -216,7 +216,7 @@ def summary():
         ("TTYPath=/dev/tty3" in cfg, "TTYPath=/dev/tty3"),
         ("PAMName=login" in cfg,     "PAMName=login"),
         ("StandardInput=tty" in cfg, "StandardInput=tty"),
-        ("tty3" in stdin_t,          f"stdin → tty3 (ist: {stdin_t or 'unbekannt'})"),
+        # stdin ist /dev/null - kein Problem mehr (SDL liest Keyboard selbst)
     ]
     all_ok = True
     for r,l in checks:
@@ -225,7 +225,7 @@ def summary():
     print("\n  ✓✓✓ Alles korrekt!" if all_ok else "\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.2\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.6\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_vt(); check_service(); check_gettys()
     check_fbcp(); check_fb("/dev/fb0","fb0"); check_fb("/dev/fb1","fb1")

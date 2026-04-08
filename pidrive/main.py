@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.5.5
+main.py - PiDrive Hauptprogramm v0.5.6
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -68,23 +68,6 @@ def _proc_groups():
     except Exception as e:
         return f"fehler: {e}"
 
-def _stdin_target():
-    """Wohin zeigt stdin (/proc/self/fd/0)?"""
-    try:
-        return os.readlink("/proc/self/fd/0")
-    except Exception:
-        return "unbekannt"
-
-def _try_open_tty3():
-    """Versucht /dev/tty3 O_RDWR zu oeffnen - genau wie systemd/openvt es braucht."""
-    import fcntl
-    try:
-        fd = os.open("/dev/tty3", os.O_RDWR | os.O_NOCTTY)
-        os.close(fd)
-        return True, "OK"
-    except OSError as e:
-        return False, f"{e.strerror} (errno {e.errno})"
-
 def system_check():
     """Prueft ob alle Voraussetzungen erfuellt sind."""
     import subprocess
@@ -113,10 +96,6 @@ def system_check():
     except Exception as e:
         log.warn(f"  ⚠ Prozessinfo fehler: {e}")
 
-    # ── stdin ──────────────────────────────────────────────────
-    stdin_dest = _stdin_target()
-    log.info(f"  ✓ stdin (fd 0) -> {stdin_dest}")
-
     # ── Framebuffer ────────────────────────────────────────────
     if os.path.exists("/dev/fb0"):
         perms = _stat_perms("/dev/fb0")
@@ -138,35 +117,6 @@ def system_check():
             log.warn("  ⚠ fbcp laeuft nicht (SPI Display bleibt dunkel)")
     except Exception:
         pass
-
-    # ── Aktives VT ─────────────────────────────────────────────
-    try:
-        r = subprocess.run("fgconsole", shell=True,
-                           capture_output=True, text=True, timeout=2)
-        tty_nr = r.stdout.strip()
-        if tty_nr == "3":
-            log.info(f"  ✓ Aktives VT: tty{tty_nr} (korrekt)")
-        else:
-            log.warn(f"  ⚠ Aktives VT: tty{tty_nr} (erwartet 3) -> chvt 3 noetig!")
-    except Exception:
-        log.warn("  ⚠ fgconsole nicht verfuegbar")
-
-    # ── /dev/tty3 Berechtigungen ───────────────────────────────
-    if os.path.exists("/dev/tty3"):
-        perms = _stat_perms("/dev/tty3")
-        log.info(f"  ✓ /dev/tty3 vorhanden  [{perms}]")
-
-        # O_RDWR Test - genau was systemd/openvt braucht
-        can_open, reason = _try_open_tty3()
-        if can_open:
-            log.info("  ✓ /dev/tty3 O_RDWR: erfolgreich")
-        else:
-            log.warn(f"  ⚠ /dev/tty3 O_RDWR fehlgeschlagen: {reason}")
-            log.warn("    -> Fix: chmod 660 /dev/tty3 in rc.local")
-            ok = False
-    else:
-        log.error("  ✗ /dev/tty3 fehlt!")
-        ok = False
 
     # ── SDL Umgebung ───────────────────────────────────────────
     log.info(f"  ✓ SDL_FBDEV={os.environ.get('SDL_FBDEV', 'NICHT GESETZT')}")
@@ -344,11 +294,8 @@ def main():
     system_check()
 
     # Selektive pygame-Initialisierung (display + font, kein mixer)
-    # pygame.init() initialisiert alle Module inkl. Mixer.
-    # Bei pygame 1.9.6 + Python 3.9 + echter TTY fuehrt das zu einem
-    # GIL-Fehler (PyEval_SaveThread). Ob Mixer, Signal-Handler oder
-    # TTY-Kontext die genaue Ursache ist, ist noch offen —
-    # selektives Init ist der sicherste Test.
+    # pygame.init() = SDL_INIT_EVERYTHING inkl. Mixer -> GIL-Fehler moeglich
+    # Nur display + font werden benoetigt, kein Audio ueber pygame.
     log.info("pygame.display.init() ...")
     pygame.display.init()
     log.info(f"  display: {pygame.display.get_init()}")
@@ -356,29 +303,6 @@ def main():
     log.info(f"  font:    {pygame.font.get_init()}")
     log.info("pygame init OK (display+font, kein mixer)")
 
-    # ── VT3 aktivieren ────────────────────────────────────────────────────
-    # Muss NACH pygame.init() passieren (SDL_VideoInit merkt sich aktuelles VT).
-    # Direkt vor set_mode() — kein Code dazwischen der VT zurueckschalten koennte.
-    try:
-        import fcntl as _fcntl_vt
-        _fd_vt = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
-        _fcntl_vt.ioctl(_fd_vt, 0x5606, 3)  # VT_ACTIVATE 3
-        os.close(_fd_vt)
-        log.info("VT_ACTIVATE 3 OK")
-    except Exception as e:
-        log.warn(f"VT_ACTIVATE: {e}")
-
-    # fgconsole loggen — zeigt ob VT3 wirklich aktiv ist
-    try:
-        import subprocess as _sp
-        _fg = _sp.run("fgconsole", shell=True,
-                      capture_output=True, text=True, timeout=1).stdout.strip()
-        log.info(f"fgconsole nach VT_ACTIVATE: {_fg} {'(korrekt)' if _fg=='3' else '(PROBLEM: nicht 3!)'}")
-    except Exception:
-        pass
-
-    # ── fbcon vom Framebuffer trennen ────────────────────────────────────
-    # NACH VT_ACTIVATE — verhindert dass unbind den VT-Zustand aendert.
     # vtcon1/bind=0: fbcon gibt fb0 frei -> pygame hat alleinigen Zugriff.
     try:
         with open("/sys/class/vtconsole/vtcon1/bind", "w") as _vf:
@@ -388,13 +312,6 @@ def main():
         log.info("vtcon1/bind=0, cursor_blink=0 OK")
     except Exception as e:
         log.warn(f"vtcon1 unbind: {e}")
-
-    # Kurzes VT-Status Logging (info only)
-    try:
-        _active = open("/sys/class/tty/tty0/active").read().strip()
-        log.info(f"Aktiver VT vor set_mode(): {_active}")
-    except Exception:
-        pass
 
     log.info("pygame.display.set_mode() ...")
     try:
