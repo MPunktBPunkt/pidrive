@@ -1,14 +1,14 @@
 [Unit]
 Description=PiDrive - Car Infotainment
 After=multi-user.target rc-local.service
-Conflicts=getty@tty1.service getty@tty2.service getty@tty3.service
+Conflicts=getty@tty1.service getty@tty2.service
 
 [Service]
 Type=simple
 User=root
 
 # Kein PAMName/TTYPath/StandardInput - haengt systemd 247 PAM-Helper
-# setsid+TIOCSCTTY in launcher.py - funktioniert seit v0.5.3
+# launcher.py: nur SIGHUP=SIG_IGN + execv main.py
 
 Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
