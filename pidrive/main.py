@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.5.4
+main.py - PiDrive Hauptprogramm v0.5.5
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -389,24 +389,12 @@ def main():
     except Exception as e:
         log.warn(f"vtcon1 unbind: {e}")
 
-    # Hartes VT-Logging direkt vor set_mode()
-    # set_mode() ruft intern VT_WAITACTIVE(3) — haengt wenn VT3 nicht foreground
+    # Kurzes VT-Status Logging (info only)
     try:
-        import subprocess as _sp_vt
-        _fg = _sp_vt.run("fgconsole", shell=True, capture_output=True,
-                          text=True, timeout=2).stdout.strip()
         _active = open("/sys/class/tty/tty0/active").read().strip()
-        log.info(f"VT-Status vor set_mode(): fgconsole={_fg}  tty0/active={_active}")
-        if _fg != "3":
-            log.warn(f"  VT{_fg} ist foreground, nicht VT3 — set_mode() wird haengen!")
-            # Nochmals VT_ACTIVATE versuchen
-            import fcntl as _fc2
-            _fd2 = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
-            _fc2.ioctl(_fd2, 0x5606, 3)
-            os.close(_fd2)
-            log.info("  VT_ACTIVATE 3 nochmals abgeschickt")
-    except Exception as e:
-        log.warn(f"VT-Status Abfrage: {e}")
+        log.info(f"Aktiver VT vor set_mode(): {_active}")
+    except Exception:
+        pass
 
     log.info("pygame.display.set_mode() ...")
     try:

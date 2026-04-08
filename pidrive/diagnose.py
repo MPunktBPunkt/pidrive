@@ -26,8 +26,7 @@ def check_vt():
     tty3 = run("loginctl list-sessions 2>/dev/null | grep tty3")
     if tty3: ok(f"logind-Session auf tty3: {tty3.strip()}")
     else:
-        err("Keine logind-Session auf tty3")
-        nfo("→ systemd hat TTYPath+PAMName nicht wirksam gebunden")
+        nfo("Keine logind-Session auf tty3 (ohne PAMName normal — SDL erkennt VT selbst)")
 
     # Session-Details
     sid = run("loginctl list-sessions 2>/dev/null | grep tty3 | awk '{print $1}'")
