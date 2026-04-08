@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive Launcher v0.5.5
+launcher.py - PiDrive Launcher v0.5.7
 
 Radikal vereinfacht. Kein TIOCSCTTY, kein setsid.
 

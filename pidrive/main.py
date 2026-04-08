@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.5.6
+main.py - PiDrive Hauptprogramm v0.5.7
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -16,7 +16,8 @@ sys.path.insert(0, BASE_DIR)
 os.environ["SDL_FBDEV"]        = "/dev/fb0"
 os.environ["SDL_VIDEODRIVER"]  = "fbcon"
 os.environ["SDL_NOMOUSE"]      = "1"
-os.environ["SDL_AUDIODRIVER"]  = "dummy"  # Verhindert ALSA-Konflikt mit raspotify
+os.environ["SDL_AUDIODRIVER"]  = "dummy"
+os.environ["SDL_VIDEO_FBCON_KEEP_TTY"] = "1"  # kein VT_SETMODE/VT_WAITACTIVE  # Verhindert ALSA-Konflikt mit raspotify
                                            # SDL_Init(EVERYTHING) wuerde sonst exit(0)
                                            # aufrufen wenn hw:1,0 von raspotify belegt
 
