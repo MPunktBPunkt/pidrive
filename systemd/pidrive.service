@@ -14,9 +14,13 @@ Environment=SDL_FBDEV=/dev/fb0
 Environment=SDL_VIDEODRIVER=fbcon
 Environment=SDL_NOMOUSE=1
 Environment=SDL_AUDIODRIVER=dummy
+Environment=SDL_VIDEO_FBCON_KEEP_TTY=1  # kein VT_SETMODE, kein Hang
 WorkingDirectory=/home/pi/pidrive/pidrive
 
 ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon0/bind || true'
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind || true'
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/graphics/fbcon/cursor_blink || true'
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/launcher.py
 
 Restart=always
