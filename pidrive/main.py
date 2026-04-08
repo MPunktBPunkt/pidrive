@@ -387,15 +387,18 @@ def main():
         log.error("  3. /dev/tty3 nicht foreground")
         raise
 
-    # chvt 3 nochmal direkt vor set_mode() — systemd kann nach dem Launcher
-    # zurueck auf VT2 gewechselt haben. SDL zeichnet sonst auf ein nicht-
-    # sichtbares VT (Display bleibt dunkel trotz laufendem Prozess).
+    # VT3 aktivieren via ioctl — NACH pygame.init(), VOR set_mode()
+    # Kein subprocess/chvt (haengt ohne ctty), direkter ioctl auf /dev/tty0.
+    # Mit TTYPath=/dev/tty3 im Service erzeugt systemd eine logind-Session,
+    # sodass VT_ACTIVATE(3) vom Kernel auch wirklich ausgefuehrt wird.
     try:
-        import subprocess as _sp
-        _sp.run(["/bin/chvt", "3"], timeout=3)
-        log.info("chvt 3 vor set_mode() OK")
+        import fcntl as _fcntl_vt
+        _fd_vt = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
+        _fcntl_vt.ioctl(_fd_vt, 0x5606, 3)  # VT_ACTIVATE 3
+        os.close(_fd_vt)
+        log.info("VT_ACTIVATE 3 OK")
     except Exception as e:
-        log.warn(f"chvt 3 fehlgeschlagen: {e}")
+        log.warn(f"VT_ACTIVATE fehlgeschlagen: {e}")
 
     log.info("pygame.init() — Schritt 4: pygame.display.set_mode()...")
     try:
