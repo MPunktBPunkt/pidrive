@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.1           ║
+║        PiDrive Installer v0.5.2           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF

@@ -1,231 +1,213 @@
 #!/usr/bin/env python3
-"""
-diagnose.py - PiDrive System-Diagnose
-Zeigt live den Status von VT, Framebuffer, SDL, fbcp und Service.
+"""diagnose.py - PiDrive System-Diagnose v0.5.2"""
+import os, subprocess, fcntl, sys, time
 
-Aufruf:
-  sudo python3 ~/pidrive/pidrive/diagnose.py
-"""
-
-import os
-import subprocess
-import fcntl
-import sys
-import time
-
-VT_ACTIVATE   = 0x5606
-VT_WAITACTIVE = 0x5607
+VT_ACTIVATE = 0x5606
 
 def run(cmd):
-    try:
-        return subprocess.check_output(cmd, shell=True, text=True,
-                                       stderr=subprocess.DEVNULL).strip()
-    except Exception:
-        return ""
+    try: return subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL).strip()
+    except: return ""
 
-def section(title):
-    print(f"\n{'='*50}")
-    print(f"  {title}")
-    print('='*50)
-
-def ok(msg):   print(f"  ✓ {msg}")
-def warn(msg): print(f"  ⚠ {msg}")
-def err(msg):  print(f"  ✗ {msg}")
-
-# ── VT Status ─────────────────────────────────────────────────────────────────
+def S(t): print(f"\n{'='*50}\n  {t}\n{'='*50}")
+def ok(m):   print(f"  ✓ {m}")
+def warn(m): print(f"  ⚠ {m}")
+def err(m):  print(f"  ✗ {m}")
+def nfo(m):  print(f"    {m}")
 
 def check_vt():
-    section("VT STATUS")
+    S("VT STATUS")
     fg = run("fgconsole")
-    if fg == "3":
-        ok(f"Aktives VT: {fg} (korrekt)")
+    (ok if fg=="3" else err)(f"Aktives VT: {fg} {'(korrekt)' if fg=='3' else '(erwartet 3)'}")
+
+    # Sessions explizit mit TTY prüfen
+    raw = run("loginctl list-sessions 2>/dev/null")
+    nfo("loginctl:"); [nfo(f"  {l}") for l in raw.splitlines()]
+
+    tty3 = run("loginctl list-sessions 2>/dev/null | grep tty3")
+    if tty3: ok(f"logind-Session auf tty3: {tty3.strip()}")
     else:
-        err(f"Aktives VT: {fg} (erwartet 3) — SDL VT_WAITACTIVE haengt!")
+        err("Keine logind-Session auf tty3")
+        nfo("→ systemd hat TTYPath+PAMName nicht wirksam gebunden")
 
-    sessions = run("loginctl list-sessions 2>/dev/null")
-    print(f"  loginctl sessions:")
-    for line in sessions.splitlines():
-        print(f"    {line}")
-
-    # Gibt es eine Session auf tty3?
-    if "tty3" in sessions:
-        ok("logind-Session auf tty3 gefunden")
-    else:
-        warn("Keine logind-Session auf tty3 — TTYPath=/dev/tty3 im Service noetig")
-
-# ── Framebuffer ───────────────────────────────────────────────────────────────
-
-def check_fb(path, name):
-    section(f"FRAMEBUFFER {name} ({path})")
-    if not os.path.exists(path):
-        err(f"{path} fehlt")
-        return
-    try:
-        import stat as stat_mod
-        s = os.stat(path)
-        mode = oct(s.st_mode)[-4:]
-        print(f"  Permissions: {stat_mod.filemode(s.st_mode)} ({mode})")
-
-        with open(path, "rb") as f:
-            raw = f.read()
-        nz  = sum(1 for b in raw if b != 0)
-        pct = nz * 100 // len(raw) if raw else 0
-        print(f"  Groesse:     {len(raw)} Bytes ({len(raw)//(640*4)} Zeilen)")
-        print(f"  Non-zero:    {nz} Bytes ({pct}%)")
-        print(f"  Erste 16:    {list(raw[:16])}")
-        if pct > 5:
-            ok(f"{name} hat Inhalt ({pct}% non-zero) — pygame zeichnet")
-        elif pct > 0:
-            warn(f"{name} hat wenig Inhalt ({pct}%) — evtl. nur Cursor")
-        else:
-            err(f"{name} ist komplett schwarz — pygame zeichnet nicht auf {path}")
-    except Exception as e:
-        err(f"Lesefehler: {e}")
-
-# ── fbcp ──────────────────────────────────────────────────────────────────────
-
-def check_fbcp():
-    section("FBCP")
-    result = run("pgrep -a fbcp")
-    if result:
-        ok(f"fbcp laeuft: {result}")
-    else:
-        err("fbcp laeuft NICHT — SPI Display bleibt dunkel")
-        warn("Fix: fbcp &")
-
-# ── pidrive Service ───────────────────────────────────────────────────────────
+    # Session-Details
+    sid = run("loginctl list-sessions 2>/dev/null | grep tty3 | awk '{print $1}'")
+    if sid:
+        [nfo(f"  {l}") for l in run(f"loginctl session-status {sid} 2>/dev/null | head -8").splitlines()]
 
 def check_service():
-    section("PIDRIVE SERVICE")
-    status = run("systemctl is-active pidrive")
-    if status == "active":
-        ok("pidrive.service: active (running)")
-    else:
-        err(f"pidrive.service: {status}")
+    S("PIDRIVE SERVICE")
+    st = run("systemctl is-active pidrive")
+    (ok if st=="active" else err)(f"pidrive.service: {st}")
 
     pid = run("systemctl show pidrive --property=MainPID --value")
-    if pid and pid != "0":
-        ok(f"PID: {pid}")
-        # stdin des Prozesses prüfen
+    if not pid or pid == "0": warn("Kein PID"); return
+    ok(f"Main PID: {pid}")
+
+    # FDs des laufenden Prozesses — KERN-DIAGNOSE
+    S(f"PROZESS FD-STATUS (PID {pid}) — welches TTY wirklich benutzt wird")
+    for fd_n, fd_nm in [(0,"stdin"),(1,"stdout"),(2,"stderr")]:
         try:
-            stdin = os.readlink(f"/proc/{pid}/fd/0")
-            ok(f"stdin → {stdin}")
-        except Exception:
-            warn("stdin nicht lesbar")
+            t = os.readlink(f"/proc/{pid}/fd/{fd_n}")
+            if t == "/dev/null" and fd_n == 0:
+                err(f"{fd_nm} (fd {fd_n}) → {t}  ← KEIN TTY! PAMName kann nicht greifen")
+            elif "tty3" in t:
+                ok(f"{fd_nm} (fd {fd_n}) → {t}  ← TTY korrekt gebunden")
+            else:
+                warn(f"{fd_nm} (fd {fd_n}) → {t}")
+        except Exception as e:
+            warn(f"{fd_nm} (fd {fd_n}): {e}")
 
-    # TTY-Konfiguration aus Service-Datei
-    tty_cfg = run("grep -E 'TTYPath|StandardInput|PAMName' /etc/systemd/system/pidrive.service 2>/dev/null")
-    if "TTYPath=/dev/tty3" in tty_cfg:
-        ok("TTYPath=/dev/tty3 konfiguriert")
-    else:
-        err("TTYPath=/dev/tty3 fehlt!")
-    if "PAMName=login" in tty_cfg:
-        ok("PAMName=login konfiguriert — logind-Session wird erzeugt")
-    else:
-        err("PAMName=login fehlt! Ohne PAM-Session blockiert Kernel VT_SETMODE -> SIGHUP")
-        err("Fix: PAMName=login in [Service] hinzufuegen")
-    print(f"  TTY-Config: {tty_cfg.replace(chr(10), ' | ')}")
+    # Controlling terminal aus /proc/PID/stat
+    try:
+        stat = open(f"/proc/{pid}/stat").read().split()
+        tty_nr = int(stat[6])
+        if tty_nr == 0: warn("Kein controlling terminal (tty_nr=0) → SIGHUP-Risiko")
+        else:
+            minor = tty_nr & 0xff
+            (ok if minor==3 else warn)(f"Controlling terminal: tty{minor} {'(korrekt)' if minor==3 else '(erwartet tty3)'}")
+    except Exception as e: warn(f"stat parse: {e}")
 
-# ── VT Aktivierungstest ───────────────────────────────────────────────────────
+    # ps
+    nfo(run(f"ps -o pid,ppid,tty,stat,cmd -p {pid} 2>/dev/null | tail -1"))
 
-def test_vt_activate():
-    section("VT3 AKTIVIERUNGSTEST")
+    # Service-Konfiguration laut systemd (Laufzeitwerte, nicht nur Datei)
+    S("SERVICE-KONFIGURATION (systemctl show — Laufzeitwerte)")
+    show = run("systemctl show pidrive -p TTYPath -p StandardInput -p StandardOutput -p StandardError -p PAMName -p Type 2>/dev/null")
+    for line in show.splitlines():
+        k, _, v = line.partition("=")
+        sym = "✓" if v and v not in ("","null") else "⚠"
+        print(f"  {sym} {k} = {v if v else '(leer)'}")
+
+    S("SERVICE-DATEI TTY-ZEILEN (/etc/systemd/system/pidrive.service)")
+    cfg = run("grep -E 'TTYPath|StandardInput|StandardOutput|StandardError|PAMName' /etc/systemd/system/pidrive.service 2>/dev/null")
+    for line in cfg.splitlines(): nfo(f"  {line}")
+
+    for check, label in [("TTYPath=/dev/tty3",cfg), ("PAMName=login",cfg), ("StandardInput=tty",cfg)]:
+        (ok if check in label else err)(f"{check} {'vorhanden' if check in label else 'FEHLT!'}")
+
+def check_gettys():
+    S("GETTY STATUS")
+    for t in ("tty1","tty2","tty3"):
+        st = run(f"systemctl is-active getty@{t}.service 2>/dev/null")
+        en = run(f"systemctl is-enabled getty@{t}.service 2>/dev/null")
+        if st == "active": warn(f"getty@{t}: active — kann VT blockieren")
+        elif "masked" in en: ok(f"getty@{t}: masked")
+        else: ok(f"getty@{t}: {st}/{en}")
+
+def check_fbcp():
+    S("FBCP")
+    r = run("pgrep -a fbcp")
+    (ok if r else err)(f"fbcp {'laeuft: '+r if r else 'laeuft NICHT — Display dunkel!'}")
+
+def check_fb(path, name):
+    S(f"FRAMEBUFFER {name} ({path})")
+    if not os.path.exists(path): err(f"{path} fehlt"); return
+    try:
+        fb_num = path.replace("/dev/fb","")
+        bpp_f  = f"/sys/class/graphics/fb{fb_num}/bits_per_pixel"
+        bpp    = int(open(bpp_f).read().strip()) if os.path.exists(bpp_f) else 0
+        if bpp:
+            sym = "✓" if bpp in (16,32) else "⚠"
+            print(f"  {sym} Farbtiefe: {bpp} bpp {'(RGB565)' if bpp==16 else '(BGRA32)'}")
+            if bpp == 16:
+                warn("pygame muss set_mode(..., 0, 16) verwenden — sonst Farb-Mismatch!")
+
+        raw   = open(path,"rb").read()
+        total = len(raw)
+        nz    = sum(1 for b in raw if b != 0)
+        pct   = nz*100//total if total else 0
+        bpp_calc = total//(640*480) if total >= 640*480 else 0
+        nfo(f"Groesse: {total} bytes = {bpp_calc} bytes/pixel = {bpp_calc*8} bpp")
+        nfo(f"Non-zero: {nz} bytes ({pct}%)")
+        nfo(f"Erste 16: {list(raw[:16])}")
+
+        # Echter Schwarztest (bpp-bewusst)
+        if bpp == 16:
+            px_black = sum(1 for i in range(0,min(total,2000),2) if raw[i]==0 and raw[i+1]==0)
+            pct_b = px_black*100//(min(total,2000)//2)
+            (err if pct_b>90 else ok)(f"{'~'+str(pct_b)+'% schwarz (pygame zeichnet schwarz!)' if pct_b>90 else str(100-pct_b)+'% hat Farbe'}")
+        elif bpp == 32:
+            px_black = sum(1 for i in range(0,min(total,4000),4) if raw[i]==0 and raw[i+1]==0 and raw[i+2]==0)
+            pct_b = px_black*100//(min(total,4000)//4)
+            (err if pct_b>90 else ok)(f"{'~'+str(pct_b)+'% schwarz' if pct_b>90 else str(100-pct_b)+'% hat Farbe'}")
+        else:
+            (ok if pct>5 else err)(f"Inhalt: {pct}% non-zero")
+    except Exception as e: err(f"Fehler: {e}")
+
+def check_log():
+    S("PIDRIVE LOG (letzte 5 Zeilen)")
+    log = "/var/log/pidrive/pidrive.log"
+    if not os.path.exists(log): err("Log-Datei fehlt"); return
+    lines = open(log).readlines()
+    for l in lines[-5:]: nfo(l.rstrip())
+    last_ts = lines[-1][:19] if lines else "?"
+    nfo(f"Letzter Eintrag: {last_ts}")
+    pid = run("systemctl show pidrive --property=MainPID --value")
+    if pid and pid != "0":
+        svc_start = run(f"systemctl show pidrive --property=ExecMainStartTimestamp --value 2>/dev/null")
+        nfo(f"Service gestartet: {svc_start}")
+        if svc_start and last_ts < svc_start[:19].replace("T"," "):
+            err("Log hat keine Eintraege vom aktuellen Service-Start!")
+            nfo("→ launcher.py oder main.py haengt VOR dem ersten log.info()")
+
+def test_vt():
+    S("VT3 AKTIVIERUNGSTEST")
     try:
         fd = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
         fcntl.ioctl(fd, VT_ACTIVATE, 3)
-        os.close(fd)
-        ok("VT_ACTIVATE(3) abgeschickt")
-        time.sleep(0.5)
+        os.close(fd); time.sleep(0.5)
         fg = run("fgconsole")
-        if fg == "3":
-            ok(f"VT3 ist jetzt foreground — VT-Wechsel funktioniert!")
-        else:
-            err(f"VT3 immer noch nicht foreground (fgconsole={fg})")
-            err("logind blockiert VT-Wechsel — TTYPath im Service noetig")
-    except Exception as e:
-        err(f"VT_ACTIVATE fehlgeschlagen: {e}")
-
-# ── SDL Test ──────────────────────────────────────────────────────────────────
+        (ok if fg=="3" else err)(f"VT3 {'ist foreground' if fg=='3' else 'immer noch nicht foreground — logind blockiert!'}")
+    except Exception as e: err(f"VT_ACTIVATE: {e}")
 
 def test_sdl():
-    section("SDL DISPLAY TEST")
+    S("SDL DISPLAY TEST")
     try:
         import pygame
-        os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
-        os.environ.setdefault("SDL_FBDEV",       "/dev/fb0")
-        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        for k,v in [("SDL_VIDEODRIVER","fbcon"),("SDL_FBDEV","/dev/fb0"),("SDL_AUDIODRIVER","dummy")]:
+            os.environ.setdefault(k,v)
         pygame.display.init()
-        drv = pygame.display.get_driver()
-        ok(f"pygame.display.init() OK — Treiber: {drv}")
+        ok(f"pygame.display.init() OK — Treiber: {pygame.display.get_driver()}")
         pygame.display.quit()
-    except Exception as e:
-        err(f"pygame.display.init() FEHLER: {e}")
+    except Exception as e: err(f"pygame FEHLER: {e}")
 
-# ── Gettys ────────────────────────────────────────────────────────────────────
+def summary():
+    S("ZUSAMMENFASSUNG")
+    fg  = run("fgconsole")
+    ses = run("loginctl list-sessions 2>/dev/null")
+    svc = run("systemctl is-active pidrive")
+    fcp = bool(run("pgrep fbcp"))
+    cfg = run("grep -E 'TTYPath|PAMName|StandardInput' /etc/systemd/system/pidrive.service 2>/dev/null")
+    pid = run("systemctl show pidrive --property=MainPID --value")
+    stdin_t = ""
+    if pid and pid != "0":
+        try: stdin_t = os.readlink(f"/proc/{pid}/fd/0")
+        except: pass
 
-def check_gettys():
-    section("GETTY STATUS")
-    for tty in ("tty1", "tty2", "tty3"):
-        status = run(f"systemctl is-active getty@{tty}.service 2>/dev/null")
-        masked = run(f"systemctl is-enabled getty@{tty}.service 2>/dev/null")
-        if status == "active":
-            warn(f"getty@{tty}: active — kann VT blockieren")
-        elif "masked" in masked:
-            ok(f"getty@{tty}: masked (korrekt)")
-        else:
-            ok(f"getty@{tty}: {status}/{masked}")
-
-# ── Hauptprogramm ─────────────────────────────────────────────────────────────
+    checks = [
+        (fg=="3",                    "VT3 foreground"),
+        ("tty3" in ses,              "logind-Session auf tty3"),
+        (svc=="active",              "pidrive.service laeuft"),
+        (fcp,                        "fbcp laeuft"),
+        ("TTYPath=/dev/tty3" in cfg, "TTYPath=/dev/tty3"),
+        ("PAMName=login" in cfg,     "PAMName=login"),
+        ("StandardInput=tty" in cfg, "StandardInput=tty"),
+        ("tty3" in stdin_t,          f"stdin → tty3 (ist: {stdin_t or 'unbekannt'})"),
+    ]
+    all_ok = True
+    for r,l in checks:
+        (ok if r else err)(l)
+        if not r: all_ok = False
+    print("\n  ✓✓✓ Alles korrekt!" if all_ok else "\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print("\n" + "="*50)
-    print("  PiDrive Diagnose")
-    print("="*50)
-    print(f"  Datum: {run('date')}")
-    print(f"  Kernel: {run('uname -r')}")
-
-    check_vt()
-    check_service()
-    check_gettys()
-    check_fbcp()
-    check_fb("/dev/fb0", "fb0 (HDMI/pygame)")
-    check_fb("/dev/fb1", "fb1 (SPI Display)")
-    test_vt_activate()
-    test_sdl()
-
-    section("ZUSAMMENFASSUNG")
-    fg = run("fgconsole")
-    sessions = run("loginctl list-sessions 2>/dev/null")
-    service  = run("systemctl is-active pidrive")
-    fbcp_ok  = bool(run("pgrep fbcp"))
-    tty_ok   = "TTYPath=/dev/tty3" in run(
-        "grep TTYPath /etc/systemd/system/pidrive.service 2>/dev/null")
-
-    all_ok = True
-    pam_ok = "PAMName=login" in run(
-        "grep PAMName /etc/systemd/system/pidrive.service 2>/dev/null")
-    checks = [
-        (fg == "3",    "VT3 foreground"),
-        ("tty3" in sessions, "logind-Session auf tty3"),
-        (service == "active", "pidrive.service laeuft"),
-        (fbcp_ok,    "fbcp laeuft"),
-        (tty_ok,     "TTYPath=/dev/tty3 im Service"),
-        (pam_ok,     "PAMName=login im Service"),
-    ]
-    for result, label in checks:
-        if result:
-            ok(label)
-        else:
-            err(label)
-            all_ok = False
-
-    if all_ok:
-        print("\n  ✓✓✓ Alles korrekt konfiguriert ✓✓✓")
-    else:
-        print("\n  ✗ Probleme gefunden — siehe Details oben")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.2\n{'='*50}")
+    print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
+    check_vt(); check_service(); check_gettys()
+    check_fbcp(); check_fb("/dev/fb0","fb0"); check_fb("/dev/fb1","fb1")
+    check_log(); test_vt(); test_sdl(); summary()
 
 if __name__ == "__main__":
     if os.getuid() != 0:
-        print("Bitte als root ausfuehren: sudo python3 diagnose.py")
-        sys.exit(1)
+        print("sudo python3 diagnose.py"); sys.exit(1)
     main()

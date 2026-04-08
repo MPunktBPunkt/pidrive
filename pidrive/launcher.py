@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive TTY-Launcher v0.5.1
+launcher.py - PiDrive TTY-Launcher v0.5.2
 
 systemd mit PAMName=login + TTYPath=/dev/tty3 sollte stdin automatisch
 auf tty3 setzen — tut es aber nicht zuverlaessig wenn tty3 beim Start
