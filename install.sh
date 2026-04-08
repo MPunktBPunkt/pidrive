@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.5           ║
+║        PiDrive Installer v0.5.6           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -143,7 +143,7 @@ EOF
 else
     # vtcon1-Block
     if ! grep -q "vtcon1" "$RC"; then
-        sed -i '/^exit 0/i sleep 7\nfbcp \&\necho 0 > /sys/class/vtconsole/vtcon1/bind\necho 0 > /sys/class/graphics/fbcon/cursor_blink\ncon2fbmap 1 1\nchvt 3\nchmod 660 /dev/tty3\n' "$RC"
+        sed -i '/^exit 0/i sleep 7\nfbcp \&\necho 0 > /sys/class/vtconsole/vtcon1/bind\necho 0 > /sys/class/graphics/fbcon/cursor_blink\ncon2fbmap 1 1\n' "$RC"
         ok "rc.local Block hinzugefuegt"
     else
         # chvt 3 nachruesten falls fehlend
@@ -160,13 +160,6 @@ else
         else
             ok "rc.local: chmod 660 /dev/tty3 vorhanden"
 
-# Doppeltes chvt 3 aus rc.local entfernen (Altlast)
-if grep -c "^chvt 3" "$RC" 2>/dev/null | grep -q "^[2-9]"; then
-    # Alle chvt 3 Zeilen entfernen dann einmalig vor chmod einfuegen
-    sed -i '/^chvt 3/d' "$RC"
-    sed -i "/^chmod 660 \/dev\/tty3/i chvt 3" "$RC"
-    ok "rc.local: doppeltes chvt 3 bereinigt (war Altlast)"
-fi
         fi
     fi
 fi
@@ -276,8 +269,7 @@ info "9/10 Berechtigungen setzen..."
 usermod -a -G video,input,render,tty "$REAL_USER" 2>/dev/null || true
 ok "Gruppen: video, input, render, tty"
 
-chmod 660 /dev/tty3 2>/dev/null || true
-ok "chmod 660 /dev/tty3"
+# chmod tty3 nicht mehr noetig
 
 ln -sf "$INSTALL_DIR/pidrive_ctrl.py" "$REAL_HOME/pidrive_ctrl.py" 2>/dev/null || true
 ok "pidrive_ctrl.py verknuepft"
@@ -382,11 +374,7 @@ if systemctl start pidrive 2>/dev/null; then
 
             # stdin pruefen
             STDIN=$(readlink /proc/$PID/fd/0 2>/dev/null || echo "unbekannt")
-            if echo "$STDIN" | grep -q "tty3"; then
-                ok "stdin (fd 0) → $STDIN  ← TTY gebunden"
-            else
-                warn "stdin (fd 0) → $STDIN  ← kein TTY (normal wenn kein PAMName)"
-            fi
+            info "stdin (fd 0) → $STDIN"
 
             # Neue Log-Eintraege pruefen
             sleep 3
