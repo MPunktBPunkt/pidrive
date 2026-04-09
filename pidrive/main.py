@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.5.7
+main.py - PiDrive Hauptprogramm v0.5.8
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
@@ -304,13 +304,17 @@ def main():
     log.info(f"  font:    {pygame.font.get_init()}")
     log.info("pygame init OK (display+font, kein mixer)")
 
-    # vtcon1/bind=0: fbcon gibt fb0 frei -> pygame hat alleinigen Zugriff.
+    # vtcon0+vtcon1/bind=0: Text-Konsolen-Treiber gibt fb0 frei
+    # vtcon0 = Haupt-Text-Konsole (war noch gebunden = hat fb0 ueberschrieben!)
+    # vtcon1 = framebuffer-konsole
     try:
-        with open("/sys/class/vtconsole/vtcon1/bind", "w") as _vf:
-            _vf.write("0")
+        with open("/sys/class/vtconsole/vtcon0/bind", "w") as _vf0:
+            _vf0.write("0")
+        with open("/sys/class/vtconsole/vtcon1/bind", "w") as _vf1:
+            _vf1.write("0")
         with open("/sys/class/graphics/fbcon/cursor_blink", "w") as _cf:
             _cf.write("0")
-        log.info("vtcon1/bind=0, cursor_blink=0 OK")
+        log.info("vtcon0+vtcon1/bind=0, cursor_blink=0 OK")
     except Exception as e:
         log.warn(f"vtcon1 unbind: {e}")
 

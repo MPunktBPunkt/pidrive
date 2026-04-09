@@ -42,6 +42,34 @@ def check_service():
     if not pid or pid == "0": warn("Kein PID"); return
     ok(f"Main PID: {pid}")
 
+    # SDL Umgebungsvariablen des laufenden Prozesses
+    S(f"SDL ENVIRONMENT (PID {pid})")
+    try:
+        env_raw = open(f"/proc/{pid}/environ","rb").read()
+        env_vars = [e.decode("utf-8","replace") for e in env_raw.split(b"\x00") if b"SDL" in e]
+        if env_vars:
+            for v in env_vars:
+                if "FBCON_KEEP_TTY=1" in v:
+                    ok(f"{v}  ← KEEP_TTY aktiv")
+                else:
+                    ok(f"{v}")
+            if not any("FBCON_KEEP_TTY" in v for v in env_vars):
+                err("SDL_VIDEO_FBCON_KEEP_TTY fehlt! set_mode() wird haengen!")
+        else:
+            warn("Keine SDL_* Vars im Prozess — service env nicht gesetzt?")
+    except Exception as e:
+        warn(f"environ: {e}")
+
+    # vtcon0 + vtcon1 Status
+    S("VTCONSOLE STATUS — ueberlagert vtcon0 noch fb0?")
+    for i in (0, 1):
+        try:
+            val  = open(f"/sys/class/vtconsole/vtcon{i}/bind").read().strip()
+            name = open(f"/sys/class/vtconsole/vtcon{i}/name").read().strip()
+            (ok if val=="0" else err)(f"vtcon{i}/bind={val}  {name}  {'← OK' if val=='0' else '← GEBUNDEN! Ueberschreibt fb0!'}")
+        except Exception as e:
+            nfo(f"vtcon{i}: {e}")
+
     # ── WICHTIGSTER CHECK: Ist der Prozess wirklich Python? ─────────────
     S(f"EXE-CHECK — laeuft wirklich Python? (PID {pid})")
     try:
@@ -225,7 +253,7 @@ def summary():
     print("\n  ✓✓✓ Alles korrekt!" if all_ok else "\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.6\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.7\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_vt(); check_service(); check_gettys()
     check_fbcp(); check_fb("/dev/fb0","fb0"); check_fb("/dev/fb1","fb1")
