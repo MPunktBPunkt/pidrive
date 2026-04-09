@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.5.2"""
+"""diagnose.py - PiDrive System-Diagnose v0.5.8"""
 import os, subprocess, fcntl, sys, time
 
 VT_ACTIVATE = 0x5606
@@ -61,6 +61,17 @@ def check_service():
         warn(f"environ: {e}")
 
     # vtcon0 + vtcon1 Status
+    S("VTCONSOLE STATUS + CMDLINE")
+    # fbcon=nodeconfig in cmdline.txt verhindert automatisches vtcon0 rebinding
+    try:
+        cmdline = open("/boot/cmdline.txt").read()
+        if "fbcon=nodeconfig" in cmdline:
+            ok("cmdline.txt: fbcon=nodeconfig gesetzt — kein vtcon0 rebind")
+        else:
+            err("cmdline.txt: fbcon=nodeconfig fehlt! Kernel rebindet vtcon0!")
+            err("  Fix: sudo sed -i 's/$/ fbcon=nodeconfig/' /boot/cmdline.txt && sudo reboot")
+    except Exception as e:
+        warn(f"cmdline.txt: {e}")
     S("VTCONSOLE STATUS — ueberlagert vtcon0 noch fb0?")
     for i in (0, 1):
         try:
@@ -134,8 +145,11 @@ def check_service():
     cfg = run("grep -E 'TTYPath|StandardInput|StandardOutput|StandardError|PAMName' /etc/systemd/system/pidrive.service 2>/dev/null")
     for line in cfg.splitlines(): nfo(f"  {line}")
 
-    for check, label in [("TTYPath=/dev/tty3",cfg), ("PAMName=login",cfg), ("StandardInput=tty",cfg)]:
-        (ok if check in label else err)(f"{check} {'vorhanden' if check in label else 'FEHLT!'}")
+    # TTYPath/PAMName/StandardInput intentional absent (haengt systemd 247)
+    if "SDL_VIDEO_FBCON_KEEP_TTY" in run("grep SDL /etc/systemd/system/pidrive.service 2>/dev/null"):
+        ok("SDL_VIDEO_FBCON_KEEP_TTY=1 im Service gesetzt")
+    else:
+        err("SDL_VIDEO_FBCON_KEEP_TTY=1 fehlt im Service!")
 
 def check_gettys():
     S("GETTY STATUS")
@@ -241,11 +255,18 @@ def summary():
         ("tty3" in ses,              "logind-Session auf tty3"),
         (svc=="active",              "pidrive.service laeuft"),
         (fcp,                        "fbcp laeuft"),
-        ("TTYPath=/dev/tty3" in cfg, "TTYPath=/dev/tty3"),
-        ("PAMName=login" in cfg,     "PAMName=login"),
-        ("StandardInput=tty" in cfg, "StandardInput=tty"),
+        # TTYPath/PAMName/StandardInput: intentional absent
         # stdin ist /dev/null - kein Problem mehr (SDL liest Keyboard selbst)
     ]
+    # Add vtcon0 and SDL_KEEP_TTY checks
+    vtcon0_val = run("cat /sys/class/vtconsole/vtcon0/bind 2>/dev/null")
+    vtcon0_ok  = vtcon0_val == "0"
+    sdl_keep   = bool(run(f"cat /proc/{pid}/environ 2>/dev/null | tr '\\0' '\\n' | grep FBCON_KEEP_TTY" if pid and pid!="0" else ""))
+    checks += [
+        (vtcon0_ok,  f"vtcon0/bind=0 (ist: {vtcon0_val or '?'})"),
+        (sdl_keep,   "SDL_VIDEO_FBCON_KEEP_TTY=1 im Prozess"),
+    ]
+
     all_ok = True
     for r,l in checks:
         (ok if r else err)(l)
@@ -253,7 +274,7 @@ def summary():
     print("\n  ✓✓✓ Alles korrekt!" if all_ok else "\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.7\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.9\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_vt(); check_service(); check_gettys()
     check_fbcp(); check_fb("/dev/fb0","fb0"); check_fb("/dev/fb1","fb1")

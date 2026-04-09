@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py - PiDrive Hauptprogramm v0.5.8
+main.py - PiDrive Hauptprogramm v0.5.9
 Raspberry Pi Car Infotainment - GPL-v3
 """
 
