@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main_display.py - PiDrive Display v0.6.2
+main_display.py - PiDrive Display v0.6.4
 
 Nur Anzeige — kein Audio, kein Trigger, keine Kernlogik.
 Liest Status von /tmp/pidrive_status.json (geschrieben von Core).
@@ -41,14 +41,19 @@ signal.signal(signal.SIGHUP, signal.SIG_IGN)
 W, H = 480, 320
 
 # Farben
-C_BG      = (20,  20,  40)
-C_HEADER  = (60,  60, 120)
-C_TEXT    = (220, 220, 220)
-C_DIM     = (120, 120, 140)
-C_ACCENT  = (100, 160, 255)
-C_GREEN   = ( 80, 200,  80)
-C_RED     = (200,  80,  80)
-C_ORANGE  = (255, 160,  40)
+C_BG        = ( 15,  15,  35)   # Dunkelblau Hintergrund
+C_HEADER    = ( 40,  40,  90)   # Header-Leiste
+C_LEFT_BG   = ( 25,  25,  55)   # Linke Kategorie-Spalte
+C_SEL_BG    = ( 60,  80, 160)   # Ausgewaehltes Element
+C_SEL_CAT   = ( 80, 100, 180)   # Ausgewaehlte Kategorie
+C_TEXT      = (220, 220, 235)   # Haupttext
+C_DIM       = (110, 110, 140)   # Gedaempfter Text
+C_ACCENT    = ( 80, 160, 255)   # Akzentfarbe blau
+C_GREEN     = ( 60, 210,  80)   # Gruen (aktiv/OK)
+C_RED       = (210,  60,  60)   # Rot (Fehler)
+C_ORANGE    = (255, 155,  30)   # Orange (Radio/Warnung)
+C_PURPLE    = (160,  80, 220)   # Lila (Spotify)
+C_DIVIDER   = ( 50,  50,  90)   # Trennlinie
 
 
 def init_display():
@@ -81,101 +86,177 @@ def load_fonts():
     return font_big, font_med, font_sm
 
 
-def draw_icon(screen, x, y, kind, active, font_sm):
-    """Einfache Text-Icons fuer Status-Leiste."""
-    color = C_GREEN if active else C_DIM
-    labels = {"wifi": "W", "bt": "B", "spotify": "S"}
-    txt = font_sm.render(labels.get(kind, "?"), True, color)
-    screen.blit(txt, (x, y))
+def draw_status_icons(screen, font_sm, status):
+    """Status-Icons rechts im Header."""
+    icons = [
+        ("wifi",    "WiFi",  status.get("wifi",    False)),
+        ("bt",      "BT",    status.get("bt",      False)),
+        ("spotify", "Spot",  status.get("spotify", False)),
+    ]
+    x = W - 8
+    for _, label, active in reversed(icons):
+        color = C_GREEN if active else C_DIM
+        t = font_sm.render(label, True, color)
+        x -= t.get_width() + 6
+        screen.blit(t, (x, 7))
 
 
 def render(screen, fonts, status, menu):
-    """Vollstaendiger Frame."""
+    """Split-Screen: Links Kategorien, rechts Item-Liste + Now Playing."""
     font_big, font_med, font_sm = fonts
+
+    # Layout
+    HEADER_H  = 28
+    FOOTER_H  = 24
+    LEFT_W    = 110   # Kategorie-Spalte links
+    CONTENT_Y = HEADER_H + 2
+    CONTENT_H = H - HEADER_H - FOOTER_H - 2
+
     screen.fill(C_BG)
 
-    # ── Status-Leiste oben ──────────────────────────────────────────
-    pygame.draw.rect(screen, C_HEADER, (0, 0, W, 28))
-
-    # PiDrive Titel
+    # ── Header ──────────────────────────────────────────────────────
+    pygame.draw.rect(screen, C_HEADER, (0, 0, W, HEADER_H))
     t = font_med.render("PiDrive", True, C_ACCENT)
-    screen.blit(t, (8, 5))
+    screen.blit(t, (8, 6))
+    ip = status.get("ip", "")
+    if ip and ip != "-":
+        t = font_sm.render(ip, True, C_DIM)
+        screen.blit(t, (80, 9))
+    draw_status_icons(screen, font_sm, status)
 
-    # Status-Icons rechts
-    wifi    = status.get("wifi",    False)
-    bt      = status.get("bt",      False)
-    spotify = status.get("spotify", False)
-    draw_icon(screen, W - 60, 6, "wifi",    wifi,    font_sm)
-    draw_icon(screen, W - 44, 6, "bt",      bt,      font_sm)
-    draw_icon(screen, W - 28, 6, "spotify", spotify, font_sm)
+    # ── Kategorie-Spalte links ───────────────────────────────────────
+    pygame.draw.rect(screen, C_LEFT_BG, (0, CONTENT_Y, LEFT_W, CONTENT_H))
 
-    # IP-Adresse
-    ip = status.get("ip", "-")
-    t = font_sm.render(ip, True, C_DIM)
-    screen.blit(t, (90, 8))
+    categories = menu.get("categories", [])
+    sel_cat    = menu.get("cat", 0)
+    cat_colors = [C_ACCENT, (100, 180, 255), C_ORANGE, (180, 130, 255)]
 
-    # ── Aktuelle Kategorie und Item ─────────────────────────────────
-    cat_label  = menu.get("cat_label",  "")
-    item_label = menu.get("item_label", "")
+    for i, cat in enumerate(categories[:8]):
+        cy = CONTENT_Y + 4 + i * 36
+        if i == sel_cat:
+            pygame.draw.rect(screen, C_SEL_CAT, (0, cy - 2, LEFT_W, 30))
+            col = (255, 255, 255)
+        else:
+            col = cat_colors[i % len(cat_colors)]
+        # Kategorie-Kuerzel (erste 7 Zeichen)
+        t = font_sm.render(cat[:9], True, col)
+        screen.blit(t, (6, cy + 6))
+
+    # Trennlinie Kategorie/Items
+    pygame.draw.line(screen, C_DIVIDER, (LEFT_W, CONTENT_Y), (LEFT_W, H - FOOTER_H), 1)
+
+    # ── Item-Liste rechts ────────────────────────────────────────────
+    items    = menu.get("items", [])
+    sel_item = menu.get("item", 0)
+    item_x   = LEFT_W + 8
+    item_w   = W - LEFT_W - 8
+
+    # Scrolling: zeige max 7 Items, sel_item zentriert
+    max_vis = 7
+    row_h   = (CONTENT_H) // max_vis
+    scroll  = max(0, sel_item - max_vis // 2)
+    scroll  = min(scroll, max(0, len(items) - max_vis))
+
+    for idx in range(max_vis):
+        i = idx + scroll
+        if i >= len(items):
+            break
+        iy = CONTENT_Y + idx * row_h + 2
+        if i == sel_item:
+            pygame.draw.rect(screen, C_SEL_BG, (LEFT_W + 1, iy, W - LEFT_W - 1, row_h - 1))
+            col = (255, 255, 255)
+            prefix = "›"
+        else:
+            col = C_TEXT
+            prefix = " "
+        label = items[i][:26]
+        t = font_med.render(f"{prefix} {label}", True, col)
+        screen.blit(t, (item_x, iy + (row_h - t.get_height()) // 2))
+
+    # Scroll-Indikator
+    if len(items) > max_vis:
+        bar_h  = max(20, CONTENT_H * max_vis // max(1, len(items)))
+        bar_y  = CONTENT_Y + (CONTENT_H - bar_h) * scroll // max(1, len(items) - max_vis)
+        pygame.draw.rect(screen, C_DIM, (W - 5, bar_y, 4, bar_h))
+
+    # ── Now Playing (overlay unter Items wenn aktiv) ─────────────────
     radio_type = menu.get("radio_type", "")
-
-    y = 40
-    t = font_big.render(cat_label, True, C_TEXT)
-    screen.blit(t, (12, y))
-
-    y = 72
-    t = font_med.render(f"  › {item_label}", True, C_ACCENT)
-    screen.blit(t, (12, y))
-
-    # ── Now Playing ─────────────────────────────────────────────────
-    y = 110
-    playing = False
+    np_text = ""
+    np_col  = C_DIM
 
     if status.get("spotify") and status.get("track"):
-        playing = True
-        track  = status.get("track",  "")[:32]
-        artist = status.get("artist", "")[:28]
-        t = font_sm.render("♫ Spotify", True, C_GREEN)
-        screen.blit(t, (12, y)); y += 20
-        t = font_med.render(track, True, C_TEXT)
-        screen.blit(t, (12, y)); y += 22
-        t = font_sm.render(artist, True, C_DIM)
-        screen.blit(t, (12, y)); y += 20
-
+        t = status.get("track","")[:28]
+        a = status.get("artist","")[:22]
+        np_text = f"♫ {a} – {t}" if a else f"♫ {t}"
+        np_col  = C_PURPLE
     elif status.get("radio") and status.get("radio_name"):
-        playing = True
-        name = status.get("radio_name", "")[:28]
-        label = {"WEB": "♪ Webradio", "DAB": "♪ DAB+",
-                 "FM": "♪ FM", "SCANNER": "♪ Scanner"}.get(
-                 radio_type, "♪ Radio")
-        t = font_sm.render(label, True, C_ORANGE)
-        screen.blit(t, (12, y)); y += 20
-        t = font_med.render(name, True, C_TEXT)
-        screen.blit(t, (12, y)); y += 22
-
+        label = {"WEB":"Webradio","DAB":"DAB+","FM":"FM","SCANNER":"Scanner"}.get(radio_type,"Radio")
+        np_text = f"♪ {label}: {status.get('radio_name','')[:22]}"
+        np_col  = C_ORANGE
     elif status.get("library") and status.get("lib_track"):
-        playing = True
-        track = status.get("lib_track", "")[:28]
-        t = font_sm.render("♫ Bibliothek", True, C_ACCENT)
-        screen.blit(t, (12, y)); y += 20
-        t = font_med.render(track, True, C_TEXT)
-        screen.blit(t, (12, y)); y += 22
+        np_text = f"♫ {status.get('lib_track','')[:28]}"
+        np_col  = C_ACCENT
 
-    # ── Audioausgang ────────────────────────────────────────────────
-    audio_out = status.get("audio_out", "auto")
-    t = font_sm.render(f"Audio: {audio_out}", True, C_DIM)
-    screen.blit(t, (12, H - 20))
+    # ── Footer ──────────────────────────────────────────────────────
+    footer_y = H - FOOTER_H
+    pygame.draw.line(screen, C_DIVIDER, (0, footer_y), (W, footer_y), 1)
+    pygame.draw.rect(screen, C_LEFT_BG, (0, footer_y + 1, W, FOOTER_H))
 
-    # ── Trennlinien ─────────────────────────────────────────────────
-    pygame.draw.line(screen, C_HEADER, (0, 30), (W, 30), 1)
-    pygame.draw.line(screen, C_HEADER, (0, H - 26), (W, H - 26), 1)
+    if np_text:
+        t = font_sm.render(np_text[:52], True, np_col)
+        screen.blit(t, (8, footer_y + 5))
+    else:
+        audio_out = status.get("audio_out", "auto")
+        t = font_sm.render(f"Audio: {audio_out}", True, C_DIM)
+        screen.blit(t, (8, footer_y + 5))
+
+    # ── Progress / Overlay ──────────────────────────────────────────
+    prog = ipc.read_json(ipc.PROGRESS_FILE, {})
+    if prog.get("active"):
+        oy = H // 2 - 55
+        pygame.draw.rect(screen, (10, 10, 30), (20, oy, W - 40, 110))
+        pygame.draw.rect(screen, C_ACCENT, (20, oy, W - 40, 110), 2)
+        col = {"green": C_GREEN, "red": C_RED, "orange": C_ORANGE}.get(
+              prog.get("color",""), C_ACCENT)
+        t = font_big.render(prog.get("title","")[:24], True, col)
+        screen.blit(t, (30, oy + 10))
+        t = font_med.render(prog.get("message","")[:36], True, C_TEXT)
+        screen.blit(t, (30, oy + 42))
+        pct = prog.get("pct")
+        if pct is not None:
+            bw = int((W - 80) * pct / 100)
+            pygame.draw.rect(screen, C_DIM,    (30, oy + 72, W - 80, 12))
+            pygame.draw.rect(screen, C_ACCENT, (30, oy + 72, bw,     12))
+
+    # ── Pick-List Overlay ────────────────────────────────────────────
+    lst = ipc.read_json(ipc.LIST_FILE, {})
+    if lst.get("active"):
+        items_l = lst.get("items", [])
+        sel_l   = lst.get("selected", 0)
+        pygame.draw.rect(screen, (10, 10, 30), (0, 0, W, H))
+        pygame.draw.rect(screen, C_HEADER, (0, 0, W, HEADER_H))
+        t = font_med.render(lst.get("title","")[:28], True, C_ACCENT)
+        screen.blit(t, (8, 6))
+        draw_status_icons(screen, font_sm, status)
+        scroll_l = max(0, sel_l - 5)
+        for i in range(min(10, len(items_l))):
+            ii = i + scroll_l
+            if ii >= len(items_l): break
+            iy = HEADER_H + 4 + i * 28
+            if ii == sel_l:
+                pygame.draw.rect(screen, C_SEL_BG, (0, iy, W, 27))
+                col = (255, 255, 255)
+            else:
+                col = C_TEXT
+            t = font_med.render(str(items_l[ii])[:36], True, col)
+            screen.blit(t, (10, iy + 4))
 
     pygame.display.flip()
 
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.6.2 gestartet")
+    log.info("PiDrive Display v0.6.4 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 
