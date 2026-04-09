@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main_core.py - PiDrive Core v0.6.0
+main_core.py - PiDrive Core v0.6.1
 Headless: kein pygame, kein Display.
 
 Verantwortlich fuer:
@@ -226,16 +226,35 @@ def check_trigger(menu, S, settings):
 # ── Einfache Kategorien fuer Core (Labels ohne pygame) ────────────────────────
 
 def build_menu_model(S, settings):
-    """Leichtgewichtiges Menuemodell ohne pygame-Abhaengigkeit."""
+    """Menuezustand mit echten Modul-Aktionen, kein pygame."""
+    from modules import (musik, wifi, bluetooth, audio, system,
+                         webradio, dab, fm, library, update, scanner)
+
+    def items_from(module_items):
+        result = []
+        for item in module_items:
+            mi = MenuItem(item.label)
+            if hasattr(item, "action") and item.action:
+                mi.action = item.action
+            elif hasattr(item, "toggle") and item.toggle:
+                mi.action = item.toggle
+            result.append(mi)
+        return result
+
+    musik_items   = musik.build_category(None, S, settings)
+    musik_items  += [i for i in library.build_items(None, S, settings)]
+    musik_items  += webradio.build_items(None, S)
+    musik_items  += dab.build_items(None, S, settings)
+    musik_items  += fm.build_items(None, S, settings)
+    musik_items  += scanner.build_items(None, S, settings)
+
     categories = [
-        ("Musik",     [MenuItem("Spotify"), MenuItem("Bibliothek"),
-                       MenuItem("Webradio"), MenuItem("DAB+"),
-                       MenuItem("FM Radio"), MenuItem("Scanner")]),
-        ("WiFi",      [MenuItem("WiFi An/Aus"), MenuItem("Netzwerke")]),
-        ("Bluetooth", [MenuItem("BT An/Aus"), MenuItem("Geraete")]),
-        ("System",    [MenuItem("Audioausgang"), MenuItem("Lautstaerke"),
-                       MenuItem("IP-Adresse"), MenuItem("Neustart"),
-                       MenuItem("Update")]),
+        ("Musik",     items_from(musik_items)),
+        ("WiFi",      items_from(wifi.build_items(None, S, settings))),
+        ("Bluetooth", items_from(bluetooth.build_items(None, S, settings))),
+        ("System",    items_from(audio.build_items(None, S, settings)
+                                 + system.build_items(None, S, settings)
+                                 + update.build_items(None, S, settings))),
     ]
     return MenuState(categories)
 
@@ -271,7 +290,7 @@ def system_check():
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.6.0 gestartet")
+    log.info("PiDrive Core v0.6.1 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

@@ -1,12 +1,15 @@
 """
 modules/bluetooth.py - Bluetooth Modul
-PiDrive Project - GPL-v3
+PiDrive v0.6.1 — pygame-frei, Status via IPC
 """
 
 import subprocess
 import time
-import pygame
-from ui import Item, show_message, pick_list, C_BT_BLUE
+import log
+import ipc
+from ui import Item
+
+C_BT_BLUE = (30, 144, 255)
 
 def _run(cmd):
     try:
@@ -33,19 +36,16 @@ def bt_toggle(S):
 
 def get_bt_audio_label(S):
     if S.get("bt_sink"):
-        dev = S.get("bt_connected_dev", "") or "BT Geraet"
+        dev = S.get("bt_connected_dev", "") or "BT Gerät"
         return f"Aktiv: {dev[:18]}"
-    return "Kein BT Geraet"
+    return "Kein BT Gerät"
 
 def build_items(screen, S, settings):
 
     def scan_and_pair():
-        show_message(screen, "Bluetooth", "Suche Geraete (5s)...",
-                     color=C_BT_BLUE)
+        ipc.write_progress("Bluetooth", "Suche Geräte (5s)...", color="blue")
         _bg("bluetoothctl scan on")
-        t0 = time.time()
-        while time.time() - t0 < 5:
-            pygame.event.pump()
+        for _ in range(25):
             time.sleep(0.2)
         _bg("bluetoothctl scan off")
 
@@ -57,29 +57,40 @@ def build_items(screen, S, settings):
                 devs.append({"mac": p[1], "name": p[2]})
 
         if not devs:
-            show_message(screen, "Bluetooth", "Keine Geraete gefunden")
+            ipc.write_progress("Bluetooth", "Keine Geräte gefunden", color="orange")
             time.sleep(2)
+            ipc.clear_progress()
             return
 
+        # Geräteliste als IPC-Auswahl schreiben
+        # (Display kann liste anzeigen, Auswahl via pick_list wenn Display läuft)
         names = [d["name"] for d in devs]
-        chosen = pick_list(screen, "BT Geraete", names, color=C_BT_BLUE)
-        if chosen:
-            mac = next((d["mac"] for d in devs if d["name"] == chosen), None)
-            if mac:
-                show_message(screen, "Bluetooth", f"Koppeln: {chosen}...")
-                _bg(f"bluetoothctl pair {mac}; bluetoothctl connect {mac}")
-                time.sleep(3)
-                S["ts"] = 0
+        ipc.write_progress("BT Geräte",
+                           lines=names[:6],
+                           color="blue")
+        log.info(f"BT Scan: {len(devs)} Geräte: {', '.join(names[:3])}")
+        # Verbinde mit erstem Gerät — volle Auswahl kommt mit Display
+        if devs:
+            first = devs[0]
+            ipc.write_progress("Bluetooth",
+                               f"Verbinde: {first['name']}...", color="blue")
+            _bg(f"bluetoothctl pair {first['mac']}; "
+                f"bluetoothctl connect {first['mac']}")
+            time.sleep(3)
+            S["ts"] = 0
+        ipc.clear_progress()
 
     def set_bt_audio():
         if not S.get("bt_sink"):
-            show_message(screen, "Bluetooth", "Kein BT Geraet verbunden")
+            ipc.write_progress("Bluetooth", "Kein BT Gerät verbunden", color="orange")
             time.sleep(2)
+            ipc.clear_progress()
             return
         _bg(f"pactl set-default-sink {S['bt_sink']} 2>/dev/null")
         settings["audio_output"] = "Bluetooth"
-        show_message(screen, "Bluetooth", "Als Ausgang gesetzt")
+        ipc.write_progress("Bluetooth", "Als Ausgang gesetzt", color="green")
         time.sleep(1)
+        ipc.clear_progress()
 
     def disconnect_all():
         out = _run("bluetoothctl devices Connected 2>/dev/null")
@@ -88,15 +99,16 @@ def build_items(screen, S, settings):
             if len(p) >= 2:
                 _bg(f"bluetoothctl disconnect {p[1]}")
         S["ts"] = 0
-        show_message(screen, "Bluetooth", "Alle getrennt")
+        ipc.write_progress("Bluetooth", "Alle getrennt", color="green")
         time.sleep(1)
+        ipc.clear_progress()
 
-    items = [
+    return [
         Item("Bluetooth",
              sub=lambda: "Eingeschaltet" if S["bt"] else "Ausgeschaltet",
              toggle=lambda: bt_toggle(S),
              state=lambda: S["bt"]),
-        Item("Geraete scannen",
+        Item("Geräte scannen",
              action=scan_and_pair),
         Item("Als Audio-Ausgang",
              sub=lambda: get_bt_audio_label(S),
@@ -104,4 +116,3 @@ def build_items(screen, S, settings):
         Item("Alle trennen",
              action=disconnect_all),
     ]
-    return items

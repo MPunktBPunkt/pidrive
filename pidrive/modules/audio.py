@@ -1,67 +1,40 @@
 """
 modules/audio.py - Audioausgang Modul
-PiDrive Project - GPL-v3
+PiDrive v0.6.1 - pygame-frei
 """
-
-import subprocess
-import time
-from ui import Item, show_message, pick_list, C_ORANGE
+import subprocess, time, ipc
+from ui import Item
 
 def _bg(cmd):
-    try:
-        subprocess.Popen(cmd, shell=True,
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+    try: subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except: pass
 
 def set_output(mode, S, settings):
     if mode == "Klinke":
-        _bg("amixer -c 0 cset numid=3 1 2>/dev/null")
-        settings["audio_output"] = "Klinke"
+        _bg("amixer -c 0 cset numid=3 1 2>/dev/null"); settings["audio_output"] = "Klinke"
     elif mode == "HDMI":
-        _bg("amixer -c 0 cset numid=3 2 2>/dev/null")
-        settings["audio_output"] = "HDMI"
+        _bg("amixer -c 0 cset numid=3 2 2>/dev/null"); settings["audio_output"] = "HDMI"
     elif mode == "Bluetooth":
         sink = S.get("bt_sink", "")
-        if sink:
-            _bg(f"pactl set-default-sink {sink} 2>/dev/null")
-            settings["audio_output"] = "BT"
+        if sink: _bg(f"pactl set-default-sink {sink} 2>/dev/null"); settings["audio_output"] = "BT"
     elif mode == "Alle":
-        _bg("pactl load-module module-combine-sink sink_name=combined 2>/dev/null; "
-            "pactl set-default-sink combined 2>/dev/null")
+        _bg("pactl load-module module-combine-sink sink_name=combined 2>/dev/null; pactl set-default-sink combined 2>/dev/null")
         settings["audio_output"] = "Alle"
 
 def build_items(screen, S, settings):
-
     def select_output():
         options = ["Klinke (3.5mm)", "HDMI", "Bluetooth", "Alle kombiniert"]
-        chosen = pick_list(screen, "Audioausgang", options, color=C_ORANGE)
-        if chosen:
-            mode = chosen.split(" ")[0]
-            if mode == "Alle":
-                mode = "Alle"
-            elif mode == "Bluetooth" and not S.get("bt_sink"):
-                show_message(screen, "Audio", "Kein BT verbunden!")
-                time.sleep(2)
-                return
-            set_output(mode, S, settings)
-            show_message(screen, "Audio", f"{mode} aktiv")
-            time.sleep(1)
+        chosen = ipc.headless_pick("Audioausgang", options)
+        if not chosen: return
+        mode = chosen.split(" ")[0]
+        if mode == "Alle": mode = "Alle"
+        if mode == "Bluetooth" and not S.get("bt_sink"):
+            ipc.write_progress("Audio", "Kein BT verbunden!", color="orange"); time.sleep(2); ipc.clear_progress(); return
+        set_output(mode, S, settings)
+        ipc.write_progress("Audio", f"{mode} aktiv", color="green"); time.sleep(1); ipc.clear_progress()
 
-    def volume_up():
-        _bg("amixer -q sset Master 5%+")
-
-    def volume_down():
-        _bg("amixer -q sset Master 5%-")
-
-    items = [
-        Item("Ausgang",
-             sub=lambda: settings.get("audio_output", "auto"),
-             action=select_output),
-        Item("Lauter",
-             action=volume_up),
-        Item("Leiser",
-             action=volume_down),
+    return [
+        Item("Ausgang", sub=lambda: settings.get("audio_output", "auto"), action=select_output),
+        Item("Lauter",  action=lambda: _bg("amixer -q sset Master 5%+")),
+        Item("Leiser",  action=lambda: _bg("amixer -q sset Master 5%-")),
     ]
-    return items

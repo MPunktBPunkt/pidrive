@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main_display.py - PiDrive Display v0.6.0
+main_display.py - PiDrive Display v0.6.1
 
 Nur Anzeige — kein Audio, kein Trigger, keine Kernlogik.
 Liest Status von /tmp/pidrive_status.json (geschrieben von Core).
@@ -31,6 +31,7 @@ os.environ["SDL_VIDEO_FBCON_KEEP_TTY"] = "1"
 import pygame
 import log
 import ipc
+import sys
 
 logger = log.setup()
 
@@ -55,6 +56,13 @@ def init_display():
     log.info("Display: pygame.display.init() ...")
     pygame.display.init()
     pygame.font.init()
+    # vtcon1 direkt vor set_mode unbinden — verhindert Rebinding durch Kernel
+    try:
+        with open("/sys/class/vtconsole/vtcon1/bind", "w") as _f:
+            _f.write("0")
+        log.info("vtcon1/bind=0 OK")
+    except Exception as _e:
+        log.warn(f"vtcon1 unbind: {_e}")
     log.info("Display: set_mode(480x320, 0, 16) ...")
     screen = pygame.display.set_mode((W, H), 0, 16)
     log.info(f"Display OK — Treiber: {pygame.display.get_driver()}")

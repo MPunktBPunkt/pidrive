@@ -11,11 +11,8 @@ import os
 import subprocess
 import time
 import io
-import pygame
-from ui import (Item, show_message, pick_list,
-                draw_rect, get_font,
-                W, H, STATUS_H, C_BG, C_HEADER, C_ACCENT,
-                C_WHITE, C_GRAY, C_PURPLE, C_DARK, C_GREEN)
+import ipc
+from ui import Item
 
 _player_proc = None
 SUPPORTED = (".mp3", ".m4a", ".flac", ".ogg", ".wav")
@@ -112,14 +109,11 @@ def stop_playback(S):
         _player_proc = None
     S["library_playing"] = False
 
-def show_now_playing(screen, tags, art_surf):
+def show_now_playing(tags, art_surf):
     """Now-Playing Screen mit Album-Art."""
     while True:
         screen.fill(C_BG)
-        draw_rect(screen, C_HEADER, (0, 0, W, STATUS_H))
-        pygame.draw.line(screen, C_PURPLE, (0, STATUS_H - 1), (W, STATUS_H - 1), 2)
-        t = get_font(14, bold=True).render("Wiedergabe", True, C_WHITE)
-        screen.blit(t, (W//2 - t.get_width()//2, STATUS_H//2 - t.get_height()//2))
+        pygame.draw.line(C_PURPLE, (0, STATUS_H - 1), (W, STATUS_H - 1), 2)
 
         y = STATUS_H + 10
 
@@ -127,72 +121,46 @@ def show_now_playing(screen, tags, art_surf):
         if art_surf:
             aw, ah = art_surf.get_size()
             ax = W//2 - aw//2
-            screen.blit(art_surf, (ax, y))
             y += ah + 10
         else:
             # Platzhalter
-            draw_rect(screen, (30, 30, 45), (W//2 - 80, y, 160, 160))
-            ph = get_font(40).render("♪", True, (60, 60, 80))
-            screen.blit(ph, (W//2 - ph.get_width()//2, y + 55))
             y += 175
 
         # Track-Info
-        title_f  = get_font(16, bold=True)
-        artist_f = get_font(13)
-        album_f  = get_font(12)
 
         title_s = title_f.render(tags["title"][:24], True, C_WHITE)
-        screen.blit(title_s, (W//2 - title_s.get_width()//2, y))
-        y += title_s.get_height() + 4
 
         if tags["artist"]:
             art_s = artist_f.render(tags["artist"][:28], True, C_GREEN)
-            screen.blit(art_s, (W//2 - art_s.get_width()//2, y))
-            y += art_s.get_height() + 2
 
         if tags["album"]:
             alb_s = album_f.render(tags["album"][:30], True, C_GRAY)
-            screen.blit(alb_s, (W//2 - alb_s.get_width()//2, y))
-            y += alb_s.get_height() + 10
 
         # Hinweis
-        hint = get_font(12).render("[ESC/Links] Zurueck", True, (60, 60, 80))
-        screen.blit(hint, (W//2 - hint.get_width()//2, H - 30))
 
-        pygame.display.flip()
-
+        
         # Event-Loop
-        for ev in pygame.event.get():
-            if ev.type == pygame.QUIT:
-                return
-            if ev.type == pygame.KEYDOWN:
-                if ev.key in (pygame.K_ESCAPE, pygame.K_LEFT,
-                              pygame.K_RETURN, pygame.K_KP_ENTER):
-                    return
 
-        pygame.time.wait(100)
-
-def build_items(screen, S, settings):
+def build_items(S, settings):
     """Gibt Bibliothek-Untermenue-Items zurueck."""
     music_path = settings.get("music_path",
                               os.path.expanduser("~/Musik"))
 
     def browse_library():
         if not os.path.isdir(music_path):
-            show_message(screen, "Bibliothek",
-                         f"Pfad nicht gefunden:", color=C_PURPLE)
+            ipc.write_progress("Bibliothek", f"Pfad nicht gefunden:")
             time.sleep(2)
             return
 
         files = scan_files(music_path)
         if not files:
-            show_message(screen, "Bibliothek", "Keine Dateien gefunden")
+            ipc.write_progress("Bibliothek", "Keine Dateien gefunden")
             time.sleep(2)
             return
 
         # Dateinamen ohne Pfad anzeigen
         names = [os.path.basename(f) for f in files]
-        chosen_name = pick_list(screen, "Bibliothek", names, color=C_PURPLE)
+        chosen_name = None  # pick_list removed
         if not chosen_name:
             return
 
@@ -200,7 +168,7 @@ def build_items(screen, S, settings):
         filepath = files[idx]
 
         # Tags lesen
-        show_message(screen, "Laden...", chosen_name[:30], color=C_PURPLE)
+        ipc.write_progress("Laden...", chosen_name[:30])
         tags = get_tags(filepath)
         art_surf = _load_art(tags["art"], max_size=160) if tags["art"] else None
 
@@ -209,15 +177,15 @@ def build_items(screen, S, settings):
 
         # Now-Playing anzeigen
         if S.get("library_playing"):
-            show_now_playing(screen, tags, art_surf)
+            show_now_playing(tags, art_surf)
 
     def stop_action():
         stop_playback(S)
-        show_message(screen, "Bibliothek", "Gestoppt")
+        ipc.write_progress("Bibliothek", "Gestoppt")
         time.sleep(1)
 
     def set_path_action():
-        show_message(screen, "Musik-Pfad", music_path[:36])
+        ipc.write_progress("Musik-Pfad", music_path[:36])
         time.sleep(3)
 
     items = [

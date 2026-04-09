@@ -16,12 +16,8 @@ import subprocess
 import os
 import json
 import time
-import pygame
-from ui import (Item, show_message, pick_list,
-                draw_rect, get_font,
-                W, H, STATUS_H, C_BG, C_HEADER,
-                C_WHITE, C_GRAY, C_GREEN, C_RED,
-                C_DIVIDER, C_SEL, C_FM)
+import ipc
+from ui import Item
 import log
 
 STATIONS_FILE = os.path.join(
@@ -127,48 +123,12 @@ def stop(S):
         S["radio_playing"] = False
         S["radio_station"] = ""
 
-def draw_freq_input(screen, current_freq):
-    """Frequenzeingabe Screen."""
-    screen.fill(C_BG)
-    draw_rect(screen, (18, 19, 26), (0, 0, W, STATUS_H))
-    pygame.draw.line(screen, C_FM, (0, STATUS_H - 1), (W, STATUS_H - 1), 2)
-    t = get_font(14, bold=True).render("FM Frequenz", True, C_WHITE)
-    screen.blit(t, (W//2 - t.get_width()//2,
-                     STATUS_H//2 - t.get_height()//2))
-
-    cy = H // 2 - 30
-    # Frequenzanzeige
-    draw_rect(screen, (25, 27, 38), (30, cy, W - 60, 50))
-    pygame.draw.rect(screen, C_FM, pygame.Rect(30, cy, W - 60, 50), 2)
-
-    freq_lbl = get_font(28, bold=True).render(
-        f"{current_freq} MHz", True, C_FM)
-    screen.blit(freq_lbl, (W//2 - freq_lbl.get_width()//2, cy + 10))
-
-    hints = [
-        ("↑/↓", "0.1 MHz"),
-        ("Links/Rechts", "1.0 MHz"),
-        ("Enter", "Abspielen"),
-        ("ESC", "Abbrechen"),
-    ]
-    y = cy + 70
-    for key, action in hints:
-        k = get_font(11, bold=True).render(key, True, C_FM)
-        a = get_font(11).render(action, True, C_GRAY)
-        screen.blit(k, (35, y))
-        screen.blit(a, (35 + k.get_width() + 8, y))
-        y += 18
-
-    pygame.display.flip()
 
 def freq_input_screen(screen):
     """Interaktiver Frequenz-Eingabe Screen. Gibt Frequenz als String zurueck."""
     freq = 87.5  # UKW Startfrequenz
 
     while True:
-        draw_freq_input(screen, f"{freq:.1f}")
-
-        for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 return None
             if ev.type == pygame.KEYDOWN:
@@ -184,19 +144,17 @@ def freq_input_screen(screen):
                     return f"{freq:.1f}"
                 elif ev.key == pygame.K_ESCAPE:
                     return None
-        pygame.time.wait(50)
 
-def build_items(screen, S, settings):
+def build_items(S, settings):
     """FM Radio Untermenue-Items."""
 
     def check_hardware():
         if not is_rtlsdr_available():
-            show_message(screen, "RTL-SDR", "Kein Stick gefunden!", color=C_RED)
+            ipc.write_progress("RTL-SDR", "Kein Stick gefunden!")
             time.sleep(2)
             return False
         if not is_rtlfm_available():
-            show_message(screen, "rtl_fm fehlt",
-                         "sudo apt install rtl-sdr", color=C_RED)
+            ipc.write_progress("rtl_fm fehlt", "sudo apt install rtl-sdr")
             time.sleep(3)
             return False
         return True
@@ -204,7 +162,7 @@ def build_items(screen, S, settings):
     def play_preset():
         stations = load_stations()
         names = [f"{s['name']} ({s['freq']} MHz)" for s in stations]
-        chosen = pick_list(screen, "FM Stationen", names, color=C_FM)
+        chosen = None  # pick_list removed
         if chosen:
             idx = names.index(chosen)
             if not check_hardware(): return
@@ -219,7 +177,7 @@ def build_items(screen, S, settings):
 
     def stop_action():
         stop(S)
-        show_message(screen, "FM Radio", "Gestoppt")
+        ipc.write_progress("FM Radio", "Gestoppt")
         time.sleep(1)
 
     def add_current():
@@ -233,7 +191,7 @@ def build_items(screen, S, settings):
         new_name = f"FM {freq_str} MHz"
         stations.append({"name": new_name, "freq": freq_str})
         save_stations(stations)
-        show_message(screen, "Gespeichert", new_name, color=C_GREEN)
+        ipc.write_progress("Gespeichert", new_name)
         time.sleep(2)
 
     items = [
