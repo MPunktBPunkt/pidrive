@@ -66,7 +66,17 @@ section() { echo; echo "=================================================="; ech
     run "ls -l /proc/$PID/cwd"
     run "grep -E '^(Name|State|Pid|PPid|Uid|Gid)' /proc/$PID/status"
 
-    section "PROZESS FDs (PID $PID) — KRITISCH"
+    section "SDL ENVIRONMENT (PID $PID)"
+  run "cat /proc/$PID/environ | tr '\0' '\n' | grep SDL || echo 'keine SDL Variablen'"
+  echo "### vtcon0/bind: $(cat /sys/class/vtconsole/vtcon0/bind 2>/dev/null || echo 'N/A')"
+  echo "### vtcon1/bind: $(cat /sys/class/vtconsole/vtcon1/bind 2>/dev/null || echo 'N/A')"
+  if cat /proc/$PID/environ 2>/dev/null | tr '\0' '\n' | grep -q "FBCON_KEEP_TTY=1"; then
+    echo "### SDL_VIDEO_FBCON_KEEP_TTY=1: OK"
+  else
+    echo "### SDL_VIDEO_FBCON_KEEP_TTY=1: FEHLT!"
+  fi
+
+  section "PROZESS FDs (PID $PID) — KRITISCH"
     echo "### fd 0 (stdin):"
     ls -l /proc/$PID/fd/0 2>/dev/null
     readlink -f /proc/$PID/fd/0 2>/dev/null && echo " ← stdin Ziel"

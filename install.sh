@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.8           ║
+║        PiDrive Installer v0.5.9           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -103,6 +103,24 @@ chown "$REAL_USER:$REAL_USER" "$LOG_DIR"
 ok "Log-Verzeichnis: $LOG_DIR"
 
 # ══════════════════════════════════════════════════════════════
+# SCHRITT 4b: /boot/cmdline.txt — fbcon deaktivieren
+# ══════════════════════════════════════════════════════════════
+# fbcon=nodeconfig verhindert dass der Text-Konsolen-Treiber sich
+# an fb0 bindet und vtcon0/bind=1 setzt. Ohne das rebindet der Kernel
+# vtcon0 automatisch wenn pygame fb0 oeffnet -> set_mode() haengt.
+CMDLINE="/boot/cmdline.txt"
+if [ -f "$CMDLINE" ]; then
+    if ! grep -q "fbcon=nodeconfig" "$CMDLINE"; then
+        # Am Ende der Zeile hinzufuegen (cmdline.txt ist eine Zeile)
+        sed -i 's/$/ fbcon=nodeconfig/' "$CMDLINE"
+        ok "cmdline.txt: fbcon=nodeconfig hinzugefuegt (kein vtcon0 rebind)"
+    else
+        ok "cmdline.txt: fbcon=nodeconfig bereits gesetzt"
+    fi
+else
+    warn "cmdline.txt nicht gefunden"
+fi
+
 # SCHRITT 5: /boot/config.txt
 # ══════════════════════════════════════════════════════════════
 info "5/10 /boot/config.txt konfigurieren..."
