@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.5.9-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.6.0-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -268,7 +268,7 @@ Vollständige Konfiguration: `config.txt.example`
 
 | Problem | Ursache | Lösung |
 |---|---|---|
-| Display dunkel nach Boot | fbcp noch nicht gestartet | `sleep 7` in rc.local abwarten |
+| Display inaktiv | pidrive_display.service nicht gestartet | `systemctl status pidrive_display` |
 | "Unable to open console terminal" | `/dev/tty3` nicht lesbar | udev-Regel: `KERNEL=="tty3", MODE="0660"` |
 | Service Restart-Schleife | HUP bei TTY-Zuweisung | launcher.py mit setsid+TIOCSCTTY (v0.3.7) |
 | Spotify nicht sichtbar | Credential-Cache deaktiviert | `LIBRESPOT_DISABLE_CREDENTIAL_CACHE` auskommentieren |
@@ -296,12 +296,14 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.5.9
-- Service: `ExecStartPre=/bin/chvt 3` — VT3 muss vor SDL aktiv sein
-- Service: `Conflicts=getty@tty1/tty2` — kein VT-Rueckfall durch getty
-- launcher.py: `SIGHUP=SIG_IGN` vor TIOCSCTTY — verhindert exit(0) in SDL
-- Erstmals stabiler Service-Start: pygame + set_mode() laufen durch
-- Offenes Problem: Display dunkel (fb0 hat Inhalt, Ursache in Diagnose) `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
+### v0.6.0
+- BREAKING: Core/Display Trennung
+- `pidrive_core.service` — headless, kein pygame, sofort startfähig
+- `pidrive_display.service` — pygame direkt auf fb1 (480x320), kein fbcp
+- `main_core.py` — Trigger, Status, Audio, kein pygame
+- `main_display.py` — reine Anzeige, liest IPC-JSON
+- `ipc.py` — atomares JSON zwischen Core und Display
+- Display-Absturz stoppt nicht mehr den Core/Audio `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
 - Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
 - RTL-SDR Check in System-Check (Startup-Log) und install.sh
 - install.sh: RTL-SDR USB Stick + rtl_fm + welle-cli werden geprueft und gemeldet

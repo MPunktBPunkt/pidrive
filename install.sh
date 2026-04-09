@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.3.7
+# PiDrive Install Script v0.6.0
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.5.9           ║
+║        PiDrive Installer v0.6.0           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -44,12 +44,13 @@ fi
 # SCHRITT 1: Service stoppen (falls aktiv)
 # ══════════════════════════════════════════════════════════════
 info "1/10 Laufenden Service stoppen..."
-if systemctl is-active --quiet pidrive 2>/dev/null; then
-    systemctl stop pidrive
-    ok "pidrive.service gestoppt"
-else
-    ok "pidrive.service war nicht aktiv"
-fi
+for SVC in pidrive_core pidrive_display pidrive; do
+    if systemctl is-active --quiet $SVC 2>/dev/null; then
+        systemctl stop $SVC 2>/dev/null || true
+        ok "$SVC gestoppt"
+    fi
+done
+ok "Services gestoppt"
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 2: Pakete installieren
@@ -103,24 +104,6 @@ chown "$REAL_USER:$REAL_USER" "$LOG_DIR"
 ok "Log-Verzeichnis: $LOG_DIR"
 
 # ══════════════════════════════════════════════════════════════
-# SCHRITT 4b: /boot/cmdline.txt — fbcon deaktivieren
-# ══════════════════════════════════════════════════════════════
-# fbcon=nodeconfig verhindert dass der Text-Konsolen-Treiber sich
-# an fb0 bindet und vtcon0/bind=1 setzt. Ohne das rebindet der Kernel
-# vtcon0 automatisch wenn pygame fb0 oeffnet -> set_mode() haengt.
-CMDLINE="/boot/cmdline.txt"
-if [ -f "$CMDLINE" ]; then
-    if ! grep -q "fbcon=nodeconfig" "$CMDLINE"; then
-        # Am Ende der Zeile hinzufuegen (cmdline.txt ist eine Zeile)
-        sed -i 's/$/ fbcon=nodeconfig/' "$CMDLINE"
-        ok "cmdline.txt: fbcon=nodeconfig hinzugefuegt (kein vtcon0 rebind)"
-    else
-        ok "cmdline.txt: fbcon=nodeconfig bereits gesetzt"
-    fi
-else
-    warn "cmdline.txt nicht gefunden"
-fi
-
 # SCHRITT 5: /boot/config.txt
 # ══════════════════════════════════════════════════════════════
 info "5/10 /boot/config.txt konfigurieren..."
@@ -140,123 +123,46 @@ ok "/boot/config.txt konfiguriert"
 # ══════════════════════════════════════════════════════════════
 info "6/10 rc.local konfigurieren..."
 RC="/etc/rc.local"
-
-if [ ! -f "$RC" ]; then
-    cat > "$RC" << 'EOF'
-#!/bin/bash
-# rc.local - PiDrive Boot-Vorbereitung
-
-sleep 7                               # Warten bis SPI-Display bereit
-fbcp &                                # Framebuffer-Copy starten
-echo 0 > /sys/class/vtconsole/vtcon1/bind
-echo 0 > /sys/class/graphics/fbcon/cursor_blink
-con2fbmap 1 1
-chvt 3                                # VT3 in den Vordergrund
-chmod 660 /dev/tty3                   # Lesezugriff fuer launcher.py
-
+# v0.6.0: minimal rc.local - kein fbcp, kein chvt, kein tty3
+# Immer neu schreiben fuer saubere Migration
+cat > "$RC" << 'RCEOF'
+#!/bin/sh -e
+# rc.local - PiDrive v0.6.0
+# vtcon1 unbinden: fbcon gibt fb1 frei fuer pygame direkt
+echo 0 > /sys/class/vtconsole/vtcon1/bind 2>/dev/null || true
+echo 0 > /sys/class/graphics/fbcon/cursor_blink 2>/dev/null || true
 exit 0
-EOF
-    chmod +x "$RC"
-    ok "rc.local erstellt"
-else
-    # vtcon1-Block
-    if ! grep -q "vtcon0" "$RC"; then
-        sed -i '/^exit 0/i sleep 7\nfbcp \&\necho 0 > /sys/class/vtconsole/vtcon0/bind\necho 0 > /sys/class/vtconsole/vtcon1/bind\necho 0 > /sys/class/graphics/fbcon/cursor_blink\ncon2fbmap 1 1\n' "$RC"
-        ok "rc.local Block hinzugefuegt"
-    else
-        # chvt 3 nachruesten falls fehlend
-        if ! grep -q "chvt 3" "$RC"; then
-            sed -i '/^exit 0/i chvt 3' "$RC"
-            ok "chvt 3 zu rc.local hinzugefuegt"
-        else
-            ok "rc.local: chvt 3 vorhanden"
-        fi
-        # chmod 660 /dev/tty3 nachruesten falls fehlend
-        if ! grep -q "chmod 660 /dev/tty3" "$RC"; then
-            sed -i '/chvt 3/a chmod 660 /dev/tty3' "$RC"
-            ok "chmod 660 /dev/tty3 zu rc.local hinzugefuegt"
-        else
-            ok "rc.local: chmod 660 /dev/tty3 vorhanden"
+RCEOF
+chmod +x "$RC"
+ok "rc.local: vtcon1 unbind (kein fbcp, kein chvt, kein tty3)"
 
-        fi
-    fi
-fi
-
-# ══════════════════════════════════════════════════════════════
-# SCHRITT 7: udev-Regel fuer /dev/tty3
-# ══════════════════════════════════════════════════════════════
-info "7/10 udev-Regel fuer /dev/tty3..."
-UDEV_RULE='/etc/udev/rules.d/99-pidrive-tty.rules'
-echo 'KERNEL=="tty3", GROUP="tty", MODE="0660"' > "$UDEV_RULE"
-udevadm control --reload-rules
-udevadm trigger /dev/tty3 2>/dev/null || true
-ok "udev-Regel gesetzt: /dev/tty3 → 0660"
-
-# ══════════════════════════════════════════════════════════════
-# SCHRITT 7b: logind.conf — VT-Verwaltung fuer SDL freigeben
-# ══════════════════════════════════════════════════════════════
-info "logind.conf konfigurieren..."
-LOGIND_CONF="/etc/systemd/logind.conf"
-# HandleVTSwitches=no: logind blockiert VT-Wechsel nicht mehr
-# NAutoVTs=0: logind startet keine Auto-VTs (kein getty auf VT1-6)
-if ! grep -q "^HandleVTSwitches=no" "$LOGIND_CONF" 2>/dev/null; then
-    # Entferne alte auskommentierte Eintraege und setze neue
-    sed -i 's/^#*HandleVTSwitches=.*/HandleVTSwitches=no/' "$LOGIND_CONF" 2>/dev/null ||         echo "HandleVTSwitches=no" >> "$LOGIND_CONF"
-    ok "logind: HandleVTSwitches=no gesetzt"
-else
-    ok "logind: HandleVTSwitches=no bereits aktiv"
-fi
-if ! grep -q "^NAutoVTs=0" "$LOGIND_CONF" 2>/dev/null; then
-    sed -i 's/^#*NAutoVTs=.*/NAutoVTs=0/' "$LOGIND_CONF" 2>/dev/null ||         echo "NAutoVTs=0" >> "$LOGIND_CONF"
-    ok "logind: NAutoVTs=0 gesetzt"
-else
-    ok "logind: NAutoVTs=0 bereits aktiv"
-fi
-systemctl daemon-reload
-systemctl restart systemd-logind 2>/dev/null || true
+info "7/10 System-Konfiguration..."
+# tty3 udev-Regel nicht mehr noetig (kein TIOCSCTTY in v0.6.0)
+rm -f /etc/udev/rules.d/99-pidrive-tty.rules 2>/dev/null || true
+udevadm control --reload-rules 2>/dev/null || true
+ok "Alte tty3 udev-Regel entfernt"
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 8: Systemdienste einrichten
 # ══════════════════════════════════════════════════════════════
-info "8/10 Systemdienste einrichten..."
+info "8/10 Systemdienste einrichten (Core + Display)..."
 
-# pidrive.service aus Repo kopieren
-if [ -f "$INSTALL_DIR/systemd/pidrive.service" ]; then
-    cp "$INSTALL_DIR/systemd/pidrive.service" "$SERVICE_DIR/pidrive.service"
-    # Pfade auf aktuellen User anpassen (falls nicht pi)
-    # Nur ExecStart und WorkingDirectory anpassen — keine anderen Zeilen anfassen
-    # Aggressives sed auf die ganze Datei wuerde TTY/PAM-Zeilen beschaedigen
-    sed -i "s|^WorkingDirectory=.*|WorkingDirectory=$REAL_HOME/pidrive/pidrive|" "$SERVICE_DIR/pidrive.service"
-    sed -i "s|^ExecStart=.*|ExecStart=/usr/bin/python3 $REAL_HOME/pidrive/pidrive/launcher.py|" "$SERVICE_DIR/pidrive.service"
-    ok "pidrive.service aus Repo kopiert und angepasst"
-else
-    warn "pidrive.service nicht im Repo — erstelle Fallback"
-    cat > "$SERVICE_DIR/pidrive.service" << EOF
-[Unit]
-Description=PiDrive - Car Infotainment
-After=multi-user.target rc-local.service
-
-[Service]
-Type=simple
-User=root
-Environment=SDL_FBDEV=/dev/fb0
-Environment=SDL_VIDEODRIVER=fbcon
-Environment=SDL_NOMOUSE=1
-WorkingDirectory=$INSTALL_DIR/pidrive
-ExecStartPre=/bin/sleep 3
-ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon0/bind || true'
-ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind || true'
-ExecStart=/usr/bin/python3 $INSTALL_DIR/pidrive/launcher.py
-Restart=always
-RestartSec=5
-StandardOutput=null
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    ok "pidrive.service (Fallback) erstellt"
+# Alten monolithischen Service deaktivieren
+if systemctl is-active --quiet pidrive 2>/dev/null; then
+    systemctl stop pidrive 2>/dev/null || true
 fi
+systemctl disable pidrive 2>/dev/null || true
+
+# Core Service
+cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.service"
+sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_core.service"
+
+# Display Service
+cp "$INSTALL_DIR/systemd/pidrive_display.service" "$SERVICE_DIR/pidrive_display.service"
+sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_display.service"
+
+
+# v0.6.0: kein monolithischer pidrive.service mehr
 
 # rfkill-unblock.service
 cat > "$SERVICE_DIR/rfkill-unblock.service" << 'EOF'
@@ -274,9 +180,8 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable pidrive
-systemctl enable rfkill-unblock 2>/dev/null || true
-ok "Dienste aktiviert (pidrive, rfkill-unblock)"
+systemctl enable pidrive_core pidrive_display rfkill-unblock 2>/dev/null || true
+ok "Dienste aktiviert (pidrive_core, pidrive_display, rfkill-unblock)"
 
 # SSH
 systemctl enable ssh 2>/dev/null && systemctl start ssh 2>/dev/null || true
@@ -291,8 +196,7 @@ ok "Gruppen: video, input, render, tty"
 
 # chmod tty3 nicht mehr noetig
 
-ln -sf "$INSTALL_DIR/pidrive_ctrl.py" "$REAL_HOME/pidrive_ctrl.py" 2>/dev/null || true
-ok "pidrive_ctrl.py verknuepft"
+# pidrive_ctrl.py entfernt in v0.6.0 — Steuerung via /tmp/pidrive_cmd
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 10: Spotify konfigurieren + Service starten
@@ -361,14 +265,14 @@ else
 fi
 
 # Service starten + ausfuehrliche Verifikation
-info "pidrive.service starten..."
-if systemctl start pidrive 2>/dev/null; then
-    sleep 5  # Launcher braucht Zeit fuer setsid+TIOCSCTTY
-    if systemctl is-active --quiet pidrive; then
-        ok "pidrive.service laeuft!"
+info "pidrive_core.service starten..."
+if systemctl start pidrive_core 2>/dev/null; then
+    sleep 5
+    if systemctl is-active --quiet pidrive_core; then
+        ok "pidrive_core.service laeuft!"
 
         # ── KRITISCHER TEST: Ist der Prozess wirklich Python? ──────────────
-        PID=$(systemctl show pidrive --property=MainPID --value 2>/dev/null)
+        PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null)
         if [ -n "$PID" ] && [ "$PID" != "0" ]; then
             ok "Main PID: $PID"
 
@@ -378,18 +282,17 @@ if systemctl start pidrive 2>/dev/null; then
                 ok "PID $PID exe: $EXE  ← Python laeuft!"
             elif echo "$EXE" | grep -q "systemd"; then
                 err "PID $PID exe: $EXE  ← KEIN Python! systemd-Helper haengt."
-                err "  → PAMName/StandardInput/TTYPath Kombination blockiert Prozessstart."
-                err "  → service-Datei pruefen: PAMName=login entfernen?"
+                err "  → ExecStart in pidrive_core.service pruefen"
             else
                 warn "PID $PID exe: $EXE  ← unbekannt, kein Python?"
             fi
 
             # cmdline pruefen
             CMDLINE=$(tr '\0' ' ' < /proc/$PID/cmdline 2>/dev/null | head -c 80)
-            if echo "$CMDLINE" | grep -q "launcher.py"; then
+            if echo "$CMDLINE" | grep -q "main_core"; then
                 ok "cmdline: $CMDLINE"
             else
-                warn "cmdline: '$CMDLINE'  ← launcher.py nicht sichtbar"
+                info "cmdline: $CMDLINE  (execv von launcher zu main_core normal)"
             fi
 
             # stdin pruefen
@@ -398,7 +301,7 @@ if systemctl start pidrive 2>/dev/null; then
 
             # Neue Log-Eintraege pruefen
             sleep 3
-            LOG_NEW=$(grep "LAUNCH\|PiDrive gestartet\|pygame" /var/log/pidrive/pidrive.log 2>/dev/null | tail -3)
+            LOG_NEW=$(grep "Core v0.6\|Core-Loop\|Core gestartet\|PiDrive Core" /var/log/pidrive/pidrive.log 2>/dev/null | tail -3)
             if [ -n "$LOG_NEW" ]; then
                 ok "Neue Log-Eintraege vorhanden:"
                 echo "$LOG_NEW" | while read line; do info "  $line"; done
@@ -408,11 +311,27 @@ if systemctl start pidrive 2>/dev/null; then
         else
             warn "Kein PID ermittelt"
         fi
+        # IPC pruefen
+        sleep 2
+        if [ -f /tmp/pidrive_status.json ]; then
+            ok "IPC: /tmp/pidrive_status.json vorhanden"
+        else
+            warn "IPC: /tmp/pidrive_status.json fehlt — Core schreibt noch nicht"
+        fi
+        # Display Service starten (optional)
+        systemctl start pidrive_display 2>/dev/null || true
+        sleep 3
+        if systemctl is-active --quiet pidrive_display; then
+            ok "pidrive_display.service laeuft!"
+        else
+            warn "pidrive_display.service inaktiv (optional)"
+            warn "  Teste fb1 direkt: sudo python3 -c \"import pygame; ..."
+        fi
     else
-        warn "pidrive.service nicht aktiv — pruefe Log unten"
+        warn "pidrive_core.service nicht aktiv — pruefe Log unten"
     fi
 else
-    warn "Start fehlgeschlagen (evtl. noch kein Display-Treiber)"
+    warn "pidrive_core Start fehlgeschlagen — journalctl -u pidrive_core"
 fi
 
 # ══════════════════════════════════════════════════════════════
@@ -434,7 +353,7 @@ echo -e "${BOLD}${GREEN}Installation abgeschlossen! (v$VER)${NC}"
 echo ""
 echo -e "${BOLD}Log pruefen:${NC}"
 echo -e "  ${CYAN}tail -20 $LOG_DIR/pidrive.log${NC}"
-echo -e "  ${CYAN}journalctl -u pidrive -f${NC}"
+echo -e "  ${CYAN}journalctl -u pidrive_core -f${NC}"
 echo ""
 echo -e "${BOLD}Naechste Schritte:${NC}"
 echo -e "  1. ${YELLOW}Display-Treiber (falls noch nicht):${NC}"

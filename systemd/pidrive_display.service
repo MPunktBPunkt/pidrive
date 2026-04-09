@@ -1,0 +1,30 @@
+[Unit]
+Description=PiDrive Display - Statusanzeige
+After=pidrive_core.service
+# Kein Requires — Display darf fehlen ohne Core zu beenden
+
+[Service]
+Type=simple
+User=root
+
+# Direkt auf SPI-Display fb1 — kein fbcp noetig
+Environment=SDL_FBDEV=/dev/fb1
+Environment=SDL_VIDEODRIVER=fbcon
+Environment=SDL_NOMOUSE=1
+Environment=SDL_AUDIODRIVER=dummy
+Environment=SDL_VIDEO_FBCON_KEEP_TTY=1
+WorkingDirectory=/home/pi/pidrive/pidrive
+
+ExecStartPre=/bin/sleep 5
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/vtconsole/vtcon1/bind || true'
+ExecStartPre=/bin/bash -c 'echo 0 > /sys/class/graphics/fbcon/cursor_blink || true'
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main_display.py
+
+# on-failure: Crash wird neu gestartet, aber Core bleibt unberuehrt
+Restart=on-failure
+RestartSec=10
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

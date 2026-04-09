@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.5.8"""
+"""diagnose.py - PiDrive System-Diagnose v0.6.0
+
+v0.6.0: Core/Display getrennt.
+- pidrive_core.service  — headless, kein pygame
+- pidrive_display.service — pygame auf fb1 direkt
+
+Aufruf: sudo python3 ~/pidrive/pidrive/diagnose.py
+"""
 import os, subprocess, fcntl, sys, time
 
 VT_ACTIVATE = 0x5606
@@ -14,156 +21,83 @@ def warn(m): print(f"  ⚠ {m}")
 def err(m):  print(f"  ✗ {m}")
 def nfo(m):  print(f"    {m}")
 
-def check_vt():
-    S("VT STATUS")
-    fg = run("fgconsole")
-    ok(f"Aktives VT: {fg} (SDL verwendet diesen VT)")
+def check_services():
+    S("PIDRIVE SERVICES (v0.6.0: Core + Display)")
 
-    # Sessions explizit mit TTY prüfen
-    raw = run("loginctl list-sessions 2>/dev/null")
-    nfo("loginctl:"); [nfo(f"  {l}") for l in raw.splitlines()]
+    # Core
+    core_st = run("systemctl is-active pidrive_core 2>/dev/null")
+    (ok if core_st=="active" else err)(f"pidrive_core.service: {core_st}")
+    core_pid = run("systemctl show pidrive_core --property=MainPID --value 2>/dev/null")
+    if core_pid and core_pid != "0":
+        ok(f"Core PID: {core_pid}")
+        try:
+            exe = os.readlink(f"/proc/{core_pid}/exe")
+            (ok if "python" in exe else err)(f"Core exe: {exe}")
+        except: pass
 
-    tty3 = run("loginctl list-sessions 2>/dev/null | grep tty3")
-    if tty3: ok(f"logind-Session auf tty3: {tty3.strip()}")
+    # Display
+    disp_st = run("systemctl is-active pidrive_display 2>/dev/null")
+    color = ok if disp_st=="active" else warn  # warn not err — display optional
+    color(f"pidrive_display.service: {disp_st} (optional)")
+    disp_pid = run("systemctl show pidrive_display --property=MainPID --value 2>/dev/null")
+    if disp_pid and disp_pid != "0":
+        nfo(f"Display PID: {disp_pid}")
+        try:
+            exe = os.readlink(f"/proc/{disp_pid}/exe")
+            nfo(f"Display exe: {exe}")
+        except: pass
+
+    # Alter monolithischer Service
+    old_st = run("systemctl is-active pidrive 2>/dev/null")
+    if old_st == "active":
+        warn(f"Alter pidrive.service noch aktiv — sollte deaktiviert sein")
     else:
-        nfo("Keine logind-Session auf tty3 (ohne PAMName normal — SDL erkennt VT selbst)")
+        ok(f"Alter pidrive.service: {old_st} (korrekt deaktiviert)")
 
-    # Session-Details
-    sid = run("loginctl list-sessions 2>/dev/null | grep tty3 | awk '{print $1}'")
-    if sid:
-        [nfo(f"  {l}") for l in run(f"loginctl session-status {sid} 2>/dev/null | head -8").splitlines()]
-
-def check_service():
-    S("PIDRIVE SERVICE")
-    st = run("systemctl is-active pidrive")
-    (ok if st=="active" else err)(f"pidrive.service: {st}")
-
-    pid = run("systemctl show pidrive --property=MainPID --value")
-    if not pid or pid == "0": warn("Kein PID"); return
-    ok(f"Main PID: {pid}")
-
-    # SDL Umgebungsvariablen des laufenden Prozesses
-    S(f"SDL ENVIRONMENT (PID {pid})")
-    try:
-        env_raw = open(f"/proc/{pid}/environ","rb").read()
-        env_vars = [e.decode("utf-8","replace") for e in env_raw.split(b"\x00") if b"SDL" in e]
-        if env_vars:
-            for v in env_vars:
-                if "FBCON_KEEP_TTY=1" in v:
-                    ok(f"{v}  ← KEEP_TTY aktiv")
-                else:
-                    ok(f"{v}")
-            if not any("FBCON_KEEP_TTY" in v for v in env_vars):
-                err("SDL_VIDEO_FBCON_KEEP_TTY fehlt! set_mode() wird haengen!")
-        else:
-            warn("Keine SDL_* Vars im Prozess — service env nicht gesetzt?")
-    except Exception as e:
-        warn(f"environ: {e}")
-
-    # vtcon0 + vtcon1 Status
-    S("VTCONSOLE STATUS + CMDLINE")
-    # fbcon=nodeconfig in cmdline.txt verhindert automatisches vtcon0 rebinding
-    try:
-        cmdline = open("/boot/cmdline.txt").read()
-        if "fbcon=nodeconfig" in cmdline:
-            ok("cmdline.txt: fbcon=nodeconfig gesetzt — kein vtcon0 rebind")
-        else:
-            err("cmdline.txt: fbcon=nodeconfig fehlt! Kernel rebindet vtcon0!")
-            err("  Fix: sudo sed -i 's/$/ fbcon=nodeconfig/' /boot/cmdline.txt && sudo reboot")
-    except Exception as e:
-        warn(f"cmdline.txt: {e}")
-    S("VTCONSOLE STATUS — ueberlagert vtcon0 noch fb0?")
-    for i in (0, 1):
-        try:
-            val  = open(f"/sys/class/vtconsole/vtcon{i}/bind").read().strip()
-            name = open(f"/sys/class/vtconsole/vtcon{i}/name").read().strip()
-            (ok if val=="0" else err)(f"vtcon{i}/bind={val}  {name}  {'← OK' if val=='0' else '← GEBUNDEN! Ueberschreibt fb0!'}")
-        except Exception as e:
-            nfo(f"vtcon{i}: {e}")
-
-    # ── WICHTIGSTER CHECK: Ist der Prozess wirklich Python? ─────────────
-    S(f"EXE-CHECK — laeuft wirklich Python? (PID {pid})")
-    try:
-        exe = os.readlink(f"/proc/{pid}/exe")
-        if "python" in exe:
-            ok(f"exe → {exe}  ← Python laeuft korrekt!")
-        elif "systemd" in exe:
-            err(f"exe → {exe}  ← KEIN Python! systemd-Helper haengt!")
-            err("  PAMName=login + StandardInput=tty + User=root blockiert ExecStart")
-            err("  Loesung: PAMName+TTYPath+StandardInput aus Service entfernen")
-        else:
-            warn(f"exe → {exe}  ← kein Python erkannt")
-    except Exception as e:
-        warn(f"exe nicht lesbar (sudo noetig?): {e}")
-
-    # cmdline
-    try:
-        cmdline = open(f"/proc/{pid}/cmdline").read().replace('',' ').strip()
-        if "launcher.py" in cmdline:
-            ok(f"cmdline: {cmdline[:80]}")
-        else:
-            warn(f"cmdline: {cmdline[:80]}  ← launcher.py nicht sichtbar!")
-    except Exception as e:
-        warn(f"cmdline: {e}")
-
-    # FDs des laufenden Prozesses — KERN-DIAGNOSE
-    S(f"PROZESS FD-STATUS (PID {pid}) — welches TTY wirklich benutzt wird")
-    for fd_n, fd_nm in [(0,"stdin"),(1,"stdout"),(2,"stderr")]:
-        try:
-            t = os.readlink(f"/proc/{pid}/fd/{fd_n}")
-            if t == "/dev/null" and fd_n == 0:
-                err(f"{fd_nm} (fd {fd_n}) → {t}  ← KEIN TTY! PAMName kann nicht greifen")
-            elif "tty3" in t:
-                ok(f"{fd_nm} (fd {fd_n}) → {t}  ← TTY korrekt gebunden")
+def check_ipc():
+    S("IPC STATUS (/tmp/ Dateien)")
+    import json
+    for path, label in [
+        ("/tmp/pidrive_status.json", "Status-JSON"),
+        ("/tmp/pidrive_menu.json",   "Menu-JSON"),
+        ("/tmp/pidrive_cmd",         "Trigger-Datei"),
+    ]:
+        if os.path.exists(path):
+            age = time.time() - os.path.getmtime(path)
+            if path.endswith(".json"):
+                try:
+                    data = json.load(open(path))
+                    ok(f"{label}: vorhanden ({int(age)}s alt) — {list(data.keys())[:4]}")
+                except:
+                    warn(f"{label}: vorhanden aber ungueltig")
             else:
-                warn(f"{fd_nm} (fd {fd_n}) → {t}")
-        except Exception as e:
-            warn(f"{fd_nm} (fd {fd_n}): {e}")
-
-    # Controlling terminal aus /proc/PID/stat
-    try:
-        stat = open(f"/proc/{pid}/stat").read().split()
-        tty_nr = int(stat[6])
-        if tty_nr == 0: warn("Kein controlling terminal (tty_nr=0) → SIGHUP-Risiko")
+                ok(f"{label}: vorhanden")
         else:
-            minor = tty_nr & 0xff
-            (ok if minor==3 else warn)(f"Controlling terminal: tty{minor} {'(korrekt)' if minor==3 else '(erwartet tty3)'}")
-    except Exception as e: warn(f"stat parse: {e}")
+            if "cmd" in path:
+                nfo(f"{label}: nicht vorhanden (wartet auf Befehl)")
+            else:
+                err(f"{label}: fehlt — Core schreibt nicht?")
 
-    # ps
-    nfo(run(f"ps -o pid,ppid,tty,stat,cmd -p {pid} 2>/dev/null | tail -1"))
-
-    # Service-Konfiguration laut systemd (Laufzeitwerte, nicht nur Datei)
-    S("SERVICE-KONFIGURATION (systemctl show — Laufzeitwerte)")
-    show = run("systemctl show pidrive -p TTYPath -p StandardInput -p StandardOutput -p StandardError -p PAMName -p Type 2>/dev/null")
-    for line in show.splitlines():
-        k, _, v = line.partition("=")
-        sym = "✓" if v and v not in ("","null") else "⚠"
-        print(f"  {sym} {k} = {v if v else '(leer)'}")
-
-    S("SERVICE-DATEI TTY-ZEILEN (/etc/systemd/system/pidrive.service)")
-    cfg = run("grep -E 'TTYPath|StandardInput|StandardOutput|StandardError|PAMName' /etc/systemd/system/pidrive.service 2>/dev/null")
-    for line in cfg.splitlines(): nfo(f"  {line}")
-
-    # TTYPath/PAMName/StandardInput intentional absent (haengt systemd 247)
-    if "SDL_VIDEO_FBCON_KEEP_TTY" in run("grep SDL /etc/systemd/system/pidrive.service 2>/dev/null"):
-        ok("SDL_VIDEO_FBCON_KEEP_TTY=1 im Service gesetzt")
+def check_display_env():
+    S("DISPLAY SERVICE KONFIGURATION")
+    cfg = run("systemctl show pidrive_display -p Environment 2>/dev/null")
+    if "SDL_FBDEV=/dev/fb1" in cfg:
+        ok("SDL_FBDEV=/dev/fb1 (direkt auf SPI-Display)")
     else:
-        err("SDL_VIDEO_FBCON_KEEP_TTY=1 fehlt im Service!")
-
-def check_gettys():
-    S("GETTY STATUS")
-    for t in ("tty1","tty2","tty3"):
-        st = run(f"systemctl is-active getty@{t}.service 2>/dev/null")
-        en = run(f"systemctl is-enabled getty@{t}.service 2>/dev/null")
-        if st == "active": warn(f"getty@{t}: active — kann VT blockieren")
-        elif "masked" in en: ok(f"getty@{t}: masked")
-        else: ok(f"getty@{t}: {st}/{en}")
+        err("SDL_FBDEV=/dev/fb1 fehlt im Display-Service!")
+    if "FBCON_KEEP_TTY=1" in cfg:
+        ok("SDL_VIDEO_FBCON_KEEP_TTY=1")
+    else:
+        warn("SDL_VIDEO_FBCON_KEEP_TTY=1 fehlt (set_mode() koennte haengen)")
 
 def check_fbcp():
-    S("FBCP")
+    S("FBCP (sollte in v0.6.0 NICHT mehr laufen)")
     r = run("pgrep -a fbcp")
-    (ok if r else err)(f"fbcp {'laeuft: '+r if r else 'laeuft NICHT — Display dunkel!'}")
+    if r:
+        warn(f"fbcp laeuft noch: {r}")
+        warn("  In v0.6.0 nicht mehr noetig (fb1 direkt)")
+    else:
+        ok("fbcp laeuft nicht (korrekt fuer v0.6.0)")
 
 def check_fb(path, name):
     S(f"FRAMEBUFFER {name} ({path})")
@@ -171,114 +105,114 @@ def check_fb(path, name):
     try:
         fb_num = path.replace("/dev/fb","")
         bpp_f  = f"/sys/class/graphics/fb{fb_num}/bits_per_pixel"
-        bpp    = int(open(bpp_f).read().strip()) if os.path.exists(bpp_f) else 0
-        if bpp:
-            sym = "✓" if bpp in (16,32) else "⚠"
-            print(f"  {sym} Farbtiefe: {bpp} bpp {'(RGB565)' if bpp==16 else '(BGRA32)'}")
-            if bpp == 16:
-                warn("pygame muss set_mode(..., 0, 16) verwenden — sonst Farb-Mismatch!")
+        vsz_f  = f"/sys/class/graphics/fb{fb_num}/virtual_size"
+        bpp    = open(bpp_f).read().strip() if os.path.exists(bpp_f) else "?"
+        vsz    = open(vsz_f).read().strip() if os.path.exists(vsz_f) else "?"
+        ok(f"Groesse: {vsz}, {bpp} bpp")
+        if path == "/dev/fb1" and bpp == "16":
+            ok("fb1: 16bpp RGB565 — korrekt fuer direktes Rendering")
+        elif path == "/dev/fb1" and bpp != "16":
+            warn(f"fb1: {bpp}bpp — set_mode(..., 0, 16) noetig")
 
-        raw   = open(path,"rb").read()
+        raw   = open(path,"rb").read(min(4000, os.path.getsize(path)))
         total = len(raw)
         nz    = sum(1 for b in raw if b != 0)
         pct   = nz*100//total if total else 0
-        bpp_calc = total//(640*480) if total >= 640*480 else 0
-        nfo(f"Groesse: {total} bytes = {bpp_calc} bytes/pixel = {bpp_calc*8} bpp")
-        nfo(f"Non-zero: {nz} bytes ({pct}%)")
-        nfo(f"Erste 16: {list(raw[:16])}")
-
-        # Echter Schwarztest (bpp-bewusst)
-        if bpp == 16:
-            px_black = sum(1 for i in range(0,min(total,2000),2) if raw[i]==0 and raw[i+1]==0)
-            pct_b = px_black*100//(min(total,2000)//2)
-            (err if pct_b>90 else ok)(f"{'~'+str(pct_b)+'% schwarz (pygame zeichnet schwarz!)' if pct_b>90 else str(100-pct_b)+'% hat Farbe'}")
-        elif bpp == 32:
-            px_black = sum(1 for i in range(0,min(total,4000),4) if raw[i]==0 and raw[i+1]==0 and raw[i+2]==0)
-            pct_b = px_black*100//(min(total,4000)//4)
-            (err if pct_b>90 else ok)(f"{'~'+str(pct_b)+'% schwarz' if pct_b>90 else str(100-pct_b)+'% hat Farbe'}")
-        else:
-            (ok if pct>5 else err)(f"Inhalt: {pct}% non-zero")
+        (ok if pct > 5 else warn)(f"Inhalt: {pct}% non-zero {'(Bild vorhanden)' if pct>5 else '(schwarz/leer)'}")
     except Exception as e: err(f"Fehler: {e}")
 
-def check_log():
-    S("PIDRIVE LOG (letzte 5 Zeilen)")
-    log = "/var/log/pidrive/pidrive.log"
-    if not os.path.exists(log): err("Log-Datei fehlt"); return
-    lines = open(log).readlines()
-    for l in lines[-5:]: nfo(l.rstrip())
-    last_ts = lines[-1][:19] if lines else "?"
-    nfo(f"Letzter Eintrag: {last_ts}")
-    pid = run("systemctl show pidrive --property=MainPID --value")
-    if pid and pid != "0":
-        svc_start = run(f"systemctl show pidrive --property=ExecMainStartTimestamp --value 2>/dev/null")
-        nfo(f"Service gestartet: {svc_start}")
-        if svc_start and last_ts < svc_start[:19].replace("T"," "):
-            err("Log hat keine Eintraege vom aktuellen Service-Start!")
-            nfo("→ launcher.py oder main.py haengt VOR dem ersten log.info()")
-
-def test_vt():
-    S("VT3 AKTIVIERUNGSTEST")
+def check_vtcon():
+    S("VTCONSOLE STATUS")
     try:
-        fd = os.open("/dev/tty0", os.O_WRONLY | os.O_NOCTTY)
-        fcntl.ioctl(fd, VT_ACTIVATE, 3)
-        os.close(fd); time.sleep(0.5)
-        fg = run("fgconsole")
-        (ok if fg=="3" else err)(f"VT3 {'ist foreground' if fg=='3' else 'immer noch nicht foreground — logind blockiert!'}")
-    except Exception as e: err(f"VT_ACTIVATE: {e}")
+        cmdline = open("/boot/cmdline.txt").read()
+        (ok if "fbcon=nodeconfig" in cmdline else warn)(
+            f"cmdline.txt: {'fbcon=nodeconfig gesetzt' if 'fbcon=nodeconfig' in cmdline else 'fbcon=nodeconfig fehlt'}")
+    except: pass
+    for i in (0,1):
+        try:
+            val  = open(f"/sys/class/vtconsole/vtcon{i}/bind").read().strip()
+            name = open(f"/sys/class/vtconsole/vtcon{i}/name").read().strip()
+            # vtcon0 = dummy (immer 1, normal)
+            # vtcon1 = framebuffer (sollte 0 sein)
+            if i == 0:
+                nfo(f"vtcon0/bind={val} ({name}) — Text-VT-Layer (normal)")
+            else:
+                (ok if val=="0" else warn)(f"vtcon1/bind={val} ({name}) {'← OK' if val=='0' else '← fbcon noch aktiv'}")
+        except Exception as e: nfo(f"vtcon{i}: {e}")
+
+def check_log():
+    S("PIDRIVE LOG (letzte 8 Zeilen)")
+    log_file = "/var/log/pidrive/pidrive.log"
+    if not os.path.exists(log_file): err("Log-Datei fehlt"); return
+    lines = open(log_file).readlines()
+    for l in lines[-8:]: nfo(l.rstrip())
+    # Pruefe ob Core-Logs vorhanden
+    core_start = run("systemctl show pidrive_core --property=ExecMainStartTimestamp --value 2>/dev/null")
+    if core_start and lines:
+        last_ts = lines[-1][:19]
+        nfo(f"Core gestartet: {core_start[:19] if core_start else '?'}")
 
 def test_sdl():
-    S("SDL DISPLAY TEST")
+    S("SDL DISPLAY TEST (fb1)")
     try:
         import pygame
-        for k,v in [("SDL_VIDEODRIVER","fbcon"),("SDL_FBDEV","/dev/fb0"),("SDL_AUDIODRIVER","dummy")]:
-            os.environ.setdefault(k,v)
+        os.environ["SDL_VIDEODRIVER"] = "fbcon"
+        os.environ["SDL_FBDEV"]       = "/dev/fb1"
+        os.environ["SDL_AUDIODRIVER"] = "dummy"
+        os.environ["SDL_VIDEO_FBCON_KEEP_TTY"] = "1"
         pygame.display.init()
         ok(f"pygame.display.init() OK — Treiber: {pygame.display.get_driver()}")
         pygame.display.quit()
-    except Exception as e: err(f"pygame FEHLER: {e}")
+    except Exception as e:
+        err(f"pygame auf fb1 FEHLER: {e}")
+        nfo("  → set_mode() Test: sudo SDL_FBDEV=/dev/fb1 ... python3 -c 'import pygame...'")
 
 def summary():
     S("ZUSAMMENFASSUNG")
-    fg  = run("fgconsole")
-    ses = run("loginctl list-sessions 2>/dev/null")
-    svc = run("systemctl is-active pidrive")
-    fcp = bool(run("pgrep fbcp"))
-    cfg = run("grep -E '^TTYPath|^PAMName|^StandardInput' /etc/systemd/system/pidrive.service 2>/dev/null")
-    pid = run("systemctl show pidrive --property=MainPID --value")
-    stdin_t = ""
-    if pid and pid != "0":
-        try: stdin_t = os.readlink(f"/proc/{pid}/fd/0")
-        except: pass
+    core_ok  = run("systemctl is-active pidrive_core 2>/dev/null") == "active"
+    disp_ok  = run("systemctl is-active pidrive_display 2>/dev/null") == "active"
+    ipc_ok   = os.path.exists("/tmp/pidrive_status.json")
+    fbcp_off = not bool(run("pgrep fbcp"))
+    fb1_ok   = os.path.exists("/dev/fb1")
 
     checks = [
-        (fg=="3",                    "VT3 foreground"),
-        ("tty3" in ses,              "logind-Session auf tty3"),
-        (svc=="active",              "pidrive.service laeuft"),
-        (fcp,                        "fbcp laeuft"),
-        # TTYPath/PAMName/StandardInput: intentional absent
-        # stdin ist /dev/null - kein Problem mehr (SDL liest Keyboard selbst)
+        (core_ok,  "pidrive_core.service laeuft"),
+        (ipc_ok,   "/tmp/pidrive_status.json vorhanden"),
+        (fb1_ok,   "/dev/fb1 vorhanden (SPI-Display)"),
+        (fbcp_off, "fbcp nicht aktiv (v0.6.0: nicht noetig)"),
     ]
-    # Add vtcon0 and SDL_KEEP_TTY checks
-    vtcon0_val = run("cat /sys/class/vtconsole/vtcon0/bind 2>/dev/null")
-    vtcon0_ok  = vtcon0_val == "0"
-    sdl_keep   = bool(run(f"cat /proc/{pid}/environ 2>/dev/null | tr '\\0' '\\n' | grep FBCON_KEEP_TTY" if pid and pid!="0" else ""))
-    checks += [
-        (vtcon0_ok,  f"vtcon0/bind=0 (ist: {vtcon0_val or '?'})"),
-        (sdl_keep,   "SDL_VIDEO_FBCON_KEEP_TTY=1 im Prozess"),
-    ]
-
-    all_ok = True
+    all_core_ok = True
     for r,l in checks:
         (ok if r else err)(l)
-        if not r: all_ok = False
-    print("\n  ✓✓✓ Alles korrekt!" if all_ok else "\n  ✗ Probleme vorhanden — siehe Details oben")
+        if not r: all_core_ok = False
+
+    # Display optional
+    (ok if disp_ok else warn)(f"pidrive_display.service {'laeuft' if disp_ok else 'inaktiv (optional)'}")
+
+    if all_core_ok:
+        print("\n  ✓ Core laeuft korrekt")
+        if not disp_ok:
+            print("  ⚠ Display inaktiv — teste fb1 direkt:")
+            print("    sudo SDL_FBDEV=/dev/fb1 SDL_VIDEODRIVER=fbcon SDL_AUDIODRIVER=dummy")
+            print("    SDL_VIDEO_FBCON_KEEP_TTY=1 python3 -c")
+            print("    \"import pygame,time; pygame.display.init(); s=pygame.display.set_mode((480,320),0,16)")
+            print("     s.fill((255,0,0)); pygame.display.flip(); print('ROT OK'); time.sleep(5)\"")
+    else:
+        print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.5.9\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.6.0\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
-    check_vt(); check_service(); check_gettys()
-    check_fbcp(); check_fb("/dev/fb0","fb0"); check_fb("/dev/fb1","fb1")
-    check_log(); test_vt(); test_sdl(); summary()
+    check_services()
+    check_ipc()
+    check_display_env()
+    check_fbcp()
+    check_fb("/dev/fb0", "fb0 (HDMI intern)")
+    check_fb("/dev/fb1", "fb1 (SPI Display)")
+    check_vtcon()
+    check_log()
+    test_sdl()
+    summary()
 
 if __name__ == "__main__":
     if os.getuid() != 0:

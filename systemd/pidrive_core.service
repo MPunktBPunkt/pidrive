@@ -1,0 +1,21 @@
+[Unit]
+Description=PiDrive Core - Car Infotainment
+After=multi-user.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/pidrive/pidrive
+
+# Kein SDL, kein Display, keine TTY-Abhaengigkeiten
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main_core.py
+
+Restart=always
+RestartSec=5
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

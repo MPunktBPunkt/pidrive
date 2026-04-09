@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.5.9
+# PiDrive — Kontext & Projektdokumentation v0.6.0
 
 ## Projektbeschreibung
 
@@ -97,7 +97,7 @@ sudo ./LCD35-show
     ├── status.py
     ├── trigger.py
     ├── log.py
-    ├── VERSION              (aktuell: 0.5.9)
+    ├── VERSION              (aktuell: 0.6.0)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -145,7 +145,7 @@ hdmi_drive=2
 
 ---
 
-## PAMName=login — Der entscheidende Fix (v0.5.9)
+## PAMName=login — Der entscheidende Fix (v0.6.0)
 
 SDL setzt intern VT_SETMODE(VT_PROCESS). Der Kernel prueft dabei:
 "Ist dieser Prozess Session-Leader des aktiven VT?"
@@ -178,14 +178,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.5.9)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.6.0)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.5.9):
+Diagnose (v0.6.0):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -542,12 +542,12 @@ sudo systemctl restart pidrive
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel, Hintergrundbeleuchtung an | fb0 hat Inhalt (1.2MB), fbcp laeuft, pygame laeuft — Ursache offen | naechster Debug-Schritt |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.6.0) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt mit exit(0) nach pygame.init() | Keine logind-Session -> VT_SETMODE fehlgeschlagen -> SIGHUP | PAMName=login im Service (v0.5.9) |
-| set_mode() haengt ewig | VT2 foreground, SDL wartet auf VT_WAITACTIVE(3) | PAMName=login -> logind-Session -> VT3 aktiv (v0.5.9) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.6.0) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.6.0) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -564,12 +564,16 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.5.9 (aktuell)
-- Service: ExecStartPre=/bin/chvt 3 — VT3 muss VOR SDL set_mode() aktiv sein
-- Service: Conflicts=getty@tty1/tty2 — verhindert VT-Rueckfall durch getty
-- launcher.py: SIGHUP=SIG_IGN vor TIOCSCTTY — Kernel sendet HUP beim ctty-Wechsel, SDL wuerde sonst mit exit(0) sterben
-- Erstmals stabil: systemd Service laeuft durch, pygame.init() + set_mode() erfolgreich
-- Offenes Problem: Display bleibt dunkel (fb0 hat Inhalt, fbcp laeuft — Ursache unklar)
+### v0.6.0 (aktuell)
+- BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
+- pidrive_core.service: headless, kein pygame, kein Display
+- pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
+- main_core.py: Trigger, Status, Audio, Menuezustand — kein pygame
+- main_display.py: reine Anzeige, liest IPC-JSON vom Core
+- ipc.py: atomares JSON (/tmp/pidrive_status.json + menu.json)
+- Display-Crash stoppt nicht mehr den Core
+- fbcp entfernt (nicht mehr noetig)
+- rc.local: stark vereinfacht
 
 ### v0.4.1
 - launcher.py: Diagnose-Version — TIOCSCTTY entfernt, Step-Logging
@@ -627,24 +631,29 @@ sudo systemctl restart pidrive
 
 ---
 
-## Aktuell offenes Problem (Stand v0.5.9)
+## Aktuell offenes Problem (Stand v0.6.0)
 
-**Display bleibt dunkel** — nach PAMName=login Fix laeuft pygame stabil,
-aber das SPI-Display zeigt noch kein Bild.
+**Display-Test:** Nach Core/Display-Trennung muss fb1-Direktrendering bestätigt werden.
 
-Was diagnose.py zeigt (nach v0.5.9 Installation):
-- fb0: 62% non-zero — pygame zeichnet korrekt
-- fb1: 50% non-zero — fbcp kopiert
-- Hintergrundbeleuchtung an
-
-Naechster Schritt: Farbtiefe pruefen
 ```bash
-cat /sys/class/graphics/fb0/bits_per_pixel
-cat /sys/class/graphics/fb1/bits_per_pixel
-```
+# Core starten und testen
+sudo systemctl start pidrive_core
+echo "down" > /tmp/pidrive_cmd
+cat /tmp/pidrive_menu.json  # muss item wechseln
 
-Verdacht: fb0 ist 16bpp (RGB565), pygame schreibt 32bpp (BGRA).
-Wenn das zutrifft: pygame muss mit `pygame.display.set_mode((W,H), 0, 16)` initialisieren.
+# Display direkt testen (ohne Service)
+sudo SDL_FBDEV=/dev/fb1 SDL_VIDEODRIVER=fbcon \
+     SDL_AUDIODRIVER=dummy SDL_VIDEO_FBCON_KEEP_TTY=1 \
+     python3 -c "
+import pygame, time
+pygame.display.init()
+s = pygame.display.set_mode((480, 320), 0, 16)
+s.fill((255, 0, 0))
+pygame.display.flip()
+print('ROT OK')
+time.sleep(5)
+"
+```
 
 ## Roadmap
 
