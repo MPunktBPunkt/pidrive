@@ -1,1 +1,42 @@
-
+[
+  {
+    "name": "Bayern 3",
+    "url": "https://dispatcher.rndfnk.com/br/br3/live/mp3/low",
+    "genre": "Pop/Rock"
+  },
+  {
+    "name": "Bayern 1",
+    "url": "https://dispatcher.rndfnk.com/br/br1/sued/mp3/low",
+    "genre": "Pop"
+  },
+  {
+    "name": "Antenne Bayern",
+    "url": "https://stream.antenne.de/antenne/stream/mp3",
+    "genre": "Pop"
+  },
+  {
+    "name": "Radio Gong",
+    "url": "https://stream.radiogong.com/radiogong.mp3",
+    "genre": "Rock"
+  },
+  {
+    "name": "DLF",
+    "url": "https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3",
+    "genre": "Info"
+  },
+  {
+    "name": "DLF Nova",
+    "url": "https://st03.sslstream.dlf.de/dlf/03/128/mp3/stream.mp3",
+    "genre": "Info/Kultur"
+  },
+  {
+    "name": "Radio Bob",
+    "url": "https://streams.radiobob.de/bob-national/mp3-128/mediaplayer",
+    "genre": "Rock"
+  },
+  {
+    "name": "1LIVE",
+    "url": "https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3",
+    "genre": "Pop/Dance"
+  }
+]
