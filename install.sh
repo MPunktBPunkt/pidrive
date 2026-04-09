@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.6.1           ║
+║        PiDrive Installer v0.6.2           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -51,6 +51,17 @@ for SVC in pidrive_core pidrive_display pidrive; do
     fi
 done
 ok "Services gestoppt"
+# fbcp dauerhaft entfernen (GPT-5.4: sonst blockiert fbcp fb1)
+pkill fbcp 2>/dev/null || true
+# Falls fbcp als systemd-Service laeuft
+systemctl stop fbcp 2>/dev/null || true
+systemctl disable fbcp 2>/dev/null || true
+# rc.local von fbcp bereinigen
+if grep -q "fbcp" /etc/rc.local 2>/dev/null; then
+    sed -i '/fbcp/d' /etc/rc.local
+    ok "fbcp aus rc.local entfernt"
+fi
+ok "fbcp gestoppt und dauerhaft deaktiviert"
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 2: Pakete installieren
@@ -262,6 +273,18 @@ if which welle-cli >/dev/null 2>&1; then
     ok "welle-cli vorhanden (DAB+)"
 else
     warn "welle-cli nicht installiert -> sudo apt install welle.io"
+fi
+
+# Syntax-Check vor Service-Start
+info "Python Syntax-Check..."
+SYNTAX_ERR=$(find "$INSTALL_DIR/pidrive" -name "*.py" -print0 |     xargs -0 python3 -m py_compile 2>&1 | head -3)
+if [ -z "$SYNTAX_ERR" ]; then
+    ok "Syntax-Check OK (alle .py Dateien)"
+else
+    err "Syntax-Fehler gefunden:"
+    err "$SYNTAX_ERR"
+    err "Service-Start abgebrochen — bitte Fehler beheben"
+    exit 1
 fi
 
 # Service starten + ausfuehrliche Verifikation
