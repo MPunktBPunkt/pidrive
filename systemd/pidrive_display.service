@@ -1,8 +1,10 @@
 [Unit]
 Description=PiDrive Display - Statusanzeige
 # GPT-5.4: kein Requires — Display-Fehler stoppen nicht den Core
-# PartOf wuerde ordering cycle erzeugen, daher nur After=
 After=pidrive_core.service
+# max 3 Neustarts in 120s
+StartLimitIntervalSec=120
+StartLimitBurst=3
 
 [Service]
 Type=simple
@@ -24,8 +26,6 @@ ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main_display.py
 # GPT-5.4: Crash neu starten, aber mit Limit
 Restart=on-failure
 RestartSec=10
-StartLimitIntervalSec=120
-StartLimitBurst=3
 StandardOutput=null
 StandardError=journal
 

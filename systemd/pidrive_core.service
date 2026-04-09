@@ -2,6 +2,9 @@
 Description=PiDrive Core - Car Infotainment
 After=multi-user.target network-online.target
 Wants=network-online.target
+# GPT-5.4: max 5 Neustarts in 60s
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -14,9 +17,6 @@ ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main_core.py
 
 Restart=on-failure
 RestartSec=5
-# GPT-5.4: Restart-Limit — max 5 Neustarts in 60s, dann Stop
-StartLimitIntervalSec=60
-StartLimitBurst=5
 StandardOutput=null
 StandardError=journal
 
