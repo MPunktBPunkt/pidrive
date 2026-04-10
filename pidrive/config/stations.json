@@ -1,15 +1,5 @@
 [
   {
-    "name": "ROCK ANTENNE",
-    "url": "https://stream.rockantenne.de/rockantenne/stream/mp3",
-    "genre": "Rock"
-  },
-  {
-    "name": "Radio BOB!",
-    "url": "https://streams.radiobob.de/bob-national/mp3-128/mediaplayer",
-    "genre": "Rock"
-  },
-  {
     "name": "Bayern 3",
     "url": "https://dispatcher.rndfnk.com/br/br3/live/mp3/low",
     "genre": "Pop/Rock"
@@ -30,19 +20,19 @@
     "genre": "Rock"
   },
   {
-    "name": "sunshine live",
-    "url": "https://stream.sunshine-live.de/live/mp3-192",
-    "genre": "Dance/Electronic"
-  },
-  {
-    "name": "Deutschlandfunk",
+    "name": "DLF",
     "url": "https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3",
     "genre": "Info"
   },
   {
-    "name": "Deutschlandfunk Nova",
+    "name": "DLF Nova",
     "url": "https://st03.sslstream.dlf.de/dlf/03/128/mp3/stream.mp3",
     "genre": "Info/Kultur"
+  },
+  {
+    "name": "Radio Bob",
+    "url": "https://streams.radiobob.de/bob-national/mp3-128/mediaplayer",
+    "genre": "Rock"
   },
   {
     "name": "1LIVE",

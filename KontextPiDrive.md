@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.6.5
+# PiDrive — Kontext & Projektdokumentation v0.6.6
 
 ## Projektbeschreibung
 
@@ -27,9 +27,102 @@ curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh 
 |---|---|
 | Raspberry Pi | Pi 3 Model B Rev 1.2, Pi 4 geplant |
 | Display | Joy-IT RB-TFT3.5, 480x320, XPT2046 Touch |
-| Verbindung | SPI (erste 26 GPIO-Pins) |
+| Display-Verbindung | SPI (erste 26 GPIO-Pins) |
 | Touch | ADS7846/XPT2046 — Hardware-Defekt am Testgeraet |
 | RTL-SDR | Fuer DAB+ und FM Radio |
+| **Audio-Ausgang** | **3.5mm Klinke** (hw:1,0) → Autoradio AUX-IN |
+| **Stromversorgung** | USB-A Port im Auto (5V/2A min.) oder KFZ-Adapter |
+| **Steuerung** | USB-Tethering / WLAN → SSH / File-Trigger |
+| **BMW iDrive** | ESP32-Bridge (zukuenftig) → `/tmp/pidrive_cmd` |
+
+---
+
+## Physische Verbindung mit dem Auto
+
+### Audioverbindung (aktiv)
+
+```
+Raspberry Pi 3.5mm Klinke (hw:1,0)
+        │
+    Klinke-Kabel (3.5mm auf 3.5mm)
+        │
+    BMW Aux-IN / Adapter
+        │
+    Fahrzeug-Lautsprecher
+```
+
+**Voraussetzung:** Das Fahrzeug braucht einen AUX-IN Eingang.
+Bei BMW typisch: CD-Wechsler-Buchse oder direkter AUX-Eingang je nach Modell.
+
+**Audio-Ausgang setzen:**
+```bash
+# Klinke aktivieren (ALSA hw:1,0)
+echo "audio_klinke" > /tmp/pidrive_cmd
+# oder direkt:
+amixer -c 0 cset numid=3 1
+```
+
+### Stromversorgung
+
+```
+KFZ-Stecker 12V
+        │
+    USB-KFZ-Adapter (5V/2A oder 3A)
+        │
+    Micro-USB → Raspberry Pi 3B
+```
+
+**Empfehlung:** Mindestens 2A Ladestrom. Unterspannungswarnungen
+(Blitz-Symbol oben links im Display) deuten auf zu schwaches Netzteil hin.
+
+### Steuerung / Netzwerk
+
+**Option A: USB-Tethering (empfohlen fuer Entwicklung)**
+```
+Raspberry Pi USB-Port
+        │
+    USB-Kabel
+        │
+    PC / Mac → SSH, Browser (http://PI-IP:8080)
+```
+
+**Option B: WLAN (aktuell aktiv)**
+```
+Raspberry Pi WLAN
+        │
+    Heimnetz / Hotspot
+        │
+    PC → SSH, Browser (http://192.168.178.92:8080)
+```
+
+**Option C: BMW iDrive Integration (Roadmap)**
+```
+BMW iDrive Drehsteller
+        │
+    ESP32 (liest CAN-Bus oder USB-HID)
+        │
+    Pi USB / WLAN
+        │
+    echo "up/down/enter" > /tmp/pidrive_cmd
+```
+
+### iPod-Emulation (iDrive-Adapter)
+
+PiDrive emuliert einen iPod gegenueber dem iDrive-Adapter.
+Dafuer wird ein **BMW iPod-Adapter** (z.B. Dension, Connects2) benoetigt,
+der am CD-Wechsler-Anschluss des Fahrzeugs sitzt.
+
+**Verbindung:**
+```
+BMW iDrive Adapter (CD-Wechsler-Port)
+        │
+    Proprietary Apple-Dock-Connector
+        │
+    Raspberry Pi GPIO (zukuenftig: libaacs/iap Emulation)
+```
+
+**Aktueller Stand:** Steuerung erfolgt noch via File-Trigger (SSH/Web).
+Die iPod-Emulation ist noch nicht implementiert.
 
 ### GPIO-Pinbelegung (Joy-IT RB-TFT3.5)
 
@@ -84,15 +177,12 @@ sudo ./LCD35-show
 ├── LICENSE                  (GPL-v3)
 ├── .gitignore
 ├── install.sh               (Schnellinstallation, 10 Schritte)
-├── setup_pidrive.sh         (vollstaendiges Setup-Script)
-├── pidrive_ctrl.py          (SSH Tastatur-Steuerung)
 ├── config.txt.example
 ├── KontextPiDrive.md
 ├── systemd/
 │   └── pidrive.service      (User=root, launcher.py)
 └── pidrive/
-    ├── launcher.py          (TTY-Setup: setsid + TIOCSCTTY, startet main.py)
-    ├── launcher.py          (SIGHUP=SIG_IGN + execv)
+    ├── launcher.py          (SIGHUP=SIG_IGN + execv, startet main_core.py)
     ├── main.py              (veraltet, nur als Referenz)
     ├── main_core.py         (Core: headless, kein pygame)
     ├── main_display.py      (Display: pygame auf fb1 direkt)
@@ -103,7 +193,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.6.5)
+    ├── VERSION              (aktuell: 0.6.6)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -122,6 +212,7 @@ sudo ./LCD35-show
         ├── bluetooth.py
         ├── audio.py
         ├── system.py
+        ├── scanner.py       (PMR446, Freenet, LPD433, VHF, UHF)
         ├── scanner.py       (PMR446, Freenet, LPD433, VHF, UHF)
         └── update.py        (OTA Updates)
 ```
@@ -175,14 +266,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.6.5)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.6.6)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.6.5):
+Diagnose (v0.6.6):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -496,33 +587,32 @@ sudo systemctl restart pidrive
 ## Menü-Struktur
 
 ```
-PiDrive
-|-- Musik
-|   |-- Spotify (Toggle + Track-Anzeige)
-|   |-- Wiedergabe (Titel | Artist | Album)
-|   |-- Bibliothek (MP3 mit Album-Art)
-|   |-- Webradio (stations.json)
-|   |-- DAB+ (RTL-SDR, dab_stations.json)
-|   |-- FM Radio (RTL-SDR, fm_stations.json)
-|   +-- Scanner (PMR446/Freenet/LPD433/VHF/UHF)
-|-- WiFi
-|   |-- WiFi An/Aus
-|   |-- Verbunden mit (SSID)
-|   +-- Netzwerke scannen
-|-- Bluetooth
+PiDrive  (v0.6.6 — Auto-orientiert)
+|-- Jetzt laeuft          (Hauptansicht — aktuelle Wiedergabe)
+|   |-- Wiedergabe        (Titel | Artist | Album | Sender)
+|   |-- Spotify           (Toggle)
+|   |-- Audioausgang      (Klinke/HDMI/BT/Alle)
+|   |-- Lauter
+|   +-- Leiser
+|-- Quellen               (Audioquelle waehlen)
+|   |-- Spotify
+|   |-- Bibliothek        (MP3 mit Album-Art)
+|   |-- Webradio          (stations.json)
+|   |-- DAB+              (RTL-SDR, dab_stations.json)
+|   |-- FM Radio          (RTL-SDR, fm_stations.json)
+|   +-- Scanner           (PMR446/Freenet/LPD433/VHF/UHF)
+|-- Verbindungen          (Selten — BT + WiFi Management)
 |   |-- Bluetooth An/Aus
-|   |-- Geraete scannen & koppeln
-|   |-- Als Audio-Ausgang setzen
-|   +-- Alle trennen
-+-- System
-    |-- Audioausgang (Klinke/HDMI/BT/Alle)
-    |-- Lauter / Leiser
+|   |-- Geraete scannen
+|   |-- WiFi An/Aus
+|   |-- Netzwerke scannen
+|   +-- Status
++-- System                (Setup / Wartung)
     |-- IP Adresse
-    |-- Hostname
-    |-- System-Info (CPU-Temp, Uptime)
+    |-- System-Info       (CPU-Temp, Uptime)
     |-- Version
     |-- Neustart / Ausschalten
-    +-- Update (OTA via GitHub)
+    +-- Update            (OTA via GitHub)
 ```
 
 ---
@@ -544,8 +634,11 @@ echo "reboot/shutdown"              > /tmp/pidrive_cmd
 
 ## Steuerung
 
-### USB-Tastatur (direkt am Pi)
-Pfeiltasten + Enter + ESC — funktioniert nach Reboot automatisch.
+### Steuerung via SSH / Web UI
+```bash
+echo 'down' > /tmp/pidrive_cmd
+# oder: http://PI-IP:8080
+```
 
 ### SSH-Steuerung
 ```bash
@@ -563,12 +656,12 @@ sudo systemctl restart pidrive
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.6.5) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.6.6) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.6.5) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.6.5) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.6.6) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.6.6) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -585,7 +678,7 @@ sudo systemctl restart pidrive
 
 ## Changelog
 
-### v0.6.5 (aktuell)
+### v0.6.6 (aktuell)
 - BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
 - pidrive_core.service: headless, kein pygame, kein Display
 - pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
@@ -652,18 +745,20 @@ sudo systemctl restart pidrive
 
 ---
 
-## Aktueller Stand (v0.6.5)
+## Aktueller Stand (v0.6.6)
 
-**System laeuft stabil** — bestätigt 09.04.2026:
+**System laeuft stabil** — bestätigt 10.04.2026 (v0.6.6):
 
 ```
 ✓ pidrive_core.service: active, headless
 ✓ pidrive_display.service: active, Split-Screen auf fb1
 ✓ pidrive_web.service: active, http://<PI-IP>:8080
 ✓ fbcp: deaktiviert (nicht mehr noetig)
-✓ IPC: status.json + menu.json + display_debug.json
+✓ IPC: status.json + menu.json + display_debug.json + ready
 ✓ Alle Module: pygame-frei
 ✓ render_count: 850+ (Display rendert aktiv)
+✓ Web UI: http://PI-IP:8080 (pidrive_web.service)
+✓ Menü: Jetzt läuft / Quellen / Verbindungen / System
 ```
 
 **Offene Punkte:**
@@ -673,14 +768,19 @@ sudo systemctl restart pidrive
 
 ## Roadmap
 
+### Kurzfristig
+- [ ] Audio Klinke/HDMI/BT Umschaltung testen und stabilisieren
 - [ ] GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- [ ] BMW iDrive ESP32 Integration
-- [ ] Audio Klinke/HDMI/BT Umschaltung verbessern
-- [ ] DAB+ Programminfo, FM RDS Text
-- [ ] USB-Tethering Autostart
-- [ ] Hotspot-Modus
-- [ ] USB-Tethering Autostart
-- [ ] Hotspot-Modus
-- [ ] DAB+ Programminfo
-- [ ] FM RDS Text-Anzeige
-- [ ] Equalizer
+- [ ] USB-Tethering Autostart (Auto ohne WLAN)
+
+### Mittelfristig
+- [ ] DAB+ Programminfo (welle-cli Metadaten)
+- [ ] FM RDS Text (rtl_fm + rds_rx)
+- [ ] Equalizer (ALSA-basiert, global)
+- [ ] Hotspot-Modus (Pi als WLAN-AP)
+
+### Langfristig (Fahrzeug-Integration)
+- [ ] BMW iDrive ESP32 Integration (CAN-Bus oder HID → File-Trigger)
+- [ ] iPod-Emulation vollstaendig (libaacs / iap2)
+- [ ] Spotify Web API (Play/Pause/Next im Menue)
+- [ ] Bluetooth-Audio Autoconnect (nach Fahrzeugstart)

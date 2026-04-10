@@ -129,7 +129,8 @@ def render(screen, fonts, status, menu):
 
     categories = menu.get("categories", [])
     sel_cat    = menu.get("cat", 0)
-    cat_colors = [C_ACCENT, (100, 180, 255), C_ORANGE, (180, 130, 255)]
+    # Farben pro Kategorie: Jetzt läuft=grün, Quellen=blau, Verbindungen=orange, System=lila
+    cat_colors = [C_GREEN, C_ACCENT, C_ORANGE, (180, 130, 255)]
 
     for i, cat in enumerate(categories[:8]):
         cy = CONTENT_Y + 4 + i * 36
@@ -185,9 +186,12 @@ def render(screen, fonts, status, menu):
     np_col  = C_DIM
 
     if status.get("spotify") and status.get("track"):
-        t = status.get("track","")[:28]
-        a = status.get("artist","")[:22]
+        t = status.get("track","")[:26]
+        a = status.get("artist","")[:20]
         np_text = f"♫ {a} – {t}" if a else f"♫ {t}"
+        np_col  = C_PURPLE
+    elif status.get("spotify"):
+        np_text = "♫ Spotify aktiv — warte auf Wiedergabe"
         np_col  = C_PURPLE
     elif status.get("radio") and status.get("radio_name"):
         label = {"WEB":"Webradio","DAB":"DAB+","FM":"FM","SCANNER":"Scanner"}.get(radio_type,"Radio")
@@ -256,7 +260,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.6.4 gestartet")
+    log.info("PiDrive Display v0.6.6 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 

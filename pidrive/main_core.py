@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main_core.py - PiDrive Core v0.6.2
+main_core.py - PiDrive Core v0.6.6
 Headless: kein pygame, kein Display.
 
 Verantwortlich fuer:
@@ -235,45 +235,51 @@ def check_trigger(menu, S, settings):
 # ── Einfache Kategorien fuer Core (Labels ohne pygame) ────────────────────────
 
 def build_menu_model(S, settings):
-    """Menuezustand mit direkten Aktionen — kein build_items(), kein screen."""
-    # Module nur fuer Action-Funktionen importieren, nicht fuer build_items()
+    """Auto-Menue: Jetzt laeuft / Quellen / Verbindungen / System.
+    GPT-5.4: Nutzungssituationen statt technische Module."""
     from modules import (musik as _musik, wifi as _wifi, bluetooth as _bt,
                          audio as _audio, system as _sys, webradio as _web,
                          dab as _dab, fm as _fm, update as _upd)
 
-    def _noop(): pass
-
     categories = [
-        ("Musik", [
+        # ── Jetzt laeuft ─────────────────────────────────────────────────────
+        # Wichtigster Bereich — zeigt aktuelle Wiedergabe
+        ("Jetzt laeuft", [
+            MenuItem("Wiedergabe",
+                     action=lambda: _musik.spotify_toggle(S) if not S.get("spotify") else None),
             MenuItem("Spotify",
                      action=lambda: _musik.spotify_toggle(S)),
-            MenuItem("Wiedergabe"),
-            MenuItem("Webradio",
-                     action=lambda: _web.build_items(None, S)[0].action() if _web.build_items(None, S) else None),
-            MenuItem("DAB+"),
-            MenuItem("FM Radio"),
-            MenuItem("Scanner"),
-            MenuItem("Bibliothek"),
-        ]),
-        ("WiFi", [
-            MenuItem("WiFi An/Aus",
-                     action=lambda: _wifi.wifi_toggle(S)),
-            MenuItem("Verbunden mit"),
-            MenuItem("Netzwerke scannen",
-                     action=lambda: _wifi.build_items(None, S, settings)[2].action()),
-        ]),
-        ("Bluetooth", [
-            MenuItem("Bluetooth An/Aus"),
-            MenuItem("Geraete scannen"),
-            MenuItem("Als Ausgang"),
-        ]),
-        ("System", [
             MenuItem("Audioausgang",
                      action=lambda: _audio.build_items(None, S, settings)[0].action()),
             MenuItem("Lauter",
                      action=lambda: _audio.build_items(None, S, settings)[1].action()),
             MenuItem("Leiser",
                      action=lambda: _audio.build_items(None, S, settings)[2].action()),
+        ]),
+        # ── Quellen ──────────────────────────────────────────────────────────
+        # Audioquelle waehlen → aktiviert Quelle und springt zu "Jetzt laeuft"
+        ("Quellen", [
+            MenuItem("Spotify",
+                     action=lambda: _musik.spotify_toggle(S)),
+            MenuItem("Bibliothek"),
+            MenuItem("Webradio"),
+            MenuItem("DAB+"),
+            MenuItem("FM Radio"),
+            MenuItem("Scanner"),
+        ]),
+        # ── Verbindungen ─────────────────────────────────────────────────────
+        # Selten benoetigt — BT + WiFi Management
+        ("Verbindungen", [
+            MenuItem("Bluetooth An/Aus"),
+            MenuItem("Geraete scannen"),
+            MenuItem("WiFi An/Aus",
+                     action=lambda: _wifi.wifi_toggle(S)),
+            MenuItem("Netzwerke scannen",
+                     action=lambda: _wifi.build_items(None, S, settings)[2].action()),
+            MenuItem("Status"),
+        ]),
+        # ── System ───────────────────────────────────────────────────────────
+        ("System", [
             MenuItem("IP Adresse"),
             MenuItem("System-Info",
                      action=lambda: _sys.build_items(None, S, settings)[2].action()),
@@ -322,7 +328,7 @@ def system_check():
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.6.2 gestartet")
+    log.info("PiDrive Core v0.6.6 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

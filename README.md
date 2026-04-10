@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.6.5-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.6.6-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -29,10 +29,21 @@ PiDrive verwandelt einen Raspberry Pi in ein vollwertiges Car-Infotainment-Syste
 
 | Komponente | Details |
 |---|---|
-| Raspberry Pi | 3B oder 4 |
-| Display | Joy-IT RB-TFT3.5, 480×320, XPT2046 Touch |
-| Verbindung | SPI (erste 26 GPIO-Pins) |
+| Raspberry Pi | Pi 3B (getestet), Pi 4 geplant |
+| Display | Joy-IT RB-TFT3.5, 480×320, XPT2046 Touch (SPI) |
+| Audio-Ausgang | 3.5mm Klinke → Autoradio AUX-IN |
+| Stromversorgung | USB-KFZ-Adapter 5V/2A (Micro-USB) |
 | Optional | RTL-SDR Stick für DAB+ und FM |
+
+### Verbindung mit dem Auto
+
+```
+Pi 3.5mm Klinke ──────────────────── Auto AUX-IN
+Pi Micro-USB ──── USB-KFZ-Adapter ── KFZ 12V
+Pi WLAN/USB ──── Heimnetz/Tethering ── SSH / http://PI-IP:8080
+```
+
+Audio-Ausgang aktivieren: `echo "audio_klinke" > /tmp/pidrive_cmd`
 
 ### GPIO-Pinbelegung (Joy-IT RB-TFT3.5)
 
@@ -186,7 +197,7 @@ PiDrive
 
 ## Steuerung
 
-### USB-Tastatur direkt am Pi
+### Steuerung (File-Trigger / Web)
 
 | Taste | Funktion |
 |---|---|
@@ -296,7 +307,7 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.6.5 — Web UI
+### v0.6.6 — Web UI
 - WebUI: Flask-Webinterface auf Port 8080 (`pidrive_web.service`)
 - Menü-Vorschau im Browser, Navigation, Log-Viewer, Diagnose
 - Auto-Refresh alle 2s ohne Seiten-Reload
@@ -377,10 +388,18 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 
 ## Roadmap
 
-- [ ] GPIO-Button Navigation (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- [ ] BMW iDrive ESP32 Integration
+### Kurzfristig
+- [ ] Audio Klinke/HDMI/BT Umschaltung testen
+- [ ] GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
 - [ ] USB-Tethering Autostart
-- [ ] Hotspot-Modus
+
+### Mittelfristig
 - [ ] DAB+ Programminfo
-- [ ] FM RDS Anzeige
+- [ ] FM RDS Text
 - [ ] Equalizer
+- [ ] Hotspot-Modus
+
+### Fahrzeug-Integration
+- [ ] BMW iDrive ESP32 → File-Trigger Bridge
+- [ ] Spotify Web API (Play/Pause/Next)
+- [ ] Bluetooth-Audio Autoconnect

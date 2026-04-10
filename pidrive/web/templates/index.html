@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>PiDrive Web UI</title>
+  <title>PiDrive v0.6.6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -15,9 +15,9 @@
         <span>{{ vm["ip"] }}</span>
       </div>
       <div class="flags">
-        <span class="flag {{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
-        <span class="flag {{ 'on' if vm['status'].get('bt') else 'off' }}">BT</span>
-        <span class="flag {{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
+        <span class="flag {{ 'on' if vm["status"].get('wifi') else 'off' }}" data-key="wifi">WiFi</span>
+        <span class="flag {{ 'on' if vm["status"].get('bt') else 'off' }}" data-key="bt">BT</span>
+        <span class="flag {{ 'on' if vm["status"].get('spotify') else 'off' }}" data-key="spotify">Spot</span>
       </div>
     </header>
 
@@ -30,15 +30,15 @@
             <div class="title">PiDrive</div>
             <div class="ip">{{ vm["ip"] }}</div>
             <div class="right-status">
-              <span class="{{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
-              <span class="{{ 'on' if vm['status'].get('bt') else 'off' }}">BT</span>
-              <span class="{{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
+              <span class="{{ 'on' if vm["status"].get('wifi') else 'off' }}">WiFi</span>
+              <span class="{{ 'on' if vm["status"].get('bt') else 'off' }}">BT</span>
+              <span class="{{ 'on' if vm["status"].get('spotify') else 'off' }}">Spot</span>
             </div>
           </div>
 
           <div class="display-body">
             <div class="left-menu">
-              {% set current_cat = vm["menu"].get("cat") %}
+              {% set current_cat = vm["menu"].get('cat') %}
               {% if vm["categories"] %}
                 {% for cat in vm["categories"] %}
                   <div class="left-item {% if loop.index0 == current_cat %}active{% endif %}">
@@ -47,37 +47,37 @@
                 {% endfor %}
               {% else %}
                 {% for cat in ['Musik', 'WiFi', 'Bluetooth', 'System'] %}
-                  <div class="left-item {% if cat == vm['menu'].get('cat_label') %}active{% endif %}">
+                  <div class="left-item {% if cat == vm["menu"].get('cat_label') %}active{% endif %}">
                     {{ cat }}
                   </div>
                 {% endfor %}
               {% endif %}
             </div>
 
-            <div class="right-menu">
-              <div class="breadcrumb">› {{ vm["menu"].get("item_label", "-") }}</div>
+            <div class="right-menu" id="rightMenu">
+              <div class="breadcrumb">› {{ vm["menu"].get('item_label', '-') }}</div>
 
               {% if vm["items"] %}
                 {% for item in vm["items"] %}
-                  <div class="right-item {% if loop.index0 == vm['menu'].get('item') %}active{% endif %}">
+                  <div class="right-item {% if loop.index0 == vm["menu"].get('item') %}active{% endif %}">
                     {{ item }}
                   </div>
                 {% endfor %}
               {% else %}
-                <div class="right-item active">{{ vm["menu"].get("item_label", "Keine Daten") }}</div>
+                <div class="right-item active">{{ vm["menu"].get('item_label', 'Keine Daten') }}</div>
               {% endif %}
             </div>
           </div>
 
-          <div class="display-footer">
-            Audio: {{ vm["status"].get("audio_output", "auto") }}
+          <div class="display-footer" id="displayFooter">
+            Audio: {{ vm["status"].get('audio_out', 'auto') }}
           </div>
         </div>
 
         <div class="ipc-state">
-          <div>Status JSON: {{ 'OK' if vm["status_exists"] else 'fehlt' }}{% if vm["status_age"] is not none %} ({{ vm["status_age"] }}s){% endif %}</div>
-          <div>Menu JSON: {{ 'OK' if vm["menu_exists"] else 'fehlt' }}{% if vm["menu_age"] is not none %} ({{ vm["menu_age"] }}s){% endif %}</div>
-          <div>Progress JSON: {{ 'OK' if vm["progress_exists"] else 'fehlt' }}{% if vm["progress_age"] is not none %} ({{ vm["progress_age"] }}s){% endif %}</div>
+          <div>Status JSON: {{ 'OK' if vm["status"]_exists else 'fehlt' }}{% if vm["status"]_age is not none %} ({{ vm["status"]_age }}s){% endif %}</div>
+          <div>Menu JSON: {{ 'OK' if vm["menu"]_exists else 'fehlt' }}{% if vm["menu"]_age is not none %} ({{ vm["menu"]_age }}s){% endif %}</div>
+          <div>Progress JSON: {{ 'OK' if vm["progress"]_exists else 'fehlt' }}{% if vm["progress"]_age is not none %} ({{ vm["progress"]_age }}s){% endif %}</div>
           <div>List JSON: {{ 'OK' if vm["list_exists"] else 'fehlt' }}{% if vm["list_age"] is not none %} ({{ vm["list_age"] }}s){% endif %}</div>
         </div>
       </section>
@@ -97,9 +97,9 @@
         </div>
 
         <div class="button-grid">
-          <button onclick="sendCmd('cat:0')">Musik</button>
-          <button onclick="sendCmd('cat:1')">WiFi</button>
-          <button onclick="sendCmd('cat:2')">Bluetooth</button>
+          <button onclick="sendCmd('cat:0')">Jetzt läuft</button>
+          <button onclick="sendCmd('cat:1')">Quellen</button>
+          <button onclick="sendCmd('cat:2')">Verbindungen</button>
           <button onclick="sendCmd('cat:3')">System</button>
 
           <button onclick="sendCmd('spotify_on')">Spotify an</button>
@@ -163,11 +163,48 @@
     async function refreshState() {
       const r = await fetch('/api/state');
       const data = await r.json();
+      updateDisplay(data);
+    }
 
+    function updateDisplay(data) {
       document.getElementById('statusJson').textContent = JSON.stringify(data.status, null, 2);
       document.getElementById('menuJson').textContent = JSON.stringify(data.menu, null, 2);
 
-      window.location.reload();
+      // Status-Flags aktualisieren
+      document.querySelectorAll('.flag').forEach(el => {
+        const key = el.dataset.key;
+        if (key) el.className = 'flag ' + (data.status[key] ? 'on' : 'off');
+      });
+
+      // Kategorien hervorheben
+      document.querySelectorAll('.left-item').forEach((el, i) => {
+        el.classList.toggle('active', i === data.menu.cat);
+      });
+
+      // Items aktualisieren
+      const rightMenu = document.getElementById('rightMenu');
+      if (rightMenu && data.items && data.items.length) {
+        rightMenu.innerHTML = '';
+        data.items.forEach((item, i) => {
+          const div = document.createElement('div');
+          div.className = 'right-item' + (i === data.menu.item ? ' active' : '');
+          div.textContent = item;
+          rightMenu.appendChild(div);
+        });
+      }
+
+      // Footer
+      const footer = document.getElementById('displayFooter');
+      if (footer) {
+        const s = data.status;
+        if (s.spotify && s.track) {
+          footer.textContent = '♫ ' + (s.artist || '') + ' – ' + (s.track || '');
+        } else if (s.radio && s.radio_name) {
+          footer.textContent = '♪ ' + s.radio_name;
+        } else {
+          footer.textContent = 'Audio: ' + (s.audio_out || 'auto');
+        }
+      }
     }
 
     async function loadLogs(target) {
@@ -198,15 +235,13 @@
         (data.cmd || '') + "\n\n" + (data.stdout || '') + (data.stderr ? ("\n[stderr]\n" + data.stderr) : '');
     }
 
+    // Auto-Refresh alle 2s — kein Seiten-Reload
     setInterval(() => {
       fetch('/api/state')
         .then(r => r.json())
-        .then(data => {
-          document.getElementById('statusJson').textContent = JSON.stringify(data.status, null, 2);
-          document.getElementById('menuJson').textContent = JSON.stringify(data.menu, null, 2);
-        })
+        .then(data => updateDisplay(data))
         .catch(() => {});
-    }, 3000);
+    }, 2000);
   </script>
 </body>
 </html>
