@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>PiDrive v0.6.6</title>
+  <title>PiDrive v{{ vm["version"] }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -15,13 +15,13 @@
         <span>{{ vm["ip"] }}</span>
       </div>
       <div class="flags">
-        <span class="flag {{ 'on' if vm["status"].get('wifi') else 'off' }}" data-key="wifi">WiFi</span>
-        <span class="flag {{ 'on' if vm["status"].get('bt') else 'off' }}" data-key="bt">BT</span>
-        <span class="flag {{ 'on' if vm["status"].get('spotify') else 'off' }}" data-key="spotify">Spot</span>
+        <span class="flag {{ 'on' if vm['status'].get('wifi') else 'off' }}" data-key="wifi">WiFi</span>
+        <span class="flag {{ 'on' if vm['status'].get('bt') else 'off' }}" data-key="bt">BT</span>
+        <span class="flag {{ 'on' if vm['status'].get('spotify') else 'off' }}" data-key="spotify">Spot</span>
       </div>
     </header>
 
-    <div id="debugBar" style="background:#0a1a30;color:#4ea3ff;font-size:12px;padding:5px 16px;font-family:monospace;border-bottom:1px solid #1a3a60;">Initialisiere...</div>
+    <div id="debugBar" class="debug-bar">Initialisiere...</div>
 
     <main class="main-grid">
       <section class="panel display-panel">
@@ -32,62 +32,53 @@
             <div class="title">PiDrive</div>
             <div class="ip">{{ vm["ip"] }}</div>
             <div class="right-status">
-              <span class="{{ 'on' if vm["status"].get('wifi') else 'off' }}">WiFi</span>
-              <span class="{{ 'on' if vm["status"].get('bt') else 'off' }}">BT</span>
-              <span class="{{ 'on' if vm["status"].get('spotify') else 'off' }}">Spot</span>
+              <span class="{{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
+              <span class="{{ 'on' if vm['status'].get('bt') else 'off' }}">BT</span>
+              <span class="{{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
             </div>
           </div>
 
-          <div class="display-body" id="menuBody">
-            <div class="left-menu">
-              {# Linke Spalte: immer Root-Ebene (Hauptkategorien) #}
+          <div class="display-body single-column" id="menuBody">
+            <div class="menu-tree" id="treeMenu">
               {% set path = vm["path"] %}
-              {% set path_cat = path[1] if path|length > 1 else "" %}
-              {% for cat in vm["categories"] %}
-                <div class="left-item {% if cat == path_cat %}active{% endif %}"
-                     onclick="sendCmd('cat:{{ loop.index0 }}')">
-                  {{ cat }}
-                </div>
-              {% endfor %}
-            </div>
-
-            <div class="menu-right" id="rightMenu">
-              {# Breadcrumb: Pfad ab 2. Ebene #}
-              {% if path|length > 2 %}
-                <div class="breadcrumb" id="breadcrumb">
-                  <span class="back-btn" onclick="sendCmd('back')">◀</span>
-                  {{ path[2:] | join(" › ") }}
-                </div>
-              {% elif path|length == 2 %}
-                <div class="breadcrumb" id="breadcrumb">
-                  {{ path[1] }}
-                </div>
-              {% endif %}
-
-              {# Nodes aus neuem Format — primäre Datenquelle #}
               {% set nodes = vm["nodes"] %}
               {% set cursor = vm["cursor"] %}
+              {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
+
+              <div class="breadcrumb" id="breadcrumb">
+                {% if vm["can_back"] %}
+                  <span class="back-btn" onclick="sendCmd('back')">◀</span>
+                {% endif %}
+                {{ path | join(" › ") if path else "PiDrive" }}
+              </div>
+
               {% if nodes %}
                 {% for node in nodes %}
-                  {% set ntype = node.get("type","folder") if node is mapping else "folder" %}
-                  {% set label = node.get("label","?") if node is mapping else node %}
-                  {% set active = node.get("active",false) if node is mapping else false %}
-                  {% set has_ch = node.get("has_children",false) if node is mapping else false %}
-                  {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
-                  <div class="right-item type-{{ ntype }} {% if loop.index0 == cursor %}selected{% endif %} {% if active %}playing{% endif %}"
-                       onclick="nodeClick('{{ ntype }}', {{ loop.index0 }})">
-                    <span class="node-icon">{{ icons.get(ntype,"▸") }}</span>
+                  {% set ntype = node.get("type", "folder") if node is mapping else "folder" %}
+                  {% set label = node.get("label", "?") if node is mapping else node %}
+                  {% set active = node.get("active", false) if node is mapping else false %}
+                  {% set has_ch = node.get("has_children", false) if node is mapping else false %}
+                  <div class="tree-item type-{{ ntype }} {% if loop.index0 == cursor %}selected{% endif %} {% if active %}playing{% endif %}"
+                       data-index="{{ loop.index0 }}"
+                       data-type="{{ ntype }}"
+                       onclick="nodeClick({{ loop.index0 }}, '{{ ntype }}')">
+                    <span class="node-icon">{{ icons.get(ntype, "▸") }}</span>
                     <span class="node-label">{{ label }}</span>
                     {% if has_ch %}<span class="node-arrow">›</span>{% endif %}
                   </div>
                 {% endfor %}
               {% elif vm["items"] %}
-                {# Compat-Fallback: alte items-Liste #}
                 {% for item in vm["items"] %}
-                  <div class="right-item {% if loop.index0 == cursor %}selected{% endif %}">▸ {{ item }}</div>
+                  <div class="tree-item {% if loop.index0 == cursor %}selected{% endif %}">
+                    <span class="node-icon">▸</span>
+                    <span class="node-label">{{ item }}</span>
+                  </div>
                 {% endfor %}
               {% else %}
-                <div class="right-item">Keine Daten</div>
+                <div class="tree-item type-info">
+                  <span class="node-icon">ℹ</span>
+                  <span class="node-label">Keine Daten</span>
+                </div>
               {% endif %}
             </div>
           </div>
@@ -98,9 +89,9 @@
         </div>
 
         <div class="ipc-state">
-          <div>Status JSON: {{ 'OK' if vm["status"]_exists else 'fehlt' }}{% if vm["status"]_age is not none %} ({{ vm["status"]_age }}s){% endif %}</div>
-          <div>Menu JSON: {{ 'OK' if vm["menu"]_exists else 'fehlt' }}{% if vm["menu"]_age is not none %} ({{ vm["menu"]_age }}s){% endif %}</div>
-          <div>Progress JSON: {{ 'OK' if vm["progress"]_exists else 'fehlt' }}{% if vm["progress"]_age is not none %} ({{ vm["progress"]_age }}s){% endif %}</div>
+          <div>Status JSON: {{ 'OK' if vm["status_exists"] else 'fehlt' }}{% if vm["status_age"] is not none %} ({{ vm["status_age"] }}s){% endif %}</div>
+          <div>Menu JSON: {{ 'OK' if vm["menu_exists"] else 'fehlt' }}{% if vm["menu_age"] is not none %} ({{ vm["menu_age"] }}s){% endif %}</div>
+          <div>Progress JSON: {{ 'OK' if vm["progress_exists"] else 'fehlt' }}{% if vm["progress_age"] is not none %} ({{ vm["progress_age"] }}s){% endif %}</div>
           <div>List JSON: {{ 'OK' if vm["list_exists"] else 'fehlt' }}{% if vm["list_age"] is not none %} ({{ vm["list_age"] }}s){% endif %}</div>
         </div>
       </section>
@@ -172,6 +163,15 @@
   </div>
 
   <script>
+    const typeIcons = {
+      folder: "▸",
+      station: "♪",
+      action: "→",
+      toggle: "◉",
+      info: "ℹ",
+      value: "±"
+    };
+
     async function sendCmd(cmd) {
       const r = await fetch('/api/cmd', {
         method: 'POST',
@@ -183,66 +183,112 @@
       setTimeout(refreshState, 250);
     }
 
+    function renderTree(data) {
+      const tree = document.getElementById('treeMenu');
+      if (!tree) return;
+
+      const nodes = data.nodes || [];
+      const items = data.items || [];
+      const cursor = data.cursor ?? 0;
+      const path = data.path || [];
+      const canBack = !!data.can_back;
+
+      tree.innerHTML = '';
+
+      const crumb = document.createElement('div');
+      crumb.className = 'breadcrumb';
+      crumb.id = 'breadcrumb';
+      crumb.innerHTML =
+        (canBack ? '<span class="back-btn" onclick="sendCmd(\'back\')">◀</span>' : '') +
+        (path.length ? path.join(' › ') : 'PiDrive');
+      tree.appendChild(crumb);
+
+      const src = nodes.length ? nodes : items.map(label => ({
+        label,
+        type: 'folder',
+        active: false,
+        has_children: true
+      }));
+
+      if (!src.length) {
+        const empty = document.createElement('div');
+        empty.className = 'tree-item type-info';
+        empty.innerHTML = '<span class="node-icon">ℹ</span><span class="node-label">Keine Daten</span>';
+        tree.appendChild(empty);
+        return;
+      }
+
+      src.forEach((n, i) => {
+        const label = typeof n === 'string' ? n : (n.label || '?');
+        const ntype = typeof n === 'object' ? (n.type || 'folder') : 'folder';
+        const active = typeof n === 'object' ? !!n.active : false;
+        const hasChildren = typeof n === 'object' ? !!n.has_children : false;
+
+        const div = document.createElement('div');
+        div.className = 'tree-item type-' + ntype +
+          (i === cursor ? ' selected' : '') +
+          (active ? ' playing' : '');
+        div.dataset.index = i;
+        div.dataset.type = ntype;
+
+        div.innerHTML =
+          '<span class="node-icon">' + (typeIcons[ntype] || '▸') + '</span>' +
+          '<span class="node-label">' + label + '</span>' +
+          (hasChildren ? '<span class="node-arrow">›</span>' : '');
+
+        div.onclick = () => nodeClick(i, ntype);
+        tree.appendChild(div);
+      });
+    }
+
+    async function nodeClick(index, type) {
+      const data = await (await fetch('/api/state')).json();
+      const current = data.cursor ?? 0;
+
+      if (index > current) {
+        for (let i = current; i < index; i++) {
+          await sendCmdSilent('down');
+        }
+      } else if (index < current) {
+        for (let i = current; i > index; i--) {
+          await sendCmdSilent('up');
+        }
+      }
+
+      if (type !== 'info') {
+        await sendCmd('enter');
+      }
+    }
+
+    async function sendCmdSilent(cmd) {
+      await fetch('/api/cmd', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cmd})
+      });
+    }
+
     async function refreshState() {
       const r = await fetch('/api/state');
       const data = await r.json();
       updateDisplay(data);
     }
 
-    const typeIcons = {folder:"▸",station:"♪",action:"→",toggle:"◉",info:" ",value:"±"};
-
     function updateDisplay(data) {
       document.getElementById('statusJson').textContent = JSON.stringify(data.status, null, 2);
       document.getElementById('menuJson').textContent = JSON.stringify(data.menu, null, 2);
 
-      // Status-Flags
       document.querySelectorAll('.flag').forEach(el => {
         const key = el.dataset.key;
         if (key) el.className = 'flag ' + (data.status[key] ? 'on' : 'off');
       });
 
-      // Kategorien hervorheben
-      const cats = data.categories || [];
-      const pathLabel = (data.path || [])[1] || '';
-      document.querySelectorAll('.left-item').forEach((el, i) => {
-        el.classList.toggle('active', cats[i] === pathLabel);
-      });
+      renderTree(data);
 
-      // Nodes / Items aktualisieren
-      const rightMenu = document.getElementById('rightMenu');
-      if (rightMenu) {
-        const nodes  = data.nodes || [];
-        const items  = data.items || [];
-        const cursor = data.cursor ?? (data.menu && data.menu.item) ?? 0;
-        const path   = data.path || [];
-        rightMenu.innerHTML = '';
-
-        // Breadcrumb
-        if (path.length > 2) {
-          const crumb = document.createElement('div');
-          crumb.className = 'breadcrumb';
-          crumb.textContent = '› ' + path.slice(2).join(' › ');
-          rightMenu.appendChild(crumb);
-        }
-
-        const src = nodes.length ? nodes : items.map(l => ({label:l,type:'folder'}));
-        src.forEach((n, i) => {
-          const div = document.createElement('div');
-          const label = typeof n === 'string' ? n : (n.label || '?');
-          const ntype = typeof n === 'object' ? (n.type||'folder') : 'folder';
-          const active= typeof n === 'object' ? n.active : false;
-          div.className = 'right-item type-' + ntype + (i===cursor?' active':'') + (active?' playing':'');
-          div.innerHTML = '<span class="node-icon">' + (typeIcons[ntype]||'▸') + '</span> ' + label;
-          div.onclick = () => sendCmd('enter');
-          rightMenu.appendChild(div);
-        });
-      }
-
-      // Footer
       const footer = document.getElementById('displayFooter');
       if (footer) {
-        const s = data.status;
-        if (s.spotify && s.track) footer.textContent = '♫ ' + (s.artist||'') + ' – ' + s.track;
+        const s = data.status || {};
+        if (s.spotify && s.track) footer.textContent = '♫ ' + (s.artist || '') + ' – ' + s.track;
         else if (s.radio && s.radio_name) footer.textContent = '♪ ' + s.radio_name;
         else footer.textContent = 'Audio: ' + (s.audio_out || 'auto');
       }
@@ -276,22 +322,21 @@
         (data.cmd || '') + "\n\n" + (data.stdout || '') + (data.stderr ? ("\n[stderr]\n" + data.stderr) : '');
     }
 
-    // Auto-Refresh alle 2s — kein Seiten-Reload
     let lastRev = -1;
     setInterval(() => {
       fetch('/api/state')
         .then(r => r.json())
         .then(data => {
           updateDisplay(data);
-          // Debug-Bar aktualisieren
           const dbg = data.debug || {};
           const bar = document.getElementById('debugBar');
           if (bar) {
             const ready = dbg.core_ready ? '🟢' : '🔴';
-            bar.textContent = ready + ' rev=' + (dbg.rev||0)
-              + '  path: ' + (dbg.path||[]).join(' › ')
-              + '  [' + (dbg.selected_label||'') + '] ' + (dbg.selected_type||'')
-              + '  ' + (dbg.node_count||0) + ' Einträge';
+            bar.textContent =
+              ready + ' rev=' + (dbg.rev || 0) +
+              '  path: ' + (dbg.path || []).join(' › ') +
+              '  [' + (dbg.selected_label || '') + '] ' + (dbg.selected_type || '') +
+              '  ' + (dbg.node_count || 0) + ' Einträge';
           }
           if (dbg.rev !== lastRev) lastRev = dbg.rev;
         })
