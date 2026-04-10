@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.7.1-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.7.2-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -163,7 +163,7 @@ pidrive/
 
 ## Menü-Struktur
 
-Auto-orientiert (v0.7.1) — optimiert für iDrive-Bedienung mit wenigen Schritten.
+Auto-orientiert (v0.7.2) — optimiert für iDrive-Bedienung mit wenigen Schritten.
 
 ```
 PiDrive
@@ -308,7 +308,7 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.7.1 — Web UI
+### v0.7.2 — Web UI
 - WebUI: Flask-Webinterface auf Port 8080 (`pidrive_web.service`)
 - Menü-Vorschau im Browser, Navigation, Log-Viewer, Diagnose
 - Auto-Refresh alle 2s ohne Seiten-Reload

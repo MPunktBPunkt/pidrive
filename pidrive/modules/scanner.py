@@ -295,21 +295,29 @@ def _get_channels(band_id):
     b = BANDS.get(band_id, {})
     return b.get("channels", [])
 
+def _play_channel(band_id, idx, S):
+    """Kanal abspielen und S-State für Menü aktualisieren."""
+    chs = _get_channels(band_id)
+    if not chs or idx >= len(chs): return
+    ch   = chs[idx]
+    name = ch.get("name", f"K{ch.get('ch',idx+1):02d}")
+    freq = ch.get("freq","")
+    S[f"scanner_{band_id}"] = f"{name}  {freq} MHz"
+    play_freq(freq, name, BANDS[band_id]["bw"], S)
+
 def channel_up(band_id, S):
     chs = _get_channels(band_id)
     if not chs: return
     idx = (_current_ch.get(band_id, -1) + 1) % len(chs)
     _current_ch[band_id] = idx
-    play_freq(chs[idx]["freq"], chs[idx].get("name", str(chs[idx]["freq"])),
-              BANDS[band_id]["bw"], S)
+    _play_channel(band_id, idx, S)
 
 def channel_down(band_id, S):
     chs = _get_channels(band_id)
     if not chs: return
     idx = (_current_ch.get(band_id, 1) - 1) % len(chs)
     _current_ch[band_id] = idx
-    play_freq(chs[idx]["freq"], chs[idx].get("name", str(chs[idx]["freq"])),
-              BANDS[band_id]["bw"], S)
+    _play_channel(band_id, idx, S)
 
 def scan_next(band_id, S):
     b = BANDS.get(band_id, {})

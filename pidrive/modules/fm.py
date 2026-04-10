@@ -153,71 +153,7 @@ def freq_input_screen(screen=None):
     ipc.clear_progress()
     return None
 
-def build_items(screen, S, settings):
-    """FM Radio Untermenue-Items."""
-
-    def check_hardware():
-        if not is_rtlsdr_available():
-            ipc.write_progress("RTL-SDR", "Kein Stick gefunden!")
-            time.sleep(2)
-            return False
-        if not is_rtlfm_available():
-            ipc.write_progress("rtl_fm fehlt", "sudo apt install rtl-sdr")
-            time.sleep(3)
-            return False
-        return True
-
-    def play_preset():
-        stations = load_stations()
-        names = [f"{s['name']} ({s['freq']} MHz)" for s in stations]
-        if not names:
-            ipc.write_progress("FM Radio", "Keine Stationen gespeichert", color="orange")
-            time.sleep(2); ipc.clear_progress(); return
-        chosen = ipc.headless_pick("FM Stationen", names)
-        if chosen:
-            idx = names.index(chosen)
-            if not check_hardware(): return
-            play_station(stations[idx], S)
-
-    def play_manual():
-        freq_str = freq_input_screen()
-        if freq_str:
-            if not check_hardware(): return
-            station = {"name": f"{freq_str} MHz", "freq": freq_str}
-            play_station(station, S)
-
-    def stop_action():
-        stop(S)
-        ipc.write_progress("FM Radio", "Gestoppt")
-        time.sleep(1); ipc.clear_progress()
-
-    def add_current():
-        freq_str = freq_input_screen()
-        if not freq_str:
-            return
-        stations = load_stations()
-        new_name = f"FM {freq_str} MHz"
-        stations.append({"name": new_name, "freq": freq_str})
-        save_stations(stations)
-        ipc.write_progress("Gespeichert", new_name, color="green")
-        time.sleep(2); ipc.clear_progress()
-
-    items = [
-        Item("Stationen",
-             sub=lambda: S.get("radio_station", "") if S.get("radio_type") == "FM"
-                         else f"{len(load_stations())} Sender",
-             action=play_preset),
-        Item("Manuell",
-             sub="Frequenz eingeben",
-             action=play_manual),
-        Item("Station speichern",
-             sub="Frequenz -> Liste",
-             action=add_current),
-        Item("Stop",
-             action=stop_action),
-    ]
-    return items
-
+# build_items() entfernt in v0.7.1
 
 def scan_stations(S):
     """FM Suchlauf via rtl_fm Squelch. Gibt Liste von Stationen zurueck."""

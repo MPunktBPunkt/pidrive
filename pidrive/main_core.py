@@ -114,16 +114,23 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "dab_scan":
         def _dab_scan():
             ipc.write_progress("DAB+ Suchlauf", "Scanne Band III ...", color="blue")
+            log.info("SCAN_START source=dab")
             try:
                 results = dab.scan_dab_channels()
                 store.save_dab(results)
-                log.info(f"DAB Scan: {len(results)} Sender")
-                ipc.write_progress("DAB+ Suchlauf", f"{len(results)} Sender gefunden", color="green")
+                count = len(results)
+                log.info(f"SCAN_DONE source=dab count={count}")
+                ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
                 time.sleep(2)
+                # Menü sofort mit neuen Sendern neu bauen
+                new_root = build_tree(store, S, settings)
+                menu_state.root = new_root
+                menu_state.clamp_cursors()
+                menu_state.rev += 1
             except Exception as e:
-                log.error(f"DAB Scan: {e}")
+                log.error(f"SCAN_FAIL source=dab error={e}")
                 ipc.write_progress("DAB+ Fehler", str(e)[:48], color="red")
-                time.sleep(2)
+                time.sleep(3)
             finally:
                 ipc.clear_progress()
         bg(_dab_scan)
@@ -131,17 +138,26 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     # ── FM Suchlauf ──────────────────────────────────────────────────────────
     elif cmd == "fm_scan":
         def _fm_scan():
-            ipc.write_progress("FM Suchlauf", "Scanne UKW ...", color="blue")
+            ipc.write_progress("FM Suchlauf", "Scanne UKW 87.5–108.0 MHz ...", color="blue")
+            log.info("SCAN_START source=fm")
             try:
                 results = fm.scan_stations(S)
                 store.save_fm(results)
-                log.info(f"FM Scan: {len(results)} Sender")
-                ipc.write_progress("FM Suchlauf", f"{len(results)} Sender gefunden", color="green")
+                count = len(results)
+                log.info(f"SCAN_DONE source=fm count={count}")
+                if count == 0:
+                    ipc.write_progress("FM Suchlauf", "Kein Sender gefunden", color="orange")
+                else:
+                    ipc.write_progress("FM Suchlauf", f"{count} Sender gefunden ✓", color="green")
                 time.sleep(2)
+                new_root = build_tree(store, S, settings)
+                menu_state.root = new_root
+                menu_state.clamp_cursors()
+                menu_state.rev += 1
             except Exception as e:
-                log.error(f"FM Scan: {e}")
+                log.error(f"SCAN_FAIL source=fm error={e}")
                 ipc.write_progress("FM Fehler", str(e)[:48], color="red")
-                time.sleep(2)
+                time.sleep(3)
             finally:
                 ipc.clear_progress()
         bg(_fm_scan)
@@ -151,7 +167,9 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         source = cmd.split(":", 1)[1]
         store.reload_source(source)
         rebuild = True
-        log.info(f"Reload: {source}")
+        log.info(f"STATIONS_RELOAD source={source}")
+        ipc.write_progress("Senderliste", f"{source} neu geladen", color="green")
+        time.sleep(1); ipc.clear_progress()
 
     # ── FM Next/Prev ─────────────────────────────────────────────────────────
     elif cmd == "fm_next":
@@ -227,13 +245,21 @@ def _execute_node(node, menu_state, store, S, settings):
         src = node.source
         meta = node.meta
         if src == "fm":
-            bg(lambda: fm.play_station({"name": node.label,
-                "freq": meta.get("freq","")}, S))
+            # meta["name"] für reinen Sendernamen (ohne Frequenz-Suffix)
+            _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
+                              if "  " in node.label else node.label.lstrip("★ ").strip())
+            _freq = meta.get("freq","")
+            bg(lambda n=_name, f=_freq: fm.play_station({"name": n, "freq": f}, S))
         elif src == "dab":
-            bg(lambda: dab.play_by_name(node.label, S))
+            _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
+                              if "  " in node.label else node.label.lstrip("★ ").strip())
+            bg(lambda n=_name: dab.play_by_name(n, S))
         elif src == "webradio":
-            bg(lambda: webradio.play_station(
-                {"name": node.label, "url": meta.get("url","")}, S))
+            # meta["name"] und meta["url"] korrekt weitergeben
+            _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
+                              if "  " in node.label else node.label.lstrip("★ ").strip())
+            _url  = meta.get("url","")
+            bg(lambda n=_name, u=_url: webradio.play_station({"name": n, "url": u}, S))
         return
 
     # Toggle-Knoten

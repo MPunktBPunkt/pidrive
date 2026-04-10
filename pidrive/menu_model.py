@@ -361,43 +361,63 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     """Vollständigen Menübaum aus StationStore aufbauen."""
 
     def _station_nodes_fm(stations):
-        nodes = []
-        for s in stations:
-            freq = s.get("freq_mhz") or s.get("freq", "")
-            name = s.get("name", str(freq))
+        """FM-Stationen mit Frequenz und Favoriten-Markierung."""
+        # Favoriten zuerst
+        favs    = [s for s in stations if s.get("favorite")]
+        others  = [s for s in stations if not s.get("favorite")]
+        ordered = favs + others
+        nodes   = []
+        for s in ordered:
+            freq  = s.get("freq_mhz") or s.get("freq", "")
+            name  = s.get("name", str(freq))
+            fav   = "★ " if s.get("favorite") else ""
+            label = f"{fav}{name}  {freq} MHz" if freq else f"{fav}{name}"
+            active= (S.get("radio_type") == "FM" and
+                     S.get("radio_station","").startswith(name[:10]))
             nodes.append(MenuNode(
-                id=f"fm_{freq}", label=name, type="station",
-                source="fm", playable=True,
-                active=(S.get("radio_type") == "FM" and
-                        S.get("radio_station","").startswith(name[:10])),
-                meta={"freq": str(freq)},
+                id=f"fm_{str(freq).replace('.','_')}", label=label, type="station",
+                source="fm", playable=True, active=active,
+                meta={"freq": str(freq), "name": name, "favorite": s.get("favorite",False)},
             ))
         return nodes
 
     def _station_nodes_dab(stations):
-        nodes = []
-        for s in stations:
-            name = s.get("name", s.get("service_name", "?"))
+        """DAB-Stationen mit Ensemble und Favoriten."""
+        favs   = [s for s in stations if s.get("favorite")]
+        others = [s for s in stations if not s.get("favorite")]
+        nodes  = []
+        for s in (favs + others):
+            name  = s.get("name", s.get("service_name", "?"))
+            fav   = "★ " if s.get("favorite") else ""
+            ens   = s.get("ensemble","")
+            label = f"{fav}{name}  [{ens}]" if ens else f"{fav}{name}"
+            active= (S.get("radio_type") == "DAB" and
+                     S.get("radio_station","") == name)
             nodes.append(MenuNode(
-                id=f"dab_{s.get('service_id',name)}", label=name, type="station",
-                source="dab", playable=True,
-                active=(S.get("radio_type") == "DAB" and
-                        S.get("radio_station","") == name),
-                meta={"ensemble": s.get("ensemble",""),
-                      "service_id": s.get("service_id","")},
+                id=f"dab_{s.get('service_id',name)}", label=label, type="station",
+                source="dab", playable=True, active=active,
+                meta={"ensemble": ens, "service_id": s.get("service_id",""),
+                      "name": name, "favorite": s.get("favorite",False)},
             ))
         return nodes
 
     def _station_nodes_web(stations):
-        nodes = []
-        for s in stations:
-            name = s.get("name", "?")
+        """Webradio-Stationen mit Genre und Favoriten."""
+        favs   = [s for s in stations if s.get("favorite")]
+        others = [s for s in stations if not s.get("favorite")]
+        nodes  = []
+        for s in (favs + others):
+            name  = s.get("name", "?")
+            fav   = "★ " if s.get("favorite") else ""
+            genre = s.get("genre","")
+            label = f"{fav}{name}  [{genre}]" if genre else f"{fav}{name}"
+            active= (S.get("radio_type") == "WEB" and
+                     S.get("radio_station","") == name)
             nodes.append(MenuNode(
-                id=f"web_{name}", label=name, type="station",
-                source="webradio", playable=True,
-                active=(S.get("radio_type") == "WEB" and
-                        S.get("radio_station","") == name),
-                meta={"url": s.get("url",""), "genre": s.get("genre","")},
+                id=f"web_{name.lower().replace(' ','_')[:20]}", label=label, type="station",
+                source="webradio", playable=True, active=active,
+                meta={"url": s.get("url",""), "genre": genre,
+                      "name": name, "favorite": s.get("favorite",False)},
             ))
         return nodes
 
@@ -455,16 +475,23 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
 
     # ── Quellen → Scanner ────────────────────────────────────────────────────
     def _scanner_band(band_id, label):
-        return MenuNode(id=band_id, label=label, type="folder", children=[
-            MenuNode(id=f"{band_id}_info",  label="Aktiver Kanal / Frequenz", type="info"),
-            MenuNode(id=f"{band_id}_up",    label="Kanal +",      type="action",
-                     action=f"scan_up:{band_id}"),
-            MenuNode(id=f"{band_id}_down",  label="Kanal -",      type="action",
-                     action=f"scan_down:{band_id}"),
-            MenuNode(id=f"{band_id}_next",  label="Scan weiter",  type="action",
-                     action=f"scan_next:{band_id}"),
-            MenuNode(id=f"{band_id}_prev",  label="Scan zurueck", type="action",
-                     action=f"scan_prev:{band_id}"),
+        # Aktuellen Kanal/Frequenz aus S-State lesen
+        scanner_key = f"scanner_{band_id}"
+        current_info = S.get(scanner_key, "")
+        active = bool(S.get("radio_type") == "SCANNER" and
+                      band_id.upper() in S.get("radio_station","").upper())
+        info_label = f"▶ {current_info}" if (active and current_info) else                      (current_info or "– kein Kanal aktiv –")
+        return MenuNode(id=band_id, label=label, type="folder",
+                        active=active, children=[
+            MenuNode(id=f"{band_id}_info",  label=info_label, type="info"),
+            MenuNode(id=f"{band_id}_up",    label="Kanal +",
+                     type="action", action=f"scan_up:{band_id}"),
+            MenuNode(id=f"{band_id}_down",  label="Kanal -",
+                     type="action", action=f"scan_down:{band_id}"),
+            MenuNode(id=f"{band_id}_next",  label="Scan weiter",
+                     type="action", action=f"scan_next:{band_id}"),
+            MenuNode(id=f"{band_id}_prev",  label="Scan zurueck",
+                     type="action", action=f"scan_prev:{band_id}"),
         ])
 
     scanner_node = MenuNode(id="scanner", label="Scanner", type="folder", children=[

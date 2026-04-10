@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.1
+# PiDrive — Kontext & Projektdokumentation v0.7.2
 
 ## Projektbeschreibung
 
@@ -193,7 +193,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.7.1)
+    ├── VERSION              (aktuell: 0.7.2)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -266,14 +266,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.1)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.2)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.7.1):
+Diagnose (v0.7.2):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -587,7 +587,7 @@ sudo systemctl restart pidrive
 ## Menü-Struktur
 
 ```
-PiDrive  (v0.7.1 — Auto-orientiert)
+PiDrive  (v0.7.2 — Auto-orientiert)
 |-- Jetzt laeuft          (Hauptansicht — aktuelle Wiedergabe)
 |   |-- Wiedergabe        (Titel | Artist | Album | Sender)
 |   |-- Spotify           (Toggle)
@@ -664,12 +664,12 @@ sudo systemctl restart pidrive_display
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.1) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.2) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.1) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.1) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.2) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.2) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -686,7 +686,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.1 (aktuell)
+### v0.7.2 (aktuell)
 - BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
 - pidrive_core.service: headless, kein pygame, kein Display
 - pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
@@ -753,9 +753,9 @@ sudo systemctl restart pidrive_display
 
 ---
 
-## Aktueller Stand (v0.7.1)
+## Aktueller Stand (v0.7.2)
 
-**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.1):
+**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.2):
 
 ```
 ✓ pidrive_core.service: active, headless
@@ -778,19 +778,24 @@ sudo systemctl restart pidrive_display
 ## Roadmap
 
 ### Kurzfristig
-- [x] Baumbasiertes Menümodell (v0.7.1)
-- [x] Senderlisten aus JSON mit Hot-Reload
-- [x] DAB/FM Suchlauf-Pipeline → JSON → Menü
+- [x] Baumbasiertes Menümodell (v0.7.0)
+- [x] Senderlisten aus JSON mit Hot-Reload und Merge-Strategie
+- [x] DAB/FM Suchlauf-Pipeline → JSON → Menü sofort sichtbar
+- [x] Scan-Rückmeldung: Sender gefunden / Fehler sichtbar
+- [x] Senderlisten-UX: Favoriten zuerst (★), Frequenz/Ensemble/Genre
+- [x] IPC-Vertrag in ipc.py dokumentiert (stabil ab v0.7.1)
+- [x] Altlasten build_items() aus allen Modulen entfernt
 - [ ] Audio Klinke/HDMI/BT Umschaltung testen
 - [ ] GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
 - [ ] USB-Tethering Autostart
 
 ### Mittelfristig
-- [ ] DAB+ Programminfo (welle-cli DLS Metadaten)
-- [ ] FM RDS Text (rtl_fm + rds_rx Decoder)
+- [ ] Web-UI Redesign: Breadcrumb, kein Display-Spiegel
+- [ ] DAB+ Programminfo (welle-cli DLS)
+- [ ] FM RDS Text (rtl_fm + rds_rx)
+- [ ] Favoriten setzen/entfernen im Menü
 - [ ] Equalizer (ALSA-basiert)
-- [ ] Hotspot-Modus (Pi als WLAN-AP)
-- [ ] Web-UI vollständiges Redesign (Breadcrumb-Navigation, kein Display-Spiegel)
+- [ ] Hotspot-Modus
 
 ### Langfristig (Fahrzeug-Integration)
 - [ ] BMW iDrive ESP32 Integration (CAN-Bus oder HID → File-Trigger)
