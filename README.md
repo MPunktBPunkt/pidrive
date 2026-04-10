@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.6.4-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.6.5-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -296,25 +296,51 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.6.4
-- BREAKING: Core/Display Trennung
-- `pidrive_core.service` — headless, kein pygame, sofort startfähig
-- `pidrive_display.service` — pygame direkt auf fb1 (480x320), kein fbcp
-- `main_core.py` — Trigger, Status, Audio, kein pygame
+### v0.6.5 — Web UI
+- WebUI: Flask-Webinterface auf Port 8080 (`pidrive_web.service`)
+- Menü-Vorschau im Browser, Navigation, Log-Viewer, Diagnose
+- Auto-Refresh alle 2s ohne Seiten-Reload
+
+### v0.6.4 — Split-Screen Display
+- Linke Spalte: Kategorien mit Farbkodierung
+- Rechte Spalte: Item-Liste mit Scrolling (7 sichtbar)
+- Footer: Now Playing (Spotify/Radio) oder Audio-Ausgang
+
+### v0.6.3
+- Service: `StartLimitIntervalSec` in `[Unit]` verschoben (systemd 247 fix)
+
+### v0.6.2 — Stabilisierung (GPT-5.4 Empfehlungen)
+- Restart-Limit für Core + Display
+- Getrennte Logs: `core.log` + `display.log`
+- `menu.json`: vollständige Kategorien- und Item-Listen
+- Display-Fallback wenn Core offline
+- fbcp dauerhaft entfernt
+- fm.py + library.py pygame-frei
+- Syntax-Check in install.sh vor Service-Start
+
+### v0.6.1
+- Alle Module pygame-frei: wifi, webradio, audio, system, musik
+- `ipc.py`: `headless_pick()`, `headless_confirm()` via File-Trigger
+- `main_display.py`: vtcon1 unbind direkt vor set_mode()
+- `scanner.py` SyntaxError behoben
+
+### v0.6.0 — Architektur-Refactoring
+- BREAKING: Core/Display getrennt
+- `pidrive_core.service` — headless, kein pygame
+- `pidrive_display.service` — pygame direkt auf fb1 (480×320, 16bpp)
+- `main_core.py` — Trigger, Status, Audio, Menüzustand
 - `main_display.py` — reine Anzeige, liest IPC-JSON
 - `ipc.py` — atomares JSON zwischen Core und Display
-- Display-Absturz stoppt nicht mehr den Core/Audio `pygame.init()` → `pygame.display.init()` + `pygame.font.init()`
-- Verhindert SDL `exit(0)` wenn ALSA/raspotify `hw:1,0` bereits belegt ist
-- RTL-SDR Check in System-Check (Startup-Log) und install.sh
-- install.sh: RTL-SDR USB Stick + rtl_fm + welle-cli werden geprueft und gemeldet
+- fbcp entfernt (nicht mehr nötig)
+- rc.local bereinigt
 
-### v0.3.7
-- `launcher.py`: Richtet `/dev/tty3` als Controlling Terminal ein (setsid + TIOCSCTTY)
-- Behebt dauerhaft die "Unable to open a console terminal" Bootschleife
-- Launcher loggt alle Schritte und Berechtigungen nach `pidrive.log`
-- Service: `User=root`, kein `StandardInput=tty` mehr
-- `install.sh`: udev-Regel für `/dev/tty3`, `tty`-Gruppe, 10 Schritte mit Stop/Start
-- `main.py`: erweiterter System-Check mit uid, groups, O_RDWR-Test, stdin-Ziel
+### v0.5.x — TTY/VT Debug-Serie
+- TIOCSCTTY, PAMName, VT3, fbcon, SDL_VIDEO_FBCON_KEEP_TTY
+
+### v0.3.x — Erste stabile Version
+- DAB+, FM Radio, OTA Updates, Webradio, MP3-Bibliothek, Spotify
+
+
 
 ### v0.3.6
 - log.py: Import-Bug behoben (UnboundLocalError: os)

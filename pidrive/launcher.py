@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launcher.py - PiDrive Launcher v0.5.9
+launcher.py - PiDrive Launcher v0.6.5
 
 Radikal vereinfacht. Kein TIOCSCTTY, kein setsid.
 
@@ -42,7 +42,7 @@ def lerror(msg): _log("ERROR", msg)
 
 def main():
     linfo("=" * 50)
-    linfo(f"PiDrive Launcher v0.5.5  PID={os.getpid()}  UID={os.getuid()}")
+    linfo(f"PiDrive Launcher v0.6.5  PID={os.getpid()}  UID={os.getuid()}")
 
     # SIGHUP ignorieren — SDL sendet HUP bei VT-Events
     signal.signal(signal.SIGHUP, signal.SIG_IGN)

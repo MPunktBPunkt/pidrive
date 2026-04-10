@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.6.4           ║
+║        PiDrive Installer v0.6.5           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -73,6 +73,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     avahi-daemon avahi-utils rfkill \
     bluez pulseaudio pulseaudio-module-bluetooth \
     wpasupplicant dhcpcd5 rtl-sdr sox \
+    python3-flask \
     2>/dev/null || true
 
 apt-get install -y -qq welle.io 2>/dev/null || \

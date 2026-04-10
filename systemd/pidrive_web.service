@@ -1,0 +1,19 @@
+[Unit]
+Description=PiDrive Web UI (Debug/Remote)
+After=network-online.target pidrive_core.service
+Wants=network-online.target
+# Kein Requires — Web kann ohne Core laufen (zeigt "Core offline")
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/pidrive/pidrive
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/webui.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
