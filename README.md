@@ -163,34 +163,35 @@ pidrive/
 
 ## Menü-Struktur
 
+Auto-orientiert (v0.6.6) — optimiert für iDrive-Bedienung mit wenigen Schritten.
+
 ```
 PiDrive
-├── Musik
-│   ├── Spotify (Toggle + Track-Anzeige)
-│   ├── Wiedergabe (Titel | Artist | Album)
-│   ├── Bibliothek (MP3 mit Album-Art)
-│   ├── Webradio (konfigurierbare Stationen)
-│   ├── DAB+ (RTL-SDR, Sendersuche)
-│   ├── FM Radio (UKW, manuelle Frequenz)
-│   └── Scanner (PMR446/Freenet/LPD433/VHF/UHF)
-├── WiFi
-│   ├── WiFi An/Aus
-│   ├── Verbunden mit (SSID)
-│   └── Netzwerke scannen
-├── Bluetooth
+├── Jetzt läuft            ← Hauptansicht: aktuelle Wiedergabe
+│   ├── Wiedergabe         (Titel | Artist | Album | Sender)
+│   ├── Spotify            (Toggle An/Aus)
+│   ├── Audioausgang       (Klinke/HDMI/BT/Alle)
+│   ├── Lauter
+│   └── Leiser
+├── Quellen                ← Audioquelle wählen
+│   ├── Spotify            (Spotify Connect)
+│   ├── Bibliothek         (MP3 mit Album-Art)
+│   ├── Webradio           (konfigurierbare Stationen)
+│   ├── DAB+               (RTL-SDR, Sendersuche)
+│   ├── FM Radio           (UKW, manuelle Frequenz)
+│   └── Scanner            (PMR446/Freenet/LPD433/VHF/UHF)
+├── Verbindungen           ← BT + WiFi (selten gebraucht)
 │   ├── Bluetooth An/Aus
-│   ├── Geräte scannen & koppeln
-│   ├── Als Audio-Ausgang setzen
-│   └── Alle trennen
-└── System
-    ├── Audioausgang (Klinke/HDMI/BT/Alle)
-    ├── Lauter / Leiser
+│   ├── Geräte scannen
+│   ├── WiFi An/Aus
+│   ├── Netzwerke scannen
+│   └── Status
+└── System                 ← Setup / Wartung
     ├── IP Adresse
-    ├── Hostname
-    ├── System-Info (CPU-Temp, Uptime)
+    ├── System-Info        (CPU-Temp, Uptime)
     ├── Version
     ├── Neustart / Ausschalten
-    └── Update (OTA via GitHub)
+    └── Update             (OTA via GitHub)
 ```
 
 ---
@@ -223,9 +224,9 @@ echo "up"           > /tmp/pidrive_cmd
 echo "down"         > /tmp/pidrive_cmd
 echo "enter"        > /tmp/pidrive_cmd
 echo "back"         > /tmp/pidrive_cmd
-echo "cat:0"        > /tmp/pidrive_cmd   # Musik
-echo "cat:1"        > /tmp/pidrive_cmd   # WiFi
-echo "cat:2"        > /tmp/pidrive_cmd   # Bluetooth
+echo "cat:0"        > /tmp/pidrive_cmd   # Jetzt läuft
+echo "cat:1"        > /tmp/pidrive_cmd   # Quellen
+echo "cat:2"        > /tmp/pidrive_cmd   # Verbindungen
 echo "cat:3"        > /tmp/pidrive_cmd   # System
 echo "wifi_on"      > /tmp/pidrive_cmd
 echo "spotify_on"   > /tmp/pidrive_cmd

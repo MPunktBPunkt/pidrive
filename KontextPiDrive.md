@@ -621,7 +621,10 @@ PiDrive  (v0.6.6 — Auto-orientiert)
 
 ```bash
 echo "up/down/enter/back/left/right" > /tmp/pidrive_cmd
-echo "cat:0/1/2/3"                  > /tmp/pidrive_cmd
+echo "cat:0"   # Jetzt laeuft       > /tmp/pidrive_cmd
+echo "cat:1"   # Quellen            > /tmp/pidrive_cmd
+echo "cat:2"   # Verbindungen       > /tmp/pidrive_cmd
+echo "cat:3"   # System             > /tmp/pidrive_cmd
 echo "wifi_on/wifi_off"             > /tmp/pidrive_cmd
 echo "bt_on/bt_off"                 > /tmp/pidrive_cmd
 echo "audio_klinke/hdmi/bt/all"     > /tmp/pidrive_cmd
@@ -640,14 +643,10 @@ echo 'down' > /tmp/pidrive_cmd
 # oder: http://PI-IP:8080
 ```
 
-### SSH-Steuerung
+### Manueller Neustart
 ```bash
-python3 ~/pidrive_ctrl.py
-```
-
-### Manueller Neustart (Entwicklung)
-```bash
-sudo systemctl restart pidrive
+sudo systemctl restart pidrive_core
+sudo systemctl restart pidrive_display
 ```
 
 ---
