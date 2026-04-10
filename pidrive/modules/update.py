@@ -144,3 +144,24 @@ def build_items(screen, S, settings):
              sub=lambda: get_local_version(),
              action=show_version),
     ]
+
+
+def run_update(S):
+    """OTA Update via install.sh."""
+    import subprocess, time, ipc
+    ipc.write_progress("Update", "Verbinde GitHub ...", color="blue")
+    try:
+        result = subprocess.run(
+            "curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash",
+            shell=True, capture_output=True, text=True, timeout=300
+        )
+        if result.returncode == 0:
+            ipc.write_progress("Update", "Erfolgreich! Neustart ...", color="green")
+            time.sleep(3)
+            subprocess.run(["sudo","reboot"])
+        else:
+            ipc.write_progress("Update Fehler", result.stderr[:48], color="red")
+            time.sleep(4); ipc.clear_progress()
+    except Exception as e:
+        ipc.write_progress("Update", f"Fehler: {e}", color="red")
+        time.sleep(4); ipc.clear_progress()

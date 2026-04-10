@@ -116,3 +116,25 @@ def build_items(screen, S, settings):
         Item("Alle trennen",
              action=disconnect_all),
     ]
+
+
+def scan_devices(S, settings):
+    """BT-Geräte scannen via headless_pick."""
+    import ipc, time, subprocess
+    ipc.write_progress("Bluetooth", "Scanne Geräte (10s) ...", color="blue")
+    try:
+        subprocess.run(["bluetoothctl","scan","on"], timeout=2,
+                       capture_output=True)
+        time.sleep(8)
+        subprocess.run(["bluetoothctl","scan","off"], timeout=2,
+                       capture_output=True)
+        r = subprocess.run("bluetoothctl devices | awk '{print $3}'",
+                           shell=True, capture_output=True, text=True, timeout=5)
+        devices = [d.strip() for d in r.stdout.splitlines() if d.strip()]
+    except Exception as e:
+        ipc.write_progress("BT Scan", f"Fehler: {e}", color="red")
+        time.sleep(2); ipc.clear_progress(); return
+    ipc.clear_progress()
+    if not devices:
+        ipc.write_progress("BT Scan", "Keine Geräte gefunden", color="orange")
+        time.sleep(2); ipc.clear_progress()

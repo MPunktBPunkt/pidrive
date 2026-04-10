@@ -62,9 +62,12 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "down":  menu_state.key_down()
     elif cmd == "left":  menu_state.key_left()
     elif cmd == "back":  menu_state.key_back()
-    elif cmd == "right": menu_state.key_right()
     elif cmd == "enter":
         node = menu_state.key_enter()
+        if node and node.type in ("station", "action", "toggle"):
+            _execute_node(node, menu_state, store, S, settings)
+    elif cmd == "right":
+        node = menu_state.key_right()
         if node and node.type in ("station", "action", "toggle"):
             _execute_node(node, menu_state, store, S, settings)
 
@@ -199,6 +202,10 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         bg(lambda: audio.select_output_interactive(S, settings))
 
     log.trigger_received(cmd)
+    if cmd in ("dab_scan","fm_scan"):
+        log.info(f"SCAN_START source={cmd.split('_')[0]}")
+    elif cmd.startswith("reload_stations:"):
+        log.info(f"STATIONS_RELOAD source={cmd.split(':',1)[1]}")
     return rebuild
 
 
@@ -212,8 +219,11 @@ def _execute_node(node, menu_state, store, S, settings):
     if not action:
         return
 
+    log.info(f"MENU_ACTION id={node.id} type={node.type} action={action or 'play'}")
+
     # Stationen abspielen
     if node.type == "station":
+        log.info(f"PLAY_STATION label={node.label!r} source={node.source} meta={node.meta}")
         src = node.source
         meta = node.meta
         if src == "fm":
@@ -318,8 +328,9 @@ def rebuild_tree(menu_state, store, S, settings):
                 break
         if not found:
             break
+    menu_state.clamp_cursors()
     menu_state.rev += 1
-    log.info(f"Menü neu gebaut — Pfad: {' / '.join(menu_state.path)}")
+    log.info(f"MENU_REBUILD path={'/'.join(menu_state.path)} cursor={menu_state.cursor}")
 
 
 # ── Hauptschleife ──────────────────────────────────────────────────────────────

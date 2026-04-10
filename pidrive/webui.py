@@ -21,7 +21,8 @@ STATUS_FILE = "/tmp/pidrive_status.json"
 MENU_FILE = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 LIST_FILE = "/tmp/pidrive_list.json"
-LOG_FILE = "/var/log/pidrive/pidrive.log"
+LOG_FILE  = "/var/log/pidrive/pidrive.log"
+READY_FILE= "/tmp/pidrive_ready"
 
 ALLOWED_COMMANDS = {
     "up", "down", "left", "right", "enter", "back",
@@ -112,6 +113,25 @@ def build_view_model():
     categories = menu.get("categories", [])
     items_list = menu.get("items",      [])
 
+    # Selektierter Knoten
+    cursor   = menu.get("cursor", 0)
+    sel_node = nodes[cursor] if nodes and cursor < len(nodes) else {}
+
+    # Debug-Info für Phase 2 (GPT-5.4)
+    debug = {
+        "rev":           menu.get("rev", 0),
+        "path":          menu.get("path", []),
+        "title":         menu.get("title", ""),
+        "cursor":        cursor,
+        "can_back":      menu.get("can_back", False),
+        "selected_label":sel_node.get("label","") if isinstance(sel_node,dict) else str(sel_node),
+        "selected_type": sel_node.get("type","") if isinstance(sel_node,dict) else "",
+        "node_count":    len(nodes),
+        "core_ready":    os.path.exists(READY_FILE),
+        "status_age":    file_age(STATUS_FILE),
+        "menu_age":      file_age(MENU_FILE),
+    }
+
     return {
         "version":        get_version(),
         "ip":             get_ip(),
@@ -123,9 +143,10 @@ def build_view_model():
         "categories":     categories,
         "items":          items_list,
         "path":           menu.get("path", []),
-        "cursor":         menu.get("cursor", 0),
+        "cursor":         cursor,
         "rev":            menu.get("rev", 0),
         "can_back":       menu.get("can_back", False),
+        "debug":          debug,
         "status_age":     file_age(STATUS_FILE),
         "menu_age":       file_age(MENU_FILE),
         "progress_age":   file_age(PROGRESS_FILE),

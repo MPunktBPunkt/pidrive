@@ -38,3 +38,35 @@ def build_items(screen, S, settings):
         Item("Lauter",  action=lambda: _bg("amixer -q sset Master 5%+")),
         Item("Leiser",  action=lambda: _bg("amixer -q sset Master 5%-")),
     ]
+
+
+def volume_up(settings):
+    """Lautstärke erhöhen."""
+    import subprocess, ipc, time
+    try:
+        subprocess.run(["amixer","sset","PCM","5%+"],
+                       capture_output=True, timeout=3)
+        ipc.write_progress("Lautstärke", "Erhöht ↑", color="green")
+        time.sleep(1); ipc.clear_progress()
+    except Exception as e:
+        import log; log.error(f"volume_up: {e}")
+
+def volume_down(settings):
+    """Lautstärke verringern."""
+    import subprocess, ipc, time
+    try:
+        subprocess.run(["amixer","sset","PCM","5%-"],
+                       capture_output=True, timeout=3)
+        ipc.write_progress("Lautstärke", "Verringert ↓", color="orange")
+        time.sleep(1); ipc.clear_progress()
+    except Exception as e:
+        import log; log.error(f"volume_down: {e}")
+
+def select_output_interactive(S, settings):
+    """Audioausgang via headless_pick auswählen."""
+    import ipc
+    options = ["Klinke (AUX)", "HDMI", "Bluetooth", "Alle"]
+    chosen  = ipc.headless_pick("Audioausgang", options)
+    if chosen:
+        mapping = {"Klinke (AUX)":"klinke","HDMI":"hdmi","Bluetooth":"bt","Alle":"all"}
+        set_output(mapping.get(chosen,"klinke"), settings)

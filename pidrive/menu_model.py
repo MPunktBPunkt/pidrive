@@ -136,11 +136,11 @@ class MenuState:
         """Direkt zu einem Knoten navigieren (fuer cat:X Trigger)."""
         for i, node in enumerate(self.root.children):
             if node.id == node_id or node.label.lower() == node_id.lower():
-                self._stack  = [self.root, node]
+                self._stack   = [self.root, node]
                 self._cursors = [i, 0]
                 self.rev += 1
                 return True
-        # Auch Top-Level-Index erlauben
+        # Top-Level-Index erlauben (cat:0..3)
         try:
             idx = int(node_id)
             if 0 <= idx < len(self.root.children):
@@ -152,6 +152,25 @@ class MenuState:
         except (ValueError, TypeError):
             pass
         return False
+
+    def clamp_cursors(self):
+        """Cursor nach Rebuild in gültigem Bereich halten (GPT-5.4 Phase 1)."""
+        for depth in range(len(self._stack)):
+            if depth == 0:
+                # root: cursor = index des aktuellen 2. Stacks-Elements
+                if len(self._stack) > 1:
+                    try:
+                        self._cursors[0] = self.root.children.index(self._stack[1])
+                    except ValueError:
+                        self._cursors[0] = 0
+            else:
+                parent   = self._stack[depth - 1]
+                children = parent.children
+                old_cur  = self._cursors[depth] if depth < len(self._cursors) else 0
+                if not children:
+                    self._cursors[depth] = 0
+                else:
+                    self._cursors[depth] = min(old_cur, len(children) - 1)
 
     def export(self) -> dict:
         """Menüzustand als Dict für IPC/JSON."""
@@ -196,19 +215,36 @@ class StationStore:
             return 0.0
 
     def _load(self, name: str) -> List[dict]:
+        """JSON laden — robust gegen alle Fehler, letzten Zustand erhalten."""
         p = self._path(name)
+        if not os.path.exists(p):
+            return []
         try:
             with open(p, encoding="utf-8") as f:
-                data = json.load(f)
+                raw = f.read().strip()
+            if not raw:
+                return []
+            data = json.loads(raw)
             # Neues Format: {"stations": [...]}
             if isinstance(data, dict):
-                return [s for s in data.get("stations", []) if s.get("enabled", True)]
-            # Altes Format: [...]
-            if isinstance(data, list):
-                return [s for s in data if s.get("enabled", True)]
+                stations = data.get("stations", [])
+            elif isinstance(data, list):
+                stations = data
+            else:
+                log.warn(f"StationStore: {name} unbekanntes Format")
+                return []
+            # Filtern: enabled + mindestens name vorhanden
+            result = [s for s in stations
+                      if isinstance(s, dict) and s.get("name")
+                      and s.get("enabled", True)]
+            return result
+        except json.JSONDecodeError as e:
+            log.warn(f"StationStore: {name} JSON-Fehler: {e} — behalte alten Zustand")
+            return getattr(self, {"fm_stations.json":"fm","dab_stations.json":"dab",
+                                   "stations.json":"web"}.get(name,"fm"), [])
         except Exception as e:
             log.warn(f"StationStore: {name} Ladefehler: {e}")
-        return []
+            return []
 
     def load_all(self):
         self.fm  = self._load("fm_stations.json")

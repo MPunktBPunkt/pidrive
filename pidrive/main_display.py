@@ -149,6 +149,48 @@ def render(screen, fonts, status, menu):
     item_x = LEFT_W + 8
     item_w  = W - LEFT_W - 8
 
+    # "Jetzt läuft" Spezialansicht (GPT-5.4 Phase 3)
+    in_now_playing = len(path) >= 2 and path[1] == "Jetzt laeuft"
+    is_playing = (status.get("spotify") or status.get("radio") or status.get("library"))
+
+    if in_now_playing and is_playing:
+        np_y = CONTENT_Y + 4
+        src_label = ""
+        if status.get("spotify"):
+            src_label = "♫ SPOTIFY"
+            src_col   = C_PURPLE
+        elif status.get("radio"):
+            rtype = status.get("radio_type","")
+            src_label = {"WEB":"♪ WEBRADIO","DAB":"♪ DAB+","FM":"♪ FM","SCANNER":"♪ SCANNER"}.get(rtype,"♪ RADIO")
+            src_col   = C_ORANGE
+        elif status.get("library"):
+            src_label = "♫ BIBLIOTHEK"
+            src_col   = C_ACCENT
+
+        if src_label:
+            t = font_sm.render(src_label, True, src_col)
+            screen.blit(t, (item_x, np_y)); np_y += 18
+
+        # Titel/Sender
+        title = (status.get("track") or status.get("radio_name") or
+                 status.get("lib_track") or "")
+        if title:
+            t = font_big.render(title[:22], True, C_TEXT)
+            screen.blit(t, (item_x, np_y)); np_y += 26
+
+        artist = status.get("artist","") or status.get("album","")
+        if artist:
+            t = font_med.render(artist[:26], True, C_DIM)
+            screen.blit(t, (item_x, np_y)); np_y += 20
+
+        audio_out = status.get("audio_out","auto")
+        t = font_sm.render(f"▶  {audio_out}", True, C_GREEN)
+        screen.blit(t, (item_x, np_y))
+
+        pygame.draw.line(screen, C_DIVIDER, (0, H - FOOTER_H), (W, H - FOOTER_H), 1)
+        pygame.display.flip()
+        return  # Kein normales Item-Rendering
+
     # Breadcrumb (Pfad ohne root, kompakt)
     if len(path) > 2:
         crumb = " › ".join(path[2:])  # z.B. "Webradio › Sender"
@@ -285,7 +327,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.7.0 gestartet")
+    log.info("PiDrive Display v0.7.1 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 

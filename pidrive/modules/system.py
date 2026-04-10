@@ -55,3 +55,30 @@ def build_items(screen, S, settings):
         Item("Neustart",      action=confirm_reboot),
         Item("Ausschalten",   action=confirm_shutdown),
     ]
+
+
+def show_info(S, settings):
+    """System-Info via Progress-Overlay anzeigen."""
+    import subprocess, time, ipc
+    try:
+        temp_r = subprocess.run(["cat","/sys/class/thermal/thermal_zone0/temp"],
+                                capture_output=True, text=True)
+        temp = int(temp_r.stdout.strip()) / 1000
+        uptime_r = subprocess.run(["uptime","-p"], capture_output=True, text=True)
+        uptime = uptime_r.stdout.strip()
+        ipc.write_progress("System-Info",
+                           f"Temp: {temp:.1f}°C  {uptime}", color="blue")
+    except Exception as e:
+        ipc.write_progress("System-Info", f"Fehler: {e}", color="red")
+    time.sleep(4); ipc.clear_progress()
+
+def show_version(S):
+    """Version anzeigen."""
+    import os, time, ipc
+    try:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        v = open(os.path.join(base,"VERSION")).read().strip()
+        ipc.write_progress("PiDrive", f"Version {v}", color="blue")
+    except Exception:
+        ipc.write_progress("PiDrive", "Version unbekannt", color="orange")
+    time.sleep(3); ipc.clear_progress()

@@ -168,3 +168,29 @@ def build_items(screen, S, settings):
              action=set_path_action),
     ]
     return items
+
+
+def browse_and_play(S, settings):
+    """Bibliothek durchsuchen via headless_pick und abspielen."""
+    import os, time, ipc
+    music_path = settings.get("music_path", os.path.expanduser("~/Musik"))
+    if not os.path.isdir(music_path):
+        ipc.write_progress("Bibliothek", f"Pfad nicht gefunden", color="red")
+        time.sleep(2); ipc.clear_progress(); return
+
+    files = scan_files(music_path)
+    if not files:
+        ipc.write_progress("Bibliothek", "Keine MP3-Dateien", color="orange")
+        time.sleep(2); ipc.clear_progress(); return
+
+    names = [os.path.basename(f) for f in files]
+    chosen = ipc.headless_pick("Bibliothek", names)
+    if not chosen:
+        return
+
+    idx = names.index(chosen)
+    ipc.write_progress("Laden...", chosen[:32])
+    tags = get_tags(files[idx])
+    play_file(files[idx], S)
+    if S.get("library_playing"):
+        show_now_playing(tags, S)

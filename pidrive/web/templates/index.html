@@ -21,6 +21,8 @@
       </div>
     </header>
 
+    <div id="debugBar" style="background:#0a1a30;color:#4ea3ff;font-size:12px;padding:5px 16px;font-family:monospace;border-bottom:1px solid #1a3a60;">Initialisiere...</div>
+
     <main class="main-grid">
       <section class="panel display-panel">
         <div class="display-header">Display-Vorschau</div>
@@ -254,10 +256,24 @@
     }
 
     // Auto-Refresh alle 2s — kein Seiten-Reload
+    let lastRev = -1;
     setInterval(() => {
       fetch('/api/state')
         .then(r => r.json())
-        .then(data => updateDisplay(data))
+        .then(data => {
+          updateDisplay(data);
+          // Debug-Bar aktualisieren
+          const dbg = data.debug || {};
+          const bar = document.getElementById('debugBar');
+          if (bar) {
+            const ready = dbg.core_ready ? '🟢' : '🔴';
+            bar.textContent = ready + ' rev=' + (dbg.rev||0)
+              + '  path: ' + (dbg.path||[]).join(' › ')
+              + '  [' + (dbg.selected_label||'') + '] ' + (dbg.selected_type||'')
+              + '  ' + (dbg.node_count||0) + ' Einträge';
+          }
+          if (dbg.rev !== lastRev) lastRev = dbg.rev;
+        })
         .catch(() => {});
     }, 2000);
   </script>

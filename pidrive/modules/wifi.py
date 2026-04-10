@@ -34,3 +34,30 @@ def build_items(screen, S, settings):
         Item("Verbunden mit", sub=lambda: S["ssid"] if S["conn"] else "Nicht verbunden"),
         Item("Netzwerke scannen", action=scan_and_connect),
     ]
+
+
+def scan_networks(S, settings):
+    """WLAN Netzwerke scannen und via headless_pick auswählen."""
+    import ipc, time
+    from modules import wifi as _self
+    ipc.write_progress("WiFi", "Scanne Netzwerke ...", color="blue")
+    try:
+        import subprocess
+        r = subprocess.run(["sudo","iwlist","wlan0","scan"],
+                           capture_output=True, text=True, timeout=10)
+        ssids = []
+        for line in r.stdout.splitlines():
+            if "ESSID:" in line:
+                s = line.strip().split('"')
+                if len(s) > 1 and s[1]: ssids.append(s[1])
+        ssids = list(dict.fromkeys(ssids))  # Deduplizieren
+    except Exception as e:
+        ipc.write_progress("WiFi Scan", f"Fehler: {e}", color="red")
+        time.sleep(2); ipc.clear_progress(); return
+
+    if not ssids:
+        ipc.write_progress("WiFi Scan", "Keine Netzwerke gefunden", color="orange")
+        time.sleep(2); ipc.clear_progress(); return
+
+    chosen = ipc.headless_pick("WiFi Netzwerk", ssids)
+    ipc.clear_progress()
