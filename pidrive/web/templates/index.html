@@ -43,13 +43,13 @@
               {% set path = vm["path"] %}
               {% set nodes = vm["nodes"] %}
               {% set cursor = vm["cursor"] %}
-              {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
+              {% set icons = {"folder":"&#x25B8;","station":"&#x266A;","action":"&rarr;","toggle":"&#x25CE;","info":"&#x2139;","value":"&plusmn;"} %}
 
               <div class="breadcrumb" id="breadcrumb">
                 {% if vm["can_back"] %}
-                  <span class="back-btn" onclick="sendCmd('back')">◀</span>
+                  <span class="back-btn" onclick="sendCmd('back')">&#x25C4;</span>
                 {% endif %}
-                {{ path | join(" › ") if path else "PiDrive" }}
+                {{ path | join(" &rsaquo; ") | safe if path else "PiDrive" }}
               </div>
 
               {% if nodes %}
@@ -62,21 +62,21 @@
                        data-index="{{ loop.index0 }}"
                        data-type="{{ ntype }}"
                        onclick="nodeClick({{ loop.index0 }}, '{{ ntype }}')">
-                    <span class="node-icon">{{ icons.get(ntype, "▸") }}</span>
+                    <span class="node-icon">{{ icons.get(ntype, "&#x25B8;") }}</span>
                     <span class="node-label">{{ label }}</span>
-                    {% if has_ch %}<span class="node-arrow">›</span>{% endif %}
+                    {% if has_ch %}<span class="node-arrow">&#x203A;</span>{% endif %}
                   </div>
                 {% endfor %}
               {% elif vm["items"] %}
                 {% for item in vm["items"] %}
                   <div class="tree-item {% if loop.index0 == cursor %}selected{% endif %}">
-                    <span class="node-icon">▸</span>
+                    <span class="node-icon">&#x25B8;</span>
                     <span class="node-label">{{ item }}</span>
                   </div>
                 {% endfor %}
               {% else %}
                 <div class="tree-item type-info">
-                  <span class="node-icon">ℹ</span>
+                  <span class="node-icon">&#x2139;</span>
                   <span class="node-label">Keine Daten</span>
                 </div>
               {% endif %}
@@ -89,10 +89,11 @@
         </div>
 
         <div class="ipc-state">
-          <div>Status JSON: {{ 'OK' if vm["status_exists"] else 'fehlt' }}{% if vm["status_age"] is not none %} ({{ vm["status_age"] }}s){% endif %}</div>
-          <div>Menu JSON: {{ 'OK' if vm["menu_exists"] else 'fehlt' }}{% if vm["menu_age"] is not none %} ({{ vm["menu_age"] }}s){% endif %}</div>
-          <div>Progress JSON: {{ 'OK' if vm["progress_exists"] else 'fehlt' }}{% if vm["progress_age"] is not none %} ({{ vm["progress_age"] }}s){% endif %}</div>
-          <div>List JSON: {{ 'OK' if vm["list_exists"] else 'fehlt' }}{% if vm["list_age"] is not none %} ({{ vm["list_age"] }}s){% endif %}</div>
+          <div>Core: {{ '✓ bereit' if vm["debug"]["core_ready"] else '⚠ wartet' }}</div>
+          <div>Rev: {{ vm["debug"]["rev"] }} | Pfad: {{ vm["debug"]["path"] | join(" > ") }}</div>
+          <div>Auswahl: <b>{{ vm["debug"]["selected_label"] }}</b> ({{ vm["debug"]["selected_type"] }}) | {{ vm["debug"]["node_count"] }} Eintraege</div>
+          <div>Status: {{ 'OK' if vm["status_exists"] else '&#9888;' }} ({{ vm["status_age"] }}s) |
+               Menue: {{ 'OK' if vm["menu_exists"] else '&#9888;' }} ({{ vm["menu_age"] }}s)</div>
         </div>
       </section>
 
@@ -100,36 +101,36 @@
         <div class="panel-title">Steuerung</div>
 
         <div class="nav-pad">
-          <button onclick="sendCmd('up')">↑</button>
+          <button onclick="sendCmd('up')">&#x2191;</button>
           <div class="nav-middle">
-            <button onclick="sendCmd('left')">←</button>
+            <button onclick="sendCmd('left')">&#x2190;</button>
             <button class="primary" onclick="sendCmd('enter')">Enter</button>
-            <button onclick="sendCmd('right')">→</button>
+            <button onclick="sendCmd('right')">&#x2192;</button>
           </div>
-          <button onclick="sendCmd('down')">↓</button>
+          <button onclick="sendCmd('down')">&#x2193;</button>
           <button class="danger" onclick="sendCmd('back')">Back</button>
         </div>
 
         <div class="button-grid">
-          <button onclick="sendCmd('cat:0')">Jetzt läuft</button>
+          <button onclick="sendCmd('cat:0')">Jetzt laeuft</button>
           <button onclick="sendCmd('cat:1')">Quellen</button>
           <button onclick="sendCmd('cat:2')">Verbindungen</button>
           <button onclick="sendCmd('cat:3')">System</button>
 
-          <button onclick="sendCmd('spotify_toggle')">Spotify ⏯</button>
+          <button onclick="sendCmd('spotify_toggle')">Spotify</button>
           <button onclick="sendCmd('radio_stop')">Radio Stop</button>
-          <button onclick="sendCmd('fm_next')">FM Nächster</button>
-          <button onclick="sendCmd('dab_next')">DAB Nächster</button>
+          <button onclick="sendCmd('fm_next')">FM Naechster</button>
+          <button onclick="sendCmd('dab_next')">DAB Naechster</button>
 
           <button onclick="sendCmd('dab_scan')">DAB+ Suchlauf</button>
           <button onclick="sendCmd('fm_scan')">FM Suchlauf</button>
           <button onclick="sendCmd('reload_stations:webradio')">Web Reload</button>
           <button onclick="sendCmd('library_stop')">Biblio Stop</button>
 
-          <button onclick="sendCmd('audio_klinke')">Audio Klinke</button>
-          <button onclick="sendCmd('audio_hdmi')">Audio HDMI</button>
-          <button onclick="sendCmd('vol_up')">Lauter ↑</button>
-          <button onclick="sendCmd('vol_down')">Leiser ↓</button>
+          <button onclick="sendCmd('audio_klinke')">Klinke</button>
+          <button onclick="sendCmd('audio_hdmi')">HDMI</button>
+          <button onclick="sendCmd('vol_up')">Lauter</button>
+          <button onclick="sendCmd('vol_down')">Leiser</button>
         </div>
 
         <div class="panel-title">Rohdaten</div>
@@ -139,7 +140,7 @@
             <pre id="statusJson">{{ vm["status"] | tojson(indent=2) }}</pre>
           </div>
           <div>
-            <h4>Menü</h4>
+            <h4>Menue</h4>
             <pre id="menuJson">{{ vm["menu"] | tojson(indent=2) }}</pre>
           </div>
         </div>
@@ -163,19 +164,11 @@
   </div>
 
   <script>
-    const typeIcons = {
-      folder: "▸",
-      station: "♪",
-      action: "→",
-      toggle: "◉",
-      info: "ℹ",
-      value: "±"
-    };
+    const typeIcons = {folder:"▸",station:"♪",action:"→",toggle:"◉",info:"ℹ",value:"±"};
 
     async function sendCmd(cmd) {
       const r = await fetch('/api/cmd', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({cmd})
       });
       const data = await r.json();
@@ -183,164 +176,122 @@
       setTimeout(refreshState, 250);
     }
 
+    async function sendCmdSilent(cmd) {
+      await fetch('/api/cmd', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({cmd})
+      });
+    }
+
     function renderTree(data) {
       const tree = document.getElementById('treeMenu');
       if (!tree) return;
 
-      const nodes = data.nodes || [];
-      const items = data.items || [];
-      const cursor = data.cursor ?? 0;
-      const path = data.path || [];
+      const nodes   = data.nodes  || [];
+      const items   = data.items  || [];
+      const cursor  = data.cursor ?? 0;
+      const path    = data.path   || [];
       const canBack = !!data.can_back;
 
       tree.innerHTML = '';
 
+      // Breadcrumb
       const crumb = document.createElement('div');
-      crumb.className = 'breadcrumb';
-      crumb.id = 'breadcrumb';
+      crumb.className = 'breadcrumb'; crumb.id = 'breadcrumb';
       crumb.innerHTML =
-        (canBack ? '<span class="back-btn" onclick="sendCmd(\'back\')">◀</span>' : '') +
+        (canBack ? '<span class="back-btn" onclick="sendCmd(\'back\')">&#x25C4;</span>' : '') +
         (path.length ? path.join(' › ') : 'PiDrive');
       tree.appendChild(crumb);
 
-      const src = nodes.length ? nodes : items.map(label => ({
-        label,
-        type: 'folder',
-        active: false,
-        has_children: true
-      }));
+      const src = nodes.length ? nodes : items.map(l => ({label:l,type:'folder',has_children:true}));
 
       if (!src.length) {
-        const empty = document.createElement('div');
-        empty.className = 'tree-item type-info';
-        empty.innerHTML = '<span class="node-icon">ℹ</span><span class="node-label">Keine Daten</span>';
-        tree.appendChild(empty);
-        return;
+        const e = document.createElement('div');
+        e.className = 'tree-item type-info';
+        e.innerHTML = '<span class="node-icon">ℹ</span><span class="node-label">Keine Daten</span>';
+        tree.appendChild(e); return;
       }
 
       src.forEach((n, i) => {
-        const label = typeof n === 'string' ? n : (n.label || '?');
-        const ntype = typeof n === 'object' ? (n.type || 'folder') : 'folder';
-        const active = typeof n === 'object' ? !!n.active : false;
-        const hasChildren = typeof n === 'object' ? !!n.has_children : false;
+        const label  = typeof n==='string' ? n : (n.label||'?');
+        const ntype  = typeof n==='object' ? (n.type||'folder') : 'folder';
+        const active = typeof n==='object' ? !!n.active : false;
+        const hasCh  = typeof n==='object' ? !!n.has_children : false;
 
         const div = document.createElement('div');
-        div.className = 'tree-item type-' + ntype +
-          (i === cursor ? ' selected' : '') +
-          (active ? ' playing' : '');
-        div.dataset.index = i;
-        div.dataset.type = ntype;
-
+        div.className = 'tree-item type-'+ntype+(i===cursor?' selected':'')+(active?' playing':'');
+        div.dataset.index = i; div.dataset.type = ntype;
         div.innerHTML =
-          '<span class="node-icon">' + (typeIcons[ntype] || '▸') + '</span>' +
-          '<span class="node-label">' + label + '</span>' +
-          (hasChildren ? '<span class="node-arrow">›</span>' : '');
-
+          '<span class="node-icon">'+(typeIcons[ntype]||'▸')+'</span>'+
+          '<span class="node-label">'+label+'</span>'+
+          (hasCh ? '<span class="node-arrow">›</span>' : '');
         div.onclick = () => nodeClick(i, ntype);
         tree.appendChild(div);
       });
     }
 
     async function nodeClick(index, type) {
-      const data = await (await fetch('/api/state')).json();
-      const current = data.cursor ?? 0;
-
-      if (index > current) {
-        for (let i = current; i < index; i++) {
-          await sendCmdSilent('down');
-        }
-      } else if (index < current) {
-        for (let i = current; i > index; i--) {
-          await sendCmdSilent('up');
-        }
-      }
-
-      if (type !== 'info') {
-        await sendCmd('enter');
-      }
-    }
-
-    async function sendCmdSilent(cmd) {
-      await fetch('/api/cmd', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cmd})
-      });
+      if (type === 'info') return;
+      const state = await (await fetch('/api/state')).json();
+      const current = state.cursor ?? 0;
+      if (index > current)      for (let i=current; i<index; i++) await sendCmdSilent('down');
+      else if (index < current) for (let i=current; i>index; i--) await sendCmdSilent('up');
+      await sendCmd('enter');
     }
 
     async function refreshState() {
-      const r = await fetch('/api/state');
-      const data = await r.json();
+      const data = await (await fetch('/api/state')).json();
       updateDisplay(data);
     }
 
     function updateDisplay(data) {
       document.getElementById('statusJson').textContent = JSON.stringify(data.status, null, 2);
-      document.getElementById('menuJson').textContent = JSON.stringify(data.menu, null, 2);
-
+      document.getElementById('menuJson').textContent   = JSON.stringify(data.menu,   null, 2);
       document.querySelectorAll('.flag').forEach(el => {
-        const key = el.dataset.key;
-        if (key) el.className = 'flag ' + (data.status[key] ? 'on' : 'off');
+        const k = el.dataset.key;
+        if (k) el.className = 'flag '+(data.status[k]?'on':'off');
       });
-
       renderTree(data);
-
       const footer = document.getElementById('displayFooter');
       if (footer) {
-        const s = data.status || {};
-        if (s.spotify && s.track) footer.textContent = '♫ ' + (s.artist || '') + ' – ' + s.track;
-        else if (s.radio && s.radio_name) footer.textContent = '♪ ' + s.radio_name;
-        else footer.textContent = 'Audio: ' + (s.audio_out || 'auto');
+        const s = data.status||{};
+        if (s.spotify && s.track) footer.textContent = '♫ '+(s.artist||'')+' – '+s.track;
+        else if (s.radio && s.radio_name) footer.textContent = '♪ '+s.radio_name;
+        else footer.textContent = 'Audio: '+(s.audio_out||'auto');
       }
     }
 
-    async function loadLogs(target) {
-      const r = await fetch('/api/logs?target=' + encodeURIComponent(target));
-      const data = await r.json();
-      document.getElementById('logOutput').textContent =
-        (data.cmd || '') + "\n\n" + (data.stdout || '') + (data.stderr ? ("\n[stderr]\n" + data.stderr) : '');
+    async function loadLogs(t) {
+      const d = await (await fetch('/api/logs?target='+encodeURIComponent(t))).json();
+      document.getElementById('logOutput').textContent = (d.cmd||'')+'\n\n'+(d.stdout||'')+(d.stderr?'\n[stderr]\n'+d.stderr:'');
     }
-
     async function runDiagnose() {
-      const r = await fetch('/api/diagnose');
-      const data = await r.json();
-      document.getElementById('logOutput').textContent =
-        (data.cmd || '') + "\n\n" + (data.stdout || '') + (data.stderr ? ("\n[stderr]\n" + data.stderr) : '');
+      const d = await (await fetch('/api/diagnose')).json();
+      document.getElementById('logOutput').textContent = (d.cmd||'')+'\n\n'+(d.stdout||'')+(d.stderr?'\n[stderr]\n'+d.stderr:'');
     }
-
     async function runGrep() {
-      const r = await fetch('/api/grep');
-      const data = await r.json();
-      document.getElementById('logOutput').textContent =
-        (data.cmd || '') + "\n\n" + (data.stdout || '') + (data.stderr ? ("\n[stderr]\n" + data.stderr) : '');
+      const d = await (await fetch('/api/grep')).json();
+      document.getElementById('logOutput').textContent = (d.cmd||'')+'\n\n'+(d.stdout||'')+(d.stderr?'\n[stderr]\n'+d.stderr:'');
     }
-
     async function loadService(name) {
-      const r = await fetch('/api/service?name=' + encodeURIComponent(name));
-      const data = await r.json();
-      document.getElementById('logOutput').textContent =
-        (data.cmd || '') + "\n\n" + (data.stdout || '') + (data.stderr ? ("\n[stderr]\n" + data.stderr) : '');
+      const d = await (await fetch('/api/service?name='+encodeURIComponent(name))).json();
+      document.getElementById('logOutput').textContent = (d.cmd||'')+'\n\n'+(d.stdout||'')+(d.stderr?'\n[stderr]\n'+d.stderr:'');
     }
 
     let lastRev = -1;
     setInterval(() => {
-      fetch('/api/state')
-        .then(r => r.json())
-        .then(data => {
-          updateDisplay(data);
-          const dbg = data.debug || {};
-          const bar = document.getElementById('debugBar');
-          if (bar) {
-            const ready = dbg.core_ready ? '🟢' : '🔴';
-            bar.textContent =
-              ready + ' rev=' + (dbg.rev || 0) +
-              '  path: ' + (dbg.path || []).join(' › ') +
-              '  [' + (dbg.selected_label || '') + '] ' + (dbg.selected_type || '') +
-              '  ' + (dbg.node_count || 0) + ' Einträge';
-          }
-          if (dbg.rev !== lastRev) lastRev = dbg.rev;
-        })
-        .catch(() => {});
+      fetch('/api/state').then(r=>r.json()).then(data => {
+        updateDisplay(data);
+        const dbg = data.debug||{};
+        const bar = document.getElementById('debugBar');
+        if (bar) bar.textContent =
+          (dbg.core_ready?'🟢':'🔴')+
+          '  rev='+(dbg.rev||0)+
+          '  path: '+(dbg.path||[]).join(' › ')+
+          '  ['+(dbg.selected_label||'')+'] '+(dbg.selected_type||'')+
+          '  '+(dbg.node_count||0)+' Eintraege';
+        lastRev = dbg.rev;
+      }).catch(()=>{});
     }, 2000);
   </script>
 </body>

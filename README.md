@@ -5,7 +5,7 @@ Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.7.3-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.7.5-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -163,36 +163,87 @@ pidrive/
 
 ## Menü-Struktur
 
-Auto-orientiert (v0.7.3) — optimiert für iDrive-Bedienung mit wenigen Schritten.
+Baumbasiert (v0.7.x) — beliebig tief, iDrive-kompatibel.
 
 ```
-PiDrive
-├── Jetzt läuft            ← Hauptansicht: aktuelle Wiedergabe
-│   ├── Wiedergabe         (Titel | Artist | Album | Sender)
-│   ├── Spotify            (Toggle An/Aus)
-│   ├── Audioausgang       (Klinke/HDMI/BT/Alle)
-│   ├── Lauter
-│   └── Leiser
-├── Quellen                ← Audioquelle wählen
-│   ├── Spotify            (Spotify Connect)
-│   ├── Bibliothek         (MP3 mit Album-Art)
-│   ├── Webradio           (konfigurierbare Stationen)
-│   ├── DAB+               (RTL-SDR, Sendersuche)
-│   ├── FM Radio           (UKW, manuelle Frequenz)
-│   └── Scanner            (PMR446/Freenet/LPD433/VHF/UHF)
-├── Verbindungen           ← BT + WiFi (selten gebraucht)
-│   ├── Bluetooth An/Aus
-│   ├── Geräte scannen
-│   ├── WiFi An/Aus
-│   ├── Netzwerke scannen
-│   └── Status
-└── System                 ← Setup / Wartung
-    ├── IP Adresse
-    ├── System-Info        (CPU-Temp, Uptime)
-    ├── Version
-    ├── Neustart / Ausschalten
-    └── Update             (OTA via GitHub)
+PiDrive  (v0.7.x — Baumbasiert, beliebig tief)
+├── Jetzt laeuft
+│   ├── Quelle                (info)
+│   ├── Titel/Sender          (info)
+│   ├── Spotify               (toggle)
+│   ├── Audioausgang          (action)
+│   ├── Lauter                (action)
+│   └── Leiser                (action)
+├── Quellen
+│   ├── Spotify
+│   │   ├── Spotify An/Aus    (toggle)
+│   │   └── Status            (info)
+│   ├── Bibliothek
+│   │   ├── Durchsuchen       (action → headless_pick)
+│   │   ├── Stop              (action)
+│   │   └── Pfad              (info)
+│   ├── Webradio
+│   │   ├── Jetzt laeuft      (info)
+│   │   ├── Sender            (folder → dynamisch aus stations.json)
+│   │   │   ├── ★ Bayern 3 [Pop/Rock]   (station)
+│   │   │   └── ...
+│   │   └── Sender neu laden  (action)
+│   ├── DAB+
+│   │   ├── Jetzt laeuft      (info)
+│   │   ├── Sender            (folder → dynamisch aus dab_stations.json)
+│   │   │   ├── ★ Bayern 1 [11D]        (station, nach Suchlauf)
+│   │   │   └── ...
+│   │   ├── Suchlauf starten  (action → scan → merge → sofort sichtbar)
+│   │   ├── Naechster Sender  (action)
+│   │   └── Vorheriger Sender (action)
+│   ├── FM Radio
+│   │   ├── Jetzt laeuft      (info)
+│   │   ├── Sender            (folder → dynamisch aus fm_stations.json)
+│   │   │   ├── ★ Bayern 3  99.4 MHz    (station)
+│   │   │   └── ...
+│   │   ├── Suchlauf starten  (action → scan → merge → sofort sichtbar)
+│   │   ├── Naechster Sender  (action)
+│   │   ├── Vorheriger Sender (action)
+│   │   └── Frequenz manuell  (action)
+│   └── Scanner
+│       ├── PMR446
+│       │   ├── aktuelle Info (info: live Kanal/Frequenz)
+│       │   ├── Kanal +       (action)
+│       │   ├── Kanal -       (action)
+│       │   ├── Scan weiter   (action)
+│       │   └── Scan zurueck  (action)
+│       ├── Freenet           (gleiche Struktur)
+│       ├── LPD433            (gleiche Struktur)
+│       ├── VHF               (gleiche Struktur)
+│       └── UHF               (gleiche Struktur)
+├── Verbindungen
+│   ├── Bluetooth An/Aus      (toggle)
+│   ├── Geraete scannen       (action)
+│   ├── Verbunden mit         (info)
+│   ├── WiFi An/Aus           (toggle)
+│   ├── Netzwerke scannen     (action)
+│   └── SSID                  (info)
+└── System
+    ├── IP Adresse            (info)
+    ├── System-Info           (action)
+    ├── Version               (action)
+    ├── Neustart              (action)
+    ├── Ausschalten           (action)
+    └── Update                (action, OTA via GitHub)
 ```
+
+**Knotentypen:**
+- `folder` → führt tiefer (▸)
+- `station` → spielt ab (♪), Favoriten zuerst mit ★
+- `action` → führt Aktion aus (→)
+- `toggle` → An/Aus (◉)
+- `info` → nur Anzeige (ℹ)
+
+**Navigation:**
+- `up/down` — Eintrag wählen
+- `enter/right` — tiefer (folder) oder ausführen (station/action/toggle)
+- `back/left` — eine Ebene zurück
+- `cat:0..3` — direkt zur Hauptkategorie
 
 ---
 
@@ -308,7 +359,7 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.7.3 — Web UI
+### v0.7.5 — Web UI
 - WebUI: Flask-Webinterface auf Port 8080 (`pidrive_web.service`)
 - Menü-Vorschau im Browser, Navigation, Log-Viewer, Diagnose
 - Auto-Refresh alle 2s ohne Seiten-Reload

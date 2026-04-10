@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.3
+# PiDrive — Kontext & Projektdokumentation v0.7.5
 
 ## Projektbeschreibung
 
@@ -193,7 +193,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.7.3)
+    ├── VERSION              (aktuell: 0.7.5)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -266,14 +266,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.3)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.5)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.7.3):
+Diagnose (v0.7.5):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -586,34 +586,84 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
+PiDrive  (v0.7.x — Baumbasiert, beliebig tief)
+├── Jetzt laeuft
+│   ├── Quelle                (info)
+│   ├── Titel/Sender          (info)
+│   ├── Spotify               (toggle)
+│   ├── Audioausgang          (action)
+│   ├── Lauter                (action)
+│   └── Leiser                (action)
+├── Quellen
+│   ├── Spotify
+│   │   ├── Spotify An/Aus    (toggle)
+│   │   └── Status            (info)
+│   ├── Bibliothek
+│   │   ├── Durchsuchen       (action → headless_pick)
+│   │   ├── Stop              (action)
+│   │   └── Pfad              (info)
+│   ├── Webradio
+│   │   ├── Jetzt laeuft      (info)
+│   │   ├── Sender            (folder → dynamisch aus stations.json)
+│   │   │   ├── ★ Bayern 3 [Pop/Rock]   (station)
+│   │   │   └── ...
+│   │   └── Sender neu laden  (action)
+│   ├── DAB+
+│   │   ├── Jetzt laeuft      (info)
+│   │   ├── Sender            (folder → dynamisch aus dab_stations.json)
+│   │   │   ├── ★ Bayern 1 [11D]        (station, nach Suchlauf)
+│   │   │   └── ...
+│   │   ├── Suchlauf starten  (action → scan → merge → sofort sichtbar)
+│   │   ├── Naechster Sender  (action)
+│   │   └── Vorheriger Sender (action)
+│   ├── FM Radio
+│   │   ├── Jetzt laeuft      (info)
+│   │   ├── Sender            (folder → dynamisch aus fm_stations.json)
+│   │   │   ├── ★ Bayern 3  99.4 MHz    (station)
+│   │   │   └── ...
+│   │   ├── Suchlauf starten  (action → scan → merge → sofort sichtbar)
+│   │   ├── Naechster Sender  (action)
+│   │   ├── Vorheriger Sender (action)
+│   │   └── Frequenz manuell  (action)
+│   └── Scanner
+│       ├── PMR446
+│       │   ├── aktuelle Info (info: live Kanal/Frequenz)
+│       │   ├── Kanal +       (action)
+│       │   ├── Kanal -       (action)
+│       │   ├── Scan weiter   (action)
+│       │   └── Scan zurueck  (action)
+│       ├── Freenet           (gleiche Struktur)
+│       ├── LPD433            (gleiche Struktur)
+│       ├── VHF               (gleiche Struktur)
+│       └── UHF               (gleiche Struktur)
+├── Verbindungen
+│   ├── Bluetooth An/Aus      (toggle)
+│   ├── Geraete scannen       (action)
+│   ├── Verbunden mit         (info)
+│   ├── WiFi An/Aus           (toggle)
+│   ├── Netzwerke scannen     (action)
+│   └── SSID                  (info)
+└── System
+    ├── IP Adresse            (info)
+    ├── System-Info           (action)
+    ├── Version               (action)
+    ├── Neustart              (action)
+    ├── Ausschalten           (action)
+    └── Update                (action, OTA via GitHub)
 ```
-PiDrive  (v0.7.3 — Auto-orientiert)
-|-- Jetzt laeuft          (Hauptansicht — aktuelle Wiedergabe)
-|   |-- Wiedergabe        (Titel | Artist | Album | Sender)
-|   |-- Spotify           (Toggle)
-|   |-- Audioausgang      (Klinke/HDMI/BT/Alle)
-|   |-- Lauter
-|   +-- Leiser
-|-- Quellen               (Audioquelle waehlen)
-|   |-- Spotify
-|   |-- Bibliothek        (MP3 mit Album-Art)
-|   |-- Webradio          (stations.json)
-|   |-- DAB+              (RTL-SDR, dab_stations.json)
-|   |-- FM Radio          (RTL-SDR, fm_stations.json)
-|   +-- Scanner           (PMR446/Freenet/LPD433/VHF/UHF)
-|-- Verbindungen          (Selten — BT + WiFi Management)
-|   |-- Bluetooth An/Aus
-|   |-- Geraete scannen
-|   |-- WiFi An/Aus
-|   |-- Netzwerke scannen
-|   +-- Status
-+-- System                (Setup / Wartung)
-    |-- IP Adresse
-    |-- System-Info       (CPU-Temp, Uptime)
-    |-- Version
-    |-- Neustart / Ausschalten
-    +-- Update            (OTA via GitHub)
-```
+
+**Knotentypen:**
+- `folder` → führt tiefer (▸)
+- `station` → spielt ab (♪), Favoriten zuerst mit ★
+- `action` → führt Aktion aus (→)
+- `toggle` → An/Aus (◉)
+- `info` → nur Anzeige (ℹ)
+
+**Navigation:**
+- `up/down` — Eintrag wählen
+- `enter/right` — tiefer (folder) oder ausführen (station/action/toggle)
+- `back/left` — eine Ebene zurück
+- `cat:0..3` — direkt zur Hauptkategorie
 
 ---
 
@@ -664,12 +714,12 @@ sudo systemctl restart pidrive_display
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.3) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.5) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.3) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.3) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.5) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.5) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -686,7 +736,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.3 (aktuell)
+### v0.7.5 (aktuell)
 - BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
 - pidrive_core.service: headless, kein pygame, kein Display
 - pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
@@ -753,9 +803,9 @@ sudo systemctl restart pidrive_display
 
 ---
 
-## Aktueller Stand (v0.7.3)
+## Aktueller Stand (v0.7.5)
 
-**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.3):
+**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.5):
 
 ```
 ✓ pidrive_core.service: active, headless
