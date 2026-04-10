@@ -25,12 +25,16 @@ LOG_FILE = "/var/log/pidrive/pidrive.log"
 
 ALLOWED_COMMANDS = {
     "up", "down", "left", "right", "enter", "back",
-    "wifi_on", "wifi_off",
-    "bt_on", "bt_off",
-    "spotify_on", "spotify_off",
+    "wifi_on", "wifi_off", "wifi_toggle", "wifi_scan",
+    "bt_on", "bt_off", "bt_toggle", "bt_scan",
+    "spotify_on", "spotify_off", "spotify_toggle",
     "radio_stop", "library_stop",
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
-    "reboot", "shutdown",
+    "vol_up", "vol_down",
+    "dab_scan", "fm_scan",
+    "fm_next", "fm_prev", "dab_next", "dab_prev",
+    "lib_browse",
+    "reboot", "shutdown", "sys_info", "sys_version", "update",
 }
 
 def read_json(path, default=None):
@@ -98,32 +102,39 @@ def get_version():
         return "?"
 
 def build_view_model():
-    status = read_json(STATUS_FILE, {})
-    menu = read_json(MENU_FILE, {})
+    status   = read_json(STATUS_FILE, {})
+    menu     = read_json(MENU_FILE,   {})
     progress = read_json(PROGRESS_FILE, {})
-    list_data = read_json(LIST_FILE, {})
+    list_data= read_json(LIST_FILE,   {})
 
+    # v0.7.0: nodes aus Baummodell, Compat-Fallback
+    nodes      = menu.get("nodes",      [])
     categories = menu.get("categories", [])
-    items = menu.get("items", [])
+    items_list = menu.get("items",      [])
 
     return {
-        "version": get_version(),
-        "ip": get_ip(),
-        "status": status,
-        "menu": menu,
-        "progress": progress,
-        "list_data": list_data,
-        "categories": categories,
-        "items": items,
-        "status_age": file_age(STATUS_FILE),
-        "menu_age": file_age(MENU_FILE),
-        "progress_age": file_age(PROGRESS_FILE),
-        "list_age": file_age(LIST_FILE),
-        "status_exists": os.path.exists(STATUS_FILE),
-        "menu_exists": os.path.exists(MENU_FILE),
-        "progress_exists": os.path.exists(PROGRESS_FILE),
-        "list_exists": os.path.exists(LIST_FILE),
-        "log_exists": os.path.exists(LOG_FILE),
+        "version":        get_version(),
+        "ip":             get_ip(),
+        "status":         status,
+        "menu":           menu,
+        "progress":       progress,
+        "list_data":      list_data,
+        "nodes":          nodes,
+        "categories":     categories,
+        "items":          items_list,
+        "path":           menu.get("path", []),
+        "cursor":         menu.get("cursor", 0),
+        "rev":            menu.get("rev", 0),
+        "can_back":       menu.get("can_back", False),
+        "status_age":     file_age(STATUS_FILE),
+        "menu_age":       file_age(MENU_FILE),
+        "progress_age":   file_age(PROGRESS_FILE),
+        "list_age":       file_age(LIST_FILE),
+        "status_exists":  os.path.exists(STATUS_FILE),
+        "menu_exists":    os.path.exists(MENU_FILE),
+        "progress_exists":os.path.exists(PROGRESS_FILE),
+        "list_exists":    os.path.exists(LIST_FILE),
+        "log_exists":     os.path.exists(LOG_FILE),
     }
 
 @app.route("/")
@@ -143,7 +154,9 @@ def api_cmd():
     if not cmd:
         return jsonify({"ok": False, "error": "Kein Befehl übergeben"}), 400
 
-    if not (cmd in ALLOWED_COMMANDS or cmd.startswith("cat:")):
+    prefixes = ("cat:", "reload_stations:", "scan_up:", "scan_down:",
+                  "scan_next:", "scan_prev:")
+    if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 
     try:

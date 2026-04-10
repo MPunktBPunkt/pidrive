@@ -217,3 +217,52 @@ def build_items(screen, S, settings):
              action=stop_action),
     ]
     return items
+
+
+def scan_stations(S):
+    """FM Suchlauf via rtl_fm Squelch. Gibt Liste von Stationen zurueck."""
+    import subprocess, time
+    results = []
+    # 87.5–108.0 MHz in 0.1 MHz Schritten
+    freq = 87.5
+    while freq <= 108.0:
+        freq_hz = int(freq * 1e6)
+        cmd = f"timeout 0.4s rtl_fm -M wbfm -f {freq_hz} -s 200000 -l 70 - 2>/dev/null | wc -c"
+        try:
+            r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=2)
+            if int(r.stdout.strip() or "0") > 1000:
+                results.append({"id": f"fm_{str(freq).replace('.','_')}",
+                                 "name": f"FM {freq:.1f} MHz",
+                                 "freq_mhz": freq, "enabled": True, "favorite": False})
+                log.info(f"FM Scan: Signal @ {freq:.1f} MHz")
+        except Exception:
+            pass
+        freq = round(freq + 0.1, 1)
+    log.info(f"FM Scan abgeschlossen: {len(results)} Sender")
+    return results
+
+
+def play_next(S, stations):
+    """Naechste FM Station abspielen."""
+    if not stations:
+        return
+    current = S.get("radio_station", "")
+    names   = [s.get("name","") for s in stations]
+    idx = 0
+    for i, name in enumerate(names):
+        if name in current:
+            idx = (i + 1) % len(stations); break
+    play_station(stations[idx], S)
+
+
+def play_prev(S, stations):
+    """Vorherige FM Station abspielen."""
+    if not stations:
+        return
+    current = S.get("radio_station", "")
+    names   = [s.get("name","") for s in stations]
+    idx = 0
+    for i, name in enumerate(names):
+        if name in current:
+            idx = (i - 1) % len(stations); break
+    play_station(stations[idx], S)

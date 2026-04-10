@@ -53,6 +53,7 @@ C_GREEN     = ( 60, 210,  80)   # Gruen (aktiv/OK)
 C_RED       = (210,  60,  60)   # Rot (Fehler)
 C_ORANGE    = (255, 155,  30)   # Orange (Radio/Warnung)
 C_PURPLE    = (160,  80, 220)   # Lila (Spotify)
+C_YELLOW    = (255, 220,  50)   # Gelb (Favorit/Active)
 C_DIVIDER   = ( 50,  50,  90)   # Trennlinie
 
 
@@ -102,13 +103,12 @@ def draw_status_icons(screen, font_sm, status):
 
 
 def render(screen, fonts, status, menu):
-    """Split-Screen: Links Kategorien, rechts Item-Liste + Now Playing."""
+    """Split-Screen: Breadcrumb + Node-Liste + Status."""
     font_big, font_med, font_sm = fonts
 
-    # Layout
     HEADER_H  = 28
     FOOTER_H  = 24
-    LEFT_W    = 110   # Kategorie-Spalte links
+    LEFT_W    = 110
     CONTENT_Y = HEADER_H + 2
     CONTENT_H = H - HEADER_H - FOOTER_H - 2
 
@@ -124,120 +124,144 @@ def render(screen, fonts, status, menu):
         screen.blit(t, (80, 9))
     draw_status_icons(screen, font_sm, status)
 
-    # ── Kategorie-Spalte links ───────────────────────────────────────
+    # ── Linke Spalte: Top-Level Kategorien ─────────────────────────
     pygame.draw.rect(screen, C_LEFT_BG, (0, CONTENT_Y, LEFT_W, CONTENT_H))
 
-    categories = menu.get("categories", [])
-    sel_cat    = menu.get("cat", 0)
-    # Farben pro Kategorie: Jetzt läuft=grün, Quellen=blau, Verbindungen=orange, System=lila
-    cat_colors = [C_GREEN, C_ACCENT, C_ORANGE, (180, 130, 255)]
+    path      = menu.get("path", [])
+    cat_label = path[1] if len(path) > 1 else ""
+    cats      = menu.get("categories", [])
+    cat_idx   = menu.get("cat", 0)
+    cat_colors= [C_GREEN, C_ACCENT, C_ORANGE, (180, 130, 255)]
 
-    for i, cat in enumerate(categories[:8]):
+    for i, cat in enumerate(cats[:8]):
         cy = CONTENT_Y + 4 + i * 36
-        if i == sel_cat:
+        if cat == cat_label or i == cat_idx:
             pygame.draw.rect(screen, C_SEL_CAT, (0, cy - 2, LEFT_W, 30))
             col = (255, 255, 255)
         else:
             col = cat_colors[i % len(cat_colors)]
-        # Kategorie-Kuerzel (erste 7 Zeichen)
         t = font_sm.render(cat[:9], True, col)
         screen.blit(t, (6, cy + 6))
 
-    # Trennlinie Kategorie/Items
     pygame.draw.line(screen, C_DIVIDER, (LEFT_W, CONTENT_Y), (LEFT_W, H - FOOTER_H), 1)
 
-    # ── Item-Liste rechts ────────────────────────────────────────────
-    items    = menu.get("items", [])
-    sel_item = menu.get("item", 0)
-    item_x   = LEFT_W + 8
-    item_w   = W - LEFT_W - 8
+    # ── Rechte Spalte: Breadcrumb + aktuelle Nodes ──────────────────
+    item_x = LEFT_W + 8
+    item_w  = W - LEFT_W - 8
 
-    # Scrolling: zeige max 7 Items, sel_item zentriert
-    max_vis = 7
-    row_h   = (CONTENT_H) // max_vis
-    scroll  = max(0, sel_item - max_vis // 2)
-    scroll  = min(scroll, max(0, len(items) - max_vis))
+    # Breadcrumb (Pfad ohne root, kompakt)
+    if len(path) > 2:
+        crumb = " › ".join(path[2:])  # z.B. "Webradio › Sender"
+        t = font_sm.render(crumb[:34], True, C_DIM)
+        pygame.draw.rect(screen, (30, 30, 60), (LEFT_W+1, CONTENT_Y, W-LEFT_W-1, 16))
+        screen.blit(t, (item_x, CONTENT_Y + 2))
+        list_y = CONTENT_Y + 18
+    else:
+        list_y = CONTENT_Y + 2
+
+    # Nodes (aus neuem Format oder Compat)
+    nodes    = menu.get("nodes", [])
+    cursor   = menu.get("cursor", menu.get("item", 0))
+    max_vis  = 7
+    row_h    = max(20, (H - FOOTER_H - list_y) // max_vis)
+    scroll   = max(0, cursor - max_vis // 2)
+    scroll   = min(scroll, max(0, len(nodes) - max_vis))
+
+    # Node-Typ Icons
+    type_icons = {"folder": "▸", "station": "♪", "action": "→",
+                  "toggle": "◉", "info": " ", "value": "±"}
 
     for idx in range(max_vis):
         i = idx + scroll
-        if i >= len(items):
-            break
-        iy = CONTENT_Y + idx * row_h + 2
-        if i == sel_item:
-            pygame.draw.rect(screen, C_SEL_BG, (LEFT_W + 1, iy, W - LEFT_W - 1, row_h - 1))
-            col = (255, 255, 255)
-            prefix = "›"
+        if i >= len(nodes): break
+        iy   = list_y + idx * row_h
+        node = nodes[i]
+
+        # Label aus neuem Format (dict) oder altem Format (string)
+        if isinstance(node, dict):
+            label   = node.get("label", "")[:26]
+            ntype   = node.get("type", "folder")
+            active  = node.get("active", False)
+            icon    = type_icons.get(ntype, "")
         else:
-            col = C_TEXT
-            prefix = " "
-        label = items[i][:26]
-        t = font_med.render(f"{prefix} {label}", True, col)
+            label   = str(node)[:26]
+            ntype   = "folder"
+            active  = False
+            icon    = "▸"
+
+        if i == cursor:
+            pygame.draw.rect(screen, C_SEL_BG, (LEFT_W+1, iy, W-LEFT_W-1, row_h-1))
+            col = (255, 255, 255)
+            istr = "›"
+        else:
+            col  = C_YELLOW if active else C_TEXT
+            istr = icon
+
+        label_str = f"{istr} {label}"
+        t = font_med.render(label_str, True, col)
         screen.blit(t, (item_x, iy + (row_h - t.get_height()) // 2))
 
     # Scroll-Indikator
-    if len(items) > max_vis:
-        bar_h  = max(20, CONTENT_H * max_vis // max(1, len(items)))
-        bar_y  = CONTENT_Y + (CONTENT_H - bar_h) * scroll // max(1, len(items) - max_vis)
+    if len(nodes) > max_vis:
+        bar_h = max(16, CONTENT_H * max_vis // max(1, len(nodes)))
+        bar_y = CONTENT_Y + (CONTENT_H - bar_h) * scroll // max(1, len(nodes)-max_vis)
         pygame.draw.rect(screen, C_DIM, (W - 5, bar_y, 4, bar_h))
 
-    # ── Now Playing (overlay unter Items wenn aktiv) ─────────────────
-    radio_type = menu.get("radio_type", "")
+    # ── Footer ──────────────────────────────────────────────────────
+    footer_y = H - FOOTER_H
+    pygame.draw.line(screen, C_DIVIDER, (0, footer_y), (W, footer_y), 1)
+    pygame.draw.rect(screen, C_LEFT_BG, (0, footer_y+1, W, FOOTER_H))
+
+    radio_type = status.get("radio_type", "")
     np_text = ""
     np_col  = C_DIM
 
     if status.get("spotify") and status.get("track"):
-        t = status.get("track","")[:26]
-        a = status.get("artist","")[:20]
-        np_text = f"♫ {a} – {t}" if a else f"♫ {t}"
+        a = status.get("artist","")[:18]; t2 = status.get("track","")[:22]
+        np_text = f"♫ {a} – {t2}" if a else f"♫ {t2}"
         np_col  = C_PURPLE
     elif status.get("spotify"):
-        np_text = "♫ Spotify aktiv — warte auf Wiedergabe"
+        np_text = "♫ Spotify aktiv"
         np_col  = C_PURPLE
     elif status.get("radio") and status.get("radio_name"):
-        label = {"WEB":"Webradio","DAB":"DAB+","FM":"FM","SCANNER":"Scanner"}.get(radio_type,"Radio")
-        np_text = f"♪ {label}: {status.get('radio_name','')[:22]}"
+        lbl = {"WEB":"Webradio","DAB":"DAB+","FM":"FM","SCANNER":"Scanner"}.get(radio_type,"Radio")
+        np_text = f"♪ {lbl}: {status.get('radio_name','')[:20]}"
         np_col  = C_ORANGE
     elif status.get("library") and status.get("lib_track"):
         np_text = f"♫ {status.get('lib_track','')[:28]}"
         np_col  = C_ACCENT
 
-    # ── Footer ──────────────────────────────────────────────────────
-    footer_y = H - FOOTER_H
-    pygame.draw.line(screen, C_DIVIDER, (0, footer_y), (W, footer_y), 1)
-    pygame.draw.rect(screen, C_LEFT_BG, (0, footer_y + 1, W, FOOTER_H))
-
     if np_text:
         t = font_sm.render(np_text[:52], True, np_col)
         screen.blit(t, (8, footer_y + 5))
     else:
-        audio_out = status.get("audio_out", "auto")
+        audio_out = status.get("audio_out", status.get("audio_output", "auto"))
         t = font_sm.render(f"Audio: {audio_out}", True, C_DIM)
         screen.blit(t, (8, footer_y + 5))
 
-    # ── Progress / Overlay ──────────────────────────────────────────
+    # ── Progress-Overlay ────────────────────────────────────────────
     prog = ipc.read_json(ipc.PROGRESS_FILE, {})
     if prog.get("active"):
         oy = H // 2 - 55
-        pygame.draw.rect(screen, (10, 10, 30), (20, oy, W - 40, 110))
-        pygame.draw.rect(screen, C_ACCENT, (20, oy, W - 40, 110), 2)
-        col = {"green": C_GREEN, "red": C_RED, "orange": C_ORANGE}.get(
-              prog.get("color",""), C_ACCENT)
+        pygame.draw.rect(screen, (10, 10, 30), (20, oy, W-40, 110))
+        pygame.draw.rect(screen, C_ACCENT, (20, oy, W-40, 110), 2)
+        col = {"green":C_GREEN,"red":C_RED,"orange":C_ORANGE}.get(prog.get("color",""), C_ACCENT)
         t = font_big.render(prog.get("title","")[:24], True, col)
-        screen.blit(t, (30, oy + 10))
+        screen.blit(t, (30, oy+10))
         t = font_med.render(prog.get("message","")[:36], True, C_TEXT)
-        screen.blit(t, (30, oy + 42))
+        screen.blit(t, (30, oy+42))
         pct = prog.get("pct")
         if pct is not None:
-            bw = int((W - 80) * pct / 100)
-            pygame.draw.rect(screen, C_DIM,    (30, oy + 72, W - 80, 12))
-            pygame.draw.rect(screen, C_ACCENT, (30, oy + 72, bw,     12))
+            bw = int((W-80)*pct/100)
+            pygame.draw.rect(screen, C_DIM,    (30, oy+72, W-80, 12))
+            pygame.draw.rect(screen, C_ACCENT, (30, oy+72, bw,   12))
 
     # ── Pick-List Overlay ────────────────────────────────────────────
     lst = ipc.read_json(ipc.LIST_FILE, {})
     if lst.get("active"):
         items_l = lst.get("items", [])
         sel_l   = lst.get("selected", 0)
-        pygame.draw.rect(screen, (10, 10, 30), (0, 0, W, H))
+        screen.fill(C_BG)
         pygame.draw.rect(screen, C_HEADER, (0, 0, W, HEADER_H))
         t = font_med.render(lst.get("title","")[:28], True, C_ACCENT)
         screen.blit(t, (8, 6))
@@ -253,14 +277,15 @@ def render(screen, fonts, status, menu):
             else:
                 col = C_TEXT
             t = font_med.render(str(items_l[ii])[:36], True, col)
-            screen.blit(t, (10, iy + 4))
+            screen.blit(t, (10, iy+4))
 
     pygame.display.flip()
 
 
+
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.6.6 gestartet")
+    log.info("PiDrive Display v0.7.0 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 

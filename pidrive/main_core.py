@@ -1,34 +1,30 @@
-#!/usr/bin/env python3
 """
-main_core.py - PiDrive Core v0.6.6
-Headless: kein pygame, kein Display.
+main_core.py - PiDrive Core v0.7.0
 
-Verantwortlich fuer:
-- File-Trigger lesen (/tmp/pidrive_cmd)
-- Menuezustand verwalten
-- Status sammeln (WiFi, BT, Spotify)
-- Audio-/Systemmodule steuern
-- Status+Menue als JSON schreiben (fuer Display-Prozess)
+Headless Core — kein pygame, kein Display.
+Baumbasiertes Menümodell (menu_model.py).
+Stationslisten aus JSON (StationStore, Hot-Reload).
+Suchlauf → JSON speichern → Menü sofort aktualisieren.
+
+Triggerbasierte Steuerung: echo 'cmd' > /tmp/pidrive_cmd
 """
 
-import sys
-import os
-import time
-import json
-
+import sys, os, time, json, signal
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-import log
+signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+import log, ipc
 import status as S_module
-import trigger
-import ipc
-from modules import (musik, wifi, bluetooth, audio, system,
-                     webradio, dab, fm, library, update, scanner)
+from menu_model import MenuNode, MenuState, StationStore, build_tree
+from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
+                     webradio, dab, fm, library, scanner, update)
 
 logger = log.setup("core")
 
-SETTINGS_FILE = os.path.join(BASE_DIR, "config/settings.json")
+CONFIG_DIR = os.path.join(BASE_DIR, "config")
+SETTINGS_FILE = os.path.join(CONFIG_DIR, "settings.json")
 
 
 # ── Settings ──────────────────────────────────────────────────────────────────
@@ -36,299 +32,301 @@ SETTINGS_FILE = os.path.join(BASE_DIR, "config/settings.json")
 def load_settings():
     try:
         with open(SETTINGS_FILE) as f:
-            s = json.load(f)
-        log.info("Settings geladen")
-        return s
-    except Exception as e:
-        log.warn(f"Settings Defaults ({e})")
+            return json.load(f)
+    except Exception:
         return {"music_path": os.path.expanduser("~/Musik"),
-                "audio_output": "auto", "device_name": "PiDrive"}
-
+                "audio_output": "auto",
+                "fm_freq": "98.5"}
 
 def save_settings(settings):
     try:
+        os.makedirs(CONFIG_DIR, exist_ok=True)
         with open(SETTINGS_FILE, "w") as f:
             json.dump(settings, f, indent=2)
     except Exception as e:
         log.error(f"Settings speichern: {e}")
 
 
-# ── Menuemodell (ohne pygame) ──────────────────────────────────────────────────
+# ── Trigger-Handling ───────────────────────────────────────────────────────────
 
-class MenuItem:
-    def __init__(self, label, action=None, submenu=None):
-        self.label   = label
-        self.action  = action   # callable
-        self.submenu = submenu  # list of MenuItem
+def handle_trigger(cmd, menu_state, store, S, settings):
+    """Alle Trigger verarbeiten. Gibt True zurück wenn Menü neu gebaut werden soll."""
+    rebuild = False
 
+    def bg(fn):
+        import threading
+        threading.Thread(target=fn, daemon=True).start()
 
-class MenuState:
-    """Leichtgewichtiger Menuezustand ohne UI-Renderer."""
+    # ── Navigation ──────────────────────────────────────────────────────────
+    if   cmd == "up":    menu_state.key_up()
+    elif cmd == "down":  menu_state.key_down()
+    elif cmd == "left":  menu_state.key_left()
+    elif cmd == "back":  menu_state.key_back()
+    elif cmd == "right": menu_state.key_right()
+    elif cmd == "enter":
+        node = menu_state.key_enter()
+        if node and node.type in ("station", "action", "toggle"):
+            _execute_node(node, menu_state, store, S, settings)
 
-    def __init__(self, categories):
-        self.categories  = categories   # list of (label, [MenuItem])
-        self.cat_sel     = 0
-        self.item_sel    = 0
-        self.stack       = []           # (cat, item) fuer Back-Navigation
-
-    @property
-    def current_cat(self):
-        return self.categories[self.cat_sel]
-
-    @property
-    def current_items(self):
-        _, items = self.current_cat
-        return items
-
-    def key_up(self):
-        if self.item_sel > 0:
-            self.item_sel -= 1
-
-    def key_down(self):
-        items = self.current_items
-        if self.item_sel < len(items) - 1:
-            self.item_sel += 1
-
-    def key_left(self):
-        if self.cat_sel > 0:
-            self.cat_sel -= 1
-            self.item_sel = 0
-
-    def key_right(self):
-        if self.cat_sel < len(self.categories) - 1:
-            self.cat_sel += 1
-            self.item_sel = 0
-
-    def key_enter(self):
-        items = self.current_items
-        if not items:
-            return
-        item = items[self.item_sel]
-        if item.submenu:
-            self.stack.append((self.cat_sel, self.item_sel))
-            self.categories.append((item.label, item.submenu))
-            self.cat_sel  = len(self.categories) - 1
-            self.item_sel = 0
-        elif item.action:
-            # GPT-5.4: defensiv — Modul-Fehler stoppen nicht den Core
-            try:
-                item.action()
-            except Exception as _e:
-                import log as _log
-                _log.error(f"Aktion '{item.label}' fehlgeschlagen: {_e}")
-                import ipc as _ipc
-                _ipc.write_progress("Fehler", str(_e)[:48], color="red")
-
-    def key_back(self):
-        if self.stack:
-            # Temporaere Kategorie entfernen
-            self.categories.pop()
-            self.cat_sel, self.item_sel = self.stack.pop()
-
-    def set_cat(self, val):
-        try:
-            idx = int(val)
-            if 0 <= idx < len(self.categories):
-                self.cat_sel  = idx
-                self.item_sel = 0
-                self.stack.clear()
-        except (ValueError, TypeError):
-            for i, (lbl, _) in enumerate(self.categories):
-                if lbl.lower() == str(val).lower():
-                    self.cat_sel  = i
-                    self.item_sel = 0
-                    self.stack.clear()
-                    break
-
-    def export(self):
-        cat_lbl  = self.categories[self.cat_sel][0]
-        items    = self.current_items
-        item_lbl = items[self.item_sel].label if items else ""
-        # GPT-5.4: vollstaendige Listen fuer Display-Renderer
-        cat_labels  = [c[0] for c in self.categories[:10]]
-        item_labels = [it.label for it in items[:12]]
-        return self.cat_sel, cat_lbl, self.item_sel, item_lbl, cat_labels, item_labels
-
-
-# ── Trigger (Core-Version ohne ui-Objekt) ─────────────────────────────────────
-
-def handle_trigger(cmd, menu, S, settings):
-    import subprocess
-
-    def bg(c):
-        try:
-            subprocess.Popen(c, shell=True,
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
-        except Exception:
-            pass
-
-    if   cmd == "up":    menu.key_up()
-    elif cmd == "down":  menu.key_down()
-    elif cmd == "left":  menu.key_left()
-    elif cmd == "right": menu.key_right()
-    elif cmd == "enter": menu.key_enter()
-    elif cmd == "back":  menu.key_back()
-
-    elif cmd == "wifi_on":
-        bg("rfkill unblock wifi; ip link set wlan0 up; dhcpcd wlan0")
-        S_module.invalidate()
-    elif cmd == "wifi_off":
-        bg("rfkill block wifi"); S_module.invalidate()
-
-    elif cmd == "bt_on":
-        bg("rfkill unblock bluetooth; hciconfig hci0 up"); S_module.invalidate()
-    elif cmd == "bt_off":
-        bg("hciconfig hci0 down"); S_module.invalidate()
-
-    elif cmd == "audio_klinke":
-        bg("amixer -c 0 cset numid=3 1 2>/dev/null")
-        settings["audio_output"] = "Klinke"
-    elif cmd == "audio_hdmi":
-        bg("amixer -c 0 cset numid=3 2 2>/dev/null")
-        settings["audio_output"] = "HDMI"
-    elif cmd == "audio_bt":
-        sink = S.get("bt_sink", "")
-        if sink:
-            bg(f"pactl set-default-sink {sink} 2>/dev/null")
-            settings["audio_output"] = "Bluetooth"
-    elif cmd == "audio_all":
-        bg("pactl load-module module-combine-sink sink_name=combined 2>/dev/null; "
-           "pactl set-default-sink combined 2>/dev/null")
-        settings["audio_output"] = "Alle"
-
-    elif cmd == "spotify_on":
-        bg("systemctl start raspotify"); S_module.invalidate()
-    elif cmd == "spotify_off":
-        bg("systemctl stop raspotify"); S_module.invalidate()
-
-    elif cmd == "radio_stop":
-        bg("pkill -f mpv 2>/dev/null; pkill -f vlc 2>/dev/null")
-        S["radio_playing"] = False
-
-    elif cmd == "library_stop":
-        bg("pkill -f mpv 2>/dev/null")
-        S["library_playing"] = False
-
-    elif cmd == "reboot":   bg("reboot")
-    elif cmd == "shutdown": bg("poweroff")
-
+    # ── Direkt-Kategorie ────────────────────────────────────────────────────
     elif cmd.startswith("cat:"):
-        menu.set_cat(cmd[4:])
+        val = cmd[4:]
+        menu_state.navigate_to(val)
 
-    log.info(f"Trigger: {cmd}")
+    # ── Spotify ─────────────────────────────────────────────────────────────
+    elif cmd in ("spotify_on", "spotify_off", "spotify_toggle"):
+        bg(lambda: musik.spotify_toggle(S))
+
+    # ── Audio ────────────────────────────────────────────────────────────────
+    elif cmd == "audio_klinke":
+        bg(lambda: audio.set_output("klinke", settings))
+    elif cmd == "audio_hdmi":
+        bg(lambda: audio.set_output("hdmi", settings))
+    elif cmd == "audio_bt":
+        bg(lambda: audio.set_output("bt", settings))
+    elif cmd == "audio_all":
+        bg(lambda: audio.set_output("all", settings))
+    elif cmd == "vol_up":
+        bg(lambda: audio.volume_up(settings))
+    elif cmd == "vol_down":
+        bg(lambda: audio.volume_down(settings))
+
+    # ── WiFi / BT ────────────────────────────────────────────────────────────
+    elif cmd in ("wifi_on", "wifi_off", "wifi_toggle"):
+        bg(lambda: wifi.wifi_toggle(S))
+    elif cmd in ("bt_on", "bt_off", "bt_toggle"):
+        bg(lambda: bluetooth.bt_toggle(S))
+    elif cmd == "wifi_scan":
+        bg(lambda: wifi.scan_networks(S, settings))
+    elif cmd == "bt_scan":
+        bg(lambda: bluetooth.scan_devices(S, settings))
+
+    # ── Radio Stop ───────────────────────────────────────────────────────────
+    elif cmd == "radio_stop":
+        webradio.stop(S); dab.stop(S); fm.stop(S)
+    elif cmd == "library_stop":
+        library.stop_playback(S)
+
+    # ── DAB Suchlauf ─────────────────────────────────────────────────────────
+    elif cmd == "dab_scan":
+        def _dab_scan():
+            ipc.write_progress("DAB+ Suchlauf", "Scanne Band III ...", color="blue")
+            try:
+                results = dab.scan_dab_channels()
+                store.save_dab(results)
+                log.info(f"DAB Scan: {len(results)} Sender")
+                ipc.write_progress("DAB+ Suchlauf", f"{len(results)} Sender gefunden", color="green")
+                time.sleep(2)
+            except Exception as e:
+                log.error(f"DAB Scan: {e}")
+                ipc.write_progress("DAB+ Fehler", str(e)[:48], color="red")
+                time.sleep(2)
+            finally:
+                ipc.clear_progress()
+        bg(_dab_scan)
+
+    # ── FM Suchlauf ──────────────────────────────────────────────────────────
+    elif cmd == "fm_scan":
+        def _fm_scan():
+            ipc.write_progress("FM Suchlauf", "Scanne UKW ...", color="blue")
+            try:
+                results = fm.scan_stations(S)
+                store.save_fm(results)
+                log.info(f"FM Scan: {len(results)} Sender")
+                ipc.write_progress("FM Suchlauf", f"{len(results)} Sender gefunden", color="green")
+                time.sleep(2)
+            except Exception as e:
+                log.error(f"FM Scan: {e}")
+                ipc.write_progress("FM Fehler", str(e)[:48], color="red")
+                time.sleep(2)
+            finally:
+                ipc.clear_progress()
+        bg(_fm_scan)
+
+    # ── Reload Stationen ─────────────────────────────────────────────────────
+    elif cmd.startswith("reload_stations:"):
+        source = cmd.split(":", 1)[1]
+        store.reload_source(source)
+        rebuild = True
+        log.info(f"Reload: {source}")
+
+    # ── FM Next/Prev ─────────────────────────────────────────────────────────
+    elif cmd == "fm_next":
+        bg(lambda: fm.play_next(S, store.fm))
+    elif cmd == "fm_prev":
+        bg(lambda: fm.play_prev(S, store.fm))
+    elif cmd == "fm_manual":
+        bg(lambda: _fm_manual(S, settings))
+
+    # ── DAB Next/Prev ────────────────────────────────────────────────────────
+    elif cmd == "dab_next":
+        bg(lambda: dab.play_next(S, store.dab))
+    elif cmd == "dab_prev":
+        bg(lambda: dab.play_prev(S, store.dab))
+
+    # ── Scanner Bänder ───────────────────────────────────────────────────────
+    elif cmd.startswith("scan_up:"):
+        band = cmd.split(":",1)[1]
+        bg(lambda b=band: scanner.channel_up(b, S))
+    elif cmd.startswith("scan_down:"):
+        band = cmd.split(":",1)[1]
+        bg(lambda b=band: scanner.channel_down(b, S))
+    elif cmd.startswith("scan_next:"):
+        band = cmd.split(":",1)[1]
+        bg(lambda b=band: scanner.scan_next(b, S))
+    elif cmd.startswith("scan_prev:"):
+        band = cmd.split(":",1)[1]
+        bg(lambda b=band: scanner.scan_prev(b, S))
+
+    # ── Bibliothek ───────────────────────────────────────────────────────────
+    elif cmd == "lib_browse":
+        bg(lambda: library.browse_and_play(S, load_settings()))
+
+    # ── System ───────────────────────────────────────────────────────────────
+    elif cmd == "reboot":
+        ipc.write_progress("Neustart", "In 3 Sekunden ...", color="orange")
+        time.sleep(3); os.system("reboot")
+    elif cmd == "shutdown":
+        ipc.write_progress("Ausschalten", "In 3 Sekunden ...", color="orange")
+        time.sleep(3); os.system("poweroff")
+    elif cmd == "sys_info":
+        bg(lambda: sys_mod.show_info(S, settings))
+    elif cmd == "sys_version":
+        bg(lambda: sys_mod.show_version(S))
+    elif cmd == "update":
+        bg(lambda: update.run_update(S))
+    elif cmd == "audio_select":
+        bg(lambda: audio.select_output_interactive(S, settings))
+
+    log.trigger_received(cmd)
+    return rebuild
 
 
-def check_trigger(menu, S, settings):
-    if not os.path.exists(ipc.CMD_FILE):
+def _execute_node(node, menu_state, store, S, settings):
+    """Knoten ausführen (station/action/toggle)."""
+    import threading
+
+    def bg(fn): threading.Thread(target=fn, daemon=True).start()
+
+    action = node.action
+    if not action:
         return
+
+    # Stationen abspielen
+    if node.type == "station":
+        src = node.source
+        meta = node.meta
+        if src == "fm":
+            bg(lambda: fm.play_station({"name": node.label,
+                "freq": meta.get("freq","")}, S))
+        elif src == "dab":
+            bg(lambda: dab.play_by_name(node.label, S))
+        elif src == "webradio":
+            bg(lambda: webradio.play_station(
+                {"name": node.label, "url": meta.get("url","")}, S))
+        return
+
+    # Toggle-Knoten
+    if node.type == "toggle":
+        handle_trigger(action, menu_state, store, S, settings)
+        return
+
+    # Action-Knoten
+    handle_trigger(action, menu_state, store, S, settings)
+
+
+def _fm_manual(S, settings):
+    freq_str = fm.freq_input_screen()
+    if freq_str:
+        fm.play_station({"name": f"{freq_str} MHz", "freq": freq_str}, S)
+
+
+def check_trigger(menu_state, store, S, settings):
+    """Trigger-Datei auslesen und verarbeiten."""
+    if not os.path.exists(ipc.CMD_FILE):
+        return False
     try:
         with open(ipc.CMD_FILE) as f:
             cmd = f.read().strip()
         os.remove(ipc.CMD_FILE)
-        if cmd:
-            handle_trigger(cmd, menu, S, settings)
     except Exception:
-        pass
+        return False
+    if not cmd:
+        return False
+    try:
+        return handle_trigger(cmd, menu_state, store, S, settings)
+    except Exception as e:
+        log.error(f"Trigger '{cmd}' Fehler: {e}")
+        return False
 
 
-# ── Einfache Kategorien fuer Core (Labels ohne pygame) ────────────────────────
-
-def build_menu_model(S, settings):
-    """Auto-Menue: Jetzt laeuft / Quellen / Verbindungen / System.
-    GPT-5.4: Nutzungssituationen statt technische Module."""
-    from modules import (musik as _musik, wifi as _wifi, bluetooth as _bt,
-                         audio as _audio, system as _sys, webradio as _web,
-                         dab as _dab, fm as _fm, update as _upd)
-
-    categories = [
-        # ── Jetzt laeuft ─────────────────────────────────────────────────────
-        # Wichtigster Bereich — zeigt aktuelle Wiedergabe
-        ("Jetzt laeuft", [
-            MenuItem("Wiedergabe",
-                     action=lambda: _musik.spotify_toggle(S) if not S.get("spotify") else None),
-            MenuItem("Spotify",
-                     action=lambda: _musik.spotify_toggle(S)),
-            MenuItem("Audioausgang",
-                     action=lambda: _audio.build_items(None, S, settings)[0].action()),
-            MenuItem("Lauter",
-                     action=lambda: _audio.build_items(None, S, settings)[1].action()),
-            MenuItem("Leiser",
-                     action=lambda: _audio.build_items(None, S, settings)[2].action()),
-        ]),
-        # ── Quellen ──────────────────────────────────────────────────────────
-        # Audioquelle waehlen → aktiviert Quelle und springt zu "Jetzt laeuft"
-        ("Quellen", [
-            MenuItem("Spotify",
-                     action=lambda: _musik.spotify_toggle(S)),
-            MenuItem("Bibliothek"),
-            MenuItem("Webradio"),
-            MenuItem("DAB+"),
-            MenuItem("FM Radio"),
-            MenuItem("Scanner"),
-        ]),
-        # ── Verbindungen ─────────────────────────────────────────────────────
-        # Selten benoetigt — BT + WiFi Management
-        ("Verbindungen", [
-            MenuItem("Bluetooth An/Aus"),
-            MenuItem("Geraete scannen"),
-            MenuItem("WiFi An/Aus",
-                     action=lambda: _wifi.wifi_toggle(S)),
-            MenuItem("Netzwerke scannen",
-                     action=lambda: _wifi.build_items(None, S, settings)[2].action()),
-            MenuItem("Status"),
-        ]),
-        # ── System ───────────────────────────────────────────────────────────
-        ("System", [
-            MenuItem("IP Adresse"),
-            MenuItem("System-Info",
-                     action=lambda: _sys.build_items(None, S, settings)[2].action()),
-            MenuItem("Version",
-                     action=lambda: _sys.build_items(None, S, settings)[3].action()),
-            MenuItem("Neustart",
-                     action=lambda: _sys.build_items(None, S, settings)[4].action()),
-            MenuItem("Ausschalten",
-                     action=lambda: _sys.build_items(None, S, settings)[5].action()),
-            MenuItem("Update",
-                     action=lambda: _upd.build_items(None, S, settings)[0].action()
-                                    if _upd.build_items(None, S, settings) else None),
-        ]),
-    ]
-    return MenuState(categories)
-
-
-# ── System-Check (Core-Version) ────────────────────────────────────────────────
+# ── System-Check ──────────────────────────────────────────────────────────────
 
 def system_check():
-    import subprocess
     log.info("--- Core System-Check ---")
+    VERSION = open(os.path.join(BASE_DIR, "VERSION")).read().strip()
+    log.info(f"  PiDrive Core v{VERSION}")
+
+    checks = [
+        ("/dev/fb1", "SPI Display"),
+        ("/dev/fb0", "HDMI Framebuffer"),
+    ]
+    for path, label in checks:
+        if os.path.exists(path):
+            log.info(f"  ✓ {label}: {path}")
+        else:
+            log.warn(f"  ✗ {label}: {path} nicht gefunden")
+
+    # RTL-SDR
+    import subprocess
+    r = subprocess.run("lsusb 2>/dev/null | grep -i rtl", shell=True,
+                       capture_output=True, text=True)
+    if r.returncode == 0 and r.stdout.strip():
+        log.info("  ✓ RTL-SDR gefunden")
+    else:
+        log.warn("  ⚠ RTL-SDR nicht gefunden (DAB+/FM benötigt USB-Stick)")
+
     try:
-        ver = open(os.path.join(BASE_DIR, "VERSION")).read().strip()
-        log.info(f"  PiDrive Core v{ver}")
-    except Exception:
-        pass
-    try:
-        r = subprocess.run("systemctl is-active raspotify",
-                           shell=True, capture_output=True, text=True)
-        log.info(f"  raspotify: {r.stdout.strip()}")
-    except Exception:
-        pass
-    try:
-        r = subprocess.run("ip a show wlan0", shell=True,
-                           capture_output=True, text=True)
-        if "inet " in r.stdout:
-            ip = [l.split()[1] for l in r.stdout.splitlines() if "inet " in l][0]
-            log.info(f"  WLAN: {ip}")
+        import subprocess
+        r = subprocess.run(["ip","-4","addr","show"], capture_output=True, text=True)
+        ip = [l.split()[1].split("/")[0] for l in r.stdout.splitlines() if "inet " in l and "127." not in l]
+        if ip:
+            log.info(f"  ✓ WLAN: {ip[0]}")
     except Exception:
         pass
     log.info("--- Core System-Check OK ---")
+
+
+# ── Menü neu bauen nach Scan/Reload ──────────────────────────────────────────
+
+def rebuild_tree(menu_state, store, S, settings):
+    """Menübaum neu aufbauen, aktuelle Position behalten."""
+    old_path = menu_state.path[:]
+    new_root = build_tree(store, S, settings)
+    menu_state.root = new_root
+
+    # Versuche alte Position wiederherzustellen
+    menu_state._stack   = [new_root]
+    menu_state._cursors = [0]
+    for label in old_path[1:]:  # root überspringen
+        found = False
+        for i, child in enumerate(menu_state.current.children):
+            if child.label == label:
+                menu_state._stack.append(child)
+                menu_state._cursors.append(0)
+                found = True
+                break
+        if not found:
+            break
+    menu_state.rev += 1
+    log.info(f"Menü neu gebaut — Pfad: {' / '.join(menu_state.path)}")
 
 
 # ── Hauptschleife ──────────────────────────────────────────────────────────────
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.6.6 gestartet")
+    log.info("PiDrive Core v0.7.0 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -336,41 +334,53 @@ def main():
 
     system_check()
 
-    settings    = load_settings()
+    settings = load_settings()
     S_module.refresh(force=True)
-    S           = S_module.S
-    S["radio_type"] = ""
+    S = S_module.S
 
-    menu        = build_menu_model(S, settings)
-    save_timer  = time.time()
-    stat_timer  = time.time()
-    ipc_timer   = time.time()
+    # StationStore initialisieren
+    store = StationStore(CONFIG_DIR)
+    store.load_all()
+
+    # Menübaum aufbauen
+    root       = build_tree(store, S, settings)
+    menu_state = MenuState(root)
+
+    save_timer = time.time()
+    stat_timer = time.time()
+    ipc_timer  = time.time()
+    store_timer= time.time()
 
     log.info("Core-Loop gestartet")
     _ready_written = False
 
     while True:
-        # Status aktualisieren
         S_module.refresh()
         S = S_module.S
 
-        # Trigger pruefen
-        check_trigger(menu, S, settings)
+        # Trigger prüfen
+        needs_rebuild = check_trigger(menu_state, store, S, settings)
+        if needs_rebuild:
+            rebuild_tree(menu_state, store, S, settings)
 
-        # IPC-Dateien schreiben (jede Sekunde)
+        # StationStore Hot-Reload (alle 10s prüfen)
+        if time.time() - store_timer > 10:
+            if store.reload_if_changed():
+                rebuild_tree(menu_state, store, S, settings)
+            store_timer = time.time()
+
+        # IPC schreiben (jede Sekunde)
         if time.time() - ipc_timer > 1.0:
             ipc.write_status(S, settings)
-            cat_idx, cat_lbl, item_idx, item_lbl, cats, items_list = menu.export()
-            ipc.write_menu(cat_idx, cat_lbl, item_idx, item_lbl,
-                           S.get("radio_type", ""), cats, items_list)
+            ipc.write_menu(menu_state.export())
             ipc_timer = time.time()
-            # GPT-5.4: /tmp/pidrive_ready als IPC-Bereit-Signal
             if not _ready_written:
                 try:
-                    open("/tmp/pidrive_ready","w").write("1")
+                    open(ipc.READY_FILE, "w").write("1")
                     _ready_written = True
                     log.info("IPC ready — /tmp/pidrive_ready geschrieben")
-                except Exception: pass
+                except Exception:
+                    pass
 
         # Status-Log (alle 30s)
         if time.time() - stat_timer > 30:
@@ -378,20 +388,8 @@ def main():
                               settings.get("audio_output", "auto"))
             stat_timer = time.time()
 
-        # Settings speichern (jede Minute)
-        if time.time() - save_timer > 60:
-            save_settings(settings)
-            save_timer = time.time()
-
-        time.sleep(0.1)   # 10 Hz — reicht fuer Trigger-Response
+        time.sleep(0.05)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        log.info("Core beendet (KeyboardInterrupt)")
-    except Exception as e:
-        import traceback
-        log.error(f"Core Fehler: {e}\n{traceback.format_exc()}")
-        raise
+    main()

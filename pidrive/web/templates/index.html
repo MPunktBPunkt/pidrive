@@ -102,20 +102,20 @@
           <button onclick="sendCmd('cat:2')">Verbindungen</button>
           <button onclick="sendCmd('cat:3')">System</button>
 
-          <button onclick="sendCmd('spotify_on')">Spotify an</button>
-          <button onclick="sendCmd('spotify_off')">Spotify aus</button>
-          <button onclick="sendCmd('wifi_on')">WiFi an</button>
-          <button onclick="sendCmd('wifi_off')">WiFi aus</button>
-
-          <button onclick="sendCmd('bt_on')">BT an</button>
-          <button onclick="sendCmd('bt_off')">BT aus</button>
+          <button onclick="sendCmd('spotify_toggle')">Spotify ⏯</button>
           <button onclick="sendCmd('radio_stop')">Radio Stop</button>
-          <button onclick="sendCmd('library_stop')">Library Stop</button>
+          <button onclick="sendCmd('fm_next')">FM Nächster</button>
+          <button onclick="sendCmd('dab_next')">DAB Nächster</button>
+
+          <button onclick="sendCmd('dab_scan')">DAB+ Suchlauf</button>
+          <button onclick="sendCmd('fm_scan')">FM Suchlauf</button>
+          <button onclick="sendCmd('reload_stations:webradio')">Web Reload</button>
+          <button onclick="sendCmd('library_stop')">Biblio Stop</button>
 
           <button onclick="sendCmd('audio_klinke')">Audio Klinke</button>
           <button onclick="sendCmd('audio_hdmi')">Audio HDMI</button>
-          <button onclick="sendCmd('audio_bt')">Audio BT</button>
-          <button onclick="sendCmd('audio_all')">Audio Alle</button>
+          <button onclick="sendCmd('vol_up')">Lauter ↑</button>
+          <button onclick="sendCmd('vol_down')">Leiser ↓</button>
         </div>
 
         <div class="panel-title">Rohdaten</div>
@@ -166,29 +166,51 @@
       updateDisplay(data);
     }
 
+    const typeIcons = {folder:"▸",station:"♪",action:"→",toggle:"◉",info:" ",value:"±"};
+
     function updateDisplay(data) {
       document.getElementById('statusJson').textContent = JSON.stringify(data.status, null, 2);
       document.getElementById('menuJson').textContent = JSON.stringify(data.menu, null, 2);
 
-      // Status-Flags aktualisieren
+      // Status-Flags
       document.querySelectorAll('.flag').forEach(el => {
         const key = el.dataset.key;
         if (key) el.className = 'flag ' + (data.status[key] ? 'on' : 'off');
       });
 
       // Kategorien hervorheben
+      const cats = data.categories || [];
+      const pathLabel = (data.path || [])[1] || '';
       document.querySelectorAll('.left-item').forEach((el, i) => {
-        el.classList.toggle('active', i === data.menu.cat);
+        el.classList.toggle('active', cats[i] === pathLabel);
       });
 
-      // Items aktualisieren
+      // Nodes / Items aktualisieren
       const rightMenu = document.getElementById('rightMenu');
-      if (rightMenu && data.items && data.items.length) {
+      if (rightMenu) {
+        const nodes  = data.nodes || [];
+        const items  = data.items || [];
+        const cursor = data.cursor ?? (data.menu && data.menu.item) ?? 0;
+        const path   = data.path || [];
         rightMenu.innerHTML = '';
-        data.items.forEach((item, i) => {
+
+        // Breadcrumb
+        if (path.length > 2) {
+          const crumb = document.createElement('div');
+          crumb.className = 'breadcrumb';
+          crumb.textContent = '› ' + path.slice(2).join(' › ');
+          rightMenu.appendChild(crumb);
+        }
+
+        const src = nodes.length ? nodes : items.map(l => ({label:l,type:'folder'}));
+        src.forEach((n, i) => {
           const div = document.createElement('div');
-          div.className = 'right-item' + (i === data.menu.item ? ' active' : '');
-          div.textContent = item;
+          const label = typeof n === 'string' ? n : (n.label || '?');
+          const ntype = typeof n === 'object' ? (n.type||'folder') : 'folder';
+          const active= typeof n === 'object' ? n.active : false;
+          div.className = 'right-item type-' + ntype + (i===cursor?' active':'') + (active?' playing':'');
+          div.innerHTML = '<span class="node-icon">' + (typeIcons[ntype]||'▸') + '</span> ' + label;
+          div.onclick = () => sendCmd('enter');
           rightMenu.appendChild(div);
         });
       }
@@ -197,13 +219,9 @@
       const footer = document.getElementById('displayFooter');
       if (footer) {
         const s = data.status;
-        if (s.spotify && s.track) {
-          footer.textContent = '♫ ' + (s.artist || '') + ' – ' + (s.track || '');
-        } else if (s.radio && s.radio_name) {
-          footer.textContent = '♪ ' + s.radio_name;
-        } else {
-          footer.textContent = 'Audio: ' + (s.audio_out || 'auto');
-        }
+        if (s.spotify && s.track) footer.textContent = '♫ ' + (s.artist||'') + ' – ' + s.track;
+        else if (s.radio && s.radio_name) footer.textContent = '♪ ' + s.radio_name;
+        else footer.textContent = 'Audio: ' + (s.audio_out || 'auto');
       }
     }
 

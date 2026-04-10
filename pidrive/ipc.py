@@ -1,156 +1,131 @@
 """
-ipc.py - PiDrive Inter-Process Communication
-Atomares JSON-Lesen/Schreiben zwischen Core und Display.
+ipc.py - PiDrive IPC v0.7.0
+Atomares JSON zwischen Core, Display und Web UI.
+
+Neues Format (v0.7.0):
+  menu.json: path, cursor, nodes, rev, can_back + Compat-Felder
 """
 
-import os
-import json
-import time
+import os, json, time
 
-# Pfade
-CMD_FILE     = "/tmp/pidrive_cmd"
-STATUS_FILE  = "/tmp/pidrive_status.json"
-MENU_FILE    = "/tmp/pidrive_menu.json"
-PLAYING_FILE = "/tmp/pidrive_nowplaying.json"
-READY_FILE   = "/tmp/pidrive_ready"
-DEBUG_FILE   = "/tmp/pidrive_display_debug.json"
+CMD_FILE      = "/tmp/pidrive_cmd"
+STATUS_FILE   = "/tmp/pidrive_status.json"
+MENU_FILE     = "/tmp/pidrive_menu.json"
+PROGRESS_FILE = "/tmp/pidrive_progress.json"
+LIST_FILE     = "/tmp/pidrive_list.json"
+READY_FILE    = "/tmp/pidrive_ready"
+DEBUG_FILE    = "/tmp/pidrive_display_debug.json"
 
 
 def write_json(path, data):
-    """Atomar schreiben: erst .tmp dann os.replace()."""
     tmp = path + ".tmp"
     try:
-        with open(tmp, "w") as f:
-            json.dump(data, f)
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
         os.replace(tmp, path)
-    except Exception:
-        pass
-
+    except Exception as e:
+        import log; log.error(f"ipc write_json {path}: {e}")
 
 def read_json(path, default=None):
-    """JSON lesen, bei Fehler default zurückgeben."""
+    if default is None: default = {}
     try:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
-        return default if default is not None else {}
+        return default
 
 
 def write_status(S, settings):
-    """Status-JSON aus dem Status-Dict schreiben."""
     write_json(STATUS_FILE, {
-        "wifi":       S.get("wifi", False),
-        "wifi_ssid":  S.get("ssid", ""),
-        "bt":         S.get("bt", False),
-        "bt_device":  S.get("bt_connected_dev", ""),
-        "spotify":    S.get("spotify", False),
-        "track":      S.get("spotify_track", ""),
-        "artist":     S.get("spotify_artist", ""),
-        "album":      S.get("spotify_album", ""),
-        "radio":      S.get("radio_playing", False),
-        "radio_name": S.get("radio_station", ""),
-        "library":    S.get("library_playing", False),
-        "lib_track":  S.get("library_track", ""),
-        "audio_out":  settings.get("audio_output", "auto"),
-        "ip":         S.get("ip", "-"),
-        "ts":         int(time.time()),
+        "wifi":      S.get("wifi",    False),
+        "wifi_ssid": S.get("wifi_ssid", ""),
+        "bt":        S.get("bt",      False),
+        "bt_device": S.get("bt_device", ""),
+        "spotify":   S.get("spotify", False),
+        "track":     S.get("track",   ""),
+        "artist":    S.get("artist",  ""),
+        "album":     S.get("album",   ""),
+        "radio":     S.get("radio",   False),
+        "radio_name":S.get("radio_station", ""),
+        "radio_type":S.get("radio_type", ""),
+        "library":   S.get("library_playing", False),
+        "lib_track": S.get("library_track", ""),
+        "audio_out": settings.get("audio_output", "auto"),
+        "ip":        S.get("ip", ""),
+        "ts":        int(time.time()),
     })
 
 
-def write_menu(cat_idx, cat_label, item_idx, item_label,
-               radio_type="", categories=None, items=None):
-    """Menü-Position schreiben — inkl. vollstaendiger Listen fuer Display."""
-    write_json(MENU_FILE, {
-        "cat":        cat_idx,
-        "cat_label":  cat_label,
-        "item":       item_idx,
-        "item_label": item_label,
-        "radio_type": radio_type,
-        # GPT-5.4: vollstaendige Listen damit Display ohne Modulwissen rendert
-        "categories": categories or [],
-        "items":      items or [],
-    })
+def write_menu(menu_state):
+    """Menüzustand schreiben. Erwartet MenuState.export() dict."""
+    write_json(MENU_FILE, menu_state)
 
-
-PROGRESS_FILE = "/tmp/pidrive_progress.json"
 
 def write_progress(title, message="", pct=None, lines=None, color="blue"):
-    """Fortschritt/Status fuer Display schreiben.
-    
-    title:   Haupttitel (z.B. "DAB+ Scan")
-    message: Statuszeile (z.B. "Kanal 7A...")
-    pct:     Fortschritt 0-100 oder None
-    lines:   Liste von Statuszeilen fuer laengere Ausgaben
-    color:   "blue" | "green" | "red" | "orange"
-    """
     write_json(PROGRESS_FILE, {
-        "active":   True,
-        "title":    title,
-        "message":  message,
-        "pct":      pct,
-        "lines":    lines or [],
-        "color":    color,
-        "ts":       __import__("time").time(),
+        "active":  True,
+        "title":   title[:40],
+        "message": message[:60],
+        "pct":     pct,
+        "lines":   lines or [],
+        "color":   color,
+        "ts":      int(time.time()),
     })
 
-
 def clear_progress():
-    """Progress-Anzeige beenden."""
     write_json(PROGRESS_FILE, {"active": False})
 
-LIST_FILE = "/tmp/pidrive_list.json"
 
 def headless_pick(title, items, timeout=30):
-    """Schreibt Auswahlliste in IPC, wartet auf Trigger-Auswahl.
-    Gibt gewaehlten String zurueck oder None bei Abbruch."""
-    import time as _time
+    """Auswahlmenü via /tmp/pidrive_list.json + Trigger-Steuerung."""
+    if not items: return None
     sel = 0
-    deadline = _time.time() + timeout
-    while _time.time() < deadline:
-        write_json(LIST_FILE, {
-            "active": True, "title": title,
-            "items": items, "selected": sel,
-            "ts": _time.time(),
-        })
-        if not __import__("os").path.exists(CMD_FILE):
-            _time.sleep(0.1)
-            continue
+    write_json(LIST_FILE, {"active": True, "title": title,
+                            "items": items, "selected": sel})
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if not os.path.exists(CMD_FILE):
+            time.sleep(0.1); continue
         try:
             cmd = open(CMD_FILE).read().strip()
-            __import__("os").remove(CMD_FILE)
+            os.remove(CMD_FILE)
         except Exception:
-            _time.sleep(0.1)
             continue
-        if   cmd == "up"   and sel > 0:              sel -= 1
-        elif cmd == "down" and sel < len(items) - 1: sel += 1
-        elif cmd in ("enter", "right"):
+        if   cmd == "up":    sel = max(0, sel - 1)
+        elif cmd == "down":  sel = min(len(items)-1, sel + 1)
+        elif cmd in ("enter","right"):
             write_json(LIST_FILE, {"active": False})
             return items[sel]
-        elif cmd in ("back", "left"):
+        elif cmd in ("back","left"):
             write_json(LIST_FILE, {"active": False})
             return None
+        write_json(LIST_FILE, {"active": True, "title": title,
+                                "items": items, "selected": sel})
     write_json(LIST_FILE, {"active": False})
     return None
 
 
 def headless_confirm(title, message, timeout=15):
-    """Bestaetigungsdialog via IPC. Gibt True/False zurueck."""
-    import time as _time
-    write_progress(title, message + " (Enter=Ja  Back=Nein)", color="orange")
-    deadline = _time.time() + timeout
-    while _time.time() < deadline:
-        if not __import__("os").path.exists(CMD_FILE):
-            _time.sleep(0.1)
-            continue
+    write_json(LIST_FILE, {"active": True, "title": title,
+                            "items": ["Ja","Nein"], "selected": 0})
+    deadline = time.time() + timeout
+    sel = 0
+    while time.time() < deadline:
+        if not os.path.exists(CMD_FILE):
+            time.sleep(0.1); continue
         try:
             cmd = open(CMD_FILE).read().strip()
-            __import__("os").remove(CMD_FILE)
+            os.remove(CMD_FILE)
         except Exception:
-            _time.sleep(0.1)
             continue
-        if cmd in ("enter", "right"):
-            clear_progress(); return True
-        elif cmd in ("back", "left", "esc"):
-            clear_progress(); return False
-    clear_progress()
+        if cmd in ("up","down"): sel = 1 - sel
+        elif cmd in ("enter","right"):
+            write_json(LIST_FILE, {"active": False})
+            return sel == 0
+        elif cmd in ("back","left"):
+            write_json(LIST_FILE, {"active": False})
+            return False
+        write_json(LIST_FILE, {"active": True, "title": title,
+                                "items": ["Ja","Nein"], "selected": sel})
+    write_json(LIST_FILE, {"active": False})
     return False

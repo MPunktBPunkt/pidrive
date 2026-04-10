@@ -278,3 +278,53 @@ def build_items(screen, S, settings):
              ]),
         Item("Stop", action=stop_action),
     ]
+
+
+# ── Direkt-Steuerung via Trigger ──────────────────────────────────────────────
+
+BANDS = {
+    "pmr446":  {"channels": PMR446_CHANNELS,  "bw": 12500},
+    "freenet": {"channels": FREENET_CHANNELS,  "bw": 12500},
+    "lpd433":  {"channels": LPD433_CHANNELS,   "bw": 12500},
+    "vhf":     {"band": VHF_RANGE, "bw": 25000},
+    "uhf":     {"band": UHF_RANGE, "bw": 25000},
+}
+_current_ch = {}   # band -> index
+
+def _get_channels(band_id):
+    b = BANDS.get(band_id, {})
+    return b.get("channels", [])
+
+def channel_up(band_id, S):
+    chs = _get_channels(band_id)
+    if not chs: return
+    idx = (_current_ch.get(band_id, -1) + 1) % len(chs)
+    _current_ch[band_id] = idx
+    play_freq(chs[idx]["freq"], chs[idx].get("name", str(chs[idx]["freq"])),
+              BANDS[band_id]["bw"], S)
+
+def channel_down(band_id, S):
+    chs = _get_channels(band_id)
+    if not chs: return
+    idx = (_current_ch.get(band_id, 1) - 1) % len(chs)
+    _current_ch[band_id] = idx
+    play_freq(chs[idx]["freq"], chs[idx].get("name", str(chs[idx]["freq"])),
+              BANDS[band_id]["bw"], S)
+
+def scan_next(band_id, S):
+    b = BANDS.get(band_id, {})
+    if "channels" in b:
+        ch = _scan_list(S, b["channels"], b["bw"], 1)
+    else:
+        ch = _scan_range(S, b["band"], b["bw"], 1)
+    if ch:
+        play_freq(ch["freq"], ch["name"], b["bw"], S)
+
+def scan_prev(band_id, S):
+    b = BANDS.get(band_id, {})
+    if "channels" in b:
+        ch = _scan_list(S, b["channels"], b["bw"], -1)
+    else:
+        ch = _scan_range(S, b["band"], b["bw"], -1)
+    if ch:
+        play_freq(ch["freq"], ch["name"], b["bw"], S)

@@ -254,3 +254,21 @@ pre {
     font-size: 22px;
   }
 }
+/* v0.7.0: Node-Typen */
+.node-icon { display: inline-block; width: 20px; color: var(--muted); }
+.right-item.type-station .node-icon { color: #50f090; }
+.right-item.type-action  .node-icon { color: #ffd166; }
+.right-item.type-toggle  .node-icon { color: #47b8ff; }
+.right-item.type-info    { color: var(--muted); font-style: italic; }
+.right-item.playing      { color: #50f090; font-weight: bold; }
+.right-item.active.playing { background: rgba(80, 240, 144, 0.3); }
+
+/* Breadcrumb im Display-Mock */
+.breadcrumb {
+  background: rgba(52, 172, 255, 0.25);
+  border-left: 3px solid var(--active);
+  padding: 6px 10px;
+  font-size: 14px;
+  color: var(--active2);
+  margin-bottom: 8px;
+}

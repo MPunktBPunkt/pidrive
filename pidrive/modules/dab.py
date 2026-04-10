@@ -199,3 +199,41 @@ def build_items(screen, S, settings):
              action=stop_action),
     ]
     return items
+
+
+def play_by_name(name, S):
+    """DAB Station nach Name abspielen."""
+    import json, os
+    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
+    try:
+        data = json.load(open(path))
+        stations = data.get("stations", data) if isinstance(data, dict) else data
+        for s in stations:
+            if s.get("name","") == name:
+                play_station(s, S); return
+    except Exception as e:
+        log.error(f"DAB play_by_name: {e}")
+
+
+def play_next(S, stations):
+    """Naechste DAB Station."""
+    if not stations:
+        return
+    current = S.get("radio_station","")
+    idx = 0
+    for i, s in enumerate(stations):
+        if s.get("name","") == current:
+            idx = (i+1) % len(stations); break
+    play_station(stations[idx], S)
+
+
+def play_prev(S, stations):
+    """Vorherige DAB Station."""
+    if not stations:
+        return
+    current = S.get("radio_station","")
+    idx = 0
+    for i, s in enumerate(stations):
+        if s.get("name","") == current:
+            idx = (i-1) % len(stations); break
+    play_station(stations[idx], S)

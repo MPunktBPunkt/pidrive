@@ -1,10 +1,62 @@
-[
-  {"name": "Bayern 3",      "freq": "99.4"},
-  {"name": "Bayern 1",      "freq": "95.8"},
-  {"name": "Antenne Bayern","freq": "102.2"},
-  {"name": "Radio BOB",     "freq": "89.0"},
-  {"name": "DLF",           "freq": "91.3"},
-  {"name": "DLF Nova",      "freq": "98.7"},
-  {"name": "SWR3",          "freq": "96.9"},
-  {"name": "NDR 2",         "freq": "87.9"}
-]
+{
+  "version": 1,
+  "updated_at": "2026-04-10T13:59:30",
+  "stations": [
+    {
+      "id": "fm_99_4",
+      "name": "Bayern 3",
+      "freq_mhz": 99.4,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_95_8",
+      "name": "Bayern 1",
+      "freq_mhz": 95.8,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_102_2",
+      "name": "Antenne Bayern",
+      "freq_mhz": 102.2,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_89_0",
+      "name": "Radio BOB",
+      "freq_mhz": 89.0,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_91_3",
+      "name": "DLF",
+      "freq_mhz": 91.3,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_98_7",
+      "name": "DLF Nova",
+      "freq_mhz": 98.7,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_96_9",
+      "name": "SWR3",
+      "freq_mhz": 96.9,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_87_9",
+      "name": "NDR 2",
+      "freq_mhz": 87.9,
+      "favorite": false,
+      "enabled": true
+    }
+  ]
+}
