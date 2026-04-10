@@ -1,10 +1,20 @@
 [
-  {"name": "Bayern 3",      "freq": "99.4"},
-  {"name": "Bayern 1",      "freq": "95.8"},
-  {"name": "Antenne Bayern","freq": "102.2"},
-  {"name": "Radio BOB",     "freq": "89.0"},
-  {"name": "DLF",           "freq": "91.3"},
-  {"name": "DLF Nova",      "freq": "98.7"},
-  {"name": "SWR3",          "freq": "96.9"},
-  {"name": "NDR 2",         "freq": "87.9"}
+  {"name": "Bayern 3",                "freq": "95.8"},
+  {"name": "SWR3",                    "freq": "92.1"},
+  {"name": "Bayern 1",                "freq": "90.7"},
+  {"name": "Antenne Bayern",          "freq": "104.4"},
+  {"name": "RSA Radio",               "freq": "90.2"},
+  {"name": "Radio 7",                 "freq": "100.9"},
+  {"name": "DONAU 3 FM",              "freq": "103.0"},
+  {"name": "DASDING",                 "freq": "91.8"},
+  {"name": "allgäuHIT",               "freq": "106.0"},
+  {"name": "ENERGY",                  "freq": "97.3"},
+  {"name": "BAYERN 2",                "freq": "93.6"},
+  {"name": "BR Klassik",              "freq": "87.7"},
+  {"name": "Deutschlandfunk",         "freq": "106.9"},
+  {"name": "Deutschlandfunk Kultur",  "freq": "105.0"},
+  {"name": "SWR1 Baden-Württemberg",  "freq": "89.3"},
+  {"name": "SWR2",                    "freq": "91.5"},
+  {"name": "SWR4 Baden-Württemberg",  "freq": "100.3"},
+  {"name": "egoFM",                   "freq": "95.4"}
 ]
