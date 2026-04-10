@@ -1,286 +1,15 @@
-:root {
-  --bg: #0b1730;
-  --panel: #12244a;
-  --panel2: #17315e;
-  --line: #2f5ea2;
-  --text: #d7f2ff;
-  --muted: #86a6c8;
-  --active: #2d8cff;
-  --active2: #47b8ff;
-  --green: #50f090;
-  --red: #ff6b6b;
-  --yellow: #ffd166;
-}
-
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: #09111f;
-  color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.app {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  padding: 12px 16px;
-  margin-bottom: 16px;
-}
-
-.brand {
-  font-size: 28px;
-  font-weight: bold;
-  color: #8ce7ff;
-}
-
-.meta, .flags {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.flag.on { color: var(--green); }
-.flag.off { color: var(--muted); }
-
-.main-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 16px;
-}
-
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  padding: 12px;
-}
-
-.panel-title, .display-header {
-  font-size: 18px;
-  margin-bottom: 12px;
-  color: #9ed8ff;
-}
-
-.display-mock {
-  background: linear-gradient(#163872, #0d2750);
-  border: 2px solid #4ea3ff;
-  min-height: 520px;
-  display: flex;
-  flex-direction: column;
-}
-
-.display-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #163a6f;
-  border-bottom: 1px solid #4ea3ff;
-  padding: 10px 12px;
-  color: #7ee8ff;
-}
-
-.display-top .title {
-  font-size: 26px;
-  font-weight: bold;
-}
-
-.display-top .ip {
-  color: #8bb7d9;
-  font-size: 18px;
-}
-
-.right-status {
-  display: flex;
-  gap: 10px;
-  font-size: 18px;
-}
-.right-status .on { color: #64ff92; }
-.right-status .off { color: #8aa5bb; }
-
-.display-body {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+.display-body.single-column {
+  display: block;
   flex: 1;
 }
 
-.left-menu {
-  border-right: 1px solid #4ea3ff;
-  padding-top: 12px;
-}
-
-.left-item {
-  padding: 18px 16px;
-  font-size: 22px;
-  color: #d4f4ff;
-}
-
-.left-item.active {
-  background: rgba(52, 172, 255, 0.6);
-  font-weight: bold;
-}
-
-.right-menu {
-  padding: 12px 18px;
-}
-
-.breadcrumb {
-  background: rgba(52, 172, 255, 0.7);
-  padding: 12px 14px;
-  font-size: 18px;
-  margin-bottom: 18px;
-}
-
-.right-item {
-  padding: 16px 8px;
-  font-size: 28px;
-  color: #dbffff;
-}
-
-.right-item.active {
-  color: #ffffff;
-  font-weight: bold;
-}
-
-.display-footer {
-  border-top: 1px solid #4ea3ff;
-  padding: 10px 12px;
-  font-size: 18px;
-  color: #8dd0ff;
-}
-
-.ipc-state {
-  margin-top: 12px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.nav-pad {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.nav-middle {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr;
-  gap: 10px;
-}
-
-.button-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-button {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--line);
-  padding: 12px 14px;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-button:hover {
-  background: #21457f;
-}
-
-button.primary {
-  background: var(--active);
-  font-weight: bold;
-}
-
-button.danger {
-  background: #803248;
-}
-
-.json-wrap {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.tabs-panel {
-  margin-top: 16px;
-}
-
-.tab-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-pre {
-  background: #09111f;
-  color: #bfe9ff;
-  border: 1px solid #27497b;
-  padding: 12px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  min-height: 220px;
-}
-
-@media (max-width: 1100px) {
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .button-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .json-wrap {
-    grid-template-columns: 1fr;
-  }
-
-  .display-body {
-    grid-template-columns: 180px 1fr;
-  }
-
-  .right-item {
-    font-size: 22px;
-  }
-}
-/* v0.7.0: Node-Typen */
-.node-icon { display: inline-block; width: 20px; color: var(--muted); }
-.right-item.type-station .node-icon { color: #50f090; }
-.right-item.type-action  .node-icon { color: #ffd166; }
-.right-item.type-toggle  .node-icon { color: #47b8ff; }
-.right-item.type-info    { color: var(--muted); font-style: italic; }
-.right-item.playing      { color: #50f090; font-weight: bold; }
-.right-item.active.playing { background: rgba(80, 240, 144, 0.3); }
-
-/* Breadcrumb im Display-Mock */
-.breadcrumb {
-  background: rgba(52, 172, 255, 0.25);
-  border-left: 3px solid var(--active);
-  padding: 6px 10px;
-  font-size: 14px;
-  color: var(--active2);
-  margin-bottom: 8px;
-}
-
-/* v0.7.3: Tree Navigation */
-.menu-right {
-  padding: 6px 12px;
+.menu-tree {
+  padding: 8px 12px;
   overflow-y: auto;
-  flex: 1;
+  height: 100%;
 }
 
-.right-item {
+.tree-item {
   display: flex;
   align-items: center;
   padding: 13px 8px;
@@ -291,24 +20,33 @@ pre {
   transition: background 0.1s;
 }
 
-.right-item:hover { background: rgba(52,172,255,0.12); }
-.right-item.selected {
+.tree-item:hover {
+  background: rgba(52,172,255,0.12);
+}
+
+.tree-item.selected {
   background: rgba(52, 172, 255, 0.7);
   color: #fff;
   font-weight: bold;
 }
-.right-item.playing { color: #50f090; }
-.right-item.selected.playing { background: rgba(80,240,144,0.3); color:#50f090; }
-.right-item.type-info { color: #86a6c8; font-style: italic; font-size: 18px; cursor: default; }
-.right-item.type-info:hover { background: transparent; }
 
-.node-label { flex: 1; }
-.node-arrow { color: var(--muted); font-size: 18px; margin-left: 8px; }
-
-.back-btn {
-  display: inline-block;
-  margin-right: 8px;
-  cursor: pointer;
-  color: var(--active2);
+.tree-item.playing {
+  color: #50f090;
+  font-weight: bold;
 }
-.back-btn:hover { color: #fff; }
+
+.tree-item.selected.playing {
+  background: rgba(80,240,144,0.3);
+  color: #50f090;
+}
+
+.tree-item.type-info {
+  color: #86a6c8;
+  font-style: italic;
+  font-size: 18px;
+  cursor: default;
+}
+
+.tree-item.type-info:hover {
+  background: transparent;
+}
