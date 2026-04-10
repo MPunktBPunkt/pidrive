@@ -233,16 +233,10 @@ def _execute_node(node, menu_state, store, S, settings):
 
     def bg(fn): threading.Thread(target=fn, daemon=True).start()
 
-    action = node.action
-    if not action:
-        return
-
-    log.info(f"MENU_ACTION id={node.id} type={node.type} action={action or 'play'}")
-
-    # Stationen abspielen
+    # Stationen zuerst prüfen — haben action=None, brauchen src/meta
     if node.type == "station":
         log.info(f"PLAY_STATION label={node.label!r} source={node.source} meta={node.meta}")
-        src = node.source
+        src  = node.source
         meta = node.meta
         if src == "fm":
             # meta["name"] für reinen Sendernamen (ohne Frequenz-Suffix)
@@ -400,14 +394,20 @@ def main():
         if needs_rebuild:
             rebuild_tree(menu_state, store, S, settings)
 
+        # Nach Trigger: IPC sofort schreiben (schnelle Reaktion im Web/Display)
+        if needs_rebuild or (os.path.exists(ipc.CMD_FILE) is False and
+                             menu_state.rev != getattr(main, '_last_rev', -1)):
+            ipc.write_menu(menu_state.export())
+            main._last_rev = menu_state.rev
+
         # StationStore Hot-Reload (alle 10s prüfen)
         if time.time() - store_timer > 10:
             if store.reload_if_changed():
                 rebuild_tree(menu_state, store, S, settings)
             store_timer = time.time()
 
-        # IPC schreiben (jede Sekunde)
-        if time.time() - ipc_timer > 1.0:
+        # IPC schreiben (alle 0.3s — schneller als vorher 1s)
+        if time.time() - ipc_timer > 0.3:
             ipc.write_status(S, settings)
             ipc.write_menu(menu_state.export())
             ipc_timer = time.time()
@@ -425,7 +425,7 @@ def main():
                               settings.get("audio_output", "auto"))
             stat_timer = time.time()
 
-        time.sleep(0.05)
+        time.sleep(0.03)
 
 
 if __name__ == "__main__":

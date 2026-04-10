@@ -230,6 +230,51 @@ def api_ready():
         "menu_ok":      pathlib.Path("/tmp/pidrive_menu.json").exists(),
     })
 
+@app.route("/api/nav", methods=["POST"])
+def api_nav():
+    """Direktnavigation: {"target": 3} setzt Cursor auf Index 3.
+    Ersetzt N einzelne up/down-Requests durch einen einzigen Aufruf."""
+    data = request.get_json(silent=True) or {}
+    target = data.get("target")
+    cmd    = data.get("cmd")
+
+    if cmd:
+        # Direkt-Cmd (enter, back etc.)
+        if cmd not in ("enter","back","left","right","up","down"):
+            return jsonify({"ok": False, "error": "cmd nicht erlaubt"}), 400
+        try:
+            write_cmd(cmd)
+            return jsonify({"ok": True, "cmd": cmd})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    if target is None:
+        return jsonify({"ok": False, "error": "target oder cmd fehlt"}), 400
+
+    # Aktuellen Cursor aus menu.json lesen
+    menu = read_json(MENU_FILE, {})
+    current = menu.get("cursor", menu.get("item", 0))
+    steps = int(target) - int(current)
+
+    if steps == 0:
+        # Schon dort — direkt enter
+        try:
+            write_cmd("enter")
+            return jsonify({"ok": True, "steps": 0, "cmd": "enter"})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    direction = "down" if steps > 0 else "up"
+    import time
+    try:
+        for _ in range(abs(steps)):
+            write_cmd(direction)
+            time.sleep(0.06)   # kurze Pause zwischen Schritten
+        write_cmd("enter")
+        return jsonify({"ok": True, "steps": steps, "direction": direction})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @app.route("/api/service")
 def api_service():
     name = request.args.get("name", "pidrive_core")

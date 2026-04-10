@@ -119,22 +119,41 @@ def build_items(screen, S, settings):
 
 
 def scan_devices(S, settings):
-    """BT-Geräte scannen via headless_pick."""
-    import ipc, time, subprocess
-    ipc.write_progress("Bluetooth", "Scanne Geräte (10s) ...", color="blue")
+    """BT-Geräte scannen: timeout-basiert, kein interaktiver bluetoothctl."""
+    import ipc, time, subprocess, log
+    ipc.write_progress("Bluetooth", "Scanne Geräte (8s) ...", color="blue")
     try:
-        subprocess.run(["bluetoothctl","scan","on"], timeout=2,
-                       capture_output=True)
-        time.sleep(8)
-        subprocess.run(["bluetoothctl","scan","off"], timeout=2,
-                       capture_output=True)
-        r = subprocess.run("bluetoothctl devices | awk '{print $3}'",
-                           shell=True, capture_output=True, text=True, timeout=5)
-        devices = [d.strip() for d in r.stdout.splitlines() if d.strip()]
+        # scan on via timeout (nicht interaktiver Modus)
+        subprocess.run(
+            "timeout 8s bluetoothctl scan on 2>/dev/null || true",
+            shell=True, capture_output=True, timeout=12)
+        # Gefundene Geräte auflesen
+        r = subprocess.run(
+            "bluetoothctl devices 2>/dev/null",
+            shell=True, capture_output=True, text=True, timeout=5)
+        devices = []
+        for line in r.stdout.splitlines():
+            parts = line.strip().split(" ", 2)
+            if len(parts) >= 3 and parts[0] == "Device":
+                mac  = parts[1]
+                name = parts[2] if len(parts) > 2 else mac
+                devices.append(f"{name}  ({mac})")
     except Exception as e:
-        ipc.write_progress("BT Scan", f"Fehler: {e}", color="red")
+        log.error(f"BT scan: {e}")
+        ipc.write_progress("BT Scan", "Scan fehlgeschlagen", color="red")
         time.sleep(2); ipc.clear_progress(); return
+
     ipc.clear_progress()
     if not devices:
         ipc.write_progress("BT Scan", "Keine Geräte gefunden", color="orange")
-        time.sleep(2); ipc.clear_progress()
+        time.sleep(2); ipc.clear_progress(); return
+
+    chosen = ipc.headless_pick("BT Geraete", devices)
+    if chosen:
+        mac = chosen.split("(")[-1].rstrip(")")
+        ipc.write_progress("Verbinde", chosen[:36], color="blue")
+        subprocess.run(f"bluetoothctl pair {mac}; bluetoothctl connect {mac}",
+                       shell=True, capture_output=True, timeout=15)
+        ipc.write_progress("BT", f"Verbunden: {chosen[:28]}", color="green")
+        time.sleep(2)
+    ipc.clear_progress()

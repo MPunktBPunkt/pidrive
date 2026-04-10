@@ -351,11 +351,20 @@ def main():
     log.info("Display-Loop gestartet")
     _render_count = 0
     _last_debug   = 0
+    _last_rev     = -1
+    _last_status_ts = -1
 
     while True:
         # Status und Menue von Core lesen
         status = ipc.read_json(ipc.STATUS_FILE, {})
         menu   = ipc.read_json(ipc.MENU_FILE,   {})
+
+        # Nur rendern wenn sich etwas geändert hat (rev oder status timestamp)
+        cur_rev = menu.get("rev", 0)
+        cur_ts  = status.get("ts", 0)
+        changed = (cur_rev != _last_rev) or (cur_ts != _last_status_ts)
+        _last_rev = cur_rev
+        _last_status_ts = cur_ts
 
         # GPT-5.4: Fallback wenn Core noch nicht bereit
         core_ready = os.path.exists(ipc.READY_FILE)
@@ -373,8 +382,9 @@ def main():
                 screen.blit(t, (W//2 - t.get_width()//2, 110))
                 pygame.display.flip()
             else:
-                render(screen, fonts, status, menu)
-                _render_count += 1
+                if changed:
+                    render(screen, fonts, status, menu)
+                    _render_count += 1
         except Exception as e:
             log.error(f"Render-Fehler: {e}")
 
