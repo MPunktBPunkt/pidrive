@@ -272,3 +272,43 @@ pre {
   color: var(--active2);
   margin-bottom: 8px;
 }
+
+/* v0.7.3: Tree Navigation */
+.menu-right {
+  padding: 6px 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.right-item {
+  display: flex;
+  align-items: center;
+  padding: 13px 8px;
+  font-size: 24px;
+  color: #dbffff;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(78, 163, 255, 0.08);
+  transition: background 0.1s;
+}
+
+.right-item:hover { background: rgba(52,172,255,0.12); }
+.right-item.selected {
+  background: rgba(52, 172, 255, 0.7);
+  color: #fff;
+  font-weight: bold;
+}
+.right-item.playing { color: #50f090; }
+.right-item.selected.playing { background: rgba(80,240,144,0.3); color:#50f090; }
+.right-item.type-info { color: #86a6c8; font-style: italic; font-size: 18px; cursor: default; }
+.right-item.type-info:hover { background: transparent; }
+
+.node-label { flex: 1; }
+.node-arrow { color: var(--muted); font-size: 18px; margin-left: 8px; }
+
+.back-btn {
+  display: inline-block;
+  margin-right: 8px;
+  cursor: pointer;
+  color: var(--active2);
+}
+.back-btn:hover { color: #fff; }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.6.0
+"""diagnose.py - PiDrive System-Diagnose v0.7.3
 
 v0.6.0: Core/Display getrennt.
 - pidrive_core.service  — headless, kein pygame
@@ -22,7 +22,7 @@ def err(m):  print(f"  ✗ {m}")
 def nfo(m):  print(f"    {m}")
 
 def check_services():
-    S("PIDRIVE SERVICES (v0.6.0: Core + Display)")
+    S("PIDRIVE SERVICES (Core + Display + Web)")
 
     # Core
     core_st = run("systemctl is-active pidrive_core 2>/dev/null")
@@ -91,11 +91,11 @@ def check_display_env():
         warn("SDL_VIDEO_FBCON_KEEP_TTY=1 fehlt (set_mode() koennte haengen)")
 
 def check_fbcp():
-    S("FBCP (sollte in v0.6.0 NICHT mehr laufen)")
+    S("FBCP (seit v0.6.0 dauerhaft entfernt)")
     r = run("pgrep -a fbcp")
     if r:
         warn(f"fbcp laeuft noch: {r}")
-        warn("  In v0.6.0 nicht mehr noetig (fb1 direkt)")
+        warn("  Korrekt: kein fbcp mehr (fb1 direkt)")
     else:
         ok("fbcp laeuft nicht (korrekt fuer v0.6.0)")
 
@@ -201,7 +201,7 @@ def summary():
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.6.2\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.7.3\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()

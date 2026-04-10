@@ -38,35 +38,56 @@
             </div>
           </div>
 
-          <div class="display-body">
+          <div class="display-body" id="menuBody">
             <div class="left-menu">
-              {% set current_cat = vm["menu"].get('cat') %}
-              {% if vm["categories"] %}
-                {% for cat in vm["categories"] %}
-                  <div class="left-item {% if loop.index0 == current_cat %}active{% endif %}">
-                    {{ cat }}
-                  </div>
-                {% endfor %}
-              {% else %}
-                {% for cat in ['Musik', 'WiFi', 'Bluetooth', 'System'] %}
-                  <div class="left-item {% if cat == vm["menu"].get('cat_label') %}active{% endif %}">
-                    {{ cat }}
-                  </div>
-                {% endfor %}
-              {% endif %}
+              {# Linke Spalte: immer Root-Ebene (Hauptkategorien) #}
+              {% set path = vm["path"] %}
+              {% set path_cat = path[1] if path|length > 1 else "" %}
+              {% for cat in vm["categories"] %}
+                <div class="left-item {% if cat == path_cat %}active{% endif %}"
+                     onclick="sendCmd('cat:{{ loop.index0 }}')">
+                  {{ cat }}
+                </div>
+              {% endfor %}
             </div>
 
-            <div class="right-menu" id="rightMenu">
-              <div class="breadcrumb">› {{ vm["menu"].get('item_label', '-') }}</div>
+            <div class="menu-right" id="rightMenu">
+              {# Breadcrumb: Pfad ab 2. Ebene #}
+              {% if path|length > 2 %}
+                <div class="breadcrumb" id="breadcrumb">
+                  <span class="back-btn" onclick="sendCmd('back')">◀</span>
+                  {{ path[2:] | join(" › ") }}
+                </div>
+              {% elif path|length == 2 %}
+                <div class="breadcrumb" id="breadcrumb">
+                  {{ path[1] }}
+                </div>
+              {% endif %}
 
-              {% if vm["items"] %}
-                {% for item in vm["items"] %}
-                  <div class="right-item {% if loop.index0 == vm["menu"].get('item') %}active{% endif %}">
-                    {{ item }}
+              {# Nodes aus neuem Format — primäre Datenquelle #}
+              {% set nodes = vm["nodes"] %}
+              {% set cursor = vm["cursor"] %}
+              {% if nodes %}
+                {% for node in nodes %}
+                  {% set ntype = node.get("type","folder") if node is mapping else "folder" %}
+                  {% set label = node.get("label","?") if node is mapping else node %}
+                  {% set active = node.get("active",false) if node is mapping else false %}
+                  {% set has_ch = node.get("has_children",false) if node is mapping else false %}
+                  {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
+                  <div class="right-item type-{{ ntype }} {% if loop.index0 == cursor %}selected{% endif %} {% if active %}playing{% endif %}"
+                       onclick="nodeClick('{{ ntype }}', {{ loop.index0 }})">
+                    <span class="node-icon">{{ icons.get(ntype,"▸") }}</span>
+                    <span class="node-label">{{ label }}</span>
+                    {% if has_ch %}<span class="node-arrow">›</span>{% endif %}
                   </div>
                 {% endfor %}
+              {% elif vm["items"] %}
+                {# Compat-Fallback: alte items-Liste #}
+                {% for item in vm["items"] %}
+                  <div class="right-item {% if loop.index0 == cursor %}selected{% endif %}">▸ {{ item }}</div>
+                {% endfor %}
               {% else %}
-                <div class="right-item active">{{ vm["menu"].get('item_label', 'Keine Daten') }}</div>
+                <div class="right-item">Keine Daten</div>
               {% endif %}
             </div>
           </div>
