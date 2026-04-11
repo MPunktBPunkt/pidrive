@@ -8,7 +8,6 @@ import os
 import time
 import log
 import ipc
-from ui import Item
 
 INSTALL_DIR        = os.path.expanduser("~/pidrive")
 REPO_URL           = "https://github.com/MPunktBPunkt/pidrive"
@@ -106,45 +105,7 @@ def check_update_available():
         return remote_v
     return None
 
-def build_items(screen, S, settings):
-    update_available = {"v": None}
-
-    def check_action():
-        ipc.write_progress("Update", "Prüfe GitHub...", color="blue")
-        remote_v = get_remote_version()
-        local_v  = get_local_version()
-        if remote_v is None:
-            ipc.write_progress("Fehler", "Kein Internet", color="red")
-        elif remote_v == local_v:
-            ipc.write_progress("Aktuell", f"Version {local_v}", color="green")
-        else:
-            update_available["v"] = remote_v
-            ipc.write_progress("Update!", f"{local_v} → {remote_v}", color="orange")
-        time.sleep(2)
-        ipc.clear_progress()
-
-    def update_action():
-        do_update()
-
-    def show_version():
-        local_v = get_local_version()
-        ipc.write_progress("Version", f"PiDrive {local_v}", color="blue")
-        time.sleep(3)
-        ipc.clear_progress()
-
-    return [
-        Item("Auf Updates prüfen",
-             sub=lambda: f"Neu: {update_available['v']}"
-                         if update_available["v"] else "Aktuell",
-             action=check_action),
-        Item("Update installieren",
-             sub=lambda: get_local_version(),
-             action=update_action),
-        Item("Version anzeigen",
-             sub=lambda: get_local_version(),
-             action=show_version),
-    ]
-
+# build_items entfernt
 
 def run_update(S):
     """OTA Update via install.sh."""

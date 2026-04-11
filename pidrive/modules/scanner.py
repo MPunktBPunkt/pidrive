@@ -9,7 +9,6 @@ Scan-Funktion: Squelch-Erkennung via rtl_fm -l, stoppt bei Signal.
 import subprocess
 import time
 import ipc
-from ui import Item
 import log
 
 # ── Kanaltabellen ────────────────────────────────────────────────────────────
@@ -191,105 +190,7 @@ def _freq_input(band):
 
 # ── Menu ─────────────────────────────────────────────────────────────────────
 
-def build_items(screen, S, settings):
-
-    def pmr_select():
-        if not check_hardware(None): return
-        names = [f"K{c['ch']:02d}  {c['freq']:.5g} MHz  {c['name']}"
-                 for c in PMR446_CHANNELS]
-        chosen = ipc.headless_pick("PMR446 Kanal", names)
-        if chosen:
-            idx = names.index(chosen)
-            play_freq(PMR446_CHANNELS[idx]["freq"],
-                      PMR446_CHANNELS[idx]["name"], 12500, S)
-
-    def freenet_select():
-        if not check_hardware(None): return
-        names = [f"K{c['ch']}  {c['freq']:.5g} MHz  {c['name']}"
-                 for c in FREENET_CHANNELS]
-        chosen = ipc.headless_pick("Freenet Kanal", names)
-        if chosen:
-            idx = names.index(chosen)
-            play_freq(FREENET_CHANNELS[idx]["freq"],
-                      FREENET_CHANNELS[idx]["name"], 12500, S)
-
-    def lpd_select():
-        if not check_hardware(None): return
-        names = [f"K{c['ch']:02d}  {c['freq']:.3f} MHz" for c in LPD433_CHANNELS]
-        chosen = ipc.headless_pick("LPD433 Kanal", names)
-        if chosen:
-            idx = names.index(chosen)
-            play_freq(LPD433_CHANNELS[idx]["freq"],
-                      LPD433_CHANNELS[idx]["name"], 12500, S)
-
-    def mk_list_scan(channels, bw, d):
-        def f():
-            if not check_hardware(None): return
-            ch = _scan_list(S, channels, bw, d)
-            if ch: play_freq(ch["freq"], ch["name"], bw, S)
-        return f
-
-    def mk_range_scan(band, bw, d):
-        def f():
-            if not check_hardware(None): return
-            r = _scan_range(S, band, bw, d)
-            if r: play_freq(r["freq"], r["name"], bw, S)
-        return f
-
-    def mk_manual(band, bw):
-        def f():
-            if not check_hardware(None): return
-            freq = _freq_input(band)
-            if freq is not None:
-                play_freq(freq, band["short"], bw, S)
-        return f
-
-    def stop_action():
-        stop(S)
-        ipc.write_progress("Scanner", "Gestoppt")
-        time.sleep(1)
-
-    return [
-        Item("PMR446",
-             submenu=[
-                 Item("Kanal waehlen", sub="K1-K8",    action=pmr_select),
-                 Item("Scan aufwaerts", sub="K1 -> K8", action=mk_list_scan(PMR446_CHANNELS, 12500, 1)),
-                 Item("Scan abwaerts",  sub="K8 -> K1", action=mk_list_scan(PMR446_CHANNELS, 12500, -1)),
-             ]),
-        Item("Freenet",
-             action=freenet_select),
-        Item("LPD433",
-             submenu=[
-                 Item("Kanal waehlen",  sub="K1-K69",        action=lpd_select),
-                 Item("Scan aufwaerts", sub="K01 -> K69",     action=mk_list_scan(LPD433_CHANNELS, 12500, 1)),
-                 Item("Scan abwaerts",  sub="K69 -> K01",     action=mk_list_scan(LPD433_CHANNELS, 12500, -1)),
-             ]),
-        Item("VHF manuell",
-             submenu=[
-                 Item("Frequenz",       sub="manuell eingeben", action=mk_manual(VHF_RANGE, 25000)),
-                 Item("Scan aufwaerts", sub="136 -> 174 MHz",   action=mk_range_scan(VHF_RANGE, 25000, 1)),
-                 Item("Scan abwaerts",  sub="174 -> 136 MHz",   action=mk_range_scan(VHF_RANGE, 25000, -1)),
-             ]),
-        Item("UHF manuell",
-             submenu=[
-                 Item("Frequenz",       sub="manuell eingeben", action=mk_manual(UHF_RANGE, 25000)),
-                 Item("Scan aufwaerts", sub="400 -> 470 MHz",   action=mk_range_scan(UHF_RANGE, 25000, 1)),
-                 Item("Scan abwaerts",  sub="470 -> 400 MHz",   action=mk_range_scan(UHF_RANGE, 25000, -1)),
-             ]),
-        Item("Stop", action=stop_action),
-    ]
-
-
-# ── Direkt-Steuerung via Trigger ──────────────────────────────────────────────
-
-BANDS = {
-    "pmr446":  {"channels": PMR446_CHANNELS,  "bw": 12500},
-    "freenet": {"channels": FREENET_CHANNELS,  "bw": 12500},
-    "lpd433":  {"channels": LPD433_CHANNELS,   "bw": 12500},
-    "vhf":     {"band": VHF_RANGE, "bw": 25000},
-    "uhf":     {"band": UHF_RANGE, "bw": 25000},
-}
-_current_ch = {}   # band -> index
+# build_items entfernt
 
 def _get_channels(band_id):
     b = BANDS.get(band_id, {})

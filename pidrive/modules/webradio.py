@@ -3,7 +3,6 @@ modules/webradio.py - Webradio Modul
 PiDrive v0.6.1 - pygame-frei
 """
 import subprocess, json, os, time, ipc
-from ui import Item
 
 STATIONS_FILE = os.path.join(os.path.dirname(__file__), "../config/stations.json")
 _player_proc = None

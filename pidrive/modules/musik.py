@@ -3,7 +3,6 @@ modules/musik.py - Spotify & Wiedergabe Modul
 PiDrive v0.6.1 - pygame-frei
 """
 import subprocess, time, ipc
-from ui import Item
 
 def _bg(cmd):
     try: subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

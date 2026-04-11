@@ -12,7 +12,6 @@ import subprocess
 import time
 import io
 import ipc
-from ui import Item
 
 _player_proc = None
 SUPPORTED = (".mp3", ".m4a", ".flac", ".ogg", ".wav")
@@ -117,58 +116,7 @@ def show_now_playing(tags, S):
         color="blue"
     )
 
-def build_items(screen, S, settings):
-    """Gibt Bibliothek-Untermenue-Items zurueck."""
-    music_path = settings.get("music_path", os.path.expanduser("~/Musik"))
-
-    def browse_library():
-        if not os.path.isdir(music_path):
-            ipc.write_progress("Bibliothek", f"Pfad nicht gefunden: {music_path}", color="red")
-            time.sleep(2); ipc.clear_progress(); return
-
-        files = scan_files(music_path)
-        if not files:
-            ipc.write_progress("Bibliothek", "Keine Dateien gefunden", color="orange")
-            time.sleep(2); ipc.clear_progress(); return
-
-        names = [os.path.basename(f) for f in files]
-        chosen_name = ipc.headless_pick("Bibliothek", names)
-        if not chosen_name:
-            return
-
-        idx = names.index(chosen_name)
-        filepath = files[idx]
-
-        ipc.write_progress("Laden...", chosen_name[:30])
-        tags = get_tags(filepath)
-        play_file(filepath, S)
-
-        # Now-Playing via IPC anzeigen
-        if S.get("library_playing"):
-            show_now_playing(tags, S)
-
-    def stop_action():
-        stop_playback(S)
-        ipc.write_progress("Bibliothek", "Gestoppt")
-        time.sleep(1)
-
-    def set_path_action():
-        ipc.write_progress("Musik-Pfad", music_path[:36])
-        time.sleep(3)
-
-    items = [
-        Item("Durchsuchen",
-             sub=lambda: S.get("library_track", "Leer") if S.get("library_playing")
-                         else f"{music_path[-20:]}",
-             action=browse_library),
-        Item("Stop",
-             action=stop_action),
-        Item("Pfad",
-             sub=lambda: music_path[-30:],
-             action=set_path_action),
-    ]
-    return items
-
+# build_items entfernt
 
 def browse_and_play(S, settings):
     """Bibliothek durchsuchen via headless_pick und abspielen."""

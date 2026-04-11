@@ -17,7 +17,6 @@ import os
 import json
 import time
 import ipc
-from ui import Item
 import log
 
 STATIONS_FILE = os.path.join(

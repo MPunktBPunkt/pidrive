@@ -3,7 +3,6 @@ modules/dabfm.py - DAB+/FM kombiniert
 PiDrive v0.6.1 - pygame-frei
 """
 import ipc, time
-from ui import Item
 
 def build_items(screen, S, settings):
     def no_rtlsdr():

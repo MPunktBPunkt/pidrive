@@ -9,7 +9,6 @@ import os
 import time
 import log
 import ipc
-from ui import Item
 
 C_DAB = (0, 200, 180)
 
