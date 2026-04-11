@@ -150,10 +150,37 @@ def scan_devices(S, settings):
 
     chosen = ipc.headless_pick("BT Geraete", devices)
     if chosen:
-        mac = chosen.split("(")[-1].rstrip(")")
-        ipc.write_progress("Verbinde", chosen[:36], color="blue")
-        subprocess.run(f"bluetoothctl pair {mac}; bluetoothctl connect {mac}",
-                       shell=True, capture_output=True, timeout=15)
-        ipc.write_progress("BT", f"Verbunden: {chosen[:28]}", color="green")
+        mac  = chosen.split("(")[-1].rstrip(")")
+        name = chosen.split("  (")[0].strip()
+        ipc.write_progress("Verbinde", f"{name}...", color="blue")
+        log.info(f"BT: verbinde {mac} ({name})")
+        ok = False
+        try:
+            # Erst connect versuchen (bereits gepaart?)
+            r = subprocess.run(f"bluetoothctl connect {mac}",
+                               shell=True, capture_output=True,
+                               text=True, timeout=10)
+            ok = "successful" in r.stdout.lower() or "connected" in r.stdout.lower()
+        except subprocess.TimeoutExpired:
+            pass
+        if not ok:
+            try:
+                # Neu paaren und dann verbinden
+                ipc.write_progress("Paare", f"{name}...", color="blue")
+                subprocess.run(f"bluetoothctl pair {mac}",
+                               shell=True, capture_output=True,
+                               text=True, timeout=20)
+                r = subprocess.run(f"bluetoothctl connect {mac}",
+                                   shell=True, capture_output=True,
+                                   text=True, timeout=10)
+                ok = "successful" in r.stdout.lower() or "connected" in r.stdout.lower()
+            except subprocess.TimeoutExpired:
+                pass
+        if ok:
+            ipc.write_progress("BT", f"Verbunden: {name[:24]}", color="green")
+            log.info(f"BT: Verbunden {mac}")
+        else:
+            ipc.write_progress("BT", f"Verbindung fehlgeschlagen", color="red")
+            log.warn(f"BT: Verbindung fehlgeschlagen {mac}")
         time.sleep(2)
     ipc.clear_progress()

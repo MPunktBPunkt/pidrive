@@ -286,6 +286,21 @@ def check_trigger(menu_state, store, S, settings):
     """Trigger-Datei auslesen und verarbeiten."""
     if not os.path.exists(ipc.CMD_FILE):
         return False
+
+    # Race condition fix: wenn headless_pick läuft (list aktiv),
+    # Navigation-Trigger NICHT konsumieren — headless_pick liest sie selbst
+    NAV_CMDS = {"up","down","enter","back","left","right"}
+    try:
+        lst = ipc.read_json(ipc.LIST_FILE, {})
+        if lst.get("active"):
+            # Nur cmd lesen ohne zu löschen, dann prüfen ob es Navigation ist
+            with open(ipc.CMD_FILE) as f:
+                peek = f.read().strip()
+            if peek in NAV_CMDS:
+                return False  # headless_pick soll es lesen
+    except Exception:
+        pass
+
     try:
         with open(ipc.CMD_FILE) as f:
             cmd = f.read().strip()
@@ -368,7 +383,7 @@ def rebuild_tree(menu_state, store, S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.12 gestartet")
+    log.info("PiDrive Core v0.7.13 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
