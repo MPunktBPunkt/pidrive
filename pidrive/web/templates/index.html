@@ -88,19 +88,12 @@
           </div>
         </div>
 
-        {# headless_pick: Auswahlliste wenn aktiv #}
-          {% if vm["list_active"] %}
-          <div class="list-overlay" id="listOverlay">
-            <div class="list-title">{{ vm["list_title"] }}</div>
-            {% for item in vm["list_items"] %}
-              <div class="list-item {% if loop.index0 == vm['list_selected'] %}selected{% endif %}"
-                   onclick="listPick({{ loop.index0 }})">
-                {{ item }}
-              </div>
-            {% endfor %}
-            <div class="list-hint">↑↓ navigieren — Enter wählen — Back abbrechen</div>
+        {# headless_pick: immer im DOM, JS steuert display #}
+          <div class="list-overlay" id="listOverlay" style="display:none">
+            <div class="list-title" id="listTitle">Auswahl</div>
+            <div id="listItems"></div>
+            <div class="list-hint">↑↓ navigieren &mdash; Enter wählen &mdash; Back abbrechen</div>
           </div>
-          {% endif %}
 
         <div class="ipc-state">
           <div>Core: {{ '✓ bereit' if vm["debug"]["core_ready"] else '⚠ wartet' }}</div>

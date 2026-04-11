@@ -179,8 +179,20 @@ def scan_devices(S, settings):
         if ok:
             ipc.write_progress("BT", f"Verbunden: {name[:24]}", color="green")
             log.info(f"BT: Verbunden {mac}")
+            # Audio automatisch auf BT umschalten
+            S["bt_sink_mac"]          = mac
+            S["audio_output"]         = "bt"
+            settings["audio_output"]  = "bt"
+            settings["bt_sink_mac"]   = mac
+            settings["alsa_device"]   = f"bluealsa:DEV={mac},PROFILE=a2dp"
+            # Laufendes Radio stoppen (wird mit BT-Device neu gestartet)
+            if S.get("radio_playing"):
+                import webradio as _wr, fm as _fm, dab as _dab
+                _wr.stop(S); _fm.stop(S); _dab.stop(S)
+                ipc.write_progress("BT", "Radio stoppt — bitte Sender erneut wählen", color="blue")
+                log.info("BT: Radio gestoppt für BT-Neustart")
         else:
-            ipc.write_progress("BT", f"Verbindung fehlgeschlagen", color="red")
+            ipc.write_progress("BT", "Verbindung fehlgeschlagen", color="red")
             log.warn(f"BT: Verbindung fehlgeschlagen {mac}")
         time.sleep(2)
     ipc.clear_progress()
