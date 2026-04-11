@@ -350,6 +350,14 @@ def system_check():
             log.info(f"  ✓ WLAN: {ip[0]}")
     except Exception:
         pass
+    # Bluealsa check (fuer BT Audio)
+    bluealsa_running = _run("systemctl is-active bluealsa 2>/dev/null") == "active"
+    if bluealsa_running:
+        log.info("  ✓ bluealsa: aktiv (BT A2DP verfügbar)")
+    else:
+        log.warn("  ⚠ bluealsa: nicht aktiv (BT Audio evtl. nicht verfügbar)")
+        log.warn("    Fix: sudo apt install bluealsa && sudo systemctl enable --now bluealsa")
+
     log.info("--- Core System-Check OK ---")
 
 
@@ -383,7 +391,7 @@ def rebuild_tree(menu_state, store, S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.17 gestartet")
+    log.info("PiDrive Core v0.7.19 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -441,13 +449,25 @@ def main():
             if settings.get("audio_output") == "bt":
                 log.info("BT: Verbindung getrennt — Audio zurück auf Klinke")
                 settings["audio_output"] = "klinke"
-                settings["alsa_device"]  = "hw:1,0"
+                settings["alsa_device"]  = "default"
                 S["audio_output"]        = "klinke"
                 try:
-                    from modules import bluetooth as _bt_mod
-                    _bt_mod._set_raspotify_device("hw:1,0")
+                    import subprocess
+                    # PulseAudio auf ALSA-Sink zurücksetzen
+                    PA = "PULSE_SERVER=unix:/var/run/pulse/native"
+                    sinks = subprocess.run(
+                        PA + " pactl list sinks short 2>/dev/null",
+                        shell=True, capture_output=True, text=True, timeout=3)
+                    for line in sinks.stdout.splitlines():
+                        if "alsa_output" in line:
+                            alsa_sink = line.split()[1]
+                            subprocess.run(
+                                PA + " pactl set-default-sink " + alsa_sink,
+                                shell=True, timeout=3)
+                            log.info("PulseAudio: zurück auf " + alsa_sink)
+                            break
                 except Exception as _e:
-                    log.warn("Raspotify Fallback: " + str(_e))
+                    log.warn("BT Disconnect PulseAudio: " + str(_e))
         main._bt_was_connected = bt_now
 
         # IPC schreiben (alle 0.3s)

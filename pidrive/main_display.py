@@ -327,7 +327,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.7.17 gestartet")
+    log.info("PiDrive Display v0.7.19 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 
