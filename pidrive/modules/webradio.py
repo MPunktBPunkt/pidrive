@@ -20,9 +20,15 @@ def load_stations():
 def play_station(station, S):
     global _player_proc
     stop(S)
+    url = station.get("url","")
+    if not url:
+        import log; log.error(f"webradio: keine URL für {station.get('name','?')}")
+        return
     try:
         _player_proc = subprocess.Popen(
-            ["mpv", "--no-video", "--really-quiet", "--title=pidrive_radio", station["url"]],
+            ["mpv", "--no-video", "--really-quiet",
+             "--audio-device=alsa/hw:1,0",   # explizit ALSA hw:1,0
+             "--title=pidrive_radio", url],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         S["radio_playing"] = True; S["radio_type"] = "WEB"; S["radio_station"] = station["name"]
     except FileNotFoundError:

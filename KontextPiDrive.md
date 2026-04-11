@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.7
+# PiDrive — Kontext & Projektdokumentation v0.7.8
 
 ## Projektbeschreibung
 
@@ -33,7 +33,9 @@ curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh 
 | **Audio-Ausgang** | **3.5mm Klinke** (hw:1,0) → Autoradio AUX-IN |
 | **Stromversorgung** | USB-A Port im Auto (5V/2A min.) oder KFZ-Adapter |
 | **Steuerung** | USB-Tethering / WLAN → SSH / File-Trigger |
-| **BMW iDrive** | ESP32-Bridge (zukuenftig) → `/tmp/pidrive_cmd` |
+| **Audio-Ausgang** | **3.5mm Klinke** (hw:1,0) oder **Bluetooth A2DP** |
+| **Steuerung** | BMW iDrive → AVRCP → `/tmp/pidrive_cmd` (pidrive_avrcp.service) |
+| **BMW iDrive** | BMW 118d 2017 NBT EVO, AVRCP über Bluetooth |
 
 ---
 
@@ -193,7 +195,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.7.7)
+    ├── VERSION              (aktuell: 0.7.8)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -266,14 +268,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.7)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.8)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.7.7):
+Diagnose (v0.7.8):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -336,6 +338,79 @@ KERNEL=="tty3", GROUP="tty", MODE="0660"
 
 Wird von install.sh automatisch angelegt. Stellt sicher dass `/dev/tty3`
 nach jedem Reboot 660-Berechtigungen hat, unabhaengig von rc.local.
+
+---
+
+
+## BMW iDrive Steuerung (AVRCP)
+
+**Fahrzeug:** BMW 118d 2017 (NBT EVO)
+**Protokoll:** Bluetooth A2DP (Audio) + AVRCP (Steuerung)
+
+Kein iPod-Adapter, kein ESP32, kein CAN-Bus nötig.
+Pi verbindet sich per Bluetooth mit dem Auto — Audio UND Steuerung über ein Kabel.
+
+### AVRCP → File-Trigger Mapping
+
+| BMW iDrive Aktion | AVRCP Befehl | PiDrive Trigger |
+|---|---|---|
+| Drehsteller rechts | NEXT | `down` |
+| Drehsteller links | PREV | `up` |
+| Drehsteller drücken | PLAY/PAUSE | `enter` |
+| Zurück-Taste | STOP | `back` |
+| 2x Drücken (< 0.5s) | 2x PLAY/PAUSE | `cat:0` (Jetzt läuft) |
+
+### Audio-Routing (NICHT parallel!)
+
+```
+Bluetooth A2DP:  Pi → BMW Lautsprecher (empfohlen)
+Klinke (AUX):   Pi → BMW AUX-IN        (Fallback)
+```
+
+Wichtig: Audio läuft immer nur auf EINEM Ausgang.
+Wenn BT aktiv: alle mpv-Instanzen nutzen bluealsa/A2DP.
+Wenn Klinke: mpv nutzt ALSA hw:1,0.
+
+### Menü-Design für AVRCP
+
+AVRCP hat nur 4 Befehle → Menü muss damit bedienbar sein:
+
+- **up/down** (Drehen): Einträge wählen
+- **enter** (Drücken): tiefer / Aktion ausführen
+- **back** (Zurück): eine Ebene zurück
+- **2x Drücken**: sofort zu "Jetzt läuft"
+
+Maximale sinnvolle Tiefe: 4 Ebenen.
+Häufigste Aktionen immer oben im Menü.
+
+### Service
+
+```bash
+# Status prüfen
+systemctl status pidrive_avrcp
+
+# Log
+journalctl -u pidrive_avrcp -f
+
+# Manuell testen (ohne BT)
+echo "next" | python3 ~/pidrive/pidrive/avrcp_trigger.py
+```
+
+### Bluetooth Pairing (einmalig)
+
+```bash
+# Am Pi:
+bluetoothctl
+  power on
+  discoverable on
+  pairable on
+
+# Am BMW: Bluetooth-Gerät "PiDrive" suchen und koppeln
+# PIN falls nötig: 0000
+
+# Danach: automatische Verbindung beim Start
+# (pidrive_avrcp.service macht auto_connect beim Start)
+```
 
 ---
 
@@ -714,12 +789,12 @@ sudo systemctl restart pidrive_display
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.7) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.8) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.7) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.7) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.8) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.8) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -736,7 +811,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.7 (aktuell)
+### v0.7.8 (aktuell)
 - BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
 - pidrive_core.service: headless, kein pygame, kein Display
 - pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
@@ -803,9 +878,9 @@ sudo systemctl restart pidrive_display
 
 ---
 
-## Aktueller Stand (v0.7.7)
+## Aktueller Stand (v0.7.8)
 
-**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.7):
+**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.8):
 
 ```
 ✓ pidrive_core.service: active, headless

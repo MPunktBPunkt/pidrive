@@ -1,0 +1,18 @@
+[Unit]
+Description=PiDrive AVRCP Trigger (BMW iDrive → File-Trigger)
+After=bluetooth.target pidrive_core.service
+Wants=bluetooth.target
+# Kein Requires — AVRCP optional, Core läuft auch ohne
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/pidrive/pidrive
+ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/avrcp_trigger.py
+Restart=always
+RestartSec=5
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

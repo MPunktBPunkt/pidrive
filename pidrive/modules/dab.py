@@ -102,7 +102,7 @@ def play_station(station, S):
     try:
         _player_proc = subprocess.Popen(
             f"welle-cli -D 0 -c {ch} -s '{name}' -o - 2>/dev/null | "
-            f"mpv --no-video --really-quiet --title=pidrive_dab - 2>/dev/null",
+            f"mpv --no-video --really-quiet --audio-device=alsa/hw:1,0 --title=pidrive_dab - 2>/dev/null",
             shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
         S["radio_playing"] = True
