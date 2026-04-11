@@ -260,6 +260,13 @@ def _execute_node(node, menu_state, store, S, settings):
             bg(lambda n=_name, u=_url: webradio.play_station({"name": n, "url": u}, S))
         return
 
+    # action-String muss vorhanden sein (toggle/action/info)
+    action = node.action
+    if not action:
+        return   # info-Nodes: kein action → nichts tun
+
+    log.info(f"MENU_ACTION id={node.id} type={node.type} action={action}")
+
     # Toggle-Knoten
     if node.type == "toggle":
         handle_trigger(action, menu_state, store, S, settings)
