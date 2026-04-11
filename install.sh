@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.16           ║
+║        PiDrive Installer v0.7.17           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -176,6 +176,17 @@ sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_core.service"
 cp "$INSTALL_DIR/systemd/pidrive_display.service" "$SERVICE_DIR/pidrive_display.service"
 sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_display.service"
 
+# Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
+if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive_web.service" "$SERVICE_DIR/pidrive_web.service"
+    sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_web.service"
+fi
+
+# AVRCP Service
+if [ -f "$INSTALL_DIR/systemd/pidrive_avrcp.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive_avrcp.service" "$SERVICE_DIR/pidrive_avrcp.service"
+    sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_avrcp.service"
+fi
 
 # v0.6.0: kein monolithischer pidrive.service mehr
 
