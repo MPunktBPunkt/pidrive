@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.17           ║
+║        PiDrive Installer v0.7.19           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -74,7 +74,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     bluez pulseaudio pulseaudio-module-bluetooth \
     wpasupplicant dhcpcd5 rtl-sdr sox \
     python3-flask \
-    bluealsa \
+    python3-bluez \
     python3-dbus \
     python3-gi \
     2>/dev/null || true
