@@ -20,6 +20,32 @@ def _run(cmd):
         return ""
 
 
+def _set_pulseaudio_sink(sink_name):
+    """PulseAudio Default-Sink setzen (fuer BT A2DP).
+    Wechselt automatisch Spotify und Radio auf BT-Kopfhörer."""
+    import subprocess, time
+    PA_SOCKET = "PULSE_SERVER=unix:/var/run/pulse/native"
+    try:
+        # Kurz warten bis BT-Sink erscheint
+        for _ in range(5):
+            r = subprocess.run(
+                PA_SOCKET + " pactl list sinks short 2>/dev/null",
+                shell=True, capture_output=True, text=True, timeout=3)
+            if sink_name in r.stdout:
+                break
+            time.sleep(1)
+        # Default-Sink setzen
+        r = subprocess.run(
+            PA_SOCKET + " pactl set-default-sink " + sink_name,
+            shell=True, capture_output=True, text=True, timeout=5)
+        if r.returncode == 0:
+            log.info("PulseAudio: Default-Sink=" + sink_name)
+        else:
+            log.warn("PulseAudio sink nicht gefunden: " + sink_name)
+    except Exception as e:
+        log.error("PulseAudio sink-Fehler: " + str(e))
+
+
 def _set_raspotify_device(device, restart=True):
     """Raspotify LIBRESPOT_DEVICE in /etc/raspotify/conf setzen."""
     conf = "/etc/raspotify/conf"
@@ -208,10 +234,37 @@ def scan_devices(S, settings):
             except subprocess.TimeoutExpired:
                 pass
         if ok:
-            ipc.write_progress("BT", f"Verbunden: {name[:24]}", color="green")
-            log.info(f"BT: Verbunden {mac}")
+            ipc.write_progress("BT", "Verbunden: " + name[:24], color="green")
+            log.info("BT: Verbunden " + mac)
+            # A2DP Profil explizit verbinden
+            try:
+                subprocess.run(
+                    "bluetoothctl connect " + mac + " 2>/dev/null || true",
+                    shell=True, capture_output=True, timeout=5)
+            except Exception:
+                pass
+            # Audio-Routing auf BT umschalten
+            mac_fmt = mac.replace(":", "_")
+            bt_pa_sink = "bluez_sink." + mac_fmt + ".a2dp_sink"
+            S["bt_sink_mac"]         = mac
+            S["bt_pa_sink"]          = bt_pa_sink
+            S["audio_output"]        = "bt"
+            settings["audio_output"] = "bt"
+            settings["bt_sink_mac"]  = mac
+            settings["bt_pa_sink"]   = bt_pa_sink
+            settings["alsa_device"]  = "default"
+            log.info("Audio: BT PulseAudio " + bt_pa_sink)
+            # PulseAudio Default-Sink auf BT setzen
+            _set_pulseaudio_sink(bt_pa_sink)
+            # Laufendes Radio stoppen
+            if S.get("radio_playing"):
+                try:
+                    import webradio as _wr, fm as _fm, dab as _dab
+                    _wr.stop(S); _fm.stop(S); _dab.stop(S)
+                except Exception:
+                    pass
         else:
-            ipc.write_progress("BT", f"Verbindung fehlgeschlagen", color="red")
-            log.warn(f"BT: Verbindung fehlgeschlagen {mac}")
+            ipc.write_progress("BT", "Verbindung fehlgeschlagen", color="red")
+            log.warn("BT: Verbindung fehlgeschlagen " + mac)
         time.sleep(2)
     ipc.clear_progress()

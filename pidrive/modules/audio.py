@@ -99,12 +99,24 @@ def set_output(mode, settings):
 
 
 def get_alsa_device(settings):
-    """Aktuellen ALSA-Device-String für mpv zurückgeben."""
+    """Aktuellen ALSA-Device-String für mpv zurückgeben.
+    Prüft ob bluealsa läuft, Fallback auf Klinke wenn nicht."""
     mode = settings.get("audio_output", "klinke")
     if mode == "bt":
         mac = settings.get("bt_sink_mac", "")
         if mac:
-            return f"bluealsa:DEV={mac},PROFILE=a2dp"
+            # Prüfen ob bluealsa aktiv ist
+            try:
+                import subprocess
+                r = subprocess.run(
+                    ["systemctl","is-active","bluealsa"],
+                    capture_output=True, text=True, timeout=2)
+                if r.stdout.strip() == "active":
+                    return "bluealsa:DEV=" + mac + ",PROFILE=a2dp"
+            except Exception:
+                pass
+            # Fallback: Klinke
+            log.warn("BT Audio: bluealsa nicht aktiv → Klinke als Fallback")
     elif mode == "hdmi":
         return "hw:0,0"
     return "hw:1,0"  # Standard: Klinke
