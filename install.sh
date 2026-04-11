@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.15           ║
+║        PiDrive Installer v0.7.16           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -238,6 +238,19 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     grep -q "^LIBRESPOT_ONEVENT" /etc/raspotify/conf || \
         echo "LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh" >> /etc/raspotify/conf
+
+    # Standard-Audioausgang: ALSA hw:1,0 (Klinke)
+    # bluetooth.py setzt LIBRESPOT_DEVICE dynamisch um wenn BT verbindet
+    if grep -q "^LIBRESPOT_BACKEND" /etc/raspotify/conf; then
+        sed -i 's|^LIBRESPOT_BACKEND=.*|LIBRESPOT_BACKEND=alsa|' /etc/raspotify/conf
+    else
+        echo 'LIBRESPOT_BACKEND=alsa' >> /etc/raspotify/conf
+    fi
+    if grep -q "^LIBRESPOT_DEVICE" /etc/raspotify/conf; then
+        sed -i 's|^LIBRESPOT_DEVICE=.*|LIBRESPOT_DEVICE=hw:1,0|' /etc/raspotify/conf
+    else
+        echo 'LIBRESPOT_DEVICE=hw:1,0' >> /etc/raspotify/conf
+    fi
     if [ -f /lib/systemd/system/raspotify.service ]; then
         sed -i 's/Wants=network.target/Wants=network-online.target/'  /lib/systemd/system/raspotify.service 2>/dev/null || true
         sed -i 's/After=network.target/After=network-online.target/' /lib/systemd/system/raspotify.service 2>/dev/null || true

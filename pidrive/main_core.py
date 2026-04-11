@@ -383,7 +383,7 @@ def rebuild_tree(menu_state, store, S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.15 gestartet")
+    log.info("PiDrive Core v0.7.16 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -434,6 +434,21 @@ def main():
             if store.reload_if_changed():
                 rebuild_tree(menu_state, store, S, settings)
             store_timer = time.time()
+
+        # BT Disconnect: wenn BT getrennt → Audio auf Klinke zurück
+        bt_now = S.get("bt", False)
+        if getattr(main, '_bt_was_connected', False) and not bt_now:
+            if settings.get("audio_output") == "bt":
+                log.info("BT: Verbindung getrennt — Audio zurück auf Klinke")
+                settings["audio_output"] = "klinke"
+                settings["alsa_device"]  = "hw:1,0"
+                S["audio_output"]        = "klinke"
+                try:
+                    from modules import bluetooth as _bt_mod
+                    _bt_mod._set_raspotify_device("hw:1,0")
+                except Exception as _e:
+                    log.warn("Raspotify Fallback: " + str(_e))
+        main._bt_was_connected = bt_now
 
         # IPC schreiben (alle 0.3s)
         if time.time() - ipc_timer > 0.3:
