@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main_display.py - PiDrive Display v0.6.4
+main_display.py - PiDrive Display v0.7.10
 
 Nur Anzeige — kein Audio, kein Trigger, keine Kernlogik.
 Liest Status von /tmp/pidrive_status.json (geschrieben von Core).
@@ -327,7 +327,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.7.4 gestartet")
+    log.info("PiDrive Display v0.7.10 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 

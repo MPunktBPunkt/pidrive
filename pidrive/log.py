@@ -1,5 +1,5 @@
 """
-log.py - Logging fuer PiDrive v0.6.2
+log.py - Logging fuer PiDrive v0.7.10
 PiDrive - GPL-v3
 
 Features:

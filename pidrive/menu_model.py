@@ -1,5 +1,5 @@
 """
-menu_model.py - PiDrive Menümodell v0.7.0
+menu_model.py - PiDrive Menümodell v0.7.10
 Baumstruktur statt flacher Kategorien/Items.
 
 Architektur nach GPT-5.4 Analyse:

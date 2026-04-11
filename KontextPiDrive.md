@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.8
+# PiDrive — Kontext & Projektdokumentation v0.7.10
 
 ## Projektbeschreibung
 
@@ -189,13 +189,16 @@ sudo ./LCD35-show
     ├── main_core.py         (Core: headless, kein pygame)
     ├── main_display.py      (Display: pygame auf fb1 direkt)
     ├── ipc.py               (IPC: atomares JSON Core↔Display)
+    ├── menu_model.py        (Baummenü: MenuNode, MenuState, StationStore)
+    ├── mpris2.py            (MPRIS2 D-Bus → BMW-Display Metadaten)
+    ├── avrcp_trigger.py     (AVRCP → File-Trigger, BMW iDrive Steuerung)
     ├── webui.py             (Flask Web UI, Port 8080)
     ├── ui.py
     ├── status.py
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.7.8)
+    ├── VERSION              (aktuell: 0.7.10)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -268,14 +271,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.8)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.10)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.7.8):
+Diagnose (v0.7.10):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -395,6 +398,86 @@ journalctl -u pidrive_avrcp -f
 # Manuell testen (ohne BT)
 echo "next" | python3 ~/pidrive/pidrive/avrcp_trigger.py
 ```
+
+### MPRIS2 — BMW-Display Metadaten
+
+Der Pi sendet über MPRIS2 D-Bus Trackinfo ans BMW-Display:
+
+```
+Pi MPRIS2 → Bluetooth AVRCP → BMW iDrive Display
+  Jetzt läuft: "Bayern 3"
+  Artist:      "FM Radio"
+  Album:       "PiDrive Radio"
+```
+
+Während der Menünavigation zeigt das BMW-Display den aktuellen Pfad:
+```
+  Titel:  "FM Radio"
+  Artist: "Quellen › FM Radio"
+```
+
+**Servicedatei:** `mpris2.py` — wird von `main_core.py` gestartet
+
+### AVRCP Version (BMW NBT EVO Kompatibilität)
+
+BMW 118d 2017 NBT EVO bevorzugt AVRCP 1.4 oder 1.5.
+AVRCP 1.6 (Android-Standard) kann Anzeigeprobleme verursachen.
+
+**Fix wird automatisch von install.sh gesetzt:**
+```ini
+# /etc/bluetooth/main.conf
+[AVRCP]
+Version = 0x0105   # = AVRCP 1.5 (stabiler als 1.4, kein BIP)
+```
+
+### WiFi / Bluetooth Interferenz (Pi 3B)
+
+Der Pi 3B teilt sich eine Antenne für 2.4GHz WLAN und Bluetooth.
+Gleichzeitiges Streaming über WLAN + BT-Audio kann zu Rucklern führen.
+
+**Fix in `/etc/bluetooth/main.conf` (von install.sh gesetzt):**
+```ini
+[LE]
+MinConnectionInterval=7
+MaxConnectionInterval=9
+```
+
+**Alternativen:**
+- Pi per LAN-Kabel verbinden (empfohlen im Auto: USB-Tethering)
+- Pi 4 nutzen: hat separate Antennen → kein Problem
+
+**Hinweis:** Pi 3B hat **kein 5GHz** WLAN (erst ab Pi 3B+).
+
+### AVRCP Versionsübersicht
+
+| Version | Pi 3B | BMW NBT EVO | Empfehlung |
+|---|---|---|---|
+| 1.4 | stabil | ✓ | Minimum, Volume-Sync manchmal unzuverlässig |
+| **1.5** | **stabil** | **✓** | **Verwendete Version — bester Sweet Spot** |
+| 1.6 | komplex | teils ✓ | BIP Cover-Art oft instabil, nicht nötig |
+
+### Warum nicht Mopidy
+
+Mopidy ist ein vollständiger Musikserver der die gesamte Audio-Pipeline ersetzt.
+PiDrive nutzt bewusst eigene Module (mpv, raspotify, welle-cli, rtl_fm) —
+das passt zur Core/Display/Web-Architektur und bleibt schlank.
+Mopidy würde die komplette Architektur ersetzen, nicht ergänzen.
+
+### OBD2 Fahrzeugdaten (Roadmap)
+
+Über USB-ELM327 Adapter am OBD2-Port:
+```
+OBD2-Port (unter Lenkrad)
+    │
+ELM327 USB Adapter (~15€)
+    │
+Pi USB → python-obd
+    │
+Drehzahl, Geschwindigkeit, Tankfüllung, Temperatur, Gaspedal, Fehlercodes
+```
+
+Wichtig: Pi 3B hat nur einen BT-Chip → bei BT für Audio/AVRCP
+→ ELM327 per USB verwenden (nicht BT).
 
 ### Bluetooth Pairing (einmalig)
 
@@ -529,6 +612,10 @@ PrivateUsers=false
 
 | Service | Zweck |
 |---|---|
+| pidrive_core.service | Core: headless, Trigger, Menü, IPC |
+| pidrive_display.service | Display: pygame auf fb1 |
+| pidrive_web.service | Web UI Port 8080 |
+| pidrive_avrcp.service | BMW iDrive AVRCP → File-Trigger |
 | rfkill-unblock.service | WiFi + BT beim Boot entsperren |
 | raspotify.service | Spotify Connect |
 
@@ -789,12 +876,12 @@ sudo systemctl restart pidrive_display
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.8) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.10) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.8) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.8) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.10) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.10) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -811,7 +898,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.8 (aktuell)
+### v0.7.10 (aktuell)
 - BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
 - pidrive_core.service: headless, kein pygame, kein Display
 - pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
@@ -878,14 +965,15 @@ sudo systemctl restart pidrive_display
 
 ---
 
-## Aktueller Stand (v0.7.8)
+## Aktueller Stand (v0.7.10)
 
-**System laeuft stabil** — bestätigt 10.04.2026 (v0.7.8):
+**System laeuft stabil** — bestätigt 11.04.2026 (v0.7.10):
 
 ```
 ✓ pidrive_core.service: active, headless
 ✓ pidrive_display.service: active, Split-Screen auf fb1
 ✓ pidrive_web.service: active, http://<PI-IP>:8080
+✓ pidrive_avrcp.service: active, BMW iDrive → AVRCP → Trigger
 ✓ fbcp: deaktiviert (nicht mehr noetig)
 ✓ IPC: status.json + menu.json + display_debug.json + ready
 ✓ Alle Module: pygame-frei
@@ -893,12 +981,15 @@ sudo systemctl restart pidrive_display
 ✓ Web UI: http://PI-IP:8080 (pidrive_web.service)
 ✓ Menü: Baumstruktur, beliebig tief, Senderlisten aus JSON
 ✓ Suchlauf: DAB/FM → JSON → Store → Menü sofort aktualisiert
+✓ MPRIS2: BMW-Display zeigt Sendername/Titel
+✓ AVRCP 1.5 konfiguriert (/etc/bluetooth/main.conf)
 ```
 
 **Offene Punkte:**
 - Audio Klinke/HDMI/BT Umschaltung testen
 - GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- BMW iDrive ESP32 Integration
+- BMW iDrive BT-Pairing und AVRCP Praxistest
+
 
 ## Roadmap
 
@@ -923,7 +1014,11 @@ sudo systemctl restart pidrive_display
 - [ ] Hotspot-Modus
 
 ### Langfristig (Fahrzeug-Integration)
-- [ ] BMW iDrive ESP32 Integration (CAN-Bus oder HID → File-Trigger)
+- [x] AVRCP BMW 118d 2017 NBT EVO → File-Trigger (v0.7.10)
+- [x] MPRIS2 D-Bus → BMW-Display Metadaten (v0.7.10)
+- [x] AVRCP 1.4 Konfiguration für NBT EVO Kompatibilität
+- [ ] OBD2 Fahrzeugdaten (ELM327 USB, python-obd)
+- [ ] BMW iDrive Playlist-Simulation (volles Dateisystem im Auto-Display)
 - [ ] iPod-Emulation (libaacs / iap2)
 - [ ] Spotify Web API (Play/Pause/Next)
 - [ ] Bluetooth-Audio Autoconnect

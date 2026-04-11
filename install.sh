@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.8           ║
+║        PiDrive Installer v0.7.10           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -75,6 +75,8 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     wpasupplicant dhcpcd5 rtl-sdr sox \
     python3-flask \
     bluealsa \
+    python3-dbus \
+    python3-gi \
     2>/dev/null || true
 
 apt-get install -y -qq welle.io 2>/dev/null || \

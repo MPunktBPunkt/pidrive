@@ -1,8 +1,8 @@
 """
-ipc.py - PiDrive IPC v0.7.1
+ipc.py - PiDrive IPC v0.7.10
 Atomares JSON zwischen Core, Display und Web UI.
 
-IPC-VERTRAG (stabil ab v0.7.1):
+IPC-VERTRAG (stabil ab v0.7.10):
 ============================================================
 STATUS: /tmp/pidrive_status.json
   wifi      bool     WLAN verbunden

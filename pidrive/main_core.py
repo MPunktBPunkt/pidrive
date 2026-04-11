@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.7.0
+main_core.py - PiDrive Core v0.7.10
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -17,6 +17,10 @@ signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
 import log, ipc
 import status as S_module
+try:
+    import mpris2 as _mpris2
+except Exception:
+    _mpris2 = None
 from menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
                      webradio, dab, fm, library, scanner, update)
@@ -357,13 +361,16 @@ def rebuild_tree(menu_state, store, S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.4 gestartet")
+    log.info("PiDrive Core v0.7.10 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
     log.info("=" * 50)
 
     system_check()
+
+    # MPRIS2: BMW-Display Metadaten
+    _mpris2_player = _mpris2.start_mpris2() if _mpris2 else None
 
     settings = load_settings()
     S_module.refresh(force=True)
@@ -406,10 +413,15 @@ def main():
                 rebuild_tree(menu_state, store, S, settings)
             store_timer = time.time()
 
-        # IPC schreiben (alle 0.3s — schneller als vorher 1s)
+        # IPC schreiben (alle 0.3s)
         if time.time() - ipc_timer > 0.3:
             ipc.write_status(S, settings)
-            ipc.write_menu(menu_state.export())
+            exported = menu_state.export()
+            ipc.write_menu(exported)
+            # BMW-Display aktualisieren
+            if _mpris2:
+                try: _mpris2.update(S, exported)
+                except Exception: pass
             ipc_timer = time.time()
             if not _ready_written:
                 try:

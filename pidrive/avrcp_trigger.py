@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 avrcp_trigger.py - PiDrive AVRCP → File-Trigger Bridge
-v0.7.8
+v0.7.10
 
 Lauscht auf bluetoothctl-Events und übersetzt AVRCP-Befehle
 des BMW iDrive in /tmp/pidrive_cmd File-Trigger.
@@ -31,15 +31,22 @@ CMD_FILE  = "/tmp/pidrive_cmd"
 READY_FILE= "/tmp/pidrive_ready"
 
 # BMW NBT EVO AVRCP → Trigger Mapping
+# AVRCP 1.5 (stabiler Volume-Sync, beste Balance Pi 3B + BMW NBT EVO)
+# Hinweis: BlueZ Version via /etc/bluetooth/main.conf steuerbar
 AVRCP_MAP = {
-    "next":         "down",
-    "previous":     "up",
-    "play":         "enter",
-    "pause":        "enter",
-    "play_pause":   "enter",
-    "stop":         "back",
-    "fast_forward": "down",  # Schneller Vorlauf = auch vorwärts
-    "rewind":       "up",
+    "next":           "down",
+    "previous":       "up",
+    "play":           "enter",
+    "pause":          "enter",
+    "play_pause":     "enter",
+    "stop":           "back",
+    "fast_forward":   "down",
+    "rewind":         "up",
+    # AVRCP 1.4: Lautstärke-Events
+    "volumeup":       "vol_up",
+    "volumedown":     "vol_down",
+    "volume_up":      "vol_up",
+    "volume_down":    "vol_down",
 }
 
 # Doppelklick-Erkennung: 2x enter in <0.5s → "Jetzt läuft"
@@ -160,6 +167,21 @@ def monitor_dbus():
         log.error(f"AVRCP dbus: {e}")
 
 
+def check_avrcp_version():
+    """Prüft ob AVRCP 1.4 konfiguriert ist (Empfehlung für BMW NBT EVO)."""
+    config = "/etc/bluetooth/main.conf"
+    try:
+        content = open(config).read()
+        if "0x0104" in content or "0x0105" in content:
+            log.info("AVRCP: Version 1.4/1.5 konfiguriert ✓")
+        else:
+            log.warn("AVRCP: Version nicht explizit gesetzt")
+            log.warn("  BMW NBT EVO empfiehlt AVRCP 1.4")
+            log.warn("  Fix: /etc/bluetooth/main.conf → [AVRCP] Version = 0x0105")
+    except Exception:
+        pass
+
+
 def auto_connect_bmw():
     """BMW Bluetooth automatisch verbinden beim Start."""
     # Gespeicherte Geräte prüfen und verbinden
@@ -187,7 +209,7 @@ def auto_connect_bmw():
 def main():
     log.setup("core")  # nutzt Core-Log
     log.info("=" * 50)
-    log.info("PiDrive AVRCP-Trigger v0.7.8 gestartet")
+    log.info("PiDrive AVRCP-Trigger v0.7.10 gestartet")
     log.info("  BMW iDrive NBT EVO → AVRCP → /tmp/pidrive_cmd")
     log.info("=" * 50)
 
