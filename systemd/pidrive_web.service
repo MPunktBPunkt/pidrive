@@ -1,8 +1,11 @@
 [Unit]
 Description=PiDrive Web UI (Debug/Remote)
-After=network-online.target pidrive_core.service
+After=network-online.target
 Wants=network-online.target
-# Kein Requires — Web kann ohne Core laufen (zeigt "Core offline")
+# KEIN After=pidrive_core — erzeugt Ordering-Cycle beim Shutdown
+# Web läuft unabhängig und zeigt "Core offline" wenn nötig
+StartLimitIntervalSec=120
+StartLimitBurst=10
 
 [Service]
 Type=simple

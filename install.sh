@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.14           ║
+║        PiDrive Installer v0.7.15           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -246,11 +246,15 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     ok "Raspotify konfiguriert"
 
-  # Web-Service neu starten: neues HTML-Template aktivieren
-  if systemctl is-active pidrive_web >/dev/null 2>&1; then
-    systemctl restart pidrive_web
-    ok "pidrive_web.service neu gestartet (neues Template)"
-  fi
+  # __pycache__ loeschen: alte .pyc mit pygame-Import
+  find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+  find "$INSTALL_DIR/pidrive" -name "*.pyc" -delete 2>/dev/null || true
+  ok "Python Cache geloescht (sauberer Start)"
+  # Web-Service neu starten
+  systemctl reset-failed pidrive_web 2>/dev/null || true
+  systemctl restart pidrive_web 2>/dev/null && \
+    ok "pidrive_web.service neu gestartet" || \
+    warn "pidrive_web konnte nicht gestartet werden"
   # AVRCP Service starten
   if [ -f "$SERVICE_DIR/pidrive_avrcp.service" ]; then
     systemctl restart pidrive_avrcp 2>/dev/null || true

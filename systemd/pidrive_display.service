@@ -1,7 +1,8 @@
 [Unit]
 Description=PiDrive Display - Statusanzeige
 # GPT-5.4: kein Requires — Display-Fehler stoppen nicht den Core
-After=pidrive_core.service
+After=multi-user.target
+# KEIN After=pidrive_core — vermeidet Ordering-Cycle
 # max 3 Neustarts in 120s
 StartLimitIntervalSec=120
 StartLimitBurst=3
