@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.11           ║
+║        PiDrive Installer v0.7.12           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -197,6 +197,8 @@ EOF
 systemctl daemon-reload
 systemctl enable pidrive_core pidrive_display rfkill-unblock 2>/dev/null || true
 ok "Dienste aktiviert (pidrive_core, pidrive_display, rfkill-unblock)"
+[ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
+[ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
 
 # SSH
 systemctl enable ssh 2>/dev/null && systemctl start ssh 2>/dev/null || true
@@ -243,6 +245,17 @@ if [ -f /etc/raspotify/conf ]; then
         systemctl daemon-reload
     fi
     ok "Raspotify konfiguriert"
+
+  # Web-Service neu starten: neues HTML-Template aktivieren
+  if systemctl is-active pidrive_web >/dev/null 2>&1; then
+    systemctl restart pidrive_web
+    ok "pidrive_web.service neu gestartet (neues Template)"
+  fi
+  # AVRCP Service starten
+  if [ -f "$SERVICE_DIR/pidrive_avrcp.service" ]; then
+    systemctl restart pidrive_avrcp 2>/dev/null || true
+    ok "pidrive_avrcp.service gestartet"
+  fi
 fi
 
 # ── Zeitzone und fake-hwclock ──────────────────────────────────────────────

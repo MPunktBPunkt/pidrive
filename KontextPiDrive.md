@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.11
+# PiDrive — Kontext & Projektdokumentation v0.7.12
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.7.11)
+    ├── VERSION              (aktuell: 0.7.12)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -271,14 +271,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.11)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.12)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.7.11):
+Diagnose (v0.7.12):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -876,12 +876,12 @@ sudo systemctl restart pidrive_display
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.11) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.12) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.11) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.11) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.12) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.12) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -898,7 +898,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.11 (aktuell)
+### v0.7.12 (aktuell)
 - BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
 - pidrive_core.service: headless, kein pygame, kein Display
 - pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
@@ -965,9 +965,9 @@ sudo systemctl restart pidrive_display
 
 ---
 
-## Aktueller Stand (v0.7.11)
+## Aktueller Stand (v0.7.12)
 
-**System laeuft stabil** — bestätigt 11.04.2026 (v0.7.11):
+**System laeuft stabil** — bestätigt 11.04.2026 (v0.7.12):
 
 ```
 ✓ pidrive_core.service: active, headless
@@ -1014,8 +1014,8 @@ sudo systemctl restart pidrive_display
 - [ ] Hotspot-Modus
 
 ### Langfristig (Fahrzeug-Integration)
-- [x] AVRCP BMW 118d 2017 NBT EVO → File-Trigger (v0.7.11)
-- [x] MPRIS2 D-Bus → BMW-Display Metadaten (v0.7.11)
+- [x] AVRCP BMW 118d 2017 NBT EVO → File-Trigger (v0.7.12)
+- [x] MPRIS2 D-Bus → BMW-Display Metadaten (v0.7.12)
 - [x] AVRCP 1.4 Konfiguration für NBT EVO Kompatibilität
 - [ ] OBD2 Fahrzeugdaten (ELM327 USB, python-obd)
 - [ ] BMW iDrive Playlist-Simulation (volles Dateisystem im Auto-Display)

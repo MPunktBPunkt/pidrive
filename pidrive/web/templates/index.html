@@ -88,6 +88,20 @@
           </div>
         </div>
 
+        {# headless_pick: Auswahlliste wenn aktiv #}
+          {% if vm["list_active"] %}
+          <div class="list-overlay" id="listOverlay">
+            <div class="list-title">{{ vm["list_title"] }}</div>
+            {% for item in vm["list_items"] %}
+              <div class="list-item {% if loop.index0 == vm['list_selected'] %}selected{% endif %}"
+                   onclick="listPick({{ loop.index0 }})">
+                {{ item }}
+              </div>
+            {% endfor %}
+            <div class="list-hint">↑↓ navigieren — Enter wählen — Back abbrechen</div>
+          </div>
+          {% endif %}
+
         <div class="ipc-state">
           <div>Core: {{ '✓ bereit' if vm["debug"]["core_ready"] else '⚠ wartet' }}</div>
           <div>Rev: {{ vm["debug"]["rev"] }} | Pfad: {{ vm["debug"]["path"] | join(" > ") }}</div>
@@ -273,6 +287,15 @@
       const d = await (await fetch('/api/grep')).json();
       document.getElementById('logOutput').textContent = (d.cmd||'')+'\n\n'+(d.stdout||'')+(d.stderr?'\n[stderr]\n'+d.stderr:'');
     }
+    async function listPick(index) {
+      // Cursor auf Index setzen, dann enter
+      const state = await (await fetch('/api/state')).json();
+      const current = state.list_selected ?? 0;
+      if (index > current)      for (let i=current; i<index; i++) await sendCmdSilent('down');
+      else if (index < current) for (let i=current; i>index; i--) await sendCmdSilent('up');
+      await sendCmd('enter');
+    }
+
     async function loadService(name) {
       const d = await (await fetch('/api/service?name='+encodeURIComponent(name))).json();
       document.getElementById('logOutput').textContent = (d.cmd||'')+'\n\n'+(d.stdout||'')+(d.stderr?'\n[stderr]\n'+d.stderr:'');
