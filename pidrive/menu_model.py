@@ -1,3 +1,4 @@
+import ipc
 """
 menu_model.py - PiDrive Menümodell v0.7.10
 Baumstruktur statt flacher Kategorien/Items.
@@ -526,14 +527,49 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     ])
 
     # ── Verbindungen ─────────────────────────────────────────────────────────
+    # BT: gefundene Geraete als Submenu (aus /tmp/pidrive_bt_devices.json)
+    bt_devs = []
+    try:
+        _btd = json.load(open("/tmp/pidrive_bt_devices.json"))
+        for _d in _btd.get("devices", []):
+            _m = _d.get("mac",""); _n = _d.get("name",_m)
+            _lbl = ("★ " if _d.get("known") else "") + _n
+            bt_devs.append(MenuNode(
+                id="btd_" + _m.replace(":",""), label=_lbl,
+                type="action", action="bt_connect:" + _m,
+                meta={"mac": _m, "name": _n}))
+    except Exception:
+        pass
+    bt_geraete = MenuNode(id="bt_geraete", label="Geraete", type="folder",
+        children=bt_devs or [MenuNode(id="bt_hint",
+            label="Zuerst scannen", type="info")])
+
+    # WiFi: gefundene Netzwerke als Submenu (aus /tmp/pidrive_wifi_nets.json)
+    wifi_nets = []
+    try:
+        _wfd = json.load(open("/tmp/pidrive_wifi_nets.json"))
+        for _n in _wfd.get("networks", []):
+            _s = _n.get("ssid","")
+            wifi_nets.append(MenuNode(
+                id="wfn_" + _s.replace(" ","_")[:16], label=_s,
+                type="action", action="wifi_connect:" + _s,
+                meta={"ssid": _s}))
+    except Exception:
+        pass
+    wifi_netze = MenuNode(id="wifi_netze", label="Netzwerke", type="folder",
+        children=wifi_nets or [MenuNode(id="wifi_hint",
+            label="Zuerst scannen", type="info")])
+
     verbindungen = MenuNode(id="connections", label="Verbindungen", type="folder", children=[
         MenuNode(id="bt_toggle",  label="Bluetooth An/Aus", type="toggle",
                  action="bt_toggle", active=S.get("bt", False)),
         MenuNode(id="bt_scan",    label="Geraete scannen",  type="action", action="bt_scan"),
+        bt_geraete,
         MenuNode(id="bt_status",  label="Verbunden mit",    type="info"),
         MenuNode(id="wifi_toggle",label="WiFi An/Aus",      type="toggle",
                  action="wifi_toggle", active=S.get("wifi", False)),
         MenuNode(id="wifi_scan",  label="Netzwerke scannen",type="action", action="wifi_scan"),
+        wifi_netze,
         MenuNode(id="wifi_status",label="SSID",             type="info"),
     ])
 

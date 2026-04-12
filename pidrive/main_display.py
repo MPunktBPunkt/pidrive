@@ -327,7 +327,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.7.19 gestartet")
+    log.info("PiDrive Display v0.7.21 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 
@@ -390,7 +390,7 @@ def main():
 
         # GPT-5.4: Display-Debug JSON schreiben (alle 5s)
         now = time.time()
-        if now - _last_debug > 5:
+        if now - _last_debug > 10:
             ipc.write_json(ipc.DEBUG_FILE, {
                 "display_loop": True,
                 "last_render":  int(now),
@@ -409,7 +409,7 @@ def main():
                 pygame.quit()
                 sys.exit()
 
-        clock.tick(10)   # 10 fps reicht fuer Status-Anzeige
+        clock.tick(20)   # 20 fps: flüssige Menü-Reaktion
 
 
 if __name__ == "__main__":

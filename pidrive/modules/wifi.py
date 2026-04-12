@@ -19,27 +19,53 @@ def wifi_toggle(S):
 # build_items entfernt
 
 def scan_networks(S, settings):
-    """WLAN Netzwerke scannen und via headless_pick auswählen."""
-    import ipc, time
-    from modules import wifi as _self
-    ipc.write_progress("WiFi", "Scanne Netzwerke ...", color="blue")
+    """WLAN scannen, Ergebnis in JSON speichern (-> Submenu)."""
+    import ipc, time, subprocess, json
+    ipc.write_progress("WiFi", "Scanne Netzwerke...", color="blue")
+    networks = []
     try:
-        import subprocess
         r = subprocess.run(["sudo","iwlist","wlan0","scan"],
-                           capture_output=True, text=True, timeout=10)
-        ssids = []
+                           capture_output=True, text=True, timeout=15)
+        seen = set()
         for line in r.stdout.splitlines():
             if "ESSID:" in line:
-                s = line.strip().split('"')
-                if len(s) > 1 and s[1]: ssids.append(s[1])
-        ssids = list(dict.fromkeys(ssids))  # Deduplizieren
+                p = line.strip().split('"')
+                if len(p) > 1 and p[1] and p[1] not in seen:
+                    seen.add(p[1])
+                    networks.append({"ssid": p[1]})
     except Exception as e:
-        ipc.write_progress("WiFi Scan", f"Fehler: {e}", color="red")
+        log.error("WiFi scan: " + str(e))
+        ipc.write_progress("WiFi Scan", "Fehler", color="red")
         time.sleep(2); ipc.clear_progress(); return
 
-    if not ssids:
-        ipc.write_progress("WiFi Scan", "Keine Netzwerke gefunden", color="orange")
-        time.sleep(2); ipc.clear_progress(); return
-
-    chosen = ipc.headless_pick("WiFi Netzwerk", ssids)
+    ipc.write_json("/tmp/pidrive_wifi_nets.json", {"networks": networks})
     ipc.clear_progress()
+    msg = str(len(networks)) + " Netz(e) — Verbindungen > Netzwerke"
+    ipc.write_progress("WiFi Scan", msg, color="green" if networks else "orange")
+    time.sleep(2); ipc.clear_progress()
+    S["menu_rev"] = S.get("menu_rev", 0) + 1
+
+
+def connect_network(ssid, S, settings):
+    """WLAN-Netzwerk verbinden."""
+    import ipc, time, subprocess
+    ipc.write_progress("WiFi", "Verbinde " + ssid[:20] + "...", color="blue")
+    log.info("WiFi: verbinde " + ssid)
+    try:
+        r = subprocess.run(
+            ["sudo","nmcli","d","wifi","connect", ssid],
+            capture_output=True, text=True, timeout=30)
+        ok = "successfully" in r.stdout.lower() or r.returncode == 0
+        if ok:
+            ipc.write_progress("WiFi", "Verbunden: " + ssid[:22], color="green")
+            log.info("WiFi: verbunden mit " + ssid)
+            S["wifi"] = True
+        else:
+            ipc.write_progress("WiFi", "Verbindung fehlgeschlagen", color="red")
+            log.warn("WiFi: Verbindung fehlgeschlagen: " + ssid)
+    except Exception as e:
+        log.error("WiFi connect: " + str(e))
+        ipc.write_progress("WiFi", "Fehler: " + str(e)[:20], color="red")
+    time.sleep(2); ipc.clear_progress()
+
+

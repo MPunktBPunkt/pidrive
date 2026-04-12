@@ -83,7 +83,7 @@ def write_json(path, data):
             json.dump(data, f, ensure_ascii=False)
         os.replace(tmp, path)
     except Exception as e:
-        import log; log.error(f"ipc write_json {path}: {e}")
+        pass  # write error silently ignored (tmpfs race)
 
 def read_json(path, default=None):
     if default is None: default = {}

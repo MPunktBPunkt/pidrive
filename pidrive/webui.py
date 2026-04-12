@@ -179,7 +179,7 @@ def api_cmd():
     if not cmd:
         return jsonify({"ok": False, "error": "Kein Befehl übergeben"}), 400
 
-    prefixes = ("cat:", "reload_stations:", "scan_up:", "scan_down:",
+    prefixes = ("cat:", "reload_stations:", "scan_up:", "scan_down:", "bt_connect:", "wifi_connect:",
                   "scan_next:", "scan_prev:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400

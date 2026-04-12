@@ -350,13 +350,16 @@ def system_check():
             log.info(f"  ✓ WLAN: {ip[0]}")
     except Exception:
         pass
-    # Bluealsa check (fuer BT Audio)
-    bluealsa_running = _run("systemctl is-active bluealsa 2>/dev/null") == "active"
-    if bluealsa_running:
-        log.info("  ✓ bluealsa: aktiv (BT A2DP verfügbar)")
-    else:
-        log.warn("  ⚠ bluealsa: nicht aktiv (BT Audio evtl. nicht verfügbar)")
-        log.warn("    Fix: sudo apt install bluealsa && sudo systemctl enable --now bluealsa")
+    # PulseAudio BT check
+    try:
+        r = subprocess.run(["systemctl","is-active","pulseaudio"],
+                           capture_output=True, text=True, timeout=3)
+        if r.stdout.strip() == "active":
+            log.info("  ✓ PulseAudio: aktiv (BT A2DP verfügbar)")
+        else:
+            log.warn("  ⚠ PulseAudio: nicht aktiv — BT Audio evtl. nicht verfügbar")
+    except Exception:
+        pass
 
     log.info("--- Core System-Check OK ---")
 
@@ -389,9 +392,52 @@ def rebuild_tree(menu_state, store, S, settings):
 
 # ── Hauptschleife ──────────────────────────────────────────────────────────────
 
+
+def startup_tasks(S, settings):
+    """Einmalig beim Start: BT reconnect + letzte Station wiederherstellen."""
+    import subprocess, time
+
+    # BT Auto-reconnect: alle gepaarten Geraete versuchen
+    try:
+        r = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
+                           shell=True, capture_output=True, text=True, timeout=5)
+        for line in r.stdout.splitlines():
+            p = line.strip().split(" ", 2)
+            if len(p) >= 2 and p[0] == "Device":
+                mac = p[1]
+                subprocess.run("bluetoothctl trust " + mac + " 2>/dev/null",
+                               shell=True, capture_output=True, timeout=3)
+                rc = subprocess.run("bluetoothctl connect " + mac + " 2>/dev/null",
+                                    shell=True, capture_output=True,
+                                    text=True, timeout=8)
+                if "successful" in rc.stdout.lower() or "connected" in rc.stdout.lower():
+                    log.info("BT Auto-reconnect: " + mac)
+                    from modules import bluetooth as _bt
+                    _bt.connect_device(mac, S, settings)
+                    break
+    except Exception as _e:
+        log.warn("BT Auto-reconnect: " + str(_e))
+
+    # Letzte FM/DAB Station wiederherstellen
+    try:
+        time.sleep(1)
+        last_fm  = settings.get("last_fm_station")
+        last_dab = settings.get("last_dab_station")
+        if last_fm and last_fm.get("freq"):
+            log.info("FM: starte letzte Station: " + str(last_fm.get("name","")))
+            from modules import fm as _fm
+            _fm.play_station(last_fm, S, settings)
+        elif last_dab and last_dab.get("name"):
+            log.info("DAB: starte letzte Station: " + str(last_dab.get("name","")))
+            from modules import dab as _dab
+            _dab.play_station(last_dab, S, settings)
+    except Exception as _e:
+        log.warn("Letzte Station: " + str(_e))
+
+
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.19 gestartet")
+    log.info("PiDrive Core v0.7.21 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -403,7 +449,7 @@ def main():
     _mpris2_player = _mpris2.start_mpris2() if _mpris2 else None
 
     settings = load_settings()
-    S_module.refresh(force=True)
+    S_module.start()   # Status-Thread starten (non-blocking)
     S = S_module.S
 
     # StationStore initialisieren
@@ -421,10 +467,13 @@ def main():
 
     log.info("Core-Loop gestartet")
     _ready_written = False
+    import threading as _thr
+    _thr.Thread(target=startup_tasks, args=(S_module.S, settings),
+                daemon=True).start()
+
 
     while True:
-        S_module.refresh()
-        S = S_module.S
+        S = S_module.S   # Direkt lesen — Thread aktualisiert im Hintergrund
 
         # Trigger prüfen
         needs_rebuild = check_trigger(menu_state, store, S, settings)
@@ -443,35 +492,37 @@ def main():
                 rebuild_tree(menu_state, store, S, settings)
             store_timer = time.time()
 
-        # BT Disconnect: wenn BT getrennt → Audio auf Klinke zurück
+        # BT Disconnect: Einmalig wenn BT getrennt wird
         bt_now = S.get("bt", False)
         if getattr(main, '_bt_was_connected', False) and not bt_now:
             if settings.get("audio_output") == "bt":
-                log.info("BT: Verbindung getrennt — Audio zurück auf Klinke")
+                log.info("BT getrennt — Audio Fallback auf Klinke")
                 settings["audio_output"] = "klinke"
                 settings["alsa_device"]  = "default"
-                S["audio_output"]        = "klinke"
-                try:
-                    import subprocess
-                    # PulseAudio auf ALSA-Sink zurücksetzen
-                    PA = "PULSE_SERVER=unix:/var/run/pulse/native"
-                    sinks = subprocess.run(
-                        PA + " pactl list sinks short 2>/dev/null",
-                        shell=True, capture_output=True, text=True, timeout=3)
-                    for line in sinks.stdout.splitlines():
-                        if "alsa_output" in line:
-                            alsa_sink = line.split()[1]
-                            subprocess.run(
-                                PA + " pactl set-default-sink " + alsa_sink,
-                                shell=True, timeout=3)
-                            log.info("PulseAudio: zurück auf " + alsa_sink)
-                            break
-                except Exception as _e:
-                    log.warn("BT Disconnect PulseAudio: " + str(_e))
+                # In Background ausführen, blockiert nicht den Loop
+                def _bt_disconnect_bg():
+                    try:
+                        import subprocess
+                        PA = "PULSE_SERVER=unix:/var/run/pulse/native"
+                        sinks = subprocess.run(
+                            PA + " pactl list sinks short 2>/dev/null",
+                            shell=True, capture_output=True, text=True, timeout=3)
+                        for line in sinks.stdout.splitlines():
+                            if "alsa_output" in line:
+                                alsa_sink = line.split()[1]
+                                subprocess.run(
+                                    PA + " pactl set-default-sink " + alsa_sink,
+                                    shell=True, timeout=3)
+                                log.info("PA: zurück auf " + alsa_sink)
+                                break
+                    except Exception as _e:
+                        log.warn("BT Disconnect PA: " + str(_e))
+                import threading
+                threading.Thread(target=_bt_disconnect_bg, daemon=True).start()
         main._bt_was_connected = bt_now
 
-        # IPC schreiben (alle 0.3s)
-        if time.time() - ipc_timer > 0.3:
+        # IPC schreiben (alle 0.1s — Status-Thread ist non-blocking)
+        if time.time() - ipc_timer > 0.1:
             ipc.write_status(S, settings)
             exported = menu_state.export()
             ipc.write_menu(exported)
@@ -488,8 +539,8 @@ def main():
                 except Exception:
                     pass
 
-        # Status-Log (alle 30s)
-        if time.time() - stat_timer > 30:
+        # Status-Log (alle 60s)
+        if time.time() - stat_timer > 60:
             log.status_update(S["wifi"], S["bt"], S["spotify"],
                               settings.get("audio_output", "auto"))
             stat_timer = time.time()

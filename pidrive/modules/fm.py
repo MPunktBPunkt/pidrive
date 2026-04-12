@@ -76,13 +76,21 @@ def save_stations(stations):
     except Exception as e:
         log.error(f"FM Stationen speichern: {e}")
 
-def play_station(station, S):
+def play_station(station, S, settings=None):
     """FM Station abspielen via rtl_fm | mpv."""
     global _player_proc
     stop(S)
 
     freq = station.get("freq", "")
     name = station.get("name", "")
+    if settings is not None:
+        settings["last_fm_station"] = station
+        try:
+            import json as _j
+            with open("/home/pi/pidrive/pidrive/config/settings.json","w") as _f:
+                _j.dump(settings, _f, indent=2)
+        except Exception:
+            pass
 
     if not freq:
         log.error("FM play: keine Frequenz")

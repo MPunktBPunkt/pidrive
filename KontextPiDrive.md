@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.19
+# PiDrive — Kontext & Projektdokumentation v0.7.20
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.7.19)
+    ├── VERSION              (aktuell: 0.7.20)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -271,14 +271,14 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 SDL nutzt dann einen Dummy-Audio-Treiber, pygame.init() laeuft vollstaendig durch.
 Der echte Audio-Output (Spotify, Radio) laeuft weiter ueber mpv/ALSA — nicht ueber pygame.
 
-## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.19)
+## TIOCSCTTY — Warum wir es NICHT verwenden (v0.7.20)
 
 SDL fbcon ruft intern VT_SETMODE(VT_PROCESS) auf. Wenn der Prozess ein
 Controlling Terminal hat (gesetzt via TIOCSCTTY), sendet der Kernel SIGHUP
 bei VT-Events (z.B. wenn VT3 in den Vordergrund kommt). SDL hat keinen
 SIGHUP-Handler -> exit(0), kein Python-Fehler, kein Log-Eintrag.
 
-Diagnose (v0.7.19):
+Diagnose (v0.7.20):
 - Test MIT TIOCSCTTY: "Aufgelegt" (= SIGHUP) nach pygame.init()
 - Test OHNE TIOCSCTTY (stdin=/dev/null): pygame.init() OK
 - Loesung: O_NOCTTY beim Oeffnen von tty3, kein setsid(), kein TIOCSCTTY
@@ -876,12 +876,12 @@ sudo systemctl restart pidrive_display
 
 | Problem | Ursache | Loesung |
 |---|---|---|
-| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.19) |
+| Display dunkel | pygame auf fb0+fbcp Architektur — ersetzt durch fb1 direkt | main_display.py + pidrive_display.service (v0.7.20) |
 | Display zeigt nichts | camera/display_auto_detect=1 | In config.txt auf 0 |
 | Unable to open console terminal | /dev/tty3 nicht lesbar oder kein Controlling Terminal | launcher.py + udev-Regel (v0.3.7) |
 | Service Restart-Schleife | HUP bei StandardInput=tty | launcher.py ersetzt TTY-Management (v0.3.7) |
-| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.19) |
-| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.19) |
+| Service stirbt exit(0) | PAMName+StandardInput+root haengt systemd247 | Core ohne pygame (v0.7.20) |
+| set_mode() haengt | SDL wartet auf VT in monolithischem Service | Core/Display Trennung + fb1 direkt (v0.7.20) |
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
@@ -898,95 +898,110 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.19 (aktuell)
-- BREAKING: Core/Display getrennt (Refactor-Plan umgesetzt)
-- pidrive_core.service: headless, kein pygame, kein Display
-- pidrive_display.service: pygame direkt auf fb1 (480x320, 16bpp), kein fbcp
-- main_core.py: Trigger, Status, Audio, Menuezustand — kein pygame
-- main_display.py: reine Anzeige, liest IPC-JSON vom Core
-- ipc.py: atomares JSON (/tmp/pidrive_status.json + menu.json)
-- Display-Crash stoppt nicht mehr den Core
-- fbcp entfernt (nicht mehr noetig)
-- rc.local: stark vereinfacht
+### v0.7.20 (aktuell)
+- BT/WiFi Scan → Submenu (navigierbar): Verbindungen > Geraete / Netzwerke
+- Geraet/Netzwerk im Baum auswaehlen = direkt verbinden
+- BT Auto-Reconnect beim Boot (alle gepaarten Geraete)
+- FM/DAB: letzte Station wird in settings.json gespeichert + beim Boot wiederhergestellt
+- Hotfix: _run() NameError in system_check() (crash v0.7.19)
 
-### v0.4.1
-- launcher.py: Diagnose-Version — TIOCSCTTY entfernt, Step-Logging
-- main.py: SIGHUP-Handler sichtbar im Log, SDL Umgebungspruefung vor pygame.init()
-- Erkenntnis: TIOCSCTTY allein reicht nicht — VT3 muss foreground sein
+### v0.7.19
+- PulseAudio System-Daemon fuer BT A2DP Audio (bluealsa nicht in Bullseye)
+- setup_bt_audio.sh: pulse-User in BT-Gruppe, DBus-Policy, system.pa, PULSE_SERVER
+- install.sh ruft setup_bt_audio.sh automatisch auf
+- bluetooth.py: _set_pulseaudio_sink() statt bluealsa-Device-String
+- main_core.py: BT-Disconnect setzt PA-Sink zurueck auf ALSA
 
-### v0.4.0
-- SDL_AUDIODRIVER=dummy gesetzt vor pygame.init()
-- pygame.init() laeuft jetzt vollstaendig durch (kein selektives init mehr noetig)
+### v0.7.18
+- BT Audio Fix: Audio-Routing-Code fehlte im if ok: Block (audio=auto Bug)
+- audio.py: prueft ob PulseAudio laeuft, Fallback auf Klinke
+- install.sh: bluealsa-Erkennung mit PulseAudio-Fallback
 
-### v0.3.9
-- launcher.py: tcsetpgrp() Fix — SDL fbcon exit(0) bei VT_SETMODE behoben
-- scanner.py: Scan aufwaerts/abwaerts fuer PMR446, LPD433, VHF, UHF
-- install.sh: Zeitzone Europe/Berlin + fake-hwclock
+### v0.7.17
+- Service-Files Fix: install.sh kopiert jetzt ALLE 4 Service-Dateien
+  (pidrive_core, pidrive_display, pidrive_web, pidrive_avrcp)
+- Ordering-Cycle dauerhaft geloest: alte Datei auf Pi hatte After=pidrive_core
 
-### v0.3.8
-- Kritischer Bugfix: pygame.init() durch pygame.display.init() + pygame.font.init() ersetzt
-- SDL exit(0) bei ALSA-Konflikt behoben (raspotify belegte hw:1,0)
-- scanner.py: PMR446, Freenet, LPD433, VHF, UHF
-- RTL-SDR Check in system_check() und install.sh
+### v0.7.16
+- Raspotify Auto-Routing: bei BT-Connect wechselt raspotify auf BT A2DP-Sink
+- Bei BT-Trennung: raspotify zurueck auf hw:1,0 (Klinke)
+- _set_raspotify_device() in bluetooth.py: patcht /etc/raspotify/conf + restart
+- main_core.py: ueberwacht BT-Status, loest Fallback automatisch aus
+- install.sh: setzt LIBRESPOT_BACKEND=alsa + LIBRESPOT_DEVICE=hw:1,0 als Standard
 
-### v0.3.7
-- launcher.py: Neues TTY-Setup Script (setsid + TIOCSCTTY)
-- launcher.py: Berechtigungs-Check mit O_RDWR-Test fuer fb0 und tty3
-- launcher.py: Vollstaendiges Logging nach pidrive.log (Tag: LAUNCH)
-- Service: User=root, kein StandardInput=tty mehr, kein HUP-Problem
-- install.sh: 10 Schritte, Service Stop/Start, udev-Regel, tty-Gruppe
-- install.sh: rc.local mit chvt 3 + chmod 660 /dev/tty3
-- main.py: system_check() mit uid, groups, stdin-Ziel, O_RDWR-Test
+### v0.7.15
+- Systemd Ordering-Cycle Fix: After=pidrive_core aus pidrive_web.service entfernt
+- pidrive_display.service: After=pidrive_core → After=multi-user.target
+- StartLimitIntervalSec=120 / Burst=10 in pidrive_web
+- install.sh: __pycache__ loeschen + reset-failed vor Web-Neustart
+- from ui import Item (pygame) aus allen 10 Modulen entfernt (WebUI Crash Fix)
 
-### v0.3.6
-- log.py: Import-Bug behoben (UnboundLocalError: os)
-- main.py: Detailliertes Startup-Logging mit System-Check
-- Service: TTYVHangup=no, After=rc-local.service
+### v0.7.14
+- BT Audio-Routing: nach BT-Connect wird audio_output="bt" gesetzt
+- WebUI Overlay Fix: listOverlay immer im DOM (vorher: nur wenn list_active=True)
+- JS baut BT/WiFi-Liste dynamisch
 
-### v0.3.5
-- System-Check beim Start (fb0, fbcp, tty3, pygame, WLAN, Raspotify)
+### v0.7.13
+- BT Scan: race condition fix (headless_pick race)
+- BT Connect: 2s statt 15s Timeout-Problem geloest
 
-### v0.3.3
-- Bugfix: chvt 3 aus Service (HUP-Signal Schleife)
-- Spotify: ALSA Backend (hw:1,0)
-- Raspotify: ProtectHome=false, PrivateUsers=false
+### v0.7.10 — v0.7.12
+- WebUI: Single-Column Baumnavigation mit Icons
+- Ordering-Cycle Fix (pidrive_web After=pidrive_core entfernt)
+- Version-Strings bereinigt
 
-### v0.3.0
-- DAB+ Radio (welle.io, Sendersuche & Speicherung)
-- FM Radio (rtl_fm, manuelle Frequenzeingabe)
+### v0.7.7 — v0.7.9
+- action=None NameError Fix (alle Actions fehlgeschlagen)
+- StationStore: Senderlisten hot-reload
+- Suchlauf-Pipeline: DAB/FM → JSON → Menü sofort sichtbar
+
+### v0.7.3 — v0.7.6
+- Core/Display getrennt (headless Core + pygame Display)
+- pidrive_core.service + pidrive_display.service
+- ipc.py: atomares JSON (status.json + menu.json)
+- fbcp entfernt, fb1 direkt
+
+### v0.7.0 — v0.7.2
+- Baumbasiertes Menumodell (menu_model.py, MenuNode, MenuState)
+- StationStore mit JSON hot-reload
+- Altlasten build_items() aus allen Modulen entfernt
+
+### v0.4.x — v0.6.x
+- launcher.py: setsid + TIOCSCTTY (v0.3.7)
+- SDL_AUDIODRIVER=dummy (v0.4.0)
+- scanner.py: PMR446, Freenet, LPD433, VHF, UHF (v0.3.8)
+- fbcp-Architektur → direkt fb1 (v0.6.0)
+
+### v0.3.0 — v0.3.6
+- DAB+ Radio (welle.io), FM Radio (rtl_fm)
 - OTA Updates aus dem Menue
 - Logging-Modul (rotierend)
-
-### v0.2.0
-- Modulare Struktur
-- Spotify Track-Anzeige
-- Webradio, MP3 Bibliothek mit Album-Art
 - Bluetooth Audio-Ausgang
+- Webradio, MP3 Bibliothek mit Album-Art
 
----
 
-## Aktueller Stand (v0.7.19)
+## Aktueller Stand (v0.7.20)
 
-**System laeuft stabil** — bestätigt 11.04.2026 (v0.7.19):
+**System laeuft stabil** — 12.04.2026 (v0.7.20):
 
 ```
-✓ pidrive_core.service: active, headless (v0.7.19)
-✓ pidrive_display.service: active, fb1 direkt (v0.7.19)
-✓ pidrive_web.service: active, http://<PI-IP>:8080 (Ordering-Cycle fix)
-✓ pidrive_avrcp.service: active, BMW iDrive → AVRCP
-✓ fbcp: dauerhaft deaktiviert
-✓ MPRIS2: BMW-Display zeigt Sendername/Titel
-✓ AVRCP 1.5: konfiguriert
-✓ BT Audio-Routing: raspotify wechselt automatisch BT/Klinke
-✓ WebUI: Single-Column Baumnavigation, BT/WiFi Overlay
-✓ IPC: status.json + menu.json + list.json + ready
-✓ Menü: Baumstruktur, Senderlisten aus JSON, hot-reload
+✓ pidrive_core.service: active (v0.7.20)
+✓ pidrive_display.service: active, fb1 direkt
+✓ pidrive_web.service: active, http://<PI-IP>:8080
+✓ pidrive_avrcp.service: active
+✓ pulseaudio.service: active (BT A2DP)
+✓ BT Scan → Submenu Verbindungen > Geraete
+✓ WiFi Scan → Submenu Verbindungen > Netzwerke
+✓ BT Auto-Reconnect beim Boot
+✓ FM/DAB letzte Station wird beim Boot wiederhergestellt
+✓ Raspotify wechselt automatisch auf BT/Klinke
+✓ WebUI: Single-Column Baum, alle Aktionen klickbar
 ```
 
-**Bekannte offene Punkte:**
+**Offene Punkte:**
 - GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- BMW iDrive BT-Pairing und AVRCP Praxistest im Auto
-- Audio Klinke/HDMI/BT Umschaltung im Fahrbetrieb testen
+- BMW iDrive AVRCP Praxistest im Auto
+- PulseAudio BT A2DP noch in Prüfung (bluealsa nicht verfuegbar auf Bullseye)
 
 
 ## Roadmap
@@ -1012,8 +1027,8 @@ sudo systemctl restart pidrive_display
 - [ ] Hotspot-Modus
 
 ### Langfristig (Fahrzeug-Integration)
-- [x] AVRCP BMW 118d 2017 NBT EVO → File-Trigger (v0.7.19)
-- [x] MPRIS2 D-Bus → BMW-Display Metadaten (v0.7.19)
+- [x] AVRCP BMW 118d 2017 NBT EVO → File-Trigger (v0.7.20)
+- [x] MPRIS2 D-Bus → BMW-Display Metadaten (v0.7.20)
 - [x] AVRCP 1.4 Konfiguration für NBT EVO Kompatibilität
 - [ ] OBD2 Fahrzeugdaten (ELM327 USB, python-obd)
 - [ ] BMW iDrive Playlist-Simulation (volles Dateisystem im Auto-Display)

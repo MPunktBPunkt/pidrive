@@ -91,9 +91,17 @@ def scan_dab_channels(progress_cb=None):
     _scan_running = False
     return found
 
-def play_station(station, S):
+def play_station(station, S, settings=None):
     global _player_proc
     stop(S)
+    if settings is not None:
+        settings["last_dab_station"] = station
+        try:
+            import json as _j
+            with open("/home/pi/pidrive/pidrive/config/settings.json","w") as _f:
+                _j.dump(settings, _f, indent=2)
+        except Exception:
+            pass
     ch   = station.get("channel", "")
     name = station.get("name", "")
     if not ch:

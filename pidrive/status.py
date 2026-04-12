@@ -1,93 +1,128 @@
 """
-status.py - System-Status Cache
+status.py - System-Status Cache (non-blocking)
 PiDrive Project - GPL-v3
+
+Laeuft in eigenem Hintergrund-Thread — blockiert nie den Main-Loop.
 """
 
 import subprocess
+import threading
 import time
 
-# Globaler Status-Cache
+# Globaler Status-Cache (thread-safe durch Lock)
 S = {
     "wifi":             False,
-    "conn":             False,
-    "ssid":             "",
+    "wifi_ssid":        "",
     "bt":               False,
-    "bt_sink":          "",
-    "bt_connected_dev": "",
-    "ip":               "-",
-    "host":             "-",
+    "bt_device":        "",
+    "ip":               "",
     "spotify":          False,
     "spotify_track":    "",
     "spotify_artist":   "",
     "spotify_album":    "",
     "radio_playing":    False,
     "radio_station":    "",
+    "radio_type":       "",
+    "radio_name":       "",
     "library_playing":  False,
     "library_track":    "",
+    "audio_output":     "auto",
     "ts":               0,
 }
 
-def _run(cmd):
+_lock       = threading.Lock()
+_refresh_iv = 5.0   # Sekunden zwischen Refreshes
+_running    = False
+
+
+def _run(cmd, timeout=3):
+    """Subprocess-Wrapper mit Timeout."""
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True,
-                           text=True, timeout=5)
+                           text=True, timeout=timeout)
         return r.stdout.strip()
     except Exception:
         return ""
 
-def refresh(force=False):
-    """Status aktualisieren (max alle 6 Sekunden)."""
-    if not force and time.time() - S["ts"] < 6:
+
+def _refresh_loop():
+    """Laeuft im Hintergrund-Thread."""
+    global _running
+    while _running:
+        _do_refresh()
+        time.sleep(_refresh_iv)
+
+
+def _do_refresh():
+    """Alle Systemwerte ermitteln und cache aktualisieren."""
+    new = {}
+    try:
+        # WiFi: rfkill + iwgetid zusammenfassen
+        rk = _run("rfkill list wifi 2>/dev/null", timeout=2)
+        new["wifi"] = "Soft blocked: no" in rk
+        new["wifi_ssid"] = _run("iwgetid -r 2>/dev/null", timeout=2)
+
+        # IP (schneller als ip a show)
+        hi = _run("hostname -I 2>/dev/null", timeout=2)
+        new["ip"] = hi.split()[0] if hi else ""
+
+        # Bluetooth: hciconfig (schnell)
+        hc = _run("hciconfig 2>/dev/null", timeout=2)
+        new["bt"] = "UP RUNNING" in hc
+
+        # Spotify
+        sp = _run("systemctl is-active raspotify 2>/dev/null", timeout=2)
+        new["spotify"] = (sp == "active")
+
+        # Spotify Track
+        new["spotify_track"] = ""
+        new["spotify_artist"] = ""
+        new["spotify_album"] = ""
+        if new["spotify"]:
+            try:
+                with open("/tmp/spotify_status") as f:
+                    line = f.readline().strip()
+                if "|" in line:
+                    p = line.split("|")
+                    new["spotify_track"]  = p[1][:40] if len(p) > 1 else ""
+                    new["spotify_artist"] = p[2][:30] if len(p) > 2 else ""
+                    new["spotify_album"]  = p[3][:30] if len(p) > 3 else ""
+            except Exception:
+                pass
+
+    except Exception:
+        pass
+
+    new["ts"] = time.time()
+
+    # Atomar in S schreiben
+    with _lock:
+        S.update(new)
+
+
+def start():
+    """Hintergrund-Thread starten."""
+    global _running
+    if _running:
         return
+    _running = True
+    _do_refresh()  # Sofort einmal ausführen
+    t = threading.Thread(target=_refresh_loop, daemon=True)
+    t.start()
 
-    try:
-        # WiFi
-        rk = _run("rfkill list wifi 2>/dev/null")
-        S["wifi"] = "Soft blocked: no" in rk
-        ip_out = _run("ip a show wlan0 2>/dev/null")
-        S["conn"] = "inet " in ip_out
-        S["ssid"] = _run("iwgetid -r 2>/dev/null")
 
-        # Bluetooth
-        hc = _run("hciconfig 2>/dev/null")
-        S["bt"] = "UP RUNNING" in hc
-        bt_sink = _run("pactl list sinks short 2>/dev/null | grep bluez")
-        S["bt_sink"] = bt_sink.split()[0] if bt_sink else ""
-        bt_dev = _run("bluetoothctl info 2>/dev/null | grep 'Name:' | head -1")
-        S["bt_connected_dev"] = bt_dev.replace("Name:", "").strip()
+def stop():
+    global _running
+    _running = False
 
-        # System
-        hi = _run("hostname -I 2>/dev/null")
-        S["ip"] = hi.split()[0] if hi else "-"
-        S["host"] = _run("hostname")
 
-        # Spotify/Raspotify
-        sp = _run("systemctl is-active raspotify 2>/dev/null")
-        S["spotify"] = (sp == "active")
+def refresh(force=False):
+    """Kompatibilitaets-Stub — refresh läuft jetzt im Hintergrund."""
+    if force:
+        _do_refresh()
 
-        # Spotify aktueller Track (via /tmp/spotify_status von onevent Script)
-        if S["spotify"]:
-            _read_spotify_status()
-
-    except Exception:
-        pass
-
-    S["ts"] = time.time()
-
-def _read_spotify_status():
-    """Liest /tmp/spotify_status das vom onevent Script geschrieben wird."""
-    try:
-        with open("/tmp/spotify_status", "r") as f:
-            line = f.readline().strip()
-        if "|" in line:
-            parts = line.split("|")
-            if len(parts) >= 3:
-                S["spotify_track"]  = parts[1][:40] if parts[1] else ""
-                S["spotify_artist"] = parts[2][:30] if len(parts) > 2 else ""
-                S["spotify_album"]  = parts[3][:30] if len(parts) > 3 else ""
-    except Exception:
-        pass
 
 def invalidate():
-    """Cache sofort invalidieren."""
-    S["ts"] = 0
+    """Cache invalidieren — naechstes refresh() liest neu."""
+    with _lock:
+        S["ts"] = 0

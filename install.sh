@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.19           ║
+║        PiDrive Installer v0.7.21           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -95,7 +95,9 @@ if [ -d "$INSTALL_DIR/.git" ]; then
     info "Update von GitHub..."
     cd "$INSTALL_DIR"
     sudo -u "$REAL_USER" git pull
-    ok "Repository aktualisiert"
+    # Veraltete .bak-Dateien entfernen
+  find "$INSTALL_DIR" -name "*.bak" -delete 2>/dev/null || true
+  ok "Repository aktualisiert"
 else
     info "Klone $REPO_URL nach $INSTALL_DIR..."
     sudo -u "$REAL_USER" git clone "$REPO_URL" "$INSTALL_DIR"

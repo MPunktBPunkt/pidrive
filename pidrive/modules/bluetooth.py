@@ -176,95 +176,92 @@ def build_items(screen, S, settings):
 
 
 def scan_devices(S, settings):
-    """BT-Geräte scannen: timeout-basiert, kein interaktiver bluetoothctl."""
-    import ipc, time, subprocess, log
-    ipc.write_progress("Bluetooth", "Scanne Geräte (8s) ...", color="blue")
+    """BT-Geraete scannen, Ergebnis in JSON speichern (-> Submenu)."""
+    import ipc, time, json, subprocess
+    ipc.write_progress("Bluetooth", "Scanne Geraete (8s)...", color="blue")
+    devices = []
     try:
-        # scan on via timeout (nicht interaktiver Modus)
-        subprocess.run(
-            "timeout 8s bluetoothctl scan on 2>/dev/null || true",
-            shell=True, capture_output=True, timeout=12)
-        # Gefundene Geräte auflesen
-        r = subprocess.run(
-            "bluetoothctl devices 2>/dev/null",
-            shell=True, capture_output=True, text=True, timeout=5)
-        devices = []
-        for line in r.stdout.splitlines():
-            parts = line.strip().split(" ", 2)
-            if len(parts) >= 3 and parts[0] == "Device":
-                mac  = parts[1]
-                name = parts[2] if len(parts) > 2 else mac
-                devices.append(f"{name}  ({mac})")
+        subprocess.run("timeout 8s bluetoothctl scan on 2>/dev/null || true",
+                       shell=True, capture_output=True, timeout=12)
+        r_paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
+                                  shell=True, capture_output=True, text=True, timeout=5)
+        known = {ln.split()[1] for ln in r_paired.stdout.splitlines()
+                 if ln.startswith("Device") and len(ln.split()) >= 2}
+        r_all = subprocess.run("bluetoothctl devices 2>/dev/null",
+                               shell=True, capture_output=True, text=True, timeout=5)
+        for line in r_all.stdout.splitlines():
+            p = line.strip().split(" ", 2)
+            if len(p) >= 2 and p[0] == "Device":
+                mac = p[1]; name = p[2] if len(p) > 2 else mac
+                devices.append({"mac": mac, "name": name, "known": mac in known})
     except Exception as e:
-        log.error(f"BT scan: {e}")
+        log.error("BT scan: " + str(e))
         ipc.write_progress("BT Scan", "Scan fehlgeschlagen", color="red")
         time.sleep(2); ipc.clear_progress(); return
 
+    ipc.write_json("/tmp/pidrive_bt_devices.json", {"devices": devices})
     ipc.clear_progress()
-    if not devices:
-        ipc.write_progress("BT Scan", "Keine Geräte gefunden", color="orange")
-        time.sleep(2); ipc.clear_progress(); return
+    msg = str(len(devices)) + " Geraet(e) — Verbindungen > Geraete"
+    ipc.write_progress("BT Scan", msg, color="green" if devices else "orange")
+    time.sleep(2); ipc.clear_progress()
+    S["menu_rev"] = S.get("menu_rev", 0) + 1
 
-    chosen = ipc.headless_pick("BT Geraete", devices)
-    if chosen:
-        mac  = chosen.split("(")[-1].rstrip(")")
-        name = chosen.split("  (")[0].strip()
-        ipc.write_progress("Verbinde", f"{name}...", color="blue")
-        log.info(f"BT: verbinde {mac} ({name})")
-        ok = False
+
+def connect_device(mac, S, settings):
+    """BT-Geraet verbinden (wird aus Submenu-Aktion aufgerufen)."""
+    import ipc, time, subprocess
+    name = mac
+    try:
+        import json
+        data = json.load(open("/tmp/pidrive_bt_devices.json"))
+        for d in data.get("devices", []):
+            if d["mac"] == mac:
+                name = d["name"]; break
+    except Exception:
+        pass
+
+    ipc.write_progress("Verbinde", name[:22] + "...", color="blue")
+    log.info("BT: verbinde " + mac + " (" + name + ")")
+    ok = False
+    for attempt in range(2):
         try:
-            # Erst connect versuchen (bereits gepaart?)
-            r = subprocess.run(f"bluetoothctl connect {mac}",
-                               shell=True, capture_output=True,
-                               text=True, timeout=10)
+            if attempt == 1:
+                subprocess.run("bluetoothctl pair " + mac,
+                               shell=True, capture_output=True, text=True, timeout=20)
+                subprocess.run("bluetoothctl trust " + mac,
+                               shell=True, capture_output=True, text=True, timeout=5)
+            r = subprocess.run("bluetoothctl connect " + mac,
+                               shell=True, capture_output=True, text=True, timeout=10)
             ok = "successful" in r.stdout.lower() or "connected" in r.stdout.lower()
+            if ok:
+                break
         except subprocess.TimeoutExpired:
             pass
-        if not ok:
+
+    if ok:
+        ipc.write_progress("BT", "Verbunden: " + name[:24], color="green")
+        log.info("BT: Verbunden " + mac)
+        bt_sink = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+        S["bt_sink_mac"]         = mac
+        S["bt_pa_sink"]          = bt_sink
+        S["bt_device"]           = name
+        S["audio_output"]        = "bt"
+        settings["audio_output"] = "bt"
+        settings["bt_sink_mac"]  = mac
+        settings["bt_pa_sink"]   = bt_sink
+        settings["alsa_device"]  = "default"
+        _set_pulseaudio_sink(bt_sink)
+        _set_raspotify_device("default")
+        if S.get("radio_playing"):
             try:
-                # Neu paaren und dann verbinden
-                ipc.write_progress("Paare", f"{name}...", color="blue")
-                subprocess.run(f"bluetoothctl pair {mac}",
-                               shell=True, capture_output=True,
-                               text=True, timeout=20)
-                r = subprocess.run(f"bluetoothctl connect {mac}",
-                                   shell=True, capture_output=True,
-                                   text=True, timeout=10)
-                ok = "successful" in r.stdout.lower() or "connected" in r.stdout.lower()
-            except subprocess.TimeoutExpired:
-                pass
-        if ok:
-            ipc.write_progress("BT", "Verbunden: " + name[:24], color="green")
-            log.info("BT: Verbunden " + mac)
-            # A2DP Profil explizit verbinden
-            try:
-                subprocess.run(
-                    "bluetoothctl connect " + mac + " 2>/dev/null || true",
-                    shell=True, capture_output=True, timeout=5)
+                import webradio as _wr, fm as _fm, dab as _dab
+                _wr.stop(S); _fm.stop(S); _dab.stop(S)
             except Exception:
                 pass
-            # Audio-Routing auf BT umschalten
-            mac_fmt = mac.replace(":", "_")
-            bt_pa_sink = "bluez_sink." + mac_fmt + ".a2dp_sink"
-            S["bt_sink_mac"]         = mac
-            S["bt_pa_sink"]          = bt_pa_sink
-            S["audio_output"]        = "bt"
-            settings["audio_output"] = "bt"
-            settings["bt_sink_mac"]  = mac
-            settings["bt_pa_sink"]   = bt_pa_sink
-            settings["alsa_device"]  = "default"
-            log.info("Audio: BT PulseAudio " + bt_pa_sink)
-            # PulseAudio Default-Sink auf BT setzen
-            _set_pulseaudio_sink(bt_pa_sink)
-            # Laufendes Radio stoppen
-            if S.get("radio_playing"):
-                try:
-                    import webradio as _wr, fm as _fm, dab as _dab
-                    _wr.stop(S); _fm.stop(S); _dab.stop(S)
-                except Exception:
-                    pass
-        else:
-            ipc.write_progress("BT", "Verbindung fehlgeschlagen", color="red")
-            log.warn("BT: Verbindung fehlgeschlagen " + mac)
-        time.sleep(2)
+    else:
+        ipc.write_progress("BT", "Verbindung fehlgeschlagen", color="red")
+        log.warn("BT: Verbindung fehlgeschlagen " + mac)
+    time.sleep(2)
     ipc.clear_progress()
+
+
