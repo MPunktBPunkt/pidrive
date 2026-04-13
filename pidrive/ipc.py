@@ -94,6 +94,22 @@ def read_json(path, default=None):
         return default
 
 
+def _get_audio_effective():
+    try:
+        from modules.audio import get_last_decision
+        return get_last_decision().get("effective", "")
+    except Exception:
+        return ""
+
+
+def _get_audio_reason():
+    try:
+        from modules.audio import get_last_decision
+        return get_last_decision().get("reason", "")
+    except Exception:
+        return ""
+
+
 def write_status(S, settings):
     write_json(STATUS_FILE, {
         "wifi":      S.get("wifi",    False),
@@ -110,6 +126,8 @@ def write_status(S, settings):
         "library":   S.get("library_playing", False),
         "lib_track": S.get("library_track", S.get("lib_track", "")),
         "audio_out": settings.get("audio_output", "auto"),
+        "audio_effective": _get_audio_effective(),
+        "audio_reason":    _get_audio_reason(),
         "ip":        S.get("ip", ""),
         "ts":        int(time.time()),
     })

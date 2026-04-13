@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.24           ║
+║        PiDrive Installer v0.7.25           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -336,6 +336,26 @@ else
     err "$SYNTAX_ERR"
     err "Service-Start abgebrochen — bitte Fehler beheben"
     exit 1
+fi
+
+# Alt-Importe pruefen (ui/trigger/launcher wurden als Dead-Code entfernt)
+BAD_IMP=$(grep -RInE '^[[:space:]]*(from[[:space:]]+ui[[:space:]]+import|import[[:space:]]+ui[[:space:]]|from[[:space:]]+trigger[[:space:]]+import|from[[:space:]]+launcher[[:space:]]+import)' \
+    "$INSTALL_DIR/pidrive" --include="*.py" --exclude-dir="__pycache__" 2>/dev/null || true)
+if [ -n "$BAD_IMP" ]; then
+    err "Veraltete Imports gefunden (bitte melden):"
+    echo "$BAD_IMP" | head -5
+    exit 1
+else
+    ok "Alt-Import-Check OK"
+fi
+
+# Import-Smoke-Test: prueft den echten Startpfad von main_core
+if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import main_core" 2>/dev/null); then
+    err "Import-Smoke-Test fehlgeschlagen:"
+    (cd "$INSTALL_DIR/pidrive" && python3 -c "import main_core" 2>&1) | head -8
+    exit 1
+else
+    ok "Import-Smoke-Test OK (main_core)"
 fi
 
 # Service starten + ausfuehrliche Verifikation

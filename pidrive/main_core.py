@@ -569,7 +569,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.24 gestartet")
+    log.info("PiDrive Core v0.7.25 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -652,10 +652,21 @@ def main():
                                 subprocess.run(
                                     PA + " pactl set-default-sink " + alsa_sink,
                                     shell=True, timeout=3)
-                                log.info("PA: zurück auf " + alsa_sink)
+                                log.info("[AUDIO] bt_disconnected → PA zurück auf " + alsa_sink)
                                 break
+                        # Radioquelle auf Klinke neu starten
+                        _rtype = S.get("radio_type", "")
+                        from modules.audio import is_radio_source
+                        if S.get("radio_playing") and is_radio_source(_rtype):
+                            log.info("[AUDIO] radio_restart_on_disconnect source=" + _rtype)
+                            import time as _td
+                            _td.sleep(0.5)
+                            with open("/tmp/pidrive_cmd","w") as _cf:
+                                _cf.write("radio_restart_on_bt\n")
+                        elif _rtype:
+                            log.info("[AUDIO] no restart on disconnect — source=" + _rtype)
                     except Exception as _e:
-                        log.warn("BT Disconnect PA: " + str(_e))
+                        log.warn("BT Disconnect BG: " + str(_e))
                 import threading
                 threading.Thread(target=_bt_disconnect_bg, daemon=True).start()
         main._bt_was_connected = bt_now

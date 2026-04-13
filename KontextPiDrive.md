@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.24
+# PiDrive — Kontext & Projektdokumentation v0.7.25
 
 ## Projektbeschreibung
 
@@ -898,7 +898,10 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.24 (aktuell)
+### v0.7.25 (aktuell)
+- Hotfix: `from ui import Item` aus bluetooth.py entfernt (Crash bei Core-Start)
+- bluetooth.py: dead `build_items()` entfernt (nie aufgerufen seit v0.7.0 Baummenü)
+- install.sh: Alt-Import-Check + Import-Smoke-Test vor Service-Start
 - `audio.get_mpv_args()` in audio.py: zentrale Funktion für Audio-Routing
 - webradio.py, fm.py, dab.py nutzen jetzt `audio.get_mpv_args()` statt hardcoded `hw:1,0`
 - `get_bt_sink()` nutzt PulseAudio `pactl` statt `bluealsa-aplay` (bluealsa nicht verfügbar)
@@ -1004,39 +1007,23 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.7.24)
+## Aktueller Stand (v0.7.25)
 
 **System läuft stabil** — 13.04.2026:
 
 ```
-✓ pidrive_core.service   v0.7.24 — non-blocking Status-Thread
+✓ pidrive_core.service   v0.7.25 — non-blocking Status-Thread
 ✓ pidrive_display.service 20fps, ändert nur bei Änderungen
 ✓ pidrive_web.service    http://<PI-IP>:8080
 ✓ pidrive_avrcp.service  BMW iDrive AVRCP 1.5
 ✓ pulseaudio.service     BT A2DP Audio
 ✓ Favoriten             FM/DAB+/Webradio, config/favorites.json
-✓ BT/WiFi Submenu        Scan → navigierbare Geräteliste
-✓ BT Auto-Reconnect      beim Boot (3 Versuche, letztes Gerät priorisiert)
-✓ FM/DAB letzte Station  beim Boot wiederhergestellt
-✓ Menü-Performance       ~50ms Latenz
-✓ Audio-Routing          audio.get_mpv_args() — alle Quellen nutzen BT/Klinke korrekt
-```
-
-**Menustruktur:**
-```
-PiDrive
-├── Jetzt läuft
-├── Favoriten          ← v0.7.22
-├── Quellen
-│   ├── Spotify, Bibliothek
-│   ├── Webradio → Sender [★ Favorit]
-│   ├── DAB+ → Sender [★ Favorit]
-│   ├── FM Radio → Sender [★ Favorit]
-│   └── Scanner
-├── Verbindungen
-│   ├── Bluetooth → Geraete (nach Scan)
-│   └── WiFi → Netzwerke (nach Scan)
-└── System
+✓ BT/WiFi Submenu        Scan → navigierbare Geräteliste (15s)
+✓ BT Auto-Reconnect      3 Versuche, letztes Gerät priorisiert
+✓ FM/DAB/Web letzte Station beim Boot wiederhergestellt
+✓ Audio-Routing          audio.get_mpv_args() — alle Quellen (FM/DAB/Web) auf BT/Klinke
+✓ Audio-Status           audio_effective + audio_reason in status.json + WebUI
+✓ BT Connect/Disconnect  Radio-Neustart symmetrisch, Cooldown 5s
 ```
 
 **Offene Punkte:**
@@ -1051,7 +1038,7 @@ PiDrive
 ### Kurzfristig (nächste 1-3 Updates)
 
 - [ ] **GPIO-Buttons** (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25) — direkte Steuerung am Display ohne SSH/WebUI, wichtigste UX-Verbesserung für Fahrzeugbetrieb
-- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.7.24)
+- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.7.25)
 - [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
 - [ ] **resume_state.py** — last_state.json: letzte Quelle/Station/MP3/BT beim Boot vollständig wiederherstellen
 - [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
@@ -1086,7 +1073,7 @@ PiDrive
 - [x] AVRCP 1.5 + MPRIS2 für BMW NBT EVO (v0.7.19/v0.7.20)
 - [x] BT/WiFi Scan → navigierbares Submenu (v0.7.20–v0.7.22)
 - [x] Favoriten: FM/DAB+/Webradio, config/favorites.json (v0.7.22)
-- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.7.24)
+- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.7.25)
 - [x] FM/DAB letzte Station beim Boot wiederherstellen (v0.7.20)
 - [x] Performance: non-blocking Status-Thread, 20fps, ~50ms Latenz (v0.7.21)
 - [x] Dead code entfernt: launcher.py, main.py, ui.py, trigger.py (v0.7.21)

@@ -22,6 +22,16 @@ import log
 # radio_type in S dict: "WEB", "DAB", "FM"
 RADIO_SOURCES = {"WEB", "DAB", "FM"}
 
+# Letzter Audio-Entscheid — wird von ipc.write_status() gelesen
+_last_decision = {"requested": "auto", "effective": "auto",
+                  "reason": "", "sink": ""}
+
+
+
+def get_last_decision() -> dict:
+    """Letzten Audio-Entscheid zurückgeben (für IPC/WebUI)."""
+    return dict(_last_decision)
+
 
 def is_radio_source(radio_type: str) -> bool:
     """True wenn Quelle ein neustart-sicheres Radio ist (nicht MP3/Spotify/Scanner)."""
@@ -76,10 +86,14 @@ def get_mpv_args(settings=None, source=""):
         sink = get_bt_sink()
         if sink:
             log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=bt     sink={sink}")
+            _last_decision.update({"requested": mode, "effective": "bt",
+                                   "reason": "a2dp_sink_available", "sink": sink})
             return ["--ao=pulse"]
 
     reason = "no_a2dp_sink" if mode in ("bt","auto") else "klinke_requested"
     log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=klinke reason={reason} device=hw:1,0")
+    _last_decision.update({"requested": mode, "effective": "klinke",
+                           "reason": reason, "sink": ""})
     return ["--ao=alsa", "--audio-device=alsa/hw:1,0"]
 
 

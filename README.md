@@ -2,11 +2,11 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.7.24-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.7.25-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
-[![Version](https://img.shields.io/badge/version-0.7.24-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.7.25-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 
 ---
 
@@ -448,7 +448,7 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 | Priorität | Feature | Status |
 |---|---|---|
 | 🔧 Kurzfristig | GPIO-Buttons (Key1-3) | offen |
-| ✅ Erledigt | Audio-Routing (Webradio/FM/DAB auf BT) | v0.7.24 |
+| ✅ Erledigt | Audio-Routing (Webradio/FM/DAB auf BT) | v0.7.25 |
 | 🔧 Kurzfristig | resume_state.py (Boot-Resume) | offen |
 | 🔧 Kurzfristig | USB-Tethering Autostart | offen |
 | 🔧 Kurzfristig | WebUI Breadcrumb-Navigation | offen |
