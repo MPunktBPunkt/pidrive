@@ -900,17 +900,37 @@ sudo systemctl restart pidrive_display
 ## Changelog
 
 ### v0.7.26 (aktuell)
+**Audio & Stabilität:**
 - Hotfix: `from ui import Item` aus bluetooth.py entfernt (Crash bei Core-Start)
 - `settings.py`: neues neutrales Modul für `load_settings()`/`save_settings()` (thread-safe)
 - audio.py: importiert nicht mehr `main_core` → kein `signal.signal`-Crash in Threads
 - audio.py: `_last_decision` startet leer statt `auto`; WebUI zeigt jetzt konkretes `bt`/`klinke`
-- bluetooth.py: dead `build_items()` entfernt (nie aufgerufen seit v0.7.0 Baummenü)
-- install.sh: Alt-Import-Check + Import-Smoke-Test vor Service-Start
-- `audio.get_mpv_args()` in audio.py: zentrale Funktion für Audio-Routing
-- webradio.py, fm.py, dab.py nutzen jetzt `audio.get_mpv_args()` statt hardcoded `hw:1,0`
-- `get_bt_sink()` nutzt PulseAudio `pactl` statt `bluealsa-aplay` (bluealsa nicht verfügbar)
+- audio.py: RADIO_SOURCES + `is_radio_source()` für saubere Quellenunterscheidung
+- webradio.py, fm.py, dab.py nutzen `audio.get_mpv_args()` statt hardcoded `hw:1,0`
+- **FM Fix: rtl_fm -r 32000 + mpv rate=32000** (vorher Rate-Mismatch → kein Ton)
+
+**Bluetooth:**
+- `get_bt_sink()` nutzt PulseAudio `pactl` statt `bluealsa-aplay`
+- bluetooth.py: dead `build_items()` entfernt
+- **BT Scan Zombie-Fix**: `bluetoothctl scan on` wird jetzt per `Popen/terminate` beendet
+  statt `kill %1` (das in `subprocess.run(shell=True)` nicht funktioniert)
 - BT Auto-Reconnect: 3 Versuche (0s/5s/12s), letztes Gerät hat Priorität
 - `bt_last_mac` + `bt_last_name` in settings.json gespeichert
+
+**DAB+:**
+- DAB+ Scan Timeout auf 6s erhöht (RTL-SDR braucht Zeit zum Tunen)
+- welle-cli 2.2 Syntax korrigiert: `-c KANAL` statt ungültigem `--programmes`
+- Robusteres Parsen der Senderausgabe (verschiedene welle-cli Versionen)
+
+**Neue Features:**
+- `mpv_meta.py`: Now-Playing Metadaten für Webradio via mpv JSON-IPC Socket
+  → `track` / `artist` in status.json + WebUI sichtbar
+- Scanner: CB-Funk DE/EU (80 Kanäle: 41-80 + 1-40, 10 kHz FM)
+- Scanner: BANDS-Dict + `_current_ch` definiert (fehlten komplett → NameError)
+- RTL-SDR: Tool-Check + Hardware-Test im Startup-Log
+
+**Install:**
+- install.sh: Alt-Import-Check + Import-Smoke-Test vor Service-Start
 
 ### v0.7.22
 - Favoriten: FM/DAB+/Webradio, config/favorites.json
