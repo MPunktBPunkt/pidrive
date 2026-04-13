@@ -554,7 +554,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.25 gestartet")
+    log.info("PiDrive Core v0.7.26 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

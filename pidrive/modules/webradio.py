@@ -27,31 +27,49 @@ def play_station(station, S, settings=None):
         except Exception:
             pass
     stop(S)
-    url = station.get("url","")
+    url  = station.get("url","")
+    name = station.get("name","?")
     if not url:
-        import log; log.error("webradio: keine URL fuer " + station.get("name","?"))
+        import log; log.error("webradio: keine URL fuer " + name)
         return
     try:
         from modules import audio as _audio
+        import mpv_meta
         mpv_args = _audio.get_mpv_args(settings, source="webradio")
+        # Metadaten-Socket vorbereiten
+        mpv_meta.stop()
+        sock = mpv_meta.MPV_SOCKET
+        try: import os; os.unlink(sock)
+        except FileNotFoundError: pass
         _player_proc = subprocess.Popen(
             ["mpv", "--no-video", "--really-quiet",
-             "--title=pidrive_radio"] + mpv_args + [url],
+             "--title=pidrive_radio",
+             "--input-ipc-server=" + sock] + mpv_args + [url],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # Track-Felder zurücksetzen, dann Listener starten
+        S["track"] = ""; S["artist"] = ""; S["album"] = ""
         S["radio_playing"] = True; S["radio_type"] = "WEB"
-        S["radio_station"] = station.get("name","?")
-        S["radio_name"]    = station.get("name","?")
+        S["radio_station"] = name
+        S["radio_name"]    = name
+        # Listener in Hintergrund-Thread
+        mpv_meta.start(name, S, sock)
     except FileNotFoundError:
         S["radio_playing"] = False; S["radio_station"] = "mpv fehlt!"
 
 def stop(S):
     global _player_proc
+    try:
+        import mpv_meta
+        mpv_meta.stop()
+    except Exception:
+        pass
     _bg("pkill -f pidrive_radio 2>/dev/null")
     if _player_proc:
         try: _player_proc.terminate()
         except: pass
         _player_proc = None
     S["radio_playing"] = False; S["radio_station"] = ""
+    S["track"] = ""; S["artist"] = ""
 
 def build_items(screen, S):
     stations = load_stations()

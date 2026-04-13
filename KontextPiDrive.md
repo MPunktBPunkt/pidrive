@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.7.25
+# PiDrive — Kontext & Projektdokumentation v0.7.26
 
 ## Projektbeschreibung
 
@@ -898,7 +898,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.7.25 (aktuell)
+### v0.7.26 (aktuell)
 - Hotfix: `from ui import Item` aus bluetooth.py entfernt (Crash bei Core-Start)
 - `settings.py`: neues neutrales Modul für `load_settings()`/`save_settings()` (thread-safe)
 - audio.py: importiert nicht mehr `main_core` → kein `signal.signal`-Crash in Threads
@@ -1010,12 +1010,12 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.7.25)
+## Aktueller Stand (v0.7.26)
 
 **System läuft stabil** — 13.04.2026:
 
 ```
-✓ pidrive_core.service   v0.7.25 — non-blocking Status-Thread
+✓ pidrive_core.service   v0.7.26 — non-blocking Status-Thread
 ✓ pidrive_display.service 20fps, ändert nur bei Änderungen
 ✓ pidrive_web.service    http://<PI-IP>:8080
 ✓ pidrive_avrcp.service  BMW iDrive AVRCP 1.5
@@ -1041,7 +1041,7 @@ sudo systemctl restart pidrive_display
 ### Kurzfristig (nächste 1-3 Updates)
 
 - [ ] **GPIO-Buttons** (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25) — direkte Steuerung am Display ohne SSH/WebUI, wichtigste UX-Verbesserung für Fahrzeugbetrieb
-- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.7.25)
+- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.7.26)
 - [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
 - [ ] **resume_state.py** — last_state.json: letzte Quelle/Station/MP3/BT beim Boot vollständig wiederherstellen
 - [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
@@ -1076,7 +1076,7 @@ sudo systemctl restart pidrive_display
 - [x] AVRCP 1.5 + MPRIS2 für BMW NBT EVO (v0.7.19/v0.7.20)
 - [x] BT/WiFi Scan → navigierbares Submenu (v0.7.20–v0.7.22)
 - [x] Favoriten: FM/DAB+/Webradio, config/favorites.json (v0.7.22)
-- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.7.25)
+- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.7.26)
 - [x] FM/DAB letzte Station beim Boot wiederherstellen (v0.7.20)
 - [x] Performance: non-blocking Status-Thread, 20fps, ~50ms Latenz (v0.7.21)
 - [x] Dead code entfernt: launcher.py, main.py, ui.py, trigger.py (v0.7.21)

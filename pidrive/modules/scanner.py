@@ -38,6 +38,45 @@ VHF_RANGE = {"min": 136.0, "max": 174.0, "step_fine": 0.025,
 UHF_RANGE = {"min": 400.0, "max": 470.0, "step_fine": 0.025,
              "label": "UHF (400-470 MHz)", "short": "UHF"}
 
+# ── Band-Konfiguration ─────────────────────────────────────────────────────
+# Startfrequenz für VHF/UHF Scan-Start; für Kanal-Bänder gilt Index 0 = Kanal 1
+
+BANDS = {
+    "pmr446": {
+        "channels": PMR446_CHANNELS,
+        "bw": 12500,        # 12.5 kHz Bandbreite
+        "label": "PMR446",
+    },
+    "freenet": {
+        "channels": FREENET_CHANNELS,
+        "bw": 12500,
+        "label": "Freenet",
+    },
+    "lpd433": {
+        "channels": LPD433_CHANNELS,
+        "bw": 12500,
+        "label": "LPD433",
+    },
+    "vhf": {
+        "band": {**VHF_RANGE, "start": VHF_RANGE["min"],
+                 "step_coarse": 1.0, "step_fine": 0.025,
+                 "step": 0.025},
+        "bw": 25000,
+        "label": "VHF",
+    },
+    "uhf": {
+        "band": {**UHF_RANGE, "start": UHF_RANGE["min"],
+                 "step_coarse": 1.0, "step_fine": 0.025,
+                 "step": 0.025},
+        "bw": 25000,
+        "label": "UHF",
+    },
+}
+
+# Aktueller Kanalindex pro Band (PMR/Freenet/LPD: Index 0 = Kanal 1)
+_current_ch: dict = {}
+
+
 # ── Player ───────────────────────────────────────────────────────────────────
 
 _player_proc = None
