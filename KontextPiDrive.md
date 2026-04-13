@@ -900,6 +900,9 @@ sudo systemctl restart pidrive_display
 
 ### v0.7.25 (aktuell)
 - Hotfix: `from ui import Item` aus bluetooth.py entfernt (Crash bei Core-Start)
+- `settings.py`: neues neutrales Modul für `load_settings()`/`save_settings()` (thread-safe)
+- audio.py: importiert nicht mehr `main_core` → kein `signal.signal`-Crash in Threads
+- audio.py: `_last_decision` startet leer statt `auto`; WebUI zeigt jetzt konkretes `bt`/`klinke`
 - bluetooth.py: dead `build_items()` entfernt (nie aufgerufen seit v0.7.0 Baummenü)
 - install.sh: Alt-Import-Check + Import-Smoke-Test vor Service-Start
 - `audio.get_mpv_args()` in audio.py: zentrale Funktion für Audio-Routing

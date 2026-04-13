@@ -28,27 +28,12 @@ from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
 logger = log.setup("core")
 
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
-SETTINGS_FILE = os.path.join(CONFIG_DIR, "settings.json")
-
 
 # ── Settings ──────────────────────────────────────────────────────────────────
 
-def load_settings():
-    try:
-        with open(SETTINGS_FILE) as f:
-            return json.load(f)
-    except Exception:
-        return {"music_path": os.path.expanduser("~/Musik"),
-                "audio_output": "auto",
-                "fm_freq": "98.5"}
-
-def save_settings(settings):
-    try:
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-        with open(SETTINGS_FILE, "w") as f:
-            json.dump(settings, f, indent=2)
-    except Exception as e:
-        log.error(f"Settings speichern: {e}")
+# load_settings / save_settings aus settings.py importieren
+# (thread-safe: settings.py importiert KEIN main_core)
+from settings import load_settings, save_settings  # noqa: E402
 
 
 # ── Trigger-Handling ───────────────────────────────────────────────────────────

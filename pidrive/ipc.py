@@ -126,7 +126,7 @@ def write_status(S, settings):
         "library":   S.get("library_playing", False),
         "lib_track": S.get("library_track", S.get("lib_track", "")),
         "audio_out": settings.get("audio_output", "auto"),
-        "audio_effective": _get_audio_effective(),
+        "audio_effective": _get_audio_effective() or settings.get("audio_output","auto"),
         "audio_reason":    _get_audio_reason(),
         "ip":        S.get("ip", ""),
         "ts":        int(time.time()),

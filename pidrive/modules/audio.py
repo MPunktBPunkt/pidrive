@@ -23,7 +23,7 @@ import log
 RADIO_SOURCES = {"WEB", "DAB", "FM"}
 
 # Letzter Audio-Entscheid — wird von ipc.write_status() gelesen
-_last_decision = {"requested": "auto", "effective": "auto",
+_last_decision = {"requested": "auto", "effective": "",
                   "reason": "", "sink": ""}
 
 
@@ -76,8 +76,8 @@ def get_mpv_args(settings=None, source=""):
       [AUDIO] source=fm       requested=auto  effective=klinke device=hw:1,0
     """
     if settings is None:
-        from main_core import load_settings
-        settings = load_settings()
+        from settings import load_settings as _ls
+        settings = _ls()
 
     mode = settings.get("audio_output", "auto")
     src_tag = f"source={source:<10}" if source else ""
