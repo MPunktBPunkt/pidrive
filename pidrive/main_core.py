@@ -122,17 +122,21 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             _last_web = settings.get("last_web_station")
             _last_dab = settings.get("last_dab_station")
             _last_fm  = settings.get("last_fm_station")
-            if _rtype == "WEB" and _last_web:
-                log.info("BT: Webradio neu auf BT: " + str(_last_web.get("name","")))
+            # Nur bekannte Radio-Quellen neu starten
+            from modules.audio import is_radio_source
+            if not is_radio_source(_rtype):
+                log.info("[AUDIO] radio_restart_on_bt: kein Neustart — source=" + (_rtype or "none"))
+            elif _rtype == "WEB" and _last_web:
+                log.info("[AUDIO] radio_restart_on_bt source=webradio: " + str(_last_web.get("name","")))
                 webradio.play_station(_last_web, S, settings)
             elif _rtype == "DAB" and _last_dab:
-                log.info("BT: DAB neu auf BT: " + str(_last_dab.get("name","")))
+                log.info("[AUDIO] radio_restart_on_bt source=dab: " + str(_last_dab.get("name","")))
                 dab.play_station(_last_dab, S, settings)
             elif _rtype == "FM" and _last_fm:
-                log.info("BT: FM neu auf BT: " + str(_last_fm.get("name","")))
+                log.info("[AUDIO] radio_restart_on_bt source=fm: " + str(_last_fm.get("name","")))
                 fm.play_station(_last_fm, S, settings)
-            elif _rtype in ("", "SCANNER", "LIB"):
-                log.info("BT: kein Radio-Neustart fuer Quelle " + _rtype)
+            else:
+                log.info("[AUDIO] radio_restart_on_bt: keine letzte Station fuer " + _rtype)
         import threading
         threading.Thread(target=_radio_restart, daemon=True).start()
 

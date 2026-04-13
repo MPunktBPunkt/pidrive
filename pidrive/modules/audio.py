@@ -18,6 +18,16 @@ import time
 import ipc
 import log
 
+# Radio-Quellen die bei BT-Wechsel neu gestartet werden koennen
+# radio_type in S dict: "WEB", "DAB", "FM"
+RADIO_SOURCES = {"WEB", "DAB", "FM"}
+
+
+def is_radio_source(radio_type: str) -> bool:
+    """True wenn Quelle ein neustart-sicheres Radio ist (nicht MP3/Spotify/Scanner)."""
+    return radio_type in RADIO_SOURCES
+
+
 def _bg(cmd):
     try:
         subprocess.Popen(cmd, shell=True,
@@ -68,7 +78,8 @@ def get_mpv_args(settings=None, source=""):
             log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=bt     sink={sink}")
             return ["--ao=pulse"]
 
-    log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=klinke device=hw:1,0")
+    reason = "no_a2dp_sink" if mode in ("bt","auto") else "klinke_requested"
+    log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=klinke reason={reason} device=hw:1,0")
     return ["--ao=alsa", "--audio-device=alsa/hw:1,0"]
 
 
