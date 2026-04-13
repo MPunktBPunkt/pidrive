@@ -100,11 +100,13 @@ def play_station(station, S, settings=None):
 
     try:
         # rtl_fm -> mpv pipe
+        from modules import audio as _audio
+        _mpv_extra = " ".join(_audio.get_mpv_args(settings))
         cmd = (
-            f"rtl_fm -M wbfm -f {freq_hz} -r 200000 - 2>/dev/null | "
-            f"mpv --no-video --really-quiet --title=pidrive_fm "
-            f"--demuxer=rawaudio --demuxer-rawaudio-rate=200000 "
-            f"--demuxer-rawaudio-channels=1 - 2>/dev/null"
+            "rtl_fm -M wbfm -f " + freq_hz + " -r 200000 - 2>/dev/null | "
+            "mpv --no-video --really-quiet --title=pidrive_fm "
+            "--demuxer=rawaudio --demuxer-rawaudio-rate=200000 "
+            "--demuxer-rawaudio-channels=1 " + _mpv_extra + " - 2>/dev/null"
         )
         _player_proc = subprocess.Popen(
             cmd, shell=True,

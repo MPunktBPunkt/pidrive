@@ -95,12 +95,11 @@
             <div class="list-hint">↑↓ navigieren &mdash; Enter wählen &mdash; Back abbrechen</div>
           </div>
 
-        <div class="ipc-state">
-          <div>Core: {{ '✓ bereit' if vm["debug"]["core_ready"] else '⚠ wartet' }}</div>
-          <div>Rev: {{ vm["debug"]["rev"] }} | Pfad: {{ vm["debug"]["path"] | join(" > ") }}</div>
-          <div>Auswahl: <b>{{ vm["debug"]["selected_label"] }}</b> ({{ vm["debug"]["selected_type"] }}) | {{ vm["debug"]["node_count"] }} Eintraege</div>
-          <div>Status: {{ 'OK' if vm["status_exists"] else '&#9888;' }} ({{ vm["status_age"] }}s) |
-               Menue: {{ 'OK' if vm["menu_exists"] else '&#9888;' }} ({{ vm["menu_age"] }}s)</div>
+        <div class="ipc-state" id="ipcState">
+          <div id="ipcCore">Core: ...</div>
+          <div id="ipcRev">Rev: 0 | Pfad: PiDrive</div>
+          <div id="ipcSel">Auswahl: ... | 0 Eintraege</div>
+          <div id="ipcAge">Status: ... | Menue: ...</div>
         </div>
       </section>
 
@@ -254,6 +253,31 @@
     }
 
     function updateDisplay(data) {
+      const dbg = data.debug || {};
+      const el = id => document.getElementById(id);
+      if (el('ipcCore')) el('ipcCore').textContent =
+        'Core: ' + (dbg.core_ready ? '✓ bereit' : '⚠ wartet');
+      if (el('ipcRev')) el('ipcRev').textContent =
+        'Rev: ' + (dbg.rev||0) + ' | Pfad: ' + (dbg.path||['PiDrive']).join(' > ');
+      if (el('ipcSel')) el('ipcSel').textContent =
+        'Auswahl: ' + (dbg.selected_label||'?') +
+        ' (' + (dbg.selected_type||'?') + ') | ' + (dbg.node_count||0) + ' Eintraege';
+      if (el('ipcAge')) el('ipcAge').textContent =
+        'Status: ' + (data.status_exists?'OK':'⚠') + ' (' + (dbg.status_age||0).toFixed(1) + 's) | ' +
+        'Menue: ' + (data.menu_exists?'OK':'⚠') + ' (' + (dbg.menu_age||0).toFixed(1) + 's)';
+      // Status-Bar live aktualisieren
+      const bar = document.getElementById('statusBar');
+      if (bar && data.menu) {
+        const m = data.menu;
+        const nodes = m.nodes || [];
+        const cur  = nodes[m.cursor || 0] || {};
+        const path = (m.path || ['PiDrive']).join(' › ');
+        bar.textContent = '🟢 rev=' + (m.rev||0) +
+          ' path: ' + path +
+          (cur.label ? ' [' + cur.label + ']' : '') +
+          ' ' + (cur.type||'') +
+          ' ' + (m.items||[]).length + ' Eintraege';
+      }
       document.getElementById('statusJson').textContent = JSON.stringify(data.status, null, 2);
       document.getElementById('menuJson').textContent   = JSON.stringify(data.menu,   null, 2);
       document.querySelectorAll('.flag').forEach(el => {

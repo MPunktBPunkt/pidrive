@@ -37,20 +37,38 @@ def _run(cmd, timeout=5):
 
 
 def get_bt_sink():
-    """Aktive bluealsa A2DP Sink-Adresse ermitteln."""
-    out = _run("bluealsa-aplay -l 2>/dev/null | grep A2DP | head -1")
-    if out:
-        # Format: "xx:xx:xx:xx:xx:xx ..."
-        parts = out.split()
-        if parts:
-            return parts[0]
-    # Fallback: verbundenes Gerät aus bluetoothctl
-    out = _run("bluetoothctl devices Connected 2>/dev/null | head -1")
-    if out:
-        parts = out.strip().split()
-        if len(parts) >= 2:
-            return parts[1]
+    """Aktiven PulseAudio BT-Sink zurückgeben (leer wenn nicht verfügbar)."""
+    out = _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null")
+    for line in out.splitlines():
+        if "bluez_sink." in line and ".a2dp_sink" in line:
+            parts = line.split()
+            if len(parts) >= 2:
+                return parts[1]   # Sink-Name, z.B. bluez_sink.00_16_94_2E_85_DB.a2dp_sink
     return ""
+
+
+def get_mpv_args(settings=None):
+    """MPV-Audioargumente für aktuellen Ausgang zurückgeben.
+    Alle Module (Webradio, FM, DAB, Bibliothek) sollen diese Funktion nutzen.
+
+    Log-Beispiele:
+      [AUDIO] requested=auto  effective=bt    sink=bluez_sink.XX.a2dp_sink → --ao=pulse
+      [AUDIO] requested=auto  effective=klinke                              → --ao=alsa --audio-device=alsa/hw:1,0
+    """
+    if settings is None:
+        from main_core import load_settings
+        settings = load_settings()
+
+    mode = settings.get("audio_output", "auto")
+
+    if mode in ("bt", "auto"):
+        sink = get_bt_sink()
+        if sink:
+            log.info(f"[AUDIO] requested={mode:<6} effective=bt     sink={sink} → --ao=pulse")
+            return ["--ao=pulse"]
+
+    log.info(f"[AUDIO] requested={mode:<6} effective=klinke device=hw:1,0 → --ao=alsa")
+    return ["--ao=alsa", "--audio-device=alsa/hw:1,0"]
 
 
 def set_output(mode, settings):
@@ -99,27 +117,15 @@ def set_output(mode, settings):
 
 
 def get_alsa_device(settings):
-    """Aktuellen ALSA-Device-String für mpv zurückgeben.
-    Prüft ob bluealsa läuft, Fallback auf Klinke wenn nicht."""
+    """Kompatibilitätsfunktion — nutze get_mpv_args() für neue Module."""
     mode = settings.get("audio_output", "klinke")
-    if mode == "bt":
-        mac = settings.get("bt_sink_mac", "")
-        if mac:
-            # Prüfen ob bluealsa aktiv ist
-            try:
-                import subprocess
-                r = subprocess.run(
-                    ["systemctl","is-active","bluealsa"],
-                    capture_output=True, text=True, timeout=2)
-                if r.stdout.strip() == "active":
-                    return "bluealsa:DEV=" + mac + ",PROFILE=a2dp"
-            except Exception:
-                pass
-            # Fallback: Klinke
-            log.warn("BT Audio: bluealsa nicht aktiv → Klinke als Fallback")
-    elif mode == "hdmi":
+    if mode == "hdmi":
         return "hw:0,0"
-    return "hw:1,0"  # Standard: Klinke
+    if mode in ("bt", "auto"):
+        sink = get_bt_sink()
+        if sink:
+            return "pulse"   # PulseAudio nutzt Default-Sink
+    return "hw:1,0"
 
 
 def volume_up(settings):

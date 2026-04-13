@@ -111,6 +111,27 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     # ── Radio Stop ───────────────────────────────────────────────────────────
     elif cmd == "radio_stop":
         webradio.stop(S); dab.stop(S); fm.stop(S)
+
+    elif cmd == "radio_restart_on_bt":
+        # Letzte Quelle mit neuem BT-Audio neu starten
+        def _radio_restart():
+            import time
+            time.sleep(1)  # kurz warten bis BT-Sink stable
+            _last_fm  = settings.get("last_fm_station")
+            _last_dab = settings.get("last_dab_station")
+            _last_web = settings.get("last_web_station")
+            if _last_web and S.get("radio_type") == "WEB":
+                log.info("BT: Webradio neu auf BT: " + str(_last_web.get("name","")))
+                webradio.play_station(_last_web, S, settings)
+            elif _last_dab and S.get("radio_type") == "DAB":
+                log.info("BT: DAB neu auf BT: " + str(_last_dab.get("name","")))
+                dab.play_station(_last_dab, S, settings)
+            elif _last_fm:
+                log.info("BT: FM neu auf BT: " + str(_last_fm.get("name","")))
+                fm.play_station(_last_fm, S, settings)
+        import threading
+        threading.Thread(target=_radio_restart, daemon=True).start()
+
     elif cmd == "library_stop":
         library.stop_playback(S)
 
@@ -482,24 +503,42 @@ def startup_tasks(S, settings):
     """Einmalig beim Start: BT reconnect + letzte Station wiederherstellen."""
     import subprocess, time
 
-    # BT Auto-reconnect: alle gepaarten Geraete versuchen
+    # BT Auto-reconnect: letztes Geraet zuerst, dann alle gepairten
     try:
+        # Letztes bekanntes Geraet hat Prioritaet
+        last_mac = settings.get("bt_last_mac", "")
         r = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
                            shell=True, capture_output=True, text=True, timeout=5)
+        paired = []
         for line in r.stdout.splitlines():
             p = line.strip().split(" ", 2)
             if len(p) >= 2 and p[0] == "Device":
-                mac = p[1]
-                subprocess.run("bluetoothctl trust " + mac + " 2>/dev/null",
-                               shell=True, capture_output=True, timeout=3)
+                paired.append((p[1], p[2] if len(p)>2 else p[1]))
+        # Letztes Geraet an den Anfang
+        if last_mac:
+            paired = sorted(paired, key=lambda x: 0 if x[0]==last_mac else 1)
+        for mac, name in paired:
+            subprocess.run("bluetoothctl trust " + mac + " 2>/dev/null",
+                           shell=True, capture_output=True, timeout=3)
+            connected = False
+            # 3 Versuche: BT im Auto ist oft noch nicht ready beim Pi-Start
+            for attempt, wait in enumerate([0, 5, 12]):
+                if wait > 0:
+                    time.sleep(wait)
                 rc = subprocess.run("bluetoothctl connect " + mac + " 2>/dev/null",
                                     shell=True, capture_output=True,
                                     text=True, timeout=8)
                 if "successful" in rc.stdout.lower() or "connected" in rc.stdout.lower():
-                    log.info("BT Auto-reconnect OK: " + mac + " (" + (p[2] if len(p)>2 else "") + ")")
-                    from modules import bluetooth as _bt
-                    _bt.connect_device(mac, S, settings)
+                    connected = True
                     break
+                log.info("BT Reconnect Versuch " + str(attempt+1) + " fehlgeschlagen: " + mac)
+            if connected:
+                log.info("BT Auto-reconnect OK: " + mac + " (" + name + ")")
+                settings["bt_last_mac"]  = mac
+                settings["bt_last_name"] = name
+                from modules import bluetooth as _bt
+                _bt.connect_device(mac, S, settings)
+                break
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
@@ -522,7 +561,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.22 gestartet")
+    log.info("PiDrive Core v0.7.24 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

@@ -16,20 +16,31 @@ def load_stations():
         with open(STATIONS_FILE) as f: return json.load(f)
     except: return []
 
-def play_station(station, S):
+def play_station(station, S, settings=None):
     global _player_proc
+    if settings is not None:
+        settings["last_web_station"] = station
+        try:
+            import json as _jw
+            with open("/home/pi/pidrive/pidrive/config/settings.json","w") as _fw:
+                _jw.dump(settings, _fw, indent=2)
+        except Exception:
+            pass
     stop(S)
     url = station.get("url","")
     if not url:
-        import log; log.error(f"webradio: keine URL für {station.get('name','?')}")
+        import log; log.error("webradio: keine URL fuer " + station.get("name","?"))
         return
     try:
+        from modules import audio as _audio
+        mpv_args = _audio.get_mpv_args(settings)
         _player_proc = subprocess.Popen(
             ["mpv", "--no-video", "--really-quiet",
-             "--audio-device=alsa/hw:1,0",   # explizit ALSA hw:1,0
-             "--title=pidrive_radio", url],
+             "--title=pidrive_radio"] + mpv_args + [url],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        S["radio_playing"] = True; S["radio_type"] = "WEB"; S["radio_station"] = station["name"]
+        S["radio_playing"] = True; S["radio_type"] = "WEB"
+        S["radio_station"] = station.get("name","?")
+        S["radio_name"]    = station.get("name","?")
     except FileNotFoundError:
         S["radio_playing"] = False; S["radio_station"] = "mpv fehlt!"
 

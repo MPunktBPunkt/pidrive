@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.22           ║
+║        PiDrive Installer v0.7.24           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -97,6 +97,10 @@ if [ -d "$INSTALL_DIR/.git" ]; then
     sudo -u "$REAL_USER" git pull
     # Veraltete .bak-Dateien entfernen
   find "$INSTALL_DIR" -name "*.bak" -delete 2>/dev/null || true
+  # Altlasten explizit entfernen
+  for _dead in main.py trigger.py ui.py launcher.py; do
+    rm -f "$INSTALL_DIR/pidrive/$_dead" 2>/dev/null || true
+  done
   ok "Repository aktualisiert"
 else
     info "Klone $REPO_URL nach $INSTALL_DIR..."

@@ -107,15 +107,20 @@ def play_station(station, S, settings=None):
     if not ch:
         return
     try:
+        from modules import audio as _audio
+        _mpv_args = " ".join(_audio.get_mpv_args(settings))
+        _cmd = (
+            "welle-cli -D 0 -c " + ch + " -s '" + name + "' -o - 2>/dev/null | "
+            "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
+        )
         _player_proc = subprocess.Popen(
-            f"welle-cli -D 0 -c {ch} -s '{name}' -o - 2>/dev/null | "
-            f"mpv --no-video --really-quiet --audio-device=alsa/hw:1,0 --title=pidrive_dab - 2>/dev/null",
-            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            _cmd, shell=True,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
         S["radio_playing"] = True
-        S["radio_station"] = f"DAB: {name}"
+        S["radio_station"] = "DAB: " + name
         S["radio_type"]    = "DAB"
-        log.action("DAB", f"Wiedergabe: {name} ({ch})")
+        log.action("DAB", "Wiedergabe: " + name + " (" + ch + ")")
     except Exception as e:
         log.error(f"DAB play Fehler: {e}")
 

@@ -69,6 +69,12 @@ def _do_refresh():
         # Bluetooth: hciconfig (schnell)
         hc = _run("hciconfig 2>/dev/null", timeout=2)
         new["bt"] = "UP RUNNING" in hc
+        # Verbundenes Gerät (nur wenn BT aktiv)
+        if new["bt"]:
+            dev = _run("bluetoothctl info 2>/dev/null | grep Name:", timeout=3)
+            new["bt_device"] = dev.replace("Name:", "").strip()
+        else:
+            new["bt_device"] = ""
 
         # Spotify
         sp = _run("systemctl is-active raspotify 2>/dev/null", timeout=2)

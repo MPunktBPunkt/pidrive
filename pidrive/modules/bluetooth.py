@@ -248,6 +248,8 @@ def connect_device(mac, S, settings):
         S["bt_pa_sink"]          = bt_sink
         S["bt_device"]           = name
         S["audio_output"]        = "bt"
+        settings["bt_last_mac"]  = mac
+        settings["bt_last_name"] = name
         settings["audio_output"] = "bt"
         settings["bt_sink_mac"]  = mac
         settings["bt_pa_sink"]   = bt_sink
@@ -255,9 +257,17 @@ def connect_device(mac, S, settings):
         _set_pulseaudio_sink(bt_sink)
         _set_raspotify_device("default")
         if S.get("radio_playing"):
+            # Laufende Quelle auf BT neu starten
+            _radio_type    = S.get("radio_type", "")
+            _radio_station = S.get("radio_station", "")
             try:
                 import webradio as _wr, fm as _fm, dab as _dab
                 _wr.stop(S); _fm.stop(S); _dab.stop(S)
+                time.sleep(0.5)
+                # Trigger: Core startet letzte Quelle neu
+                with open("/tmp/pidrive_cmd","w") as _cf:
+                    _cf.write("radio_restart_on_bt\n")
+                log.info("BT: Radio-Neustart ausgeloest (" + _radio_type + ")")
             except Exception:
                 pass
     else:
