@@ -665,6 +665,7 @@ track_changed|Titel|Artist|Album  ->  /tmp/spotify_status
 | LPD433 | 433.075–434.775 MHz | 69 fest | 12.5 kHz | NFM | Kanal waehlen + Scan ↑↓ |
 | VHF manuell | 136–174 MHz | stufenlos | 25 kHz | NFM | Manuell + Scan ↑↓ |
 | UHF manuell | 400–470 MHz | stufenlos | 25 kHz | NFM | Manuell + Scan ↑↓ |
+| CB-Funk DE/EU | 26.565–27.405 MHz | 80 fest | 10 kHz | FM | Kanal 41-80 + 1-40 |
 
 Wiedergabe: `rtl_fm | mpv` Pipeline, identisch mit FM Radio.
 Alle lizenzfreien Dienste koennen ohne Genehmigung emfpangen werden.

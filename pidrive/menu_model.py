@@ -573,6 +573,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         _scanner_band("pmr446",  "PMR446"),
         _scanner_band("freenet", "Freenet"),
         _scanner_band("lpd433",  "LPD433"),
+        _scanner_band("cb",      "CB-Funk (DE/EU)"),
         _scanner_band("vhf",     "VHF"),
         _scanner_band("uhf",     "UHF"),
     ])

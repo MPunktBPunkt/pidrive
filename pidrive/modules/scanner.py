@@ -32,6 +32,56 @@ LPD433_CHANNELS = [
     for i in range(69)
 ]
 
+# CB-Funk DE/EU: Kanäle 41-80 (26.565-26.955 MHz, lineares Raster) + 1-40 (26.965-27.405 MHz)
+CB_CHANNELS = (
+    # Deutsche Zusatzkanäle 41-80 (lineares 10-kHz-Raster)
+    [{"ch": 41+i, "name": f"CB Kanal {41+i:02d}",
+      "freq": round(26.565 + i*0.010, 3)} for i in range(40)] +
+    # Klassische Kanäle 1-40 (historisches Frequenzraster)
+    [
+        {"ch":  1, "name": "CB Kanal 01", "freq": 26.965},
+        {"ch":  2, "name": "CB Kanal 02", "freq": 26.975},
+        {"ch":  3, "name": "CB Kanal 03", "freq": 26.985},
+        {"ch":  4, "name": "CB Kanal 04", "freq": 27.005},
+        {"ch":  5, "name": "CB Kanal 05", "freq": 27.015},
+        {"ch":  6, "name": "CB Kanal 06", "freq": 27.025},
+        {"ch":  7, "name": "CB Kanal 07", "freq": 27.035},
+        {"ch":  8, "name": "CB Kanal 08", "freq": 27.055},
+        {"ch":  9, "name": "CB Kanal 09", "freq": 27.065},
+        {"ch": 10, "name": "CB Kanal 10", "freq": 27.075},
+        {"ch": 11, "name": "CB Kanal 11", "freq": 27.085},
+        {"ch": 12, "name": "CB Kanal 12", "freq": 27.105},
+        {"ch": 13, "name": "CB Kanal 13", "freq": 27.115},
+        {"ch": 14, "name": "CB Kanal 14", "freq": 27.125},
+        {"ch": 15, "name": "CB Kanal 15", "freq": 27.135},
+        {"ch": 16, "name": "CB Kanal 16", "freq": 27.155},
+        {"ch": 17, "name": "CB Kanal 17", "freq": 27.165},
+        {"ch": 18, "name": "CB Kanal 18", "freq": 27.175},
+        {"ch": 19, "name": "CB Kanal 19", "freq": 27.185},  # Notfall/Anruf
+        {"ch": 20, "name": "CB Kanal 20", "freq": 27.205},
+        {"ch": 21, "name": "CB Kanal 21", "freq": 27.215},
+        {"ch": 22, "name": "CB Kanal 22", "freq": 27.225},
+        {"ch": 23, "name": "CB Kanal 23", "freq": 27.255},
+        {"ch": 24, "name": "CB Kanal 24", "freq": 27.235},
+        {"ch": 25, "name": "CB Kanal 25", "freq": 27.245},
+        {"ch": 26, "name": "CB Kanal 26", "freq": 27.265},
+        {"ch": 27, "name": "CB Kanal 27", "freq": 27.275},
+        {"ch": 28, "name": "CB Kanal 28", "freq": 27.285},
+        {"ch": 29, "name": "CB Kanal 29", "freq": 27.295},
+        {"ch": 30, "name": "CB Kanal 30", "freq": 27.305},
+        {"ch": 31, "name": "CB Kanal 31", "freq": 27.315},
+        {"ch": 32, "name": "CB Kanal 32", "freq": 27.325},
+        {"ch": 33, "name": "CB Kanal 33", "freq": 27.335},
+        {"ch": 34, "name": "CB Kanal 34", "freq": 27.345},
+        {"ch": 35, "name": "CB Kanal 35", "freq": 27.355},
+        {"ch": 36, "name": "CB Kanal 36", "freq": 27.365},
+        {"ch": 37, "name": "CB Kanal 37", "freq": 27.375},
+        {"ch": 38, "name": "CB Kanal 38", "freq": 27.385},
+        {"ch": 39, "name": "CB Kanal 39", "freq": 27.395},
+        {"ch": 40, "name": "CB Kanal 40", "freq": 27.405},
+    ]
+)
+
 VHF_RANGE = {"min": 136.0, "max": 174.0, "step_fine": 0.025,
              "label": "VHF (136-174 MHz)", "short": "VHF"}
 
@@ -70,6 +120,11 @@ BANDS = {
                  "step": 0.025},
         "bw": 25000,
         "label": "UHF",
+    },
+    "cb": {
+        "channels": CB_CHANNELS,
+        "bw": 10000,   # 10 kHz — CB-Funk FM
+        "label": "CB-Funk",
     },
 }
 
