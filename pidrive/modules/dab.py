@@ -77,15 +77,23 @@ def scan_dab_channels(progress_cb=None):
             progress_cb(int(i / total * 100),
                         f"Scanne {ch}... ({i}/{total})",
                         len(found))
-        out = _run(f"timeout 3 welle-cli -D 0 -c {ch} -p 2>/dev/null",
+                # Kanal für 6s tunen, welle-cli 2.2 gibt Programme automatisch aus
+        out = _run("timeout 6 welle-cli -c " + ch + " 2>&1 || "
+                   "timeout 6 welle-cli -D 0 -c " + ch + " 2>&1",
                    capture=True, timeout=5)
         if out:
             for line in out.splitlines():
-                if "Service:" in line or "Programme:" in line:
+                line = line.strip()
+                name = ""
+                if "Service:" in line or "Programme:" in line or "service:" in line:
                     name = line.split(":", 1)[-1].strip()
-                    if name and name not in [s["name"] for s in found]:
-                        found.append({"name": name, "channel": ch, "ensemble": ""})
-                        log.info(f"DAB gefunden: {name} auf {ch}")
+                elif line and not line.startswith(("-", "#", "[", "DAB", "RTL", "Tuning")):
+                    # Manche welle-cli-Versionen: direkt den Sendernamen
+                    if len(line) > 2 and len(line) < 50:
+                        name = line
+                if name and name not in [s["name"] for s in found]:
+                    found.append({"name": name, "channel": ch, "ensemble": ""})
+                    log.info("DAB gefunden: " + name + " auf " + ch)
 
     _scan_results = found
     _scan_running = False

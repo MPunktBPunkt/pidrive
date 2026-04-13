@@ -103,10 +103,21 @@ def scan_devices(S, settings):
     ipc.write_progress("Bluetooth", "Scanne Geraete (15s)...", color="blue")
     devices = []
     try:
-        # scan on für 15s — mehr Zeit für Kopfhörer/Lautsprecher
-        subprocess.run(
-            "bluetoothctl scan on 2>/dev/null & sleep 15; kill %1 2>/dev/null",
-            shell=True, capture_output=True, timeout=20)
+        # scan on für 15s — explizit als Prozess starten und beenden
+        import os, signal as _sig
+        _bt_proc = subprocess.Popen(
+            ["bluetoothctl", "scan", "on"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(15)
+        try:
+            _bt_proc.terminate()
+            _bt_proc.wait(timeout=2)
+        except Exception:
+            try: _bt_proc.kill()
+            except Exception: pass
+        # Sicherstellen dass kein bluetoothctl scan hängt
+        subprocess.run("pkill -f 'bluetoothctl scan' 2>/dev/null",
+                       shell=True, capture_output=True)
         r_paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
                                   shell=True, capture_output=True, text=True, timeout=5)
         known = {ln.split()[1] for ln in r_paired.stdout.splitlines()
