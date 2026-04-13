@@ -108,7 +108,7 @@ def play_station(station, S, settings=None):
         return
     try:
         from modules import audio as _audio
-        _mpv_args = " ".join(_audio.get_mpv_args(settings))
+        _mpv_args = " ".join(_audio.get_mpv_args(settings, source="dab"))
         _cmd = (
             "welle-cli -D 0 -c " + ch + " -s '" + name + "' -o - 2>/dev/null | "
             "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"

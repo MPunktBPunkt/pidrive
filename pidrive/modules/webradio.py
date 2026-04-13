@@ -33,7 +33,7 @@ def play_station(station, S, settings=None):
         return
     try:
         from modules import audio as _audio
-        mpv_args = _audio.get_mpv_args(settings)
+        mpv_args = _audio.get_mpv_args(settings, source="webradio")
         _player_proc = subprocess.Popen(
             ["mpv", "--no-video", "--really-quiet",
              "--title=pidrive_radio"] + mpv_args + [url],

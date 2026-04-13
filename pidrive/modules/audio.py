@@ -47,27 +47,28 @@ def get_bt_sink():
     return ""
 
 
-def get_mpv_args(settings=None):
+def get_mpv_args(settings=None, source=""):
     """MPV-Audioargumente für aktuellen Ausgang zurückgeben.
     Alle Module (Webradio, FM, DAB, Bibliothek) sollen diese Funktion nutzen.
 
-    Log-Beispiele:
-      [AUDIO] requested=auto  effective=bt    sink=bluez_sink.XX.a2dp_sink → --ao=pulse
-      [AUDIO] requested=auto  effective=klinke                              → --ao=alsa --audio-device=alsa/hw:1,0
+    Log-Beispiel:
+      [AUDIO] source=webradio requested=auto  effective=bt    sink=bluez_sink.XX.a2dp_sink
+      [AUDIO] source=fm       requested=auto  effective=klinke device=hw:1,0
     """
     if settings is None:
         from main_core import load_settings
         settings = load_settings()
 
     mode = settings.get("audio_output", "auto")
+    src_tag = f"source={source:<10}" if source else ""
 
     if mode in ("bt", "auto"):
         sink = get_bt_sink()
         if sink:
-            log.info(f"[AUDIO] requested={mode:<6} effective=bt     sink={sink} → --ao=pulse")
+            log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=bt     sink={sink}")
             return ["--ao=pulse"]
 
-    log.info(f"[AUDIO] requested={mode:<6} effective=klinke device=hw:1,0 → --ao=alsa")
+    log.info(f"[AUDIO] {src_tag} requested={mode:<6} effective=klinke device=hw:1,0")
     return ["--ao=alsa", "--audio-device=alsa/hw:1,0"]
 
 

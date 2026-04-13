@@ -116,19 +116,23 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         # Letzte Quelle mit neuem BT-Audio neu starten
         def _radio_restart():
             import time
-            time.sleep(1)  # kurz warten bis BT-Sink stable
-            _last_fm  = settings.get("last_fm_station")
-            _last_dab = settings.get("last_dab_station")
+            time.sleep(1)  # kurz warten bis BT-Sink stabil
+            # Nur Radioquellen neu starten (nicht MP3/Spotify)
+            _rtype    = S.get("radio_type", "")
             _last_web = settings.get("last_web_station")
-            if _last_web and S.get("radio_type") == "WEB":
+            _last_dab = settings.get("last_dab_station")
+            _last_fm  = settings.get("last_fm_station")
+            if _rtype == "WEB" and _last_web:
                 log.info("BT: Webradio neu auf BT: " + str(_last_web.get("name","")))
                 webradio.play_station(_last_web, S, settings)
-            elif _last_dab and S.get("radio_type") == "DAB":
+            elif _rtype == "DAB" and _last_dab:
                 log.info("BT: DAB neu auf BT: " + str(_last_dab.get("name","")))
                 dab.play_station(_last_dab, S, settings)
-            elif _last_fm:
+            elif _rtype == "FM" and _last_fm:
                 log.info("BT: FM neu auf BT: " + str(_last_fm.get("name","")))
                 fm.play_station(_last_fm, S, settings)
+            elif _rtype in ("", "SCANNER", "LIB"):
+                log.info("BT: kein Radio-Neustart fuer Quelle " + _rtype)
         import threading
         threading.Thread(target=_radio_restart, daemon=True).start()
 

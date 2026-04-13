@@ -101,7 +101,7 @@ def play_station(station, S, settings=None):
     try:
         # rtl_fm -> mpv pipe
         from modules import audio as _audio
-        _mpv_extra = " ".join(_audio.get_mpv_args(settings))
+        _mpv_extra = " ".join(_audio.get_mpv_args(settings, source="fm"))
         cmd = (
             "rtl_fm -M wbfm -f " + freq_hz + " -r 200000 - 2>/dev/null | "
             "mpv --no-video --really-quiet --title=pidrive_fm "
