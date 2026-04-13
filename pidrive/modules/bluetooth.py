@@ -178,11 +178,13 @@ def build_items(screen, S, settings):
 def scan_devices(S, settings):
     """BT-Geraete scannen, Ergebnis in JSON speichern (-> Submenu)."""
     import ipc, time, json, subprocess
-    ipc.write_progress("Bluetooth", "Scanne Geraete (8s)...", color="blue")
+    ipc.write_progress("Bluetooth", "Scanne Geraete (15s)...", color="blue")
     devices = []
     try:
-        subprocess.run("timeout 8s bluetoothctl scan on 2>/dev/null || true",
-                       shell=True, capture_output=True, timeout=12)
+        # scan on für 15s — mehr Zeit für Kopfhörer/Lautsprecher
+        subprocess.run(
+            "bluetoothctl scan on 2>/dev/null & sleep 15; kill %1 2>/dev/null",
+            shell=True, capture_output=True, timeout=20)
         r_paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
                                   shell=True, capture_output=True, text=True, timeout=5)
         known = {ln.split()[1] for ln in r_paired.stdout.splitlines()

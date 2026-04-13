@@ -18,6 +18,10 @@ Typen:
 
 import os
 import json
+try:
+    from modules import favorites as _fav_mod
+except Exception:
+    _fav_mod = None
 import time
 import log
 from dataclasses import dataclass, field
@@ -269,6 +273,51 @@ class StationStore:
                 changed = True
         return changed
 
+    def set_favorite_fm(self, station_id: str, is_fav: bool):
+        """FM Station als Favorit markieren/entfernen und speichern."""
+        for s in self.fm:
+            if f"fm_{str(s.get('freq_mhz',s.get('freq','')))
+                    .replace('.','_')}" == station_id:
+                s["favorite"] = is_fav
+        self._write_json(self._fm_file, self.fm, "fm")
+
+    def set_favorite_dab(self, station_id: str, is_fav: bool):
+        """DAB Station als Favorit markieren/entfernen und speichern."""
+        for s in self.dab:
+            if f"dab_{s.get('service_id', s.get('name','?'))}" == station_id:
+                s["favorite"] = is_fav
+        self._write_json(self._dab_file, self.dab, "dab")
+
+    def set_favorite_web(self, station_id: str, is_fav: bool):
+        """Webradio Station als Favorit markieren/entfernen und speichern."""
+        for s in self.webradio:
+            name = s.get("name","?")
+            if f"web_{name.lower().replace(' ','_')[:20]}" == station_id:
+                s["favorite"] = is_fav
+        self._write_json(self._web_file, self.webradio, "webradio")
+
+    def _write_json(self, path: str, stations: list, source: str):
+        """Senderliste in JSON-Datei schreiben."""
+        try:
+            import time as _t
+            existing = {}
+            try:
+                with open(path) as _f:
+                    existing = json.load(_f)
+            except Exception:
+                pass
+            existing["stations"] = stations
+            existing["updated_at"] = int(_t.time())
+            tmp = path + ".tmp"
+            with open(tmp, "w") as _f:
+                json.dump(existing, _f, indent=2, ensure_ascii=False)
+            import os as _os
+            _os.replace(tmp, path)
+        except Exception as _e:
+            import log
+            log.error(f"StationStore write {path}: {_e}")
+
+
     def reload_source(self, source: str):
         """Einzelne Quelle neu laden."""
         mapping = {"fm": "fm_stations.json", "dab": "dab_stations.json",
@@ -375,10 +424,14 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             label = f"{fav}{name}  {freq} MHz" if freq else f"{fav}{name}"
             active= (S.get("radio_type") == "FM" and
                      S.get("radio_station","").startswith(name[:10]))
+            _fid = f"fm_{str(freq).replace('.','_')}"
+            _meta_fm = {"freq": str(freq), "name": name, "favorite": s.get("favorite",False)}
             nodes.append(MenuNode(
-                id=f"fm_{str(freq).replace('.','_')}", label=label, type="station",
+                id=_fid, label=label, type="station",
                 source="fm", playable=True, active=active,
-                meta={"freq": str(freq), "name": name, "favorite": s.get("favorite",False)},
+                meta=_meta_fm,
+                children=[_fav_node(_fid, name, "fm", _meta_fm,
+                                   s.get("favorite",False))]
             ))
         return nodes
 
@@ -394,11 +447,15 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             label = f"{fav}{name}  [{ens}]" if ens else f"{fav}{name}"
             active= (S.get("radio_type") == "DAB" and
                      S.get("radio_station","") == name)
+            _did = f"dab_{s.get('service_id',name)}"
+            _meta_dab = {"ensemble": ens, "service_id": s.get("service_id",""),
+                         "name": name, "favorite": s.get("favorite",False)}
             nodes.append(MenuNode(
-                id=f"dab_{s.get('service_id',name)}", label=label, type="station",
+                id=_did, label=label, type="station",
                 source="dab", playable=True, active=active,
-                meta={"ensemble": ens, "service_id": s.get("service_id",""),
-                      "name": name, "favorite": s.get("favorite",False)},
+                meta=_meta_dab,
+                children=[_fav_node(_did, name, "dab", _meta_dab,
+                                   s.get("favorite",False))]
             ))
         return nodes
 
@@ -414,13 +471,29 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             label = f"{fav}{name}  [{genre}]" if genre else f"{fav}{name}"
             active= (S.get("radio_type") == "WEB" and
                      S.get("radio_station","") == name)
+            _wid = f"web_{name.lower().replace(' ','_')[:20]}"
+            _meta_web = {"url": s.get("url",""), "genre": genre,
+                         "name": name, "favorite": s.get("favorite",False)}
             nodes.append(MenuNode(
-                id=f"web_{name.lower().replace(' ','_')[:20]}", label=label, type="station",
+                id=_wid, label=label, type="station",
                 source="webradio", playable=True, active=active,
-                meta={"url": s.get("url",""), "genre": genre,
-                      "name": name, "favorite": s.get("favorite",False)},
+                meta=_meta_web,
+                children=[_fav_node(_wid, name, "webradio", _meta_web,
+                                    s.get("favorite",False))]
             ))
         return nodes
+
+
+    def _fav_node(node_id, name, source, meta, is_fav):
+        """Favorit-Toggle-Node für eine Station."""
+        import json as _jj
+        _lbl = ("☆ Aus Favoriten entfernen" if is_fav 
+                else "★ Zu Favoriten hinzufuegen")
+        _meta_str = _jj.dumps(meta, ensure_ascii=False)
+        _action = f"fav_toggle:{source}:{node_id}:{name}:{_meta_str}"
+        return MenuNode(
+            id="fav_" + node_id, label=_lbl, type="action",
+            action=_action)
 
     # ── Jetzt läuft ─────────────────────────────────────────────────────────
     now_playing = MenuNode(id="now_playing", label="Jetzt laeuft", type="folder", children=[
@@ -526,20 +599,48 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         scanner_node,
     ])
 
+
+    # ── Favoriten ─────────────────────────────────────────────────────────────
+    fav_nodes = []
+    if _fav_mod:
+        for _fav in _fav_mod.get_all():
+            _src  = _fav.get("source","")
+            _id   = _fav.get("id","")
+            _name = _fav.get("name", _id)
+            _meta = _fav.get("meta", {})
+            _lbl  = "★ " + _name
+            if _src in ("fm","dab","webradio"):
+                fav_nodes.append(MenuNode(
+                    id="fav_" + _id, label=_lbl, type="station",
+                    source=_src, meta=_meta))
+            elif _src == "scanner":
+                _band = _meta.get("band","pmr446")
+                _ch   = _meta.get("ch", 1)
+                fav_nodes.append(MenuNode(
+                    id="fav_" + _id, label=_lbl, type="action",
+                    action="scan_up:" + _band, meta=_meta))
+
+    favoriten = MenuNode(id="favoriten", label="Favoriten", type="folder",
+        children=fav_nodes or [MenuNode(id="fav_empty",
+            label="Noch keine Favoriten", type="info")])
+
     # ── Verbindungen ─────────────────────────────────────────────────────────
     # BT: gefundene Geraete als Submenu (aus /tmp/pidrive_bt_devices.json)
     bt_devs = []
     try:
-        _btd = json.load(open("/tmp/pidrive_bt_devices.json"))
-        for _d in _btd.get("devices", []):
-            _m = _d.get("mac",""); _n = _d.get("name",_m)
-            _lbl = ("★ " if _d.get("known") else "") + _n
-            bt_devs.append(MenuNode(
-                id="btd_" + _m.replace(":",""), label=_lbl,
-                type="action", action="bt_connect:" + _m,
-                meta={"mac": _m, "name": _n}))
-    except Exception:
-        pass
+        import os as _os
+        if _os.path.exists("/tmp/pidrive_bt_devices.json"):
+            with open("/tmp/pidrive_bt_devices.json") as _f:
+                _btd = json.load(_f)
+            for _d in _btd.get("devices", []):
+                _m = _d.get("mac",""); _n = _d.get("name",_m)
+                _lbl = ("★ " if _d.get("known") else "") + _n
+                bt_devs.append(MenuNode(
+                    id="btd_" + _m.replace(":",""), label=_lbl,
+                    type="action", action="bt_connect:" + _m,
+                    meta={"mac": _m, "name": _n}))
+    except Exception as _e:
+        pass  # Datei noch nicht vorhanden oder JSON-Fehler
     bt_geraete = MenuNode(id="bt_geraete", label="Geraete", type="folder",
         children=bt_devs or [MenuNode(id="bt_hint",
             label="Zuerst scannen", type="info")])
@@ -547,15 +648,19 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     # WiFi: gefundene Netzwerke als Submenu (aus /tmp/pidrive_wifi_nets.json)
     wifi_nets = []
     try:
-        _wfd = json.load(open("/tmp/pidrive_wifi_nets.json"))
-        for _n in _wfd.get("networks", []):
-            _s = _n.get("ssid","")
-            wifi_nets.append(MenuNode(
-                id="wfn_" + _s.replace(" ","_")[:16], label=_s,
-                type="action", action="wifi_connect:" + _s,
-                meta={"ssid": _s}))
-    except Exception:
-        pass
+        import os as _os2
+        if _os2.path.exists("/tmp/pidrive_wifi_nets.json"):
+            with open("/tmp/pidrive_wifi_nets.json") as _f2:
+                _wfd = json.load(_f2)
+            for _n in _wfd.get("networks", []):
+                _s = _n.get("ssid","")
+                if _s:
+                    wifi_nets.append(MenuNode(
+                        id="wfn_" + _s.replace(" ","_")[:16], label=_s,
+                        type="action", action="wifi_connect:" + _s,
+                        meta={"ssid": _s}))
+    except Exception as _e:
+        pass  # Datei noch nicht vorhanden oder JSON-Fehler
     wifi_netze = MenuNode(id="wifi_netze", label="Netzwerke", type="folder",
         children=wifi_nets or [MenuNode(id="wifi_hint",
             label="Zuerst scannen", type="info")])
@@ -586,6 +691,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     # ── Root ─────────────────────────────────────────────────────────────────
     root = MenuNode(id="root", label="PiDrive", type="folder", children=[
         now_playing,
+        favoriten,
         quellen,
         verbindungen,
         system,

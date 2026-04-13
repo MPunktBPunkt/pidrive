@@ -207,6 +207,29 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "lib_browse":
         bg(lambda: library.browse_and_play(S, load_settings()))
 
+    elif cmd.startswith("fav_toggle:"):
+        payload = cmd[len("fav_toggle:"):]
+        # payload = source:id:name:meta_json
+        try:
+            import json as _j2
+            parts = payload.split(":", 3)
+            _src  = parts[0]
+            _id   = parts[1]
+            _name = parts[2]
+            _meta = _j2.loads(parts[3]) if len(parts) > 3 else {}
+            is_now_fav = favorites.toggle({"id": _id, "name": _name,
+                                           "source": _src, "meta": _meta})
+            # Auch im Senderlisten-JSON das favorite-Flag aktualisieren
+            if _src == "fm":
+                store.set_favorite_fm(_id, is_now_fav)
+            elif _src == "dab":
+                store.set_favorite_dab(_id, is_now_fav)
+            elif _src == "webradio":
+                store.set_favorite_web(_id, is_now_fav)
+            rebuild_tree(menu_state, store, S, settings)
+        except Exception as _fe:
+            log.warn("fav_toggle: " + str(_fe))
+
     # ── System ───────────────────────────────────────────────────────────────
     elif cmd == "reboot":
         ipc.write_progress("Neustart", "In 3 Sekunden ...", color="orange")
@@ -319,49 +342,111 @@ def check_trigger(menu_state, store, S, settings):
 # ── System-Check ──────────────────────────────────────────────────────────────
 
 def system_check():
+    import subprocess
     log.info("--- Core System-Check ---")
     VERSION = open(os.path.join(BASE_DIR, "VERSION")).read().strip()
     log.info(f"  PiDrive Core v{VERSION}")
 
-    checks = [
-        ("/dev/fb1", "SPI Display"),
-        ("/dev/fb0", "HDMI Framebuffer"),
-    ]
-    for path, label in checks:
+    # Framebuffer
+    for path, label in [("/dev/fb1","SPI Display"), ("/dev/fb0","HDMI Framebuffer")]:
         if os.path.exists(path):
             log.info(f"  ✓ {label}: {path}")
         else:
             log.warn(f"  ✗ {label}: {path} nicht gefunden")
 
-    # RTL-SDR
-    import subprocess
-    r = subprocess.run("lsusb 2>/dev/null | grep -i rtl", shell=True,
-                       capture_output=True, text=True)
-    if r.returncode == 0 and r.stdout.strip():
-        log.info("  ✓ RTL-SDR gefunden")
-    else:
-        log.warn("  ⚠ RTL-SDR nicht gefunden (DAB+/FM benötigt USB-Stick)")
+    # USB-Geräte vollständig auflisten
+    log.info("  USB-Geraete:")
+    try:
+        r = subprocess.run("lsusb 2>/dev/null", shell=True,
+                           capture_output=True, text=True, timeout=5)
+        for line in r.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            # Bekannte relevante Geräte hervorheben
+            if any(x in line.lower() for x in ["rtl","2832","2838"]):
+                log.info(f"    ✓ RTL-SDR: {line}")
+            elif any(x in line.lower() for x in ["bluetooth","broadcom","cambridge"]):
+                log.info(f"    ✓ BT: {line}")
+            elif any(x in line.lower() for x in ["hub","root hub"]):
+                pass  # Hubs nicht loggen
+            else:
+                log.info(f"    · {line}")
+        if not r.stdout.strip():
+            log.warn("    (keine USB-Geraete gefunden)")
+    except Exception as _e:
+        log.warn(f"  USB scan: {_e}")
 
+    # Netzwerkstatus
+    log.info("  Netzwerk:")
     try:
-        import subprocess
-        r = subprocess.run(["ip","-4","addr","show"], capture_output=True, text=True)
-        ip = [l.split()[1].split("/")[0] for l in r.stdout.splitlines() if "inet " in l and "127." not in l]
-        if ip:
-            log.info(f"  ✓ WLAN: {ip[0]}")
-    except Exception:
-        pass
-    # PulseAudio BT check
-    try:
-        r = subprocess.run(["systemctl","is-active","pulseaudio"],
+        r = subprocess.run(["ip","-4","addr","show"],
                            capture_output=True, text=True, timeout=3)
-        if r.stdout.strip() == "active":
-            log.info("  ✓ PulseAudio: aktiv (BT A2DP verfügbar)")
-        else:
-            log.warn("  ⚠ PulseAudio: nicht aktiv — BT Audio evtl. nicht verfügbar")
+        for line in r.stdout.splitlines():
+            if "inet " in line and "127." not in line:
+                parts = line.strip().split()
+                ip   = parts[1].split("/")[0]
+                iface = ""
+                # Find interface name
+                for prev in r.stdout[:r.stdout.find(line)].splitlines():
+                    if ":" in prev and not prev.startswith(" "):
+                        iface = prev.split(":")[1].strip().split()[0]
+                log.info(f"    ✓ {iface}: {ip}")
+        ssid = subprocess.run("iwgetid -r 2>/dev/null",
+                              shell=True, capture_output=True,
+                              text=True, timeout=2).stdout.strip()
+        if ssid:
+            log.info(f"    ✓ SSID: {ssid}")
     except Exception:
         pass
 
-    log.info("--- Core System-Check OK ---")
+    # Bluetooth
+    try:
+        hc = subprocess.run("hciconfig 2>/dev/null",
+                            shell=True, capture_output=True,
+                            text=True, timeout=3)
+        if "UP RUNNING" in hc.stdout:
+            log.info("  ✓ Bluetooth: UP RUNNING")
+            # Gepairte Geräte
+            paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
+                                    shell=True, capture_output=True,
+                                    text=True, timeout=3)
+            devs = [l for l in paired.stdout.splitlines() if l.startswith("Device")]
+            if devs:
+                for d in devs:
+                    p = d.split(" ", 2)
+                    name = p[2] if len(p) > 2 else p[1]
+                    log.info(f"    ★ Gepairt: {name} ({p[1]})")
+            else:
+                log.info("    (keine gepairten Geraete)")
+        else:
+            log.warn("  ⚠ Bluetooth: nicht aktiv")
+    except Exception:
+        pass
+
+    # PulseAudio
+    try:
+        pa = subprocess.run(["systemctl","is-active","pulseaudio"],
+                            capture_output=True, text=True, timeout=3)
+        if pa.stdout.strip() == "active":
+            log.info("  ✓ PulseAudio: aktiv (BT A2DP)")
+        else:
+            log.warn("  ⚠ PulseAudio: nicht aktiv")
+    except Exception:
+        pass
+
+    # Raspotify
+    try:
+        sp = subprocess.run(["systemctl","is-active","raspotify"],
+                            capture_output=True, text=True, timeout=3)
+        if sp.stdout.strip() == "active":
+            log.info("  ✓ Raspotify: aktiv")
+        else:
+            log.warn("  ⚠ Raspotify: nicht aktiv")
+    except Exception:
+        pass
+
+    log.info("--- System-Check OK ---")
 
 
 # ── Menü neu bauen nach Scan/Reload ──────────────────────────────────────────
@@ -411,7 +496,7 @@ def startup_tasks(S, settings):
                                     shell=True, capture_output=True,
                                     text=True, timeout=8)
                 if "successful" in rc.stdout.lower() or "connected" in rc.stdout.lower():
-                    log.info("BT Auto-reconnect: " + mac)
+                    log.info("BT Auto-reconnect OK: " + mac + " (" + (p[2] if len(p)>2 else "") + ")")
                     from modules import bluetooth as _bt
                     _bt.connect_device(mac, S, settings)
                     break
@@ -437,7 +522,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.21 gestartet")
+    log.info("PiDrive Core v0.7.22 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -479,6 +564,13 @@ def main():
         needs_rebuild = check_trigger(menu_state, store, S, settings)
         if needs_rebuild:
             rebuild_tree(menu_state, store, S, settings)
+
+        # Scan-triggered rebuild: bt_scan/wifi_scan setzen S['menu_rev']
+        cur_s_rev = S.get("menu_rev", 0)
+        if cur_s_rev != getattr(main, '_last_s_rev', 0):
+            main._last_s_rev = cur_s_rev
+            if not needs_rebuild:
+                rebuild_tree(menu_state, store, S, settings)
 
         # Nach Trigger: IPC sofort schreiben (schnelle Reaktion im Web/Display)
         if needs_rebuild or (os.path.exists(ipc.CMD_FILE) is False and

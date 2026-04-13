@@ -980,58 +980,91 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.7.20)
+## Aktueller Stand (v0.7.22)
 
-**System laeuft stabil** — 12.04.2026 (v0.7.20):
+**System läuft stabil** — 13.04.2026:
 
 ```
-✓ pidrive_core.service: active (v0.7.20)
-✓ pidrive_display.service: active, fb1 direkt
-✓ pidrive_web.service: active, http://<PI-IP>:8080
-✓ pidrive_avrcp.service: active
-✓ pulseaudio.service: active (BT A2DP)
-✓ BT Scan → Submenu Verbindungen > Geraete
-✓ WiFi Scan → Submenu Verbindungen > Netzwerke
-✓ BT Auto-Reconnect beim Boot
-✓ FM/DAB letzte Station wird beim Boot wiederhergestellt
-✓ Raspotify wechselt automatisch auf BT/Klinke
-✓ WebUI: Single-Column Baum, alle Aktionen klickbar
+✓ pidrive_core.service   v0.7.22 — non-blocking Status-Thread
+✓ pidrive_display.service 20fps, ändert nur bei Änderungen
+✓ pidrive_web.service    http://<PI-IP>:8080
+✓ pidrive_avrcp.service  BMW iDrive AVRCP 1.5
+✓ pulseaudio.service     BT A2DP Audio
+✓ Favoriten             FM/DAB+/Webradio, config/favorites.json
+✓ BT/WiFi Submenu        Scan → navigierbare Geräteliste
+✓ BT Auto-Reconnect      beim Boot
+✓ FM/DAB letzte Station  beim Boot wiederhergestellt
+✓ Menü-Performance       ~50ms Latenz (vorher bis 1300ms)
+```
+
+**Menustruktur:**
+```
+PiDrive
+├── Jetzt läuft
+├── Favoriten          ← NEU v0.7.22
+├── Quellen
+│   ├── Spotify, Bibliothek
+│   ├── Webradio → Sender [★ Favorit]
+│   ├── DAB+ → Sender [★ Favorit]
+│   ├── FM Radio → Sender [★ Favorit]
+│   └── Scanner
+├── Verbindungen
+│   ├── Bluetooth → Geraete (nach Scan)
+│   └── WiFi → Netzwerke (nach Scan)
+└── System
 ```
 
 **Offene Punkte:**
 - GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
 - BMW iDrive AVRCP Praxistest im Auto
-- PulseAudio BT A2DP noch in Prüfung (bluealsa nicht verfuegbar auf Bullseye)
+- PulseAudio BT A2DP testen
+- Scanner-Kanäle als Favoriten (noch nicht implementiert)
 
 
 ## Roadmap
 
-### Kurzfristig
+### Kurzfristig (nächste 1-3 Updates)
+
+- [ ] **GPIO-Buttons** (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25) — direkte Steuerung am Display ohne SSH/WebUI, wichtigste UX-Verbesserung für Fahrzeugbetrieb
+- [ ] **BT Audio A2DP testen** — PulseAudio läuft, `bluez_sink.XX.a2dp_sink` nach Connect prüfen (`pactl list sinks short`)
+- [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
+- [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
+- [ ] **WebUI Breadcrumb-Navigation** — navigierbarer Baum statt JSON-Dump
+
+### Mittelfristig (Fahrzeugbetrieb)
+
+- [ ] **BMW iDrive AVRCP Praxistest** — AVRCP 1.5 im echten Fahrzeug: zeigt NBT EVO-Display Sendername/Titel? Funktionieren Lenkradtasten?
+- [ ] **DAB+ Programminfo (DLS)** — laufender Titeltext via `welle-cli --dls`
+- [ ] **FM RDS-Text** — Senderinformationen via `rtl_fm + rds_rx`
+- [ ] **Equalizer** — ALSA-basiert, Preset-Auswahl im Menü
+- [ ] **Hotspot-Modus** — Pi öffnet WLAN-Hotspot wenn kein Heimnetz verfügbar
+
+### Langfristig
+
+- [ ] **OBD2 Fahrzeugdaten** — USB-ELM327, `python-obd`: Tacho, Drehzahl, Kühlwassertemperatur im Display
+- [ ] **BMW iPod-Emulation** — IAP2-Emulation über CD-Wechsler-Port (libaacs/iap2)
+- [ ] **Spotify Web API** — Play/Pause/Weiter vom Pi aus steuern (nicht nur AVRCP)
+- [ ] **Pi 4 Migration** — leistungsstärkere Hardware für flüssigeres Display
+
+### ✅ Erledigt
+
 - [x] Baumbasiertes Menümodell (v0.7.0)
-- [x] Senderlisten aus JSON mit Hot-Reload und Merge-Strategie
-- [x] DAB/FM Suchlauf-Pipeline → JSON → Menü sofort sichtbar
-- [x] Scan-Rückmeldung: Sender gefunden / Fehler sichtbar
-- [x] Senderlisten-UX: Favoriten zuerst (★), Frequenz/Ensemble/Genre
-- [x] IPC-Vertrag in ipc.py dokumentiert (stabil ab v0.7.1)
-- [x] Altlasten build_items() aus allen Modulen entfernt
-- [ ] Audio Klinke/HDMI/BT Umschaltung testen
-- [ ] GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- [ ] USB-Tethering Autostart
+- [x] Senderlisten aus JSON mit Hot-Reload und Merge-Strategie (v0.7.1)
+- [x] DAB/FM Suchlauf → JSON → Menü sofort sichtbar (v0.7.2)
+- [x] Core/Display getrennt — headless Core, pygame Display (v0.7.3)
+- [x] SDL_AUDIODRIVER=dummy, fb1 direkt, fbcp entfernt (v0.6.0)
+- [x] Systemd Ordering-Cycle dauerhaft gelöst (v0.7.15–v0.7.17)
+- [x] from ui import Item (pygame) aus allen Modulen entfernt (v0.7.15)
+- [x] Raspotify wechselt automatisch BT/Klinke (v0.7.16)
+- [x] PulseAudio BT A2DP Setup-Script (v0.7.19)
+- [x] AVRCP 1.5 + MPRIS2 für BMW NBT EVO (v0.7.19/v0.7.20)
+- [x] BT/WiFi Scan → navigierbares Submenu (v0.7.20–v0.7.22)
+- [x] Favoriten: FM/DAB+/Webradio, config/favorites.json (v0.7.22)
+- [x] BT Auto-Reconnect beim Boot (v0.7.20)
+- [x] FM/DAB letzte Station beim Boot wiederherstellen (v0.7.20)
+- [x] Performance: non-blocking Status-Thread, 20fps, ~50ms Latenz (v0.7.21)
+- [x] Dead code entfernt: launcher.py, main.py, ui.py, trigger.py (v0.7.21)
+- [x] Vollständiger Startup-Log: USB, Netzwerk, BT, Dienste (v0.7.22)
+- [x] WebUI: BT/WiFi-Scan direkt klickbar, BT-Device im Footer (v0.7.22)
 
-### Mittelfristig
-- [ ] Web-UI Redesign: Breadcrumb, kein Display-Spiegel
-- [ ] DAB+ Programminfo (welle-cli DLS)
-- [ ] FM RDS Text (rtl_fm + rds_rx)
-- [ ] Favoriten setzen/entfernen im Menü
-- [ ] Equalizer (ALSA-basiert)
-- [ ] Hotspot-Modus
 
-### Langfristig (Fahrzeug-Integration)
-- [x] AVRCP BMW 118d 2017 NBT EVO → File-Trigger (v0.7.20)
-- [x] MPRIS2 D-Bus → BMW-Display Metadaten (v0.7.20)
-- [x] AVRCP 1.4 Konfiguration für NBT EVO Kompatibilität
-- [ ] OBD2 Fahrzeugdaten (ELM327 USB, python-obd)
-- [ ] BMW iDrive Playlist-Simulation (volles Dateisystem im Auto-Display)
-- [ ] iPod-Emulation (libaacs / iap2)
-- [ ] Spotify Web API (Play/Pause/Next)
-- [ ] Bluetooth-Audio Autoconnect

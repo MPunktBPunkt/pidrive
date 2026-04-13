@@ -126,38 +126,45 @@ sudo systemctl restart pidrive
 
 ```
 pidrive/
-├── pidrive/
-│   ├── launcher.py      # TTY-Setup (setsid + TIOCSCTTY), startet main.py
-│   ├── main.py          # Hauptprogramm & Main-Loop
-│   ├── ui.py            # UI-Basisklassen
-│   ├── status.py        # System-Status Cache
-│   ├── trigger.py       # File-Trigger Handler
-│   ├── log.py           # Logging (rotierend, max 512KB)
-│   ├── modules/
-│   │   ├── musik.py     # Spotify & Wiedergabe
-│   │   ├── webradio.py  # Webradio (mpv)
-│   │   ├── library.py   # MP3 Bibliothek mit Album-Art
-│   │   ├── dab.py       # DAB+ Radio (RTL-SDR + welle.io)
-│   │   ├── fm.py        # FM Radio (RTL-SDR + rtl_fm)
-│   │   ├── wifi.py      # WiFi Steuerung
-│   │   ├── bluetooth.py # Bluetooth Kopplung & Audio
-│   │   ├── audio.py     # Audioausgang Steuerung
-│   │   ├── system.py    # System-Info, Neustart, etc.
-│   │   ├── scanner.py   # Funkscanner (PMR446, Freenet, LPD433, VHF, UHF)
-│   │   └── update.py    # OTA Update via GitHub
-│   └── config/
-│       ├── stations.json      # Webradio-Stationen
-│       ├── dab_stations.json  # DAB+ Sender (nach Scan)
-│       ├── fm_stations.json   # FM Sender
-│       └── settings.json      # Einstellungen
+├── install.sh               # Schnellinstallation + Update (10 Schritte)
+├── setup_bt_audio.sh        # PulseAudio BT Audio Setup
+├── KontextPiDrive.md        # Vollständige Projektdokumentation
+├── README.md
 ├── systemd/
-│   └── pidrive.service  # Systemd Service (User=root, launcher.py)
-├── pidrive_ctrl.py      # SSH Tastatur-Steuerung
-├── install.sh           # Schnellinstallation (10 Schritte)
-├── setup_pidrive.sh     # Vollständiges Setup-Script
-├── config.txt.example   # Beispiel /boot/config.txt
-├── KontextPiDrive.md    # Vollständige Projektdokumentation
-└── README.md
+│   ├── pidrive_core.service    # Headless Core (kein pygame)
+│   ├── pidrive_display.service # pygame Display (fb1 direkt)
+│   ├── pidrive_web.service     # Flask Web UI Port 8080
+│   └── pidrive_avrcp.service   # AVRCP BMW iDrive
+└── pidrive/
+    ├── main_core.py         # Core: Trigger, Menü, Audio, Status-Thread
+    ├── main_display.py      # Display: pygame auf fb1, 20fps
+    ├── ipc.py               # IPC: atomares JSON /tmp/pidrive_*.json
+    ├── menu_model.py        # Menübaum: MenuNode, MenuState, StationStore
+    ├── mpris2.py            # MPRIS2 D-Bus → BMW-Display Metadaten
+    ├── avrcp_trigger.py     # AVRCP 1.5 → File-Trigger
+    ├── webui.py             # Flask Web UI Port 8080
+    ├── status.py            # Status-Cache (Hintergrund-Thread)
+    ├── log.py               # Logging (rotierend, max 512KB)
+    ├── diagnose.py          # Diagnose-Script
+    ├── modules/
+    │   ├── musik.py         # Spotify Connect
+    │   ├── webradio.py      # Webradio (mpv)
+    │   ├── library.py       # MP3 Bibliothek mit Album-Art
+    │   ├── dab.py           # DAB+ Radio (RTL-SDR + welle.io)
+    │   ├── fm.py            # FM Radio (RTL-SDR + rtl_fm)
+    │   ├── wifi.py          # WiFi Steuerung + Scan
+    │   ├── bluetooth.py     # BT Scan, Connect, Audio-Routing
+    │   ├── audio.py         # Audioausgang (Klinke/HDMI/BT)
+    │   ├── favorites.py     # Favoritenliste (FM/DAB/Webradio)
+    │   ├── scanner.py       # Funkscanner (PMR446/Freenet/LPD433/VHF/UHF)
+    │   ├── system.py        # System-Info, Neustart
+    │   └── update.py        # OTA Update via GitHub
+    └── config/
+        ├── stations.json        # Webradio-Stationen
+        ├── dab_stations.json    # DAB+ Sender (nach Scan)
+        ├── fm_stations.json     # FM Sender
+        ├── favorites.json       # Favoritenliste
+        └── settings.json        # Einstellungen (Audio, letzte Station)
 ```
 
 ---
@@ -167,70 +174,67 @@ pidrive/
 Baumbasiert (v0.7.x) — beliebig tief, iDrive-kompatibel.
 
 ```
-PiDrive  (v0.7.x — Baumbasiert, beliebig tief)
+PiDrive  (v0.7.22 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
-│   ├── Quelle                (info)
-│   ├── Titel/Sender          (info)
-│   ├── Spotify               (toggle)
-│   ├── Audioausgang          (action)
-│   ├── Lauter                (action)
-│   └── Leiser                (action)
+│   ├── Quelle / Titel         (info)
+│   ├── Spotify An/Aus         (toggle)
+│   ├── Audioausgang           (action)
+│   ├── Lauter / Leiser        (action)
+│   └── Wiedergabe stoppen     (action)
+├── Favoriten                  ← NEU v0.7.22
+│   ├── ★ Bayern 3             (station — FM)
+│   ├── ★ BR Klassik           (station — DAB+)
+│   └── ★ Radio BOB!           (station — Webradio)
 ├── Quellen
 │   ├── Spotify
-│   │   ├── Spotify An/Aus    (toggle)
-│   │   └── Status            (info)
+│   │   ├── Spotify An/Aus     (toggle)
+│   │   └── Status             (info)
 │   ├── Bibliothek
-│   │   ├── Durchsuchen       (action → headless_pick)
-│   │   ├── Stop              (action)
-│   │   └── Pfad              (info)
+│   │   ├── Durchsuchen        (action → Dateiliste)
+│   │   └── Stop               (action)
 │   ├── Webradio
-│   │   ├── Jetzt laeuft      (info)
-│   │   ├── Sender            (folder → dynamisch aus stations.json)
-│   │   │   ├── ★ Bayern 3 [Pop/Rock]   (station)
+│   │   ├── Sender             (folder — aus stations.json)
+│   │   │   ├── ★ Bayern 3 [Pop/Rock]    (station)
+│   │   │   │   └── ★ Zu Favoriten       (action)
 │   │   │   └── ...
-│   │   └── Sender neu laden  (action)
+│   │   └── Sender neu laden   (action)
 │   ├── DAB+
-│   │   ├── Jetzt laeuft      (info)
-│   │   ├── Sender            (folder → dynamisch aus dab_stations.json)
-│   │   │   ├── ★ Bayern 1 [11D]        (station, nach Suchlauf)
+│   │   ├── Sender             (folder — aus dab_stations.json)
+│   │   │   ├── ★ Bayern 1 [11D]         (station)
+│   │   │   │   └── ★ Zu Favoriten       (action)
 │   │   │   └── ...
-│   │   ├── Suchlauf starten  (action → scan → merge → sofort sichtbar)
-│   │   ├── Naechster Sender  (action)
-│   │   └── Vorheriger Sender (action)
+│   │   ├── Suchlauf starten   (action)
+│   │   ├── Naechster / Vorheriger Sender (action)
 │   ├── FM Radio
-│   │   ├── Jetzt laeuft      (info)
-│   │   ├── Sender            (folder → dynamisch aus fm_stations.json)
-│   │   │   ├── ★ Bayern 3  99.4 MHz    (station)
+│   │   ├── Sender             (folder — aus fm_stations.json)
+│   │   │   ├── ★ Bayern 3  99.4 MHz     (station)
+│   │   │   │   └── ★ Zu Favoriten       (action)
 │   │   │   └── ...
-│   │   ├── Suchlauf starten  (action → scan → merge → sofort sichtbar)
-│   │   ├── Naechster Sender  (action)
-│   │   ├── Vorheriger Sender (action)
-│   │   └── Frequenz manuell  (action)
+│   │   ├── Suchlauf starten   (action)
+│   │   ├── Naechster / Vorheriger / Manuell (action)
 │   └── Scanner
-│       ├── PMR446
-│       │   ├── aktuelle Info (info: live Kanal/Frequenz)
-│       │   ├── Kanal +       (action)
-│       │   ├── Kanal -       (action)
-│       │   ├── Scan weiter   (action)
-│       │   └── Scan zurueck  (action)
-│       ├── Freenet           (gleiche Struktur)
-│       ├── LPD433            (gleiche Struktur)
-│       ├── VHF               (gleiche Struktur)
-│       └── UHF               (gleiche Struktur)
+│       ├── PMR446 / Freenet / LPD433 / VHF / UHF
+│       │   ├── Kanal +/−      (action)
+│       │   └── Scan weiter/zurück (action)
 ├── Verbindungen
-│   ├── Bluetooth An/Aus      (toggle)
-│   ├── Geraete scannen       (action)
-│   ├── Verbunden mit         (info)
-│   ├── WiFi An/Aus           (toggle)
-│   ├── Netzwerke scannen     (action)
-│   └── SSID                  (info)
+│   ├── Bluetooth An/Aus       (toggle)
+│   ├── Geraete scannen        (action → 15s)
+│   ├── Geraete                (folder — nach Scan)
+│   │   ├── HD 4.40BT          (action → bt_connect:MAC)
+│   │   └── ...
+│   ├── Verbunden mit          (info)
+│   ├── WiFi An/Aus            (toggle)
+│   ├── Netzwerke scannen      (action)
+│   ├── Netzwerke              (folder — nach Scan)
+│   │   ├── Heimnetz           (action → wifi_connect:SSID)
+│   │   └── ...
+│   └── SSID                   (info)
 └── System
-    ├── IP Adresse            (info)
-    ├── System-Info           (action)
-    ├── Version               (action)
-    ├── Neustart              (action)
-    ├── Ausschalten           (action)
-    └── Update                (action, OTA via GitHub)
+    ├── IP Adresse             (info)
+    ├── System-Info            (action)
+    ├── Version                (action)
+    ├── Neustart / Ausschalten (action)
+    └── Update                 (action, OTA via GitHub)
 ```
 
 **Knotentypen:**
@@ -441,18 +445,18 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 
 ## Roadmap
 
-### Kurzfristig
-- [ ] Audio Klinke/HDMI/BT Umschaltung testen
-- [ ] GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- [ ] USB-Tethering Autostart
+| Priorität | Feature | Status |
+|---|---|---|
+| 🔧 Kurzfristig | GPIO-Buttons (Key1-3) | offen |
+| 🔧 Kurzfristig | BT Audio A2DP testen | offen |
+| 🔧 Kurzfristig | USB-Tethering Autostart | offen |
+| 🔧 Kurzfristig | WebUI Breadcrumb-Navigation | offen |
+| 🚗 Mittelfristig | BMW AVRCP Praxistest im Auto | offen |
+| 🚗 Mittelfristig | DAB+ DLS / FM RDS Text | offen |
+| 🚗 Mittelfristig | Equalizer, Hotspot-Modus | offen |
+| 🔭 Langfristig | OBD2 Fahrzeugdaten (ELM327) | offen |
+| 🔭 Langfristig | BMW iPod-Emulation (IAP2) | offen |
+| 🔭 Langfristig | Spotify Web API | offen |
 
-### Mittelfristig
-- [ ] DAB+ Programminfo
-- [ ] FM RDS Text
-- [ ] Equalizer
-- [ ] Hotspot-Modus
+Vollständige Roadmap mit erledigten Punkten: [KontextPiDrive.md](KontextPiDrive.md#roadmap)
 
-### Fahrzeug-Integration
-- [ ] BMW iDrive ESP32 → File-Trigger Bridge
-- [ ] Spotify Web API (Play/Pause/Next)
-- [ ] Bluetooth-Audio Autoconnect
