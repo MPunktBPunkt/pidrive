@@ -276,8 +276,9 @@ class StationStore:
     def set_favorite_fm(self, station_id: str, is_fav: bool):
         """FM Station als Favorit markieren/entfernen und speichern."""
         for s in self.fm:
-            if f"fm_{str(s.get('freq_mhz',s.get('freq','')))
-                    .replace('.','_')}" == station_id:
+            freq = str(s.get("freq_mhz", s.get("freq", "")))
+            sid  = "fm_" + freq.replace(".", "_")
+            if sid == station_id:
                 s["favorite"] = is_fav
         self._write_json(self._fm_file, self.fm, "fm")
 
