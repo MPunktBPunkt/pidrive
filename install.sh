@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.7.26           ║
+║        PiDrive Installer v0.8.0           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -340,6 +340,19 @@ if which welle-cli >/dev/null 2>&1; then
     ok "welle-cli vorhanden (DAB+)"
 else
     warn "welle-cli nicht installiert -> sudo apt install welle.io"
+fi
+# DVB-Treiber Status
+if lsmod 2>/dev/null | grep -qE "dvb_usb_rtl28xxu|dvb_core"; then
+    warn "DVB-Treiber noch geladen — RTL-SDR erst nach Reboot nutzbar"
+else
+    ok "Kein blockierender DVB-Treiber"
+fi
+# Unterspannung
+_throttled=$(vcgencmd get_throttled 2>/dev/null || echo "n/a")
+info "Stromversorgung: $_throttled"
+if echo "$_throttled" | grep -qE "0x[0-9a-f]*[1-9][0-9a-f]*"; then
+    warn "Unterspannung erkannt ($_throttled) — 5V/3A Netzteil empfohlen"
+    dmesg -T 2>/dev/null | grep -iE "under-voltage|Undervoltage" | tail -3 || true
 fi
 
 # Syntax-Check vor Service-Start
