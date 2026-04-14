@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.7.10
+main_core.py - PiDrive Core v0.8.0
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -460,44 +460,12 @@ def system_check():
     except Exception:
         pass
 
-    # RTL-SDR Funktionstest
-    rtl_ok = False
+    # RTL-SDR: passiver Startup-Check via rtlsdr-Modul (öffnet Device NICHT)
     try:
-        r = subprocess.run("lsusb 2>/dev/null",
-                           shell=True, capture_output=True, text=True, timeout=3)
-        rtl_ok = any(x in r.stdout.lower() for x in ["0bda:2838","0bda:2832","rtl"])
-    except Exception:
-        pass
-
-    if rtl_ok:
-        log.info("  RTL-SDR Tools:")
-        for tool, pkg in [("rtl_fm","rtl-sdr"), ("rtl_test","rtl-sdr"),
-                          ("welle-cli","welle.io")]:
-            try:
-                found = subprocess.run(["which", tool],
-                                      capture_output=True, text=True,
-                                      timeout=2).returncode == 0
-                if found:
-                    log.info(f"    ✓ {tool}")
-                else:
-                    log.warn(f"    ✗ {tool} fehlt — sudo apt install {pkg}")
-            except Exception:
-                pass
-        # Kurzer HW-Test: rtl_test -t gibt sofort USB-Infos aus
-        try:
-            rt = subprocess.run("timeout 3 rtl_test 2>&1 | head -8",
-                                shell=True, capture_output=True,
-                                text=True, timeout=4)
-            if "Found" in rt.stdout or "Tuner" in rt.stdout:
-                for line in rt.stdout.splitlines():
-                    if any(x in line for x in ["Found","Tuner","SN:","device"]):
-                        log.info("    ✓ " + line.strip())
-            elif rt.stdout.strip():
-                log.info("    rtl_test: " + rt.stdout.splitlines()[0].strip())
-        except Exception:
-            pass
-    else:
-        log.warn("  ⚠ RTL-SDR: nicht gefunden (DAB+/FM/Scanner benötigen USB-Stick)")
+        from modules import rtlsdr as _rtlsdr_check
+        _rtlsdr_check.log_startup_check(log)
+    except Exception as _e:
+        log.warn("  ⚠ RTL-SDR Check: " + str(_e))
 
     log.info("--- System-Check OK ---")
 
@@ -593,7 +561,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.7.26 gestartet")
+    log.info("PiDrive Core v0.8.0 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

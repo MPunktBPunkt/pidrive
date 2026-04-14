@@ -141,6 +141,109 @@
           <button onclick="sendCmd('vol_down')">Leiser</button>
         </div>
 
+
+      <!-- RTL-SDR Diagnose Panel (v0.8.0) -->
+      <section class="panel">
+        <div class="panel-title">RTL-SDR Diagnose</div>
+        {% set r = vm.get("rtlsdr", {}) %}
+        {% set usb = r.get("usb", {}) %}
+        {% set th  = r.get("throttled", {}) %}
+        {% set procs = r.get("processes", []) %}
+        {% set dvb   = r.get("dvb_modules", []) %}
+        {% set tools = r.get("tools", {}) %}
+
+        {% if not r %}
+          <div class="diag-box warn">Noch keine Diagnose vorhanden.
+            <button onclick="refreshRTLSDR()" style="margin-left:12px">Jetzt prüfen</button>
+          </div>
+        {% else %}
+
+        <div class="diag-grid">
+          <!-- Karte: Status -->
+          <div class="diag-card">
+            <div class="diag-title">Status</div>
+            <div class="diag-list">
+
+              <div class="diag-row">
+                <div class="diag-key">Stick</div>
+                <div class="diag-value {% if usb.get('present') %}diag-ok{% else %}diag-bad{% endif %}">
+                  {% if usb.get("present") %}✓ erkannt{% else %}⚠ nicht erkannt{% endif %}
+                </div>
+              </div>
+
+              <div class="diag-row">
+                <div class="diag-key">Busy</div>
+                <div class="diag-value {% if r.get('busy') %}diag-warn{% else %}diag-ok{% endif %}">
+                  {% if r.get("busy") %}⚠ belegt{% else %}✓ frei{% endif %}
+                </div>
+              </div>
+
+              <div class="diag-row">
+                <div class="diag-key">DVB-Treiber</div>
+                <div class="diag-value {% if dvb %}diag-bad{% else %}diag-ok{% endif %}">
+                  {% if dvb %}⚠ geladen ({{dvb|length}}){% else %}✓ keine{% endif %}
+                </div>
+              </div>
+
+              <div class="diag-row">
+                <div class="diag-key">Unterspannung</div>
+                <div class="diag-value
+                  {% if th.get('undervoltage_now') %}diag-bad
+                  {% elif th.get('undervoltage_seen') %}diag-warn
+                  {% else %}diag-ok{% endif %}">
+                  {% if th.get("undervoltage_now") %}⚠ AKTUELL AKTIV
+                  {% elif th.get("undervoltage_seen") %}⚠ seit Boot
+                  {% elif th %}✓ keine
+                  {% else %}–{% endif %}
+                  <span class="diag-muted" style="font-size:12px">{{th.get("raw","")}}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Karte: Tools & Prozesse -->
+          <div class="diag-card">
+            <div class="diag-title">Tools & Prozesse</div>
+            <div class="diag-chipbar">
+              {% for t in ["rtl_fm", "rtl_test", "welle-cli"] %}
+                <span class="diag-chip {% if tools.get(t) %}ok{% else %}bad{% endif %}">
+                  {% if tools.get(t) %}✓{% else %}✗{% endif %} {{t}}
+                </span>
+              {% endfor %}
+            </div>
+
+            {% if procs %}
+              <div class="diag-box warn" style="margin-top:10px">
+                RTL-Prozesse laufen:
+                <ul class="diag-proc-list">
+                  {% for p in procs %}
+                    <li>PID {{p.pid}} — {{p.cmd}}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            <div class="diag-actions">
+              <button onclick="refreshRTLSDR()">🔄 Passive Diagnose</button>
+            </div>
+            <div class="diag-note">
+              Passive Diagnose öffnet den RTL-SDR Stick nicht.<br>
+              Für aktiven Test: Core stoppen, dann SSH:<br>
+              <code>python3 ~/pidrive/pidrive/modules/rtlsdr.py --active</code>
+            </div>
+          </div>
+        </div><!-- /diag-grid -->
+
+        <!-- Alter Debug-JSON (eingeklappt) -->
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;color:var(--muted);font-size:13px">Debug-JSON</summary>
+          <pre class="diag-json" style="margin-top:8px">{{ r | tojson(indent=2) }}</pre>
+        </details>
+
+        {% endif %}
+      </section>
+
         <div class="panel-title">Rohdaten</div>
         <div class="json-wrap">
           <div>
@@ -336,5 +439,19 @@
       }).catch(()=>{});
     }, 2000);
   </script>
+
+    <script>
+    async function refreshRTLSDR() {
+      const btns = document.querySelectorAll('button[onclick="refreshRTLSDR()"]');
+      btns.forEach(b => { b.textContent = "⏳ Aktualisiere..."; b.disabled = true; });
+      try {
+        await fetch("/api/rtlsdr/refresh");
+        setTimeout(() => location.reload(), 400);
+      } catch(e) {
+        alert("RTL-SDR Refresh fehlgeschlagen: " + e);
+        btns.forEach(b => { b.disabled = false; b.textContent = "🔄 Passive Diagnose"; });
+      }
+    }
+    </script>
 </body>
 </html>

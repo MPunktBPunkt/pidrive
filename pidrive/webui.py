@@ -20,6 +20,7 @@ CMD_FILE = "/tmp/pidrive_cmd"
 STATUS_FILE = "/tmp/pidrive_status.json"
 MENU_FILE = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
+RTLSDR_FILE  = "/tmp/pidrive_rtlsdr.json"
 LIST_FILE = "/tmp/pidrive_list.json"
 LOG_FILE  = "/var/log/pidrive/pidrive.log"
 READY_FILE= "/tmp/pidrive_ready"
@@ -106,6 +107,7 @@ def build_view_model():
     status   = read_json(STATUS_FILE, {})
     menu     = read_json(MENU_FILE,   {})
     progress = read_json(PROGRESS_FILE, {})
+    rtlsdr   = read_json(RTLSDR_FILE, {})
     list_data= read_json(LIST_FILE,   {})
 
     # v0.7.0: nodes aus Baummodell, Compat-Fallback
@@ -138,6 +140,9 @@ def build_view_model():
         "status":         status,
         "menu":           menu,
         "progress":       progress,
+        "rtlsdr":         rtlsdr,
+        "rtlsdr_age":     file_age(RTLSDR_FILE),
+        "rtlsdr_exists":  os.path.exists(RTLSDR_FILE),
         "list_data":      list_data,
         "list_active":    list_data.get("active", False),
         "list_title":     list_data.get("title", ""),
@@ -223,6 +228,26 @@ def api_diagnose():
 def api_grep():
     cmd = r'''grep -R "pidrive_status\|pidrive_menu\|write_json\|json.dump" /home/pi/pidrive/pidrive -n'''
     return jsonify(safe_run(cmd))
+
+@app.route("/api/rtlsdr")
+def api_rtlsdr():
+    data = read_json(RTLSDR_FILE, {})
+    return jsonify({"ok": bool(data), "data": data,
+                    "exists": os.path.exists(RTLSDR_FILE),
+                    "age": file_age(RTLSDR_FILE)})
+
+@app.route("/api/rtlsdr/refresh")
+def api_rtlsdr_refresh():
+    """Passive Diagnose neu ausführen (öffnet Device NICHT)."""
+    import subprocess as _sp
+    try:
+        _sp.run(["/usr/bin/python3",
+                 "/home/pi/pidrive/pidrive/modules/rtlsdr.py",
+                 "--json"],
+                timeout=10, capture_output=True)
+    except Exception:
+        pass
+    return jsonify({"ok": True, "data": read_json(RTLSDR_FILE, {})})
 
 @app.route("/api/ready")
 def api_ready():

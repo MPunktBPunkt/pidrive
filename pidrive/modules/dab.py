@@ -4,6 +4,10 @@ PiDrive v0.6.1 — pygame-frei, Progress via IPC
 """
 
 import subprocess
+try:
+    from modules import rtlsdr as _rtlsdr
+except Exception:
+    _rtlsdr = None
 import threading
 import os
 import time
@@ -77,9 +81,17 @@ def scan_dab_channels(progress_cb=None):
             progress_cb(int(i / total * 100),
                         f"Scanne {ch}... ({i}/{total})",
                         len(found))
-                # welle-cli 2.2: alle Ausgaben auf stderr → mit 2>&1 fangen
+                # Exklusiver Lock für RTL-SDR
+        if _rtlsdr and _rtlsdr.is_busy():
+            log.warn("DAB Scan: RTL-SDR belegt, ueberspringe " + ch)
+            continue
+        # welle-cli 2.2: alle Ausgaben auf stderr → mit 2>&1 fangen
         out = _run("timeout 6 welle-cli -c " + ch + " 2>&1",
                    capture=True, timeout=5)
+        if out and "usb_claim_interface error" in out:
+            log.warn("DAB: RTL-SDR blockiert auf Kanal " + ch +
+                     " — DVB-Treiber geladen?")
+            continue
         if out:
             # Strikt: NUR "Service label: NAME" ist ein echter Sender
             # Alle anderen welle-cli Ausgaben sind Debug/Fehler
@@ -119,6 +131,13 @@ def play_station(station, S, settings=None):
     name = station.get("name", "")
     if not ch:
         return
+    if _rtlsdr:
+        if not _rtlsdr.detect_usb().get("present"):
+            import log as _l; _l.error("DAB: kein RTL-SDR")
+            return
+        if _rtlsdr.is_busy():
+            import log as _l; _l.warn("DAB: RTL-SDR belegt")
+            return
     try:
         from modules import audio as _audio
         _mpv_args = " ".join(_audio.get_mpv_args(settings, source="dab"))
@@ -126,10 +145,13 @@ def play_station(station, S, settings=None):
             "welle-cli -D 0 -c " + ch + " -s '" + name + "' -o - 2>/dev/null | "
             "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
         )
-        _player_proc = subprocess.Popen(
-            _cmd, shell=True,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        _lock_ctx = (_rtlsdr.acquire_lock(owner="dab_play") if _rtlsdr
+                     else __import__("contextlib").nullcontext())
+        with _lock_ctx:
+            _player_proc = subprocess.Popen(
+                _cmd, shell=True,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
         S["radio_playing"] = True
         S["radio_station"] = "DAB: " + name
         S["radio_type"]    = "DAB"

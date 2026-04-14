@@ -7,6 +7,10 @@ Scan-Funktion: Squelch-Erkennung via rtl_fm -l, stoppt bei Signal.
 """
 
 import subprocess
+try:
+    from modules import rtlsdr as _rtlsdr
+except Exception:
+    _rtlsdr = None
 import time
 import ipc
 import log
@@ -172,15 +176,32 @@ def check_hardware(screen):
 
 def play_freq(freq_mhz, name, bandwidth_hz, S):
     global _player_proc
+    if _rtlsdr and not _rtlsdr.detect_usb()["present"]:
+        S["radio_station"] = "RTL-SDR nicht gefunden"
+        return
     stop(S)
     freq_hz = int(freq_mhz * 1e6)
     sr = max(48000, bandwidth_hz * 4)
     try:
         cmd = (f"rtl_fm -M fm -f {freq_hz} -s {bandwidth_hz} -r {sr} - 2>/dev/null | "
+               f"mpv --no-video --really-quiet --title=pidrive_scanner "
                f"--demuxer=rawaudio --demuxer-rawaudio-rate={sr} "
                f"--demuxer-rawaudio-channels=1 - 2>/dev/null")
-        _player_proc = subprocess.Popen(cmd, shell=True,
-                                        stderr=subprocess.DEVNULL)
+        if _rtlsdr:
+            usb = _rtlsdr.detect_usb()
+            if not usb.get("present"):
+                S["radio_station"] = "RTL-SDR nicht gefunden"
+                import log as _log; _log.error("Scanner: kein RTL-SDR")
+                return
+            if _rtlsdr.is_busy():
+                S["radio_station"] = "RTL-SDR belegt"
+                import log as _log; _log.warn("Scanner: RTL-SDR belegt")
+                return
+        with (_rtlsdr.acquire_lock(owner=f"scanner:{name}") if _rtlsdr
+              else __import__("contextlib").nullcontext()):
+            _player_proc = subprocess.Popen(cmd, shell=True,
+                                            stdout=subprocess.DEVNULL,
+                                            stderr=subprocess.DEVNULL)
         S["radio_playing"] = True
         S["radio_station"] = f"{name} ({freq_mhz:.5g} MHz)"
         S["radio_type"]    = "SCANNER"

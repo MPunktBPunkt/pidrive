@@ -275,12 +275,86 @@ pre {
   line-height: 1.45;
 }
 
+
+/* ─────────────────────────────────────────────────────────────
+   RTL-SDR Diagnosebox  (v0.8.0)
+   ───────────────────────────────────────────────────────────── */
+
+.diag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.diag-card {
+  background: var(--panel3);
+  border: 1px solid var(--line);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+.diag-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #9ed8ff;
+  margin-bottom: 10px;
+}
+
+.diag-list { display: flex; flex-direction: column; gap: 8px; }
+
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255,255,255,0.02);
+}
+
+.diag-key  { color: var(--muted); font-size: 14px; min-width: 120px; flex: 0 0 120px; }
+.diag-value{ color: var(--text);  font-size: 14px; flex: 1; text-align: right; word-break: break-word; }
+.diag-ok   { color: var(--green);  font-weight: bold; }
+.diag-warn { color: var(--yellow); font-weight: bold; }
+.diag-bad  { color: var(--red);    font-weight: bold; }
+.diag-muted{ color: var(--muted); }
+
+.diag-chipbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+.diag-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px; font-size: 13px;
+  border: 1px solid var(--line); background: rgba(255,255,255,0.04);
+}
+.diag-chip.ok   { color: var(--green);  background: var(--green-bg);  border-color: rgba(80,240,144,0.35); }
+.diag-chip.warn { color: var(--yellow); background: var(--yellow-bg); border-color: rgba(255,209,102,0.35); }
+.diag-chip.bad  { color: var(--red);    background: var(--red-bg);    border-color: rgba(255,107,107,0.35); }
+
+.diag-box {
+  margin-top: 10px; padding: 10px 12px;
+  border-left: 4px solid var(--line);
+  background: rgba(255,255,255,0.03);
+  color: var(--text); font-size: 14px;
+}
+.diag-box.warn { border-left-color: var(--yellow); background: var(--yellow-bg); }
+.diag-box.bad  { border-left-color: var(--red);    background: var(--red-bg); }
+
+.diag-proc-list { margin: 8px 0 0 0; padding-left: 18px; color: var(--text); font-size: 13px; }
+.diag-proc-list li { margin-bottom: 4px; word-break: break-word; }
+
+.diag-json { min-height: 160px; max-height: 320px; }
+
+.diag-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+.diag-note { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 8px; }
+
 h4 { margin: 0 0 8px 0; color: #9ed8ff; font-size: 15px; font-weight: bold; }
 
 /* Responsive */
 @media (max-width: 1100px) {
   .main-grid           { grid-template-columns: 1fr; }
   .button-grid         { grid-template-columns: repeat(2, 1fr); }
+  .diag-grid           { grid-template-columns: 1fr; }
   .json-wrap           { grid-template-columns: 1fr; }
   .tree-item           { font-size: 22px; }
   .display-top .title  { font-size: 22px; }
@@ -297,6 +371,9 @@ h4 { margin: 0 0 8px 0; color: #9ed8ff; font-size: 15px; font-weight: bold; }
   .node-icon     { width: 20px; min-width: 20px; }
   .display-footer{ font-size: 16px; }
   .button-grid   { grid-template-columns: 1fr; }
+  .diag-row      { flex-direction: column; align-items: flex-start; }
+  .diag-key      { min-width: 0; flex: none; }
+  .diag-value    { text-align: left; }
   .nav-middle    { grid-template-columns: 1fr 1fr 1fr; }
 }
 

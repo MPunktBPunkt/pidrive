@@ -1,6 +1,6 @@
 """
 mpv_meta.py — Now-Playing Metadaten via mpv JSON-IPC
-PiDrive v0.7.26
+PiDrive v0.8.0
 
 Liest ICY/Stream-Metadaten aus einem laufenden mpv-Prozess via Unix-Socket.
 Thread-sicher: läuft als Daemon-Thread, schreibt in S (State-Dict).
