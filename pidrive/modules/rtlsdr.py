@@ -453,16 +453,16 @@ def log_startup_check(log):
     if usb["present"]:
         log.info("  ✓ RTL-SDR: Stick erkannt (DAB+/FM/Scanner verfuegbar)")
     else:
-        log.warning("  ⚠ RTL-SDR: kein Stick — DAB+/FM/Scanner nicht verfuegbar")
+        log.warn("  ⚠ RTL-SDR: kein Stick — DAB+/FM/Scanner nicht verfuegbar")
         return
 
     # DVB-Treiber blockierend?
     dvb = loaded_dvb_modules()
     if dvb:
-        log.warning("  ⚠ DVB-Treiber geladen — blockiert rtl_fm/welle-cli!")
+        log.warn("  ⚠ DVB-Treiber geladen — blockiert rtl_fm/welle-cli!")
         for m in dvb:
-            log.warning("    " + m)
-        log.warning("    Fix: sudo reboot (Blacklist in /etc/modprobe.d/)")
+            log.warn("    " + m)
+        log.warn("    Fix: sudo reboot (Blacklist in /etc/modprobe.d/)")
     else:
         log.info("  ✓ RTL-SDR: kein blockierender DVB-Treiber")
 
@@ -472,14 +472,14 @@ def log_startup_check(log):
         if tools[t]:
             log.info(f"    ✓ {t}")
         else:
-            log.warning(f"    ✗ {t} fehlt")
+            log.warn(f"    ✗ {t} fehlt")
 
     # Unterspannung
     th = get_throttled()
     if th.get("undervoltage_now"):
-        log.warning("  ⚠ Unterspannung AKTIV — 5V/3A Netzteil noetig!")
+        log.warn("  ⚠ Unterspannung AKTIV — 5V/3A Netzteil noetig!")
     elif th.get("undervoltage_seen"):
-        log.warning(f"  ⚠ Unterspannung seit Boot ({th.get('raw','')}) "
+        log.warn(f"  ⚠ Unterspannung seit Boot ({th.get('raw','')}) "
                     "— Netzteil/Kabel pruefen")
     elif th.get("ok"):
         log.info("  ✓ Stromversorgung OK (kein Throttling)")
