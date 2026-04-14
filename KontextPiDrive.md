@@ -927,7 +927,8 @@ sudo systemctl restart pidrive_display
   → `track` / `artist` in status.json + WebUI sichtbar
 - Scanner: CB-Funk DE/EU (80 Kanäle: 41-80 + 1-40, 10 kHz FM)
 - Scanner: BANDS-Dict + `_current_ch` definiert (fehlten komplett → NameError)
-- RTL-SDR: Tool-Check + Hardware-Test im Startup-Log
+- RTL-SDR: Startup-Check nur via lsusb+lsmod (kein rtl_test — würde Device blockieren)
+- Unterspannungs-Check via vcgencmd get_throttled im Startup-Log
 
 **Install:**
 - install.sh: Alt-Import-Check + Import-Smoke-Test vor Service-Start

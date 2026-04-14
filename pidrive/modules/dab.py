@@ -81,23 +81,24 @@ def scan_dab_channels(progress_cb=None):
         out = _run("timeout 6 welle-cli -c " + ch + " 2>&1",
                    capture=True, timeout=5)
         if out:
+            # Strikt: NUR "Service label: NAME" ist ein echter Sender
+            # Alle anderen welle-cli Ausgaben sind Debug/Fehler
             for line in out.splitlines():
                 line = line.strip()
-                name = ""
-                # Nur echte Sendernamen: "Service label: NAME"
-                if "Service label:" in line:
-                    name = line.split("Service label:", 1)[-1].strip()
-                elif "service label:" in line.lower():
-                    name = line.split(":", 1)[-1].strip()
-                # Ignoriere alle bekannten Debug-Zeilen
-                if name and not any(x in name for x in [
-                    "SoapySDR", "Airspy", "usb_", "OFDM", "clock",
-                    "antenna", "welle-cli", "InputFactory", "Aborted",
-                    "frequency", "stream", "Wait", "sync", "kHz", "ksps"
-                ]):
-                    if name not in [s["name"] for s in found]:
-                        found.append({"name": name, "channel": ch, "ensemble": ""})
-                        log.info("DAB gefunden: " + name + " auf " + ch)
+                if "Service label:" not in line and "service label:" not in line.lower():
+                    continue
+                name = line.split(":", 1)[-1].strip()
+                if not name or len(name) < 2 or len(name) > 60:
+                    continue
+                # Nochmal prüfen: kein technischer Text
+                bad = ["kHz","MHz","SoapySDR","OFDM","usb_","rtl_",
+                       "welle-cli","InputFactory","Aborted","SyncOn",
+                       "Wait","stream","clock","antenna","[INFO]","Error"]
+                if any(b.lower() in name.lower() for b in bad):
+                    continue
+                if name not in [s["name"] for s in found]:
+                    found.append({"name": name, "channel": ch, "ensemble": ""})
+                    log.info("DAB gefunden: " + name + " auf " + ch)
 
     _scan_results = found
     _scan_running = False
