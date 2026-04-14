@@ -307,6 +307,22 @@ fi
 fake-hwclock save 2>/dev/null && ok "fake-hwclock: aktuelle Zeit gespeichert" || true
 
 # ── RTL-SDR Check ─────────────────────────────────────────────────────────
+
+# DVB-T Treiber blacklisten (blockiert sonst RTL-SDR für rtl_fm/welle-cli)
+info "RTL-SDR: DVB-T Treiber blacklisten..."
+BLACKLIST=/etc/modprobe.d/rtl-sdr-blacklist.conf
+if [ ! -f "$BLACKLIST" ] || ! grep -q "dvb_usb_rtl28xxu" "$BLACKLIST" 2>/dev/null; then
+    echo "blacklist dvb_usb_rtl28xxu" > "$BLACKLIST"
+    echo "blacklist rtl2832"         >> "$BLACKLIST"
+    echo "blacklist rtl2830"         >> "$BLACKLIST"
+    ok "DVB-T Treiber blacklisted — RTL-SDR jetzt nutzbar"
+    # Sofort entladen falls geladen
+    rmmod dvb_usb_rtl28xxu 2>/dev/null || true
+    rmmod rtl2832 2>/dev/null || true
+else
+    ok "DVB-T Blacklist bereits vorhanden"
+fi
+
 info "RTL-SDR pruefen..."
 if lsusb 2>/dev/null | grep -qiE "rtl|realtek|2838|0bda"; then
     ok "RTL-SDR USB Stick erkannt — DAB+ und FM verfuegbar"

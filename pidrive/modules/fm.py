@@ -27,6 +27,7 @@ _player_proc = None
 # Voreingestellte FM-Stationen (deutschlandweit)
 DEFAULT_STATIONS = [
     {"name": "Bayern 3",     "freq": "99.4"},
+    {"name": "Lokal FM",     "freq": "104.4"},
     {"name": "Bayern 1",     "freq": "95.8"},
     {"name": "Antenne Bayern","freq": "102.2"},
     {"name": "Radio BOB",    "freq": "89.0"},
@@ -99,15 +100,24 @@ def play_station(station, S, settings=None):
     freq_hz = f"{float(freq) * 1e6:.0f}"
 
     try:
-        # rtl_fm -> mpv pipe
+        # rtl_fm -> audio pipe
         from modules import audio as _audio
-        _mpv_extra = " ".join(_audio.get_mpv_args(settings, source="fm"))
-        cmd = (
-            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
-            "mpv --no-video --really-quiet --title=pidrive_fm "
-            "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
-            "--demuxer-rawaudio-channels=1 " + _mpv_extra + " - 2>/dev/null"
-        )
+        _mpv_extra = _audio.get_mpv_args(settings, source="fm")
+        _is_bt = "--ao=pulse" in " ".join(_mpv_extra)
+        if _is_bt:
+            # BT A2DP: via mpv/PulseAudio
+            cmd = (
+                "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
+                "mpv --no-video --really-quiet --title=pidrive_fm "
+                "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
+                "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"
+            )
+        else:
+            # Klinke: aplay — direkter, kein Pipe-Timeout-Problem
+            cmd = (
+                "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
+                "aplay -r 32000 -f S16_LE -c 1 -D hw:1,0 2>/dev/null"
+            )
         _player_proc = subprocess.Popen(
             cmd, shell=True,
             stdout=subprocess.DEVNULL,

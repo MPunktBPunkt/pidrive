@@ -167,7 +167,9 @@ def connect_device(mac, S, settings):
                                shell=True, capture_output=True, text=True, timeout=5)
             r = subprocess.run("bluetoothctl connect " + mac,
                                shell=True, capture_output=True, text=True, timeout=10)
-            ok = "successful" in r.stdout.lower() or "connected" in r.stdout.lower()
+            out_all = (r.stdout + r.stderr).strip()
+            ok = "successful" in out_all.lower() or "connected" in out_all.lower()
+            log.info("BT connect result: " + out_all[:120].replace("\n"," "))
             if ok:
                 break
         except subprocess.TimeoutExpired:
