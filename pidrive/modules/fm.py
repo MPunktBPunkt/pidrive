@@ -195,24 +195,33 @@ def freq_input_screen(screen=None):
 # build_items() entfernt in v0.7.1
 
 def scan_stations(S):
-    """FM Suchlauf via rtl_fm Squelch. Gibt Liste von Stationen zurueck."""
+    """FM Suchlauf via rtl_fm Squelch. Gibt Liste von Stationen zurueck.
+
+    Timeout muss > USB-Init-Zeit von rtl_fm sein (~0.5s).
+    Faustformel: 1.5s je Frequenz, 0.2 MHz Raster = ~88 Frequenzen = ~2.5 Min.
+    Squelch -l 30: empfindlich genug fuer Innenräume mit Fensterantenne.
+    """
     import subprocess, time
     results = []
-    # 87.5–108.0 MHz in 0.1 MHz Schritten
-    freq = 87.5
-    while freq <= 108.0:
+    # 87.6–107.8 MHz in 0.2 MHz Schritten (88 Frequenzen, ~2.5 Min)
+    freq = 87.6
+    while freq <= 107.9:
         freq_hz = int(freq * 1e6)
-        cmd = f"timeout 0.4s rtl_fm -M wbfm -f {freq_hz} -s 200000 -l 70 - 2>/dev/null | wc -c"
+        # 1.5s: USB-Init (~0.5s) + Tuning (~0.3s) + Datenfluss (~0.7s)
+        cmd = (f"timeout 1.5s rtl_fm -M wbfm -f {freq_hz} "
+               f"-s 200000 -l 30 - 2>/dev/null | wc -c")
         try:
-            r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=2)
-            if int(r.stdout.strip() or "0") > 1000:
+            r = subprocess.run(cmd, shell=True,
+                               capture_output=True, text=True, timeout=3)
+            count = int(r.stdout.strip() or "0")
+            if count > 5000:  # bei 1.5s + Signal: viele Bytes erwartet
                 results.append({"id": f"fm_{str(freq).replace('.','_')}",
                                  "name": f"FM {freq:.1f} MHz",
                                  "freq_mhz": freq, "enabled": True, "favorite": False})
-                log.info(f"FM Scan: Signal @ {freq:.1f} MHz")
+                log.info(f"FM Scan: Signal @ {freq:.1f} MHz ({count} bytes)")
         except Exception:
             pass
-        freq = round(freq + 0.1, 1)
+        freq = round(freq + 0.2, 1)
     log.info(f"FM Scan abgeschlossen: {len(results)} Sender")
     return results
 

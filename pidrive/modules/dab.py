@@ -74,6 +74,13 @@ def scan_dab_channels(progress_cb=None):
     found = []
     total = len(channels)
 
+    # RTL-SDR einmalig vor dem Scan prüfen
+    if _rtlsdr and _rtlsdr.is_busy():
+        import log as _l
+        _l.warn("DAB Scan: RTL-SDR belegt — Scan abgebrochen")
+        _scan_running = False
+        return []
+
     for i, ch in enumerate(channels):
         if not _scan_running:
             break
@@ -81,13 +88,10 @@ def scan_dab_channels(progress_cb=None):
             progress_cb(int(i / total * 100),
                         f"Scanne {ch}... ({i}/{total})",
                         len(found))
-                # Exklusiver Lock für RTL-SDR
-        if _rtlsdr and _rtlsdr.is_busy():
-            log.warn("DAB Scan: RTL-SDR belegt, ueberspringe " + ch)
-            continue
         # welle-cli 2.2: alle Ausgaben auf stderr → mit 2>&1 fangen
+        # Kein per-Kanal is_busy()-Check — Race Condition mit ps-Latenz
         out = _run("timeout 6 welle-cli -c " + ch + " 2>&1",
-                   capture=True, timeout=5)
+                   capture=True, timeout=8)
         if out and "usb_claim_interface error" in out:
             log.warn("DAB: RTL-SDR blockiert auf Kanal " + ch +
                      " — DVB-Treiber geladen?")
