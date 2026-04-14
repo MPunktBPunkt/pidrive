@@ -36,6 +36,31 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 from settings import load_settings, save_settings  # noqa: E402
 
 
+# ── Globaler Scan-Guard (verhindert parallele DAB/FM Scans) ─────────────────
+import threading as _scan_threading
+
+_SCAN_LOCK  = _scan_threading.Lock()
+_SCAN_STATE = {"active": False, "source": "", "started_ts": 0}
+
+def _scan_begin(source):
+    """Exklusiven Scan-Slot reservieren. True = erfolgreich."""
+    with _SCAN_LOCK:
+        if _SCAN_STATE["active"]:
+            return False
+        _SCAN_STATE.update({"active": True, "source": source,
+                             "started_ts": int(__import__("time").time())})
+        return True
+
+def _scan_end():
+    """Scan-Slot freigeben."""
+    with _SCAN_LOCK:
+        _SCAN_STATE.update({"active": False, "source": "", "started_ts": 0})
+
+def _scan_info():
+    with _SCAN_LOCK:
+        return dict(_SCAN_STATE)
+
+
 # ── Trigger-Handling ───────────────────────────────────────────────────────────
 
 def handle_trigger(cmd, menu_state, store, S, settings):
