@@ -197,8 +197,15 @@ def play_freq(freq_mhz, name, bandwidth_hz, S):
                 S["radio_station"] = "RTL-SDR belegt"
                 import log as _log; _log.warn("Scanner: RTL-SDR belegt")
                 return
-        with (_rtlsdr.acquire_lock(owner=f"scanner:{name}") if _rtlsdr
-              else __import__("contextlib").nullcontext()):
+        if _rtlsdr:
+            try:
+                _player_proc = _rtlsdr.start_process(
+                    cmd, owner=f"scanner:{name}", shell=True,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception as _e:
+                import log as _l; _l.error("Scanner: RTL-SDR Lock: " + str(_e))
+                return
+        else:
             _player_proc = subprocess.Popen(cmd, shell=True,
                                             stdout=subprocess.DEVNULL,
                                             stderr=subprocess.DEVNULL)
@@ -211,6 +218,8 @@ def play_freq(freq_mhz, name, bandwidth_hz, S):
 
 def stop(S):
     global _player_proc
+    if _rtlsdr:
+        _rtlsdr.stop_process()
     _bg("pkill -f pidrive_scanner 2>/dev/null")
     if _player_proc:
         try: _player_proc.terminate()

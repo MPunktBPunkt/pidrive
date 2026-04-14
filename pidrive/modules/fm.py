@@ -129,14 +129,18 @@ def play_station(station, S, settings=None):
                 "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
                 "aplay -t raw -r 32000 -f S16_LE -c 1 -D hw:1,0 2>/dev/null"
             )
-        _lock_ctx = (_rtlsdr.acquire_lock(owner="fm") if _rtlsdr
-                     else __import__("contextlib").nullcontext())
-        with _lock_ctx:
+        if _rtlsdr:
+            try:
+                _player_proc = _rtlsdr.start_process(
+                    cmd, owner="fm_play", shell=True,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception as _e:
+                import log as _l; _l.error("FM: RTL-SDR Lock: " + str(_e))
+                return
+        else:
             _player_proc = subprocess.Popen(
                 cmd, shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         S["radio_playing"] = True
         S["radio_station"] = f"FM: {name} ({freq} MHz)"
         S["radio_type"]    = "FM"
@@ -146,6 +150,8 @@ def play_station(station, S, settings=None):
 
 def stop(S):
     global _player_proc
+    if _rtlsdr:
+        _rtlsdr.stop_process()
     _bg("pkill -f pidrive_fm 2>/dev/null")
     _bg("pkill -f rtl_fm 2>/dev/null")
     if _player_proc:

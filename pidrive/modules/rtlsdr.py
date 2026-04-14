@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-pidrive/modules/rtlsdr.py  —  PiDrive v0.8.0
+pidrive/modules/rtlsdr.py  —  PiDrive v0.8.1
 
 Zentrale RTL-SDR Verwaltung:
   - Passive USB-Erkennung (kein Öffnen des Device!)
@@ -145,7 +145,23 @@ def is_busy():
     return bool(procs) or bool(state.get("locked"))
 
 
-# ── Lock-Verwaltung ────────────────────────────────────────────────────────
+# ── Lock- und Prozessverwaltung ───────────────────────────────────────────
+#
+# Design: Lock bleibt aktiv solange der RTL-Prozess läuft.
+#   start_process() → Lock holen + Prozess starten
+#   stop_process()  → Prozess beenden + Lock freigeben
+#   reap_process()  → aufräumen wenn Prozess von selbst endet
+#
+# acquire_lock() / contextmanager bleibt für kurze atomare Aktionen (Scans).
+
+_LOCK_REGISTRY = {
+    "fd":         None,
+    "owner":      None,
+    "proc":       None,
+    "proc_name":  None,
+    "started_ts": 0,
+}
+
 
 def _read_state():
     try:
@@ -163,44 +179,188 @@ def _clear_state():
     except FileNotFoundError:
         pass
 
-@contextmanager
-def acquire_lock(owner="unknown", blocking=False, timeout_s=0):
-    """
-    Exklusiver Zugriff auf RTL-SDR via flock().
-    Wirft RTLBusyError wenn belegt und blocking=False.
+def _pid_alive(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except Exception:
+        return False
 
-    Verwendung:
-        with rtlsdr.acquire_lock(owner="fm"):
-            proc = subprocess.Popen(["rtl_fm", ...])
+def _proc_running(proc):
+    try:
+        return proc is not None and proc.poll() is None
+    except Exception:
+        return False
+
+def _release_runtime_lock():
+    """Intern: Lock-FD freigeben + Registry + State löschen."""
+    fd = _LOCK_REGISTRY.get("fd")
+    if fd is not None:
+        try: fcntl.flock(fd, fcntl.LOCK_UN)
+        except Exception: pass
+        try: os.close(fd)
+        except Exception: pass
+    _LOCK_REGISTRY.update({"fd": None, "owner": None,
+                            "proc": None, "proc_name": None,
+                            "started_ts": 0})
+    _clear_state()
+
+
+def reap_process():
     """
+    Aufräumen wenn registrierter Prozess beendet ist.
+    Sollte vor is_busy(), start_process(), stop_process() aufgerufen werden.
+    """
+    proc = _LOCK_REGISTRY.get("proc")
+    if proc is None:
+        # Stale State von anderem PID aufräumen
+        st = _read_state()
+        if st.get("locked") and st.get("pid") == os.getpid():
+            _clear_state()
+        return
+    try:
+        rc = proc.poll()
+    except Exception:
+        rc = 0
+    if rc is not None:
+        _release_runtime_lock()
+
+
+def is_busy():
+    """
+    Busy wenn eigener RTL-Prozess läuft, fremde RTL-Prozesse laufen,
+    oder ein fremder flock-State aktiv ist.
+    """
+    reap_process()
+    if _proc_running(_LOCK_REGISTRY.get("proc")):
+        return True
+    if find_rtl_processes():
+        return True
+    state = _read_state()
+    if state.get("locked"):
+        pid = state.get("pid")
+        if pid and _pid_alive(pid):
+            return True
+        _clear_state()  # stale
+    return False
+
+
+def acquire_runtime_lock(owner="unknown", blocking=False):
+    """
+    Persistentes flock-Lock holen — bleibt aktiv bis release_runtime_lock().
+    Für lang laufende Prozesse bitte start_process() nutzen.
+    """
+    reap_process()
+    if _LOCK_REGISTRY.get("fd") is not None:
+        raise RTLBusyError(
+            f"RTL-SDR intern belegt durch: {_LOCK_REGISTRY.get('owner')}")
+
     fd = os.open(LOCK_FILE, os.O_CREAT | os.O_RDWR, 0o666)
     try:
         flags = fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB)
         try:
             fcntl.flock(fd, flags)
         except BlockingIOError:
+            try: os.close(fd)
+            except Exception: pass
             state = _read_state()
-            holder = state.get("owner", "?")
-            raise RTLBusyError(f"RTL-SDR belegt durch: {holder}")
+            raise RTLBusyError(
+                f"RTL-SDR belegt durch: {state.get('owner','?')}")
 
         meta = {"locked": True, "owner": owner,
                 "pid": os.getpid(), "ts": int(time.time())}
         _write_state(meta)
         os.ftruncate(fd, 0)
         os.write(fd, json.dumps(meta).encode())
+        _LOCK_REGISTRY["fd"] = fd
+        _LOCK_REGISTRY["owner"] = owner
+        _LOCK_REGISTRY["started_ts"] = int(time.time())
+        return meta
+    except Exception:
+        try: os.close(fd)
+        except Exception: pass
+        raise
 
-        yield meta
 
+def release_runtime_lock():
+    reap_process()
+    _release_runtime_lock()
+
+
+@contextmanager
+def acquire_lock(owner="unknown", blocking=False, timeout_s=0):
+    """
+    Context-Manager für kurze exklusive Aktionen (z.B. Scan-Kanal).
+    Lock wird beim Verlassen des with-Blocks freigegeben,
+    SOFERN kein Prozess registriert ist.
+    Für lang laufende Prozesse: start_process() / stop_process().
+    """
+    acquire_runtime_lock(owner=owner, blocking=blocking)
+    try:
+        yield {"locked": True, "owner": owner,
+               "pid": os.getpid(), "ts": int(time.time())}
     finally:
-        _clear_state()
-        try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-        except Exception:
-            pass
-        try:
-            os.close(fd)
-        except Exception:
-            pass
+        if _LOCK_REGISTRY.get("proc") is None:
+            _release_runtime_lock()
+
+
+def start_process(cmd, owner="unknown", **popen_kwargs):
+    """
+    RTL-Prozess starten und Lock an Prozesslebensdauer koppeln.
+    Lock bleibt aktiv bis stop_process() oder der Prozess endet.
+    Rückgabe: subprocess.Popen
+    """
+    reap_process()
+    if is_busy():
+        state = _read_state()
+        holder = (state.get("owner") or
+                  _LOCK_REGISTRY.get("owner") or "?")
+        raise RTLBusyError(f"RTL-SDR belegt durch: {holder}")
+
+    acquire_runtime_lock(owner=owner, blocking=False)
+    try:
+        proc = subprocess.Popen(cmd, **popen_kwargs)
+        _LOCK_REGISTRY["proc"]       = proc
+        _LOCK_REGISTRY["proc_name"]  = owner
+        meta = {"locked": True, "owner": owner,
+                "pid": os.getpid(), "child_pid": proc.pid,
+                "ts": int(time.time())}
+        _write_state(meta)
+        fd = _LOCK_REGISTRY.get("fd")
+        if fd is not None:
+            try:
+                os.ftruncate(fd, 0)
+                os.write(fd, json.dumps(meta).encode())
+            except Exception:
+                pass
+        return proc
+    except Exception:
+        _release_runtime_lock()
+        raise
+
+
+def stop_process(timeout=2.0, kill_timeout=2.0):
+    """
+    Registrierten RTL-Prozess beenden und Lock freigeben.
+    Gibt True zurück wenn ein Prozess beendet wurde.
+    """
+    proc = _LOCK_REGISTRY.get("proc")
+    if proc is None:
+        _release_runtime_lock()
+        return False
+    try:
+        if proc.poll() is None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=kill_timeout)
+    except Exception:
+        pass
+    finally:
+        _release_runtime_lock()
+    return True
 
 
 # ── Aktive Smoke-Tests (öffnen das Device!) ───────────────────────────────
@@ -335,7 +495,7 @@ def summary(data):
     dvb   = data.get("dvb_modules", [])
     tools = data.get("tools", {})
 
-    L.append("RTL-SDR Diagnose  v0.8.0")
+    L.append("RTL-SDR Diagnose  v0.8.1")
     L.append("=" * 44)
     L.append(("✓" if usb.get("present") else "⚠") +
              " USB Stick: " + ("erkannt" if usb.get("present") else "NICHT erkannt"))

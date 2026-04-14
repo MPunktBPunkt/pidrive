@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.0
+# PiDrive — Kontext & Projektdokumentation v0.8.1
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.8.0)
+    ├── VERSION              (aktuell: 0.8.1)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -900,7 +900,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.8.0 (aktuell)
+### v0.8.1 (aktuell)
 **RTL-SDR Architektur (Breaking Change):**
 - Neues Modul `modules/rtlsdr.py`: zentrale RTL-SDR Verwaltung
 - Passive Erkennung (lsusb) — öffnet Device NICHT mehr beim Start
@@ -929,7 +929,7 @@ sudo systemctl restart pidrive_display
 - rtlsdr.py Passive-Diagnose nach Installation
 
 
-### v0.8.0 (aktuell)
+### v0.8.1 (aktuell)
 **Audio & Stabilität:**
 - Hotfix: `from ui import Item` aus bluetooth.py entfernt (Crash bei Core-Start)
 - `settings.py`: neues neutrales Modul für `load_settings()`/`save_settings()` (thread-safe)
@@ -1062,17 +1062,17 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.0)
+## Aktueller Stand (v0.8.1)
 
 **System läuft stabil** — 14.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.0 — RTL-SDR passiv, kein rtl_test beim Start
+✓ pidrive_core.service      v0.8.1 — RTL-SDR passiv, kein rtl_test beim Start
 ✓ pidrive_display.service   20fps, ändert nur bei Änderungen
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5
 ✓ pulseaudio.service        BT A2DP Audio
-✓ modules/rtlsdr.py         Zentrale RTL-SDR Verwaltung mit Locking
+✓ modules/rtlsdr.py         start_process/stop_process, persistentes Lock
 ✓ FM Radio                  aplay für Klinke, mpv für BT A2DP
 ✓ FM/DAB Scanner            mpv-Pipe-Befehl korrigiert (war defekt)
 ✓ DAB+ Parser               Nur 'Service label:' Zeilen als Sender
@@ -1090,16 +1090,15 @@ sudo systemctl restart pidrive_display
 - GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
 - BMW iDrive AVRCP Praxistest im Auto
 - resume_state.py / last_state.json für Boot-Resume
-- RTL-SDR Lock-Lebensdauer an Prozess koppeln (Lock in stop() freigeben)
 
 
 ## Roadmap
 
 ### Kurzfristig (nächste 1-3 Updates)
 
-- [x] RTL-SDR Architektur v0.8.0 (rtlsdr.py, Locking, passive Erkennung)
+- [x] RTL-SDR Architektur v0.8.1 (rtlsdr.py, Locking, passive Erkennung)
 - [ ] **GPIO-Buttons** (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25) — direkte Steuerung am Display ohne SSH/WebUI, wichtigste UX-Verbesserung für Fahrzeugbetrieb
-- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.8.0)
+- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.8.1)
 - [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
 - [ ] **resume_state.py** — last_state.json: letzte Quelle/Station/MP3/BT beim Boot vollständig wiederherstellen
 - [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
@@ -1134,7 +1133,7 @@ sudo systemctl restart pidrive_display
 - [x] AVRCP 1.5 + MPRIS2 für BMW NBT EVO (v0.7.19/v0.7.20)
 - [x] BT/WiFi Scan → navigierbares Submenu (v0.7.20–v0.7.22)
 - [x] Favoriten: FM/DAB+/Webradio, config/favorites.json (v0.7.22)
-- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.8.0)
+- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.8.1)
 - [x] FM/DAB letzte Station beim Boot wiederherstellen (v0.7.20)
 - [x] Performance: non-blocking Status-Thread, 20fps, ~50ms Latenz (v0.7.21)
 - [x] Dead code entfernt: launcher.py, main.py, ui.py, trigger.py (v0.7.21)

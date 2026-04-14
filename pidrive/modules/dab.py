@@ -145,9 +145,15 @@ def play_station(station, S, settings=None):
             "welle-cli -D 0 -c " + ch + " -s '" + name + "' -o - 2>/dev/null | "
             "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
         )
-        _lock_ctx = (_rtlsdr.acquire_lock(owner="dab_play") if _rtlsdr
-                     else __import__("contextlib").nullcontext())
-        with _lock_ctx:
+        if _rtlsdr:
+            try:
+                _player_proc = _rtlsdr.start_process(
+                    _cmd, owner="dab_play", shell=True,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception as _e:
+                import log as _l; _l.error("DAB: RTL-SDR Lock: " + str(_e))
+                return
+        else:
             _player_proc = subprocess.Popen(
                 _cmd, shell=True,
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL

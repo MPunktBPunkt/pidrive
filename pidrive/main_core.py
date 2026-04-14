@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.0
+main_core.py - PiDrive Core v0.8.1
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -131,63 +131,95 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     # ── DAB Suchlauf ─────────────────────────────────────────────────────────
     elif cmd == "dab_scan":
         def _dab_scan():
+            if not _scan_begin("dab"):
+                info = _scan_info()
+                log.warn("SCAN_BLOCKED source=dab running=" + info.get("source","?"))
+                ipc.write_progress("DAB+ Suchlauf",
+                    "Schon aktiv: " + info.get("source","?").upper(), color="orange")
+                time.sleep(2); ipc.clear_progress(); return
             ipc.write_progress("DAB+ Suchlauf", "Scanne Band III ...", color="blue")
             log.info("SCAN_START source=dab")
             try:
                 results = dab.scan_dab_channels()
-                store.save_dab(results)
                 count = len(results)
-                log.info(f"SCAN_DONE source=dab count={count}")
-                ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
-                time.sleep(2)
-                # Menü sofort mit neuen Sendern neu bauen
-                new_root = build_tree(store, S, settings)
-                menu_state.root = new_root
-                menu_state.clamp_cursors()
-                menu_state.rev += 1
+                if count > 0:
+                    store.save_dab(results)
+                    log.info(f"SCAN_DONE source=dab count={count}")
+                    ipc.write_progress("DAB+ Suchlauf",
+                        f"{count} Sender gefunden", color="green")
+                    time.sleep(2)
+                    new_root = build_tree(store, S, settings)
+                    menu_state.root = new_root
+                    menu_state.clamp_cursors()
+                    menu_state.rev += 1
+                else:
+                    log.warn("SCAN_DONE source=dab count=0 — bestehende Liste bleibt")
+                    ipc.write_progress("DAB+ Suchlauf",
+                        "0 Sender — Liste bleibt erhalten", color="orange")
+                    time.sleep(2)
             except Exception as e:
                 log.error(f"SCAN_FAIL source=dab error={e}")
                 ipc.write_progress("DAB+ Fehler", str(e)[:48], color="red")
                 time.sleep(3)
             finally:
+                _scan_end()
                 ipc.clear_progress()
         bg(_dab_scan)
 
     # ── FM Suchlauf ──────────────────────────────────────────────────────────
     elif cmd == "fm_scan":
         def _fm_scan():
+            if not _scan_begin("fm"):
+                info = _scan_info()
+                log.warn("SCAN_BLOCKED source=fm running=" + info.get("source","?"))
+                ipc.write_progress("FM Suchlauf",
+                    "Schon aktiv: " + info.get("source","?").upper(), color="orange")
+                time.sleep(2); ipc.clear_progress(); return
             ipc.write_progress("FM Suchlauf", "Scanne UKW 87.5–108.0 MHz ...", color="blue")
             log.info("SCAN_START source=fm")
             try:
                 results = fm.scan_stations(S)
-                store.save_fm(results)
                 count = len(results)
-                log.info(f"SCAN_DONE source=fm count={count}")
-                if count == 0:
-                    ipc.write_progress("FM Suchlauf", "Kein Sender gefunden", color="orange")
+                if count > 0:
+                    store.save_fm(results)
+                    log.info(f"SCAN_DONE source=fm count={count}")
+                    ipc.write_progress("FM Suchlauf",
+                        f"{count} Sender gefunden ✓", color="green")
                 else:
-                    ipc.write_progress("FM Suchlauf", f"{count} Sender gefunden ✓", color="green")
+                    log.warn("SCAN_DONE source=fm count=0 — bestehende Liste bleibt")
+                    ipc.write_progress("FM Suchlauf",
+                        "Kein Sender — Liste bleibt erhalten", color="orange")
                 time.sleep(2)
-                new_root = build_tree(store, S, settings)
-                menu_state.root = new_root
-                menu_state.clamp_cursors()
-                menu_state.rev += 1
+                if count > 0:
+                    new_root = build_tree(store, S, settings)
+                    menu_state.root = new_root
+                    menu_state.clamp_cursors()
+                    menu_state.rev += 1
             except Exception as e:
                 log.error(f"SCAN_FAIL source=fm error={e}")
                 ipc.write_progress("FM Fehler", str(e)[:48], color="red")
                 time.sleep(3)
             finally:
+                _scan_end()
                 ipc.clear_progress()
         bg(_fm_scan)
 
     # ── Reload Stationen ─────────────────────────────────────────────────────
     elif cmd.startswith("reload_stations:"):
-        source = cmd.split(":", 1)[1]
-        store.reload_source(source)
-        rebuild = True
-        log.info(f"STATIONS_RELOAD source={source}")
-        ipc.write_progress("Senderliste", f"{source} neu geladen", color="green")
-        time.sleep(1); ipc.clear_progress()
+        _si = _scan_info()
+        if _si.get("active"):
+            log.warn("STATIONS_RELOAD_BLOCKED scan_running=" + _si.get("source","?"))
+            ipc.write_progress("Senderliste",
+                "Blockiert: Scan läuft (" + _si.get("source","?").upper() + ")",
+                color="orange")
+            time.sleep(2); ipc.clear_progress()
+        else:
+            source = cmd.split(":", 1)[1]
+            store.reload_source(source)
+            rebuild = True
+            log.info(f"STATIONS_RELOAD source={source}")
+            ipc.write_progress("Senderliste", f"{source} neu geladen", color="green")
+            time.sleep(1); ipc.clear_progress()
 
     # ── FM Next/Prev ─────────────────────────────────────────────────────────
     elif cmd == "fm_next":
@@ -561,7 +593,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.0 gestartet")
+    log.info("PiDrive Core v0.8.1 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
