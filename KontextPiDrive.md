@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.5
+# PiDrive — Kontext & Projektdokumentation v0.8.6
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.8.5)
+    ├── VERSION              (aktuell: 0.8.6)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -905,6 +905,19 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
+### v0.8.6 — Phase 1 Final: Bugfixes
+**mpris2.py — kritischer Bugfix:**
+- `_get_prop()` Methode fehlte → RuntimeError bei jedem DBus-Property-Abruf des BMW-Displays
+- Implementierung delegiert sauber an `GetAll()` (kein Code-Duplikat)
+
+**avrcp_trigger.py — D-Bus Matching repariert:**
+- `monitor_dbus()` hatte kaputte String-Literale `'"\'Next\'"'` → wurden nie gematcht
+- AVRCP über D-Bus funktionierte nicht; jetzt `'"Next"' in line_s` (korrekt)
+
+**scanner.py — Label-Fix:**
+- scan_next/scan_prev: doppeltes " MHz" bei VHF/UHF Range-Scans verhindert
+- `ch['name']` für Range-Scans enthält bereits "VHF 145.500 MHz" — kein Append mehr
+
 ### v0.8.5 — Phase 1 WebUI abgeschlossen
 **index.html:**
 - AVRCP / BMW Debug Panel: Service-Status, letztes Event, Kontext, Trigger, Quelle, Debug-JSON
@@ -1131,12 +1144,12 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.5)
+## Aktueller Stand (v0.8.6)
 
 **System läuft stabil** — 14.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.5 — Phase 1 AVRCP komplett
+✓ pidrive_core.service      v0.8.6 — Phase 1 abgeschlossen
 ✓ pidrive_display.service   20fps, ändert nur bei Änderungen
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5
@@ -1175,7 +1188,7 @@ sudo systemctl restart pidrive_display
 
 ### Mittelfristig (Fahrzeugbetrieb)
 
-- [ ] **BMW iDrive AVRCP Praxistest** — AVRCP 1.5 im echten Fahrzeug: zeigt NBT EVO-Display Sendername/Titel? Funktionieren Lenkradtasten?
+- [ ] **BMW iDrive AVRCP Praxistest** — Phase 1 code-seitig abgeschlossen; Feldtest im Auto steht noch aus
 - [ ] **DAB+ Programminfo (DLS)** — laufender Titeltext via `welle-cli --dls`
 - [ ] **FM RDS-Text** — Senderinformationen via `rtl_fm + rds_rx`
 - [ ] **Equalizer** — ALSA-basiert, Preset-Auswahl im Menü
@@ -1202,7 +1215,7 @@ sudo systemctl restart pidrive_display
 - [x] AVRCP 1.5 + MPRIS2 für BMW NBT EVO (v0.7.19/v0.7.20)
 - [x] BT/WiFi Scan → navigierbares Submenu (v0.7.20–v0.7.22)
 - [x] Favoriten: FM/DAB+/Webradio, config/favorites.json (v0.7.22)
-- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.8.5)
+- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.8.6)
 - [x] FM/DAB letzte Station beim Boot wiederherstellen (v0.7.20)
 - [x] Performance: non-blocking Status-Thread, 20fps, ~50ms Latenz (v0.7.21)
 - [x] Dead code entfernt: launcher.py, main.py, ui.py, trigger.py (v0.7.21)

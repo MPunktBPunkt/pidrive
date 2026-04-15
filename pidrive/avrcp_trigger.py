@@ -329,12 +329,12 @@ def monitor_dbus():
         for line in proc.stdout:
             line_s = line.strip()
             event = None
-            if '"\'Next\'"'     in line_s: event = "next"
-            elif '"\'Previous\'"'in line_s: event = "previous"
-            elif '"\'PlayPause\'"'in line_s: event = "play_pause"
-            elif '"\'Play\'"'    in line_s: event = "play"
-            elif '"\'Pause\'"'   in line_s: event = "pause"
-            elif '"\'Stop\'"'    in line_s: event = "stop"
+            if   '"Next"'     in line_s or "'Next'"     in line_s: event = "next"
+            elif '"Previous"' in line_s or "'Previous'" in line_s: event = "previous"
+            elif '"PlayPause"' in line_s or "'PlayPause'" in line_s: event = "play_pause"
+            elif '"Play"'     in line_s or "'Play'"     in line_s: event = "play"
+            elif '"Pause"'    in line_s or "'Pause'"    in line_s: event = "pause"
+            elif '"Stop"'     in line_s or "'Stop'"     in line_s: event = "stop"
             if event:
                 handle_avrcp(event, source="dbus-monitor")
     except Exception as e:

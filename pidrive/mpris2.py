@@ -102,6 +102,11 @@ class PiDrivePlayer(dbus.service.Object):
     @dbus.service.method(MPRIS2_IFACE)
     def Quit(self): pass
 
+    def _get_prop(self, interface, prop):
+        """Einzelne MPRIS2-Property zurückgeben (von Get() genutzt)."""
+        props = self.GetAll(interface)
+        return props.get(prop)
+
     @dbus.service.method(PROPS_IFACE,
                          in_signature="ss", out_signature="v")
     def Get(self, interface, prop):

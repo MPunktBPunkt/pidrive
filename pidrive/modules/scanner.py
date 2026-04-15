@@ -461,7 +461,11 @@ def scan_next(band_id, S, settings=None):
     else:
         ch = _scan_range(S, b["band"], b["bw"], 1)
     if ch:
-        _set_scanner_label(band_id, f"{ch['name']}  {ch.get('freq','')} MHz", S)
+        # Kein " MHz" anhängen wenn name es schon enthält (Range-Scans)
+        if ch.get("freq") and "MHz" not in ch["name"]:
+            _set_scanner_label(band_id, f"{ch['name']}  {ch['freq']} MHz", S)
+        else:
+            _set_scanner_label(band_id, ch["name"], S)
         play_freq(ch["freq"], ch["name"], b["bw"], S)
 
 def scan_prev(band_id, S, settings=None):
@@ -473,5 +477,9 @@ def scan_prev(band_id, S, settings=None):
     else:
         ch = _scan_range(S, b["band"], b["bw"], -1)
     if ch:
-        _set_scanner_label(band_id, f"{ch['name']}  {ch.get('freq','')} MHz", S)
+        # Kein " MHz" anhängen wenn name es schon enthält (Range-Scans)
+        if ch.get("freq") and "MHz" not in ch["name"]:
+            _set_scanner_label(band_id, f"{ch['name']}  {ch['freq']} MHz", S)
+        else:
+            _set_scanner_label(band_id, ch["name"], S)
         play_freq(ch["freq"], ch["name"], b["bw"], S)
