@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.8.6
+# PiDrive Install Script v0.8.7
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.8.6           ║
+║        PiDrive Installer v0.8.7           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
