@@ -1,60 +1,172 @@
 {
-  "version": 1,
-  "updated_at": "2026-04-10T13:59:30",
+  "version": 3,
+  "updated_at": "2026-04-15T23:10:00",
   "stations": [
     {
-      "id": "fm_99_4",
-      "name": "Bayern 3",
-      "freq_mhz": 99.4,
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "fm_95_8",
-      "name": "Bayern 1",
-      "freq_mhz": 95.8,
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "fm_102_2",
+      "id": "fm_antennebayern",
       "name": "Antenne Bayern",
-      "freq_mhz": 102.2,
+      "freq_mhz": 104.4,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_rt1_allgaeu",
+      "name": "Hitradio RT1",
+      "freq_mhz": 90.2,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_bayern3",
+      "name": "Bayern 3",
+      "freq_mhz": 95.8,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_swr3",
+      "name": "SWR3",
+      "freq_mhz": 103.0,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_radio7",
+      "name": "Radio 7",
+      "freq_mhz": 101.8,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_swr1bw",
+      "name": "SWR1 BW",
+      "freq_mhz": 88.1,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_bayern2",
+      "name": "Bayern 2",
+      "freq_mhz": 88.7,
       "favorite": false,
       "enabled": true
     },
     {
-      "id": "fm_89_0",
-      "name": "Radio BOB",
-      "freq_mhz": 89.0,
-      "favorite": false,
+      "id": "fm_bayern1",
+      "name": "Bayern 1",
+      "freq_mhz": 90.7,
+      "favorite": true,
       "enabled": true
     },
     {
-      "id": "fm_91_3",
-      "name": "DLF",
+      "id": "fm_dasding",
+      "name": "DASDING",
+      "freq_mhz": 91.5,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_oe3",
+      "name": "Hitradio Ö3",
+      "freq_mhz": 99.9,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_dlf",
+      "name": "Deutschlandfunk",
       "freq_mhz": 91.3,
       "favorite": false,
       "enabled": true
     },
     {
-      "id": "fm_98_7",
+      "id": "fm_donau3fm",
+      "name": "Donau 3 FM",
+      "freq_mhz": 107.7,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_oe1",
+      "name": "Ö1",
+      "freq_mhz": 92.6,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_swr2",
+      "name": "SWR2",
+      "freq_mhz": 93.6,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_swr4",
+      "name": "SWR4 BW",
+      "freq_mhz": 94.5,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_rt1",
+      "name": "Hitradio RT1 AU",
+      "freq_mhz": 96.7,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_brklassik",
+      "name": "BR-Klassik",
+      "freq_mhz": 97.3,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_dlfnova",
       "name": "DLF Nova",
       "freq_mhz": 98.7,
       "favorite": false,
       "enabled": true
     },
     {
-      "id": "fm_96_9",
-      "name": "SWR3",
-      "freq_mhz": 96.9,
+      "id": "fm_fm4_1007",
+      "name": "FM4",
+      "freq_mhz": 100.7,
       "favorite": false,
       "enabled": true
     },
     {
-      "id": "fm_87_9",
-      "name": "NDR 2",
+      "id": "fm_fm4_1021",
+      "name": "FM4 (2)",
+      "freq_mhz": 102.1,
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "fm_puls",
+      "name": "PULS",
+      "freq_mhz": 102.3,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_classicrock",
+      "name": "Rock Antenne",
       "freq_mhz": 87.9,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_radioarabella",
+      "name": "Radio Arabella",
+      "freq_mhz": 105.2,
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "fm_b5aktuell",
+      "name": "B5 aktuell",
+      "freq_mhz": 105.4,
       "favorite": false,
       "enabled": true
     }

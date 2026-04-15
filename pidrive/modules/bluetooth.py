@@ -143,80 +143,168 @@ def scan_devices(S, settings):
 
 
 def connect_device(mac, S, settings):
-    """BT-Geraet verbinden (wird aus Submenu-Aktion aufgerufen)."""
-    import ipc, time, subprocess
+    """BT-Geraet pairen/trusten/verbinden und Audio-Routing setzen."""
+    import ipc, time, subprocess as _sp, json
+
     name = mac
     try:
-        import json
         data = json.load(open("/tmp/pidrive_bt_devices.json"))
         for d in data.get("devices", []):
-            if d["mac"] == mac:
-                name = d["name"]; break
+            if d.get("mac") == mac:
+                name = d.get("name", mac); break
     except Exception:
         pass
 
-    ipc.write_progress("Verbinde", name[:22] + "...", color="blue")
-    log.info("BT: verbinde " + mac + " (" + name + ")")
+    ipc.write_progress("Bluetooth", f"Verbinde {name[:20]}...", color="blue")
+    log.info(f"BT connect: START mac={mac} name={name}")
+
     ok = False
-    for attempt in range(2):
-        try:
-            if attempt == 1:
-                subprocess.run("bluetoothctl pair " + mac,
-                               shell=True, capture_output=True, text=True, timeout=20)
-                subprocess.run("bluetoothctl trust " + mac,
-                               shell=True, capture_output=True, text=True, timeout=5)
-            r = subprocess.run("bluetoothctl connect " + mac,
-                               shell=True, capture_output=True, text=True, timeout=10)
-            out_all = (r.stdout + r.stderr).strip()
-            ok = "successful" in out_all.lower() or "connected" in out_all.lower()
-            log.info("BT connect result: " + out_all[:120].replace("\n"," "))
-            if ok:
-                break
-        except subprocess.TimeoutExpired:
-            pass
+    _btctl("power on",       timeout=8)
+    _btctl("agent on",       timeout=8)
+    _btctl("default-agent",  timeout=8)
+
+    for step, cmd, to in [
+        ("trust",   f"trust {mac}",   8),
+        ("pair",    f"pair {mac}",   25),
+        ("connect", f"connect {mac}", 15),
+        ("connect", f"connect {mac}", 15),
+    ]:
+        rc, out = _btctl(cmd, timeout=to)
+        low = out.lower()
+        if step == "pair":
+            if any(x in low for x in ["successful","paired: yes","alreadyexists",
+                                       "already paired","device has been paired"]):
+                log.info(f"BT connect: PAIR ok mac={mac}")
+        elif step == "trust":
+            if any(x in low for x in ["succeeded","trust succeeded","changing"]):
+                log.info(f"BT connect: TRUST ok mac={mac}")
+        elif step == "connect":
+            if any(x in low for x in ["successful","connection successful",
+                                       "connected: yes","already connected"]):
+                ok = True
+                log.info(f"BT connect: CONNECT ok mac={mac}"); break
+            log.warn(f"BT connect: CONNECT fehlgeschlagen mac={mac} out={out[:120]}")
+            time.sleep(2)
 
     if ok:
-        ipc.write_progress("BT", "Verbunden: " + name[:24], color="green")
-        log.info("BT: Verbunden " + mac)
-        bt_sink = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
-        S["bt_sink_mac"]         = mac
-        S["bt_pa_sink"]          = bt_sink
-        S["bt_device"]           = name
-        S["audio_output"]        = "bt"
-        settings["bt_last_mac"]  = mac
-        settings["bt_last_name"] = name
-        settings["audio_output"] = "bt"
-        settings["bt_sink_mac"]  = mac
-        settings["bt_pa_sink"]   = bt_sink
-        settings["alsa_device"]  = "default"
-        _set_pulseaudio_sink(bt_sink)
-        _set_raspotify_device("default")
-        if S.get("radio_playing"):
-            # Laufende Quelle auf BT neu starten
-            _radio_type    = S.get("radio_type", "")
-            _radio_station = S.get("radio_station", "")
-            try:
-                import webradio as _wr, fm as _fm, dab as _dab
-                _wr.stop(S); _fm.stop(S); _dab.stop(S)
-                time.sleep(0.5)
-                # Trigger: Core startet letzte Quelle neu
-                # Cooldown: nicht wenn letzter Restart < 5s her
-                import time as _t
-                _now = _t.time()
-                _last = getattr(connect_device, "_last_restart_ts", 0)
-                if _now - _last > 5:
-                    connect_device._last_restart_ts = _now
-                    with open("/tmp/pidrive_cmd","w") as _cf:
-                        _cf.write("radio_restart_on_bt\n")
-                    log.info("BT: Radio-Neustart ausgeloest (" + _radio_type + ")")
-                else:
-                    log.info("BT: Neustart-Cooldown aktiv, ueberspringe (" + _radio_type + ")")
-            except Exception:
-                pass
-    else:
-        ipc.write_progress("BT", "Verbindung fehlgeschlagen", color="red")
-        log.warn("BT: Verbindung fehlgeschlagen " + mac)
+        _, info = _btctl(f"info {mac}", timeout=8)
+        if "connected: yes" not in info.lower():
+            log.warn(f"BT connect: VERIFY failed mac={mac}")
+            ok = False
+
+    if not ok:
+        ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
+        log.warn(f"BT connect: FAIL mac={mac} name={name}")
+        time.sleep(3); ipc.clear_progress()
+        return False
+
+    S["bt"]           = True
+    S["bt_device"]    = name
+    S["bt_sink_mac"]  = mac
+    S["bt_pa_sink"]   = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+    settings["bt_last_mac"]  = mac
+    settings["bt_last_name"] = name
+    settings["bt_sink_mac"]  = mac
+    settings["bt_pa_sink"]   = S["bt_pa_sink"]
+    settings["audio_output"] = "bt"
+    settings["alsa_device"]  = "default"
+
+    log.info(f"BT connect: STATE mac={mac} sink={S['bt_pa_sink']}")
+    _set_pulseaudio_sink(S["bt_pa_sink"])
+    _set_raspotify_device("default")
+
     time.sleep(2)
-    ipc.clear_progress()
+    sinks = _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null")
+    if S["bt_pa_sink"] in sinks:
+        log.info(f"BT connect: PulseAudio sink aktiv")
+    else:
+        log.warn(f"BT connect: PulseAudio sink noch nicht sichtbar")
+
+    if S.get("radio_playing"):
+        try:
+            now = time.time()
+            if now - getattr(connect_device, "_last_restart", 0) > 5:
+                connect_device._last_restart = now
+                with open("/tmp/pidrive_cmd","w") as _cf:
+                    _cf.write("radio_restart_on_bt\n")
+                log.info("BT connect: radio_restart_on_bt ausgelöst")
+        except Exception as e:
+            log.warn(f"BT connect: radio restart failed: {e}")
+
+    ipc.write_progress("Bluetooth", f"Verbunden: {name[:22]}", color="green")
+    time.sleep(2); ipc.clear_progress()
+    log.info(f"BT connect: DONE mac={mac} name={name}")
+    return True
 
 
+def disconnect_current(S, settings):
+    """Aktuelles BT-Gerät trennen."""
+    import ipc, time
+    mac  = settings.get("bt_last_mac","") or S.get("bt_sink_mac","")
+    name = S.get("bt_device","") or settings.get("bt_last_name","") or mac or "BT-Gerät"
+
+    ipc.write_progress("Bluetooth", f"Trenne {name[:20]}...", color="orange")
+    log.info(f"BT disconnect: START mac={mac} name={name}")
+
+    if mac:
+        rc, out = _btctl(f"disconnect {mac}", timeout=12)
+        ok = any(x in out.lower() for x in ["successful","not connected"]) or rc == 0
+    else:
+        ok = True
+        log.warn("BT disconnect: keine MAC, nur Status-Reset")
+
+    S["bt_device"]   = ""
+    S["bt_sink_mac"] = ""
+    S["bt_pa_sink"]  = ""
+    if settings.get("audio_output") == "bt":
+        settings["audio_output"] = "klinke"
+    try:
+        from modules import audio as _a
+        _a.set_output("klinke", settings)
+    except Exception as e:
+        log.warn(f"BT disconnect: audio fallback: {e}")
+
+    ipc.write_progress("Bluetooth", "Getrennt" if ok else "Getrennt/unbestätigt",
+                       color="green" if ok else "orange")
+    time.sleep(2); ipc.clear_progress()
+    log.info(f"BT disconnect: DONE mac={mac}")
+    return True
+
+
+def repair_device(mac, S, settings):
+    """Gerät entkoppeln und neu verbinden."""
+    import ipc, time, json
+    name = mac
+    try:
+        data = json.load(open("/tmp/pidrive_bt_devices.json"))
+        for d in data.get("devices",[]):
+            if d.get("mac") == mac:
+                name = d.get("name", mac); break
+    except Exception:
+        pass
+
+    ipc.write_progress("Bluetooth", f"Neu koppeln: {name[:18]}...", color="blue")
+    log.info(f"BT repair: START mac={mac} name={name}")
+    _btctl("power on", timeout=8)
+    _btctl(f"disconnect {mac}", timeout=10)
+    _btctl(f"remove {mac}", timeout=10)
+    time.sleep(2)
+    ok = connect_device(mac, S, settings)
+    log.info(f"BT repair: {'OK' if ok else 'FAIL'} mac={mac}")
+    return ok
+
+
+def reconnect_last(S, settings):
+    """Letztes bekanntes BT-Gerät verbinden."""
+    import ipc, time
+    mac  = settings.get("bt_last_mac","")
+    name = settings.get("bt_last_name","") or mac
+
+    if not mac:
+        ipc.write_progress("Bluetooth", "Kein letztes Gerät", color="orange")
+        log.warn("BT reconnect_last: keine bt_last_mac")
+        time.sleep(2); ipc.clear_progress()
+        return False
+
+    log.info(f"BT reconnect_last: START mac={mac} name={name}")
+    return connect_device(mac, S, settings)

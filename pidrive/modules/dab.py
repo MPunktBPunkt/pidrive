@@ -59,7 +59,7 @@ def save_stations(stations):
     except Exception as e:
         log.error(f"DAB save Fehler: {e}")
 
-def scan_dab_channels(progress_cb=None):
+def scan_dab_channels(progress_cb=None, channels=None):
     global _scan_running, _scan_results
     _scan_running = True
     _scan_results = []
@@ -85,13 +85,17 @@ def scan_dab_channels(progress_cb=None):
         if not _scan_running:
             break
         if progress_cb:
-            progress_cb(int(i / total * 100),
+            progress_cb(int((i - 1) / total * 100),
                         f"Scanne {ch}... ({i}/{total})",
                         len(found))
         # welle-cli 2.2: alle Ausgaben auf stderr → mit 2>&1 fangen
-        # Kein per-Kanal is_busy()-Check — Race Condition mit ps-Latenz
+        import time as _time
+        _t0 = _time.time()
+        log.info(f"DAB Scan: CHANNEL_START {ch} ({i}/{total})")
         out = _run("timeout 6 welle-cli -c " + ch + " 2>&1",
                    capture=True, timeout=8)
+        _dur = round(_time.time() - _t0, 2)
+        log.info(f"DAB Scan: CHANNEL_DONE {ch} dur={_dur}s out_len={len(out) if out else 0}")
         if out and "usb_claim_interface error" in out:
             log.warn("DAB: RTL-SDR blockiert auf Kanal " + ch +
                      " — DVB-Treiber geladen?")
@@ -118,7 +122,21 @@ def scan_dab_channels(progress_cb=None):
 
     _scan_results = found
     _scan_running = False
+    log.info(f"DAB Scan: END total_found={len(found)}")
     return found
+
+
+def scan_dab_channels_full(progress_cb=None):
+    """DAB Vollscan aller Band-III Kanäle (38 Kanäle, ~4 Minuten)."""
+    all_channels = [
+        "5A","5B","5C","5D","6A","6B","6C","6D",
+        "7A","7B","7C","7D","8A","8B","8C","8D",
+        "9A","9B","9C","9D","10A","10B","10C","10D",
+        "11A","11B","11C","11D","12A","12B","12C","12D",
+        "13A","13B","13C","13D","13E","13F",
+    ]
+    return scan_dab_channels(progress_cb=progress_cb, channels=all_channels)
+
 
 def play_station(station, S, settings=None):
     global _player_proc

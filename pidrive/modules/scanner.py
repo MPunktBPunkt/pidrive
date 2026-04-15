@@ -11,6 +11,7 @@ try:
     from modules import rtlsdr as _rtlsdr
 except Exception:
     _rtlsdr = None
+import os
 import time
 import ipc
 import log
@@ -330,6 +331,24 @@ def _play_channel(band_id, idx, S):
     S[f"scanner_{band_id}"] = f"{name}  {freq} MHz"
     play_freq(freq, name, BANDS[band_id]["bw"], S)
 
+def _set_scanner_label(band_id, text, S):
+    """Scanner-Statustext in State setzen."""
+    S[f"scanner_{band_id}"] = text
+
+
+def _play_band_freq(band_id, freq, S, settings=None):
+    """Frequenz für kontinuierliche Bänder (VHF/UHF) spielen."""
+    b = BANDS.get(band_id, {}).get("band", {})
+    if not b:
+        return
+    freq = max(b["min"], min(b["max"], round(freq, 3)))
+    b["start"] = freq
+    name = f"{b.get('short', band_id.upper())} {freq:.3f} MHz"
+    _set_scanner_label(band_id, name, S)
+    log.info(f"Scanner: PLAY_FREQ band={band_id} freq={freq}")
+    play_freq(freq, name, BANDS[band_id]["bw"], S)
+
+
 def channel_up(band_id, S):
     chs = _get_channels(band_id)
     if not chs: return
@@ -344,20 +363,115 @@ def channel_down(band_id, S):
     _current_ch[band_id] = idx
     _play_channel(band_id, idx, S)
 
-def scan_next(band_id, S):
+def channel_jump(band_id, delta, S):
+    """Kanal-Sprung um N Schritte (positiv/negativ). Für AVRCP fast_forward/rewind."""
+    chs = _get_channels(band_id)
+    if not chs: return
+    cur = _current_ch.get(band_id, 0)
+    idx = (cur + delta) % len(chs)
+    _current_ch[band_id] = idx
+    _play_channel(band_id, idx, S)
+    log.info(f"Scanner channel_jump band={band_id} delta={delta} idx={idx}")
+
+def freq_step(band_id, delta_mhz, S, settings=None):
+    """Frequenzschritt für VHF/UHF um delta_mhz (±0.025 oder ±1.0 MHz)."""
     b = BANDS.get(band_id, {})
+    if "band" not in b:
+        return  # nur für kontinuierliche Bänder (VHF/UHF)
+    band = b["band"]
+    cur  = band.get("start", band["min"])
+    new_freq = round(cur + delta_mhz, 3)
+    if new_freq > band["max"]: new_freq = band["min"]
+    if new_freq < band["min"]: new_freq = band["max"]
+    log.info(f"Scanner: STEP band={band_id} delta={delta_mhz:+.3f} -> {new_freq:.3f}")
+    _play_band_freq(band_id, new_freq, S, settings)
+
+def set_freq(band_id, freq_mhz, S, settings=None):
+    """Direkte Frequenz für VHF/UHF setzen."""
+    b = BANDS.get(band_id, {}).get("band", {})
+    if not b:
+        log.warn(f"Scanner: SET_FREQ kein Band-Range: {band_id}")
+        return
+    try:
+        freq = float(freq_mhz)
+    except Exception:
+        log.warn(f"Scanner: SET_FREQ ungueltig band={band_id} value={freq_mhz}")
+        return
+    if not (b["min"] <= freq <= b["max"]):
+        log.warn(f"Scanner: SET_FREQ ausserhalb band={band_id} freq={freq}")
+        ipc.write_progress("Scanner", f"{freq:.3f} MHz ausserhalb Bereich", color="orange")
+        time.sleep(1.5)
+        ipc.clear_progress()
+        return
+    log.info(f"Scanner: SET_FREQ band={band_id} freq={freq}")
+    _play_band_freq(band_id, freq, S, settings)
+
+
+def freq_input_screen(band_id, settings=None):
+    """Manuelle Frequenzeingabe via File-Trigger (up=1 down=0 right=. left=del enter=ok back=abbruch)."""
+    b = BANDS.get(band_id, {}).get("band", {})
+    if not b:
+        return None
+    freq   = b.get("start", b["min"])
+    text   = f"{freq:.3f}"
+    deadline = time.time() + 90
+    while time.time() < deadline:
+        ipc.write_progress(
+            f"{b.get('short', band_id.upper())} Frequenz",
+            f"{text} MHz  (↑=1  ↓=0  →=.  ←=Löschen  Enter=OK  Back=Abbruch)",
+            color="blue"
+        )
+        if not os.path.exists(ipc.CMD_FILE):
+            time.sleep(0.15)
+            continue
+        try:
+            cmd = open(ipc.CMD_FILE).read().strip()
+            os.remove(ipc.CMD_FILE)
+        except Exception:
+            continue
+        if   cmd == "up":     text += "1"
+        elif cmd == "down":   text += "0"
+        elif cmd == "right":  text = text + "." if "." not in text else text
+        elif cmd == "left":   text = text[:-1] if text else ""
+        elif cmd == "enter":
+            ipc.clear_progress()
+            try:
+                val = float(text)
+                if b["min"] <= val <= b["max"]:
+                    return round(val, 3)
+            except Exception:
+                pass
+            ipc.write_progress("Scanner", "Ungültige Frequenz", color="red")
+            time.sleep(1.2)
+            ipc.clear_progress()
+            return None
+        elif cmd == "back":
+            ipc.clear_progress()
+            return None
+    ipc.clear_progress()
+    return None
+
+
+def scan_next(band_id, S, settings=None):
+    """Squelch-Scan vorwärts — erstes Signal spielen."""
+    b = BANDS.get(band_id, {})
+    log.info(f"Scanner: SCAN_NEXT band={band_id}")
     if "channels" in b:
         ch = _scan_list(S, b["channels"], b["bw"], 1)
     else:
         ch = _scan_range(S, b["band"], b["bw"], 1)
     if ch:
+        _set_scanner_label(band_id, f"{ch['name']}  {ch.get('freq','')} MHz", S)
         play_freq(ch["freq"], ch["name"], b["bw"], S)
 
-def scan_prev(band_id, S):
+def scan_prev(band_id, S, settings=None):
+    """Squelch-Scan rückwärts — erstes Signal spielen."""
     b = BANDS.get(band_id, {})
+    log.info(f"Scanner: SCAN_PREV band={band_id}")
     if "channels" in b:
         ch = _scan_list(S, b["channels"], b["bw"], -1)
     else:
         ch = _scan_range(S, b["band"], b["bw"], -1)
     if ch:
+        _set_scanner_label(band_id, f"{ch['name']}  {ch.get('freq','')} MHz", S)
         play_freq(ch["freq"], ch["name"], b["bw"], S)

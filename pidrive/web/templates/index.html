@@ -139,6 +139,15 @@
           <button onclick="sendCmd('audio_hdmi')">HDMI</button>
           <button onclick="sendCmd('vol_up')">Lauter</button>
           <button onclick="sendCmd('vol_down')">Leiser</button>
+
+          <button onclick="sendCmd('scan_step:vhf:0.025')">VHF +25k</button>
+          <button onclick="sendCmd('scan_step:vhf:-0.025')">VHF -25k</button>
+          <button onclick="sendCmd('scan_step:uhf:0.025')">UHF +25k</button>
+          <button onclick="sendCmd('scan_step:uhf:-0.025')">UHF -25k</button>
+          <button onclick="sendCmd('scan_jump:cb:10')">CB +10</button>
+          <button onclick="sendCmd('scan_jump:cb:-10')">CB -10</button>
+          <button onclick="sendCmd('bt_disconnect')">BT Trennen</button>
+          <button onclick="sendCmd('bt_reconnect_last')">BT Reconnect</button>
         </div>
 
 
@@ -244,6 +253,50 @@
         {% endif %}
       </section>
 
+      <!-- AVRCP / BMW Debug Panel (v0.8.4) -->
+      <section class="panel">
+        <div class="panel-title">AVRCP / BMW Debug</div>
+        <div class="diag-grid">
+          <div class="diag-card">
+            <div class="diag-title">Status</div>
+            <div class="diag-list">
+              <div class="diag-row">
+                <div class="diag-key">Service</div>
+                <div class="diag-value" id="avrcpServiceState">…</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Debug-JSON</div>
+                <div class="diag-value" id="avrcpJsonState">…</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Letztes Event</div>
+                <div class="diag-value" id="avrcpLastEvent">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Kontext</div>
+                <div class="diag-value" id="avrcpContext">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Trigger</div>
+                <div class="diag-value" id="avrcpTrigger">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Quelle</div>
+                <div class="diag-value" id="avrcpSource">–</div>
+              </div>
+            </div>
+            <div class="diag-actions" style="margin-top:8px">
+              <button onclick="refreshAvrcp()">🔄 AVRCP Refresh</button>
+              <button onclick="loadLogs('avrcp')">AVRCP Log laden</button>
+            </div>
+          </div>
+          <div class="diag-card">
+            <div class="diag-title">AVRCP Debug-JSON</div>
+            <pre id="avrcpJson" style="font-size:0.75em;overflow:auto;max-height:200px">{}</pre>
+          </div>
+        </div>
+      </section>
+
         <div class="panel-title">Rohdaten</div>
         <div class="json-wrap">
           <div>
@@ -268,6 +321,8 @@
         <button onclick="loadService('pidrive_core')">Core Status</button>
         <button onclick="loadService('pidrive_display')">Display Status</button>
         <button onclick="loadService('pidrive_web')">Web Status</button>
+        <button onclick="loadLogs('avrcp')">AVRCP Log</button>
+        <button onclick="loadService('pidrive_avrcp')">AVRCP Status</button>
         <button onclick="refreshState()">Refresh</button>
       </div>
       <pre id="logOutput">Bereit.</pre>
@@ -439,6 +494,51 @@
       }).catch(()=>{});
     }, 2000);
   </script>
+
+    <script>
+    async function refreshAvrcp() {
+      try {
+        const r = await fetch('/api/avrcp');
+        const j = await r.json();
+        const exists = j.exists ? 'OK' : 'fehlt';
+        const age = (j.age !== null && j.age !== undefined) ? j.age.toFixed(1)+'s' : '–';
+        document.getElementById('avrcpJsonState').textContent = exists + ' (' + age + ')';
+        const data = j.data || {};
+        document.getElementById('avrcpLastEvent').textContent = data.last_event || '–';
+        document.getElementById('avrcpContext').textContent   = data.context    || '–';
+        document.getElementById('avrcpTrigger').textContent   = data.trigger    || '–';
+        document.getElementById('avrcpSource').textContent    = data.source     || '–';
+        document.getElementById('avrcpJson').textContent      = JSON.stringify(data, null, 2);
+      } catch(e) {
+        document.getElementById('avrcpJsonState').textContent = 'Fehler';
+        document.getElementById('avrcpJson').textContent = JSON.stringify({error: String(e)}, null, 2);
+      }
+      try {
+        const s = await fetch('/api/service?name=pidrive_avrcp');
+        const sj = await s.json();
+        if (sj && typeof sj.stdout === 'string') {
+          const txt = sj.stdout;
+          let state = 'unbekannt';
+          if (txt.includes('Active: active (running)')) state = 'aktiv ✓';
+          else if (txt.includes('Active: inactive'))    state = 'inaktiv';
+          else if (txt.includes('failed'))              state = '⚠ fehler';
+          document.getElementById('avrcpServiceState').textContent = state;
+        }
+      } catch(e) {
+        document.getElementById('avrcpServiceState').textContent = 'Fehler';
+      }
+    }
+
+    // AVRCP mit refreshState mitkoppeln
+    const _origRefreshState = refreshState;
+    refreshState = async function(...args) {
+      await _origRefreshState.apply(this, args);
+      await refreshAvrcp();
+    };
+
+    // Einmal beim Laden
+    window.addEventListener('load', () => { setTimeout(refreshAvrcp, 400); });
+    </script>
 
     <script>
     async function refreshRTLSDR() {

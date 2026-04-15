@@ -1,5 +1,126 @@
 {
   "version": 1,
-  "updated_at": "2026-04-10T13:59:30",
-  "stations": []
+  "updated_at": "2026-04-15T23:20:00",
+  "stations": [
+    {
+      "id": "dab_bayern1",
+      "name": "Bayern 1",
+      "channel": "11D",
+      "ensemble": "BR Bayern",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_bayern2",
+      "name": "Bayern 2",
+      "channel": "11D",
+      "ensemble": "BR Bayern",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_bayern3",
+      "name": "Bayern 3",
+      "channel": "11D",
+      "ensemble": "BR Bayern",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "dab_brklassik",
+      "name": "BR Klassik",
+      "channel": "11D",
+      "ensemble": "BR Bayern",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_b5aktuell",
+      "name": "B5 aktuell",
+      "channel": "11D",
+      "ensemble": "BR Bayern",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_puls",
+      "name": "PULS",
+      "channel": "11D",
+      "ensemble": "BR Bayern",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_dlf",
+      "name": "Deutschlandfunk",
+      "channel": "5C",
+      "ensemble": "Bundesmux",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_dlfnova",
+      "name": "DLF Nova",
+      "channel": "5C",
+      "ensemble": "Bundesmux",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_radiobob",
+      "name": "RADIO BOB!",
+      "channel": "5D",
+      "ensemble": "Bundesmux 2",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "dab_rockantenne",
+      "name": "ROCK ANTENNE",
+      "channel": "5D",
+      "ensemble": "Bundesmux 2",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "dab_absolutrelax",
+      "name": "Absolut relax",
+      "channel": "5D",
+      "ensemble": "Bundesmux 2",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_radio7",
+      "name": "Radio 7",
+      "channel": "8D",
+      "ensemble": "BW Regional",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "dab_donau3fm",
+      "name": "DONAU 3 FM",
+      "channel": "8D",
+      "ensemble": "BW Regional",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "dab_swr3",
+      "name": "SWR3",
+      "channel": "8D",
+      "ensemble": "SWR BW",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_dasding",
+      "name": "DASDING",
+      "channel": "8D",
+      "ensemble": "SWR BW",
+      "favorite": true,
+      "enabled": true
+    }
+  ]
 }

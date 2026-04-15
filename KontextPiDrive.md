@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.1
+# PiDrive — Kontext & Projektdokumentation v0.8.5
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.8.1)
+    ├── VERSION              (aktuell: 0.8.5)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -848,6 +848,11 @@ echo "reload_stations:fm"          > /tmp/pidrive_cmd   # FM Stationen neu laden
 echo "reload_stations:webradio"    > /tmp/pidrive_cmd   # Webradio neu laden
 echo "scan_up:pmr446"              > /tmp/pidrive_cmd   # PMR446 Kanal hoch
 echo "scan_next:pmr446"            > /tmp/pidrive_cmd   # PMR446 Scan weiter
+echo "scan_jump:cb:10"             > /tmp/pidrive_cmd   # CB-Funk 10 Kanäle vor
+echo "scan_step:vhf:0.025"         > /tmp/pidrive_cmd   # VHF +25 kHz
+echo "scan_step:uhf:-1.0"          > /tmp/pidrive_cmd   # UHF -1 MHz
+echo "scan_setfreq:vhf:145.500"    > /tmp/pidrive_cmd   # VHF direkt auf 145.5 MHz
+echo "scan_inputfreq:vhf"          > /tmp/pidrive_cmd   # VHF manuelle Eingabe
 echo "wifi_on/wifi_off"             > /tmp/pidrive_cmd
 echo "bt_on/bt_off"                 > /tmp/pidrive_cmd
 echo "audio_klinke/hdmi/bt/all"     > /tmp/pidrive_cmd
@@ -900,7 +905,71 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.8.1 (aktuell)
+### v0.8.5 — Phase 1 WebUI abgeschlossen
+**index.html:**
+- AVRCP / BMW Debug Panel: Service-Status, letztes Event, Kontext, Trigger, Quelle, Debug-JSON
+- Scanner-Buttons: VHF/UHF ±25kHz, CB ±10 (scan_step/scan_jump)
+- BT-Buttons: BT Trennen (bt_disconnect), BT Reconnect (bt_reconnect_last)
+- AVRCP Log Tab + AVRCP Status Tab in Tab-Leiste
+- `refreshAvrcp()` JavaScript: /api/avrcp + /api/service polling
+- refreshState() koppelt AVRCP automatisch mit
+
+### v0.8.4 — Phase 1 Scanner-Trigger vollständig
+**scanner.py — neue Funktionen:**
+- `_set_scanner_label()`: zentraler Label-Setter für S-State
+- `_play_band_freq()`: zentraler Frequenz-Abspieler VHF/UHF
+- `set_freq(band_id, freq_mhz)`: direkte Frequenzwahl mit Bereichsprüfung
+- `freq_input_screen(band_id)`: manuelle Frequenzeingabe via up=1/down=0/right=./enter
+- `scan_next/scan_prev(settings=None)`: settings-Parameter + Label-Update
+- `freq_step`: refactored zu _play_band_freq
+
+**main_core.py:**
+- `scan_jump:<band>:<delta>` → scanner.channel_jump()
+- `scan_step:<band>:<delta_mhz>` → scanner.freq_step()
+- `scan_setfreq:<band>:<freq>` → scanner.set_freq()
+- `scan_inputfreq:<band>` → scanner.freq_input_screen()
+
+**webui.py:** scan_jump/step/setfreq/inputfreq/bt_repair in erlaubten Prefixen
+
+### v0.8.3 — Phase 1 AVRCP kontextsensitiv
+**avrcp_trigger.py — kompletter Rewrite:**
+- Kontextbasiertes Mapping aus status.json + menu.json + list.json
+- Kontexte: list_overlay → Navigation | scanner FM/DAB → Senderwechsel | menu → down/up/enter/back
+- Scanner VHF/UHF: scan_step ±0.025 MHz (fein) / ±1.0 MHz (grob)
+- Scanner Kanal-Bänder: scan_up/down + scan_jump:N
+- Volume global: vol_up / vol_down
+- Doppelklick Play/Pause → cat:0 (Jetzt läuft)
+- Debug-JSON /tmp/pidrive_avrcp.json (last_event, context, trigger, source)
+
+**mpris2.py:** differenzierte BMW-Display Metadaten je Quelle:
+- FM: Frequenz als Artist | DAB: Kanal | WEB: Stream-Track | Scanner: Band+Frequenz | Menü: Breadcrumb
+
+**webui.py:** AVRCP_FILE, /api/avrcp, Log-Target "avrcp", pidrive_avrcp in Service-API
+
+### v0.8.2 — BT-Fixes, Senderlisten Memmingen
+**Kritische Bugfixes (aus GPT-5.4 Analyse):**
+- `bt_connect:MAC` Trigger fehlte im Core → Kopfhörer-Verbindung unmöglich
+- `wifi_connect:SSID` Trigger fehlte
+- `favorites` nicht importiert → Crash bei Favoriten-Toggle
+- StationStore `_fm_file`/_dab_file`/_web_file`/webradio` nicht in __init__ → Crash
+
+**Bluetooth:** _btctl() Wrapper, connect_device Rewrite (Trust→Pair→Connect×2→Verify),
+  disconnect_current(), repair_device(), reconnect_last()
+
+**BT-Menü:** Status verbunden/nicht verbunden/aus, Verbundenes Gerät,
+  Letztes Gerät, → Verbinden, → Neu koppeln, → Bluetooth trennen
+
+**DAB-Scan:** Regionalscan 7 Kanäle (5C,5D,8D,10A,10D,11D,12D) Standard, scan_dab_channels_full()
+
+**Senderlisten:** fm_stations.json (24 Sender), dab_stations.json (15 Sender) für Memmingen/Allgäu
+
+### v0.8.1 — Scan-Bugfixes
+- `NameError: _scan_begin not defined` — Guard-Funktion war in handle_trigger statt Modulebene
+- `log.warning` → `log.warn` in rtlsdr.py
+- DAB Scan Race Condition: is_busy() nur einmal vor dem Scan (nicht per Kanal)
+- FM Scan: timeout 0.4s→1.5s, Squelch 70→30, Schrittweite 0.1→0.2 MHz
+
+### v0.8.0
 **RTL-SDR Architektur (Breaking Change):**
 - Neues Modul `modules/rtlsdr.py`: zentrale RTL-SDR Verwaltung
 - Passive Erkennung (lsusb) — öffnet Device NICHT mehr beim Start
@@ -929,7 +998,7 @@ sudo systemctl restart pidrive_display
 - rtlsdr.py Passive-Diagnose nach Installation
 
 
-### v0.8.1 (aktuell)
+### v0.7.26
 **Audio & Stabilität:**
 - Hotfix: `from ui import Item` aus bluetooth.py entfernt (Crash bei Core-Start)
 - `settings.py`: neues neutrales Modul für `load_settings()`/`save_settings()` (thread-safe)
@@ -1062,12 +1131,12 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.1)
+## Aktueller Stand (v0.8.5)
 
 **System läuft stabil** — 14.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.1 — RTL-SDR passiv, kein rtl_test beim Start
+✓ pidrive_core.service      v0.8.5 — Phase 1 AVRCP komplett
 ✓ pidrive_display.service   20fps, ändert nur bei Änderungen
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5
@@ -1096,9 +1165,9 @@ sudo systemctl restart pidrive_display
 
 ### Kurzfristig (nächste 1-3 Updates)
 
-- [x] RTL-SDR Architektur v0.8.1 (rtlsdr.py, Locking, passive Erkennung)
+- [x] RTL-SDR Architektur v0.8.0 (rtlsdr.py, Locking, passive Erkennung)
 - [ ] **GPIO-Buttons** (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25) — direkte Steuerung am Display ohne SSH/WebUI, wichtigste UX-Verbesserung für Fahrzeugbetrieb
-- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.8.1)
+- [x] **Audio-Routing zentralisiert** — `audio.get_mpv_args()`: Webradio/FM/DAB/MP3 nutzen BT automatisch (v0.7.26)
 - [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
 - [ ] **resume_state.py** — last_state.json: letzte Quelle/Station/MP3/BT beim Boot vollständig wiederherstellen
 - [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
@@ -1133,7 +1202,7 @@ sudo systemctl restart pidrive_display
 - [x] AVRCP 1.5 + MPRIS2 für BMW NBT EVO (v0.7.19/v0.7.20)
 - [x] BT/WiFi Scan → navigierbares Submenu (v0.7.20–v0.7.22)
 - [x] Favoriten: FM/DAB+/Webradio, config/favorites.json (v0.7.22)
-- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.8.1)
+- [x] BT Auto-Reconnect beim Boot, 3 Versuche, letztes Gerät priorisiert (v0.7.20/v0.8.5)
 - [x] FM/DAB letzte Station beim Boot wiederherstellen (v0.7.20)
 - [x] Performance: non-blocking Status-Thread, 20fps, ~50ms Latenz (v0.7.21)
 - [x] Dead code entfernt: launcher.py, main.py, ui.py, trigger.py (v0.7.21)

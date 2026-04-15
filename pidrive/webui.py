@@ -21,7 +21,8 @@ STATUS_FILE = "/tmp/pidrive_status.json"
 MENU_FILE = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 RTLSDR_FILE  = "/tmp/pidrive_rtlsdr.json"
-LIST_FILE = "/tmp/pidrive_list.json"
+AVRCP_FILE   = "/tmp/pidrive_avrcp.json"
+LIST_FILE    = "/tmp/pidrive_list.json"
 LOG_FILE  = "/var/log/pidrive/pidrive.log"
 READY_FILE= "/tmp/pidrive_ready"
 
@@ -29,6 +30,7 @@ ALLOWED_COMMANDS = {
     "up", "down", "left", "right", "enter", "back",
     "wifi_on", "wifi_off", "wifi_toggle", "wifi_scan",
     "bt_on", "bt_off", "bt_toggle", "bt_scan",
+    "bt_disconnect", "bt_reconnect_last",
     "spotify_on", "spotify_off", "spotify_toggle",
     "radio_stop", "library_stop",
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
@@ -108,6 +110,7 @@ def build_view_model():
     menu     = read_json(MENU_FILE,   {})
     progress = read_json(PROGRESS_FILE, {})
     rtlsdr   = read_json(RTLSDR_FILE, {})
+    avrcp    = read_json(AVRCP_FILE,  {})
     list_data= read_json(LIST_FILE,   {})
 
     # v0.7.0: nodes aus Baummodell, Compat-Fallback
@@ -143,6 +146,9 @@ def build_view_model():
         "rtlsdr":         rtlsdr,
         "rtlsdr_age":     file_age(RTLSDR_FILE),
         "rtlsdr_exists":  os.path.exists(RTLSDR_FILE),
+        "avrcp":          avrcp,
+        "avrcp_age":      file_age(AVRCP_FILE),
+        "avrcp_exists":   os.path.exists(AVRCP_FILE),
         "list_data":      list_data,
         "list_active":    list_data.get("active", False),
         "list_title":     list_data.get("title", ""),
@@ -184,8 +190,10 @@ def api_cmd():
     if not cmd:
         return jsonify({"ok": False, "error": "Kein Befehl übergeben"}), 400
 
-    prefixes = ("cat:", "reload_stations:", "scan_up:", "scan_down:", "bt_connect:", "wifi_connect:",
-                  "scan_next:", "scan_prev:")
+    prefixes = ("cat:", "reload_stations:",
+                "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
+                "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
+                "bt_connect:", "wifi_connect:", "bt_repair:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 
@@ -203,6 +211,8 @@ def api_logs():
         cmd = "journalctl -u pidrive_core -n 100 --no-pager"
     elif target == "display":
         cmd = "journalctl -u pidrive_display -n 100 --no-pager"
+    elif target == "avrcp":
+        cmd = "journalctl -u pidrive_avrcp -n 100 --no-pager"
     elif target == "app":
         cmd = f"tail -n 100 {LOG_FILE}"
     else:
@@ -307,9 +317,22 @@ def api_nav():
 @app.route("/api/service")
 def api_service():
     name = request.args.get("name", "pidrive_core")
-    if name not in ("pidrive_core", "pidrive_display", "pidrive_web"):
+    if name not in ("pidrive_core", "pidrive_display", "pidrive_web", "pidrive_avrcp"):
         return jsonify({"ok": False, "error": "Ungültiger Service"}), 400
     return jsonify(safe_run(f"systemctl status {name} --no-pager"))
+
+
+@app.route("/api/avrcp")
+def api_avrcp():
+    """AVRCP Debug-Status."""
+    data = read_json(AVRCP_FILE, {})
+    return jsonify({
+        "ok":     bool(data),
+        "data":   data,
+        "exists": os.path.exists(AVRCP_FILE),
+        "age":    file_age(AVRCP_FILE),
+    })
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)

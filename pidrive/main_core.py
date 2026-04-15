@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.1
+main_core.py - PiDrive Core v0.8.5
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -23,7 +23,7 @@ except Exception:
     _mpris2 = None
 from menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
-                     webradio, dab, fm, library, scanner, update)
+                     webradio, dab, fm, library, scanner, update, favorites)
 
 logger = log.setup("core")
 
@@ -117,6 +117,19 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         bg(lambda: wifi.scan_networks(S, settings))
     elif cmd == "bt_scan":
         bg(lambda: bluetooth.scan_devices(S, settings))
+    elif cmd.startswith("bt_connect:"):
+        mac = cmd.split(":", 1)[1].strip()
+        bg(lambda m=mac: bluetooth.connect_device(m, S, settings))
+    elif cmd == "bt_disconnect":
+        bg(lambda: bluetooth.disconnect_current(S, settings))
+    elif cmd == "bt_reconnect_last":
+        bg(lambda: bluetooth.reconnect_last(S, settings))
+    elif cmd.startswith("bt_repair:"):
+        mac = cmd.split(":", 1)[1].strip()
+        bg(lambda m=mac: bluetooth.repair_device(m, S, settings))
+    elif cmd.startswith("wifi_connect:"):
+        ssid = cmd.split(":", 1)[1]
+        bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
     # ── Radio Stop ───────────────────────────────────────────────────────────
     elif cmd == "radio_stop":
@@ -203,7 +216,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             ipc.write_progress("FM Suchlauf", "Scanne UKW 87.5–108.0 MHz ...", color="blue")
             log.info("SCAN_START source=fm")
             try:
-                results = fm.scan_stations(S)
+                results = fm.scan_stations(S, quick_only=True)
                 count = len(results)
                 if count > 0:
                     store.save_fm(results)
@@ -273,6 +286,53 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd.startswith("scan_prev:"):
         band = cmd.split(":",1)[1]
         bg(lambda b=band: scanner.scan_prev(b, S))
+
+    elif cmd.startswith("scan_jump:"):
+        # scan_jump:<band>:<delta>  — Kanal-Sprung
+        parts = cmd.split(":")
+        if len(parts) >= 3:
+            band = parts[1]
+            try:
+                delta = int(parts[2])
+            except Exception:
+                delta = 0
+            if delta:
+                bg(lambda b=band, d=delta: scanner.channel_jump(b, d, S))
+
+    elif cmd.startswith("scan_step:"):
+        # scan_step:<band>:<delta_mhz>  — Frequenzschritt VHF/UHF
+        parts = cmd.split(":")
+        if len(parts) >= 3:
+            band = parts[1]
+            try:
+                delta = float(parts[2])
+            except Exception:
+                delta = 0.0
+            if delta:
+                bg(lambda b=band, d=delta: scanner.freq_step(b, d, S, settings))
+
+    elif cmd.startswith("scan_setfreq:"):
+        # scan_setfreq:<band>:<freq_mhz>  — direkte Frequenz setzen
+        parts = cmd.split(":")
+        if len(parts) >= 3:
+            band = parts[1]
+            try:
+                freq = float(parts[2])
+            except Exception:
+                freq = 0.0
+            if freq:
+                bg(lambda b=band, f=freq: scanner.set_freq(b, f, S, settings))
+
+    elif cmd.startswith("scan_inputfreq:"):
+        # scan_inputfreq:<band>  — manuelle Frequenzeingabe
+        parts = cmd.split(":")
+        if len(parts) >= 2:
+            band = parts[1]
+            def _input_and_set(b=band):
+                freq = scanner.freq_input_screen(b, settings)
+                if freq is not None:
+                    scanner.set_freq(b, freq, S, settings)
+            bg(_input_and_set)
 
     # ── Bibliothek ───────────────────────────────────────────────────────────
     elif cmd == "lib_browse":
@@ -618,7 +678,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.1 gestartet")
+    log.info("PiDrive Core v0.8.5 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

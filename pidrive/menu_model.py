@@ -209,6 +209,11 @@ class StationStore:
         self.dab: List[dict] = []
         self.web: List[dict] = []
         self._mtimes: Dict[str, float] = {}
+        # Aliase und Dateinamen für Favoriten-Methoden
+        self._fm_file  = self._path("fm_stations.json")
+        self._dab_file = self._path("dab_stations.json")
+        self._web_file = self._path("stations.json")
+        self.webradio  = self.web  # Alias
 
     def _path(self, name: str) -> str:
         return os.path.join(self.config_dir, name)
@@ -255,6 +260,10 @@ class StationStore:
         self.fm  = self._load("fm_stations.json")
         self.dab = self._load("dab_stations.json")
         self.web = self._load("stations.json")
+        self.webradio = self.web  # Alias aktualisieren
+        self._fm_file  = self._path("fm_stations.json")
+        self._dab_file = self._path("dab_stations.json")
+        self._web_file = self._path("stations.json")
         for n in ("fm_stations.json", "dab_stations.json", "stations.json"):
             self._mtimes[n] = self._mtime(n)
         log.info(f"StationStore: FM={len(self.fm)} DAB={len(self.dab)} Web={len(self.web)}")
@@ -329,6 +338,8 @@ class StationStore:
                     "stations.json":"web"}[name]
             setattr(self, attr, self._load(name))
             self._mtimes[name] = self._mtime(name)
+            if attr == "web":
+                self.webradio = self.web
             log.info(f"StationStore: {source} neu geladen")
 
     def save_dab(self, stations: List[dict]):
@@ -627,27 +638,52 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             label="Noch keine Favoriten", type="info")])
 
     # ── Verbindungen ─────────────────────────────────────────────────────────
-    # BT: gefundene Geraete als Submenu (aus /tmp/pidrive_bt_devices.json)
-    bt_devs = []
+    _bt_is_on  = bool(S.get("bt", False))
+    _bt_dev    = S.get("bt_device", "") or "–"
+    _bt_last   = settings.get("bt_last_name", "") or "–"
+
+    if _bt_is_on and S.get("bt_device"):
+        _bt_state_label = "Status: verbunden"
+    elif _bt_is_on:
+        _bt_state_label = "Status: aktiv / nicht verbunden"
+    else:
+        _bt_state_label = "Status: aus"
+
+    # BT: Geraete mit Verbinden/Neu-koppeln Untermenü
+    bt_devs_ext = []
     try:
         import os as _os
         if _os.path.exists("/tmp/pidrive_bt_devices.json"):
             with open("/tmp/pidrive_bt_devices.json") as _f:
                 _btd = json.load(_f)
             for _d in _btd.get("devices", []):
-                _m = _d.get("mac",""); _n = _d.get("name",_m)
-                _lbl = ("★ " if _d.get("known") else "") + _n
-                bt_devs.append(MenuNode(
-                    id="btd_" + _m.replace(":",""), label=_lbl,
-                    type="action", action="bt_connect:" + _m,
-                    meta={"mac": _m, "name": _n}))
-    except Exception as _e:
-        pass  # Datei noch nicht vorhanden oder JSON-Fehler
+                _m = _d.get("mac", ""); _n = _d.get("name", _m)
+                _prefix = ""
+                if _d.get("connected"):
+                    _prefix = "▶ "
+                elif _d.get("known") or _d.get("paired"):
+                    _prefix = "★ "
+                bt_devs_ext.append(MenuNode(
+                    id="btd_" + _m.replace(":",""),
+                    label=_prefix + _n,
+                    type="folder",
+                    meta={"mac": _m, "name": _n},
+                    children=[
+                        MenuNode(id="btconn_" + _m.replace(":",""),
+                                 label="Verbinden",    type="action",
+                                 action="bt_connect:" + _m),
+                        MenuNode(id="btrep_"  + _m.replace(":",""),
+                                 label="Neu koppeln",  type="action",
+                                 action="bt_repair:" + _m),
+                    ]
+                ))
+    except Exception:
+        pass
     bt_geraete = MenuNode(id="bt_geraete", label="Geraete", type="folder",
-        children=bt_devs or [MenuNode(id="bt_hint",
+        children=bt_devs_ext or [MenuNode(id="bt_hint",
             label="Zuerst scannen", type="info")])
 
-    # WiFi: gefundene Netzwerke als Submenu (aus /tmp/pidrive_wifi_nets.json)
+    # WiFi: gefundene Netzwerke als Submenu
     wifi_nets = []
     try:
         import os as _os2
@@ -655,29 +691,36 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             with open("/tmp/pidrive_wifi_nets.json") as _f2:
                 _wfd = json.load(_f2)
             for _n in _wfd.get("networks", []):
-                _s = _n.get("ssid","")
+                _s = _n.get("ssid", "")
                 if _s:
                     wifi_nets.append(MenuNode(
                         id="wfn_" + _s.replace(" ","_")[:16], label=_s,
                         type="action", action="wifi_connect:" + _s,
                         meta={"ssid": _s}))
-    except Exception as _e:
-        pass  # Datei noch nicht vorhanden oder JSON-Fehler
+    except Exception:
+        pass
     wifi_netze = MenuNode(id="wifi_netze", label="Netzwerke", type="folder",
         children=wifi_nets or [MenuNode(id="wifi_hint",
             label="Zuerst scannen", type="info")])
 
     verbindungen = MenuNode(id="connections", label="Verbindungen", type="folder", children=[
         MenuNode(id="bt_toggle",  label="Bluetooth An/Aus", type="toggle",
-                 action="bt_toggle", active=S.get("bt", False)),
+                 action="bt_toggle", active=_bt_is_on),
         MenuNode(id="bt_scan",    label="Geraete scannen",  type="action", action="bt_scan"),
+        MenuNode(id="bt_state",   label=_bt_state_label,    type="info"),
+        MenuNode(id="bt_status",  label="Verbunden mit: " + _bt_dev[:24], type="info"),
+        MenuNode(id="bt_last",    label="Letztes Geraet: " + _bt_last[:24], type="info"),
+        MenuNode(id="bt_reconn",  label="Letztes Geraet verbinden", type="action",
+                 action="bt_reconnect_last"),
+        MenuNode(id="bt_disc",    label="Bluetooth trennen", type="action",
+                 action="bt_disconnect"),
         bt_geraete,
-        MenuNode(id="bt_status",  label="Verbunden mit",    type="info"),
         MenuNode(id="wifi_toggle",label="WiFi An/Aus",      type="toggle",
                  action="wifi_toggle", active=S.get("wifi", False)),
         MenuNode(id="wifi_scan",  label="Netzwerke scannen",type="action", action="wifi_scan"),
         wifi_netze,
-        MenuNode(id="wifi_status",label="SSID",             type="info"),
+        MenuNode(id="wifi_status",label="SSID: " + (S.get("wifi_ssid","") or "–"),
+                 type="info"),
     ])
 
     # ── System ───────────────────────────────────────────────────────────────

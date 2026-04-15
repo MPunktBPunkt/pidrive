@@ -237,43 +237,96 @@ def start_mpris2():
 def update(status: dict, menu: dict):
     """
     Status-Daten → MPRIS2 Metadaten → BMW-Display.
-    Wird vom Core bei jeder IPC-Aktualisierung aufgerufen.
+    Differenzierte Anzeige je Quelle.
     """
     if _player is None:
         return
 
-    radio_type = status.get("radio_type", "")
-    playing    = status.get("radio_playing",
-                 status.get("radio", False)) or \
-                 status.get("spotify", False) or \
-                 status.get("library_playing", False)
+    radio_type = (status.get("radio_type", "") or "").upper()
+    playing    = (status.get("radio_playing", status.get("radio", False))
+                  or status.get("spotify", False)
+                  or status.get("library_playing", False))
 
-    # Quelle bestimmen
+    title  = "PiDrive"
+    artist = ""
+    album  = "PiDrive"
+
+    # ── Spotify ──────────────────────────────────────────────────────────────
     if status.get("spotify"):
         title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
         artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
         album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
 
+    # ── Radio ────────────────────────────────────────────────────────────────
     elif status.get("radio_playing", status.get("radio", False)):
-        station   = status.get("radio_station", status.get("radio_name", ""))
-        type_label= {"WEB": "Webradio", "DAB": "DAB+",
-                     "FM": "FM Radio",  "SCANNER": "Scanner"}.get(radio_type, "Radio")
-        title  = station or type_label
-        artist = type_label
-        album  = "PiDrive Radio"
+        station    = status.get("radio_station", status.get("radio_name", "")) or ""
+        radio_name = status.get("radio_name", "") or station
 
+        if radio_type == "FM":
+            title  = radio_name or "FM Radio"
+            # Frequenz aus station extrahieren wenn vorhanden, z.B. "Bayern 3 (95.8 MHz)"
+            artist = "FM Radio"
+            if "(" in station and "mhz" in station.lower():
+                try:
+                    artist = station.split("(")[-1].replace(")", "").strip()
+                except Exception:
+                    pass
+            album  = "FM Radio"
+
+        elif radio_type == "DAB":
+            title  = radio_name or station or "DAB+"
+            artist = "DAB+"
+            album  = "PiDrive DAB+"
+
+        elif radio_type == "WEB":
+            title  = status.get("track", "") or radio_name or "Webradio"
+            artist = status.get("artist", "") or radio_name or "Webradio"
+            album  = radio_name or "PiDrive Webradio"
+
+        elif radio_type == "SCANNER":
+            rs = station or "Scanner"
+            title  = radio_name or rs
+            freq_txt = ""
+            if "(" in rs and "mhz" in rs.lower():
+                try:
+                    freq_txt = rs.split("(")[-1].replace(")", "").strip()
+                except Exception:
+                    pass
+            artist = freq_txt or "Scanner"
+            rs_l   = rs.lower()
+            if "cb" in rs_l:        album = "Scanner / CB-Funk"
+            elif "pmr" in rs_l:     album = "Scanner / PMR446"
+            elif "freenet" in rs_l: album = "Scanner / Freenet"
+            elif "lpd" in rs_l:     album = "Scanner / LPD433"
+            elif "vhf" in rs_l:     album = "Scanner / VHF"
+            elif "uhf" in rs_l:     album = "Scanner / UHF"
+            else:                   album = "Scanner"
+
+        else:
+            title  = station or "Radio"
+            artist = "Radio"
+            album  = "PiDrive Radio"
+
+    # ── Bibliothek ───────────────────────────────────────────────────────────
     elif status.get("library_playing", False):
         title  = status.get("library_track", status.get("lib_track", "")) or "Bibliothek"
         artist = "PiDrive"
         album  = "Bibliothek"
 
+    # ── Menü-Navigation ──────────────────────────────────────────────────────
     else:
-        # Menü-Navigation: Pfad anzeigen
-        path   = menu.get("path", [])
-        label  = menu.get("item_label", "") or (path[-1] if path else "PiDrive")
-        title  = label
-        artist = " › ".join(path[1:3]) if len(path) > 1 else "PiDrive"
-        album  = "PiDrive Menü"
+        path     = menu.get("path", [])
+        cursor   = menu.get("cursor", 0)
+        nodes    = menu.get("nodes", [])
+        selected = ""
+        if isinstance(nodes, list) and nodes and 0 <= cursor < len(nodes):
+            try:
+                selected = nodes[cursor].get("label", "")
+            except Exception:
+                pass
+        title   = selected or (path[-1] if path else "PiDrive")
+        artist  = " › ".join(path[1:]) if len(path) > 1 else "PiDrive"
+        album   = "PiDrive Menü"
         playing = False
 
     _player.set_status(playing)
