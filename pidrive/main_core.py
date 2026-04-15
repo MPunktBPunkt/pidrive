@@ -61,11 +61,45 @@ def _scan_info():
         return dict(_SCAN_STATE)
 
 
+# ── Trigger-Entprellung (v0.8.7) ───────────────────────────────────────────────
+import time as _time_mod
+
+_LAST_TRIGGER_TS: dict = {}
+_TRIGGER_DEBOUNCE = {
+    "enter":    0.35,
+    "fm_next":  0.5,
+    "fm_prev":  0.5,
+    "dab_next": 0.5,
+    "dab_prev": 0.5,
+}
+
+_LAST_NODE_EXEC_TS  = 0.0
+_LAST_NODE_EXEC_ID  = ""
+
+
+def _debounced(cmd: str) -> bool:
+    """True = Befehl innerhalb Entprellzeit wiederholt → ignorieren."""
+    now   = _time_mod.time()
+    limit = _TRIGGER_DEBOUNCE.get(cmd)
+    if not limit:
+        return False
+    last = _LAST_TRIGGER_TS.get(cmd, 0.0)
+    if now - last < limit:
+        log.info(f"TRIGGER debounce: {cmd}")
+        return True
+    _LAST_TRIGGER_TS[cmd] = now
+    return False
+
+
 # ── Trigger-Handling ───────────────────────────────────────────────────────────
 
 def handle_trigger(cmd, menu_state, store, S, settings):
     """Alle Trigger verarbeiten. Gibt True zurück wenn Menü neu gebaut werden soll."""
     rebuild = False
+
+    # Entprellung für schnelle Doppeldrücker
+    if _debounced(cmd):
+        return False
 
     def bg(fn):
         import threading
@@ -387,7 +421,17 @@ def handle_trigger(cmd, menu_state, store, S, settings):
 
 def _execute_node(node, menu_state, store, S, settings):
     """Knoten ausführen (station/action/toggle)."""
+    global _LAST_NODE_EXEC_TS, _LAST_NODE_EXEC_ID
     import threading
+
+    # Doppelte Ausführung desselben Knotens innerhalb 0.5s verhindern
+    now = _time_mod.time()
+    node_exec_id = f"{node.type}:{node.id}:{node.action}:{node.source}"
+    if node_exec_id == _LAST_NODE_EXEC_ID and (now - _LAST_NODE_EXEC_TS) < 0.5:
+        log.info(f"MENU_ACTION entprellt id={node.id} type={node.type}")
+        return
+    _LAST_NODE_EXEC_ID = node_exec_id
+    _LAST_NODE_EXEC_TS = now
 
     def bg(fn): threading.Thread(target=fn, daemon=True).start()
 
