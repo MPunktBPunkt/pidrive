@@ -1,8 +1,8 @@
 [Unit]
 Description=PiDrive AVRCP Trigger (BMW iDrive → File-Trigger)
-After=bluetooth.target pidrive_core.service
+After=bluetooth.target
 Wants=bluetooth.target
-# Kein Requires — AVRCP optional, Core läuft auch ohne
+# KEIN After=pidrive_core.service — vermeidet systemd Ordering-Cycle beim Shutdown (v0.8.7)
 
 [Service]
 Type=simple
