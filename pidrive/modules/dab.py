@@ -138,53 +138,113 @@ def scan_dab_channels_full(progress_cb=None):
     return scan_dab_channels(progress_cb=progress_cb, channels=all_channels)
 
 
+def _get_dab_gain(settings=None):
+    """
+    DAB Gain für welle-cli — v0.8.10.
+    -1 = Auto Gain (AGC), sonst numerischer Wert in dB.
+    Konfigurierbar via settings.json: "dab_gain": 35
+    """
+    try:
+        if settings is None:
+            from settings import load_settings as _ls
+            settings = _ls()
+        g = settings.get("dab_gain", -1)
+        if isinstance(g, str):
+            g = g.strip()
+            if not g:
+                return "-1"
+        return str(int(float(g)))
+    except Exception:
+        return "-1"
+
+
 def play_station(station, S, settings=None):
     global _player_proc
     stop(S)
+
     if settings is not None:
         settings["last_dab_station"] = station
         try:
             import json as _j
-            with open("/home/pi/pidrive/pidrive/config/settings.json","w") as _f:
+            with open("/home/pi/pidrive/pidrive/config/settings.json", "w") as _f:
                 _j.dump(settings, _f, indent=2)
         except Exception:
             pass
+
     ch   = station.get("channel", "")
     name = station.get("name", "")
+
     if not ch:
+        log.error(f"DAB play: kein channel station={station!r}")
         return
+
     if _rtlsdr:
         if not _rtlsdr.detect_usb().get("present"):
-            import log as _l; _l.error("DAB: kein RTL-SDR")
+            S["radio_playing"] = False
+            S["radio_station"] = "RTL-SDR nicht gefunden"
+            log.error("DAB: kein RTL-SDR")
             return
         if _rtlsdr.is_busy():
-            import log as _l; _l.warn("DAB: RTL-SDR belegt")
+            S["radio_playing"] = False
+            S["radio_station"] = "RTL-SDR belegt"
+            log.warn(f"DAB: RTL-SDR belegt vor play {name} [{ch}]")
             return
+
     try:
         from modules import audio as _audio
         _mpv_args = " ".join(_audio.get_mpv_args(settings, source="dab"))
+        _gain     = _get_dab_gain(settings)
+
+        # name mit shlex quoten für Shell-Sicherheit
+        import shlex
+        _name_q = shlex.quote(name)
+
         _cmd = (
-            "welle-cli -D 0 -c " + ch + " -s '" + name + "' -o - 2>/dev/null | "
+            "welle-cli -D 0 -c " + ch + " -g " + _gain +
+            " -s " + _name_q + " -o - 2>/tmp/pidrive_dab_welle.err | "
             "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
         )
+
+        log.info(f"DAB play: START name={name!r} channel={ch} gain={_gain}")
+
         if _rtlsdr:
             try:
                 _player_proc = _rtlsdr.start_process(
                     _cmd, owner="dab_play", shell=True,
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception as _e:
-                import log as _l; _l.error("DAB: RTL-SDR Lock: " + str(_e))
+                S["radio_playing"] = False
+                S["radio_station"] = "RTL-SDR Lock-Fehler"
+                log.error("DAB: RTL-SDR Lock: " + str(_e))
                 return
         else:
             _player_proc = subprocess.Popen(
                 _cmd, shell=True,
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
+
+        # Kurz warten und welle-cli Startausgabe loggen
+        import time as _t
+        _t.sleep(1.2)
+        try:
+            if os.path.exists("/tmp/pidrive_dab_welle.err"):
+                with open("/tmp/pidrive_dab_welle.err", "r",
+                          encoding="utf-8", errors="ignore") as _f:
+                    _lines = [ln.strip() for ln in _f.readlines()[-6:] if ln.strip()]
+                for _ln in _lines:
+                    log.info("DAB welle-cli: " + _ln[:200])
+        except Exception:
+            pass
+
         S["radio_playing"] = True
         S["radio_station"] = "DAB: " + name
+        S["radio_name"]    = name
         S["radio_type"]    = "DAB"
         log.action("DAB", "Wiedergabe: " + name + " (" + ch + ")")
+
     except Exception as e:
+        S["radio_playing"] = False
+        S["radio_station"] = "DAB Fehler"
         log.error(f"DAB play Fehler: {e}")
 
 def stop(S):

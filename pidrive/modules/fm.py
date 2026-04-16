@@ -155,12 +155,33 @@ def play_station(station, S, settings=None):
 
     try:
         if _rtlsdr:
+            # Aufräumen vor neuem Start
+            try:
+                _rtlsdr.reap_process()
+            except Exception:
+                pass
+
             if not _rtlsdr.detect_usb().get("present"):
                 S["radio_playing"] = False
                 S["radio_station"] = "RTL-SDR nicht gefunden"
                 log.error("FM: kein RTL-SDR")
                 return
-            if _rtlsdr.is_busy():
+
+            # Warten auf echte Freigabe nach stop() — verhindert Race beim Senderwechsel
+            if not _rtlsdr.wait_until_free(timeout=2.5, interval=0.05):
+                log.warn(f"FM: RTL-SDR nach stop() noch belegt — harter Cleanup für {name} @ {freq_f}")
+                try:
+                    _rtlsdr.stop_process()
+                except Exception:
+                    pass
+                _bg("pkill -f rtl_fm 2>/dev/null")
+                _bg("pkill -f aplay 2>/dev/null")
+                _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_fm' 2>/dev/null")
+                time.sleep(0.35)
+
+            if not _rtlsdr.wait_until_free(timeout=1.5, interval=0.05):
+                S["radio_playing"] = False
+                S["radio_station"] = "RTL-SDR belegt"
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
                 return
 
@@ -210,8 +231,11 @@ def play_station(station, S, settings=None):
 def stop(S):
     global _player_proc
     log.info("FM stop: requested")
-    if _rtlsdr:
-        _rtlsdr.stop_process()
+    try:
+        if _rtlsdr:
+            _rtlsdr.stop_process()
+    except Exception as e:
+        log.warn(f"FM stop: rtlsdr.stop_process: {e}")
     _bg("pkill -f pidrive_fm 2>/dev/null")
     _bg("pkill -f rtl_fm 2>/dev/null")
     _bg("pkill -f aplay 2>/dev/null")
@@ -222,10 +246,16 @@ def stop(S):
         except Exception:
             pass
         _player_proc = None
+    # Kurzes Warten auf echte Freigabe — verhindert sofortiges Busy beim Folgestart
+    try:
+        if _rtlsdr:
+            _rtlsdr.wait_until_free(timeout=1.5, interval=0.05)
+    except Exception:
+        pass
     if S.get("radio_type") == "FM":
         S["radio_playing"] = False
         S["radio_station"] = ""
-    time.sleep(0.25)
+    time.sleep(0.10)
     log.info("FM stop: done")
 
 

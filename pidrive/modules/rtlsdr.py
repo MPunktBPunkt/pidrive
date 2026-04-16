@@ -226,6 +226,38 @@ def reap_process():
         _release_runtime_lock()
 
 
+def wait_until_free(timeout=2.5, interval=0.05):
+    """
+    Wartet kurz bis RTL-SDR wirklich frei ist — v0.8.10.
+    Hilft bei Race Conditions direkt nach stop_process()/Quellenwechsel.
+    Gibt True zurück wenn frei, False wenn timeout.
+    """
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            reap_process()
+        except Exception:
+            pass
+
+        procs = find_rtl_processes()
+        state = _read_state()
+
+        locked = False
+        if state.get("locked"):
+            pid = state.get("pid")
+            if pid and _pid_alive(pid):
+                locked = True
+            else:
+                _clear_state()
+                locked = False
+
+        if not procs and not locked and not _proc_running(_LOCK_REGISTRY.get("proc")):
+            return True
+
+        time.sleep(interval)
+    return False
+
+
 def is_busy():
     """
     Busy wenn eigener RTL-Prozess läuft, fremde RTL-Prozesse laufen,

@@ -46,6 +46,41 @@ def _btctl(cmd, timeout=12):
         return 1, str(e)
 
 
+def _ensure_agent():
+    """
+    Bluetooth-Agent robust initialisieren — v0.8.10.
+    Wichtig für Pairing / Default-Agent beim Verbinden im Auto.
+    """
+    tried = [
+        ("agent NoInputNoOutput", 8),
+        ("default-agent",         8),
+    ]
+    ok = False
+    last_out = ""
+    for cmd, to in tried:
+        rc, out = _btctl(cmd, timeout=to)
+        last_out = out
+        low = out.lower()
+        if rc == 0 or "successful" in low or "default agent request successful" in low:
+            ok = True
+        elif "no agent is registered" in low and cmd.startswith("default-agent"):
+            ok = False
+            break
+    if not ok:
+        # Fallback: ältere BlueZ-Variante
+        _btctl("agent on", timeout=8)
+        rc2, out2 = _btctl("default-agent", timeout=8)
+        low2 = out2.lower()
+        if rc2 == 0 or "successful" in low2:
+            ok = True
+            last_out = out2
+    if ok:
+        log.info("BT agent: bereit")
+    else:
+        log.warn(f"BT agent: nicht sauber initialisiert: {last_out[:180]}")
+    return ok
+
+
 def _bg(cmd):
     try:
         subprocess.Popen(cmd, shell=True,
@@ -126,8 +161,7 @@ def scan_devices(S, settings):
     devices = []
     try:
         _btctl("power on", timeout=8)
-        _btctl("agent on", timeout=8)
-        _btctl("default-agent", timeout=8)
+        _ensure_agent()
 
         # Zombie-Fix: Popen/terminate statt kill %1
         bt_proc = subprocess.Popen(
@@ -204,9 +238,8 @@ def connect_device(mac, S, settings):
 
     ok = False
 
-    _btctl("power on",      timeout=8)
-    _btctl("agent on",      timeout=8)
-    _btctl("default-agent", timeout=8)
+    _btctl("power on", timeout=8)
+    _ensure_agent()
 
     # Trust → Pair → Connect (3 Versuche)
     attempts = [
@@ -351,7 +384,8 @@ def repair_device(mac, S, settings):
     ipc.write_progress("Bluetooth", f"Neu koppeln: {name[:18]}...", color="blue")
     log.info(f"BT repair: START mac={mac} name={name}")
 
-    _btctl("power on",         timeout=8)
+    _btctl("power on", timeout=8)
+    _ensure_agent()
     _btctl(f"disconnect {mac}", timeout=10)
     _btctl(f"remove {mac}",     timeout=10)
     time.sleep(2)
