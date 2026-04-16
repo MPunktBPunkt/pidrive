@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.6
+# PiDrive — Kontext & Projektdokumentation v0.8.8
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.8.6)
+    ├── VERSION              (aktuell: 0.8.8)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.7.x — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.8 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -904,6 +904,33 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.8 — Bluetooth Fix & Scanner Optimierung
+**bluetooth.py — kritischer NameError fix:**
+- `_btctl()` Funktion war vollständig fehlend → jeder `bt_connect` / `bt_repair` Aufruf crashte mit `NameError: name '_btctl' is not defined`
+- `_btctl()` jetzt korrekt als Wrapper für `bluetoothctl` implementiert: Timeout, Logging, rc+output Rückgabe
+- `connect_device()`: Trust→Pair→Connect mit 3 Verbindungsversuchen + Verify via `bluetoothctl info`
+- `repair_device()`: nutzt jetzt `_btctl` korrekt, kein Crash mehr
+- `disconnect_current()`: setzt Audio-Routing zurück auf Klinke
+- BT Scan Zombie-Fix: `Popen/terminate` statt `kill %1`
+
+**Robuste stop() Funktionen:**
+- `dab.stop()`: `welle-cli` + `mpv --title=pidrive_dab` + `rtlsdr.stop_process()` + `time.sleep(0.25)` + Logging
+- `fm.stop()`: zusätzlich `pkill -f aplay` (Klinke-Pipe) + Logging
+- `scanner.stop()`: `rtl_fm` + `mpv --title=pidrive_scanner` + Logging
+
+**main_core.py — Quellenwechsel-Cleanup:**
+- `_stop_all_sources()`: stoppt webradio/dab/fm/scanner vor jedem Quellenwechsel (vermeidet `RTL-SDR belegt`)
+- wird in `_execute_node()` bei `node.type == "station"` aufgerufen
+- `radio_stop` Trigger stoppt jetzt auch `scanner.stop(S)` (vorher fehlend)
+
+**Scanner Fast-Scan (zweistufig):**
+- `_detect_signal_fast()`: schneller Grobtest (0.22s, Squelch=12, breitere BW) → Kandidatenerkennung
+- `_detect_signal_confirm()`: Bestätigungstest (0.65s, Squelch=20) → nur bei Kandidaten
+- `_scan_bw_fast()`: bandabhängige Fast-Scan-Bandbreite (PMR/LPD=25kHz, CB=20kHz, VHF/UHF=50kHz)
+- `_scan_list()`: merkt Scanposition (`scan_idx`) für Fortsetzung statt immer von vorn
+- `_scan_range()`: grober Schritt (`_range_step_fast`) für Fast-Pass, Confirm auf Treffer
+- `scan_next/prev`: übergeben `band_id` an Scan-Funktionen
 
 ### v0.8.7 — Phase 1 Bugfixes & Abschluss
 **FM-Bug fix (kritisch):**
@@ -1160,24 +1187,26 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.7)
+## Aktueller Stand (v0.8.8)
 
-**System läuft stabil** — 15.04.2026:
+**System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.7 — Phase 1 code-seitig vollständig abgeschlossen
+✓ pidrive_core.service      v0.8.8 — Bluetooth Fix, Scanner Optimierung
 ✓ pidrive_display.service   20fps, ändert nur bei Änderungen
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox + AVRCP Debug-Panel
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, kein systemd-Ordering-Cycle mehr
 ✓ pulseaudio.service        BT A2DP Audio
+✓ Bluetooth                 _btctl() jetzt definiert — connect/repair funktioniert
+✓ BT connect_device         Trust→Pair→Connect (3 Versuche) + Verify
+✓ BT repair_device          nutzt _btctl korrekt, kein NameError mehr
+✓ FM/DAB/Scanner stop()     robust: alle Prozesse + aplay + mpv explizit beendet
+✓ main_core _stop_all       Quellenwechsel stoppt vorher alle RTL-SDR Quellen
+✓ Scanner Fast-Scan         zweistufig: Fast-Detect → Confirm (kein langsamer Single-Pass)
+✓ scanner.stop in radio_stop alle Quellen inkl. Scanner sauber gestoppt
 ✓ FM Radio                  fm_next/fm_prev repariert (freq/freq_mhz kompatibel)
-✓ FM/DAB Core               Doppelstart-Entprellung (_debounced + _execute_node guard)
 ✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
-✓ MPRIS2 BMW-Metadaten      FM=Frequenz, DAB=Kanal, WEB=Track, Scanner=Band+Freq, Menü=Breadcrumb
-✓ WebUI AVRCP Debug         /api/avrcp, AVRCP Tab, Service-Status, Debug-JSON
 ✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
-✓ BT Auto-Reconnect         3 Versuche, letztes Gerät priorisiert
-✓ Audio-Routing             audio.get_mpv_args() — zentral für alle Quellen
 ✓ Senderlisten Memmingen    24 FM + 15 DAB+ Sender für Raum Memmingen/Allgäu
 ```
 
@@ -1287,6 +1316,9 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] Bluetooth _btctl NameError fix, connect/repair robust (v0.8.8)
+- [x] Robuste stop() für FM/DAB/Scanner, Quellenwechsel-Cleanup (v0.8.8)
+- [x] Scanner Fast-Scan zweistufig: Fast-Detect + Confirm (v0.8.8)
 - [x] Phase 1 Bugfixes: FM fm_next/prev, systemd Ordering-Cycle, Doppelstart-Entprellung (v0.8.7)
 - [x] Phase 1 Bugfixes: mpris2 _get_prop, AVRCP D-Bus Matching (v0.8.6)
 

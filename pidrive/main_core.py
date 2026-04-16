@@ -167,7 +167,10 @@ def handle_trigger(cmd, menu_state, store, S, settings):
 
     # ── Radio Stop ───────────────────────────────────────────────────────────
     elif cmd == "radio_stop":
-        webradio.stop(S); dab.stop(S); fm.stop(S)
+        webradio.stop(S)
+        dab.stop(S)
+        fm.stop(S)
+        scanner.stop(S)
 
     elif cmd == "radio_restart_on_bt":
         # Letzte Quelle mit neuem BT-Audio neu starten
@@ -435,9 +438,30 @@ def _execute_node(node, menu_state, store, S, settings):
 
     def bg(fn): threading.Thread(target=fn, daemon=True).start()
 
+    def _stop_all_sources():
+        """Alle RTL-SDR/Audio-Quellen sauber stoppen vor Quellenwechsel."""
+        try:
+            webradio.stop(S)
+        except Exception:
+            pass
+        try:
+            dab.stop(S)
+        except Exception:
+            pass
+        try:
+            fm.stop(S)
+        except Exception:
+            pass
+        try:
+            scanner.stop(S)
+        except Exception:
+            pass
+        _time_mod.sleep(0.25)
+
     # Stationen zuerst prüfen — haben action=None, brauchen src/meta
     if node.type == "station":
         log.info(f"PLAY_STATION label={node.label!r} source={node.source} meta={node.meta}")
+        _stop_all_sources()
         src  = node.source
         meta = node.meta
         if src == "fm":

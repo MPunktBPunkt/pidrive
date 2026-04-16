@@ -219,66 +219,162 @@ def play_freq(freq_mhz, name, bandwidth_hz, S):
 
 def stop(S):
     global _player_proc
+    log.info("Scanner stop: requested")
     if _rtlsdr:
         _rtlsdr.stop_process()
     _bg("pkill -f pidrive_scanner 2>/dev/null")
+    _bg("pkill -f rtl_fm 2>/dev/null")
+    _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_scanner' 2>/dev/null")
     if _player_proc:
-        try: _player_proc.terminate()
-        except Exception: pass
+        try:
+            _player_proc.terminate()
+        except Exception:
+            pass
         _player_proc = None
     if S.get("radio_type") == "SCANNER":
         S["radio_playing"] = False
         S["radio_station"] = ""
+    time.sleep(0.2)
+    log.info("Scanner stop: done")
 
-# ── Signal-Erkennung ──────────────────────────────────────────────────────────
+# ── Signal-Erkennung (v0.8.8: zweistufig Fast-Detect + Confirm) ───────────────
 
-def _detect_signal(freq_mhz, bandwidth_hz, timeout_s=0.4):
+def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=12):
     """
-    Prueft Signal via rtl_fm Squelch.
-    Bei Signal: rtl_fm gibt Audio aus -> viele Bytes.
-    Ohne Signal: Squelch zu -> 0 Bytes.
+    Sehr schneller Grobtest — nur Kandidatenerkennung.
+    Niedrige Schwelle, kurze Messzeit, breitere Bandbreite.
     """
     freq_hz = int(freq_mhz * 1e6)
     cmd = (f"timeout {timeout_s}s rtl_fm -M fm -f {freq_hz} "
-           f"-s {bandwidth_hz} -l 70 - 2>/dev/null | wc -c")
+           f"-s {bandwidth_hz} -l {squelch} - 2>/dev/null | wc -c")
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True,
-                           text=True, timeout=timeout_s + 1)
-        return int(r.stdout.strip() or "0") > 500
+                           text=True, timeout=timeout_s + 1.0)
+        count = int((r.stdout or "0").strip() or "0")
+        log.debug(f"Scanner fast-detect: freq={freq_mhz} bw={bandwidth_hz} bytes={count}")
+        return count > 180
     except Exception:
         return False
 
+
+def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=0.65, squelch=20):
+    """
+    Bestätigungstest — nur bei Fast-Detect Kandidaten.
+    Normale Bandbreite, längere Messung, robustere Schwelle.
+    """
+    freq_hz = int(freq_mhz * 1e6)
+    cmd = (f"timeout {timeout_s}s rtl_fm -M fm -f {freq_hz} "
+           f"-s {bandwidth_hz} -l {squelch} - 2>/dev/null | wc -c")
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True,
+                           text=True, timeout=timeout_s + 1.4)
+        count = int((r.stdout or "0").strip() or "0")
+        log.debug(f"Scanner confirm: freq={freq_mhz} bw={bandwidth_hz} bytes={count}")
+        return count > 450
+    except Exception:
+        return False
+
+
+def _detect_signal(freq_mhz, bandwidth_hz, timeout_s=0.55):
+    """Standardprüfung (Fallback / Direktprüfung)."""
+    return _detect_signal_confirm(freq_mhz, bandwidth_hz,
+                                  timeout_s=timeout_s, squelch=20)
+
+
+def _scan_bw_fast(band_id, default_bw):
+    """Schnelle Scan-Bandbreite je Band — nur für Kandidatensuche."""
+    if band_id in ("pmr446", "freenet", "lpd433"):
+        return 25000
+    if band_id == "cb":
+        return 20000
+    if band_id in ("vhf", "uhf"):
+        return max(default_bw, 50000)
+    return default_bw
+
+
+def _range_step_fast(band_id, band_cfg):
+    """Grobe Schrittweite für Fast-Scan bei Range-Bändern."""
+    if band_id == "vhf":
+        return 0.1
+    if band_id == "uhf":
+        return 0.1
+    return band_cfg.get("step_fine", 0.025)
+
+
 # ── Scan-Screen ───────────────────────────────────────────────────────────────
 
-
-
-def _scan_list(S, channels, bw, direction):
+def _scan_list(S, channels, bw, direction, band_id=""):
+    """
+    Zweistufiger Suchlauf für Kanalbänder (PMR, CB, LPD, Freenet):
+    1. Fast-Detect — schnell, empfindlich
+    2. Confirm nur bei Kandidaten — verhindert Fehlalarme
+    Merkt sich Startposition (scan_idx) für Fortsetzung.
+    """
     n = len(channels)
-    idx = 0 if direction > 0 else n-1
-    for step in range(n):
-        ch = channels[idx]
-        if _detect_signal(ch["freq"], bw):
-            log.action("Scanner", f"Signal: {ch['name']} @ {ch['freq']} MHz")
-            return ch
+    if n == 0:
+        return None
+
+    start_idx = _current_ch.get("scan_idx", _current_ch.get(band_id, 0))
+    idx       = start_idx % n
+    fast_bw   = _scan_bw_fast(band_id, bw)
+
+    for _ in range(n):
+        ch   = channels[idx]
+        freq = ch["freq"]
+        name = ch["name"]
+
+        log.info(f"Scanner scan-list: FAST band={band_id} ch={name} freq={freq} bw={fast_bw}")
+        if _detect_signal_fast(freq, fast_bw):
+            log.info(f"Scanner scan-list: CANDIDATE band={band_id} ch={name} freq={freq}")
+            if _detect_signal_confirm(freq, bw):
+                log.action("Scanner", f"Signal: {name} @ {freq} MHz")
+                _current_ch["scan_idx"] = idx
+                if band_id:
+                    _current_ch[band_id] = idx
+                return ch
+            else:
+                log.info(f"Scanner scan-list: FALSE_POSITIVE band={band_id} ch={name}")
+
         idx = (idx + direction) % n
-    ipc.write_progress("Scan beendet", "Kein Signal")
-    time.sleep(1.5)
+
+    ipc.write_progress("Scan beendet", "Kein Signal", color="orange")
+    time.sleep(0.8)
+    ipc.clear_progress()
     return None
 
-def _scan_range(S, band, bw, direction):
-    step  = band["step_fine"]
-    total = round((band["max"] - band["min"]) / step)
-    freq  = band["start"]
-    for done in range(total):
-        if _detect_signal(freq, bw):
-            name = f"{band['short']} {freq:.3f} MHz"
-            log.action("Scanner", f"Signal @ {freq:.3f} MHz")
-            return {"name": name, "freq": freq}
-        freq = round(freq + direction * step, 3)
-        if freq > band["max"]: freq = band["min"]
-        elif freq < band["min"]: freq = band["max"]
-    ipc.write_progress("Scan beendet", "Kein Signal")
-    time.sleep(1.5)
+
+def _scan_range(S, band, bw, direction, band_id=""):
+    """
+    Zweistufiger Range-Scan für VHF/UHF:
+    1. Grober Fast-Scan (step_fast)
+    2. Confirm auf Kandidaten mit Normalbandbreite
+    """
+    step_fast = _range_step_fast(band_id, band)
+    total     = max(1, round((band["max"] - band["min"]) / step_fast))
+    freq      = band.get("start", band["min"])
+    fast_bw   = _scan_bw_fast(band_id, bw)
+
+    for _ in range(total):
+        log.info(f"Scanner scan-range: FAST band={band_id} freq={freq:.3f} bw={fast_bw}")
+        if _detect_signal_fast(freq, fast_bw):
+            log.info(f"Scanner scan-range: CANDIDATE band={band_id} freq={freq:.3f}")
+            if _detect_signal_confirm(freq, bw):
+                name = f"{band['short']} {freq:.3f} MHz"
+                log.action("Scanner", f"Signal @ {freq:.3f} MHz")
+                band["start"] = freq
+                return {"name": name, "freq": freq}
+            else:
+                log.info(f"Scanner scan-range: FALSE_POSITIVE band={band_id} freq={freq:.3f}")
+
+        freq = round(freq + direction * step_fast, 3)
+        if freq > band["max"]:
+            freq = band["min"]
+        elif freq < band["min"]:
+            freq = band["max"]
+
+    ipc.write_progress("Scan beendet", "Kein Signal", color="orange")
+    time.sleep(0.8)
+    ipc.clear_progress()
     return None
 
 # ── Manuell Frequenz ──────────────────────────────────────────────────────────
@@ -453,15 +549,14 @@ def freq_input_screen(band_id, settings=None):
 
 
 def scan_next(band_id, S, settings=None):
-    """Squelch-Scan vorwärts — erstes Signal spielen."""
+    """Squelch-Scan vorwärts — erstes Signal spielen (zweistufig Fast+Confirm)."""
     b = BANDS.get(band_id, {})
     log.info(f"Scanner: SCAN_NEXT band={band_id}")
     if "channels" in b:
-        ch = _scan_list(S, b["channels"], b["bw"], 1)
+        ch = _scan_list(S, b["channels"], b["bw"], 1, band_id=band_id)
     else:
-        ch = _scan_range(S, b["band"], b["bw"], 1)
+        ch = _scan_range(S, b["band"], b["bw"], 1, band_id=band_id)
     if ch:
-        # Kein " MHz" anhängen wenn name es schon enthält (Range-Scans)
         if ch.get("freq") and "MHz" not in ch["name"]:
             _set_scanner_label(band_id, f"{ch['name']}  {ch['freq']} MHz", S)
         else:
@@ -469,15 +564,14 @@ def scan_next(band_id, S, settings=None):
         play_freq(ch["freq"], ch["name"], b["bw"], S)
 
 def scan_prev(band_id, S, settings=None):
-    """Squelch-Scan rückwärts — erstes Signal spielen."""
+    """Squelch-Scan rückwärts — erstes Signal spielen (zweistufig Fast+Confirm)."""
     b = BANDS.get(band_id, {})
     log.info(f"Scanner: SCAN_PREV band={band_id}")
     if "channels" in b:
-        ch = _scan_list(S, b["channels"], b["bw"], -1)
+        ch = _scan_list(S, b["channels"], b["bw"], -1, band_id=band_id)
     else:
-        ch = _scan_range(S, b["band"], b["bw"], -1)
+        ch = _scan_range(S, b["band"], b["bw"], -1, band_id=band_id)
     if ch:
-        # Kein " MHz" anhängen wenn name es schon enthält (Range-Scans)
         if ch.get("freq") and "MHz" not in ch["name"]:
             _set_scanner_label(band_id, f"{ch['name']}  {ch['freq']} MHz", S)
         else:

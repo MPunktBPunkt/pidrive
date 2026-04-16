@@ -214,6 +214,8 @@ def stop(S):
         _rtlsdr.stop_process()
     _bg("pkill -f pidrive_fm 2>/dev/null")
     _bg("pkill -f rtl_fm 2>/dev/null")
+    _bg("pkill -f aplay 2>/dev/null")
+    _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_fm' 2>/dev/null")
     if _player_proc:
         try:
             _player_proc.terminate()
@@ -223,6 +225,7 @@ def stop(S):
     if S.get("radio_type") == "FM":
         S["radio_playing"] = False
         S["radio_station"] = ""
+    time.sleep(0.25)
     log.info("FM stop: done")
 
 

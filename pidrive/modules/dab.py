@@ -189,16 +189,27 @@ def play_station(station, S, settings=None):
 
 def stop(S):
     global _player_proc, _scan_running
+    log.info("DAB stop: requested")
     _scan_running = False
     _bg("pkill -f pidrive_dab 2>/dev/null")
     _bg("pkill -f welle-cli 2>/dev/null")
+    _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_dab' 2>/dev/null")
+    if _rtlsdr:
+        try:
+            _rtlsdr.stop_process()
+        except Exception:
+            pass
     if _player_proc:
-        try: _player_proc.terminate()
-        except Exception: pass
+        try:
+            _player_proc.terminate()
+        except Exception:
+            pass
         _player_proc = None
     S["radio_playing"] = False
     if S.get("radio_type") == "DAB":
         S["radio_station"] = ""
+    time.sleep(0.25)
+    log.info("DAB stop: done")
 
 # build_items() entfernt in v0.7.1 — Menü wird von menu_model.py gebaut
 
