@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.9
+# PiDrive — Kontext & Projektdokumentation v0.8.10
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.8.9)
+    ├── VERSION              (aktuell: 0.8.10)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.9 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.10 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -904,6 +904,44 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.10 — FM Race-Fix, DAB Gain, BT Agent, Cleanup
+**rtlsdr.py — `wait_until_free()` (FM Race Condition Fix):**
+- Neue Funktion wartet aktiv bis RTL-SDR wirklich frei ist (Prozesse + Lock)
+- Verhindert Race Condition beim schnellen FM→FM Senderwechsel
+- Timeout 2.5s mit 50ms Intervall — kurz genug für UX, lang genug für sichere Freigabe
+
+**fm.py — deterministischer stop() + wait_until_free in play_station():**
+- `play_station()`: ruft `reap_process()` auf, dann `wait_until_free()` vor Start
+- Zweistufig: erst warten, bei Timeout harter Cleanup, dann nochmal warten
+- `stop()`: nutzt jetzt `wait_until_free()` statt pauschaler `sleep(0.25)` → deterministisch
+- `WARNING: FM: RTL-SDR belegt vor play ...` sollte damit behoben sein
+
+**main_core.py — globaler Source-Switch-Lock:**
+- `_SOURCE_SWITCH_LOCK` serialisiert alle Quellenwechsel — nur ein Wechsel gleichzeitig
+- `_run_station_switch()`: Stop → Play läuft atomar im Background-Thread
+- `_stop_all_sources()`: jetzt mit Fehlerlogging statt stummem `pass`
+
+**bluetooth.py — `_ensure_agent()` (BT Agent Fix):**
+- `_ensure_agent()`: initialisiert BlueZ Agent sauber: `NoInputNoOutput` → `default-agent`
+- Fallback auf ältere BlueZ-Variante wenn nötig
+- Ersetzt das bisherige `agent on` / `default-agent` Muster in scan/connect/repair
+- Behebt: `default-agent rc=1 out=No agent is registered`
+
+**dab.py — konfigurierbarer DAB Gain + besseres Logging:**
+- `_get_dab_gain()`: liest `dab_gain` aus settings.json, Default -1 (Auto AGC)
+- `welle-cli -g GAIN` Parameter jetzt gesetzt: `-g -1` = Auto, `-g 35` = 35 dB manuell
+- `shlex.quote()` für sicheres Shell-Quoting von Sendernamen
+- welle-cli Startausgabe wird nach `/tmp/pidrive_dab_welle.err` + Log geschrieben
+- Empfehlung: `dab_gain: 35` in settings.json für schlechte Antenne / Auto
+
+**settings.py — `dab_gain` Default:**
+- `dab_gain: -1` in `_DEFAULTS` eingetragen
+
+**wifi.py / webradio.py / musik.py — Altlasten entfernt:**
+- `wifi.py`: komplett neu, `log` korrekt importiert, `_has_nmcli()` Check
+- `webradio.py`: `load_stations()` dict/list-robust, keine `build_items()` Reste
+- `musik.py`: komplett neu, Alt-UI-Reste (`Item`) entfernt
 
 ### v0.8.9 — Statusfix, AVRCP Debug, RTL-SDR Lock
 **main_display.py — Versionsstring fix:**
@@ -1216,25 +1254,25 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.9)
+## Aktueller Stand (v0.8.10)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.9 — Statusfix, AVRCP Debug, RTL-SDR Lock
-✓ pidrive_display.service   20fps, Version korrekt (war v0.8.6)
+✓ pidrive_core.service      v0.8.10 — FM Race-Fix, DAB Gain, BT Agent, Cleanup
+✓ pidrive_display.service   20fps, Version korrekt
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox + AVRCP Debug-Panel
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
 ✓ pulseaudio.service        BT A2DP Audio
-✓ status.py                 BT-Status robust via bluetoothctl info (bt_device konsistent)
-✓ settings.py               Defaults werden immer gemergt (bt_last_mac etc. vorhanden)
-✓ menu_model.py             BT-Status korrekt (_bt_on, bt_status-Label)
-✓ avrcp_trigger.py          Debug-JSON sofort beim Start — kein "fehlt" mehr in WebUI
-✓ rtlsdr.py                 Stale Lock beim Start aufgeräumt (kein RTL-SDR belegt nach Restart)
-✓ main_display.py           Version korrekt (war hardcoded v0.8.6)
-✓ Bluetooth                 _btctl() definiert, connect/repair robust
-✓ FM/DAB/Scanner stop()     robust: alle Prozesse + aplay + mpv explizit beendet
-✓ Scanner Fast-Scan         zweistufig: Fast-Detect → Confirm
+✓ rtlsdr.py                 wait_until_free() — wartet auf echte RTL-Freigabe nach stop()
+✓ FM Radio                  Race Condition behoben: wait_until_free + deterministischer stop()
+✓ main_core.py              Source-Switch-Lock: nur ein Quellenwechsel gleichzeitig
+✓ bluetooth.py              _ensure_agent() — BlueZ Agent robuster initialisiert
+✓ dab.py                    DAB Gain konfigurierbar (-g GAIN), welle-cli Log, shlex.quote
+✓ settings.py               dab_gain: -1 (Auto) als Default, überschreibbar
+✓ wifi.py                   Komplett neu, Altlasten entfernt, log korrekt importiert
+✓ webradio.py               Komplett neu, load_stations() dict/list-robust
+✓ musik.py                  Komplett neu, Alt-UI-Reste (Item) entfernt
 ✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
 ✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
 ✓ Senderlisten Memmingen    24 FM + 15 DAB+ Sender für Raum Memmingen/Allgäu
@@ -1244,6 +1282,7 @@ sudo systemctl restart pidrive_display
 - GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
 - BMW iDrive AVRCP Praxistest im Auto (code-seitig fertig, Feldtest ausstehend)
 - resume_state.py / last_state.json für Boot-Resume
+- BT Auto-Reconnect im Laufzeitbetrieb (Kopfhörer der nach Start eingeschaltet wird)
 
 
 ## Entwicklungs-Phasen & Roadmap
@@ -1346,6 +1385,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] FM Race-Fix, DAB Gain, BT Agent, Cleanup (v0.8.10)
 - [x] Statusfix: BT robust, AVRCP Debug-JSON, RTL-SDR Stale Lock, Display-Version (v0.8.9)
 - [x] Bluetooth _btctl NameError fix, connect/repair robust (v0.8.8)
 - [x] Robuste stop() für FM/DAB/Scanner, Quellenwechsel-Cleanup (v0.8.8)
