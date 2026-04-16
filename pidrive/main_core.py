@@ -61,6 +61,38 @@ def _scan_info():
         return dict(_SCAN_STATE)
 
 
+# ── Globaler Source-Switch-Lock (v0.8.10) ──────────────────────────────────────
+import threading as _src_threading
+
+_SOURCE_SWITCH_LOCK  = _src_threading.Lock()
+_SOURCE_SWITCH_STATE = {"active": False, "owner": "", "started_ts": 0.0}
+
+
+def _source_switch_begin(owner="unknown", blocking=False):
+    ok = _SOURCE_SWITCH_LOCK.acquire(blocking=blocking)
+    if not ok:
+        return False
+    _SOURCE_SWITCH_STATE["active"]     = True
+    _SOURCE_SWITCH_STATE["owner"]      = owner
+    _SOURCE_SWITCH_STATE["started_ts"] = _time_mod.time() if "_time_mod" in dir() else 0.0
+    return True
+
+
+def _source_switch_end():
+    try:
+        if _SOURCE_SWITCH_LOCK.locked():
+            _SOURCE_SWITCH_STATE["active"]     = False
+            _SOURCE_SWITCH_STATE["owner"]      = ""
+            _SOURCE_SWITCH_STATE["started_ts"] = 0.0
+            _SOURCE_SWITCH_LOCK.release()
+    except RuntimeError:
+        pass
+
+
+def _source_switch_info():
+    return dict(_SOURCE_SWITCH_STATE)
+
+
 # ── Trigger-Entprellung (v0.8.7) ───────────────────────────────────────────────
 import time as _time_mod
 
@@ -439,47 +471,59 @@ def _execute_node(node, menu_state, store, S, settings):
     def bg(fn): threading.Thread(target=fn, daemon=True).start()
 
     def _stop_all_sources():
-        """Alle RTL-SDR/Audio-Quellen sauber stoppen vor Quellenwechsel."""
+        """Alle Quellen sauber stoppen vor Quellenwechsel."""
         try:
             webradio.stop(S)
-        except Exception:
-            pass
+        except Exception as e:
+            log.warn(f"stop_all_sources: webradio.stop: {e}")
         try:
             dab.stop(S)
-        except Exception:
-            pass
+        except Exception as e:
+            log.warn(f"stop_all_sources: dab.stop: {e}")
         try:
             fm.stop(S)
-        except Exception:
-            pass
+        except Exception as e:
+            log.warn(f"stop_all_sources: fm.stop: {e}")
         try:
             scanner.stop(S)
-        except Exception:
-            pass
-        _time_mod.sleep(0.25)
+        except Exception as e:
+            log.warn(f"stop_all_sources: scanner.stop: {e}")
+        _time_mod.sleep(0.10)
 
     # Stationen zuerst prüfen — haben action=None, brauchen src/meta
     if node.type == "station":
         log.info(f"PLAY_STATION label={node.label!r} source={node.source} meta={node.meta}")
-        _stop_all_sources()
-        src  = node.source
-        meta = node.meta
-        if src == "fm":
-            # meta["name"] für reinen Sendernamen (ohne Frequenz-Suffix)
-            _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
-                              if "  " in node.label else node.label.lstrip("★ ").strip())
-            _freq = meta.get("freq","")
-            bg(lambda n=_name, f=_freq: fm.play_station({"name": n, "freq": f}, S))
-        elif src == "dab":
-            _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
-                              if "  " in node.label else node.label.lstrip("★ ").strip())
-            bg(lambda n=_name: dab.play_by_name(n, S))
-        elif src == "webradio":
-            # meta["name"] und meta["url"] korrekt weitergeben
-            _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
-                              if "  " in node.label else node.label.lstrip("★ ").strip())
-            _url  = meta.get("url","")
-            bg(lambda n=_name, u=_url: webradio.play_station({"name": n, "url": u}, S))
+
+        def _run_station_switch():
+            owner = f"station:{node.source}:{node.id}"
+            if not _source_switch_begin(owner=owner, blocking=False):
+                info = _source_switch_info()
+                log.warn(f"PLAY_STATION blocked by active switch owner={info.get('owner','?')}")
+                return
+            try:
+                _stop_all_sources()
+                src  = node.source
+                meta = node.meta
+                if src == "fm":
+                    _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
+                                      if "  " in node.label else node.label.lstrip("★ ").strip())
+                    _freq = meta.get("freq", "")
+                    fm.play_station({"name": _name, "freq": _freq}, S, settings)
+                elif src == "dab":
+                    _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
+                                      if "  " in node.label else node.label.lstrip("★ ").strip())
+                    dab.play_by_name(_name, S)
+                elif src == "webradio":
+                    _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
+                                      if "  " in node.label else node.label.lstrip("★ ").strip())
+                    _url  = meta.get("url", "")
+                    webradio.play_station({"name": _name, "url": _url}, S, settings)
+            except Exception as e:
+                log.error(f"PLAY_STATION switch error: {e}")
+            finally:
+                _source_switch_end()
+
+        bg(_run_station_switch)
         return
 
     # action-String muss vorhanden sein (toggle/action/info)

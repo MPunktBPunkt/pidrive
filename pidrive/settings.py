@@ -24,6 +24,7 @@ _DEFAULTS = {
     "volume":           90,
     "last_fm_station":  None,
     "last_dab_station": None,
+    "dab_gain":         -1,
 }
 
 
