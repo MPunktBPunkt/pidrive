@@ -638,16 +638,19 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             label="Noch keine Favoriten", type="info")])
 
     # ── Verbindungen ─────────────────────────────────────────────────────────
-    _bt_is_on  = bool(S.get("bt", False))
+    _bt_on     = bool(S.get("bt", False))
     _bt_dev    = S.get("bt_device", "") or "–"
     _bt_last   = settings.get("bt_last_name", "") or "–"
+    _bt_status = S.get("bt_status", "getrennt")
 
-    if _bt_is_on and S.get("bt_device"):
-        _bt_state_label = "Status: verbunden"
-    elif _bt_is_on:
-        _bt_state_label = "Status: aktiv / nicht verbunden"
+    if _bt_status == "verbunden":
+        _bt_state_label = "Bluetooth: verbunden"
+    elif _bt_status == "verbindet":
+        _bt_state_label = "Bluetooth: verbindet..."
+    elif _bt_status == "aus":
+        _bt_state_label = "Bluetooth: aus"
     else:
-        _bt_state_label = "Status: aus"
+        _bt_state_label = "Bluetooth: getrennt"
 
     # BT: Geraete mit Verbinden/Neu-koppeln Untermenü
     bt_devs_ext = []
@@ -705,11 +708,11 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
 
     verbindungen = MenuNode(id="connections", label="Verbindungen", type="folder", children=[
         MenuNode(id="bt_toggle",  label="Bluetooth An/Aus", type="toggle",
-                 action="bt_toggle", active=_bt_is_on),
+                 action="bt_toggle", active=_bt_on),
         MenuNode(id="bt_scan",    label="Geraete scannen",  type="action", action="bt_scan"),
         MenuNode(id="bt_state",   label=_bt_state_label,    type="info"),
-        MenuNode(id="bt_status",  label="Verbunden mit: " + _bt_dev[:24], type="info"),
-        MenuNode(id="bt_last",    label="Letztes Geraet: " + _bt_last[:24], type="info"),
+        MenuNode(id="bt_status",  label="Geraet: " + _bt_dev[:24], type="info"),
+        MenuNode(id="bt_last",    label="Letztes: " + _bt_last[:24], type="info"),
         MenuNode(id="bt_reconn",  label="Letztes Geraet verbinden", type="action",
                  action="bt_reconnect_last"),
         MenuNode(id="bt_disc",    label="Bluetooth trennen", type="action",

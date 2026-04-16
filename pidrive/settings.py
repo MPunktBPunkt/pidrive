@@ -1,9 +1,9 @@
 """
 settings.py — Zentrales Settings-Modul für PiDrive
 
-Darf von JEDEM Modul importiert werden, auch aus Threads.
-Enthält KEINE Signal-Handler, keine pygame, keine Threads.
+v0.8.9: fehlende Schlüssel werden mit Defaults aufgefüllt (merge)
 """
+
 import json
 import os
 
@@ -12,31 +12,50 @@ CONFIG_DIR    = os.path.join(BASE_DIR, "config")
 SETTINGS_FILE = os.path.join(CONFIG_DIR, "settings.json")
 
 _DEFAULTS = {
-    "music_path":    os.path.expanduser("~/Musik"),
-    "audio_output":  "auto",
-    "fm_freq":       "98.5",
+    "music_path":       os.path.expanduser("~/Musik"),
+    "audio_output":     "auto",
+    "fm_freq":          "98.5",
+    "bt_last_mac":      "",
+    "bt_last_name":     "",
+    "bt_sink_mac":      "",
+    "bt_pa_sink":       "",
+    "scanner_vhf_freq": 136.000,
+    "scanner_uhf_freq": 400.000,
+    "volume":           90,
+    "last_fm_station":  None,
+    "last_dab_station": None,
 }
 
 
 def load_settings() -> dict:
-    """settings.json lesen, Defaults zurückgeben wenn Datei fehlt."""
+    """settings.json lesen, Defaults mergen wenn Datei fehlt oder unvollständig."""
+    merged = dict(_DEFAULTS)
     try:
         with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        if isinstance(data, dict):
+            merged.update(data)
     except Exception:
-        return dict(_DEFAULTS)
+        pass
+    return merged
 
 
 def save_settings(settings: dict) -> None:
-    """settings.json atomar schreiben."""
+    """settings.json atomar schreiben (Defaults als Basis)."""
     try:
         os.makedirs(CONFIG_DIR, exist_ok=True)
+        merged = dict(_DEFAULTS)
+        if isinstance(settings, dict):
+            merged.update(settings)
         tmp = SETTINGS_FILE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(settings, f, indent=2, ensure_ascii=False)
+            json.dump(merged, f, indent=2, ensure_ascii=False)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, SETTINGS_FILE)
     except Exception as e:
-        import log
-        log.error(f"Settings speichern: {e}")
+        try:
+            import log
+            log.error(f"Settings speichern: {e}")
+        except Exception:
+            pass

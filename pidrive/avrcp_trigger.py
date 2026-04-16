@@ -369,6 +369,22 @@ def main():
     log.info("  Kontexte: menu / radio / scanner / list_overlay")
     log.info("=" * 50)
 
+    # Debug-JSON sofort initialisieren — WebUI zeigt sonst "fehlt"
+    write_debug({
+        "ts":         time.time(),
+        "last_event": "",
+        "context":    "startup",
+        "trigger":    "",
+        "source":     "service_start",
+        "ctx": {
+            "radio_type":  "",
+            "radio":       False,
+            "band":        "",
+            "menu_path":   [],
+            "list_active": False,
+        }
+    })
+
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 

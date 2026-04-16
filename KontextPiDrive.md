@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.8
+# PiDrive — Kontext & Projektdokumentation v0.8.9
 
 ## Projektbeschreibung
 
@@ -198,7 +198,7 @@ sudo ./LCD35-show
     ├── trigger.py
     ├── log.py               (getrennte core.log + display.log)
     ├── diagnose.py
-    ├── VERSION              (aktuell: 0.8.8)
+    ├── VERSION              (aktuell: 0.8.9)
     ├── config/
     │   ├── stations.json    (Webradio)
     │   ├── dab_stations.json (DAB+ nach Scan)
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.8 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.9 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -904,6 +904,35 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.9 — Statusfix, AVRCP Debug, RTL-SDR Lock
+**main_display.py — Versionsstring fix:**
+- Hardcodierter `v0.8.6` String → jetzt `v0.8.9` (Log zeigte falsche Version)
+
+**status.py — robuste BT-Statusprüfung:**
+- BT-Status wird jetzt via `bluetoothctl info <mac>` geprüft statt nur `hciconfig`
+- `bt_device` ist jetzt konsistent mit `bt_status` (kein `bt: true` + `bt_device: ""` mehr)
+- `bt_status`: verbunden / getrennt / verbindet / aus — klar unterscheidbar
+
+**settings.py — Default-Merge:**
+- `load_settings()` mergt jetzt immer Defaults — fehlende Keys wie `bt_last_mac` immer vorhanden
+- `save_settings()` nutzt Defaults als Basis, atomares Schreiben via tmp + os.replace
+
+**menu_model.py — BT-Status konsistent:**
+- `_bt_is_on` → `_bt_on` (war undefined wenn `bt_status` genutzt wurde)
+- BT-State-Label nutzt jetzt `bt_status` direkt: verbunden / verbindet / getrennt / aus
+- Labels: "Geraet:" / "Letztes:" statt überlanger Strings
+
+**avrcp_trigger.py — Debug-JSON sofort vorhanden:**
+- `write_debug()` wird jetzt direkt beim Start aufgerufen
+- WebUI zeigt kein "fehlt (–)" mehr nach Service-Start
+- Initial-JSON enthält: ts, last_event, context=startup, source=service_start
+
+**rtlsdr.py — Stale Lock aufräumen:**
+- `clear_stale_lock()`: prüft beim Startup ob Lock-Owner-PID noch existiert
+- Wenn PID tot → Lock-Datei + State werden bereinigt
+- Verhindert `RTL-SDR belegt` nach Core-Neustart (Lock von altem PID blieb stehen)
+- Wird automatisch in `log_startup_check()` aufgerufen
 
 ### v0.8.8 — Bluetooth Fix & Scanner Optimierung
 **bluetooth.py — kritischer NameError fix:**
@@ -1187,24 +1216,25 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.8)
+## Aktueller Stand (v0.8.9)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.8 — Bluetooth Fix, Scanner Optimierung
-✓ pidrive_display.service   20fps, ändert nur bei Änderungen
+✓ pidrive_core.service      v0.8.9 — Statusfix, AVRCP Debug, RTL-SDR Lock
+✓ pidrive_display.service   20fps, Version korrekt (war v0.8.6)
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox + AVRCP Debug-Panel
-✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, kein systemd-Ordering-Cycle mehr
+✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
 ✓ pulseaudio.service        BT A2DP Audio
-✓ Bluetooth                 _btctl() jetzt definiert — connect/repair funktioniert
-✓ BT connect_device         Trust→Pair→Connect (3 Versuche) + Verify
-✓ BT repair_device          nutzt _btctl korrekt, kein NameError mehr
+✓ status.py                 BT-Status robust via bluetoothctl info (bt_device konsistent)
+✓ settings.py               Defaults werden immer gemergt (bt_last_mac etc. vorhanden)
+✓ menu_model.py             BT-Status korrekt (_bt_on, bt_status-Label)
+✓ avrcp_trigger.py          Debug-JSON sofort beim Start — kein "fehlt" mehr in WebUI
+✓ rtlsdr.py                 Stale Lock beim Start aufgeräumt (kein RTL-SDR belegt nach Restart)
+✓ main_display.py           Version korrekt (war hardcoded v0.8.6)
+✓ Bluetooth                 _btctl() definiert, connect/repair robust
 ✓ FM/DAB/Scanner stop()     robust: alle Prozesse + aplay + mpv explizit beendet
-✓ main_core _stop_all       Quellenwechsel stoppt vorher alle RTL-SDR Quellen
-✓ Scanner Fast-Scan         zweistufig: Fast-Detect → Confirm (kein langsamer Single-Pass)
-✓ scanner.stop in radio_stop alle Quellen inkl. Scanner sauber gestoppt
-✓ FM Radio                  fm_next/fm_prev repariert (freq/freq_mhz kompatibel)
+✓ Scanner Fast-Scan         zweistufig: Fast-Detect → Confirm
 ✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
 ✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
 ✓ Senderlisten Memmingen    24 FM + 15 DAB+ Sender für Raum Memmingen/Allgäu
@@ -1316,6 +1346,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] Statusfix: BT robust, AVRCP Debug-JSON, RTL-SDR Stale Lock, Display-Version (v0.8.9)
 - [x] Bluetooth _btctl NameError fix, connect/repair robust (v0.8.8)
 - [x] Robuste stop() für FM/DAB/Scanner, Quellenwechsel-Cleanup (v0.8.8)
 - [x] Scanner Fast-Scan zweistufig: Fast-Detect + Confirm (v0.8.8)

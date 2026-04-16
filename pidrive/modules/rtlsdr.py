@@ -444,11 +444,48 @@ def diagnose(active_tests=False):
     return data
 
 
+def clear_stale_lock():
+    """
+    Stale Lock-Datei aufräumen — v0.8.9.
+    Wenn der Lock-Owner-PID nicht mehr existiert, Lock löschen.
+    Verhindert 'RTL-SDR belegt' nach einem Neustart des Core-Service.
+    """
+    try:
+        if not os.path.exists(LOCK_FILE):
+            return
+        state = _read_state()
+        locked_pid = state.get("pid")
+        if not locked_pid:
+            return
+        # Prüfen ob PID noch lebt
+        try:
+            os.kill(locked_pid, 0)
+            # PID existiert → kein stale Lock
+        except ProcessLookupError:
+            # PID tot → staler Lock → aufräumen
+            import log as _log
+            _log.warn(f"RTL-SDR: staler Lock von PID {locked_pid} gefunden, wird bereinigt")
+            try:
+                os.remove(LOCK_FILE)
+            except Exception:
+                pass
+            _write_state({"locked": False, "owner": "", "pid": 0,
+                          "ts": int(time.time()), "child_pid": None})
+        except PermissionError:
+            # PID existiert aber gehört anderem User → nicht löschen
+            pass
+    except Exception:
+        pass
+
+
 def log_startup_check(log):
     """
     Passiver Startup-Check für main_core.py.
     Öffnet das Device NICHT — nur lsusb + lsmod + vcgencmd.
     """
+    # Stale Lock von vorherigem Lauf bereinigen
+    clear_stale_lock()
+
     usb = detect_usb()
     if usb["present"]:
         log.info("  ✓ RTL-SDR: Stick erkannt (DAB+/FM/Scanner verfuegbar)")

@@ -2,41 +2,44 @@
 status.py - System-Status Cache (non-blocking)
 PiDrive Project - GPL-v3
 
-Laeuft in eigenem Hintergrund-Thread — blockiert nie den Main-Loop.
+v0.8.9:
+- BT-Status robust via bluetoothctl info (nicht nur hciconfig)
+- bt_device immer konsistent mit bt_status
+- bt_status: verbunden / getrennt / verbindet / aus
 """
 
 import subprocess
 import threading
 import time
+from settings import load_settings
 
-# Globaler Status-Cache (thread-safe durch Lock)
 S = {
-    "wifi":             False,
-    "wifi_ssid":        "",
-    "bt":               False,
-    "bt_device":        "",
-    "ip":               "",
-    "spotify":          False,
-    "spotify_track":    "",
-    "spotify_artist":   "",
-    "spotify_album":    "",
-    "radio_playing":    False,
-    "radio_station":    "",
-    "radio_type":       "",
-    "radio_name":       "",
-    "library_playing":  False,
-    "library_track":    "",
-    "audio_output":     "auto",
-    "ts":               0,
+    "wifi":            False,
+    "wifi_ssid":       "",
+    "bt":              False,
+    "bt_device":       "",
+    "bt_status":       "getrennt",
+    "ip":              "",
+    "spotify":         False,
+    "spotify_track":   "",
+    "spotify_artist":  "",
+    "spotify_album":   "",
+    "radio_playing":   False,
+    "radio_station":   "",
+    "radio_type":      "",
+    "radio_name":      "",
+    "library_playing": False,
+    "library_track":   "",
+    "audio_output":    "auto",
+    "ts":              0,
 }
 
 _lock       = threading.Lock()
-_refresh_iv = 5.0   # Sekunden zwischen Refreshes
+_refresh_iv = 5.0
 _running    = False
 
 
 def _run(cmd, timeout=3):
-    """Subprocess-Wrapper mit Timeout."""
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True,
                            text=True, timeout=timeout)
@@ -46,7 +49,6 @@ def _run(cmd, timeout=3):
 
 
 def _refresh_loop():
-    """Laeuft im Hintergrund-Thread."""
     global _running
     while _running:
         _do_refresh()
@@ -54,36 +56,51 @@ def _refresh_loop():
 
 
 def _do_refresh():
-    """Alle Systemwerte ermitteln und cache aktualisieren."""
     new = {}
     try:
-        # WiFi: rfkill + iwgetid zusammenfassen
+        # WiFi
         rk = _run("rfkill list wifi 2>/dev/null", timeout=2)
-        new["wifi"] = "Soft blocked: no" in rk
+        new["wifi"]     = "Soft blocked: no" in rk
         new["wifi_ssid"] = _run("iwgetid -r 2>/dev/null", timeout=2)
 
-        # IP (schneller als ip a show)
         hi = _run("hostname -I 2>/dev/null", timeout=2)
         new["ip"] = hi.split()[0] if hi else ""
 
-        # Bluetooth: hciconfig (schnell)
+        # BT — robust via bluetoothctl info
         hc = _run("hciconfig 2>/dev/null", timeout=2)
-        new["bt"] = "UP RUNNING" in hc
-        # Verbundenes Gerät (nur wenn BT aktiv)
-        if new["bt"]:
-            dev = _run("bluetoothctl info 2>/dev/null | grep Name:", timeout=3)
-            new["bt_device"] = dev.replace("Name:", "").strip()
-        else:
-            new["bt_device"] = ""
+        bt_adapter_up = "UP RUNNING" in hc
+
+        new["bt"]        = False
+        new["bt_device"] = ""
+        new["bt_status"] = "aus" if not bt_adapter_up else "getrennt"
+
+        if bt_adapter_up:
+            settings  = load_settings()
+            last_mac  = settings.get("bt_last_mac",  "").strip()
+            last_name = settings.get("bt_last_name", "").strip()
+
+            if last_mac:
+                info = _run(f"bluetoothctl info {last_mac} 2>/dev/null", timeout=4)
+                low  = info.lower()
+                if "connected: yes" in low:
+                    new["bt"]        = True
+                    new["bt_device"] = last_name or last_mac
+                    new["bt_status"] = "verbunden"
+                elif "paired: yes" in low or "trusted: yes" in low:
+                    new["bt"]        = False
+                    new["bt_device"] = last_name or last_mac
+                    new["bt_status"] = "getrennt"
+                else:
+                    new["bt"]        = False
+                    new["bt_device"] = last_name or ""
+                    new["bt_status"] = "getrennt"
 
         # Spotify
         sp = _run("systemctl is-active raspotify 2>/dev/null", timeout=2)
         new["spotify"] = (sp == "active")
-
-        # Spotify Track
-        new["spotify_track"] = ""
+        new["spotify_track"]  = ""
         new["spotify_artist"] = ""
-        new["spotify_album"] = ""
+        new["spotify_album"]  = ""
         if new["spotify"]:
             try:
                 with open("/tmp/spotify_status") as f:
@@ -100,19 +117,16 @@ def _do_refresh():
         pass
 
     new["ts"] = time.time()
-
-    # Atomar in S schreiben
     with _lock:
         S.update(new)
 
 
 def start():
-    """Hintergrund-Thread starten."""
     global _running
     if _running:
         return
     _running = True
-    _do_refresh()  # Sofort einmal ausführen
+    _do_refresh()
     t = threading.Thread(target=_refresh_loop, daemon=True)
     t.start()
 
@@ -123,12 +137,10 @@ def stop():
 
 
 def refresh(force=False):
-    """Kompatibilitaets-Stub — refresh läuft jetzt im Hintergrund."""
     if force:
         _do_refresh()
 
 
 def invalidate():
-    """Cache invalidieren — naechstes refresh() liest neu."""
     with _lock:
         S["ts"] = 0
