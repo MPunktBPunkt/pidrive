@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.10
+# PiDrive — Kontext & Projektdokumentation v0.8.11
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.10 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.11 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -899,11 +899,59 @@ sudo systemctl restart pidrive_display
 | Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
+| DAB '-o' Fehler | welle-cli 2.2 kennt -o nicht | dab.py: -p PROGRAMMNAME Syntax (v0.8.11) |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
 
 ---
 
 ## Changelog
+
+### v0.8.11 — Audio-Architektur Option B, DAB Fix, Car-Only Cleanup
+**Zielarchitektur Option B — Einheitliches Audio über systemweiten PulseAudio:**
+- Alle Audioquellen (FM, DAB, Webradio, Scanner) laufen nun über denselben Pfad
+- Kein Mischbetrieb mehr: kein aplay direkt, kein rtl_fm|aplay Sonderpfad
+- Klinke / BT / HDMI sind ab jetzt nur noch PulseAudio-Sink-Entscheidungen
+
+**audio.py — Komplettes Rewrite:**
+- Zentraler Audio-Routing-Entscheider für alle Quellen
+- `get_mpv_args()` gibt immer `["--ao=pulse"]` zurück
+- Sink-Auswahl via `set_default_sink()` im systemweiten PulseAudio
+- `get_bt_sink()` / `get_alsa_sink()` / `get_hdmi_sink()` — Sink-Erkennung
+- `get_last_decision()` — letzte Routing-Entscheidung für WebUI-Debug
+- Fallback auf ALSA wenn PulseAudio inaktiv
+
+**fm.py — aplay-Sonderpfad entfernt:**
+- `play_station()`: kein `if _is_bt` mehr, immer `mpv --ao=pulse`
+- FM läuft jetzt gleich wie Webradio und DAB
+- Entscheidung Klinke/BT liegt jetzt sauber in audio.py
+
+**dab.py — welle-cli `-o -` Bug gefixt:**
+- welle-cli 2.2 kennt `-o -` nicht → `invalid option -- 'o'`
+- Korrekte Syntax: `-p PROGRAMMNAME` (gibt Audio nach stdout)
+- DAB funktioniert jetzt mit welle-cli 2.2-1
+
+**webui.py + index.html — Audio Routing Debug Panel:**
+- Neuer API-Endpoint `/api/audio`: PulseAudio-Status, Sinks, letzte Entscheidung
+- Neues "Audio Routing Debug" Panel in der WebUI
+- Zeigt: PulseAudio aktiv?, Default Sink, BT A2DP Sink, ALSA Sink
+- Zeigt: requested / effective / reason / source der letzten Routing-Entscheidung
+
+**Versionsstrings gefixt:**
+- `main_core.py`: war `v0.8.6` → jetzt `v0.8.11`
+- `main_display.py`: war `v0.8.9` → jetzt `v0.8.11`
+
+**pidrive_car_only_cleanup.sh — Neues System-Cleanup-Script:**
+- Deaktiviert Desktop-Dienste: ModemManager, ofono, dundee, cups, cups-browsed, snapd
+- Deaktiviert User-Audio-Stack: PipeWire + User-PulseAudio für Benutzer pi
+- Nur systemweiter PulseAudio-Daemon bleibt aktiv
+- Beendet Altprozesse: rtl_fm, welle-cli, mpv, aplay, bluetoothctl scan
+- Bereinigt RTL-SDR-State, Python-Cache, Temp-Dateien
+- Startet PiDrive-Dienste sauber neu
+
+**install.sh — Optionaler Car-Only Cleanup:**
+- Nach Installation: "Car-Only Cleanup jetzt ausführen? [j/N]" mit 15s Timeout
+- Führt pidrive_car_only_cleanup.sh bei Zustimmung aus
+- Sonst: Hinweis auf manuelle Ausführung
 
 ### v0.8.10 — FM Race-Fix, DAB Gain, BT Agent, Cleanup
 **rtlsdr.py — `wait_until_free()` (FM Race Condition Fix):**
@@ -1254,25 +1302,25 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.10)
+## Aktueller Stand (v0.8.11)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.10 — FM Race-Fix, DAB Gain, BT Agent, Cleanup
-✓ pidrive_display.service   20fps, Version korrekt
-✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR Diagnosebox + AVRCP Debug-Panel
+✓ pidrive_core.service      v0.8.11 — Audio Umbau Option B, DAB Fix, Versionsstrings
+✓ pidrive_display.service   v0.8.11, 20fps
+✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio-Routing Debug
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
-✓ pulseaudio.service        BT A2DP Audio
-✓ rtlsdr.py                 wait_until_free() — wartet auf echte RTL-Freigabe nach stop()
-✓ FM Radio                  Race Condition behoben: wait_until_free + deterministischer stop()
-✓ main_core.py              Source-Switch-Lock: nur ein Quellenwechsel gleichzeitig
-✓ bluetooth.py              _ensure_agent() — BlueZ Agent robuster initialisiert
-✓ dab.py                    DAB Gain konfigurierbar (-g GAIN), welle-cli Log, shlex.quote
-✓ settings.py               dab_gain: -1 (Auto) als Default, überschreibbar
-✓ wifi.py                   Komplett neu, Altlasten entfernt, log korrekt importiert
-✓ webradio.py               Komplett neu, load_stations() dict/list-robust
-✓ musik.py                  Komplett neu, Alt-UI-Reste (Item) entfernt
+✓ pulseaudio.service        BT A2DP Audio — systemweiter Daemon
+✓ audio.py                  Zielarchitektur Option B: alle Quellen über systemweiten PulseAudio
+✓ fm.py                     FM nicht mehr via aplay — einheitlich über mpv --ao=pulse
+✓ dab.py                    welle-cli -o - Bug gefixt → -p PROGRAMMNAME Syntax
+✓ webui.py                  /api/audio — Audio-Sink + letzte Routing-Entscheidung sichtbar
+✓ index.html                Audio Routing Debug Panel (PulseAudio-Status, Sinks, Entscheidung)
+✓ main_core.py              Versionsstring v0.8.6 → v0.8.11
+✓ main_display.py           Versionsstring v0.8.9 → v0.8.11
+✓ pidrive_car_only_cleanup.sh  Neues Script: Desktop-Dienste deaktivieren, User-Audio stilllegen
+✓ install.sh                Optionaler Car-Only Cleanup nach Installation
 ✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
 ✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
 ✓ Senderlisten Memmingen    24 FM + 15 DAB+ Sender für Raum Memmingen/Allgäu
@@ -1385,6 +1433,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] Audio-Architektur Option B, DAB Fix, Car-Only Cleanup (v0.8.11)
 - [x] FM Race-Fix, DAB Gain, BT Agent, Cleanup (v0.8.10)
 - [x] Statusfix: BT robust, AVRCP Debug-JSON, RTL-SDR Stale Lock, Display-Version (v0.8.9)
 - [x] Bluetooth _btctl NameError fix, connect/repair robust (v0.8.8)

@@ -334,5 +334,53 @@ def api_avrcp():
     })
 
 
+@app.route("/api/audio")
+def api_audio():
+    """Audio-Routing Debug — v0.8.11 Zielarchitektur Option B."""
+    try:
+        import sys, os as _os
+        _base = _os.path.dirname(__file__)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from modules.audio import (
+            get_last_decision, get_bt_sink, get_alsa_sink,
+            get_hdmi_sink, _pa_ok, _list_sinks, PA_ENV
+        )
+        import subprocess as _sp
+
+        pa_active = _pa_ok()
+        sinks     = _list_sinks()
+        bt_sink   = get_bt_sink()
+        alsa_sink = get_alsa_sink()
+        hdmi_sink = get_hdmi_sink()
+        last      = get_last_decision()
+
+        # Default sink abfragen
+        default_sink = ""
+        try:
+            r = _sp.run(
+                PA_ENV + " pactl info 2>/dev/null | grep 'Default Sink'",
+                shell=True, capture_output=True, text=True, timeout=4
+            )
+            for line in r.stdout.splitlines():
+                if "Default Sink" in line:
+                    default_sink = line.split(":", 1)[-1].strip()
+                    break
+        except Exception:
+            pass
+
+        return jsonify({
+            "pa_active":    pa_active,
+            "default_sink": default_sink,
+            "bt_sink":      bt_sink,
+            "alsa_sink":    alsa_sink,
+            "hdmi_sink":    hdmi_sink,
+            "sinks":        [s["name"] for s in sinks],
+            "last_decision": last,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "pa_active": False})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)

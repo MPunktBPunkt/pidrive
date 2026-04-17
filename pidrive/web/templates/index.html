@@ -297,6 +297,57 @@
         </div>
       </section>
 
+      <!-- Audio Debug Panel (v0.8.11 Zielarchitektur Option B) -->
+      <section class="panel">
+        <div class="panel-title">Audio Routing Debug</div>
+        <div class="diag-grid">
+          <div class="diag-card">
+            <div class="diag-title">Aktueller Status</div>
+            <div class="diag-list">
+              <div class="diag-row">
+                <div class="diag-key">PulseAudio</div>
+                <div class="diag-value" id="audioPaActive">…</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Default Sink</div>
+                <div class="diag-value" id="audioDefaultSink">…</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">BT A2DP Sink</div>
+                <div class="diag-value" id="audioBtSink">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">ALSA Sink</div>
+                <div class="diag-value" id="audioAlsaSink">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Requested</div>
+                <div class="diag-value" id="audioRequested">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Effective</div>
+                <div class="diag-value" id="audioEffective">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Reason</div>
+                <div class="diag-value" id="audioReason">–</div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Quelle</div>
+                <div class="diag-value" id="audioSource">–</div>
+              </div>
+            </div>
+            <div class="diag-actions" style="margin-top:8px">
+              <button onclick="refreshAudio()">🔄 Audio Refresh</button>
+            </div>
+          </div>
+          <div class="diag-card">
+            <div class="diag-title">Audio Debug-JSON</div>
+            <pre id="audioJson" style="font-size:0.75em;overflow:auto;max-height:220px">{}</pre>
+          </div>
+        </div>
+      </section>
+
         <div class="panel-title">Rohdaten</div>
         <div class="json-wrap">
           <div>
@@ -538,6 +589,38 @@
 
     // Einmal beim Laden
     window.addEventListener('load', () => { setTimeout(refreshAvrcp, 400); });
+    </script>
+
+    <script>
+    // Audio Routing Debug — v0.8.11
+    async function refreshAudio() {
+      try {
+        const r = await fetch('/api/audio');
+        const j = await r.json();
+        if (j.error) {
+          document.getElementById('audioPaActive').textContent = 'Fehler: ' + j.error;
+          return;
+        }
+        document.getElementById('audioPaActive').textContent =
+          j.pa_active ? '✓ aktiv' : '⚠ inaktiv';
+        document.getElementById('audioDefaultSink').textContent =
+          j.default_sink ? j.default_sink.replace(/alsa_output\.|\.stereo/g,'') : '–';
+        document.getElementById('audioBtSink').textContent =
+          j.bt_sink   ? ('✓ ' + j.bt_sink.replace(/bluez_sink\./,'').slice(0,24)) : '– kein A2DP';
+        document.getElementById('audioAlsaSink').textContent =
+          j.alsa_sink ? ('✓ ' + j.alsa_sink.replace(/alsa_output\./,'').slice(0,24)) : '–';
+        const ld = j.last_decision || {};
+        document.getElementById('audioRequested').textContent = ld.requested || '–';
+        document.getElementById('audioEffective').textContent = ld.effective || '–';
+        document.getElementById('audioReason').textContent    = ld.reason    || '–';
+        document.getElementById('audioSource').textContent    = ld.source    || '–';
+        document.getElementById('audioJson').textContent      = JSON.stringify(j, null, 2);
+      } catch(e) {
+        document.getElementById('audioPaActive').textContent = 'Fehler';
+        document.getElementById('audioJson').textContent = String(e);
+      }
+    }
+    window.addEventListener('load', () => { setTimeout(refreshAudio, 600); });
     </script>
 
     <script>

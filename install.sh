@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.8.10
+# PiDrive Install Script v0.8.11
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.8.10           ║
+║        PiDrive Installer v0.8.11           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -490,6 +490,27 @@ echo -e "       --system-cache /var/cache/raspotify"
 echo ""
 echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
+echo ""
+
+# ── Optionaler Car-Only Cleanup (v0.8.11) ─────────────────────────────────────
+if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
+  echo ""
+  echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"
+  echo -e "  Deaktiviert unnötige Dienste (cups, ModemManager, snapd, ...)"
+  echo -e "  und bereinigt Desktop-Audio-Stack (PipeWire, User-PulseAudio)."
+  echo -e "  Empfohlen wenn PiDrive das einzige Nutzungsziel des Pi ist."
+  echo ""
+  read -r -t 15 -p "  Car-Only Cleanup jetzt ausführen? [j/N] " CLEANUP_CHOICE || CLEANUP_CHOICE="n"
+  echo ""
+  if [[ "$CLEANUP_CHOICE" =~ ^[jJyY]$ ]]; then
+    echo -e "${CYAN}  Starte Car-Only Cleanup...${NC}"
+    bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
+  else
+    echo -e "  Cleanup übersprungen."
+    echo -e "  Manuell ausführen: ${CYAN}sudo bash ~/pidrive/pidrive_car_only_cleanup.sh${NC}"
+  fi
+fi
+
 echo ""
 echo -e "${BOLD}Update:${NC}"
 echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash${NC}"

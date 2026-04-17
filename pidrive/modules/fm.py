@@ -3,7 +3,7 @@ modules/fm.py - FM Radio mit RTL-SDR
 PiDrive - GPL-v3
 
 Hardware: RTL-SDR Stick
-Software: rtl-sdr Paket (rtl_fm) + aplay / mpv
+Software: rtl-sdr Paket (rtl_fm) + mpv --ao=pulse (v0.8.11)
 
 Frequenzen werden in config/fm_stations.json gespeichert.
 Format: [{"name": "Bayern 3", "freq": "99.4"}]
@@ -113,7 +113,7 @@ def save_stations(stations):
 
 
 def play_station(station, S, settings=None):
-    """FM Station abspielen via rtl_fm | aplay (Klinke) oder mpv (BT A2DP)."""
+    """FM Station abspielen via rtl_fm | mpv --ao=pulse (v0.8.11: einheitlich)."""
     global _player_proc, _last_start_ts, _last_station_key
 
     freq = _get_freq(station)
@@ -185,24 +185,18 @@ def play_station(station, S, settings=None):
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
                 return
 
+        # v0.8.11: Zielarchitektur Option B — immer über zentrales PulseAudio
         from modules import audio as _audio
         _mpv_extra = _audio.get_mpv_args(settings, source="fm")
-        _is_bt     = "--ao=pulse" in " ".join(_mpv_extra)
 
-        if _is_bt:
-            cmd = (
-                "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
-                "mpv --no-video --really-quiet --title=pidrive_fm "
-                "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
-                "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"
-            )
-        else:
-            cmd = (
-                "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
-                "aplay -t raw -r 32000 -f S16_LE -c 1 -D hw:1,0 2>/dev/null"
-            )
+        cmd = (
+            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
+            "mpv --no-video --really-quiet --title=pidrive_fm "
+            "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
+            "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"
+        )
 
-        log.info(f"FM play: PIPE {'BT/mpv' if _is_bt else 'Klinke/aplay'} freq_hz={freq_hz}")
+        log.info(f"FM play: PIPE zentral/mpv freq_hz={freq_hz}")
 
         if _rtlsdr:
             _player_proc = _rtlsdr.start_process(
