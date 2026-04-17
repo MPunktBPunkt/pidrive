@@ -127,14 +127,16 @@ def get_audio_debug() -> dict:
         "decision": {},
     }
 
-    # 1) letzte PiDrive Audio-Entscheidung
+    # 1) letzte PiDrive Audio-Entscheidung aus shared state file (v0.8.13)
+    # Liest /tmp/pidrive_audio_state.json — geschrieben vom Core-Prozess
+    # get_last_decision() zeigte nur den WebUI-Prozesszustand, nicht den Core-Zustand
     try:
-        import sys, os as _os
+        import sys
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
-        from modules.audio import get_last_decision
-        data["decision"] = get_last_decision()
+        from modules.audio import read_last_decision_file
+        data["decision"] = read_last_decision_file()
     except Exception:
         data["decision"] = {}
 
@@ -149,6 +151,13 @@ def get_audio_debug() -> dict:
     try:
         ds = safe_run(PA_ENV + " pactl get-default-sink 2>/dev/null")
         data["default_sink"] = (ds.get("stdout", "") or "").strip()
+        # Fallback: pactl info wenn get-default-sink leer ist (v0.8.13)
+        if not data["default_sink"]:
+            info = safe_run(PA_ENV + " pactl info 2>/dev/null")
+            for ln in (info.get("stdout", "") or "").splitlines():
+                if "Default Sink:" in ln:
+                    data["default_sink"] = ln.split(":", 1)[1].strip()
+                    break
     except Exception:
         pass
 

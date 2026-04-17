@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.12
+main_core.py - PiDrive Core v0.8.13
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -488,6 +488,11 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
+        # v0.8.13: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        S["radio_playing"] = False
+        S["radio_station"] = ""
+        S["radio_name"]    = ""
+        S["radio_type"]    = ""
         _time_mod.sleep(0.10)
 
     # Stationen zuerst prüfen — haben action=None, brauchen src/meta
@@ -790,7 +795,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.12 gestartet")
+    log.info("PiDrive Core v0.8.13 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
