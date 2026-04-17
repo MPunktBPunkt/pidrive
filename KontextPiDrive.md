@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.12
+# PiDrive — Kontext & Projektdokumentation v0.8.13
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.12 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.13 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -905,6 +905,42 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.13 — Audio State File, Scanner-Guard, BT-Fix, Status-Sync
+**Probleme aus v0.8.12 Log-Review:**
+- Audio Debug Cockpit zeigte leere Werte (`Default Sink –`, `keine Inputs`)
+  obwohl `mpv --ao=pulse` real lief (WebUI las falschen Prozesszustand)
+- Quellenstatus lief auseinander: RTL-Diagnose zeigte DAB, Status zeigte SCANNER
+- BT-Connect scheiterte während laufendem Scanner-Betrieb
+- Scanner überschrieb Status nach Quellenwechsel weiter
+
+**audio.py — Audio-State-File (`/tmp/pidrive_audio_state.json`):**
+- `_write_audio_state()`: schreibt letzte Entscheidung atomar nach `/tmp/pidrive_audio_state.json`
+- `read_last_decision_file()`: liest shared state prozessübergreifend
+- WebUI kann jetzt echte Core-Audio-Entscheidung lesen, nicht eigenen Modulzustand
+
+**webui.py — Audio Debug liest aus Datei statt Modulzustand:**
+- `get_audio_debug()` nutzt `read_last_decision_file()` statt `get_last_decision()`
+- `pactl get-default-sink` Fallback: bei leerer Ausgabe wird `pactl info` ausgewertet
+- Audio Debug Cockpit zeigt jetzt korrekte Core-Entscheidung
+
+**scanner.py — Scan-Abort-Flag:**
+- `_scan_abort` Flag: wird in `stop()` gesetzt, in `scan_next()`/`scan_prev()` zurückgesetzt
+- Guards in `_scan_list()` und `_scan_range()`: brechen Scan ab wenn `radio_type` wechselt
+- Scanner-Scan kollidiert nicht mehr mit FM/DAB/Webradio-Wechsel
+
+**bluetooth.py — Scanner stoppen + Disconnect vor Connect:**
+- `connect_device()`: stoppt Scanner wenn aktiv, bevor BT-Connect startet
+- `disconnect` vor neuen Connect-Versuchen: saubererer Verbindungsaufbau
+- BT-Connect-Fehler durch parallelen RTL-SDR-Betrieb reduziert
+
+**main_core.py — Status-Felder nach Quellenwechsel leeren:**
+- `_stop_all_sources()`: setzt `radio_playing`, `radio_station`, `radio_name`, `radio_type` auf `""`
+- Verhindert stale State: alter Quellstatus bleibt nicht mehr nach Wechsel stehen
+
+**install.sh — WebUI Import-Smoke-Test:**
+- Nach main_core-Import-Test jetzt auch `import webui` geprüft
+- Verhindert dass stille Strukturfehler wie der v0.8.12-WebUI-Bug unentdeckt bleiben
 
 ### v0.8.12 — Audio Debug Cockpit, Versionsstrings, Diagnose-Fix
 **diagnose.py — Versionsstring gefixt:**
@@ -1346,14 +1382,20 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.12)
+## Aktueller Stand (v0.8.13)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.12 — Audio Debug Cockpit, Versionsstrings
-✓ pidrive_display.service   v0.8.12, 20fps
+✓ pidrive_core.service      v0.8.13 — Audio State File, Scanner-Guard, BT-Fix, Status-Sync
+✓ pidrive_display.service   v0.8.13, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
+✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
+✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
+✓ scanner.py                _scan_abort Flag — kein Status-Überschreiben mehr
+✓ bluetooth.py              Scanner stoppen vor BT-Connect, Disconnect vor Connect
+✓ main_core.py              Status-Felder in _stop_all_sources() geleert
+✓ install.sh                WebUI Import-Smoke-Test (verhindert v0.8.12-Strukturfehler)
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
 ✓ pulseaudio.service        BT A2DP Audio — systemweiter Daemon
 ✓ audio.py                  Zielarchitektur Option B: alle Quellen über systemweiten PulseAudio
@@ -1481,6 +1523,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] Audio State File, Scanner-Guard, BT-Fix, Status-Sync (v0.8.13)
 - [x] Audio Debug Cockpit, Versionsstrings, Diagnose-Fix (v0.8.12)
 - [x] Audio-Architektur Option B, DAB Fix, Car-Only Cleanup (v0.8.11)
 - [x] FM Race-Fix, DAB Gain, BT Agent, Cleanup (v0.8.10)

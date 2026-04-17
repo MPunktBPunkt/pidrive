@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pidrive_car_only_cleanup.sh — PiDrive Car-Only System Cleanup
-# v0.8.12 — GEHÄRTET: User-PulseAudio/PipeWire wirklich final killen
+# v0.8.13 — GEHÄRTET: User-PulseAudio/PipeWire wirklich final killen
 #
 # Macht folgendes:
 #   1) PiDrive-Dienste sicherstellen
@@ -22,7 +22,7 @@ err()  { echo -e "${RED}  ✗ $*${NC}"; }
 
 echo
 echo "=================================================="
-echo " PiDrive Car-Only Cleanup v0.8.12"
+echo " PiDrive Car-Only Cleanup v0.8.13"
 echo " github.com/MPunktBPunkt/pidrive"
 echo "=================================================="
 echo
