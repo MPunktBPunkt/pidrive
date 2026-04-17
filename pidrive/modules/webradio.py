@@ -59,6 +59,16 @@ def play_station(station, S, settings=None):
         import mpv_meta
 
         mpv_args = _audio.get_mpv_args(settings, source="webradio")
+
+        # Strict Mode: abbrechen wenn PulseAudio inaktiv
+        _adec = _audio.get_last_decision()
+        if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
+            S["radio_playing"] = False
+            S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
+            S["radio_name"]    = name
+            S["radio_type"]    = "WEB"
+            log.error(f"WEB strict-mode: Abbruch name={name!r} reason={_adec.get('reason','?')}")
+            return
         mpv_meta.stop()
         sock = mpv_meta.MPV_SOCKET
         try:

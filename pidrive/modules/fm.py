@@ -185,9 +185,20 @@ def play_station(station, S, settings=None):
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
                 return
 
-        # v0.8.11: Zielarchitektur Option B — immer über zentrales PulseAudio
+        # v0.8.12: Zielarchitektur Option B — immer über zentrales PulseAudio
         from modules import audio as _audio
         _mpv_extra = _audio.get_mpv_args(settings, source="fm")
+
+        # Strict Mode: abbrechen wenn PulseAudio inaktiv
+        _adec = _audio.get_last_decision()
+        if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
+            S["radio_playing"] = False
+            S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
+            S["radio_name"]    = name
+            S["radio_type"]    = "FM"
+            log.error(f"FM strict-mode: Abbruch name={name!r} freq={freq_f} reason={_adec.get('reason','?')}")
+            return
+
 
         cmd = (
             "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "

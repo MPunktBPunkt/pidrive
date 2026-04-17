@@ -921,12 +921,34 @@ sudo systemctl restart pidrive_display
 - Sink-Input Details (`pactl list sink-inputs`): Application Name, Process Binary, PID, Media Name
 - `/api/audio` delegiert jetzt komplett an `get_audio_debug()`
 - `build_view_model()` enthält `audio_debug` für Server-Side-Rendering
+- **Bugfix: `def build_view_model():` fehlte → WebUI-Absturz behoben**
 
 **index.html — Audio Debug Cockpit Panel:**
 - Panel umbenannt: "Audio Routing Debug" → "Audio Debug Cockpit"
 - Neue rechte Spalte: Sink-Inputs-Tabelle mit App/Binary/PID (mpv/librespot hervorgehoben)
 - Neue Sinks-Liste mit Default-Sink-Marker (◀ default)
 - JS `refreshAudio()` vollständig neu: rendert Tabellen dynamisch, kein JSON-Dump mehr
+
+**audio.py — Strict Mode (kein ALSA-Fallback):**
+- `get_mpv_args()`: bei inaktivem PulseAudio kein stiller Fallback auf `--ao=alsa` mehr
+- `effective="none"`, `reason="pulseaudio_inactive"` → klar sichtbar in WebUI/Log
+- Zielarchitektur Option B damit wirklich hart: ein Pfad, kein zweiter
+
+**fm.py / dab.py / webradio.py — Strict Mode Guards:**
+- Alle drei prüfen nach `get_mpv_args()` die letzte Audio-Entscheidung
+- Bei `pulseaudio_inactive` oder `effective=none`: Abbruch statt blindem Start
+- Log: `FM/DAB/WEB strict-mode: Abbruch ... reason=pulseaudio_inactive`
+
+**pidrive_car_only_cleanup.sh — gehärtet:**
+- User-PulseAudio/PipeWire werden jetzt wirklich beendet: `pkill -9` nach `systemctl --user stop`
+- `loginctl disable-linger` verhindert Auto-Start der User-Session
+- User-Unit-Overrides: `/home/pi/.config/systemd/user/` mit maskierten Overrides
+- `XDG_RUNTIME_DIR` und `DBUS_SESSION_BUS_ADDRESS` korrekt gesetzt für `--user` Befehle
+
+**install.sh — Raspotify auf zentralen PulseAudio-Pfad:**
+- `LIBRESPOT_DEVICE=default` statt `hw:1,0` — nutzt PulseAudio Default-Sink
+- `PULSE_SERVER=unix:/var/run/pulse/native` in `raspotify.service` eingetragen
+- Spotify läuft jetzt auf demselben zentralen Audio-Pfad wie FM/DAB/Webradio
 
 ### v0.8.11 — Audio-Architektur Option B, DAB Fix, Car-Only Cleanup
 **Zielarchitektur Option B — Einheitliches Audio über systemweiten PulseAudio:**
@@ -1335,15 +1357,18 @@ sudo systemctl restart pidrive_display
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
 ✓ pulseaudio.service        BT A2DP Audio — systemweiter Daemon
 ✓ audio.py                  Zielarchitektur Option B: alle Quellen über systemweiten PulseAudio
-✓ fm.py                     FM einheitlich über mpv --ao=pulse (kein aplay mehr)
-✓ dab.py                    welle-cli -p PROGRAMMNAME (war: broken -o -)
+✓ audio.py                  Strict Mode: kein ALSA-Fallback, effective=none bei inaktivem PA
+✓ fm.py                     FM einheitlich über mpv --ao=pulse, Strict Mode Guard
+✓ dab.py                    welle-cli -p PROGRAMMNAME, Strict Mode Guard
+✓ webradio.py               Strict Mode Guard bei PulseAudio inaktiv
 ✓ diagnose.py               Versionsstring v0.7.10 → v0.8.12
+✓ webui.py                  build_view_model() Strukturfehler behoben (WebUI-Absturz)
 ✓ webui.py                  get_audio_debug(): Sinks + Sink-Inputs + Prozessnamen
 ✓ index.html                Audio Debug Cockpit: Sink-Inputs-Tabelle mit App/Binary/PID
 ✓ main_core.py              Versionsstring v0.8.6 → v0.8.12 (korrekt)
 ✓ main_display.py           Versionsstring v0.8.9 → v0.8.12 (korrekt)
-✓ pidrive_car_only_cleanup.sh  Car-Only Cleanup Script
-✓ install.sh                Optionaler Car-Only Cleanup nach Installation
+✓ pidrive_car_only_cleanup.sh  Car-Only Cleanup Script — gehärtet (pkill -9, linger, Overrides)
+✓ install.sh                Optionaler Car-Only Cleanup + Raspotify auf PulseAudio umgestellt
 ✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
 ✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
 ✓ Senderlisten Memmingen    24 FM + 15 DAB+ Sender für Raum Memmingen/Allgäu

@@ -1,22 +1,16 @@
 #!/usr/bin/env bash
 # pidrive_car_only_cleanup.sh — PiDrive Car-Only System Cleanup
-# v0.8.11 — Zielarchitektur: dediziertes Car-Infotainment, kein Desktop-Pi
+# v0.8.12 — GEHÄRTET: User-PulseAudio/PipeWire wirklich final killen
 #
 # Macht folgendes:
 #   1) PiDrive-Dienste sicherstellen
 #   2) Unnötige Desktop-/Raspbian-Dienste deaktivieren
-#   3) User-Audio-Stack (PulseAudio/PipeWire) stilllegen
+#   3) User-Audio-Stack (PulseAudio/PipeWire) HARD killen + maskieren
 #   4) Altprozesse beenden + RTL-SDR-State bereinigen
 #   5) snapd deaktivieren
 #   6) PiDrive sauber neu starten
 #
-# Verwendung:
-#   sudo bash ~/pidrive/pidrive_car_only_cleanup.sh
-#
-# Optional danach — aggressive Paketbereinigung:
-#   sudo apt purge -y cups cups-browsed modemmanager ofono dundee snapd
-#   sudo apt autoremove -y
-#   sudo reboot
+# Verwendung: sudo bash ~/pidrive/pidrive_car_only_cleanup.sh
 #
 set -e
 
@@ -28,7 +22,7 @@ err()  { echo -e "${RED}  ✗ $*${NC}"; }
 
 echo
 echo "=================================================="
-echo " PiDrive Car-Only Cleanup v0.8.11"
+echo " PiDrive Car-Only Cleanup v0.8.12"
 echo " github.com/MPunktBPunkt/pidrive"
 echo "=================================================="
 echo
@@ -40,6 +34,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 REAL_USER="${SUDO_USER:-pi}"
+REAL_UID="$(id -u "$REAL_USER" 2>/dev/null || echo 1000)"
 
 # ------------------------------------------------------------------
 # 1) PiDrive-Dienste sicherstellen
@@ -54,15 +49,7 @@ ok "PiDrive-Dienste aktiviert"
 # 2) Unnötige Standard-/Desktop-Dienste deaktivieren
 # ------------------------------------------------------------------
 info "Nicht benötigte Dienste deaktivieren..."
-for SVC in \
-  ModemManager \
-  ofono \
-  dundee \
-  cups \
-  cups-browsed \
-  triggerhappy \
-  avahi-daemon
-do
+for SVC in ModemManager ofono dundee cups cups-browsed triggerhappy avahi-daemon; do
   if systemctl list-unit-files 2>/dev/null | grep -q "^${SVC}\.service"; then
     systemctl stop "$SVC" 2>/dev/null || true
     systemctl disable "$SVC" 2>/dev/null || true
@@ -70,28 +57,65 @@ do
   fi
 done
 warn "avahi-daemon wurde deaktiviert — .local-Namensauflösung entfällt"
-warn "Für SSH mit Hostname 'raspberrypi.local' avahi wieder aktivieren: systemctl enable --now avahi-daemon"
+warn "Für SSH mit 'raspberrypi.local': systemctl enable --now avahi-daemon"
 
 # ------------------------------------------------------------------
-# 3) User-Audio-Stack stilllegen (wichtig für PiDrive Option B!)
+# 3) User-Audio-Stack HARD killen + maskieren
 # ------------------------------------------------------------------
-info "Desktop-Audio-Stack für Benutzer ${REAL_USER} deaktivieren..."
+info "Desktop-Audio-Stack für Benutzer ${REAL_USER} deaktivieren und beenden..."
+
+# Zuerst über systemctl --user stoppen und maskieren
 for CMD in \
   "systemctl --user stop pulseaudio.service" \
   "systemctl --user stop pulseaudio.socket" \
   "systemctl --user disable pulseaudio.service" \
   "systemctl --user disable pulseaudio.socket" \
+  "systemctl --user mask pulseaudio.service" \
+  "systemctl --user mask pulseaudio.socket" \
   "systemctl --user stop pipewire.service" \
   "systemctl --user stop pipewire.socket" \
   "systemctl --user stop pipewire-media-session.service" \
   "systemctl --user disable pipewire.service" \
   "systemctl --user disable pipewire.socket" \
-  "systemctl --user disable pipewire-media-session.service"
+  "systemctl --user disable pipewire-media-session.service" \
+  "systemctl --user mask pipewire.service" \
+  "systemctl --user mask pipewire.socket" \
+  "systemctl --user mask pipewire-media-session.service"
 do
-  sudo -u "$REAL_USER" bash -c "$CMD" 2>/dev/null || true
+  sudo -u "$REAL_USER" \
+    XDG_RUNTIME_DIR="/run/user/${REAL_UID}" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${REAL_UID}/bus" \
+    bash -lc "$CMD" 2>/dev/null || true
 done
-ok "User-PulseAudio/PipeWire deaktiviert"
-info "Nur noch systemweiter PulseAudio (pulseaudio.service) bleibt aktiv"
+
+# HART: Prozesse explizit killen (SIGTERM, dann SIGKILL)
+pkill -u "$REAL_UID" -f "/usr/bin/pipewire$"          2>/dev/null || true
+pkill -u "$REAL_UID" -f "/usr/bin/pipewire-media-session" 2>/dev/null || true
+pkill -u "$REAL_UID" -f "/usr/bin/pulseaudio --daemonize=no" 2>/dev/null || true
+pkill -u "$REAL_UID" -f "/usr/bin/pulseaudio"         2>/dev/null || true
+sleep 1
+# Falls noch aktiv: SIGKILL
+pkill -9 -u "$REAL_UID" -f "/usr/bin/pipewire$"       2>/dev/null || true
+pkill -9 -u "$REAL_UID" -f "/usr/bin/pipewire-media-session" 2>/dev/null || true
+pkill -9 -u "$REAL_UID" -f "/usr/bin/pulseaudio"      2>/dev/null || true
+
+# systemd user lingering deaktivieren (verhindert Auto-Start der Session)
+loginctl disable-linger "$REAL_USER" 2>/dev/null || true
+
+# User-Unit-Overrides anlegen (maskieren auch ohne aktive Session)
+mkdir -p "/home/${REAL_USER}/.config/systemd/user"
+for UNIT in pulseaudio.service pulseaudio.socket pipewire.service pipewire.socket pipewire-media-session.service; do
+  cat > "/home/${REAL_USER}/.config/systemd/user/${UNIT}" << 'UNITEOF'
+[Unit]
+Description=Masked by PiDrive Car-Only Cleanup
+[Service]
+ExecStart=/bin/false
+UNITEOF
+done
+chown -R "${REAL_USER}:${REAL_USER}" "/home/${REAL_USER}/.config/systemd" 2>/dev/null || true
+
+ok "User-PulseAudio/PipeWire deaktiviert, maskiert und beendet"
+info "Nur systemweiter PulseAudio-Daemon (pulseaudio.service) bleibt aktiv"
 
 # ------------------------------------------------------------------
 # 4) Altprozesse beenden
@@ -107,10 +131,10 @@ ok "Altprozesse beendet"
 # 5) RTL-SDR Stale-State bereinigen
 # ------------------------------------------------------------------
 info "RTL-SDR Lock/State aufräumen..."
-rm -f /tmp/pidrive_rtlsdr.lock      2>/dev/null || true
+rm -f /tmp/pidrive_rtlsdr.lock       2>/dev/null || true
 rm -f /tmp/pidrive_rtlsdr_state.json 2>/dev/null || true
-rm -f /tmp/pidrive_dab_welle.err    2>/dev/null || true
-rm -f /tmp/pidrive_mpv.sock         2>/dev/null || true
+rm -f /tmp/pidrive_dab_welle.err     2>/dev/null || true
+rm -f /tmp/pidrive_mpv.sock          2>/dev/null || true
 ok "RTL-SDR State bereinigt"
 
 # ------------------------------------------------------------------
@@ -122,7 +146,7 @@ find /home/pi/pidrive -name "*.pyc" -delete 2>/dev/null || true
 ok "Python-Cache bereinigt"
 
 # ------------------------------------------------------------------
-# 7) snapd deaktivieren (ressourcenintensiv, für PiDrive nutzlos)
+# 7) snapd deaktivieren
 # ------------------------------------------------------------------
 if systemctl list-unit-files 2>/dev/null | grep -q "^snapd\.service"; then
   info "snapd deaktivieren..."
@@ -139,6 +163,7 @@ info "Dienste neu starten..."
 systemctl daemon-reload
 systemctl restart dbus       2>/dev/null || true; sleep 1
 systemctl restart bluetooth  2>/dev/null || true; sleep 1
+systemctl enable pulseaudio  2>/dev/null || true
 systemctl restart pulseaudio 2>/dev/null || true; sleep 1
 systemctl restart raspotify  2>/dev/null || true; sleep 1
 systemctl restart pidrive_core    2>/dev/null || true; sleep 2
@@ -173,9 +198,11 @@ ps ax 2>/dev/null | grep -E 'pidrive|rtl_fm|welle-cli|mpv|pulseaudio|pipewire|li
 echo
 ok "Car-Only Cleanup abgeschlossen"
 echo
-warn "Empfehlung: sudo reboot  (damit alle Änderungen sauber greifen)"
+warn "Empfehlung: sudo reboot  (damit Masking der User-Units sauber greift)"
 echo
 echo "Nach Reboot prüfen:"
+echo "  ps ax | egrep 'pulseaudio|pipewire'"
+echo "  → nur /usr/bin/pulseaudio --system ... sollte laufen"
 echo "  PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short"
 echo "  journalctl -u pidrive_core -n 50 --no-pager"
 echo

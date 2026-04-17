@@ -256,25 +256,30 @@ if [ -f /etc/raspotify/conf ]; then
     grep -q "^LIBRESPOT_ONEVENT" /etc/raspotify/conf || \
         echo "LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh" >> /etc/raspotify/conf
 
-    # Standard-Audioausgang: ALSA hw:1,0 (Klinke)
-    # bluetooth.py setzt LIBRESPOT_DEVICE dynamisch um wenn BT verbindet
+    # v0.8.12: Zielarchitektur Option B — Spotify über zentralen PulseAudio-Pfad
+    # LIBRESPOT_DEVICE=default nutzt den PulseAudio Default-Sink (Klinke oder BT)
     if grep -q "^LIBRESPOT_BACKEND" /etc/raspotify/conf; then
         sed -i 's|^LIBRESPOT_BACKEND=.*|LIBRESPOT_BACKEND=alsa|' /etc/raspotify/conf
     else
         echo 'LIBRESPOT_BACKEND=alsa' >> /etc/raspotify/conf
     fi
     if grep -q "^LIBRESPOT_DEVICE" /etc/raspotify/conf; then
-        sed -i 's|^LIBRESPOT_DEVICE=.*|LIBRESPOT_DEVICE=hw:1,0|' /etc/raspotify/conf
+        sed -i 's|^LIBRESPOT_DEVICE=.*|LIBRESPOT_DEVICE=default|' /etc/raspotify/conf
     else
-        echo 'LIBRESPOT_DEVICE=hw:1,0' >> /etc/raspotify/conf
+        echo 'LIBRESPOT_DEVICE=default' >> /etc/raspotify/conf
     fi
     if [ -f /lib/systemd/system/raspotify.service ]; then
         sed -i 's/Wants=network.target/Wants=network-online.target/'  /lib/systemd/system/raspotify.service 2>/dev/null || true
         sed -i 's/After=network.target/After=network-online.target/' /lib/systemd/system/raspotify.service 2>/dev/null || true
+        # PULSE_SERVER: systemweiter PulseAudio-Daemon
+        if ! grep -q "PULSE_SERVER=unix:/var/run/pulse/native" /lib/systemd/system/raspotify.service 2>/dev/null; then
+            sed -i '/^\[Service\]/a Environment=PULSE_SERVER=unix:/var/run/pulse/native' \
+                /lib/systemd/system/raspotify.service 2>/dev/null || true
+        fi
         systemctl enable systemd-networkd-wait-online.service 2>/dev/null || true
         systemctl daemon-reload
     fi
-    ok "Raspotify konfiguriert"
+    ok "Raspotify konfiguriert (zentral via PulseAudio)"
 
   # __pycache__ loeschen: alte .pyc mit pygame-Import
   find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true

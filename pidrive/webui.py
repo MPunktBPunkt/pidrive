@@ -230,6 +230,7 @@ def get_audio_debug() -> dict:
     return data
 
 
+def build_view_model():
     status   = read_json(STATUS_FILE, {})
     menu     = read_json(MENU_FILE,   {})
     progress = read_json(PROGRESS_FILE, {})

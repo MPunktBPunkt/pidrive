@@ -195,6 +195,16 @@ def play_station(station, S, settings=None):
         _mpv_args = " ".join(_audio.get_mpv_args(settings, source="dab"))
         _gain     = _get_dab_gain(settings)
 
+        # Strict Mode: abbrechen wenn PulseAudio inaktiv
+        _adec = _audio.get_last_decision()
+        if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
+            S["radio_playing"] = False
+            S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
+            S["radio_name"]    = name
+            S["radio_type"]    = "DAB"
+            log.error(f"DAB strict-mode: Abbruch name={name!r} channel={ch} reason={_adec.get('reason','?')}")
+            return
+
         # name mit shlex quoten fuer Shell-Sicherheit
         import shlex
         _name_q = shlex.quote(name)

@@ -145,14 +145,16 @@ def get_mpv_args(settings=None, source: str = "") -> list:
     src_tag   = ("source=" + source).ljust(17) if source else "source=-         "
 
     if not _pa_ok():
-        log.warn("[AUDIO] " + src_tag + " requested=" + requested +
-                 " PulseAudio nicht aktiv -> ALSA-Fallback")
+        # v0.8.12 STRICT MODE: kein stiller ALSA-Fallback mehr
+        # Klare Fehlermeldung, aber Pfad bleibt bei --ao=pulse
+        log.error("[AUDIO] " + src_tag + " requested=" + requested +
+                  " effective=none reason=pulseaudio_inactive — KEIN ALSA-Fallback (strict mode)")
         _last_decision.update({
-            "requested": requested, "effective": "klinke",
+            "requested": requested, "effective": "none",
             "reason": "pulseaudio_inactive", "sink": "", "source": source,
             "ts": int(time.time()),
         })
-        return ["--ao=alsa", "--audio-device=alsa/hw:1,0"]
+        return ["--ao=pulse"]
 
     bt_sink   = get_bt_sink()
     alsa_sink = get_alsa_sink()
