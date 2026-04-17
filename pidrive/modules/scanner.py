@@ -140,6 +140,8 @@ _current_ch: dict = {}
 # ── Player ───────────────────────────────────────────────────────────────────
 
 _player_proc = None
+_scan_running = False
+_scan_abort   = False   # v0.8.13: gesetzt von stop(), geprüft in scan-Schleifen
 SQUELCH = 25  # 0=immer offen, hoeher=strenger
 
 def _bg(cmd):
@@ -218,7 +220,8 @@ def play_freq(freq_mhz, name, bandwidth_hz, S):
         log.error(f"Scanner play: {e}")
 
 def stop(S):
-    global _player_proc
+    global _player_proc, _scan_abort
+    _scan_abort = True   # v0.8.13: bricht laufende scan-Schleifen ab
     log.info("Scanner stop: requested")
     if _rtlsdr:
         _rtlsdr.stop_process()
@@ -319,6 +322,10 @@ def _scan_list(S, channels, bw, direction, band_id=""):
     fast_bw   = _scan_bw_fast(band_id, bw)
 
     for _ in range(n):
+        # v0.8.13: Scan abbrechen wenn andere Quelle aktiv wurde
+        if _scan_abort or S.get("radio_type") not in ("", "SCANNER"):
+            log.info(f"Scanner scan-list: abgebrochen band={band_id} radio_type={S.get('radio_type','')}")
+            return None
         ch   = channels[idx]
         freq = ch["freq"]
         name = ch["name"]
@@ -355,6 +362,10 @@ def _scan_range(S, band, bw, direction, band_id=""):
     fast_bw   = _scan_bw_fast(band_id, bw)
 
     for _ in range(total):
+        # v0.8.13: Scan abbrechen wenn andere Quelle aktiv wurde
+        if _scan_abort or S.get("radio_type") not in ("", "SCANNER"):
+            log.info(f"Scanner scan-range: abgebrochen band={band_id} radio_type={S.get('radio_type','')}")
+            return None
         log.info(f"Scanner scan-range: FAST band={band_id} freq={freq:.3f} bw={fast_bw}")
         if _detect_signal_fast(freq, fast_bw):
             log.info(f"Scanner scan-range: CANDIDATE band={band_id} freq={freq:.3f}")
@@ -550,6 +561,8 @@ def freq_input_screen(band_id, settings=None):
 
 def scan_next(band_id, S, settings=None):
     """Squelch-Scan vorwärts — erstes Signal spielen (zweistufig Fast+Confirm)."""
+    global _scan_abort
+    _scan_abort = False   # v0.8.13: neuer Scan beginnt, altes Abort-Flag zurücksetzen
     b = BANDS.get(band_id, {})
     log.info(f"Scanner: SCAN_NEXT band={band_id}")
     if "channels" in b:
@@ -565,6 +578,8 @@ def scan_next(band_id, S, settings=None):
 
 def scan_prev(band_id, S, settings=None):
     """Squelch-Scan rückwärts — erstes Signal spielen (zweistufig Fast+Confirm)."""
+    global _scan_abort
+    _scan_abort = False   # v0.8.13: neuer Scan beginnt, altes Abort-Flag zurücksetzen
     b = BANDS.get(band_id, {})
     log.info(f"Scanner: SCAN_PREV band={band_id}")
     if "channels" in b:

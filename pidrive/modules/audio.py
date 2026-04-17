@@ -1,32 +1,22 @@
 """
-modules/audio.py - Zentraler Audioausgang für PiDrive
-PiDrive v0.8.11 - Zielarchitektur Option B
+modules/audio.py - Zentraler Audioausgang fuer PiDrive
+PiDrive v0.8.13 - STRICT PulseAudio Only + shared debug state
 
-Ziel:
-- Ein zentraler Audio-Server: systemweiter PulseAudio
-- ALLE Quellen (FM, DAB, Webradio, Scanner) über denselben Routing-Pfad
-- Klinke / HDMI / BT nur noch als Sink-Entscheidung
-- Kein Sonderpfad für aplay/ALSA direkt mehr
-- WebUI/IPC-Debug bleibt erhalten (get_last_decision())
-
-Audio-Pfad:
-  rtl_fm | mpv --ao=pulse    (FM, Scanner)
-  welle-cli | mpv --ao=pulse (DAB)
-  mpv --ao=pulse             (Webradio)
-  librespot -> PulseAudio    (Spotify via Raspotify)
-
-Sinks:
-  Klinke = PulseAudio Default-Sink auf ALSA-Ausgang (hw:1,0)
-  BT     = PulseAudio Default-Sink auf bluez_sink.*.a2dp_sink
-  HDMI   = PulseAudio Default-Sink auf HDMI-Ausgang
+Neu in v0.8.13:
+- _write_audio_state() schreibt letzte Entscheidung in /tmp/pidrive_audio_state.json
+- read_last_decision_file() liest daraus (prozessuebergreifend — fuer WebUI)
+- WebUI liest damit echte Core-Entscheidung, nicht eigenen Modulzustand
 """
 
+import os
+import json
 import subprocess
 import time
 import ipc
 import log
 
 PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+AUDIO_STATE_FILE = "/tmp/pidrive_audio_state.json"
 
 _last_decision = {
     "requested": "auto",
@@ -38,17 +28,29 @@ _last_decision = {
 }
 
 
+def _write_audio_state():
+    """Schreibt letzte Entscheidung atomar in shared state file."""
+    try:
+        tmp = AUDIO_STATE_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(_last_decision, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, AUDIO_STATE_FILE)
+    except Exception:
+        pass
+
+
 def get_last_decision() -> dict:
-    """Letzte Audio-Routing-Entscheidung — fuer WebUI-Debug."""
+    """In-Prozess-Zustand (fuer Strict-Mode-Guards in fm/dab/webradio)."""
     return dict(_last_decision)
 
 
-def _bg(cmd):
+def read_last_decision_file() -> dict:
+    """Liest shared state file — prozessuebergreifend fuer WebUI."""
     try:
-        subprocess.Popen(cmd, shell=True,
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with open(AUDIO_STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
-        pass
+        return {}
 
 
 def _run(cmd, timeout=5):
@@ -61,14 +63,11 @@ def _run(cmd, timeout=5):
 
 
 def _pa_ok() -> bool:
-    """PulseAudio-Systemdaemon laeuft?"""
-    out = _run("systemctl is-active pulseaudio 2>/dev/null", timeout=3)
-    return out.strip() == "active"
+    return _run("systemctl is-active pulseaudio 2>/dev/null", 3) == "active"
 
 
 def _list_sinks() -> list:
-    """Alle PulseAudio-Sinks (system) als Liste von Dicts."""
-    out = _run(PA_ENV + " pactl list sinks short 2>/dev/null", timeout=4)
+    out = _run(PA_ENV + " pactl list sinks short 2>/dev/null", 4)
     sinks = []
     for line in out.splitlines():
         parts = line.split()
@@ -78,16 +77,13 @@ def _list_sinks() -> list:
 
 
 def get_bt_sink() -> str:
-    """Aktiven Bluetooth A2DP Sink finden."""
     for s in _list_sinks():
-        name = s["name"]
-        if "bluez_sink." in name and ".a2dp_sink" in name:
-            return name
+        if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
+            return s["name"]
     return ""
 
 
 def get_alsa_sink() -> str:
-    """ALSA-Klinke-Sink finden."""
     for s in _list_sinks():
         if "alsa_output" in s["name"]:
             return s["name"]
@@ -95,17 +91,15 @@ def get_alsa_sink() -> str:
 
 
 def get_hdmi_sink() -> str:
-    """HDMI-Sink finden."""
     for s in _list_sinks():
-        name = s["name"].lower()
-        raw  = s["raw"].lower()
-        if "hdmi" in name or "hdmi" in raw:
+        n = s["name"].lower()
+        r = s["raw"].lower()
+        if "hdmi" in n or "hdmi" in r:
             return s["name"]
     return ""
 
 
 def set_default_sink(sink_name: str) -> bool:
-    """PulseAudio Default-Sink setzen."""
     if not sink_name:
         return False
     try:
@@ -115,24 +109,32 @@ def set_default_sink(sink_name: str) -> bool:
         )
         if r.returncode == 0:
             log.info("[AUDIO] default sink -> " + sink_name)
-        else:
-            log.warn("[AUDIO] set-default-sink failed: " + sink_name +
-                     " | " + (r.stderr or "").strip()[:80])
-        return r.returncode == 0
+            return True
+        log.warn("[AUDIO] set-default-sink failed: " + sink_name +
+                 " | " + (r.stderr or "").strip()[:60])
+        return False
     except Exception as e:
         log.error("[AUDIO] set_default_sink: " + str(e))
         return False
 
 
+def _remember_decision(requested, effective, reason, sink, source):
+    _last_decision.update({
+        "requested": requested,
+        "effective": effective,
+        "reason":    reason,
+        "sink":      sink or "",
+        "source":    source or "",
+        "ts":        int(time.time()),
+    })
+    _write_audio_state()
+
+
 def get_mpv_args(settings=None, source: str = "") -> list:
     """
-    Einheitlicher Audio-Pfad fuer ALLE Quellen - v0.8.11.
-
-    Gibt immer ["--ao=pulse"] zurueck.
-    Die Sink-Entscheidung (Klinke / BT / HDMI) wird ueber set_default_sink()
-    im systemweiten PulseAudio gesetzt, bevor mpv gestartet wird.
-
-    Fallback: wenn PulseAudio nicht aktiv ist, direkt via ALSA.
+    STRICT zentraler Audio-Pfad — v0.8.13.
+    Immer --ao=pulse. Kein ALSA-Fallback.
+    Schreibt Entscheidung in /tmp/pidrive_audio_state.json.
     """
     if settings is None:
         try:
@@ -145,15 +147,9 @@ def get_mpv_args(settings=None, source: str = "") -> list:
     src_tag   = ("source=" + source).ljust(17) if source else "source=-         "
 
     if not _pa_ok():
-        # v0.8.12 STRICT MODE: kein stiller ALSA-Fallback mehr
-        # Klare Fehlermeldung, aber Pfad bleibt bei --ao=pulse
         log.error("[AUDIO] " + src_tag + " requested=" + requested +
-                  " effective=none reason=pulseaudio_inactive — KEIN ALSA-Fallback (strict mode)")
-        _last_decision.update({
-            "requested": requested, "effective": "none",
-            "reason": "pulseaudio_inactive", "sink": "", "source": source,
-            "ts": int(time.time()),
-        })
+                  " effective=none reason=pulseaudio_inactive — strict mode")
+        _remember_decision(requested, "none", "pulseaudio_inactive", "", source)
         return ["--ao=pulse"]
 
     bt_sink   = get_bt_sink()
@@ -169,16 +165,13 @@ def get_mpv_args(settings=None, source: str = "") -> list:
             effective, reason, sink = "bt",     "bt_requested",               bt_sink
         else:
             effective, reason, sink = "klinke", "bt_requested_no_a2dp_sink",  alsa_sink
-
     elif requested == "hdmi":
         if hdmi_sink:
             effective, reason, sink = "hdmi",   "hdmi_requested",             hdmi_sink
         else:
             effective, reason, sink = "klinke", "hdmi_requested_no_hdmi_sink", alsa_sink
-
     elif requested == "klinke":
         effective, reason, sink = "klinke", "klinke_requested", alsa_sink
-
     else:  # auto
         if bt_sink:
             effective, reason, sink = "bt",     "a2dp_sink_available",  bt_sink
@@ -187,22 +180,19 @@ def get_mpv_args(settings=None, source: str = "") -> list:
 
     if sink:
         set_default_sink(sink)
+    else:
+        effective = "none"
+        reason    = "no_sink_available"
 
     log.info("[AUDIO] " + src_tag + " requested=" + requested.ljust(6) +
              " effective=" + effective.ljust(7) +
              " reason=" + reason + " sink=" + (sink or "-"))
 
-    _last_decision.update({
-        "requested": requested, "effective": effective,
-        "reason": reason, "sink": sink or "", "source": source,
-        "ts": int(time.time()),
-    })
-
+    _remember_decision(requested, effective, reason, sink, source)
     return ["--ao=pulse"]
 
 
 def set_output(mode: str, settings: dict):
-    """Audio-Ausgang wechseln und in settings speichern."""
     mode = mode.lower().replace("audio_", "").strip()
 
     if mode in ("klinke", "aux", "klinke (aux)"):
@@ -210,7 +200,11 @@ def set_output(mode: str, settings: dict):
         sink = get_alsa_sink()
         if sink:
             set_default_sink(sink)
-        ipc.write_progress("Audio", "Klinke aktiv", color="green")
+            _remember_decision("klinke", "klinke", "klinke_requested", sink, "manual")
+            ipc.write_progress("Audio", "Klinke aktiv", color="green")
+        else:
+            _remember_decision("klinke", "none", "no_alsa_sink", "", "manual")
+            ipc.write_progress("Audio", "Kein ALSA-Sink", color="orange")
         log.info("[AUDIO] set_output -> klinke")
 
     elif mode == "hdmi":
@@ -218,8 +212,10 @@ def set_output(mode: str, settings: dict):
         sink = get_hdmi_sink()
         if sink:
             set_default_sink(sink)
+            _remember_decision("hdmi", "hdmi", "hdmi_requested", sink, "manual")
             ipc.write_progress("Audio", "HDMI aktiv", color="green")
         else:
+            _remember_decision("hdmi", "none", "no_hdmi_sink", "", "manual")
             ipc.write_progress("Audio", "Kein HDMI-Sink", color="orange")
         log.info("[AUDIO] set_output -> hdmi")
 
@@ -228,23 +224,18 @@ def set_output(mode: str, settings: dict):
         sink = get_bt_sink()
         if sink:
             set_default_sink(sink)
+            _remember_decision("bt", "bt", "bt_requested", sink, "manual")
             ipc.write_progress("Audio", "Bluetooth aktiv", color="green")
             log.info("[AUDIO] set_output -> bt  sink=" + sink)
         else:
+            _remember_decision("bt", "none", "no_a2dp_sink", "", "manual")
             ipc.write_progress("Audio", "Kein BT-Sink (A2DP)", color="orange")
             log.warn("[AUDIO] set_output -> bt  aber kein A2DP-Sink")
 
     elif mode in ("auto", "all"):
         settings["audio_output"] = "auto"
-        sink = get_bt_sink()
-        if sink:
-            set_default_sink(sink)
-            ipc.write_progress("Audio", "Auto: BT", color="green")
-        else:
-            sink = get_alsa_sink()
-            if sink:
-                set_default_sink(sink)
-            ipc.write_progress("Audio", "Auto: Klinke", color="green")
+        get_mpv_args(settings, source="set_output:auto")
+        ipc.write_progress("Audio", "Auto gesetzt", color="green")
         log.info("[AUDIO] set_output -> auto")
 
     time.sleep(1)
@@ -274,7 +265,7 @@ def volume_down(settings=None):
 
 
 def get_alsa_device(settings: dict) -> str:
-    """Veraltet - nur noch fuer Altcode. Neue Architektur nutzt get_mpv_args()."""
+    """Veraltet — nur Altkompatibilitaet."""
     requested = settings.get("audio_output", "auto")
     if requested in ("bt", "auto"):
         return "pulse"

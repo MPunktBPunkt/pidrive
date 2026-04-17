@@ -232,6 +232,16 @@ def connect_device(mac, S, settings):
     ipc.write_progress("Bluetooth", f"Verbinde {name[:20]}...", color="blue")
     log.info(f"BT connect: START mac={mac} name={name}")
 
+    # v0.8.13: Scanner stoppen vor Connect — verhindert RTL-/Status-Kollision
+    try:
+        from modules import scanner as _scanner
+        if S.get("radio_type") == "SCANNER":
+            log.info("BT connect: stoppe Scanner vor Connect")
+            _scanner.stop(S)
+            import time as _t; _t.sleep(0.5)
+    except Exception as e:
+        log.warn("BT connect: scanner stop failed: " + str(e))
+
     S["bt"] = False
     S["bt_status"] = "verbindet"
     S["menu_rev"] = S.get("menu_rev", 0) + 1
@@ -240,6 +250,10 @@ def connect_device(mac, S, settings):
 
     _btctl("power on", timeout=8)
     _ensure_agent()
+
+    # v0.8.13: sauberer Zustand vor Connect — alten Verbindungsstatus aufräumen
+    _btctl(f"disconnect {mac}", timeout=8)
+    import time as _t2; _t2.sleep(1)
 
     # Trust → Pair → Connect (3 Versuche)
     attempts = [
