@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.11
+# PiDrive — Kontext & Projektdokumentation v0.8.12
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.11 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.12 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -899,12 +899,34 @@ sudo systemctl restart pidrive_display
 | Konsole ueberlagert Display | stdout auf tty3 | StandardOutput=null im Service |
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
-| DAB '-o' Fehler | welle-cli 2.2 kennt -o nicht | dab.py: -p PROGRAMMNAME Syntax (v0.8.11) |
+| DAB '-o' Fehler | welle-cli 2.2 kennt -o nicht | dab.py: -p PROGRAMMNAME Syntax — behoben v0.8.11 |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
 
 ---
 
 ## Changelog
+
+### v0.8.12 — Audio Debug Cockpit, Versionsstrings, Diagnose-Fix
+**diagnose.py — Versionsstring gefixt:**
+- War noch `v0.7.10` → jetzt `v0.8.12`
+- Diagnose-Ausgabe im Installer und manuell korrekt
+
+**main_core.py / main_display.py — Versionsstrings:**
+- Beide bereits in v0.8.11 auf v0.8.11 gesetzt, jetzt auf v0.8.12
+
+**webui.py — Audio Debug Cockpit (`get_audio_debug()`):**
+- Neue Funktion `get_audio_debug()` mit vollständiger Audio-Sicht
+- PulseAudio-Status, Default-Sink, alle Sinks (Typ: bt/alsa/hdmi/other)
+- Sink-Inputs kurz (`pactl list sink-inputs short`)
+- Sink-Input Details (`pactl list sink-inputs`): Application Name, Process Binary, PID, Media Name
+- `/api/audio` delegiert jetzt komplett an `get_audio_debug()`
+- `build_view_model()` enthält `audio_debug` für Server-Side-Rendering
+
+**index.html — Audio Debug Cockpit Panel:**
+- Panel umbenannt: "Audio Routing Debug" → "Audio Debug Cockpit"
+- Neue rechte Spalte: Sink-Inputs-Tabelle mit App/Binary/PID (mpv/librespot hervorgehoben)
+- Neue Sinks-Liste mit Default-Sink-Marker (◀ default)
+- JS `refreshAudio()` vollständig neu: rendert Tabellen dynamisch, kein JSON-Dump mehr
 
 ### v0.8.11 — Audio-Architektur Option B, DAB Fix, Car-Only Cleanup
 **Zielarchitektur Option B — Einheitliches Audio über systemweiten PulseAudio:**
@@ -1302,24 +1324,25 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.11)
+## Aktueller Stand (v0.8.12)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.11 — Audio Umbau Option B, DAB Fix, Versionsstrings
-✓ pidrive_display.service   v0.8.11, 20fps
-✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio-Routing Debug
+✓ pidrive_core.service      v0.8.12 — Audio Debug Cockpit, Versionsstrings
+✓ pidrive_display.service   v0.8.12, 20fps
+✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
 ✓ pulseaudio.service        BT A2DP Audio — systemweiter Daemon
 ✓ audio.py                  Zielarchitektur Option B: alle Quellen über systemweiten PulseAudio
-✓ fm.py                     FM nicht mehr via aplay — einheitlich über mpv --ao=pulse
-✓ dab.py                    welle-cli -o - Bug gefixt → -p PROGRAMMNAME Syntax
-✓ webui.py                  /api/audio — Audio-Sink + letzte Routing-Entscheidung sichtbar
-✓ index.html                Audio Routing Debug Panel (PulseAudio-Status, Sinks, Entscheidung)
-✓ main_core.py              Versionsstring v0.8.6 → v0.8.11
-✓ main_display.py           Versionsstring v0.8.9 → v0.8.11
-✓ pidrive_car_only_cleanup.sh  Neues Script: Desktop-Dienste deaktivieren, User-Audio stilllegen
+✓ fm.py                     FM einheitlich über mpv --ao=pulse (kein aplay mehr)
+✓ dab.py                    welle-cli -p PROGRAMMNAME (war: broken -o -)
+✓ diagnose.py               Versionsstring v0.7.10 → v0.8.12
+✓ webui.py                  get_audio_debug(): Sinks + Sink-Inputs + Prozessnamen
+✓ index.html                Audio Debug Cockpit: Sink-Inputs-Tabelle mit App/Binary/PID
+✓ main_core.py              Versionsstring v0.8.6 → v0.8.12 (korrekt)
+✓ main_display.py           Versionsstring v0.8.9 → v0.8.12 (korrekt)
+✓ pidrive_car_only_cleanup.sh  Car-Only Cleanup Script
 ✓ install.sh                Optionaler Car-Only Cleanup nach Installation
 ✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
 ✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
@@ -1433,6 +1456,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] Audio Debug Cockpit, Versionsstrings, Diagnose-Fix (v0.8.12)
 - [x] Audio-Architektur Option B, DAB Fix, Car-Only Cleanup (v0.8.11)
 - [x] FM Race-Fix, DAB Gain, BT Agent, Cleanup (v0.8.10)
 - [x] Statusfix: BT robust, AVRCP Debug-JSON, RTL-SDR Stale Lock, Display-Version (v0.8.9)

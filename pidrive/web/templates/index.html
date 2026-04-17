@@ -299,10 +299,10 @@
 
       <!-- Audio Debug Panel (v0.8.11 Zielarchitektur Option B) -->
       <section class="panel">
-        <div class="panel-title">Audio Routing Debug</div>
+        <div class="panel-title">Audio Debug Cockpit</div>
         <div class="diag-grid">
           <div class="diag-card">
-            <div class="diag-title">Aktueller Status</div>
+            <div class="diag-title">Routing-Entscheidung</div>
             <div class="diag-list">
               <div class="diag-row">
                 <div class="diag-key">PulseAudio</div>
@@ -342,8 +342,14 @@
             </div>
           </div>
           <div class="diag-card">
-            <div class="diag-title">Audio Debug-JSON</div>
-            <pre id="audioJson" style="font-size:0.75em;overflow:auto;max-height:220px">{}</pre>
+            <div class="diag-title">Aktive Sink-Inputs</div>
+            <div id="audioSinkInputsTable" style="font-size:0.8em;">
+              <em style="color:#888">– keine –</em>
+            </div>
+            <div class="diag-title" style="margin-top:10px">Alle Sinks</div>
+            <div id="audioSinksList" style="font-size:0.8em;">
+              <em style="color:#888">– keine –</em>
+            </div>
           </div>
         </div>
       </section>
@@ -592,32 +598,83 @@
     </script>
 
     <script>
-    // Audio Routing Debug — v0.8.11
+    // Audio Debug Cockpit — v0.8.12: Sinks + Sink-Inputs + Prozessnamen
     async function refreshAudio() {
       try {
         const r = await fetch('/api/audio');
         const j = await r.json();
-        if (j.error) {
-          document.getElementById('audioPaActive').textContent = 'Fehler: ' + j.error;
-          return;
-        }
+        const d = j.data || j;
+
         document.getElementById('audioPaActive').textContent =
-          j.pa_active ? '✓ aktiv' : '⚠ inaktiv';
+          d.pulse_active ? '✓ aktiv' : '⚠ inaktiv';
         document.getElementById('audioDefaultSink').textContent =
-          j.default_sink ? j.default_sink.replace(/alsa_output\.|\.stereo/g,'') : '–';
+          d.default_sink ? d.default_sink.replace(/alsa_output\.|\.stereo/g,'') : '–';
+
+        const btSink   = (d.sinks||[]).find(s => s.type === 'bt');
+        const alsaSink = (d.sinks||[]).find(s => s.type === 'alsa');
         document.getElementById('audioBtSink').textContent =
-          j.bt_sink   ? ('✓ ' + j.bt_sink.replace(/bluez_sink\./,'').slice(0,24)) : '– kein A2DP';
+          btSink ? ('✓ ' + btSink.name.replace('bluez_sink.','').slice(0,26)) : '– kein A2DP';
         document.getElementById('audioAlsaSink').textContent =
-          j.alsa_sink ? ('✓ ' + j.alsa_sink.replace(/alsa_output\./,'').slice(0,24)) : '–';
-        const ld = j.last_decision || {};
+          alsaSink ? ('✓ ' + alsaSink.name.replace('alsa_output.','').slice(0,26)) : '–';
+
+        const ld = d.decision || {};
         document.getElementById('audioRequested').textContent = ld.requested || '–';
         document.getElementById('audioEffective').textContent = ld.effective || '–';
         document.getElementById('audioReason').textContent    = ld.reason    || '–';
         document.getElementById('audioSource').textContent    = ld.source    || '–';
-        document.getElementById('audioJson').textContent      = JSON.stringify(j, null, 2);
+
+        // Sink-Inputs Tabelle
+        const inputs = d.sink_inputs || [];
+        const siDiv = document.getElementById('audioSinkInputsTable');
+        if (!inputs.length) {
+          siDiv.innerHTML = '<em style="color:#888">– keine aktiven Inputs –</em>';
+        } else {
+          let html = '<table style="width:100%;border-collapse:collapse;font-size:0.78em">';
+          html += '<tr style="color:#aaa"><th align="left" style="padding:2px 4px">ID</th>'
+               + '<th align="left" style="padding:2px 4px">Sink</th>'
+               + '<th align="left" style="padding:2px 4px">App</th>'
+               + '<th align="left" style="padding:2px 4px">Binary</th>'
+               + '<th align="left" style="padding:2px 4px">PID</th></tr>';
+          for (const inp of inputs) {
+            const app  = inp.application_name || inp.client || '–';
+            const bin  = inp.process_binary   || '–';
+            const pid  = inp.process_id       || '–';
+            const sink = (inp.sink || '–').toString().slice(0,6);
+            const hi   = (bin==='mpv'||bin==='librespot') ? 'background:#1a2a1a' : '';
+            html += `<tr style="border-top:1px solid #333;${hi}">
+              <td style="padding:2px 4px">${inp.id}</td>
+              <td style="padding:2px 4px">${sink}</td>
+              <td style="padding:2px 4px">${app}</td>
+              <td style="padding:2px 4px;color:#7cf">${bin}</td>
+              <td style="padding:2px 4px;color:#aaa">${pid}</td>
+            </tr>`;
+          }
+          html += '</table>';
+          siDiv.innerHTML = html;
+        }
+
+        // Sinks Liste
+        const sinks = d.sinks || [];
+        const skDiv = document.getElementById('audioSinksList');
+        if (!sinks.length) {
+          skDiv.innerHTML = '<em style="color:#888">– keine Sinks –</em>';
+        } else {
+          let html = '';
+          for (const s of sinks) {
+            const isDefault = (s.name === d.default_sink);
+            const col = s.type==='bt' ? '#7cf' : s.type==='alsa' ? '#7fc' : '#aaa';
+            const mark = isDefault ? ' ◀ default' : '';
+            html += `<div style="padding:2px 0;color:${col}">`
+                  + `<span style="color:#555">[${s.id}] </span>`
+                  + s.name.replace('alsa_output.','').replace('bluez_sink.','')
+                  + `<span style="color:#fa0">${mark}</span></div>`;
+          }
+          skDiv.innerHTML = html;
+        }
+
       } catch(e) {
         document.getElementById('audioPaActive').textContent = 'Fehler';
-        document.getElementById('audioJson').textContent = String(e);
+        console.error('Audio Debug Cockpit Fehler', e);
       }
     }
     window.addEventListener('load', () => { setTimeout(refreshAudio, 600); });

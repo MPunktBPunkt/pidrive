@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.8.11
+# PiDrive Install Script v0.8.12
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.8.11           ║
+║        PiDrive Installer v0.8.12           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -492,7 +492,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Optionaler Car-Only Cleanup (v0.8.11) ─────────────────────────────────────
+# ── Optionaler Car-Only Cleanup (v0.8.12) ─────────────────────────────────────
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   echo ""
   echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"

@@ -105,7 +105,131 @@ def get_version():
     except Exception:
         return "?"
 
-def build_view_model():
+
+PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+
+
+def get_audio_debug() -> dict:
+    """
+    Vollstaendiges Audio-Debug-Cockpit fuer WebUI — v0.8.12.
+    Liefert:
+      - pulse_active: PulseAudio Systemdaemon aktiv?
+      - default_sink: aktueller Default-Sink
+      - sinks:        alle verfuegbaren PulseAudio-Sinks
+      - sink_inputs:  laufende Sink-Inputs mit Prozessnamen
+      - decision:     letzte audio.py Routing-Entscheidung
+    """
+    data = {
+        "pulse_active": False,
+        "default_sink": "",
+        "sinks": [],
+        "sink_inputs": [],
+        "decision": {},
+    }
+
+    # 1) letzte PiDrive Audio-Entscheidung
+    try:
+        import sys, os as _os
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from modules.audio import get_last_decision
+        data["decision"] = get_last_decision()
+    except Exception:
+        data["decision"] = {}
+
+    # 2) PulseAudio aktiv?
+    try:
+        pa = safe_run("systemctl is-active pulseaudio 2>/dev/null")
+        data["pulse_active"] = (pa.get("stdout", "").strip() == "active")
+    except Exception:
+        pass
+
+    # 3) Default-Sink
+    try:
+        ds = safe_run(PA_ENV + " pactl get-default-sink 2>/dev/null")
+        data["default_sink"] = (ds.get("stdout", "") or "").strip()
+    except Exception:
+        pass
+
+    # 4) Alle Sinks
+    try:
+        sinks = safe_run(PA_ENV + " pactl list sinks short 2>/dev/null")
+        out = sinks.get("stdout", "") or ""
+        for line in out.splitlines():
+            if not line.strip():
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                name = parts[1]
+                typ  = "bt" if "bluez_sink" in name else \
+                       "hdmi" if "hdmi" in name.lower() else \
+                       "alsa" if "alsa_output" in name else "other"
+                data["sinks"].append({
+                    "id":   parts[0],
+                    "name": name,
+                    "type": typ,
+                    "raw":  line.strip(),
+                })
+    except Exception:
+        pass
+
+    # 5) Sink-Inputs (kurz)
+    try:
+        sin = safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null")
+        out = sin.get("stdout", "") or ""
+        for line in out.splitlines():
+            if not line.strip():
+                continue
+            parts = line.split()
+            data["sink_inputs"].append({
+                "id":     parts[0] if len(parts) > 0 else "",
+                "sink":   parts[1] if len(parts) > 1 else "",
+                "client": parts[2] if len(parts) > 2 else "",
+                "driver": parts[3] if len(parts) > 3 else "",
+                "raw":    line.strip(),
+            })
+    except Exception:
+        pass
+
+    # 6) Sink-Input Details: Prozessname aus vollem pactl list
+    try:
+        detail = safe_run(PA_ENV + " pactl list sink-inputs 2>/dev/null")
+        txt = detail.get("stdout", "") or ""
+        blocks = txt.split("Sink Input #")
+        parsed = {}
+        for block in blocks[1:]:
+            lines = block.splitlines()
+            if not lines:
+                continue
+            sid = lines[0].strip()
+            item = {
+                "application_name":  "",
+                "process_binary":    "",
+                "process_id":        "",
+                "media_name":        "",
+            }
+            for ln in lines:
+                s = ln.strip()
+                if 'application.name = "' in s:
+                    item["application_name"] = s.split('"')[1]
+                elif 'application.process.binary = "' in s:
+                    item["process_binary"] = s.split('"')[1]
+                elif 'application.process.id = "' in s:
+                    item["process_id"] = s.split('"')[1]
+                elif 'media.name = "' in s:
+                    item["media_name"] = s.split('"')[1]
+            parsed[sid] = item
+
+        for row in data["sink_inputs"]:
+            extra = parsed.get(str(row.get("id", "")), {})
+            row.update(extra)
+    except Exception:
+        pass
+
+    return data
+
+
     status   = read_json(STATUS_FILE, {})
     menu     = read_json(MENU_FILE,   {})
     progress = read_json(PROGRESS_FILE, {})
@@ -149,6 +273,7 @@ def build_view_model():
         "avrcp":          avrcp,
         "avrcp_age":      file_age(AVRCP_FILE),
         "avrcp_exists":   os.path.exists(AVRCP_FILE),
+        "audio_debug":    get_audio_debug(),
         "list_data":      list_data,
         "list_active":    list_data.get("active", False),
         "list_title":     list_data.get("title", ""),
@@ -336,50 +461,11 @@ def api_avrcp():
 
 @app.route("/api/audio")
 def api_audio():
-    """Audio-Routing Debug — v0.8.11 Zielarchitektur Option B."""
-    try:
-        import sys, os as _os
-        _base = _os.path.dirname(__file__)
-        if _base not in sys.path:
-            sys.path.insert(0, _base)
-        from modules.audio import (
-            get_last_decision, get_bt_sink, get_alsa_sink,
-            get_hdmi_sink, _pa_ok, _list_sinks, PA_ENV
-        )
-        import subprocess as _sp
-
-        pa_active = _pa_ok()
-        sinks     = _list_sinks()
-        bt_sink   = get_bt_sink()
-        alsa_sink = get_alsa_sink()
-        hdmi_sink = get_hdmi_sink()
-        last      = get_last_decision()
-
-        # Default sink abfragen
-        default_sink = ""
-        try:
-            r = _sp.run(
-                PA_ENV + " pactl info 2>/dev/null | grep 'Default Sink'",
-                shell=True, capture_output=True, text=True, timeout=4
-            )
-            for line in r.stdout.splitlines():
-                if "Default Sink" in line:
-                    default_sink = line.split(":", 1)[-1].strip()
-                    break
-        except Exception:
-            pass
-
-        return jsonify({
-            "pa_active":    pa_active,
-            "default_sink": default_sink,
-            "bt_sink":      bt_sink,
-            "alsa_sink":    alsa_sink,
-            "hdmi_sink":    hdmi_sink,
-            "sinks":        [s["name"] for s in sinks],
-            "last_decision": last,
-        })
-    except Exception as e:
-        return jsonify({"error": str(e), "pa_active": False})
+    """Audio-Routing Debug Cockpit — v0.8.12: Sinks + Sink-Inputs + Prozessnamen."""
+    return jsonify({
+        "ok":   True,
+        "data": get_audio_debug(),
+    })
 
 
 if __name__ == "__main__":
