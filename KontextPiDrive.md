@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.14
+# PiDrive — Kontext & Projektdokumentation v0.8.15
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.14 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.15 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -851,6 +851,10 @@ echo "scan_next:pmr446"            > /tmp/pidrive_cmd   # PMR446 Scan weiter
 echo "scan_jump:cb:10"             > /tmp/pidrive_cmd   # CB-Funk 10 Kanäle vor
 echo "scan_step:vhf:0.025"         > /tmp/pidrive_cmd   # VHF +25 kHz
 echo "scan_step:uhf:-1.0"          > /tmp/pidrive_cmd   # UHF -1 MHz
+echo "fm_gain:-1"                   > /tmp/pidrive_cmd   # FM Auto-Gain (AGC)
+echo "fm_gain:30"                   > /tmp/pidrive_cmd   # FM Gain 30 dB
+echo "dab_gain:-1"                  > /tmp/pidrive_cmd   # DAB Auto-Gain (AGC)
+echo "dab_gain:35"                  > /tmp/pidrive_cmd   # DAB Gain 35 dB
 echo "scan_setfreq:vhf:145.500"    > /tmp/pidrive_cmd   # VHF direkt auf 145.5 MHz
 echo "scan_inputfreq:vhf"          > /tmp/pidrive_cmd   # VHF manuelle Eingabe
 echo "wifi_on/wifi_off"             > /tmp/pidrive_cmd
@@ -902,11 +906,51 @@ sudo systemctl restart pidrive_display
 | DAB '-o' Fehler | welle-cli 2.2 kennt -o nicht | dab.py: -p PROGRAMMNAME Syntax — behoben v0.8.11 |
 | Kein Ton auf Klinke | Pi-Ausgang physisch auf HDMI (amixer numid=3) | audio.py: _set_pi_output_klinke() — behoben v0.8.14 |
 | BT Agent No agent is registered | _btctl() subprocess stirbt sofort | bluetooth.py: persistenter bluetoothctl-Prozess — behoben v0.8.14 |
+| BT AuthenticationFailed nach Reboot | Pairing-Keys verloren, Kopfhörer hat alte Keys | bluetooth.py: Paired:no → auto-remove + Neu-Pairing (v0.8.15) |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
 
 ---
 
 ## Changelog
+
+### v0.8.15 — BT-AuthFix, Gain-WebUI, Auto-Reconnect
+**Analyse aus v0.8.14 Log:**
+- `Paired: no` + `org.bluez.Error.AuthenticationFailed` bei jedem pair-Versuch
+- Pi hat nach Reboot keine Pairing-Keys mehr, Kopfhörer aber noch alte Keys
+- connect() schlug deshalb strukturell immer fehl
+- Gain (FM/DAB) und Lautstärke waren im WebUI nicht sichtbar/steuerbar
+- BT Auto-Reconnect (Kopfhörer später einschalten) fehlte komplett
+
+**bluetooth.py — AuthenticationFailed strukturell beheben:**
+- Vor connect: `bluetoothctl info <mac>` prüft `Paired: no` → automatisches `remove` + frisches Pairing
+- Bei `org.bluez.Error.AuthenticationFailed` im pair-Schritt: `remove` + Hinweis "Pairing-Modus nötig"
+- Verhindert endlose Fehlversuche mit inkompatiblen Keys
+
+**bluetooth.py — BT Auto-Reconnect Watcher:**
+- `start_auto_reconnect()`: Hintergrund-Thread startet mit Core, prüft alle 30s
+- Wenn letztes Gerät erreichbar (`Connected: no` aber BlueZ kennt es) → `connect` versuchen
+- Bei Erfolg: Audio-Routing auf BT umschalten, Status aktualisieren
+- Phase 3 Feature: "Kopfhörer wird nach PiDrive-Start eingeschaltet → verbindet automatisch"
+
+**settings.py + fm.py — FM Gain:**
+- `fm_gain: -1` als Default (Auto AGC) in settings
+- `rtl_fm` Befehl nutzt `-g GAIN` wenn fm_gain != -1
+- Separate Einstellung von `dab_gain` — FM und DAB brauchen unterschiedliche Werte
+
+**main_core.py — Gain-Trigger:**
+- `fm_gain:-1` / `fm_gain:30` → setzt settings.fm_gain, speichert, Progress-Feedback
+- `dab_gain:-1` / `dab_gain:35` → analog für DAB
+
+**webui.py — /api/gain + /api/volume:**
+- `/api/gain`: gibt fm_gain + dab_gain aus settings zurück
+- `/api/volume`: gibt PulseAudio Default-Sink-Lautstärke zurück
+
+**index.html — Gain & Lautstärke Panel:**
+- Neues Panel "🎚️ Lautstärke & Empfang (Gain)"
+- Lautstärke: aktueller Wert + ▲/▼ Buttons (+5%/-5%)
+- FM Gain: Auto/10/20/30/40/49 dB Buttons mit Erklärung
+- DAB Gain: gleiche Buttons + Hinweis (DAB braucht oft mehr als FM)
+- Auto-Refresh beim Laden
 
 ### v0.8.14 — Klinke-Audio-Fix, BT-Agent-Fix
 **Analyse aus v0.8.13 Log:**
@@ -1408,13 +1452,13 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.14)
+## Aktueller Stand (v0.8.15)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.14 — Klinke-Audio-Fix, BT-Agent-Fix
-✓ pidrive_display.service   v0.8.14, 20fps
+✓ pidrive_core.service      v0.8.15 — BT-AuthFix, Gain-WebUI, Auto-Reconnect
+✓ pidrive_display.service   v0.8.15, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
@@ -1445,6 +1489,7 @@ sudo systemctl restart pidrive_display
 **Offene Punkte:**
 - GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
 - BMW iDrive AVRCP Praxistest im Auto (code-seitig fertig, Feldtest ausstehend)
+- BT Pairing nach Reboot stabil machen (v0.8.15 verbessert, weiteres Testen nötig)
 - resume_state.py / last_state.json für Boot-Resume
 - BT Auto-Reconnect im Laufzeitbetrieb (Kopfhörer der nach Start eingeschaltet wird)
 
@@ -1549,6 +1594,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] BT-AuthFix, Gain-WebUI, Auto-Reconnect (v0.8.15)
 - [x] Klinke-Audio-Fix, BT-Agent-Fix (v0.8.14)
 - [x] Audio State File, Scanner-Guard, BT-Fix, Status-Sync (v0.8.13)
 - [x] Audio Debug Cockpit, Versionsstrings, Diagnose-Fix (v0.8.12)

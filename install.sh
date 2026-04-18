@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.8.14
+# PiDrive Install Script v0.8.15
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.8.14           ║
+║        PiDrive Installer v0.8.15           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -256,7 +256,7 @@ if [ -f /etc/raspotify/conf ]; then
     grep -q "^LIBRESPOT_ONEVENT" /etc/raspotify/conf || \
         echo "LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh" >> /etc/raspotify/conf
 
-    # v0.8.14: Zielarchitektur Option B — Spotify über zentralen PulseAudio-Pfad
+    # v0.8.15: Zielarchitektur Option B — Spotify über zentralen PulseAudio-Pfad
     # LIBRESPOT_DEVICE=default nutzt den PulseAudio Default-Sink (Klinke oder BT)
     if grep -q "^LIBRESPOT_BACKEND" /etc/raspotify/conf; then
         sed -i 's|^LIBRESPOT_BACKEND=.*|LIBRESPOT_BACKEND=alsa|' /etc/raspotify/conf
@@ -281,7 +281,7 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     ok "Raspotify konfiguriert (zentral via PulseAudio)"
 
-  # v0.8.14: Pi 3B Klinken-Ausgang physisch aktivieren
+  # v0.8.15: Pi 3B Klinken-Ausgang physisch aktivieren
   # amixer numid=3: 0=auto, 1=klinke, 2=HDMI
   # Ohne diese Zeile bleibt Pi-Audio oft auf HDMI trotz PulseAudio-Routing
   amixer -q -c 0 cset numid=3 1 2>/dev/null && ok "Pi Audio: Klinke aktiviert (amixer numid=3=1)" || true
@@ -395,7 +395,7 @@ if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import main_core" 2>/dev/null); t
     exit 1
 else
     ok "Import-Smoke-Test OK (main_core)"
-  # v0.8.14: WebUI Import-Smoke-Test — verhindert stille Strukturfehler wie v0.8.12
+  # v0.8.15: WebUI Import-Smoke-Test — verhindert stille Strukturfehler wie v0.8.12
   if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>/dev/null); then
     err "Import-Smoke-Test fehlgeschlagen: webui"
     (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>&1) | head -12
@@ -510,7 +510,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Optionaler Car-Only Cleanup (v0.8.14) ─────────────────────────────────────
+# ── Optionaler Car-Only Cleanup (v0.8.15) ─────────────────────────────────────
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   echo ""
   echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"
