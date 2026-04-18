@@ -304,6 +304,15 @@ def connect_device(mac, S, settings):
     _btctl(f"disconnect {mac}", timeout=8)
     import time as _t2; _t2.sleep(1)
 
+    # v0.8.15: Paired-Status prüfen — bei Paired:no erst remove, dann frisch pairen
+    # AuthenticationFailed tritt auf wenn Pi keine Keys hat, Kopfhörer aber schon
+    _, info_pre = _btctl(f"info {mac}", timeout=6)
+    if "paired: no" in info_pre.lower() and "name:" in info_pre.lower():
+        log.info(f"BT connect: Paired:no erkannt — entferne Gerät für sauberes Neu-Pairing mac={mac}")
+        ipc.write_progress("Bluetooth", "Kopplung erneuern...", color="blue")
+        _btctl(f"remove {mac}", timeout=10)
+        time.sleep(2)
+
     # Trust → Pair → Connect (3 Versuche)
     attempts = [
         ("trust",   f"trust {mac}",   8),
@@ -322,6 +331,12 @@ def connect_device(mac, S, settings):
                                        "alreadyexists", "already paired",
                                        "device has been paired"]):
                 log.info(f"BT connect: PAIR ok mac={mac}")
+            elif "authenticationfailed" in low or "authentication failed" in low:
+                # v0.8.15: AuthenticationFailed → Keys inkompatibel → remove + Hinweis
+                log.warn(f"BT connect: AuthenticationFailed — Kopfhörer in Pairing-Modus bringen mac={mac}")
+                ipc.write_progress("Bluetooth", "Pairing-Modus am Kopfhörer nötig!", color="orange")
+                _btctl(f"remove {mac}", timeout=10)
+                time.sleep(1)
             else:
                 log.warn(f"BT connect: PAIR unsicher mac={mac} out={out[:180]}")
 
@@ -457,6 +472,65 @@ def repair_device(mac, S, settings):
     log.info(f"BT repair: {'OK' if ok else 'FAIL'} mac={mac}")
     S["menu_rev"] = S.get("menu_rev", 0) + 1
     return ok
+
+
+# ── Auto-Reconnect Watcher ───────────────────────────────────────────────────
+
+_reconnect_thread = None
+_reconnect_stop   = False
+
+
+def start_auto_reconnect(S, settings):
+    """
+    Startet einen Hintergrund-Watcher der alle 30s prüft ob das letzte
+    BT-Gerät erreichbar ist und ggf. automatisch verbindet.
+    Phase 3 Feature: "Kopfhörer wird eingeschaltet → PiDrive verbindet"
+    """
+    global _reconnect_thread, _reconnect_stop
+    if _reconnect_thread and _reconnect_thread.is_alive():
+        return
+    _reconnect_stop = False
+    import threading as _th
+
+    def _watcher():
+        import time as _t
+        _t.sleep(15)  # Kurze Startpause
+        while not _reconnect_stop:
+            try:
+                mac  = settings.get("bt_last_mac", "")
+                name = settings.get("bt_last_name", "")
+                if mac and not S.get("bt", False):
+                    rc, out = _btctl(f"info {mac}", timeout=5)
+                    low = out.lower()
+                    if rc == 0 and "name:" in low and "connected: no" in low:
+                        log.info(f"BT auto-reconnect: Gerät sichtbar, versuche Connect mac={mac}")
+                        # Kein aggressives repair — nur connect versuchen
+                        rc2, out2 = _btctl(f"connect {mac}", timeout=15)
+                        low2 = out2.lower()
+                        if any(x in low2 for x in ["successful", "connected: yes"]):
+                            log.info(f"BT auto-reconnect: ERFOLG mac={mac} name={name}")
+                            S["bt"]         = True
+                            S["bt_device"]  = name
+                            S["bt_status"]  = "verbunden"
+                            S["bt_sink_mac"] = mac
+                            S["bt_pa_sink"]  = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+                            settings["audio_output"] = "bt"
+                            from modules import audio as _aud
+                            _aud.get_mpv_args(settings, source="bt_auto_reconnect")
+                        else:
+                            log.info(f"BT auto-reconnect: fehlgeschlagen mac={mac} ({out2[:80]})")
+            except Exception as e:
+                log.warn("BT auto-reconnect Watcher: " + str(e))
+            _t.sleep(30)
+
+    _reconnect_thread = _th.Thread(target=_watcher, daemon=True, name="bt_auto_reconnect")
+    _reconnect_thread.start()
+    log.info("BT auto-reconnect: Watcher gestartet (30s Intervall)")
+
+
+def stop_auto_reconnect():
+    global _reconnect_stop
+    _reconnect_stop = True
 
 
 def reconnect_last(S, settings):

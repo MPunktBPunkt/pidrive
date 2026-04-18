@@ -200,8 +200,10 @@ def play_station(station, S, settings=None):
             return
 
 
+        _fm_gain_val = settings.get("fm_gain", -1) if settings else -1
+        _fm_gain_arg = "" if str(_fm_gain_val) == "-1" else f" -g {_fm_gain_val}"
         cmd = (
-            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000 -A fast - 2>/dev/null | "
+            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + " -A fast - 2>/dev/null | "
             "mpv --no-video --really-quiet --title=pidrive_fm "
             "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
             "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"
