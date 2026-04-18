@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.8.14
+"""diagnose.py - PiDrive System-Diagnose v0.8.15
 
 v0.6.0: Core/Display getrennt.
 - pidrive_core.service  — headless, kein pygame
@@ -201,7 +201,7 @@ def summary():
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.8.14\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.8.15\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()

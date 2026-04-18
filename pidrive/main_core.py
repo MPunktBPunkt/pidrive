@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.14
+main_core.py - PiDrive Core v0.8.15
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -197,7 +197,31 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Radio Stop ───────────────────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.8.15) ─────────────────────────────────────────────
+    elif cmd.startswith("fm_gain:"):
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            settings["fm_gain"] = val
+            from settings import save_settings
+            save_settings(settings)
+            ipc.write_progress("FM Gain", f"{'Auto (AGC)' if val == -1 else str(val) + ' dB'}", color="green")
+            log.info(f"TRIGGER fm_gain={val}")
+            import time as _tg; _tg.sleep(1); ipc.clear_progress()
+        except Exception as e:
+            log.error(f"fm_gain Trigger: {e}")
+
+    elif cmd.startswith("dab_gain:"):
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            settings["dab_gain"] = val
+            from settings import save_settings
+            save_settings(settings)
+            ipc.write_progress("DAB Gain", f"{'Auto (AGC)' if val == -1 else str(val) + ' dB'}", color="green")
+            log.info(f"TRIGGER dab_gain={val}")
+            import time as _tg2; _tg2.sleep(1); ipc.clear_progress()
+        except Exception as e:
+            log.error(f"dab_gain Trigger: {e}")
+
     elif cmd == "radio_stop":
         webradio.stop(S)
         dab.stop(S)
@@ -488,7 +512,7 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.8.14: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        # v0.8.15: Status-Felder leeren — verhindert stale State beim Quellenwechsel
         S["radio_playing"] = False
         S["radio_station"] = ""
         S["radio_name"]    = ""
@@ -795,7 +819,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.14 gestartet")
+    log.info("PiDrive Core v0.8.15 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -824,6 +848,8 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
+    # v0.8.15: BT Auto-Reconnect Watcher starten
+    bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr
     _thr.Thread(target=startup_tasks, args=(S_module.S, settings),

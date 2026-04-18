@@ -35,6 +35,7 @@ ALLOWED_COMMANDS = {
     "radio_stop", "library_stop",
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
     "vol_up", "vol_down",
+    "gain_fm_auto", "gain_dab_auto",
     "dab_scan", "fm_scan",
     "fm_next", "fm_prev", "dab_next", "dab_prev",
     "lib_browse",
@@ -328,7 +329,8 @@ def api_cmd():
     prefixes = ("cat:", "reload_stations:",
                 "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
                 "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
-                "bt_connect:", "wifi_connect:", "bt_repair:")
+                "bt_connect:", "wifi_connect:", "bt_repair:",
+                "fm_gain:", "dab_gain:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 
@@ -476,6 +478,44 @@ def api_audio():
         "ok":   True,
         "data": get_audio_debug(),
     })
+
+
+@app.route("/api/gain")
+def api_gain():
+    """Gibt aktuelle Gain-Einstellungen zurück."""
+    try:
+        import sys
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from settings import load_settings as _ls
+        s = _ls()
+        return jsonify({
+            "ok": True,
+            "fm_gain":  s.get("fm_gain",  -1),
+            "dab_gain": s.get("dab_gain", -1),
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+@app.route("/api/volume")
+def api_volume():
+    """Gibt aktuelle PulseAudio-Lautstärke zurück."""
+    try:
+        r = safe_run(
+            "PULSE_SERVER=unix:/var/run/pulse/native "
+            "pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null"
+        )
+        txt = r.get("stdout", "") or ""
+        vol = ""
+        for part in txt.split():
+            if part.endswith("%"):
+                vol = part
+                break
+        return jsonify({"ok": True, "volume_raw": txt.strip(), "volume": vol})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
 
 
 if __name__ == "__main__":
