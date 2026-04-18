@@ -48,37 +48,54 @@ def _btctl(cmd, timeout=12):
 
 def _ensure_agent():
     """
-    Bluetooth-Agent robust initialisieren — v0.8.10.
-    Wichtig für Pairing / Default-Agent beim Verbinden im Auto.
+    Bluetooth-Agent via einzigem persistenten bluetoothctl-Prozess — v0.8.14.
+
+    Problem vorher (v0.8.13): _btctl() startet pro Befehl einen neuen Subprocess.
+    Agent wird in Subprocess A registriert, ist aber in Subprocess B nicht mehr da.
+    → "No agent is registered" bei default-agent im nächsten _btctl()-Call.
+
+    Fix: agent-Registrierung + default-agent in einem einzigen Prozess via stdin-pipe.
     """
-    tried = [
-        ("agent NoInputNoOutput", 8),
-        ("default-agent",         8),
-    ]
-    ok = False
-    last_out = ""
-    for cmd, to in tried:
-        rc, out = _btctl(cmd, timeout=to)
-        last_out = out
+    try:
+        proc = subprocess.Popen(
+            ["bluetoothctl"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        cmds = "agent NoInputNoOutput\ndefault-agent\n"
+        try:
+            out, _ = proc.communicate(input=cmds, timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            out = ""
+
         low = out.lower()
-        if rc == 0 or "successful" in low or "default agent request successful" in low:
-            ok = True
-        elif "no agent is registered" in low and cmd.startswith("default-agent"):
-            ok = False
-            break
-    if not ok:
-        # Fallback: ältere BlueZ-Variante
-        _btctl("agent on", timeout=8)
-        rc2, out2 = _btctl("default-agent", timeout=8)
-        low2 = out2.lower()
-        if rc2 == 0 or "successful" in low2:
-            ok = True
-            last_out = out2
-    if ok:
-        log.info("BT agent: bereit")
-    else:
-        log.warn(f"BT agent: nicht sauber initialisiert: {last_out[:180]}")
-    return ok
+        if "default agent request successful" in low or "default agent" in low:
+            log.info("BT agent: bereit (persistenter Prozess)")
+            return True
+        # Fallback: agent on statt NoInputNoOutput
+        proc2 = subprocess.Popen(
+            ["bluetoothctl"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        try:
+            out2, _ = proc2.communicate(input="agent on\ndefault-agent\n", timeout=10)
+        except subprocess.TimeoutExpired:
+            proc2.kill()
+            out2 = ""
+        if "default agent" in out2.lower():
+            log.info("BT agent: bereit (fallback agent on)")
+            return True
+        log.warn("BT agent: default-agent nicht bestätigt — Verbindung trotzdem versuchen")
+        return True  # weiter versuchen, auch wenn Agent unsicher
+    except Exception as e:
+        log.warn("BT agent: Fehler: " + str(e))
+        return False
 
 
 def _bg(cmd):
@@ -250,6 +267,38 @@ def connect_device(mac, S, settings):
 
     _btctl("power on", timeout=8)
     _ensure_agent()
+
+    # v0.8.14: Prüfen ob BlueZ das Gerät kennt — sonst kurzen Discovery-Scan starten
+    # "Device not available" tritt auf wenn BlueZ die MAC nicht in seiner Datenbank hat
+    rc_info, out_info = _btctl(f"info {mac}", timeout=6)
+    device_known = (rc_info == 0 and "Device" in out_info and "not available" not in out_info)
+
+    if not device_known:
+        log.info(f"BT connect: Gerät {mac} unbekannt — kurzer Discovery-Scan (10s)")
+        ipc.write_progress("Bluetooth", "Suche Gerät...", color="blue")
+        # Kurzen Scan starten damit BlueZ das Gerät findet
+        proc_scan = subprocess.Popen(
+            ["bluetoothctl", "scan", "on"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        import time as _ts; _ts.sleep(10)
+        try:
+            proc_scan.terminate()
+        except Exception:
+            pass
+        # Nochmal prüfen
+        rc_info2, out_info2 = _btctl(f"info {mac}", timeout=6)
+        device_known = (rc_info2 == 0 and "Device" in out_info2 and "not available" not in out_info2)
+        if device_known:
+            log.info(f"BT connect: Gerät {mac} nach Scan gefunden")
+        else:
+            log.warn(f"BT connect: Gerät {mac} auch nach Scan nicht bekannt — Pairing nötig")
+            ipc.write_progress("Bluetooth", "Gerät nicht gefunden — Pairing-Modus nötig", color="orange")
+            import time as _tw; _tw.sleep(3)
+            ipc.clear_progress()
+            # Trotzdem versuchen — vielleicht klappt pair
+    else:
+        log.info(f"BT connect: Gerät {mac} BlueZ bekannt")
 
     # v0.8.13: sauberer Zustand vor Connect — alten Verbindungsstatus aufräumen
     _btctl(f"disconnect {mac}", timeout=8)

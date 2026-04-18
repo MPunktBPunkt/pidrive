@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pidrive_car_only_cleanup.sh — PiDrive Car-Only System Cleanup
-# v0.8.13 — GEHÄRTET: User-PulseAudio/PipeWire wirklich final killen
+# v0.8.14 — GEHÄRTET: User-PulseAudio/PipeWire wirklich final killen
 #
 # Macht folgendes:
 #   1) PiDrive-Dienste sicherstellen
@@ -22,7 +22,7 @@ err()  { echo -e "${RED}  ✗ $*${NC}"; }
 
 echo
 echo "=================================================="
-echo " PiDrive Car-Only Cleanup v0.8.13"
+echo " PiDrive Car-Only Cleanup v0.8.14"
 echo " github.com/MPunktBPunkt/pidrive"
 echo "=================================================="
 echo
@@ -162,7 +162,10 @@ fi
 info "Dienste neu starten..."
 systemctl daemon-reload
 systemctl restart dbus       2>/dev/null || true; sleep 1
-systemctl restart bluetooth  2>/dev/null || true; sleep 1
+# v0.8.14: bluetooth NICHT hartes restart — bluetoothd verwaltet die Pairing-Daten
+# Ein Neustart kann die BT-Bonding-Keys löschen und Pairing-History verlieren
+systemctl is-active bluetooth 2>/dev/null | grep -q active || systemctl start bluetooth 2>/dev/null || true
+sleep 1
 systemctl enable pulseaudio  2>/dev/null || true
 systemctl restart pulseaudio 2>/dev/null || true; sleep 1
 systemctl restart raspotify  2>/dev/null || true; sleep 1

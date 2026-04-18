@@ -18,6 +18,33 @@ import log
 PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
 AUDIO_STATE_FILE = "/tmp/pidrive_audio_state.json"
 
+
+def _set_pi_output_klinke():
+    """
+    Pi 3B: ALSA-Ausgang physisch auf 3.5mm Klinke schalten.
+    amixer numid=3: 0=auto, 1=klinke, 2=HDMI
+    Muss VOR dem Starten von mpv/PulseAudio-Routing gesetzt werden.
+    Verhindert das Problem 'mpv laeuft aber kein Ton' wenn Pi auf HDMI steht.
+    """
+    try:
+        import subprocess as _sp
+        _sp.run("amixer -q -c 0 cset numid=3 1 2>/dev/null",
+                shell=True, timeout=3)
+        log.info("[AUDIO] Pi Ausgang: Klinke (amixer numid=3=1)")
+    except Exception as e:
+        log.warn("[AUDIO] amixer klinke: " + str(e))
+
+
+def _set_pi_output_hdmi():
+    """Pi 3B: ALSA-Ausgang auf HDMI."""
+    try:
+        import subprocess as _sp
+        _sp.run("amixer -q -c 0 cset numid=3 2 2>/dev/null",
+                shell=True, timeout=3)
+        log.info("[AUDIO] Pi Ausgang: HDMI (amixer numid=3=2)")
+    except Exception as e:
+        log.warn("[AUDIO] amixer hdmi: " + str(e))
+
 _last_decision = {
     "requested": "auto",
     "effective": "",
@@ -184,6 +211,13 @@ def get_mpv_args(settings=None, source: str = "") -> list:
         effective = "none"
         reason    = "no_sink_available"
 
+    # v0.8.14: Pi 3B physischen ALSA-Ausgang setzen (amixer numid=3)
+    # Verhindert dass mpv auf HDMI statt Klinke ausgibt
+    if effective == "klinke":
+        _set_pi_output_klinke()
+    elif effective == "hdmi":
+        _set_pi_output_hdmi()
+
     log.info("[AUDIO] " + src_tag + " requested=" + requested.ljust(6) +
              " effective=" + effective.ljust(7) +
              " reason=" + reason + " sink=" + (sink or "-"))
@@ -205,6 +239,7 @@ def set_output(mode: str, settings: dict):
         else:
             _remember_decision("klinke", "none", "no_alsa_sink", "", "manual")
             ipc.write_progress("Audio", "Kein ALSA-Sink", color="orange")
+        _set_pi_output_klinke()
         log.info("[AUDIO] set_output -> klinke")
 
     elif mode == "hdmi":
@@ -217,6 +252,7 @@ def set_output(mode: str, settings: dict):
         else:
             _remember_decision("hdmi", "none", "no_hdmi_sink", "", "manual")
             ipc.write_progress("Audio", "Kein HDMI-Sink", color="orange")
+        _set_pi_output_hdmi()
         log.info("[AUDIO] set_output -> hdmi")
 
     elif mode in ("bt", "bluetooth", "a2dp"):

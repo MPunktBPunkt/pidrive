@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.13
+# PiDrive — Kontext & Projektdokumentation v0.8.14
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.13 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.14 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -900,11 +900,37 @@ sudo systemctl restart pidrive_display
 | Menue-Text ueberlaeuft | pygame Surface | eigene Surface (_draw_left) |
 | DAB+ kein Ton | welle-cli fehlt | sudo apt install welle.io |
 | DAB '-o' Fehler | welle-cli 2.2 kennt -o nicht | dab.py: -p PROGRAMMNAME Syntax — behoben v0.8.11 |
+| Kein Ton auf Klinke | Pi-Ausgang physisch auf HDMI (amixer numid=3) | audio.py: _set_pi_output_klinke() — behoben v0.8.14 |
+| BT Agent No agent is registered | _btctl() subprocess stirbt sofort | bluetooth.py: persistenter bluetoothctl-Prozess — behoben v0.8.14 |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
 
 ---
 
 ## Changelog
+
+### v0.8.14 — Klinke-Audio-Fix, BT-Agent-Fix
+**Analyse aus v0.8.13 Log:**
+- mpv lief korrekt mit --ao=pulse auf alsa_output.0.stereo-fallback
+- Kein Ton weil Pi-Ausgang physisch auf HDMI statt Klinke stand
+- BT-Agent "No agent is registered" bei JEDEM Connect-Versuch (struktureller Bug)
+- Kopfhörer war nicht erreichbar (not available = ausgeschaltet)
+
+**audio.py — Pi-Klinke physisch aktivieren (amixer):**
+- `_set_pi_output_klinke()`: `amixer -c 0 cset numid=3 1` → Klinke
+- `_set_pi_output_hdmi()`: `amixer -c 0 cset numid=3 2` → HDMI
+- `get_mpv_args()`: ruft je nach effective klinke/hdmi den passenden amixer-Befehl
+- `set_output()`: setzt amixer synchron beim manuellen Ausgabewechsel
+- Erkannte Probleme in install.sh: Audio-Ausgang auch beim Install aktivieren
+
+**bluetooth.py — BT-Agent strukturell gefixt:**
+- Problem: _btctl() startet pro Befehl eigenen Subprocess → Agent stirbt sofort
+- Fix: _ensure_agent() nutzt jetzt einen einzigen `bluetoothctl`-Prozess mit stdin-pipe
+- agent + default-agent werden in einem Aufruf abgesetzt → Agent bleibt registriert
+- Fallback auf "agent on" wenn "NoInputNoOutput" nicht klappt
+
+**install.sh — Klinke beim Install aktivieren:**
+- `amixer -c 0 cset numid=3 1` wird nach Raspotify-Konfiguration gesetzt
+- Stellt sicher dass Pi beim ersten Start korrekt auf Klinke routet
 
 ### v0.8.13 — Audio State File, Scanner-Guard, BT-Fix, Status-Sync
 **Probleme aus v0.8.12 Log-Review:**
@@ -1382,13 +1408,13 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.13)
+## Aktueller Stand (v0.8.14)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.13 — Audio State File, Scanner-Guard, BT-Fix, Status-Sync
-✓ pidrive_display.service   v0.8.13, 20fps
+✓ pidrive_core.service      v0.8.14 — Klinke-Audio-Fix, BT-Agent-Fix
+✓ pidrive_display.service   v0.8.14, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
@@ -1523,6 +1549,7 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] Klinke-Audio-Fix, BT-Agent-Fix (v0.8.14)
 - [x] Audio State File, Scanner-Guard, BT-Fix, Status-Sync (v0.8.13)
 - [x] Audio Debug Cockpit, Versionsstrings, Diagnose-Fix (v0.8.12)
 - [x] Audio-Architektur Option B, DAB Fix, Car-Only Cleanup (v0.8.11)
