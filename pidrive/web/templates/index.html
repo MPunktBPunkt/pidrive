@@ -297,6 +297,71 @@
         </div>
       </section>
 
+      <!-- Gain & Lautstärke Panel (v0.8.15) -->
+      <section class="panel">
+        <div class="panel-title">🎚️ Lautstärke &amp; Empfang (Gain)</div>
+        <div class="diag-grid">
+
+          <!-- Lautstärke -->
+          <div class="diag-card">
+            <div class="diag-title">Lautstärke</div>
+            <div class="diag-row" style="margin-bottom:8px">
+              <div class="diag-key">Aktuell</div>
+              <div class="diag-value" id="volCurrent">…</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+              <button onclick="sendCmd('vol_up')" style="font-size:1.2em;padding:6px 14px">▲ +5%</button>
+              <button onclick="sendCmd('vol_down')" style="font-size:1.2em;padding:6px 14px">▼ -5%</button>
+            </div>
+            <div style="margin-top:8px">
+              <button onclick="refreshVolume()" style="font-size:0.85em">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <!-- FM Gain -->
+          <div class="diag-card">
+            <div class="diag-title">FM Empfang (Gain)</div>
+            <div class="diag-row">
+              <div class="diag-key">FM Gain</div>
+              <div class="diag-value" id="fmGainCurrent">…</div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+              <button onclick="setGain('fm',-1)" title="AGC automatisch">Auto (AGC)</button>
+              <button onclick="setGain('fm',10)">10 dB</button>
+              <button onclick="setGain('fm',20)">20 dB</button>
+              <button onclick="setGain('fm',30)">30 dB</button>
+              <button onclick="setGain('fm',40)">40 dB</button>
+              <button onclick="setGain('fm',49)">49 dB (max)</button>
+            </div>
+            <div style="margin-top:8px;font-size:0.8em;color:#888">
+              -1 = Auto AGC. Höher = mehr Verstärkung bei schwachem Signal.<br>
+              Bei gutem Empfang: Auto. Bei schwachem Empfang: 30–40 dB testen.
+            </div>
+          </div>
+
+          <!-- DAB Gain -->
+          <div class="diag-card">
+            <div class="diag-title">DAB+ Empfang (Gain)</div>
+            <div class="diag-row">
+              <div class="diag-key">DAB Gain</div>
+              <div class="diag-value" id="dabGainCurrent">…</div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+              <button onclick="setGain('dab',-1)" title="AGC automatisch">Auto (AGC)</button>
+              <button onclick="setGain('dab',10)">10 dB</button>
+              <button onclick="setGain('dab',20)">20 dB</button>
+              <button onclick="setGain('dab',30)">30 dB</button>
+              <button onclick="setGain('dab',40)">40 dB</button>
+              <button onclick="setGain('dab',49)">49 dB (max)</button>
+            </div>
+            <div style="margin-top:8px;font-size:0.8em;color:#888">
+              DAB braucht oft mehr Gain als FM — bei schlechter Antenne 35–49 testen.
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <!-- Audio Debug Panel (v0.8.11 Zielarchitektur Option B) -->
       <section class="panel">
         <div class="panel-title">Audio Debug Cockpit</div>
@@ -677,6 +742,38 @@
         console.error('Audio Debug Cockpit Fehler', e);
       }
     }
+
+    // Gain & Lautstärke Panel (v0.8.15)
+    async function refreshVolume() {
+      try {
+        const r = await fetch('/api/volume');
+        const d = await r.json();
+        document.getElementById('volCurrent').textContent = d.volume || d.volume_raw || '–';
+      } catch(e) { document.getElementById('volCurrent').textContent = 'Fehler'; }
+    }
+
+    async function refreshGain() {
+      try {
+        const r = await fetch('/api/gain');
+        const d = await r.json();
+        const fmEl  = document.getElementById('fmGainCurrent');
+        const dabEl = document.getElementById('dabGainCurrent');
+        if (fmEl)  fmEl.textContent  = d.fm_gain  === -1 ? 'Auto (AGC)' : d.fm_gain  + ' dB';
+        if (dabEl) dabEl.textContent = d.dab_gain === -1 ? 'Auto (AGC)' : d.dab_gain + ' dB';
+      } catch(e) { console.error('refreshGain', e); }
+    }
+
+    async function setGain(type, val) {
+      const cmd = type + '_gain:' + val;
+      await sendCmd(cmd);
+      setTimeout(refreshGain, 600);
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(refreshVolume, 800);
+      setTimeout(refreshGain, 900);
+    });
+
     window.addEventListener('load', () => { setTimeout(refreshAudio, 600); });
     </script>
 
