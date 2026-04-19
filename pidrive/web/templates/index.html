@@ -43,7 +43,7 @@
               {% set path = vm["path"] %}
               {% set nodes = vm["nodes"] %}
               {% set cursor = vm["cursor"] %}
-              {% set icons = {"folder":"&#x25B8;","station":"&#x266A;","action":"&rarr;","toggle":"&#x25CE;","info":"&#x2139;","value":"&plusmn;"} %}
+              {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
 
               <div class="breadcrumb" id="breadcrumb">
                 {% if vm["can_back"] %}
@@ -62,7 +62,7 @@
                        data-index="{{ loop.index0 }}"
                        data-type="{{ ntype }}"
                        onclick="nodeClick({{ loop.index0 }}, '{{ ntype }}')">
-                    <span class="node-icon">{{ icons.get(ntype, "&#x25B8;") }}</span>
+                    <span class="node-icon">{{ icons.get(ntype, "▸") }}</span>
                     <span class="node-label">{{ label }}</span>
                     {% if has_ch %}<span class="node-arrow">&#x203A;</span>{% endif %}
                   </div>
