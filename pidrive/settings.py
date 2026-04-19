@@ -26,6 +26,14 @@ _DEFAULTS = {
     "last_dab_station": None,
     "dab_gain":         -1,
     "fm_gain":          -1,
+    # v0.8.19: Boot-Resume
+    "last_source":      "",     # fm / dab / webradio
+    "last_web_station": None,   # dict mit name + url
+    # v0.8.18: RTL-SDR Empfangsqualität
+    "ppm_correction":   0,     # Frequenzfehler-Korrektur in ppm (0 = deaktiviert)
+                               # Typischer RTL2838-Wert: ±20..100 ppm
+                               # Kalibrieren mit: rtl_test -p 30 (30s laufen lassen)
+    "scanner_squelch":  25,    # Squelch-Schwelle (0=immer offen, 25=Standard, 10=empfindlich)
 }
 
 

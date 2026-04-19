@@ -40,6 +40,8 @@ ALLOWED_COMMANDS = {
     "fm_next", "fm_prev", "dab_next", "dab_prev",
     "lib_browse",
     "reboot", "shutdown", "sys_info", "sys_version", "update",
+    "rtlsdr_reset",
+    "rtlsdr_reset",
 }
 
 def read_json(path, default=None):
@@ -330,7 +332,7 @@ def api_cmd():
                 "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
                 "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
                 "bt_connect:", "wifi_connect:", "bt_repair:",
-                "fm_gain:", "dab_gain:")
+                "fm_gain:", "dab_gain:", "ppm:", "squelch:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 
@@ -396,7 +398,18 @@ def api_rtlsdr_refresh():
         pass
     return jsonify({"ok": True, "data": read_json(RTLSDR_FILE, {})})
 
-@app.route("/api/ready")
+
+@app.route("/api/rtlsdr/reset", methods=["POST"])
+def api_rtlsdr_reset():
+    """RTL-SDR USB-Reset via Core-Trigger (v0.8.16). Kein Reboot nötig."""
+    try:
+        write_cmd("rtlsdr_reset")
+        return jsonify({"ok": True, "msg": "RTL-SDR Reset gestartet — dauert ~5s"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+
 def api_ready():
     import pathlib
     ready = pathlib.Path("/tmp/pidrive_ready").exists()
@@ -482,7 +495,7 @@ def api_audio():
 
 @app.route("/api/gain")
 def api_gain():
-    """Gibt aktuelle Gain-Einstellungen zurück."""
+    """Gibt aktuelle Gain + PPM + Squelch Einstellungen zurück (v0.8.18)."""
     try:
         import sys
         _base = str(BASE_DIR)
@@ -492,28 +505,112 @@ def api_gain():
         s = _ls()
         return jsonify({
             "ok": True,
-            "fm_gain":  s.get("fm_gain",  -1),
-            "dab_gain": s.get("dab_gain", -1),
+            "fm_gain":        s.get("fm_gain",        -1),
+            "dab_gain":       s.get("dab_gain",       -1),
+            "ppm_correction": s.get("ppm_correction",  0),
+            "scanner_squelch":s.get("scanner_squelch",25),
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 
 
+@app.route("/api/rtlsdr/calibrate")
+def api_rtlsdr_calibrate():
+    """
+    PPM-Schätzung via rtl_test -p (v0.8.20).
+
+    rtl_test -p misst die Samplerate-Abweichung des Sticks.
+    Formel: ppm = (gemessene_rate - nominale_rate) / nominale_rate * 1e6
+    Nominale Rate: 2048000 S/s
+
+    Hinweis: Das Ergebnis ist eine Näherung. Für exakte Kalibrierung
+    besser eine bekannte FM-Frequenz als Referenz nutzen.
+    """
+    import re as _re
+    result = safe_run("timeout 32s rtl_test -p 2>&1")
+    stdout = result.get("stdout", "") or ""
+
+    ppm = None
+    method = "nicht erkannt"
+    lines = stdout.splitlines()
+
+    # Methode 1: "real sample rate: XXXXXXX +/- N samples/sec"
+    for ln in lines:
+        m = _re.search(r'real sample rate:\s*([\d.]+)', ln, _re.I)
+        if m:
+            try:
+                measured = float(m.group(1))
+                nominal  = 2048000.0
+                ppm_raw  = (measured - nominal) / nominal * 1e6
+                ppm      = round(ppm_raw)
+                method   = f"Samplerate-Messung ({measured:.0f} S/s gemessen, {ppm_raw:.1f} ppm roh)"
+            except Exception:
+                pass
+            break
+
+    # Methode 2: direkter ppm-Wert in Ausgabe (neuere rtl-sdr Versionen)
+    if ppm is None:
+        for ln in lines:
+            m = _re.search(r'ppm[^a-z0-9]*([-+]?[0-9]+[.]?[0-9]*)', ln, _re.I)
+            if m:
+                try:
+                    ppm    = round(float(m.group(1)))
+                    method = "direkt aus Ausgabe"
+                except Exception:
+                    pass
+                break
+
+    # Hinweise für den User
+    hints = []
+    if ppm is None:
+        hints.append("rtl_test gab keinen verwertbaren Wert aus — manuell testen:")
+        hints.append("1. FM-Sender mit bekannter Frequenz hören")
+        hints.append("2. Wenn Empfang schlecht: PPM ±10 schrittweise anpassen")
+        hints.append("3. Typische RTL2838-Werte: -50..+50 ppm")
+    else:
+        hints.append(f"Methode: {method}")
+        if abs(ppm) > 80:
+            hints.append("⚠ Wert > 80 ppm — ungewöhnlich hoch, ggf. manuell verifizieren")
+        hints.append("Tipp: Nach Setzen kurz FM hören und Empfang vergleichen")
+
+    return jsonify({
+        "ok":           True,
+        "stdout":       stdout[-800:],   # letzte 800 Zeichen
+        "suggested_ppm": ppm,
+        "method":       method,
+        "hints":        hints,
+    })
+
+
 @app.route("/api/volume")
 def api_volume():
-    """Gibt aktuelle PulseAudio-Lautstärke zurück."""
+    """Gibt aktuelle PulseAudio-Lautstärke zurück (v0.8.16: Default + BT-Sink)."""
     try:
-        r = safe_run(
-            "PULSE_SERVER=unix:/var/run/pulse/native "
-            "pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null"
-        )
+        PA = "PULSE_SERVER=unix:/var/run/pulse/native "
+        # Default Sink Volume
+        r = safe_run(PA + "pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null")
         txt = r.get("stdout", "") or ""
         vol = ""
         for part in txt.split():
             if part.endswith("%"):
                 vol = part
                 break
-        return jsonify({"ok": True, "volume_raw": txt.strip(), "volume": vol})
+        # Fallback: pactl list sinks für aktuellen Sink
+        if not vol:
+            sinks_r = safe_run(PA + "pactl list sinks 2>/dev/null")
+            sinks_txt = sinks_r.get("stdout", "") or ""
+            in_default = False
+            for ln in sinks_txt.splitlines():
+                if "* index:" in ln or "State: RUNNING" in ln:
+                    in_default = True
+                if in_default and "Volume:" in ln and "%" in ln:
+                    for part in ln.split():
+                        if part.endswith("%"):
+                            vol = part
+                            break
+                    if vol:
+                        break
+        return jsonify({"ok": True, "volume_raw": txt.strip(), "volume": vol or "–"})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 

@@ -129,6 +129,9 @@ def write_status(S, settings):
         "audio_effective": _get_audio_effective() or settings.get("audio_output","auto"),
         "audio_reason":    _get_audio_reason(),
         "ip":        S.get("ip", ""),
+        # Phase 2: zentraler control_context (v0.8.17)
+        # Mögliche Werte: idle | menu | radio_fm | radio_dab | radio_web | scanner | spotify | library
+        "control_context": S.get("control_context", "idle"),
         "ts":        int(time.time()),
     })
 

@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.15
+main_core.py - PiDrive Core v0.8.20
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -23,6 +23,7 @@ except Exception:
     _mpris2 = None
 from menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
+                    gpio_buttons as _gpio_buttons,
                      webradio, dab, fm, library, scanner, update, favorites)
 
 logger = log.setup("core")
@@ -197,7 +198,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.8.15) ─────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.8.20) ─────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -205,7 +206,6 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             from settings import save_settings
             save_settings(settings)
             ipc.write_progress("FM Gain", f"{'Auto (AGC)' if val == -1 else str(val) + ' dB'}", color="green")
-            log.info(f"TRIGGER fm_gain={val}")
             import time as _tg; _tg.sleep(1); ipc.clear_progress()
         except Exception as e:
             log.error(f"fm_gain Trigger: {e}")
@@ -217,10 +217,57 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             from settings import save_settings
             save_settings(settings)
             ipc.write_progress("DAB Gain", f"{'Auto (AGC)' if val == -1 else str(val) + ' dB'}", color="green")
-            log.info(f"TRIGGER dab_gain={val}")
             import time as _tg2; _tg2.sleep(1); ipc.clear_progress()
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
+
+    # ── PPM + Squelch Trigger (v0.8.20) ─────────────────────────────────────
+    elif cmd.startswith("ppm:"):
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            settings["ppm_correction"] = val
+            from settings import save_settings
+            save_settings(settings)
+            label = f"{val:+d} ppm" if val != 0 else "deaktiviert (0)"
+            ipc.write_progress("PPM", f"Korrektur: {label}", color="green")
+            log.info(f"TRIGGER ppm_correction={val}")
+            import time as _tp; _tp.sleep(1); ipc.clear_progress()
+        except Exception as e:
+            log.error(f"ppm Trigger: {e}")
+
+    elif cmd.startswith("squelch:"):
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            val = max(0, min(val, 50))  # Bereich 0–50
+            settings["scanner_squelch"] = val
+            from settings import save_settings
+            save_settings(settings)
+            label = "immer offen" if val == 0 else str(val)
+            ipc.write_progress("Squelch", f"Schwelle: {label}", color="green")
+            log.info(f"TRIGGER scanner_squelch={val}")
+            import time as _tq; _tq.sleep(1); ipc.clear_progress()
+        except Exception as e:
+            log.error(f"squelch Trigger: {e}")
+
+    # ── RTL-SDR Reset (v0.8.20) ───────────────────────────────────────────────
+    elif cmd == "rtlsdr_reset":
+        def _do_rtlsdr_reset():
+            try:
+                from modules import rtlsdr as _rtl
+                ipc.write_progress("RTL-SDR", "USB-Reset läuft...", color="blue")
+                result = _rtl.usb_reset()
+                if result.get("ok"):
+                    ipc.write_progress("RTL-SDR", "Reset OK — Stick erkannt ✓", color="green")
+                    log.info("RTLSDR_RESET: OK — Stick wieder erkannt")
+                else:
+                    ipc.write_progress("RTL-SDR", "Reset: Stick nicht erkannt — Abziehen/Einstecken nötig", color="orange")
+                    log.warn("RTLSDR_RESET: Stick nach Reset nicht erkannt")
+                import time as _t; _t.sleep(3)
+                ipc.clear_progress()
+            except Exception as e:
+                log.error(f"RTLSDR_RESET Fehler: {e}")
+                ipc.clear_progress()
+        bg(_do_rtlsdr_reset)
 
     elif cmd == "radio_stop":
         webradio.stop(S)
@@ -512,11 +559,12 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.8.15: Status-Felder leeren — verhindert stale State beim Quellenwechsel
-        S["radio_playing"] = False
-        S["radio_station"] = ""
-        S["radio_name"]    = ""
-        S["radio_type"]    = ""
+        # v0.8.20: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        S["radio_playing"]    = False
+        S["radio_station"]    = ""
+        S["radio_name"]       = ""
+        S["radio_type"]       = ""
+        S["control_context"]  = "idle"   # Phase 2: Zustand zurücksetzen
         _time_mod.sleep(0.10)
 
     # Stationen zuerst prüfen — haben action=None, brauchen src/meta
@@ -800,26 +848,60 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # Letzte FM/DAB Station wiederherstellen
+    # GPIO-Tasten starten (v0.8.20)
+    try:
+        _gpio_active = _gpio_buttons.start()
+        if _gpio_active:
+            log.info("GPIO: Tasten aktiv (Key1=up, Key2=enter, Key3=back)")
+        else:
+            log.info("GPIO: nicht verfügbar (kein RPi.GPIO oder kein Raspberry Pi)")
+    except Exception as _eg:
+        log.warn(f"GPIO start: {_eg}")
+
+    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.8.20)
     try:
         time.sleep(1)
-        last_fm  = settings.get("last_fm_station")
-        last_dab = settings.get("last_dab_station")
-        if last_fm and last_fm.get("freq"):
-            log.info("FM: starte letzte Station: " + str(last_fm.get("name","")))
+        last_src   = settings.get("last_source", "")
+        last_fm    = settings.get("last_fm_station")
+        last_dab   = settings.get("last_dab_station")
+        last_web   = settings.get("last_web_station")
+
+        if last_src == "fm" and last_fm and last_fm.get("freq"):
+            log.info("Boot-Resume: FM → " + str(last_fm.get("name", last_fm.get("freq", ""))))
             from modules import fm as _fm
             _fm.play_station(last_fm, S, settings)
-        elif last_dab and last_dab.get("name"):
-            log.info("DAB: starte letzte Station: " + str(last_dab.get("name","")))
+
+        elif last_src == "dab" and last_dab and last_dab.get("name"):
+            log.info("Boot-Resume: DAB → " + str(last_dab.get("name", "")))
             from modules import dab as _dab
             _dab.play_station(last_dab, S, settings)
+
+        elif last_src == "webradio" and last_web and last_web.get("url"):
+            log.info("Boot-Resume: Webradio → " + str(last_web.get("name", "")))
+            from modules import webradio as _web
+            _web.play_station(last_web, S, settings)
+
+        elif last_fm and last_fm.get("freq"):
+            # Fallback: FM auch ohne last_source
+            log.info("Boot-Resume: FM (Fallback) → " + str(last_fm.get("name", "")))
+            from modules import fm as _fm
+            _fm.play_station(last_fm, S, settings)
+
+        elif last_dab and last_dab.get("name"):
+            log.info("Boot-Resume: DAB (Fallback) → " + str(last_dab.get("name", "")))
+            from modules import dab as _dab
+            _dab.play_station(last_dab, S, settings)
+
+        else:
+            log.info("Boot-Resume: keine letzte Quelle gespeichert")
+
     except Exception as _e:
-        log.warn("Letzte Station: " + str(_e))
+        log.warn("Boot-Resume: " + str(_e))
 
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.15 gestartet")
+    log.info("PiDrive Core v0.8.20 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -848,7 +930,7 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.8.15: BT Auto-Reconnect Watcher starten
+    # v0.8.20: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr
