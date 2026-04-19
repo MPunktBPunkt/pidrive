@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.15
+# PiDrive — Kontext & Projektdokumentation v0.8.20
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.15 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.20 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -855,6 +855,11 @@ echo "fm_gain:-1"                   > /tmp/pidrive_cmd   # FM Auto-Gain (AGC)
 echo "fm_gain:30"                   > /tmp/pidrive_cmd   # FM Gain 30 dB
 echo "dab_gain:-1"                  > /tmp/pidrive_cmd   # DAB Auto-Gain (AGC)
 echo "dab_gain:35"                  > /tmp/pidrive_cmd   # DAB Gain 35 dB
+echo "rtlsdr_reset"                  > /tmp/pidrive_cmd   # RTL-SDR USB-Reset (kein Reboot)
+echo "ppm:0"                          > /tmp/pidrive_cmd   # PPM-Korrektur deaktivieren
+echo "ppm:25"                         > /tmp/pidrive_cmd   # PPM-Korrektur +25 ppm
+echo "squelch:15"                     > /tmp/pidrive_cmd   # Scanner Squelch empfindlich
+echo "squelch:25"                     > /tmp/pidrive_cmd   # Scanner Squelch Standard
 echo "scan_setfreq:vhf:145.500"    > /tmp/pidrive_cmd   # VHF direkt auf 145.5 MHz
 echo "scan_inputfreq:vhf"          > /tmp/pidrive_cmd   # VHF manuelle Eingabe
 echo "wifi_on/wifi_off"             > /tmp/pidrive_cmd
@@ -907,11 +912,156 @@ sudo systemctl restart pidrive_display
 | Kein Ton auf Klinke | Pi-Ausgang physisch auf HDMI (amixer numid=3) | audio.py: _set_pi_output_klinke() — behoben v0.8.14 |
 | BT Agent No agent is registered | _btctl() subprocess stirbt sofort | bluetooth.py: persistenter bluetoothctl-Prozess — behoben v0.8.14 |
 | BT AuthenticationFailed nach Reboot | Pairing-Keys verloren, Kopfhörer hat alte Keys | bluetooth.py: Paired:no → auto-remove + Neu-Pairing (v0.8.15) |
+| RTL-SDR Stick verschwindet aus USB | libusb-Aufhänger nach unsauber gestopptem Scanner | rtlsdr.py: usb_reset() + WebUI-Button (v0.8.16) |
 | FM kein Ton | rtl_fm fehlt | sudo apt install rtl-sdr |
 
 ---
 
 ## Changelog
+
+### v0.8.20 — PPM-Kalibrierung verbessert
+**Problem in v0.8.18:** rtl_test -p gibt keinen direkten "X ppm"-Wert aus,
+Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
+
+**webui.py — /api/rtlsdr/calibrate verbessert:**
+- Methode 1: Samplerate-Messung aus rtl_test ("real sample rate: XXXXXXX")
+  → Formel: ppm = (gemessen - 2048000) / 2048000 * 1e6
+- Methode 2: direkter ppm-Wert aus Ausgabe (neuere rtl-sdr Versionen)
+- Gibt jetzt `method` + `hints` zurück — erklärt was gefunden wurde
+- Hinweise bei nicht erkanntem Wert: manuell ±10 ppm schrittweise testen
+
+**index.html — Kalibrierungsbutton und Panel:**
+- Kalibrierungsergebnis zeigt jetzt: Wert + Messmethode + Hinweisliste
+- Panel-Text erklärt Was/Wie/Wann der PPM-Wert wirkt
+- Klarer: "0 = deaktiviert", "nach Übernehmen neu abspielen"
+
+### v0.8.19 — GPIO-Tasten, Boot-Resume Webradio
+**Offen seit langem, jetzt umgesetzt:**
+- GPIO-Tasten am Joy-IT Display waren komplett nicht implementiert
+- Boot-Resume startete nur FM/DAB, nicht Webradio
+- Beim Einschalten im Auto: keine automatische Wiederaufnahme der letzten Webradio-Station
+
+**modules/gpio_buttons.py — NEU:**
+- Neues Modul für Key1 (GPIO23), Key2 (GPIO24), Key3 (GPIO25)
+- Key1 → `up`, Key2 → `enter`, Key3 → `back` (File-Trigger)
+- Polling-Loop (50ms) in Daemon-Thread — keine Interrupt-Konflikte mit SPI-Display
+- 200ms Debounce verhindert Mehrfachauslösung
+- Graceful Fallback wenn RPi.GPIO nicht installiert (kein Absturz)
+- `start()` / `stop()` / `is_active()` API
+
+**main_core.py — GPIO-Start + erweiterter Boot-Resume:**
+- `_gpio_buttons.start()` beim Core-Start — Log zeigt ob Tasten aktiv
+- Boot-Resume nutzt jetzt `last_source` (fm/dab/webradio) als primäres Kriterium
+- Webradio: `last_web_station` mit name + url + genre wird beim Start wiederhergestellt
+- Fallback-Logik: wenn `last_source` fehlt → FM → DAB → nichts
+
+**settings.py — neue Felder:**
+- `last_source: ""` — letzte aktive Quelle (fm/dab/webradio)
+- `last_web_station: null` — dict mit name/url/genre der letzten Webradio-Station
+
+**fm.py / dab.py / webradio.py — Persistenz:**
+- Alle drei schreiben `last_source` nach settings.json bei erfolgreichem Play
+- webradio.py speichert zusätzlich `last_web_station` mit name + url
+
+**install.sh:**
+- `pip3 install RPi.GPIO` wird automatisch mit installiert
+
+### v0.8.18 — PPM-Korrektur, Squelch-Einstellung, Empfangsoptimierung
+**Hintergrund:**
+- RTL2838-Stick hat typisch 20–100 ppm Quarzfehler → FM-Stereo unstabil, DAB-Sync schlechter
+- Scanner Squelch war fest auf 25 (nicht konfigurierbar)
+- Kein WebUI-Weg zur Frequenzkorrektur oder Squelch-Anpassung
+
+**settings.py — neue Felder:**
+- `ppm_correction: 0` — Frequenzkorrektur in ppm (0 = aus)
+- `scanner_squelch: 25` — Squelch-Schwelle (0=offen, 25=Standard, 10=empfindlich)
+
+**fm.py — PPM-Korrektur:**
+- `rtl_fm` bekommt `-p PPM` Parameter wenn `ppm_correction != 0`
+- Log: "FM play: PPM-Korrektur aktiv: N ppm"
+
+**dab.py — PPM-Korrektur:**
+- `welle-cli` bekommt `-P PPM` Parameter wenn `ppm_correction != 0`
+- Verbesserter DAB-Empfang bei PPM-Fehler des Sticks
+
+**scanner.py — dynamischer Squelch:**
+- `_get_squelch()`: liest `scanner_squelch` aus settings.json
+- Fast-Detection: squelch = max(5, configured_squelch//2) — halbe Schwelle für Erstdetektion
+- Confirm-Detection: squelch = configured_squelch — volle Schwelle zur Bestätigung
+
+**main_core.py — Trigger:**
+- `ppm:N` → setzt `ppm_correction=N`, speichert, Progress-Feedback
+- `squelch:N` → setzt `scanner_squelch=N` (0–50), speichert
+
+**webui.py:**
+- `/api/gain` gibt jetzt auch `ppm_correction` + `scanner_squelch` zurück
+- `/api/rtlsdr/calibrate`: 30s `rtl_test -p` → schlägt PPM-Wert vor
+
+**index.html — PPM + Squelch Karten im Gain-Panel:**
+- PPM-Karte: Schnellbuttons (0/±10/±25/±50), Custom-Input, 🔬 Kalibrieren-Button
+- Kalibrieren: startet rtl_test, zeigt empfohlenen Wert mit "Übernehmen"-Link
+- Squelch-Karte: Buttons 0/10/15/20/25/35 mit Erklärungen
+
+### v0.8.17 — WebUI-Kompakt, Phase 2 State, PulseAudio Switch-on-Connect
+**Aus WebUI-Feedback und Phase 2 Planung:**
+- Steuerungs-Buttons belegten zu viel Platz (4 Spalten, großes Padding)
+- Kein "Alle Logs auf einmal" Button mit Copy-to-Clipboard
+- Phase 2 `control_context` State Machine noch nicht gestartet
+- PulseAudio BT-Auto-Routing benötigte manuelles Sink-Wechseln
+
+**style.css — Button-Grid kompakter:**
+- `button-grid`: 4 → 6 Spalten, Padding 12px → 8px, font-size 15px → 13px
+- `tab-buttons`: flex-wrap statt grid, 6px/10px Padding → kompakte Log-Buttons
+- Responsive: 1100px→4 Spalten, 700px→3 Spalten (war 2/1)
+
+**index.html — "📋 Alle" + "⎘ Copy" Buttons:**
+- `📋 Alle`: lädt Core Log + App Log + Core Status + Diagnose parallel (Promise.all)
+  Zusammengefasst mit Timestamps in einem Block, fertig zum Kopieren
+- `⎘ Copy`: kopiert logOutput-Inhalt in Zwischenablage
+  Fallback auf `execCommand('copy')` für ältere Browser
+  Button zeigt "✓ Kopiert!" kurz als Bestätigung
+
+**ipc.py + main_core.py + webradio/fm/dab.py — Phase 2 control_context:**
+- Neues Feld `control_context` in `write_status()`: idle | radio_web | radio_fm | radio_dab | radio_scanner | spotify | library
+- Wird in `_stop_all_sources()` auf `idle` zurückgesetzt
+- Wird in webradio/fm/dab beim Start auf den jeweiligen Kontext gesetzt
+- Grundlage für Phase 2 explizite Zustandsmaschine
+- Sichtbar in WebUI Status-JSON und per AVRCP-Trigger lesbar
+
+**setup_bt_audio.sh — module-switch-on-connect:**
+- `load-module module-switch-on-connect` in system.pa ergänzt
+- PulseAudio wechselt automatisch auf BT-Sink wenn A2DP verbunden wird
+- Fallback auf Klinke wenn BT trennt — kein manuelles Routing-Script nötig
+- Entspricht der empfohlenen Zielarchitektur: BT = Primary, Klinke = Fallback
+
+### v0.8.16 — RTL-SDR USB-Reset, BT-Auto-Reconnect aktiv, Lautstärke-Fix
+**Analyse aus v0.8.15 Log:**
+- RTL-SDR Stick nach Scanner/Gain-Nutzung aus USB-Subsystem verschwunden (lsusb leer)
+- Reboot war nötig — jetzt per WebUI behebbar ohne Reboot
+- Lautstärke-Anzeige zeigte „–" bei BT-Sink (pactl get-sink-volume gab leere Ausgabe)
+- Doppeltes Gain-Log (custom log.info + generischer TRIGGER-Handler)
+- BT Auto-Reconnect Watcher läuft stabil im Hintergrund
+
+**rtlsdr.py — `usb_reset()`:**
+- Neue Funktion `usb_reset()`: RTL-SDR USB-Reset ohne Reboot
+- Ablauf: alle rtl_fm/welle-cli killen → Lock/State bereinigen → sysfs authorized=0/1 Cycle
+- Fallback auf `usbreset 0bda:2838` wenn sysfs-Path nicht gefunden
+- Prüft nach Reset ob Stick wieder erkannt wird, schreibt Diagnosedatei neu
+
+**main_core.py — `rtlsdr_reset` Trigger:**
+- Neuer Trigger `rtlsdr_reset`: startet `usb_reset()` im Hintergrund
+- Progress-Feedback: "USB-Reset läuft..." → "Reset OK — Stick erkannt ✓" oder Warnung
+- Doppeltes Gain-Log entfernt (custom log.info + TRIGGER-Handler waren redundant)
+
+**webui.py — `/api/rtlsdr/reset` + Lautstärke-Fix:**
+- `POST /api/rtlsdr/reset`: schreibt `rtlsdr_reset` Trigger, gibt sofort Antwort
+- `rtlsdr_reset` in ALLOWED_COMMANDS eingetragen
+- `/api/volume`: Fallback auf `pactl list sinks` wenn `get-sink-volume` leer (BT-Sink)
+
+**index.html — RTL-SDR Reset Button:**
+- Roter „⚡ RTL-SDR Reset" Button neben „🔄 Passive Diagnose"
+- Button disabled während Reset läuft, zeigt Status-Feedback
+- Nach 7s automatisch Passive Diagnose neu laden
 
 ### v0.8.15 — BT-AuthFix, Gain-WebUI, Auto-Reconnect
 **Analyse aus v0.8.14 Log:**
@@ -1452,13 +1602,13 @@ sudo systemctl restart pidrive_display
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.15)
+## Aktueller Stand (v0.8.20)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.15 — BT-AuthFix, Gain-WebUI, Auto-Reconnect
-✓ pidrive_display.service   v0.8.15, 20fps
+✓ pidrive_core.service      v0.8.20 — PPM-Kalibrierung verbessert
+✓ pidrive_display.service   v0.8.20, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
@@ -1548,9 +1698,9 @@ sudo systemctl restart pidrive_display
 
 #### Kurzfristig (nächste 1–3 Updates)
 
-- [ ] **GPIO-Buttons** (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25) — direkte Steuerung am Display, wichtigste UX-Verbesserung für Fahrzeugbetrieb
+- [x] **GPIO-Buttons** (Key1=GPIO23→up, Key2=GPIO24→enter, Key3=GPIO25→back) — implementiert v0.8.19
 - [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
-- [ ] **resume_state.py** — last_state.json: letzte Quelle/Station beim Boot vollständig wiederherstellen
+- [x] **Boot-Resume** — last_source + last_web_station: FM/DAB/Webradio wiederhergestellt v0.8.19
 - [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
 - [ ] **WebUI Breadcrumb-Navigation** — navigierbarer Baum statt JSON-Dump
 
@@ -1594,6 +1744,9 @@ sudo systemctl restart pidrive_display
 - [x] MPRIS2 differenzierte BMW-Metadaten je Quelle (v0.8.3)
 - [x] Scanner-Trigger vollständig: scan_jump/step/setfreq/inputfreq (v0.8.4)
 - [x] WebUI AVRCP Debug Panel + Scanner-Buttons (v0.8.5)
+- [x] PPM-Korrektur, Squelch-Einstellung, Empfangsoptimierung (v0.8.18)
+- [x] WebUI-Kompakt, Phase 2 State, PulseAudio Switch-on-Connect (v0.8.17)
+- [x] RTL-SDR USB-Reset, Lautstärke-Fix (v0.8.16)
 - [x] BT-AuthFix, Gain-WebUI, Auto-Reconnect (v0.8.15)
 - [x] Klinke-Audio-Fix, BT-Agent-Fix (v0.8.14)
 - [x] Audio State File, Scanner-Guard, BT-Fix, Status-Sync (v0.8.13)

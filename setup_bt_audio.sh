@@ -48,9 +48,11 @@ load-module module-card-restore
 load-module module-alsa-card device_id=0
 load-module module-bluetooth-policy
 load-module module-bluetooth-discover
+# v0.8.17: Automatisches Umschalten auf BT wenn verbunden, Fallback auf Klinke
+load-module module-switch-on-connect
 load-module module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native
 EOF
-ok "PulseAudio system.pa konfiguriert"
+ok "PulseAudio system.pa konfiguriert (inkl. switch-on-connect)"
 
 # 4. PulseAudio runtime-Verzeichnis
 mkdir -p /var/run/pulse
