@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.20
+# PiDrive — Kontext & Projektdokumentation v0.8.21
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.20 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.21 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -918,6 +918,11 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.21 — Display-Vorschau Bugfix (HTML-Entity-Double-Escape)
+**Bug:** Jinja2-Template zeigte `&#x25B8;Jetzt läuft` statt `▸Jetzt läuft` in der Display-Vorschau.
+**Ursache:** `{% set icons = {"folder":"&#x25B8;",...} %}` — Jinja2 auto-escaped `&` → `&amp;`, Browser zeigte Literal-Text.
+**Fix:** Direkte Unicode-Zeichen `▸♪→◉ℹ±` statt HTML-Entity-Strings in der icons-Dict.
 
 ### v0.8.20 — PPM-Kalibrierung verbessert
 **Problem in v0.8.18:** rtl_test -p gibt keinen direkten "X ppm"-Wert aus,
@@ -1602,13 +1607,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.20)
+## Aktueller Stand (v0.8.21)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.20 — PPM-Kalibrierung verbessert
-✓ pidrive_display.service   v0.8.20, 20fps
+✓ pidrive_core.service      v0.8.21 — Display-Vorschau Bugfix
+✓ pidrive_display.service   v0.8.21, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
