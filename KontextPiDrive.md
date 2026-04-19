@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.21
+# PiDrive — Kontext & Projektdokumentation v0.8.23
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.21 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.23 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -918,6 +918,43 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.23 — WebUI HTML/JS Bugfixes (Gemini-Review)
+**Nach Gemini-Code-Review — verifizierte echte Bugs:**
+
+**index.html — ID-Mismatch behoben:**
+- HTML hatte `id="debugBar"`, JS suchte `getElementById('statusBar')`
+- getElementById('statusBar') gibt `null` zurück → Status-Bar wurde nicht aktualisiert
+- Fix: HTML-ID auf `id="statusBar"` geändert
+
+**index.html — copyLogToClipboard event.target behoben:**
+- `onclick="copyLogToClipboard()"` ohne event-Übergabe
+- Funktion nutzte globales `event.target` — in modernen Browsern deprecated/undefined
+- Fix: `onclick="copyLogToClipboard(event)"` + `function copyLogToClipboard(evt)` + `evt.target`
+
+**Gemini-Punkte die KEIN echtes Problem sind:**
+- Issue 2 (HTML-Struktur): `</section>`+`<section>` sind korrekte Schachtelung, kein Bug
+- Issue 5 (nodeClick): `await` in `for`-Schleife garantiert sequentielle Ausführung
+- Issue 6 (listOverlay): display:none ist korrekt — das Overlay wird per Jinja2 und Core-IPC gesteuert
+
+### v0.8.22 — WebUI JavaScript Bugfix (Block 1 Syntax Error)
+**Ursache:**
+- Die `loadAllLogs()` Funktion (v0.8.17 eingebaut) enthielt echte Zeilenumbrüche
+  in JavaScript Single-Quoted-String-Literalen statt `\n` Escape-Sequenzen
+- JavaScript-Syntax: `'text\n'` (Escape) ✓ vs `'text` + Newline + `'` (Literal) ✗
+- Dieser Syntax-Fehler deaktivierte den gesamten ersten `<script>`-Block
+- Betroffen: `sendCmd()`, `loadLogs()`, `runDiagnose()`, alle Steuerungsbuttons
+- Nicht betroffen: Blöcke 2–4 (Audio, Gain, RTL-Reset) — diese liefen weiter
+
+**Symptom:** Steuerungsbuttons taten nichts, Diagnose-Buttons reagierten nicht,
+RTL-Reset und PPM-Kalibrierung funktionierten noch (eigene Script-Blöcke).
+
+**Fix:**
+- `loadAllLogs()` komplett neu geschrieben — kein String-Literal mit Newline mehr
+- Alle 4 Script-Blöcke mit Node.js `--check` verifiziert: Syntax OK
+
+**v0.8.21 Fix (Icons) ist ebenfalls enthalten:**
+- Jinja2 icons-Dict: HTML-Entities (`&#x25B8;`) → direkte Unicode-Zeichen (`▸`)
 
 ### v0.8.21 — Display-Vorschau Bugfix (HTML-Entity-Double-Escape)
 **Bug:** Jinja2-Template zeigte `&#x25B8;Jetzt läuft` statt `▸Jetzt läuft` in der Display-Vorschau.
@@ -1607,13 +1644,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.21)
+## Aktueller Stand (v0.8.23)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.21 — Display-Vorschau Bugfix
-✓ pidrive_display.service   v0.8.21, 20fps
+✓ pidrive_core.service      v0.8.23 — WebUI HTML/JS Bugfixes (ID+event)
+✓ pidrive_display.service   v0.8.23, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
