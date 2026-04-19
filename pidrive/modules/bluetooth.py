@@ -378,6 +378,15 @@ def connect_device(mac, S, settings):
     S["bt_sink_mac"] = mac
     S["bt_pa_sink"]  = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
 
+    # v0.8.25: nach erfolgreichem Connect automatisch Pairing-Keys sichern
+    try:
+        from modules import bt_backup as _btbak
+        res = _btbak.backup()
+        if res.get("ok"):
+            log.info(f"BT-Backup: nach Connect automatisch gesichert ({res['count']} Dateien)")
+    except Exception as _ebb:
+        log.warn("BT-Backup nach Connect: " + str(_ebb))
+
     settings["bt_last_mac"]  = mac
     settings["bt_last_name"] = name
     settings["bt_sink_mac"]  = mac

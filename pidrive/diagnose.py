@@ -200,8 +200,158 @@ def summary():
     else:
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
+def check_audio():
+    S("AUDIO (PulseAudio + amixer)")
+    PA = "PULSE_SERVER=unix:/var/run/pulse/native "
+
+    # PulseAudio aktiv?
+    pa_state = run("systemctl is-active pulseaudio 2>/dev/null")
+    (ok if pa_state == "active" else err)(f"pulseaudio.service: {pa_state}")
+
+    # Sinks
+    sinks = run(PA + "pactl list sinks short 2>/dev/null")
+    if sinks:
+        for s in sinks.splitlines():
+            nfo(f"Sink: {s[:80]}")
+    else:
+        warn("Keine PulseAudio-Sinks (pactl nicht erreichbar?)")
+
+    # Default Sink
+    ds = run(PA + "pactl get-default-sink 2>/dev/null")
+    if ds:
+        ok(f"Default Sink: {ds}")
+    else:
+        warn("Default Sink: leer (pactl get-default-sink gab nichts zurück)")
+
+    # Sink-Inputs
+    si = run(PA + "pactl list sink-inputs short 2>/dev/null")
+    if si:
+        ok(f"Aktive Sink-Inputs: {len(si.splitlines())} (mpv/librespot?)")
+        for s in si.splitlines():
+            nfo(f"  Input: {s[:80]}")
+    else:
+        warn("Keine aktiven Sink-Inputs — kein Audio läuft gerade?")
+
+    # amixer numid=3 (Pi 3B Ausgang: 0=auto, 1=klinke, 2=HDMI)
+    amix = run("amixer -c 0 cget numid=3 2>/dev/null")
+    if amix:
+        val = ""
+        for l in amix.splitlines():
+            if "values=" in l:
+                val = l.strip()
+        mapping = {"0": "Auto (unsicher!)", "1": "Klinke ✓", "2": "HDMI (kein Ton auf Klinke!)"}
+        raw = val.split("=")[-1] if "=" in val else "?"
+        label = mapping.get(raw, f"Unbekannt ({raw})")
+        (ok if raw == "1" else warn)(f"Pi Audio-Ausgang (amixer numid=3): {label}")
+    else:
+        warn("amixer numid=3 nicht lesbar")
+
+    # Audio State File
+    state_file = "/tmp/pidrive_audio_state.json"
+    if os.path.exists(state_file):
+        import json
+        try:
+            with open(state_file) as f:
+                state = json.load(f)
+            eff = state.get("effective", "?")
+            req = state.get("requested", "?")
+            rsn = state.get("reason", "?")
+            ok(f"Audio-State: requested={req} effective={eff} reason={rsn}")
+        except Exception as e:
+            warn(f"Audio-State: Lesefehler ({e})")
+    else:
+        warn("Audio-State-Datei fehlt (/tmp/pidrive_audio_state.json)")
+
+
+def check_bluetooth():
+    S("BLUETOOTH")
+
+    # Service Status
+    bt_state = run("systemctl is-active bluetooth 2>/dev/null")
+    (ok if bt_state == "active" else err)(f"bluetooth.service: {bt_state}")
+
+    # hci0 vorhanden?
+    hci = run("hciconfig hci0 2>/dev/null")
+    if hci:
+        up = "UP RUNNING" in hci
+        (ok if up else warn)(f"hci0: {'UP RUNNING' if up else 'DOWN / fehlt'}")
+    else:
+        err("hci0 nicht gefunden — BT-Dongle fehlt oder Treiber-Problem")
+
+    # Gepaarte Geräte
+    paired = run("bluetoothctl paired-devices 2>/dev/null")
+    if paired:
+        ok(f"Gepaarte Geräte: {len(paired.splitlines())}")
+        for l in paired.splitlines():
+            nfo(f"  {l}")
+    else:
+        warn("Keine gepaarten Geräte in BlueZ-Datenbank")
+        warn("→ Gerät muss neu gepairt werden (bluetoothctl: pair ...)")
+
+    # BT-Agent
+    agent_test = run("echo 'agent on' | timeout 4s bluetoothctl 2>/dev/null")
+    if "registered" in agent_test.lower() or "agent on" in agent_test.lower():
+        ok("BT-Agent: registrierbar")
+    else:
+        warn(f"BT-Agent: Antwort: {agent_test[:60]}")
+
+    # A2DP Sinks in PulseAudio
+    PA = "PULSE_SERVER=unix:/var/run/pulse/native "
+    bt_sinks = run(PA + "pactl list sinks short 2>/dev/null | grep bluez")
+    if bt_sinks:
+        ok(f"BT A2DP Sink aktiv: {bt_sinks[:80]}")
+    else:
+        nfo("Kein BT A2DP Sink aktiv (normal wenn kein BT verbunden)")
+
+
+def check_rtlsdr():
+    S("RTL-SDR")
+    import json as _json
+
+    # USB
+    lsusb = run("lsusb 2>/dev/null")
+    found = any(x in lsusb for x in ["0bda:2838", "RTL2838", "RTL2832"])
+    (ok if found else warn)(f"RTL-SDR USB: {'erkannt ✓' if found else 'NICHT erkannt'}")
+    if not found:
+        warn("→ Stick abziehen und neu einstecken, dann RTL-SDR Reset im WebUI")
+
+    # Tools
+    for tool in ["rtl_fm", "rtl_test", "welle-cli"]:
+        p = run(f"which {tool} 2>/dev/null")
+        (ok if p else err)(f"{tool}: {p if p else 'FEHLT'}")
+
+    # RTL-SDR State File
+    state_file = "/tmp/pidrive_rtlsdr.json"
+    if os.path.exists(state_file):
+        try:
+            with open(state_file) as f:
+                state = _json.load(f)
+            busy = state.get("busy", False)
+            procs = state.get("processes", [])
+            (ok if not busy else warn)(f"RTL-SDR busy: {busy} | Prozesse: {len(procs)}")
+            ppm = state.get("ppm", None)
+            if ppm is not None:
+                nfo(f"PPM-Konfiguration: {ppm}")
+        except Exception as e:
+            warn(f"RTL-SDR State: Lesefehler ({e})")
+    else:
+        nfo("Kein RTL-SDR State File — normal beim Start")
+
+    # Settings: ppm + squelch
+    settings_file = "/home/pi/pidrive/pidrive/config/settings.json"
+    if os.path.exists(settings_file):
+        try:
+            import json as _j
+            with open(settings_file) as f:
+                sett = _j.load(f)
+            nfo(f"Settings: fm_gain={sett.get('fm_gain',-1)} dab_gain={sett.get('dab_gain',-1)} "
+                f"ppm={sett.get('ppm_correction',0)} squelch={sett.get('scanner_squelch',25)}")
+        except Exception:
+            pass
+
+
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.8.23\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.8.25\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
@@ -211,6 +361,9 @@ def main():
     check_fb("/dev/fb1", "fb1 (SPI Display)")
     check_vtcon()
     check_log()
+    check_audio()
+    check_bluetooth()
+    check_rtlsdr()
     test_sdl()
     summary()
 

@@ -148,6 +148,8 @@
           <button onclick="sendCmd('scan_jump:cb:-10')">CB -10</button>
           <button onclick="sendCmd('bt_disconnect')">BT Trennen</button>
           <button onclick="sendCmd('bt_reconnect_last')">BT Reconnect</button>
+          <button onclick="sendCmd('bt_backup')" title="Pairing-Keys sichern">BT Backup</button>
+          <button onclick="sendCmd('bt_restore')" title="Pairing-Keys wiederherstellen (nach Reboot)">BT Restore</button>
         </div>
 
 
@@ -419,6 +421,46 @@
             </div>
           </div>
 
+        </div>
+      </section>
+
+      <!-- BT-Backup Panel (v0.8.25) -->
+      <section class="panel">
+        <div class="panel-title">🔐 Bluetooth Pairing-Keys Backup</div>
+        <div class="diag-grid">
+          <div class="diag-card">
+            <div class="diag-title">Backup-Status</div>
+            <div class="diag-row">
+              <div class="diag-key">Backup</div>
+              <div class="diag-value" id="btBackupStatus">…</div>
+            </div>
+            <div class="diag-row">
+              <div class="diag-key">Datum</div>
+              <div class="diag-value" id="btBackupDate">–</div>
+            </div>
+            <div class="diag-row">
+              <div class="diag-key">Geräte</div>
+              <div class="diag-value" id="btBackupDevices">–</div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="sendCmd('bt_backup');setTimeout(refreshBtBackup,2000)"
+                      style="background:#1a4a2a;color:#7fc"
+                      title="Aktuelle Pairing-Keys sichern — nach erfolgreichem Pairing aufrufen">
+                💾 Jetzt sichern
+              </button>
+              <button onclick="sendCmd('bt_restore');setTimeout(refreshBtBackup,4000)"
+                      style="background:#4a2a1a;color:#fc9"
+                      title="Pairing-Keys aus Backup wiederherstellen — bei 'not available' nach Reboot">
+                🔄 Wiederherstellen
+              </button>
+              <button onclick="refreshBtBackup()" style="font-size:0.85em">🔄 Status</button>
+            </div>
+            <div style="margin-top:8px;font-size:0.8em;color:#888">
+              <strong style="color:#9ed8ff">Wann sichern?</strong> Nach jedem erfolgreichen Pairing sofort.<br>
+              <strong style="color:#9ed8ff">Wann wiederherstellen?</strong> Wenn BT nach Reboot "not available" meldet.<br>
+              Auto-Restore beim Boot: aktiv — greift wenn BlueZ-DB leer ist.
+            </div>
+          </div>
         </div>
       </section>
 
@@ -926,6 +968,28 @@
       setTimeout(refreshVolume, 800);
       setTimeout(refreshGain, 900);
     });
+
+    async function refreshBtBackup() {
+      try {
+        const r = await fetch('/api/bt/backup');
+        const d = await r.json();
+        const info = d.data || {};
+        const el = id => document.getElementById(id);
+        if (info.available) {
+          if (el('btBackupStatus')) el('btBackupStatus').textContent = '✓ vorhanden';
+          if (el('btBackupDate'))   el('btBackupDate').textContent   = info.date || '–';
+          if (el('btBackupDevices')) {
+            const devs = (info.devices || []).map(d => d.name || d.mac).join(', ');
+            el('btBackupDevices').textContent = devs || '–';
+          }
+        } else {
+          if (el('btBackupStatus'))  el('btBackupStatus').textContent  = '– kein Backup';
+          if (el('btBackupDate'))    el('btBackupDate').textContent    = '–';
+          if (el('btBackupDevices')) el('btBackupDevices').textContent = '–';
+        }
+      } catch(e) { console.error('refreshBtBackup', e); }
+    }
+    window.addEventListener('load', () => setTimeout(refreshBtBackup, 1000));
 
     window.addEventListener('load', () => { setTimeout(refreshAudio, 600); });
     </script>

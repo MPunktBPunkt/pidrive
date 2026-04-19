@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.23
+main_core.py - PiDrive Core v0.8.25
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -191,6 +191,44 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         bg(lambda: bluetooth.disconnect_current(S, settings))
     elif cmd == "bt_reconnect_last":
         bg(lambda: bluetooth.reconnect_last(S, settings))
+    elif cmd == "bt_backup":
+        def _do_bt_backup():
+            try:
+                from modules import bt_backup as _btb
+                ipc.write_progress("BT-Backup", "Sichern...", color="blue")
+                res = _btb.backup()
+                if res.get("ok"):
+                    info = _btb.backup_info()
+                    devs = len(info.get("devices", []))
+                    ipc.write_progress("BT-Backup", f"OK — {devs} Gerät(e) gesichert ✓", color="green")
+                    log.info(f"BT-Backup: {res['count']} Dateien")
+                else:
+                    ipc.write_progress("BT-Backup", f"Fehler: {res.get('error','?')}", color="red")
+                import time as _t; _t.sleep(3); ipc.clear_progress()
+            except Exception as e:
+                log.error(f"bt_backup Trigger: {e}"); ipc.clear_progress()
+        bg(_do_bt_backup)
+
+    elif cmd == "bt_restore":
+        def _do_bt_restore():
+            try:
+                from modules import bt_backup as _btb
+                if not _btb.has_backup():
+                    ipc.write_progress("BT-Restore", "Kein Backup vorhanden!", color="orange")
+                    import time as _t; _t.sleep(3); ipc.clear_progress()
+                    return
+                ipc.write_progress("BT-Restore", "Wiederherstellung...", color="blue")
+                res = _btb.restore()
+                if res.get("ok"):
+                    ipc.write_progress("BT-Restore", "OK — bluetoothd neugestartet ✓", color="green")
+                    log.info(f"BT-Restore: {res['count']} Dateien")
+                else:
+                    ipc.write_progress("BT-Restore", f"Fehler: {res.get('error','?')}", color="red")
+                import time as _t; _t.sleep(3); ipc.clear_progress()
+            except Exception as e:
+                log.error(f"bt_restore Trigger: {e}"); ipc.clear_progress()
+        bg(_do_bt_restore)
+
     elif cmd.startswith("bt_repair:"):
         mac = cmd.split(":", 1)[1].strip()
         bg(lambda m=mac: bluetooth.repair_device(m, S, settings))
@@ -198,7 +236,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.8.23) ─────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.8.25) ─────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -221,7 +259,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
 
-    # ── PPM + Squelch Trigger (v0.8.23) ─────────────────────────────────────
+    # ── PPM + Squelch Trigger (v0.8.25) ─────────────────────────────────────
     elif cmd.startswith("ppm:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -249,7 +287,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"squelch Trigger: {e}")
 
-    # ── RTL-SDR Reset (v0.8.23) ───────────────────────────────────────────────
+    # ── RTL-SDR Reset (v0.8.25) ───────────────────────────────────────────────
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
@@ -559,7 +597,7 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.8.23: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        # v0.8.25: Status-Felder leeren — verhindert stale State beim Quellenwechsel
         S["radio_playing"]    = False
         S["radio_station"]    = ""
         S["radio_name"]       = ""
@@ -848,7 +886,7 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # GPIO-Tasten starten (v0.8.23)
+    # GPIO-Tasten starten (v0.8.25)
     try:
         _gpio_active = _gpio_buttons.start()
         if _gpio_active:
@@ -858,7 +896,18 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
-    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.8.23)
+    # v0.8.25: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
+    # wenn boot-resume play_station() startet ohne vorherigen get_mpv_args()-Aufruf
+    try:
+        from modules.audio import _set_pi_output_klinke
+        _audio_out = settings.get("audio_output", "auto")
+        if _audio_out not in ("bt", "hdmi"):
+            _set_pi_output_klinke()
+            log.info("Boot: amixer Klinke aktiviert (audio_output=" + _audio_out + ")")
+    except Exception as _ea:
+        log.warn("Boot amixer: " + str(_ea))
+
+    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.8.25)
     try:
         time.sleep(1)
         last_src   = settings.get("last_source", "")
@@ -901,7 +950,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.23 gestartet")
+    log.info("PiDrive Core v0.8.25 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -930,7 +979,7 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.8.23: BT Auto-Reconnect Watcher starten
+    # v0.8.25: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr

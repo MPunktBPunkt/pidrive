@@ -41,7 +41,9 @@ ALLOWED_COMMANDS = {
     "lib_browse",
     "reboot", "shutdown", "sys_info", "sys_version", "update",
     "rtlsdr_reset",
+    "bt_backup", "bt_restore",
     "rtlsdr_reset",
+    "bt_backup", "bt_restore",
 }
 
 def read_json(path, default=None):
@@ -517,14 +519,13 @@ def api_gain():
 @app.route("/api/rtlsdr/calibrate")
 def api_rtlsdr_calibrate():
     """
-    PPM-Schätzung via rtl_test -p (v0.8.20).
+    PPM-Kalibrierung via rtl_test -p (v0.8.25).
 
-    rtl_test -p misst die Samplerate-Abweichung des Sticks.
-    Formel: ppm = (gemessene_rate - nominale_rate) / nominale_rate * 1e6
-    Nominale Rate: 2048000 S/s
+    rtl_test -p gibt aus:
+      real sample rate: 2047943 current PPM: -28 cumulative PPM: -28
 
-    Hinweis: Das Ergebnis ist eine Näherung. Für exakte Kalibrierung
-    besser eine bekannte FM-Frequenz als Referenz nutzen.
+    Methode 1: "cumulative PPM: N" direkt aus rtl_test (zuverlässigste Methode)
+    Methode 2: Samplerate-Berechnung als Fallback
     """
     import re as _re
     result = safe_run("timeout 32s rtl_test -p 2>&1")
@@ -534,51 +535,75 @@ def api_rtlsdr_calibrate():
     method = "nicht erkannt"
     lines = stdout.splitlines()
 
-    # Methode 1: "real sample rate: XXXXXXX +/- N samples/sec"
+    # Methode 1 (beste): "cumulative PPM: N" — rtl_test gibt dies nach ~30s aus
+    # Zeile sieht aus: "real sample rate: 2047943 current PPM: -28 cumulative PPM: -28"
+    cum_ppms = []
     for ln in lines:
-        m = _re.search(r'real sample rate:\s*([\d.]+)', ln, _re.I)
+        m = _re.search(r'cumulative PPM[: ]+([-+]?[0-9]+)', ln, _re.I)
         if m:
             try:
-                measured = float(m.group(1))
-                nominal  = 2048000.0
-                ppm_raw  = (measured - nominal) / nominal * 1e6
-                ppm      = round(ppm_raw)
-                method   = f"Samplerate-Messung ({measured:.0f} S/s gemessen, {ppm_raw:.1f} ppm roh)"
+                cum_ppms.append(int(m.group(1)))
             except Exception:
                 pass
-            break
 
-    # Methode 2: direkter ppm-Wert in Ausgabe (neuere rtl-sdr Versionen)
+    if cum_ppms:
+        # Letzten kumulativen PPM-Wert nehmen (stabilstes Ergebnis)
+        ppm = cum_ppms[-1]
+        method = f"cumulative PPM aus rtl_test ({len(cum_ppms)} Messungen, letzter Wert)"
+
+    # Methode 2: "current PPM: N" wenn kein kumulativer Wert
     if ppm is None:
+        cur_ppms = []
         for ln in lines:
-            m = _re.search(r'ppm[^a-z0-9]*([-+]?[0-9]+[.]?[0-9]*)', ln, _re.I)
+            m = _re.search(r'current PPM[: ]+([-+]?[0-9]+)', ln, _re.I)
             if m:
                 try:
-                    ppm    = round(float(m.group(1)))
-                    method = "direkt aus Ausgabe"
+                    cur_ppms.append(int(m.group(1)))
+                except Exception:
+                    pass
+        if cur_ppms:
+            # Median der aktuellen PPM-Werte (robuster als letzter Wert)
+            cur_ppms.sort()
+            ppm = cur_ppms[len(cur_ppms)//2]
+            method = f"current PPM Median aus {len(cur_ppms)} Werten"
+
+    # Methode 3: Samplerate-Berechnung
+    if ppm is None:
+        for ln in lines:
+            m = _re.search(r'real sample rate[: ]+([\d.]+)', ln, _re.I)
+            if m:
+                try:
+                    measured = float(m.group(1))
+                    nominal  = 2048000.0
+                    ppm_raw  = (measured - nominal) / nominal * 1e6
+                    ppm      = round(ppm_raw)
+                    method   = f"Samplerate-Berechnung ({measured:.0f} S/s)"
                 except Exception:
                     pass
                 break
 
-    # Hinweise für den User
+    # Hinweise
     hints = []
     if ppm is None:
-        hints.append("rtl_test gab keinen verwertbaren Wert aus — manuell testen:")
-        hints.append("1. FM-Sender mit bekannter Frequenz hören")
-        hints.append("2. Wenn Empfang schlecht: PPM ±10 schrittweise anpassen")
-        hints.append("3. Typische RTL2838-Werte: -50..+50 ppm")
+        hints.append("Kein PPM-Wert erkannt — mögliche Ursachen:")
+        hints.append("• RTL-SDR Stick noch nicht freigegeben (kurz warten, erneut versuchen)")
+        hints.append("• Kalibrierung läuft nur wenn kein FM/DAB/Scanner aktiv ist")
+        hints.append("• Timeout zu kurz — 30s reicht normalerweise")
+        hints.append("Manuelle Alternative: PPM-Wert schrittweise ±5 testen beim FM-Hören")
     else:
         hints.append(f"Methode: {method}")
-        if abs(ppm) > 80:
-            hints.append("⚠ Wert > 80 ppm — ungewöhnlich hoch, ggf. manuell verifizieren")
-        hints.append("Tipp: Nach Setzen kurz FM hören und Empfang vergleichen")
+        if abs(ppm) > 100:
+            hints.append("⚠ Wert > 100 ppm — sehr hoch, eventuell Stick-Problem")
+        elif abs(ppm) > 50:
+            hints.append("Hinweis: Typischer Bereich für RTL2838 ist ±20-60 ppm")
+        hints.append("Nach Übernehmen → FM neu starten um Wert zu aktivieren")
 
     return jsonify({
-        "ok":           True,
-        "stdout":       stdout[-800:],   # letzte 800 Zeichen
+        "ok":            True,
+        "stdout":        stdout[-1000:],
         "suggested_ppm": ppm,
-        "method":       method,
-        "hints":        hints,
+        "method":        method,
+        "hints":         hints,
     })
 
 

@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.23
+# PiDrive — Kontext & Projektdokumentation v0.8.25
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.23 — Baumbasiert, beliebig tief)
+PiDrive  (v0.8.25 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -855,6 +855,8 @@ echo "fm_gain:-1"                   > /tmp/pidrive_cmd   # FM Auto-Gain (AGC)
 echo "fm_gain:30"                   > /tmp/pidrive_cmd   # FM Gain 30 dB
 echo "dab_gain:-1"                  > /tmp/pidrive_cmd   # DAB Auto-Gain (AGC)
 echo "dab_gain:35"                  > /tmp/pidrive_cmd   # DAB Gain 35 dB
+echo "bt_backup"                     > /tmp/pidrive_cmd   # BT Pairing-Keys sichern
+echo "bt_restore"                     > /tmp/pidrive_cmd   # BT Pairing-Keys wiederherstellen
 echo "rtlsdr_reset"                  > /tmp/pidrive_cmd   # RTL-SDR USB-Reset (kein Reboot)
 echo "ppm:0"                          > /tmp/pidrive_cmd   # PPM-Korrektur deaktivieren
 echo "ppm:25"                         > /tmp/pidrive_cmd   # PPM-Korrektur +25 ppm
@@ -918,6 +920,68 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.8.25 — BT-Pairing-Backup, PPM-Fix
+**Probleme aus Log v0.8.24:**
+- BT `not available` nach Reboot — BlueZ-DB leer, Pairing verloren
+- PPM-Kalibrierung: Regex fand kumulativen PPM-Wert nicht (`cumulative PPM: N` in rtl_test-Ausgabe)
+
+**modules/bt_backup.py — NEU:**
+- `backup()`: kopiert /var/lib/bluetooth/ → config/bt_pairs/
+- `restore()`: kopiert zurück + `systemctl restart bluetooth`
+- `has_backup()` / `backup_info()`: Status-Abfrage
+- BlueZ-Datenbank enthält alle Pairing-Keys (Link Keys, UUIDs, Profile)
+
+**bluetooth.py — Auto-Backup nach Connect:**
+- Nach erfolgreichem BT-Connect: automatisches Backup der Pairing-Daten
+- Einmal verbunden → Keys gesichert → Restore nach Reboot möglich
+
+**main_core.py — Auto-Restore beim Boot:**
+- Wenn `bluetoothctl paired-devices` leer + Backup vorhanden → automatisches Restore
+- bluetoothd wird neu gestartet → Pairing sofort verfügbar
+- Triggers: `bt_backup` + `bt_restore` (manuell per WebUI)
+
+**webui.py — BT-Backup API:**
+- `GET /api/bt/backup`: Status, Datum, gesicherte Geräte
+- `bt_backup` + `bt_restore` in ALLOWED_COMMANDS
+
+**index.html — BT-Backup Panel:**
+- Zeigt Backup-Status, Datum, gesicherte Geräte
+- 💾 Jetzt sichern + 🔄 Wiederherstellen Buttons
+- Erklärung: wann sichern (nach Pairing), wann restore (nach Reboot)
+
+**webui.py — PPM-Kalibrierung Fix:**
+- rtl_test gibt `current PPM: N` und `cumulative PPM: N` aus
+- Methode 1: `cumulative PPM` (stabilster Wert nach 30s)
+- Methode 2: Median der `current PPM` Werte
+- Methode 3: Samplerate-Berechnung als Fallback
+- Korrekte Hinweise wenn Wert nicht erkannt
+
+### v0.8.24 — amixer Boot-Fix, Diagnose erweitert
+**Log-Analyse v0.8.23:**
+- Klinke kein Ton: `get_mpv_args()` wurde beim Boot-Resume nicht aufgerufen → kein `amixer numid=3 1` → Pi-Ausgang blieb auf HDMI
+- BT `not available`: BlueZ-Datenbank leer nach Reboot — manuelles Neu-Pairing nötig
+- Diagnose zeigte Audio/BT/RTL-SDR nicht → jetzt ergänzt
+
+**main_core.py — amixer explizit beim Boot:**
+- Vor Boot-Resume: `_set_pi_output_klinke()` wenn audio_output != bt/hdmi
+- Verhindert „kein Ton auf Klinke" wenn play_station() ohne vorherigen get_mpv_args()-Aufruf startet
+- Log: `Boot: amixer Klinke aktiviert (audio_output=...)`
+
+**diagnose.py — drei neue Sektionen:**
+- `check_audio()`: PulseAudio-Status, Sinks, Default-Sink, Sink-Inputs, amixer numid=3 Wert, Audio-State-File
+- `check_bluetooth()`: bluetooth.service, hci0, gepaarte Geräte, BT-Agent, A2DP-Sink
+- `check_rtlsdr()`: USB-Erkennung, Tools (rtl_fm/rtl_test/welle-cli), RTL-State, PPM/Squelch aus settings
+
+**Sofort-Fix bei BT `not available` (manuell per SSH):**
+```bash
+bluetoothctl
+  power on; agent on; default-agent; scan on
+  # warten bis HD 4.40BT erscheint
+  pair 00:16:94:2E:85:DB
+  trust 00:16:94:2E:85:DB  
+  connect 00:16:94:2E:85:DB
+```
 
 ### v0.8.23 — WebUI HTML/JS Bugfixes (Gemini-Review)
 **Nach Gemini-Code-Review — verifizierte echte Bugs:**
@@ -1644,13 +1708,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.23)
+## Aktueller Stand (v0.8.25)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.23 — WebUI HTML/JS Bugfixes (ID+event)
-✓ pidrive_display.service   v0.8.23, 20fps
+✓ pidrive_core.service      v0.8.25 — BT-Pairing-Backup, PPM-Fix
+✓ pidrive_display.service   v0.8.25, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
