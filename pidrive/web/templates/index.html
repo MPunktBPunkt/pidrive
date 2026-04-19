@@ -21,7 +21,7 @@
       </div>
     </header>
 
-    <div id="debugBar" class="debug-bar">Initialisiere...</div>
+    <div id="statusBar" class="debug-bar">Initialisiere...</div>
 
     <main class="main-grid">
       <section class="panel display-panel">
@@ -507,7 +507,7 @@
         <button onclick="loadService('pidrive_avrcp')">AVRCP Status</button>
         <button onclick="refreshState()">Refresh</button>
         <button onclick="loadAllLogs()" class="primary" title="Alle Logs + Diagnose in einem">📋 Alle</button>
-        <button onclick="copyLogToClipboard()" title="Log in Zwischenablage kopieren">⎘ Copy</button>
+        <button onclick="copyLogToClipboard(event)" title="Log in Zwischenablage kopieren">⎘ Copy</button>
       </div>
       <pre id="logOutput">Bereit.</pre>
     </section>
@@ -639,8 +639,7 @@
     // Alle Logs + Diagnose auf einmal laden (v0.8.17)
     async function loadAllLogs() {
       const out = document.getElementById('logOutput');
-      out.textContent = '⏳ Lade alle Logs...';
-      const sections = [];
+      out.textContent = '\u23F3 Lade alle Logs...';
       try {
         const tasks = [
           fetch('/api/logs?target=core').then(r=>r.json()),
@@ -650,35 +649,28 @@
         ];
         const [core, app, status, diag] = await Promise.all(tasks);
         const ts = new Date().toLocaleString('de-DE');
-        sections.push('=== PiDrive Log-Snapshot ' + ts + ' ===
-');
-        sections.push('--- Core Log ---
-' + (core.stdout||'') );
-        sections.push('
---- App Log ---
-' + (app.stdout||''));
-        sections.push('
---- Core Status ---
-' + (status.stdout||''));
-        sections.push('
---- Diagnose ---
-' + (diag.stdout||''));
-        out.textContent = sections.join('');
+        const sep = '\n' + '-'.repeat(40) + '\n';
+        const txt = [
+          '=== PiDrive Log-Snapshot ' + ts + ' ===',
+          sep + '--- Core Log ---' + sep + (core.stdout||'(leer)'),
+          sep + '--- App Log ---' + sep + (app.stdout||'(leer)'),
+          sep + '--- Core Status ---' + sep + (status.stdout||'(leer)'),
+          sep + '--- Diagnose ---' + sep + (diag.stdout||'(leer)'),
+        ].join('\n');
+        out.textContent = txt;
       } catch(e) {
         out.textContent = 'Fehler: ' + e;
       }
     }
 
     // Copy log output to clipboard (v0.8.17)
-    function copyLogToClipboard() {
+    function copyLogToClipboard(evt) {
       const txt = document.getElementById('logOutput').textContent;
       if (!txt || txt === 'Bereit.') { alert('Kein Log zum Kopieren'); return; }
+      const btn = evt ? evt.target : null;
       navigator.clipboard.writeText(txt).then(() => {
-        const btn = event.target;
-        const orig = btn.textContent;
-        btn.textContent = '✓ Kopiert!';
-        setTimeout(() => btn.textContent = orig, 1500);
-      }).catch(e => {
+        if (btn) { const orig = btn.textContent; btn.textContent = '✓ Kopiert!'; setTimeout(() => btn.textContent = orig, 1500); }
+      }).catch(() => {
         // Fallback für ältere Browser
         const ta = document.createElement('textarea');
         ta.value = txt;
@@ -686,8 +678,7 @@
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        event.target.textContent = '✓ Kopiert!';
-        setTimeout(() => event.target.textContent = '⎘ Copy', 1500);
+        if (btn) { btn.textContent = '✓ Kopiert!'; setTimeout(() => btn.textContent = '⎘ Copy', 1500); }
       });
     }
 
