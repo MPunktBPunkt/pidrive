@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.20
+main_core.py - PiDrive Core v0.8.23
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -198,7 +198,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.8.20) ─────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.8.23) ─────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -221,7 +221,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
 
-    # ── PPM + Squelch Trigger (v0.8.20) ─────────────────────────────────────
+    # ── PPM + Squelch Trigger (v0.8.23) ─────────────────────────────────────
     elif cmd.startswith("ppm:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -249,7 +249,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"squelch Trigger: {e}")
 
-    # ── RTL-SDR Reset (v0.8.20) ───────────────────────────────────────────────
+    # ── RTL-SDR Reset (v0.8.23) ───────────────────────────────────────────────
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
@@ -559,7 +559,7 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.8.20: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        # v0.8.23: Status-Felder leeren — verhindert stale State beim Quellenwechsel
         S["radio_playing"]    = False
         S["radio_station"]    = ""
         S["radio_name"]       = ""
@@ -848,7 +848,7 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # GPIO-Tasten starten (v0.8.20)
+    # GPIO-Tasten starten (v0.8.23)
     try:
         _gpio_active = _gpio_buttons.start()
         if _gpio_active:
@@ -858,7 +858,7 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
-    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.8.20)
+    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.8.23)
     try:
         time.sleep(1)
         last_src   = settings.get("last_source", "")
@@ -901,7 +901,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.20 gestartet")
+    log.info("PiDrive Core v0.8.23 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -930,7 +930,7 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.8.20: BT Auto-Reconnect Watcher starten
+    # v0.8.23: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr
