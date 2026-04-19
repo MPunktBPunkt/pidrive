@@ -235,6 +235,11 @@
 
             <div class="diag-actions">
               <button onclick="refreshRTLSDR()">🔄 Passive Diagnose</button>
+              <button onclick="resetRTLSDR()" id="rtlResetBtn"
+                      style="background:#c0392b;color:white;margin-left:6px"
+                      title="RTL-SDR USB-Reset ohne Reboot — wenn Stick nicht erkannt wird">
+                ⚡ RTL-SDR Reset
+              </button>
             </div>
             <div class="diag-note">
               Passive Diagnose öffnet den RTL-SDR Stick nicht.<br>
@@ -359,6 +364,61 @@
             </div>
           </div>
 
+          <!-- PPM Frequenzkorrektur -->
+          <div class="diag-card">
+            <div class="diag-title">📡 PPM Frequenzkorrektur</div>
+            <div class="diag-row">
+              <div class="diag-key">PPM</div>
+              <div class="diag-value" id="ppmCurrent">…</div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+              <button onclick="setPPM(0)" title="Keine Korrektur">0 (aus)</button>
+              <button onclick="setPPM(-50)">-50</button>
+              <button onclick="setPPM(-25)">-25</button>
+              <button onclick="setPPM(-10)">-10</button>
+              <button onclick="setPPM(10)">+10</button>
+              <button onclick="setPPM(25)">+25</button>
+              <button onclick="setPPM(50)">+50</button>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+              <input type="number" id="ppmInput" placeholder="ppm" style="width:70px;padding:4px;background:#0a1628;color:#fff;border:1px solid #2a4a7f"
+                     min="-200" max="200" step="1">
+              <button onclick="setPPMCustom()">Setzen</button>
+              <button onclick="calibratePPM()" id="ppmCalBtn" style="background:#6b2fa0;color:white"
+                      title="30s Kalibrierungstest starten (rtl_test -p)">🔬 Kalibrieren</button>
+            </div>
+            <div id="ppmCalResult" style="font-size:0.8em;color:#9ed8ff;margin-top:6px;min-height:1.2em"></div>
+            <div style="margin-top:8px;font-size:0.8em;color:#888">
+              <strong style="color:#9ed8ff">Was ist PPM?</strong> Quarzfehler des RTL-SDR Sticks (typisch ±20–100 ppm).<br>
+              Bei 100 MHz: 50 ppm = 5 kHz Versatz → schlechtere FM-Stereo-Trennung, DAB-Aussetzer.<br>
+              <strong style="color:#9ed8ff">Wie kalibrieren?</strong> 🔬 Kalibrieren drücken (30s, Stick darf nichts anderes tun)
+              → Wert übernehmen → beim nächsten FM/DAB Start automatisch aktiv.<br>
+              <strong style="color:#9ed8ff">Oder manuell:</strong> FM-Sender hören → ±10 ppm ausprobieren → besser klingt = richtig.<br>
+              <em>0 = deaktiviert (Werkseinstellung). Nach Übernehmen neu abspielen.</em>
+            </div>
+          </div>
+
+          <!-- Scanner Squelch -->
+          <div class="diag-card">
+            <div class="diag-title">🔇 Scanner Squelch</div>
+            <div class="diag-row">
+              <div class="diag-key">Schwelle</div>
+              <div class="diag-value" id="squelchCurrent">…</div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+              <button onclick="setSquelch(0)" title="Immer offen — hört alles inkl. Rauschen">0 (offen)</button>
+              <button onclick="setSquelch(10)">10 empf.</button>
+              <button onclick="setSquelch(15)">15</button>
+              <button onclick="setSquelch(20)">20</button>
+              <button onclick="setSquelch(25)">25 std.</button>
+              <button onclick="setSquelch(35)">35</button>
+            </div>
+            <div style="margin-top:8px;font-size:0.8em;color:#888">
+              0 = immer offen (viel Rauschen). 10–15 = empfindlich. 25 = Standard. 35 = nur starke Signale.<br>
+              Bei schlechtem Empfang: 10–15 testen.
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -446,6 +506,8 @@
         <button onclick="loadLogs('avrcp')">AVRCP Log</button>
         <button onclick="loadService('pidrive_avrcp')">AVRCP Status</button>
         <button onclick="refreshState()">Refresh</button>
+        <button onclick="loadAllLogs()" class="primary" title="Alle Logs + Diagnose in einem">📋 Alle</button>
+        <button onclick="copyLogToClipboard()" title="Log in Zwischenablage kopieren">⎘ Copy</button>
       </div>
       <pre id="logOutput">Bereit.</pre>
     </section>
@@ -572,6 +634,61 @@
         else if (s.radio && s.radio_name) footer.textContent = '♪ '+s.radio_name;
         else footer.textContent = 'Audio: '+(s.audio_out||'auto');
       }
+    }
+
+    // Alle Logs + Diagnose auf einmal laden (v0.8.17)
+    async function loadAllLogs() {
+      const out = document.getElementById('logOutput');
+      out.textContent = '⏳ Lade alle Logs...';
+      const sections = [];
+      try {
+        const tasks = [
+          fetch('/api/logs?target=core').then(r=>r.json()),
+          fetch('/api/logs?target=app').then(r=>r.json()),
+          fetch('/api/service?name=pidrive_core').then(r=>r.json()),
+          fetch('/api/diagnose').then(r=>r.json()),
+        ];
+        const [core, app, status, diag] = await Promise.all(tasks);
+        const ts = new Date().toLocaleString('de-DE');
+        sections.push('=== PiDrive Log-Snapshot ' + ts + ' ===
+');
+        sections.push('--- Core Log ---
+' + (core.stdout||'') );
+        sections.push('
+--- App Log ---
+' + (app.stdout||''));
+        sections.push('
+--- Core Status ---
+' + (status.stdout||''));
+        sections.push('
+--- Diagnose ---
+' + (diag.stdout||''));
+        out.textContent = sections.join('');
+      } catch(e) {
+        out.textContent = 'Fehler: ' + e;
+      }
+    }
+
+    // Copy log output to clipboard (v0.8.17)
+    function copyLogToClipboard() {
+      const txt = document.getElementById('logOutput').textContent;
+      if (!txt || txt === 'Bereit.') { alert('Kein Log zum Kopieren'); return; }
+      navigator.clipboard.writeText(txt).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = '✓ Kopiert!';
+        setTimeout(() => btn.textContent = orig, 1500);
+      }).catch(e => {
+        // Fallback für ältere Browser
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        event.target.textContent = '✓ Kopiert!';
+        setTimeout(() => event.target.textContent = '⎘ Copy', 1500);
+      });
     }
 
     async function loadLogs(t) {
@@ -743,6 +860,47 @@
       }
     }
 
+    // PPM + Squelch Panel (v0.8.18)
+    async function setPPM(val) {
+      await sendCmd('ppm:' + val);
+      setTimeout(refreshGain, 600);
+    }
+    function setPPMCustom() {
+      const v = parseInt(document.getElementById('ppmInput').value);
+      if (!isNaN(v)) setPPM(v);
+    }
+    async function calibratePPM() {
+      const btn = document.getElementById('ppmCalBtn');
+      const res = document.getElementById('ppmCalResult');
+      btn.textContent = '⏳ 30s messen...'; btn.disabled = true;
+      res.innerHTML = '<em>Kalibrierung läuft — RTL-Stick darf während der Messung nicht für FM/DAB genutzt werden (~30s)...</em>';
+      try {
+        const r = await fetch('/api/rtlsdr/calibrate');
+        const d = await r.json();
+        const ppm = d.suggested_ppm;
+        let html = '';
+        if (ppm !== null && ppm !== undefined) {
+          const sign = ppm > 0 ? '+' : '';
+          html += `<strong>Geschätzter PPM-Wert: ${sign}${ppm}</strong> `;
+          html += `<a href="#" onclick="setPPM(${ppm});return false;" style="color:#9ed8ff;font-weight:bold">→ Übernehmen</a><br>`;
+          if (d.method) html += `<span style="color:#888;font-size:0.85em">Methode: ${d.method}</span><br>`;
+        } else {
+          html += '<strong style="color:#e67;">Kein automatischer Wert erkannt</strong><br>';
+        }
+        if (d.hints && d.hints.length) {
+          html += '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:0.85em;color:#9ed8ff">';
+          d.hints.forEach(h => { html += `<li>${h}</li>`; });
+          html += '</ul>';
+        }
+        res.innerHTML = html;
+      } catch(e) { res.textContent = 'Fehler: ' + e; }
+      btn.textContent = '🔬 Kalibrieren'; btn.disabled = false;
+    }
+    async function setSquelch(val) {
+      await sendCmd('squelch:' + val);
+      setTimeout(refreshGain, 600);
+    }
+
     // Gain & Lautstärke Panel (v0.8.15)
     async function refreshVolume() {
       try {
@@ -758,8 +916,12 @@
         const d = await r.json();
         const fmEl  = document.getElementById('fmGainCurrent');
         const dabEl = document.getElementById('dabGainCurrent');
+        const ppmEl = document.getElementById('ppmCurrent');
+        const sqEl  = document.getElementById('squelchCurrent');
         if (fmEl)  fmEl.textContent  = d.fm_gain  === -1 ? 'Auto (AGC)' : d.fm_gain  + ' dB';
         if (dabEl) dabEl.textContent = d.dab_gain === -1 ? 'Auto (AGC)' : d.dab_gain + ' dB';
+        if (ppmEl) ppmEl.textContent = d.ppm_correction === 0 ? 'aus (0 ppm)' : (d.ppm_correction > 0 ? '+' : '') + d.ppm_correction + ' ppm';
+        if (sqEl)  sqEl.textContent  = d.scanner_squelch === 0 ? 'offen (0)' : d.scanner_squelch + ' (Standard: 25)';
       } catch(e) { console.error('refreshGain', e); }
     }
 
@@ -778,6 +940,27 @@
     </script>
 
     <script>
+    // RTL-SDR Reset (v0.8.16) — USB-Reset ohne Reboot
+    async function resetRTLSDR() {
+      const btn = document.getElementById('rtlResetBtn');
+      btn.textContent = '⏳ Reset läuft...';
+      btn.disabled = true;
+      try {
+        const r = await fetch('/api/rtlsdr/reset', {method: 'POST'});
+        const d = await r.json();
+        btn.textContent = d.ok ? '✓ Gesendet' : '✗ Fehler';
+        // Nach 7s Diagnose neu laden
+        setTimeout(async () => {
+          btn.textContent = '⚡ RTL-SDR Reset';
+          btn.disabled = false;
+          await refreshRTLSDR();
+        }, 7000);
+      } catch(e) {
+        btn.textContent = '✗ Fehler';
+        setTimeout(() => { btn.textContent = '⚡ RTL-SDR Reset'; btn.disabled = false; }, 3000);
+      }
+    }
+
     async function refreshRTLSDR() {
       const btns = document.querySelectorAll('button[onclick="refreshRTLSDR()"]');
       btns.forEach(b => { b.textContent = "⏳ Aktualisiere..."; b.disabled = true; });
