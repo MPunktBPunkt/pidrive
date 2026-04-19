@@ -236,8 +236,8 @@ body { min-height: 100vh; }
 
 .button-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
   margin-bottom: 16px;
 }
 
@@ -245,9 +245,9 @@ button {
   background: var(--panel2);
   color: var(--text);
   border: 1px solid var(--line);
-  padding: 12px 14px;
+  padding: 8px 6px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 13px;
   transition: background 0.12s ease, transform 0.05s ease;
 }
 
@@ -350,10 +350,22 @@ pre {
 
 h4 { margin: 0 0 8px 0; color: #9ed8ff; font-size: 15px; font-weight: bold; }
 
+.tab-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.tab-buttons button {
+  padding: 6px 10px;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
 /* Responsive */
 @media (max-width: 1100px) {
   .main-grid           { grid-template-columns: 1fr; }
-  .button-grid         { grid-template-columns: repeat(2, 1fr); }
+  .button-grid         { grid-template-columns: repeat(4, 1fr); }
   .diag-grid           { grid-template-columns: 1fr; }
   .json-wrap           { grid-template-columns: 1fr; }
   .tree-item           { font-size: 22px; }
@@ -370,7 +382,7 @@ h4 { margin: 0 0 8px 0; color: #9ed8ff; font-size: 15px; font-weight: bold; }
   .tree-item     { font-size: 19px; padding: 11px 6px; }
   .node-icon     { width: 20px; min-width: 20px; }
   .display-footer{ font-size: 16px; }
-  .button-grid   { grid-template-columns: 1fr; }
+  .button-grid   { grid-template-columns: repeat(3, 1fr); }
   .diag-row      { flex-direction: column; align-items: flex-start; }
   .diag-key      { min-width: 0; flex: none; }
   .diag-value    { text-align: left; }
