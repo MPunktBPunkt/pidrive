@@ -142,7 +142,20 @@ _current_ch: dict = {}
 _player_proc = None
 _scan_running = False
 _scan_abort   = False   # v0.8.13: gesetzt von stop(), geprüft in scan-Schleifen
-SQUELCH = 25  # 0=immer offen, hoeher=strenger
+SQUELCH = 25  # 0=immer offen, hoeher=strenger (Standard, überschreibbar via settings)
+
+def _get_squelch(settings=None):
+    """Squelch-Schwelle aus settings.json lesen (v0.8.18).
+    Niedrigerer Wert = empfindlicher = mehr Aktivität, aber auch mehr Rauschen.
+    Empfehlung: 25 (Standard), 15 (empfindlich), 10 (sehr empfindlich).
+    """
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            return SQUELCH
+    return int(settings.get("scanner_squelch", SQUELCH))
 
 def _bg(cmd):
     try:
@@ -242,7 +255,7 @@ def stop(S):
 
 # ── Signal-Erkennung (v0.8.8: zweistufig Fast-Detect + Confirm) ───────────────
 
-def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=12):
+def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=None):
     """
     Sehr schneller Grobtest — nur Kandidatenerkennung.
     Niedrige Schwelle, kurze Messzeit, breitere Bandbreite.
@@ -260,7 +273,7 @@ def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=12):
         return False
 
 
-def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=0.65, squelch=20):
+def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=0.65, squelch=None):
     """
     Bestätigungstest — nur bei Fast-Detect Kandidaten.
     Normale Bandbreite, längere Messung, robustere Schwelle.

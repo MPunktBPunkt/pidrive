@@ -67,6 +67,7 @@ def play_station(station, S, settings=None):
             S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
             S["radio_name"]    = name
             S["radio_type"]    = "WEB"
+            S["control_context"] = "radio_web"  # Phase 2 state
             log.error(f"WEB strict-mode: Abbruch name={name!r} reason={_adec.get('reason','?')}")
             return
         mpv_meta.stop()
@@ -88,8 +89,20 @@ def play_station(station, S, settings=None):
         S["album"]         = ""
         S["radio_playing"] = True
         S["radio_type"]    = "WEB"
+        S["control_context"] = "radio_web"  # Phase 2 state
         S["radio_station"] = name
         S["radio_name"]    = name
+
+        # v0.8.19: Boot-Resume — letzte Webradio-Station speichern
+        try:
+            if settings is not None:
+                settings["last_source"]      = "webradio"
+                settings["last_web_station"] = {"name": name, "url": url,
+                                                "genre": station.get("genre", "")}
+                from settings import save_settings
+                save_settings(settings)
+        except Exception:
+            pass
 
         mpv_meta.start(name, S, sock)
         log.action("WEB", f"Wiedergabe: {name}")

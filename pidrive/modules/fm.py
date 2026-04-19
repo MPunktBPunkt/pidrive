@@ -196,19 +196,24 @@ def play_station(station, S, settings=None):
             S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
             S["radio_name"]    = name
             S["radio_type"]    = "FM"
+            S["control_context"] = "radio_fm"  # Phase 2 state
             log.error(f"FM strict-mode: Abbruch name={name!r} freq={freq_f} reason={_adec.get('reason','?')}")
             return
 
 
         _fm_gain_val = settings.get("fm_gain", -1) if settings else -1
         _fm_gain_arg = "" if str(_fm_gain_val) == "-1" else f" -g {_fm_gain_val}"
+        _ppm_val     = int(settings.get("ppm_correction", 0)) if settings else 0
+        _ppm_arg     = "" if _ppm_val == 0 else f" -p {_ppm_val}"
         cmd = (
-            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + " -A fast - 2>/dev/null | "
+            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + _ppm_arg + " -A fast - 2>/dev/null | "
             "mpv --no-video --really-quiet --title=pidrive_fm "
             "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
             "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"
         )
 
+        if _ppm_val != 0:
+            log.info(f"FM play: PPM-Korrektur aktiv: {_ppm_val} ppm")
         log.info(f"FM play: PIPE zentral/mpv freq_hz={freq_hz}")
 
         if _rtlsdr:
@@ -226,6 +231,7 @@ def play_station(station, S, settings=None):
         S["radio_station"]  = f"FM: {name} ({freq_f:.1f} MHz)"
         S["radio_name"]     = name
         S["radio_type"]     = "FM"
+        S["control_context"] = "radio_fm"  # Phase 2 state
         _last_start_ts      = now
         _last_station_key   = cur_key
 

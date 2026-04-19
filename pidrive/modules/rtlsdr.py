@@ -618,6 +618,123 @@ def summary(data):
     return "\n".join(L)
 
 
+
+
+# ── USB Reset ─────────────────────────────────────────────────────────────────
+
+def usb_reset() -> dict:
+    """
+    RTL-SDR USB-Stick hard-reset ohne Reboot (v0.8.16).
+    Nutzt sysfs authorized-Cycle: 0 → kurze Pause → 1.
+    Funktioniert wenn der Stick sich aus dem USB-Subsystem verabschiedet hat.
+
+    Ablauf:
+    1. Alle rtl_fm/welle-cli Prozesse killen
+    2. Lock + State bereinigen
+    3. USB-Device via sysfs unbinden (authorized=0) und wieder binden (authorized=1)
+    4. Kurz warten und Stick neu erkennen (lsusb)
+    """
+    import glob
+    import time as _t
+    result = {"ok": False, "steps": [], "found_after_reset": False}
+
+    # Schritt 1: laufende Prozesse killen
+    for proc in ("rtl_fm", "rtl_test", "welle-cli", "welle_cli"):
+        try:
+            _run(["pkill", "-9", "-f", proc], timeout=3)
+            result["steps"].append(f"kill {proc}")
+        except Exception:
+            pass
+    _t.sleep(0.5)
+
+    # Schritt 2: Lock + State bereinigen
+    try:
+        clear_stale_lock()
+        import os
+        for f in (LOCK_FILE, STATE_FILE, "/tmp/pidrive_dab_welle.err"):
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
+        result["steps"].append("lock cleared")
+    except Exception as e:
+        result["steps"].append(f"lock clear error: {e}")
+
+    # Schritt 3: USB-Device via sysfs authorized cycle
+    # USB-Bus-Path für RTL2838 finden
+    usb_path = None
+    try:
+        raw = _run(["lsusb"], timeout=3)
+        for line in raw.splitlines():
+            for uid in RTL_USB_MATCHES:
+                if uid.lower() in line.lower():
+                    # "Bus 001 Device 004" → /sys/bus/usb/devices/1-X
+                    parts = line.split()
+                    bus = parts[1].lstrip("0") or "1"
+                    dev = parts[3].rstrip(":").lstrip("0") or "1"
+                    # Sysfs-Pfad über product/idVendor suchen
+                    patterns = glob.glob(f"/sys/bus/usb/devices/{bus}-*")
+                    for p in patterns:
+                        try:
+                            idv = open(f"{p}/idVendor").read().strip()
+                            idp = open(f"{p}/idProduct").read().strip()
+                            if idv == "0bda" and idp in ("2838", "2832", "2837"):
+                                usb_path = p
+                                break
+                        except Exception:
+                            pass
+                    break
+    except Exception as e:
+        result["steps"].append(f"usb path search error: {e}")
+
+    if usb_path:
+        result["steps"].append(f"usb path: {usb_path}")
+        try:
+            auth_file = f"{usb_path}/authorized"
+            with open(auth_file, "w") as f:
+                f.write("0")
+            result["steps"].append("authorized=0 (unbind)")
+            _t.sleep(1.5)
+            with open(auth_file, "w") as f:
+                f.write("1")
+            result["steps"].append("authorized=1 (rebind)")
+            _t.sleep(2.0)
+        except Exception as e:
+            result["steps"].append(f"sysfs write error: {e}")
+            # Fallback: usbreset wenn vorhanden
+            try:
+                _run(["usbreset", "0bda:2838"], timeout=5)
+                result["steps"].append("usbreset fallback")
+                _t.sleep(2.0)
+            except Exception:
+                pass
+    else:
+        result["steps"].append("usb path not found — attempting usbreset")
+        try:
+            _run(["usbreset", "0bda:2838"], timeout=5)
+            result["steps"].append("usbreset")
+            _t.sleep(2.0)
+        except Exception as e2:
+            result["steps"].append(f"usbreset failed: {e2}")
+
+    # Schritt 4: Ergebnis prüfen
+    _t.sleep(1.0)
+    usb_data = detect_usb()
+    result["found_after_reset"] = usb_data.get("present", False)
+    result["ok"] = result["found_after_reset"]
+    result["steps"].append(
+        "RTL-SDR wieder erkannt ✓" if result["found_after_reset"]
+        else "RTL-SDR NICHT erkannt — Stick ggf. abziehen und neu einstecken"
+    )
+
+    # Diagnose neu schreiben
+    try:
+        _write_diag_json(diagnose())
+    except Exception:
+        pass
+
+    return result
+
 # ── CLI ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

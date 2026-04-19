@@ -202,22 +202,27 @@ def play_station(station, S, settings=None):
             S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
             S["radio_name"]    = name
             S["radio_type"]    = "DAB"
+            S["control_context"] = "radio_dab"  # Phase 2 state
             log.error(f"DAB strict-mode: Abbruch name={name!r} channel={ch} reason={_adec.get('reason','?')}")
             return
 
         # name mit shlex quoten fuer Shell-Sicherheit
         import shlex
         _name_q = shlex.quote(name)
+        _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
+        _ppm_arg = "" if _ppm_val == 0 else f" -P {_ppm_val}"
 
         # v0.8.11: welle-cli 2.2 kennt kein '-o -'
         # Korrekte Syntax: -p PROGRAMMNAME gibt Audio nach stdout aus
         # Pipe direkt in mpv
         _cmd = (
-            "welle-cli -c " + ch + " -g " + _gain +
+            "welle-cli -c " + ch + " -g " + _gain + _ppm_arg +
             " -p " + _name_q + " 2>/tmp/pidrive_dab_welle.err | "
             "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
         )
 
+        if _ppm_val != 0:
+            log.info(f"DAB play: PPM-Korrektur aktiv: {_ppm_val} ppm")
         log.info(f"DAB play: START name={name!r} channel={ch} gain={_gain}")
 
         if _rtlsdr:
@@ -253,6 +258,7 @@ def play_station(station, S, settings=None):
         S["radio_station"] = "DAB: " + name
         S["radio_name"]    = name
         S["radio_type"]    = "DAB"
+        S["control_context"] = "radio_dab"  # Phase 2 state
         log.action("DAB", "Wiedergabe: " + name + " (" + ch + ")")
 
     except Exception as e:
