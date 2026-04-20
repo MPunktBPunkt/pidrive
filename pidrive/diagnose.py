@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.8.23
+"""diagnose.py - PiDrive System-Diagnose v0.9.2
 
 v0.6.0: Core/Display getrennt.
 - pidrive_core.service  — headless, kein pygame

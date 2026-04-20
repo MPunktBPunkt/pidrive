@@ -339,7 +339,7 @@ Vollständige Konfiguration: `config.txt.example`
 | "Unable to open console terminal" | `/dev/tty3` nicht lesbar | udev-Regel: `KERNEL=="tty3", MODE="0660"` |
 | Service Restart-Schleife | HUP bei TTY-Zuweisung | launcher.py mit setsid+TIOCSCTTY (v0.3.7) |
 | Spotify nicht sichtbar | Credential-Cache deaktiviert | `LIBRESPOT_DISABLE_CREDENTIAL_CACHE` auskommentieren |
-| Spotify kein Ton | PulseAudio als root | `LIBRESPOT_BACKEND=alsa` + `DEVICE=hw:1,0` |
+| Spotify kein Ton | Core ohne PULSE_SERVER | `PULSE_SERVER=unix:/var/run/pulse/native` in pidrive_core.service |
 | WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
 | Raspotify startet zu früh | falsches network target | `network-online.target` im Service |
 | Touch reagiert nicht | Hardware-Defekt (XPT2046) | USB-Tastatur als Alternative |
@@ -419,7 +419,7 @@ sudo apt install welle.io
 
 ### v0.3.3
 - Bugfix: chvt 3 aus Service entfernt (HUP-Signal Schleife)
-- Spotify: ALSA Backend (hw:1,0)
+- Spotify: PulseAudio Default-Sink (LIBRESPOT_DEVICE=default)
 - Raspotify: ProtectHome=false, PrivateUsers=false
 
 ### v0.3.0

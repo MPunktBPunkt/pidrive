@@ -594,7 +594,8 @@ LIBRESPOT_ENABLE_VOLUME_NORMALISATION=
 LIBRESPOT_SYSTEM_CACHE=/var/cache/raspotify
 LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh
 LIBRESPOT_BACKEND=alsa
-LIBRESPOT_DEVICE=hw:1,0
+LIBRESPOT_DEVICE=default
+# PULSE_SERVER=unix:/var/run/pulse/native  ← wird von install.sh in raspotify.service gesetzt
 ```
 
 **Timing-Fix (`/lib/systemd/system/raspotify.service`):**
@@ -1811,7 +1812,8 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Bei BT-Trennung: raspotify zurueck auf hw:1,0 (Klinke)
 - _set_raspotify_device() in bluetooth.py: patcht /etc/raspotify/conf + restart
 - main_core.py: ueberwacht BT-Status, loest Fallback automatisch aus
-- install.sh: setzt LIBRESPOT_BACKEND=alsa + LIBRESPOT_DEVICE=hw:1,0 als Standard
+- install.sh: setzt LIBRESPOT_BACKEND=alsa + LIBRESPOT_DEVICE=default
+# PULSE_SERVER=unix:/var/run/pulse/native  ← wird von install.sh in raspotify.service gesetzt als Standard
 
 ### v0.7.15
 - Systemd Ordering-Cycle Fix: After=pidrive_core aus pidrive_web.service entfernt
@@ -1869,8 +1871,14 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.2 — Settings-Fix, DAB-Gain-Fix, Diagnose-Bugfixes
+✓ pidrive_core.service      v0.9.2 — Settings-Fix, DAB-Gain-Fix, Diagnose-Bugfixes, DAB-Webdiagnose
 ✓ pidrive_display.service   v0.9.2, 20fps
+✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
+✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
+✓ modules/dab.py            Gain auf gültige RTL-SDR Stufen quantisiert (40→40.2)
+✓ diagnose.py               amixer Hex-Parse-Fix, Default-Sink Fallback via pactl info
+✓ webui.py                  /api/runtime, /api/dab/diag, get_settings_debug()
+✓ index.html                DAB Diagnose Button, refreshRuntime() JS
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
