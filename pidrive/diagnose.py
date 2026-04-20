@@ -218,10 +218,17 @@ def check_audio():
 
     # Default Sink
     ds = run(PA + "pactl get-default-sink 2>/dev/null")
+    if not ds:
+        # Fallback: pactl info enthält "Default Sink: NAME"
+        info_txt = run(PA + "pactl info 2>/dev/null")
+        for ln in info_txt.splitlines():
+            if "Default Sink:" in ln:
+                ds = ln.split(":", 1)[1].strip()
+                break
     if ds:
         ok(f"Default Sink: {ds}")
     else:
-        warn("Default Sink: leer (pactl get-default-sink gab nichts zurück)")
+        warn("Default Sink: leer (pactl get-default-sink + pactl info ergaben nichts)")
 
     # Sink-Inputs
     si = run(PA + "pactl list sink-inputs short 2>/dev/null")
@@ -374,7 +381,7 @@ def check_processes():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.1\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.2\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()

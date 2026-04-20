@@ -12,30 +12,40 @@ CONFIG_DIR    = os.path.join(BASE_DIR, "config")
 SETTINGS_FILE = os.path.join(CONFIG_DIR, "settings.json")
 
 _DEFAULTS = {
-    "music_path":       os.path.expanduser("~/Musik"),
-    "audio_output":     "auto",
-    "fm_freq":          "98.5",
-    "bt_last_mac":      "",
-    "bt_last_name":     "",
-    "bt_sink_mac":      "",
-    "bt_pa_sink":       "",
-    "scanner_vhf_freq": 136.000,
-    "scanner_uhf_freq": 400.000,
-    "volume":           90,
-    "last_fm_station":  None,
-    "last_dab_station": None,
-    "dab_gain":         -1,
-    "fm_gain":          -1,
-    # v0.8.19: Boot-Resume
-    "last_source":      "",     # fm / dab / webradio
-    "last_web_station": None,   # dict mit name + url
-    # v0.8.18: RTL-SDR Empfangsqualität
-    "ppm_correction":   0,     # Frequenzfehler-Korrektur in ppm (0 = deaktiviert)
-                               # Gemessener RTL2838-Wert (3 Messläufe): ~52 ppm
-                               # Kalibrieren: sudo rtl_test -p (mehrere Minuten laufen lassen)
-    "scanner_squelch":  25,    # Squelch-Schwelle (0=immer offen, 25=Standard, 10=empfindlich)
-    # v0.9.0: Scanner-Gain + Lautstärke persistent
-    "scanner_gain":     -1,    # Scanner HF-Gain (-1=Auto AGC, 0-49=manuell dB)
+    # Gerät
+    "device_name":        "PiDrive",
+    "display_brightness": 100,
+    "theme":              "dark",
+    # Quellen
+    "spotify_enabled":    True,
+    "webradio_enabled":   True,
+    "dabfm_enabled":      True,
+    # Audio
+    "music_path":         os.path.expanduser("~/Musik"),
+    "audio_output":       "auto",        # auto | klinke | bt | hdmi
+    "volume":             90,
+    # FM
+    "fm_freq":            "98.5",
+    "fm_gain":            -1,            # -1 = Auto AGC, 0–49 = dB
+    # DAB
+    "dab_gain":           -1,            # -1 = Auto AGC, gültige RTL-Stufe
+    # Scanner
+    "scanner_vhf_freq":   136.000,
+    "scanner_uhf_freq":   400.000,
+    "scanner_gain":       -1,            # -1 = Auto AGC
+    "scanner_squelch":    25,            # 0=offen 10=empfindlich 25=standard 35=hart
+    # RTL-SDR
+    "ppm_correction":     0,             # Quarzfehler-Korrektur (gemessener ~52 ppm)
+    # Bluetooth
+    "bt_last_mac":        "",
+    "bt_last_name":       "",
+    "bt_sink_mac":        "",
+    "bt_pa_sink":         "",
+    # Boot-Resume
+    "last_source":        "",            # fm | dab | webradio
+    "last_fm_station":    None,
+    "last_dab_station":   None,
+    "last_web_station":   None,
 }
 
 
@@ -71,3 +81,15 @@ def save_settings(settings: dict) -> None:
             log.error(f"Settings speichern: {e}")
         except Exception:
             pass
+
+def ensure_settings_file() -> None:
+    """
+    Schreibt eine vollständige settings.json mit allen Defaults wenn die Datei
+    fehlt oder veraltete/fehlende Keys hat (v0.9.2).
+    """
+    try:
+        current = load_settings()
+        save_settings(current)
+    except Exception:
+        pass
+

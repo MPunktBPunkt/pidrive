@@ -138,11 +138,20 @@ def scan_dab_channels_full(progress_cb=None):
     return scan_dab_channels(progress_cb=progress_cb, channels=all_channels)
 
 
+# RTL-SDR R820T gültige Gain-Stufen (aus rtl_test Ausgabe)
+_RTL_VALID_GAINS = [
+    0.0, 0.9, 1.4, 2.7, 3.7, 7.7, 8.7, 12.5, 14.4, 15.7,
+    16.6, 19.7, 20.7, 22.9, 25.4, 28.0, 29.7, 32.8, 33.8,
+    36.4, 37.2, 38.6, 40.2, 42.1, 43.4, 43.9, 44.5, 48.0, 49.6
+]
+
 def _get_dab_gain(settings=None):
     """
-    DAB Gain für welle-cli — v0.8.10.
-    -1 = Auto Gain (AGC), sonst numerischer Wert in dB.
-    Konfigurierbar via settings.json: "dab_gain": 35
+    DAB Gain für welle-cli (v0.9.2).
+    -1 = Auto Gain (AGC) → gibt "-1" zurück
+    sonst: nächstliegende gültige RTL-SDR Gain-Stufe als String mit einer Dezimalstelle.
+    Hintergrund: welle-cli/RTL-SDR erwartet exakte diskrete Gain-Werte aus der
+    Hardware-Gain-Liste, nicht beliebige Integer.
     """
     try:
         if settings is None:
@@ -153,6 +162,14 @@ def _get_dab_gain(settings=None):
             g = g.strip()
             if not g:
                 return "-1"
+        g = float(g)
+        if g < 0:
+            return "-1"
+        # Auf nächste gültige RTL-Gain-Stufe quantisieren
+        nearest = min(_RTL_VALID_GAINS, key=lambda x: abs(x - g))
+        return f"{nearest:.1f}"
+    except Exception:
+        return "-1"
         return str(int(float(g)))
     except Exception:
         return "-1"

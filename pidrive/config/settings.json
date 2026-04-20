@@ -1,11 +1,34 @@
 {
   "device_name": "PiDrive",
-  "music_path": "/home/pi/Musik",
-  "volume": 90,
   "display_brightness": 100,
-  "audio_output": "auto",
+  "theme": "dark",
+
   "spotify_enabled": true,
   "webradio_enabled": true,
-  "dabfm_enabled": false,
-  "theme": "dark"
+  "dabfm_enabled": true,
+
+  "music_path": "/home/pi/Musik",
+  "audio_output": "auto",
+  "volume": 90,
+
+  "fm_freq": "98.5",
+  "fm_gain": 30,
+  "dab_gain": 40,
+  "scanner_gain": -1,
+
+  "ppm_correction": 55,
+  "scanner_squelch": 10,
+
+  "scanner_vhf_freq": 136.0,
+  "scanner_uhf_freq": 400.0,
+
+  "bt_last_mac": "",
+  "bt_last_name": "",
+  "bt_sink_mac": "",
+  "bt_pa_sink": "",
+
+  "last_source": "",
+  "last_fm_station": null,
+  "last_dab_station": null,
+  "last_web_station": null
 }

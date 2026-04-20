@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.1
+main_core.py - PiDrive Core v0.9.2
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -237,7 +237,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.9.1) ─────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.9.2) ─────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -260,7 +260,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
 
-    # ── PPM + Squelch Trigger (v0.9.1) ─────────────────────────────────────
+    # ── PPM + Squelch Trigger (v0.9.2) ─────────────────────────────────────
     elif cmd.startswith("ppm:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -302,7 +302,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"scanner_gain Trigger: {e}")
 
-    # ── RTL-SDR Reset (v0.9.1) ───────────────────────────────────────────────
+    # ── RTL-SDR Reset (v0.9.2) ───────────────────────────────────────────────
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
@@ -612,7 +612,7 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.9.1: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        # v0.9.2: Status-Felder leeren — verhindert stale State beim Quellenwechsel
         S["radio_playing"]    = False
         S["radio_station"]    = ""
         S["radio_name"]       = ""
@@ -907,7 +907,7 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # GPIO-Tasten starten (v0.9.1)
+    # GPIO-Tasten starten (v0.9.2)
     try:
         _gpio_active = _gpio_buttons.start()
         if _gpio_active:
@@ -917,7 +917,7 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
-    # v0.9.1: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
+    # v0.9.2: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
     # wenn boot-resume play_station() startet ohne vorherigen get_mpv_args()-Aufruf
     try:
         from modules.audio import _set_pi_output_klinke
@@ -928,7 +928,7 @@ def startup_tasks(S, settings):
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 
-    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.1)
+    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.2)
     try:
         time.sleep(1)
         last_src   = settings.get("last_source", "")
@@ -973,7 +973,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.9.1 gestartet")
+    log.info("PiDrive Core v0.9.2 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -985,6 +985,13 @@ def main():
     _mpris2_player = _mpris2.start_mpris2() if _mpris2 else None
 
     settings = load_settings()
+    # v0.9.2: settings.json auf aktuelle Defaults-Vollständigkeit bringen
+    try:
+        from settings import ensure_settings_file
+        ensure_settings_file()
+        settings = load_settings()  # erneut laden nach Normalisierung
+    except Exception:
+        pass
     S_module.start()   # Status-Thread starten (non-blocking)
     S = S_module.S
 
@@ -1002,7 +1009,7 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.9.1: BT Auto-Reconnect Watcher starten
+    # v0.9.2: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr

@@ -401,6 +401,80 @@ def api_rtlsdr_refresh():
     return jsonify({"ok": True, "data": read_json(RTLSDR_FILE, {})})
 
 
+@app.route("/api/dab/diag")
+def api_dab_diag():
+    """
+    Startet welle-cli im Webserver-Diagnose-Modus (-C 1 -w port) (v0.9.2).
+    Zeigt Ensemble-Infos, DLS, Signal im Browser auf http://PI-IP:7979
+
+    Parameter: ?channel=11D&port=7979
+    Stoppt laufenden DAB-Player vorher via radio_stop Trigger.
+    """
+    import subprocess as _sp
+    channel = request.args.get("channel", "")
+    port    = request.args.get("port", "7979")
+
+    if not channel:
+        # Aus aktuellem Status holen
+        try:
+            import pathlib, json as _j
+            st = _j.loads(pathlib.Path(STATUS_FILE).read_text())
+            rt = st.get("radio_type", "")
+            rn = st.get("radio_station", "")
+            if rt == "DAB" and rn:
+                # z.B. "ROCK ANTENNE" — für Kanal brauchen wir anders
+                pass
+        except Exception:
+            pass
+
+    if not channel:
+        return jsonify({"ok": False, "error": "channel Parameter fehlt (z.B. ?channel=11D)"})
+
+    try:
+        port = int(port)
+        if not (1024 <= port <= 65535):
+            return jsonify({"ok": False, "error": "Port muss zwischen 1024 und 65535 sein"})
+    except Exception:
+        return jsonify({"ok": False, "error": "Ungültiger Port"})
+
+    # Laufenden Player stoppen
+    try:
+        (BASE_DIR / "../pidrive_cmd").write_text("radio_stop\n") if False else None
+        with open("/tmp/pidrive_cmd", "w") as _f:
+            _f.write("radio_stop\n")
+    except Exception:
+        pass
+
+    import time as _t
+    _t.sleep(1.5)
+
+    # Laufende welle-cli Instanzen killen
+    _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
+    _t.sleep(0.5)
+
+    cmd = f"welle-cli -c {channel} -C 1 -w {port} 2>&1 &"
+    try:
+        _sp.Popen(cmd, shell=True, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+    return jsonify({
+        "ok":      True,
+        "channel": channel,
+        "port":    port,
+        "url":     f"http://PI_IP:{port}/",
+        "note":    f"welle-cli Webserver gestartet auf Port {port} — Browser: http://[PI-IP]:{port}/",
+    })
+
+
+@app.route("/api/dab/diag/stop")
+def api_dab_diag_stop():
+    """Stoppt den welle-cli Webserver-Diagnosemodus."""
+    import subprocess as _sp
+    _sp.run("pkill -f 'welle-cli.*-w' 2>/dev/null", shell=True, capture_output=True)
+    return jsonify({"ok": True, "note": "welle-cli Webserver gestoppt"})
+
+
 @app.route("/api/rtlsdr/reset", methods=["POST"])
 def api_rtlsdr_reset():
     """RTL-SDR USB-Reset via Core-Trigger (v0.8.16). Kein Reboot nötig."""

@@ -132,6 +132,8 @@
 
           <button onclick="sendCmd('dab_scan')">DAB+ Suchlauf</button>
           <button onclick="sendCmd('fm_scan')">FM Suchlauf</button>
+          <button onclick="startDabDiag()" id="dabDiagBtn" title="welle-cli Webserver starten — zeigt Ensemble, Signal, DLS im Browser">🔍 DAB Diagnose</button>
+          <button onclick="stopDabDiag()" title="DAB Diagnosemodus stoppen">⏹ DAB Diag Stop</button>
           <button onclick="sendCmd('reload_stations:webradio')">Web Reload</button>
           <button onclick="sendCmd('library_stop')">Biblio Stop</button>
 
@@ -1054,6 +1056,44 @@
       </section>
 
     <script>
+    async function startDabDiag() {
+      const btn = document.getElementById('dabDiagBtn');
+      // Aktuellen DAB-Kanal aus Status holen
+      let channel = '';
+      try {
+        const st = await (await fetch('/api/state')).json();
+        const radioType = (st.status || {}).radio_type || '';
+        if (radioType === 'DAB') {
+          // Kanal aus radio_name / radio_station extrahieren
+          const rn = (st.status || {}).radio_name || '';
+          // "DAB: ROCK ANTENNE" oder direkt Kanalname
+          channel = prompt('DAB Kanal für Diagnose (z.B. 11D, 5D, 8D):', '11D');
+        } else {
+          channel = prompt('DAB Kanal für Diagnose (z.B. 11D, 5D, 8D):', '11D');
+        }
+      } catch(e) {
+        channel = prompt('DAB Kanal für Diagnose:', '11D');
+      }
+      if (!channel) return;
+      if (btn) { btn.textContent = '⏳ Starte...'; btn.disabled = true; }
+      try {
+        const r = await fetch('/api/dab/diag?channel=' + encodeURIComponent(channel) + '&port=7979');
+        const d = await r.json();
+        if (d.ok) {
+          alert('DAB Webserver läuft!\nBrowser öffnen: http://' + location.hostname + ':7979/\n\nZeigt: Ensemble, Signal, DLS, Slides');
+        } else {
+          alert('Fehler: ' + d.error);
+        }
+      } catch(e) { alert('Fehler: ' + e); }
+      if (btn) { btn.textContent = '🔍 DAB Diagnose'; btn.disabled = false; }
+    }
+    async function stopDabDiag() {
+      await fetch('/api/dab/diag/stop');
+      document.getElementById('logOutput').textContent = 'DAB Diagnosemodus gestoppt.';
+    }
+    </script>
+
+  <script>
     async function refreshRuntime() {
       try {
         const r = await fetch('/api/runtime');

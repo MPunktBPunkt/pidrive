@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.1
+# PiDrive — Kontext & Projektdokumentation v0.9.2
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.9.1 — Baumbasiert, beliebig tief)
+PiDrive  (v0.9.2 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -920,6 +920,72 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.2 — Settings-Migration, DAB-Gain-Fix, Diagnose-Bugfixes, DAB-Webdiagnose
+
+**Motivation:** Code-Review v0.9.1 (externe GPT-Analyse + eigene Prüfung) ergab vier kritische Restprobleme.
+
+---
+
+**settings.py — vollständige Defaults (Checkliste Punkt 1+10):**
+- `_DEFAULTS` jetzt vollständig: device_name, display_brightness, theme, spotify/webradio/dab enabled,
+  fm_freq, fm_gain, dab_gain, scanner_gain, ppm_correction, scanner_squelch, scanner_vhf/uhf_freq,
+  bt_last_mac/name/sink/pa_sink, last_source, last_fm/dab/web_station
+- `ensure_settings_file()`: neue Funktion — schreibt settings.json beim Boot auf vollständige Defaults
+- `save_settings()`: schreibt immer vollständigen Satz (Defaults + aktuelle Werte)
+
+**config/settings.json — vollständige Initialdatei:**
+- Alle 34 Keys vorhanden
+- Startwerte: ppm_correction=55 (gemessen), scanner_squelch=10, fm_gain=30, dab_gain=40
+- Verhindert dass Runtime-Panel im WebUI "–" zeigt
+
+**main_core.py:**
+- `ensure_settings_file()` beim Start aufgerufen — settings.json wird beim ersten Boot normalisiert
+
+**modules/dab.py — DAB-Gain-Fix (Checkliste Punkt 9):**
+- Kernproblem: welle-cli/RTL-SDR erwartet exakte diskrete Gain-Stufen (0.0, 0.9, 1.4, ... 49.6)
+- `"Unknown gain count40"` im Log war klares Symptom: `40` ist keine gültige Stufe
+- `_RTL_VALID_GAINS` Liste der 29 gültigen R820T Gain-Stufen
+- `_get_dab_gain()` quantisiert auf nächste gültige Stufe: 40→40.2, 35→36.4, 49→49.6
+- Format jetzt `"40.2"` statt `"40"`
+
+**diagnose.py — Diagnose-Bugfixes (Checkliste Punkt 11):**
+- Default-Sink: Fallback auf `pactl info` wenn `pactl get-default-sink` leer
+- amixer numid=3: Parse mit `int(raw, 0)` — versteht 1, 0x1, 0x00000001 korrekt
+- Behebt: `Pi Audio-Ausgang (amixer numid=3): Unbekannt (0x00])`
+
+**webui.py — Runtime-Panel + DAB-Webdiagnose (Checkliste Punkt 2+6):**
+- `get_settings_debug()` + `get_process_debug()`: neue Hilfsfunktionen
+- `GET /api/runtime`: gibt aktive Settings + laufende rtl_fm/mpv Parameter zurück
+- `GET /api/dab/diag?channel=11D&port=7979`: startet `welle-cli -c <CH> -C 1 -w <PORT>`
+  Webserver-Diagnosemodus — Browser zeigt Ensemble, Signal, DLS, Slides
+- `GET /api/dab/diag/stop`: stoppt welle-cli Webserver
+
+**index.html — DAB Diagnose Button:**
+- 🔍 DAB Diagnose Button: fragt nach Kanal, startet Webserver, öffnet Browser-URL
+- ⏹ DAB Diag Stop: beendet Webserver
+- `refreshRuntime()` JS jetzt backend-gestützt via `/api/runtime`
+
+---
+
+**Abgleich Checkliste (externe Prüfung) — was gefixt wurde:**
+
+| # | Prüfpunkt | Vorher | Nachher |
+|---|---|---|---|
+| 10 | settings.json vollständig | ✗ nur 9 Keys | ✓ 34 Keys |
+| 9 | DAB Gain korrekt | ✗ `Unknown gain count40` | ✓ quantisiert auf 40.2 |
+| 11 | amixer Diagnose | ✗ `Unbekannt (0x00])` | ✓ int-Parse |
+| 2 | Default Sink in Diagnose | ✗ leer | ✓ pactl info Fallback |
+| 2 | Runtime-Panel WebUI | ✗ zeigt –  | ✓ /api/runtime |
+| 6 | welle-cli Webdiagnose | ✗ nicht vorhanden | ✓ /api/dab/diag |
+
+---
+
+**Noch nicht gefixt (Folgeversionen):**
+- Installer zeigt alte Version im Log (install.sh greift zu früh in Logfile)
+- BT praktisch noch nicht verifiziert (Kopfhörer war aus)
+- BT-Agent "default-agent nicht bestätigt" Warnung bleibt
+- Sink-Input App/Binary/PID-Auflösung teilweise leer (webui.py pactl list sink-inputs parsing)
 
 ### v0.9.1 — Source-State vollständig, BT-Reconnect schneller
 
@@ -1798,13 +1864,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.1)
+## Aktueller Stand (v0.9.2)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.1 — Source-State vollständig, BT-Reconnect schneller
-✓ pidrive_display.service   v0.9.1, 20fps
+✓ pidrive_core.service      v0.9.2 — Settings-Fix, DAB-Gain-Fix, Diagnose-Bugfixes
+✓ pidrive_display.service   v0.9.2, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
