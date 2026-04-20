@@ -1916,78 +1916,144 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 
 ## Entwicklungs-Phasen & Roadmap
 
+---
+
 ### Phase 1 — BMW iDrive AVRCP Integration (✅ Code abgeschlossen v0.8.7)
 
-**Ziel:** PiDrive vollständig per BMW iDrive Drehsteller bedienbar, kontextabhängiges Mapping, Debug-Sichtbarkeit.
+**Ziel:** PiDrive vollständig per BMW iDrive Drehsteller bedienbar.
 
-**Abgeschlossene Punkte:**
-- [x] AVRCP-Service `pidrive_avrcp.service` + `avrcp_trigger.py` (v0.7.19)
-- [x] AVRCP 1.5 Versionspinning für BMW NBT EVO (v0.7.19)
-- [x] MPRIS2-Metadaten → BMW-Display: Sender/Titel/Breadcrumb (v0.7.20)
-- [x] Kontextabhängiges AVRCP-Mapping: menu / radio / scanner / list_overlay (v0.8.3)
-- [x] Scanner über AVRCP bedienbar: VHF/UHF ±25kHz/±1MHz, CB ±10 Kanäle (v0.8.3–v0.8.4)
-- [x] Differenzierte BMW-Metadaten je Quelle: FM=Frequenz, DAB=Kanal, WEB=Track, Scanner=Band+Freq (v0.8.3)
-- [x] AVRCP Debug-JSON `/tmp/pidrive_avrcp.json` (last_event, context, trigger, source) (v0.8.3)
-- [x] WebUI AVRCP/BMW Debug Panel: Service-Status, Event, Kontext, Trigger, Quelle (v0.8.5)
-- [x] WebUI Scanner-Buttons: VHF/UHF ±25kHz/±1MHz, CB ±10 (v0.8.5)
-- [x] Kritische Bugfixes: `_get_prop()` in mpris2.py, D-Bus String-Matching in avrcp_trigger.py (v0.8.6)
-
-**Offen (Feldtest, kein Code):**
-- [ ] **BMW iDrive AVRCP Praxistest im Auto** — code-seitig fertig, physischer Test steht aus
+- [x] AVRCP-Service + avrcp_trigger.py
+- [x] AVRCP 1.5 Versionspinning BMW NBT EVO
+- [x] MPRIS2-Metadaten → BMW-Display
+- [x] Kontextabhängiges Mapping: menu/radio/scanner/list_overlay
+- [x] Scanner über AVRCP bedienbar
+- [x] AVRCP Debug-JSON + WebUI Debug Panel
+- [ ] **BMW iDrive Praxistest im Auto** — code-seitig fertig, Feldtest ausstehend
 
 ---
 
-### Phase 2 — AVRCP Single-Path & Zustandsmaschine (🔜 nächste Phase)
+### Phase 2 — AVRCP Single-Path & Zustandsmaschine (🔄 in Arbeit, v0.9.x)
 
-**Ziel:** Saubere, wartbare AVRCP-Architektur mit einem zentralen Eingabepfad statt verteilter Verarbeitung.
+**Ziel:** Saubere, wartbare Architektur mit einem zentralen Eingabepfad, konsistentem
+Status und serialisierten Quellenwechseln.
+
+#### State-Machine — aktueller Stand (v0.9.2):
+
+**Implementiert:**
+- `modules/source_state.py` — drei getrennte State-Ebenen:
+  - `source_current`: idle | fm | dab | webradio | scanner | spotify | library
+  - `audio_route`: klinke | bt | hdmi | none
+  - `bt_state`: off | idle | connecting | connected | failed
+- `begin_transition()` / `commit_source()` / `end_transition()` — serialisierte Quellenwechsel
+- `_run_station_switch()` in main_core.py nutzt vollständig begin/commit/end
+- `_stop_all_sources()` committed `idle`
+- Scanner-Schleifen brechen bei `in_transition()` ab
+- BT-Connect prüft `in_transition()` vor Connect-Versuch
+- boot_phase: cold_start → restore_bt → restore_source → steady
+
+**Noch offen für Phase 2:**
+- [ ] `ipc.py`: `_get_audio_effective/reason()` liest noch aus In-Prozess-Zustand
+  (`get_last_decision()`), nicht aus `read_last_decision_file()` — Status-Inkonsistenz
+  zwischen WebUI-Prozess und Core bleibt möglich
+- [ ] Scanner-Trigger in `main_core.py` (`scan_next/prev/up/jump/step`) übergeben
+  `settings` nicht an `scanner.scan_next(b, S)` — PPM/Gain/Squelch werden dort aus
+  Settings neu geladen, aber nicht durchgereicht
+- [ ] `scan_next/prev/jump/step` nutzen keine `source_state.begin_transition()` —
+  Scanner-Start ist noch nicht voll in die State-Machine integriert
+- [ ] Spotify/Library als Source-States noch nicht über source_state.commit_source()
+  erfasst
+- [ ] Installer-Log-Verifikation zeigt alte Version (`v0.8.25`) weil grep-Pattern
+  `"Core v0.6"` nicht die neue Versionnummer trifft
+
+---
+
+### Phase 3 — Resume-State & Stabilität im Dauerbetrieb (🔄 teilweise, v0.9.x)
+
+**Ziel:** PiDrive startet im Auto sofort in der letzten Quelle, BT verbindet zuverlässig.
+
+**Implementiert:**
+- Boot-Resume: FM/DAB/Webradio wiederhergestellt (v0.8.19)
+- BT-Backup/Restore der Pairing-Keys (v0.8.25)
+- Boot Auto-Restore wenn BlueZ-DB leer (v0.8.25)
+- BT Auto-Reconnect Watcher: 6s Startpause, 12s Intervall (v0.9.1)
+- Startup-Lautstärke aus settings.json beim Boot anwenden (v0.9.0)
+- `ensure_settings_file()` normalisiert settings.json beim Boot (v0.9.2)
+- `settings.json` vollständig mit 34 Keys (v0.9.2)
 
 **Noch offen:**
-- [ ] Single-Path für AVRCP-Eingaben — aktuell verarbeiten `avrcp_trigger.py` und `mpris2.py` Eingaben teilweise selbst
-- [ ] Explizite Bedien-Zustandsmaschine im Core (`control_context` als eigene State-Klasse)
-- [ ] Zentraler `ControlContext` in `main_core.py` statt verteiltem Context-Lesen aus JSON-Dateien
-- [ ] AVRCP-Eingaben ausschließlich über Core-Trigger (File-Trigger oder IPC), kein Direkt-Schreiben mehr
+- [ ] BT-Agent: `default-agent nicht bestätigt` bleibt als WARNING — Agent-Registrierung
+  im nicht-interaktiven bluetoothctl-Modus noch nicht 100% zuverlässig
+- [ ] BT-Pairing praktisch noch nicht als stabil verifiziert (Feldtest fehlt)
+- [ ] BT Auto-Reconnect: Nach Reboot findet Watcher das Gerät erst nach ~12s Scan-Zyklus
+  — erste Verbindung noch nicht so schnell wie gewünscht
+- [ ] Spotify Boot-Resume fehlt noch (letzte Spotify-Wiedergabe wird nicht wiederhergestellt)
+- [ ] USB-Tethering Autostart (Pi als USB-Netzwerkgerät ohne WLAN)
 
 ---
 
-### Phase 3 — Boot-Resume & Stabilität im Dauerbetrieb (🔜 folgende Phase)
+## Offene Code-Review-Punkte (Stand nach v0.9.2)
 
-**Ziel:** PiDrive startet im Auto sofort in der letzten Quelle/Station, ohne manuelle Navigation.
+### Kritisch / Funktional relevant
 
-**Noch offen:**
-- [ ] `resume_state.py` / `last_state.json` — letzte Quelle, Station, Frequenz, BT-Gerät beim Boot vollständig wiederherstellen
-- [ ] USB-Tethering Autostart — Pi als USB-Netzwerkgerät, kein WLAN nötig
-- [ ] Hotspot-Modus — WLAN-Hotspot wenn kein Heimnetz verfügbar
-- [ ] Scanner-Kanäle als Favoriten (PMR446/LPD433)
-- [ ] DAB+ DLS Programminfo (`welle-cli --dls`)
-- [ ] FM RDS-Text (`rtl_fm + rds_rx`)
-- [ ] WebUI Breadcrumb-Navigation
+| # | Problem | Details | Priorität |
+|---|---|---|---|
+| 1 | `ipc.py` liest Audio-State aus In-Prozess-Zustand | `_get_audio_effective/reason()` nutzt `get_last_decision()` statt `read_last_decision_file()` → Status-JSON kann von WebUI-Debug abweichen | Hoch |
+| 2 | Scanner-Settings nicht durchgereicht | `scan_next/prev/jump/step` Trigger in main_core.py übergeben keine settings → PPM/Gain werden in scanner.py neu geladen (funktioniert, aber nicht sauber) | Mittel |
+| 3 | Scanner nicht in source_state integriert | scan_next/prev-Trigger nutzen keine begin_transition() | Mittel |
+| 4 | Installer zeigt alte Version im Log | grep-Pattern `"Core v0.6"` trifft nicht neue Versionen → Log zeigt `v0.8.25` | Niedrig |
+| 5 | BT-Agent WARNING | `default-agent nicht bestätigt` bei jedem Connect-Versuch | Mittel |
+
+### Diagnose / Debug
+
+| # | Problem | Details | Priorität |
+|---|---|---|---|
+| 6 | Sink-Input App/Binary/PID teilweise leer | `pactl list sink-inputs` Parsing: Application Name wird nicht immer gefunden | Niedrig |
+| 7 | Default-Sink leer in Diagnose | Fallback via `pactl info` in v0.9.2 implementiert, aber nicht im echten System verifiziert | Mittel |
+| 8 | amixer-Diagnose | Hex-Parse-Fix in v0.9.2, noch nicht im echten System verifiziert | Niedrig |
+
+### Aufräum / Technische Schuld
+
+| # | Problem | Details | Priorität |
+|---|---|---|---|
+| 9 | `Error_v0.8.25.md` im Repo | Debug-Analyse, kein Release-Dokument | Niedrig |
+| 10 | `pidrive_debug.sh` veraltet | v0.6.0, ersetzt durch `pidrive_boot_debug.sh` | Niedrig |
+| 11 | `systemd/pidrive.service` veraltet | Alter monolithischer Service, ersetzt durch Core+Display | Niedrig |
+| 12 | `setup_bt_audio.sh` nicht in install.sh integriert | Wird nicht automatisch aufgerufen | Niedrig |
+| 13 | `.gitignore` excludiert `settings.json` | Seit v0.9.2 soll vollständige Default-Datei ins Repo | Niedrig |
+| 14 | BT-Praxistest Feldtest | Kopfhörer war bei Tests aus, BT noch nicht als stabil verifiziert | Hoch |
+| 15 | BMW iDrive Feldtest | Phase 1 code-seitig fertig, kein Praxistest im Auto | Mittel |
 
 ---
 
-### Weitere Roadmap
+## Roadmap v0.9.3
 
-#### Kurzfristig (nächste 1–3 Updates)
+### Ziele
 
-- [x] **GPIO-Buttons** (Key1=GPIO23→up, Key2=GPIO24→enter, Key3=GPIO25→back) — implementiert v0.8.19
-- [ ] **USB-Tethering Autostart** — Pi als USB-Netzwerkgerät beim Einschalten, kein WLAN nötig
-- [x] **Boot-Resume** — last_source + last_web_station: FM/DAB/Webradio wiederhergestellt v0.8.19
-- [ ] **Scanner-Kanäle als Favoriten** — PMR446/LPD433-Kanäle in Favoritenliste aufnehmen
-- [ ] **WebUI Breadcrumb-Navigation** — navigierbarer Baum statt JSON-Dump
+1. **Aufräumen** — tote Dateien entfernen, .gitignore korrigieren
+2. **State-Machine vervollständigen** — Scanner und Spotify in source_state integrieren
+3. **ipc.py Audio-State** — auf read_last_decision_file() umstellen
+4. **Installer-Log-Verifikation** — grep-Pattern für aktuelle Versionen korrigieren
+5. **BT-Agent** — zuverlässigere Registrierung
 
-#### Mittelfristig (Fahrzeugbetrieb)
+### Konkrete Patches v0.9.3
 
-- [ ] **BMW iDrive AVRCP Praxistest** — Phase 1 code-seitig abgeschlossen; Feldtest im Auto steht noch aus
-- [ ] **DAB+ Programminfo (DLS)** — laufender Titeltext via `welle-cli --dls`
-- [ ] **FM RDS-Text** — Senderinformationen via `rtl_fm + rds_rx`
-- [ ] **Equalizer** — ALSA-basiert, Preset-Auswahl im Menü
-- [ ] **Hotspot-Modus** — Pi öffnet WLAN-Hotspot wenn kein Heimnetz verfügbar
+```
+Remove:  Error_v0.8.25.md
+Remove:  pidrive_debug.sh  (ersetzt durch pidrive_boot_debug.sh)
+Remove:  systemd/pidrive.service  (veraltet)
 
-#### Langfristig
+Fix:     ipc.py  _get_audio_effective/reason() → read_last_decision_file()
+Fix:     main_core.py  scan_next/prev/jump Trigger → settings durchreichen
+Fix:     main_core.py  Scanner-Trigger → source_state.begin/commit/end
+Fix:     install.sh  Log-Verifikation → grep-Pattern auf aktuelle Versionen
+Fix:     .gitignore  settings.json Ausnahme ergänzen
 
-- [ ] **OBD2 Fahrzeugdaten** — USB-ELM327, `python-obd`: Tacho, Drehzahl, Kühlwassertemperatur im Display
-- [ ] **BMW iPod-Emulation** — IAP2-Emulation über CD-Wechsler-Port
-- [ ] **Spotify Web API** — Play/Pause/Weiter vom Pi aus steuern (nicht nur AVRCP)
-- [ ] **Pi 4 Migration** — leistungsstärkere Hardware für flüssigeres Display
+Optional: setup_bt_audio.sh in install.sh integrieren oder entfernen
+```
+
+---
+
+### ✅ Alles Erledigte
 
 ### ✅ Alles Erledigte
 
@@ -2029,4 +2095,30 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - [x] Scanner Fast-Scan zweistufig: Fast-Detect + Confirm (v0.8.8)
 - [x] Phase 1 Bugfixes: FM fm_next/prev, systemd Ordering-Cycle, Doppelstart-Entprellung (v0.8.7)
 - [x] Phase 1 Bugfixes: mpris2 _get_prop, AVRCP D-Bus Matching (v0.8.6)
+
+
+---
+
+## Aufräum-Plan: Dateien für nächstes Release entfernen/bereinigen
+
+### Beim nächsten Paket (v0.9.3) entfernen:
+
+| Datei | Grund |
+|---|---|
+| `Error_v0.8.25.md` | Debug-Analyse, kein Release-Dokument |
+| `pidrive_debug.sh` | Veraltet (v0.6.0) — ersetzt durch `pidrive_boot_debug.sh` (v0.9.0) |
+| `systemd/pidrive.service` | Alter monolithischer Service — ersetzt durch pidrive_core + pidrive_display |
+
+### Beim nächsten Paket prüfen/anpassen:
+
+| Datei | Aktion |
+|---|---|
+| `.gitignore` | `pidrive/config/settings.json` ist excludiert — neu: vollständige Default-settings.json soll ins Repo, nur lokale Überschreibungen sollen ignoriert werden. Ggf. `settings.json` aus .gitignore entfernen oder Ausnahme `!pidrive/config/settings.json` hinzufügen |
+| `KontextPiDrive.md` | Bleibt im Repo als Entwicklerdokumentation ✓ |
+| `config.txt.example` | Bleibt — nützlich für Erstinstallation ✓ |
+| `pidrive_boot_debug.sh` | Bleibt — aktuelles Debug-Script ✓ |
+| `pidrive_car_only_cleanup.sh` | Bleibt — nützlich für Car-Only Setup ✓ |
+| `setup_bt_audio.sh` | Prüfen ob noch aktuell — PulseAudio-Setup ggf. in install.sh integriert |
+| `pidrive/status.py` | Prüfen ob noch aktiv genutzt oder Dead Code |
+| `pidrive/modules/musik.py` | Prüfen ob noch aktiv genutzt |
 
