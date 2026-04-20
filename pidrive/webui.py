@@ -334,7 +334,7 @@ def api_cmd():
                 "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
                 "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
                 "bt_connect:", "wifi_connect:", "bt_repair:",
-                "fm_gain:", "dab_gain:", "ppm:", "squelch:")
+                "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 
@@ -511,6 +511,7 @@ def api_gain():
             "dab_gain":       s.get("dab_gain",       -1),
             "ppm_correction": s.get("ppm_correction",  0),
             "scanner_squelch":s.get("scanner_squelch",25),
+            "scanner_gain":   s.get("scanner_gain", -1),
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})

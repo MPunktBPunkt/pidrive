@@ -11,6 +11,10 @@ try:
     from modules import rtlsdr as _rtlsdr
 except Exception:
     _rtlsdr = None
+try:
+    from modules import source_state as _src_state
+except Exception:
+    _src_state = None
 import os
 import time
 import ipc
@@ -157,6 +161,28 @@ def _get_squelch(settings=None):
             return SQUELCH
     return int(settings.get("scanner_squelch", SQUELCH))
 
+
+def _get_ppm(settings=None):
+    """PPM-Korrektur aus settings.json lesen (v0.9.0)."""
+    try:
+        if settings is None:
+            from settings import load_settings
+            settings = load_settings()
+        return int(settings.get("ppm_correction", 0))
+    except Exception:
+        return 0
+
+
+def _get_gain(settings=None):
+    """Scanner HF-Gain aus settings.json lesen (v0.9.0). -1=Auto AGC."""
+    try:
+        if settings is None:
+            from settings import load_settings
+            settings = load_settings()
+        return int(settings.get("scanner_gain", -1))
+    except Exception:
+        return -1
+
 def _bg(cmd):
     try:
         subprocess.Popen(cmd, shell=True,
@@ -190,19 +216,23 @@ def check_hardware(screen):
         return False
     return True
 
-def play_freq(freq_mhz, name, bandwidth_hz, S):
+def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
     global _player_proc
     if _rtlsdr and not _rtlsdr.detect_usb()["present"]:
         S["radio_station"] = "RTL-SDR nicht gefunden"
         return
     stop(S)
+    _ppm  = _get_ppm(settings)
+    _gain = _get_gain(settings)
+    _ppm_arg  = f" -p {_ppm}" if _ppm else ""
+    _gain_arg = f" -g {_gain}" if _gain != -1 else ""
     freq_hz = int(freq_mhz * 1e6)
     sr = max(48000, bandwidth_hz * 4)
     try:
-        cmd = (f"rtl_fm -M fm -f {freq_hz} -s {bandwidth_hz} -r {sr} - 2>/dev/null | "
+        cmd = (f"rtl_fm -M fm -f {freq_hz} -s {bandwidth_hz}{_ppm_arg}{_gain_arg} -r {sr} - 2>/dev/null | "
                f"mpv --no-video --really-quiet --title=pidrive_scanner "
                f"--demuxer=rawaudio --demuxer-rawaudio-rate={sr} "
-               f"--demuxer-rawaudio-channels=1 - 2>/dev/null")
+               f"--demuxer-rawaudio-channels=1 --ao=pulse - 2>/dev/null")
         if _rtlsdr:
             usb = _rtlsdr.detect_usb()
             if not usb.get("present"):
@@ -228,6 +258,7 @@ def play_freq(freq_mhz, name, bandwidth_hz, S):
         S["radio_playing"] = True
         S["radio_station"] = f"{name} ({freq_mhz:.5g} MHz)"
         S["radio_type"]    = "SCANNER"
+        if _src_state: _src_state.commit_source("scanner")
         log.action("Scanner", f"{name} @ {freq_mhz} MHz")
     except Exception as e:
         log.error(f"Scanner play: {e}")
@@ -255,7 +286,7 @@ def stop(S):
 
 # ── Signal-Erkennung (v0.8.8: zweistufig Fast-Detect + Confirm) ───────────────
 
-def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=None):
+def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=None, settings=None):
     """
     Sehr schneller Grobtest — nur Kandidatenerkennung.
     Niedrige Schwelle, kurze Messzeit, breitere Bandbreite.
@@ -273,7 +304,7 @@ def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=None):
         return False
 
 
-def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=0.65, squelch=None):
+def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=0.65, squelch=None, settings=None):
     """
     Bestätigungstest — nur bei Fast-Detect Kandidaten.
     Normale Bandbreite, längere Messung, robustere Schwelle.
@@ -336,7 +367,9 @@ def _scan_list(S, channels, bw, direction, band_id=""):
 
     for _ in range(n):
         # v0.8.13: Scan abbrechen wenn andere Quelle aktiv wurde
-        if _scan_abort or S.get("radio_type") not in ("", "SCANNER"):
+        if (_scan_abort
+                or (_src_state and _src_state.in_transition())
+                or S.get("radio_type") not in ("", "SCANNER")):
             log.info(f"Scanner scan-list: abgebrochen band={band_id} radio_type={S.get('radio_type','')}")
             return None
         ch   = channels[idx]
@@ -376,7 +409,9 @@ def _scan_range(S, band, bw, direction, band_id=""):
 
     for _ in range(total):
         # v0.8.13: Scan abbrechen wenn andere Quelle aktiv wurde
-        if _scan_abort or S.get("radio_type") not in ("", "SCANNER"):
+        if (_scan_abort
+                or (_src_state and _src_state.in_transition())
+                or S.get("radio_type") not in ("", "SCANNER")):
             log.info(f"Scanner scan-range: abgebrochen band={band_id} radio_type={S.get('radio_type','')}")
             return None
         log.info(f"Scanner scan-range: FAST band={band_id} freq={freq:.3f} bw={fast_bw}")

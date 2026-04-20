@@ -15,6 +15,10 @@ import time
 import json
 import log
 import ipc
+try:
+    from modules import source_state as _src_state
+except Exception:
+    _src_state = None
 
 C_BT_BLUE = (30, 144, 255)
 
@@ -249,6 +253,13 @@ def connect_device(mac, S, settings):
     ipc.write_progress("Bluetooth", f"Verbinde {name[:20]}...", color="blue")
     log.info(f"BT connect: START mac={mac} name={name}")
 
+    if _src_state:
+        if _src_state.in_transition():
+            log.warn("BT connect: abgebrochen — Quellen-Transition läuft")
+            ipc.clear_progress()
+            return False
+        _src_state.set_bt_state("connecting")
+
     # v0.8.13: Scanner stoppen vor Connect — verhindert RTL-/Status-Kollision
     try:
         from modules import scanner as _scanner
@@ -364,6 +375,7 @@ def connect_device(mac, S, settings):
     if not ok:
         S["bt"] = False
         S["bt_status"] = "getrennt"
+        if _src_state: _src_state.set_bt_state("failed")
         ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
         log.warn(f"BT connect: FAIL mac={mac} name={name}")
         time.sleep(3)
@@ -503,12 +515,15 @@ def start_auto_reconnect(S, settings):
 
     def _watcher():
         import time as _t
-        _t.sleep(15)  # Kurze Startpause
+        _t.sleep(6)   # v0.9.1: schneller nach Boot (war 15s)
         while not _reconnect_stop:
             try:
                 mac  = settings.get("bt_last_mac", "")
                 name = settings.get("bt_last_name", "")
                 if mac and not S.get("bt", False):
+                    # source_state: warte wenn Quellen-Transition läuft
+                    if _src_state and _src_state.in_transition():
+                        continue
                     rc, out = _btctl(f"info {mac}", timeout=5)
                     low = out.lower()
                     if rc == 0 and "name:" in low and "connected: no" in low:
@@ -530,7 +545,8 @@ def start_auto_reconnect(S, settings):
                             log.info(f"BT auto-reconnect: fehlgeschlagen mac={mac} ({out2[:80]})")
             except Exception as e:
                 log.warn("BT auto-reconnect Watcher: " + str(e))
-            _t.sleep(30)
+            # v0.9.1: 12s wenn getrennt (schnellerer Reconnect), 20s wenn verbunden
+            _t.sleep(12 if not S.get("bt", False) else 20)
 
     _reconnect_thread = _th.Thread(target=_watcher, daemon=True, name="bt_auto_reconnect")
     _reconnect_thread.start()

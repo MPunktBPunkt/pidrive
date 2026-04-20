@@ -146,6 +146,8 @@
           <button onclick="sendCmd('scan_step:uhf:-0.025')">UHF -25k</button>
           <button onclick="sendCmd('scan_jump:cb:10')">CB +10</button>
           <button onclick="sendCmd('scan_jump:cb:-10')">CB -10</button>
+          <button onclick="sendCmd('scanner_gain:-1')" title="Auto AGC">Scan Auto Gain</button>
+          <button onclick="sendCmd('scanner_gain:30')" title="30 dB">Scan 30dB</button>
           <button onclick="sendCmd('bt_disconnect')">BT Trennen</button>
           <button onclick="sendCmd('bt_reconnect_last')">BT Reconnect</button>
           <button onclick="sendCmd('bt_backup')" title="Pairing-Keys sichern">BT Backup</button>
@@ -1028,5 +1030,50 @@
       }
     }
     </script>
+      <!-- Runtime Debug Panel (v0.9.0) -->
+      <section class="panel">
+        <div class="panel-title">⚙️ Runtime / Startwerte</div>
+        <div class="diag-grid">
+          <div class="diag-card">
+            <div class="diag-title">Aktive Settings</div>
+            <div class="diag-row"><div class="diag-key">audio_output</div><div class="diag-value" id="rtAudioOut">–</div></div>
+            <div class="diag-row"><div class="diag-key">volume</div><div class="diag-value" id="rtVolume">–</div></div>
+            <div class="diag-row"><div class="diag-key">fm_gain</div><div class="diag-value" id="rtFmGain">–</div></div>
+            <div class="diag-row"><div class="diag-key">dab_gain</div><div class="diag-value" id="rtDabGain">–</div></div>
+            <div class="diag-row"><div class="diag-key">scanner_gain</div><div class="diag-value" id="rtScanGain">–</div></div>
+            <div class="diag-row"><div class="diag-key">ppm</div><div class="diag-value" id="rtPpm">–</div></div>
+            <div class="diag-row"><div class="diag-key">squelch</div><div class="diag-value" id="rtSquelch">–</div></div>
+            <div class="diag-row"><div class="diag-key">last_source</div><div class="diag-value" id="rtLastSrc">–</div></div>
+          </div>
+          <div class="diag-card">
+            <div class="diag-title">Laufende Prozesse</div>
+            <pre id="rtProcPre" style="font-size:0.7em;white-space:pre-wrap;color:#7cf">–</pre>
+          </div>
+        </div>
+        <button onclick="refreshRuntime()">🔄 Runtime Refresh</button>
+      </section>
+
+    <script>
+    async function refreshRuntime() {
+      try {
+        const r = await fetch('/api/runtime');
+        const j = await r.json();
+        const s = j.settings || {};
+        const p = j.processes || {};
+        const el = id => document.getElementById(id);
+        if (el('rtAudioOut'))  el('rtAudioOut').textContent  = s.audio_output || '–';
+        if (el('rtVolume'))    el('rtVolume').textContent    = s.volume != null ? s.volume + '%' : '–';
+        if (el('rtFmGain'))    el('rtFmGain').textContent    = s.fm_gain === -1 ? 'Auto' : s.fm_gain + ' dB';
+        if (el('rtDabGain'))   el('rtDabGain').textContent   = s.dab_gain === -1 ? 'Auto' : s.dab_gain + ' dB';
+        if (el('rtScanGain'))  el('rtScanGain').textContent  = s.scanner_gain === -1 ? 'Auto' : s.scanner_gain + ' dB';
+        if (el('rtPpm'))       el('rtPpm').textContent       = s.ppm_correction === 0 ? 'aus (0)' : '+' + s.ppm_correction + ' ppm';
+        if (el('rtSquelch'))   el('rtSquelch').textContent   = s.scanner_squelch;
+        if (el('rtLastSrc'))   el('rtLastSrc').textContent   = s.last_source || 'idle';
+        if (el('rtProcPre'))   el('rtProcPre').textContent   = (p.lines || []).join('\n') || '– keine –';
+      } catch(e) { console.error('refreshRuntime', e); }
+    }
+    window.addEventListener('load', () => setTimeout(refreshRuntime, 1200));
+    </script>
+
 </body>
 </html>

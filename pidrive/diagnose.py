@@ -350,8 +350,31 @@ def check_rtlsdr():
             pass
 
 
+def check_processes():
+    S("RELEVANTE PROZESSE")
+    cmd = (r"ps ax -o pid=,user=,cmd= | egrep "
+           r"'pidrive|rtl_fm|welle-cli|rtl_test|mpv|librespot|pulseaudio|pipewire|bluetoothd' "
+           r"| grep -v grep")
+    out = run(cmd)
+    if out:
+        ok("Relevante Prozesse gefunden:")
+        for ln in out.splitlines():
+            nfo(ln[:140])
+        # Warnung: mpv läuft aber kein PulseAudio-Input?
+        pa_cmd = "PULSE_SERVER=unix:/var/run/pulse/native pactl list sink-inputs short 2>/dev/null"
+        pa_out = run(pa_cmd)
+        has_mpv = any("mpv" in l for l in out.splitlines())
+        if has_mpv and not pa_out:
+            warn("mpv läuft, aber keine PulseAudio Sink-Inputs!")
+            warn("→ PULSE_SERVER in pidrive_core.service prüfen")
+        elif pa_out:
+            ok(f"PulseAudio Sink-Inputs: {len(pa_out.splitlines())}")
+    else:
+        warn("Keine relevanten Prozesse gefunden")
+
+
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.8.25\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.1\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
@@ -364,6 +387,7 @@ def main():
     check_audio()
     check_bluetooth()
     check_rtlsdr()
+    check_processes()
     test_sdl()
     summary()
 

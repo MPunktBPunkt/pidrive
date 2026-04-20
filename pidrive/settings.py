@@ -31,9 +31,11 @@ _DEFAULTS = {
     "last_web_station": None,   # dict mit name + url
     # v0.8.18: RTL-SDR Empfangsqualität
     "ppm_correction":   0,     # Frequenzfehler-Korrektur in ppm (0 = deaktiviert)
-                               # Typischer RTL2838-Wert: ±20..100 ppm
-                               # Kalibrieren mit: rtl_test -p 30 (30s laufen lassen)
+                               # Gemessener RTL2838-Wert (3 Messläufe): ~52 ppm
+                               # Kalibrieren: sudo rtl_test -p (mehrere Minuten laufen lassen)
     "scanner_squelch":  25,    # Squelch-Schwelle (0=immer offen, 25=Standard, 10=empfindlich)
+    # v0.9.0: Scanner-Gain + Lautstärke persistent
+    "scanner_gain":     -1,    # Scanner HF-Gain (-1=Auto AGC, 0-49=manuell dB)
 }
 
 

@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.8.25
+# PiDrive — Kontext & Projektdokumentation v0.9.1
 
 ## Projektbeschreibung
 
@@ -750,7 +750,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.8.25 — Baumbasiert, beliebig tief)
+PiDrive  (v0.9.1 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -920,6 +920,96 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.1 — Source-State vollständig, BT-Reconnect schneller
+
+**main_core.py — source_state voll integriert:**
+- `_run_station_switch()`: `begin_transition()` vor Quellenwechsel, `commit_source()` nach FM/DAB/Webradio-Start, `end_transition()` im finally
+- `_stop_all_sources()`: `source_state.commit_source("idle")` am Ende
+
+**bluetooth.py — source_state aware + schnellerer Reconnect:**
+- Connect-Start: prüft `in_transition()` — bricht ab wenn Quellenwechsel läuft
+- Erfolg/Fehler: setzt `bt_state = connected/failed`, `audio_route = bt`
+- Auto-Reconnect Watcher: Startpause 15s → 6s (schneller nach Boot)
+- Intervall 30s → 12s getrennt / 20s verbunden
+- Watcher überspringt Reconnect-Versuch wenn Quellen-Transition läuft
+
+**scanner.py — source_state aware:**
+- Scan-Schleifen brechen ab wenn `in_transition()` True
+- `play_freq()` setzt `commit_source("scanner")` nach erfolgreichem Start
+
+**webui.py:**
+- `scanner_gain` in `/api/gain` Response ergänzt
+
+### v0.9.0 — Audio-Fix PULSE_SERVER, Source-State-Machine, Scanner-PPM, Boot-Debug
+
+**Hauptmotivation:** Log-Analyse v0.8.25 zeigte `pactl sink-inputs: leer` trotz laufendem mpv.
+Root-Cause: `pidrive_core.service` ohne `PULSE_SERVER` → mpv als root landet nicht am System-PulseAudio.
+
+**systemd/pidrive_core.service — KRITISCHER FIX:**
+- `Environment=PULSE_SERVER=unix:/var/run/pulse/native` eingetragen
+- Alle Kindprozesse (mpv, rtl_fm|mpv, welle-cli|mpv) nutzen jetzt sicher den System-PulseAudio-Socket
+- `After=bluetooth.service` ergänzt
+
+**modules/source_state.py — NEU:**
+- Zentrale Source-State-Machine: verhindert gleichzeitige FM+Scanner+BT-Aktivität
+- Drei getrennte State-Ebenen: source_current, audio_route, bt_state
+- `begin_transition()` / `commit_source()` / `end_transition()` — serialisierte Quellenwechsel
+- Timeout-Guard gegen hängende Transitions (8s)
+- boot_phase: cold_start → restore_bt → restore_source → steady
+
+**scanner.py — PPM/Gain/Squelch vollständig verdrahtet:**
+- `_get_ppm()` / `_get_gain()` aus settings.json
+- `_detect_signal_fast()` + `_detect_signal_confirm()` + `play_freq()` nutzen alle drei Werte
+- Scanner-mpv jetzt mit `--ao=pulse` (war ohne, kein Ton über PulseAudio)
+- `scanner_gain:-1` Trigger in main_core.py
+
+**settings.py:**
+- `scanner_gain: -1` als neues Default
+- Kommentar: gemessener RTL2838-PPM ~52
+
+**modules/audio.py:**
+- `apply_startup_volume()` — liest `settings["volume"]` beim Boot und setzt Default-Sink
+- `volume_up()` speichert Lautstärke persistent nach settings.json
+
+**main_core.py:**
+- `source_state` Import + Initialisierung beim Boot
+- `startup_tasks()`: apply_startup_volume() vor Boot-Resume
+- `_stop_all_sources()`: `source_state.commit_source("idle")`
+- `scanner_gain:N` Trigger
+
+**webui.py:**
+- `get_settings_debug()` / `get_process_debug()` — neue Hilfsfunktionen
+- `GET /api/runtime` — aktive Settings + laufende rtl_fm/mpv Parameter
+- Audio Debug: Warnung wenn PulseAudio aktiv aber keine Sink-Inputs + laufende Player
+
+**diagnose.py:**
+- `check_processes()` — zeigt alle relevanten Prozesse
+- Warnung wenn mpv läuft aber keine PulseAudio Sink-Inputs → PULSE_SERVER-Hinweis
+
+**index.html:**
+- Runtime-Panel mit allen aktiven Settings + laufenden Prozessparametern
+- Scanner Gain Schnellbuttons (Auto / 30dB)
+- `refreshRuntime()` JS-Funktion
+
+**pidrive_boot_debug.sh — NEU:**
+- Boot-Debug-Snapshot: Services, PULSE_SERVER-Check, Prozesse, PulseAudio, BT, RTL-SDR, Settings
+- Speichert nach `/tmp/pidrive_boot_debug_DATUM.log`
+
+**systemd/pidrive_boot_debug.service — NEU:**
+- Oneshot-Service: startet pidrive_boot_debug.sh nach pidrive_core
+- Optional: `systemctl enable pidrive_boot_debug.service`
+
+---
+
+**NICHT implementiert (Dokumentation):**
+
+| Patch | Grund |
+|---|---|
+| bluetooth.py Vollrewrite | GPT-Patch nicht mit existierender bt_backup-Logik kompatibel; BT-Verbesserungen folgen in v0.9.1 |
+| audio.py Vollrewrite | Zu riskant ohne vollständigen Kontext; gezielte Patches stattdessen |
+| main_core.py source_state voll integriert | Nur Boot-Phase + _stop_all_sources; vollständige Integration in v0.9.1 |
+| BT Auto-Reconnect State-Events | Folgt nach Praxistest mit PULSE_SERVER-Fix |
 
 ### v0.8.25 — BT-Pairing-Backup, PPM-Fix
 **Probleme aus Log v0.8.24:**
@@ -1708,13 +1798,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.8.25)
+## Aktueller Stand (v0.9.1)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.8.25 — BT-Pairing-Backup, PPM-Fix
-✓ pidrive_display.service   v0.8.25, 20fps
+✓ pidrive_core.service      v0.9.1 — Source-State vollständig, BT-Reconnect schneller
+✓ pidrive_display.service   v0.9.1, 20fps
 ✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
 ✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
 ✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand

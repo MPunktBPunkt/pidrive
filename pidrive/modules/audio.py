@@ -278,10 +278,44 @@ def set_output(mode: str, settings: dict):
     ipc.clear_progress()
 
 
+def apply_startup_volume(settings=None):
+    """
+    Gespeicherte Lautstärke beim Boot auf Default-Sink anwenden (v0.9.0).
+    Wird in main_core.py startup_tasks() aufgerufen.
+    """
+    if settings is None:
+        try:
+            from settings import load_settings as _ls
+            settings = _ls()
+        except Exception:
+            settings = {}
+    vol = settings.get("volume", 90)
+    try:
+        vol = max(0, min(int(vol), 150))
+    except Exception:
+        vol = 90
+    try:
+        import subprocess as _sp
+        _sp.run(
+            PA_ENV + f" pactl set-sink-volume @DEFAULT_SINK@ {vol}%",
+            shell=True, capture_output=True, timeout=4
+        )
+        log.info(f"[AUDIO] startup volume → {vol}%")
+    except Exception as e:
+        log.error("[AUDIO] apply_startup_volume: " + str(e))
+
+
 def volume_up(settings=None):
     try:
         subprocess.run(PA_ENV + " pactl set-sink-volume @DEFAULT_SINK@ +5%",
                        shell=True, capture_output=True, timeout=3)
+        if settings is not None:
+            try:
+                settings["volume"] = min(150, int(settings.get("volume", 90)) + 5)
+                from settings import save_settings
+                save_settings(settings)
+            except Exception:
+                pass
         ipc.write_progress("Lautstaerke", "up +5%", color="green")
         time.sleep(0.8)
         ipc.clear_progress()

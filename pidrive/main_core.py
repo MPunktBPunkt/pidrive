@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.8.25
+main_core.py - PiDrive Core v0.9.1
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -22,6 +22,7 @@ try:
 except Exception:
     _mpris2 = None
 from menu_model import MenuNode, MenuState, StationStore, build_tree
+from modules import source_state
 from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
                     gpio_buttons as _gpio_buttons,
                      webradio, dab, fm, library, scanner, update, favorites)
@@ -236,7 +237,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.8.25) ─────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.9.1) ─────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -259,7 +260,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
 
-    # ── PPM + Squelch Trigger (v0.8.25) ─────────────────────────────────────
+    # ── PPM + Squelch Trigger (v0.9.1) ─────────────────────────────────────
     elif cmd.startswith("ppm:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -287,7 +288,21 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"squelch Trigger: {e}")
 
-    # ── RTL-SDR Reset (v0.8.25) ───────────────────────────────────────────────
+    elif cmd.startswith("scanner_gain:"):
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            val = max(-1, min(val, 49))
+            settings["scanner_gain"] = val
+            from settings import save_settings
+            save_settings(settings)
+            label = "Auto (AGC)" if val == -1 else f"{val} dB"
+            ipc.write_progress("Scanner Gain", label, color="green")
+            log.info(f"TRIGGER scanner_gain={val}")
+            import time as _tsg; _tsg.sleep(1); ipc.clear_progress()
+        except Exception as e:
+            log.error(f"scanner_gain Trigger: {e}")
+
+    # ── RTL-SDR Reset (v0.9.1) ───────────────────────────────────────────────
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
@@ -597,12 +612,13 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.8.25: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        # v0.9.1: Status-Felder leeren — verhindert stale State beim Quellenwechsel
         S["radio_playing"]    = False
         S["radio_station"]    = ""
         S["radio_name"]       = ""
         S["radio_type"]       = ""
         S["control_context"]  = "idle"   # Phase 2: Zustand zurücksetzen
+        source_state.commit_source("idle")
         _time_mod.sleep(0.10)
 
     # Stationen zuerst prüfen — haben action=None, brauchen src/meta
@@ -615,6 +631,7 @@ def _execute_node(node, menu_state, store, S, settings):
                 info = _source_switch_info()
                 log.warn(f"PLAY_STATION blocked by active switch owner={info.get('owner','?')}")
                 return
+            source_state.begin_transition(owner, node.source or "unknown")
             try:
                 _stop_all_sources()
                 src  = node.source
@@ -624,19 +641,23 @@ def _execute_node(node, menu_state, store, S, settings):
                                       if "  " in node.label else node.label.lstrip("★ ").strip())
                     _freq = meta.get("freq", "")
                     fm.play_station({"name": _name, "freq": _freq}, S, settings)
+                    source_state.commit_source("fm")
                 elif src == "dab":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
                                       if "  " in node.label else node.label.lstrip("★ ").strip())
                     dab.play_by_name(_name, S)
+                    source_state.commit_source("dab")
                 elif src == "webradio":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
                                       if "  " in node.label else node.label.lstrip("★ ").strip())
                     _url  = meta.get("url", "")
                     webradio.play_station({"name": _name, "url": _url}, S, settings)
+                    source_state.commit_source("webradio")
             except Exception as e:
                 log.error(f"PLAY_STATION switch error: {e}")
             finally:
                 _source_switch_end()
+                source_state.end_transition()
 
         bg(_run_station_switch)
         return
@@ -886,7 +907,7 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # GPIO-Tasten starten (v0.8.25)
+    # GPIO-Tasten starten (v0.9.1)
     try:
         _gpio_active = _gpio_buttons.start()
         if _gpio_active:
@@ -896,7 +917,7 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
-    # v0.8.25: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
+    # v0.9.1: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
     # wenn boot-resume play_station() startet ohne vorherigen get_mpv_args()-Aufruf
     try:
         from modules.audio import _set_pi_output_klinke
@@ -907,7 +928,7 @@ def startup_tasks(S, settings):
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 
-    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.8.25)
+    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.1)
     try:
         time.sleep(1)
         last_src   = settings.get("last_source", "")
@@ -946,11 +967,13 @@ def startup_tasks(S, settings):
 
     except Exception as _e:
         log.warn("Boot-Resume: " + str(_e))
+    finally:
+        source_state.set_boot_phase("steady")
 
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.8.25 gestartet")
+    log.info("PiDrive Core v0.9.1 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -979,7 +1002,7 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.8.25: BT Auto-Reconnect Watcher starten
+    # v0.9.1: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr

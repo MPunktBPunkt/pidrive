@@ -1,0 +1,15 @@
+[Unit]
+Description=PiDrive Boot Debug Snapshot (v0.9.0)
+After=multi-user.target network-online.target bluetooth.service pulseaudio.service pidrive_core.service
+Wants=pidrive_core.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /home/pi/pidrive/pidrive_boot_debug.sh
+TimeoutStartSec=60
+RemainAfterExit=no
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
