@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.9.2
+"""diagnose.py - PiDrive System-Diagnose v0.9.3
 
 v0.6.0: Core/Display getrennt.
 - pidrive_core.service  — headless, kein pygame
@@ -380,8 +380,32 @@ def check_processes():
         warn("Keine relevanten Prozesse gefunden")
 
 
+def check_source_state():
+    S("SOURCE STATE (Quellen-Zustandsmaschine)")
+    try:
+        import json as _j, sys, os
+        sys.path.insert(0, "/home/pi/pidrive/pidrive")
+        try:
+            from modules.source_state import snapshot
+            st = snapshot()
+            src = st.get("source_current", "?")
+            bt  = st.get("bt_state", "?")
+            ar  = st.get("audio_route", "?")
+            tr  = st.get("transition", False)
+            bp  = st.get("boot_phase", "?")
+            (ok if not tr else warn)(f"Quelle: {src} | Audio-Route: {ar} | BT: {bt}")
+            nfo(f"boot_phase: {bp} | transition: {tr}")
+            if tr:
+                owner = st.get("owner", "?")
+                warn(f"Transition läuft: owner={owner}")
+        except Exception as e:
+            warn(f"source_state Import fehlgeschlagen: {e}")
+    except Exception as e:
+        warn(f"source_state check: {e}")
+
+
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.2\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.3\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
@@ -395,6 +419,7 @@ def main():
     check_bluetooth()
     check_rtlsdr()
     check_processes()
+    check_source_state()
     test_sdl()
     summary()
 

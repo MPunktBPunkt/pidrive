@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.9.2
+# PiDrive Install Script v0.9.3
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.2           ║
+║        PiDrive Installer v0.9.3           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -85,7 +85,7 @@ ok "System-Pakete installiert"
 
 pip3 install mutagen --break-system-packages -q 2>/dev/null || \
 pip3 install mutagen -q 2>/dev/null || true
-# v0.9.2: RPi.GPIO für Display-Tasten (Key1/Key2/Key3)
+# v0.9.3: RPi.GPIO für Display-Tasten (Key1/Key2/Key3)
 pip3 install RPi.GPIO --break-system-packages -q 2>/dev/null || true
 ok "Python-Pakete installiert (mutagen + RPi.GPIO)"
 
@@ -178,7 +178,7 @@ systemctl disable pidrive 2>/dev/null || true
 
 # Core Service
 cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.service"
-  # v0.9.2: PULSE_SERVER fuer System-PulseAudio erzwingen
+  # v0.9.3: PULSE_SERVER fuer System-PulseAudio erzwingen
   if ! grep -q "^Environment=PULSE_SERVER=" "$SERVICE_DIR/pidrive_core.service"; then
     sed -i '/^WorkingDirectory=/a Environment=PULSE_SERVER=unix:/var/run/pulse/native' \
         "$SERVICE_DIR/pidrive_core.service"
@@ -264,7 +264,7 @@ if [ -f /etc/raspotify/conf ]; then
     grep -q "^LIBRESPOT_ONEVENT" /etc/raspotify/conf || \
         echo "LIBRESPOT_ONEVENT=/usr/local/bin/spotify_event.sh" >> /etc/raspotify/conf
 
-    # v0.9.2: Zielarchitektur Option B — Spotify über zentralen PulseAudio-Pfad
+    # v0.9.3: Zielarchitektur Option B — Spotify über zentralen PulseAudio-Pfad
     # LIBRESPOT_DEVICE=default nutzt den PulseAudio Default-Sink (Klinke oder BT)
     if grep -q "^LIBRESPOT_BACKEND" /etc/raspotify/conf; then
         sed -i 's|^LIBRESPOT_BACKEND=.*|LIBRESPOT_BACKEND=alsa|' /etc/raspotify/conf
@@ -289,7 +289,7 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     ok "Raspotify konfiguriert (zentral via PulseAudio)"
 
-  # v0.9.2: Pi 3B Klinken-Ausgang physisch aktivieren
+  # v0.9.3: Pi 3B Klinken-Ausgang physisch aktivieren
   # amixer numid=3: 0=auto, 1=klinke, 2=HDMI
   # Ohne diese Zeile bleibt Pi-Audio oft auf HDMI trotz PulseAudio-Routing
   amixer -q -c 0 cset numid=3 1 2>/dev/null && ok "Pi Audio: Klinke aktiviert (amixer numid=3=1)" || true
@@ -403,7 +403,7 @@ if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import main_core" 2>/dev/null); t
     exit 1
 else
     ok "Import-Smoke-Test OK (main_core)"
-  # v0.9.2: WebUI Import-Smoke-Test — verhindert stille Strukturfehler wie v0.8.12
+  # v0.9.3: WebUI Import-Smoke-Test — verhindert stille Strukturfehler wie v0.8.12
   if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>/dev/null); then
     err "Import-Smoke-Test fehlgeschlagen: webui"
     (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>&1) | head -12
@@ -448,9 +448,15 @@ if systemctl start pidrive_core 2>/dev/null; then
             STDIN=$(readlink /proc/$PID/fd/0 2>/dev/null || echo "unbekannt")
             info "stdin (fd 0) → $STDIN"
 
-            # Neue Log-Eintraege pruefen
+            # Neue Log-Eintraege pruefen (nur Eintraege nach Service-Start)
             sleep 3
-            LOG_NEW=$(grep "Core v0.6\|Core-Loop\|Core gestartet\|PiDrive Core" /var/log/pidrive/pidrive.log 2>/dev/null | tail -3)
+            START_TS=$(date +"%Y-%m-%d %H:%M" --date="2 seconds ago" 2>/dev/null || date +"%Y-%m-%d %H:%M")
+            LOG_NEW=$(grep "Core v0.6\|Core-Loop\|Core gestartet\|PiDrive Core" /var/log/pidrive/pidrive.log 2>/dev/null \
+                     | awk -v ts="$START_TS" '$0 >= ts' | tail -3)
+            # Fallback: zeige letzte 3 Zeilen wenn awk keine Treffer
+            if [ -z "$LOG_NEW" ]; then
+                LOG_NEW=$(grep "PiDrive Core v${NEW_VERSION}\|Core-Loop" /var/log/pidrive/pidrive.log 2>/dev/null | tail -3)
+            fi
             if [ -n "$LOG_NEW" ]; then
                 ok "Neue Log-Eintraege vorhanden:"
                 echo "$LOG_NEW" | while read line; do info "  $line"; done
@@ -518,7 +524,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Optionaler Car-Only Cleanup (v0.9.2) ─────────────────────────────────────
+# ── Optionaler Car-Only Cleanup (v0.9.3) ─────────────────────────────────────
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   echo ""
   echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"

@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.2
+# PiDrive — Kontext & Projektdokumentation v0.9.3
 
 ## Projektbeschreibung
 
@@ -751,7 +751,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.9.2 — Baumbasiert, beliebig tief)
+PiDrive  (v0.9.3 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -921,6 +921,60 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.3 — DAB-Gain-Index-Fix, mux.json-Scan, State-Machine vollständig, Aufräumen
+
+**Kritische Erkenntnis aus welle-cli Quellcode (rtl_sdr.cpp):**
+- `welle-cli -g N` erwartet einen **GAIN-INDEX (0–28)**, KEIN dB-Wert!
+- `"Unknown gain count40"` = Index 40 out-of-range (max Index=28)
+- v0.9.2-Fix (`"40.2"`) war ebenfalls falsch — erst v0.9.3 übergibt Index 22 für 40 dB
+- `-P` ist **kein PPM-Flag** in welle-cli, sondern Carousel/PAD-Verhalten → entfernt
+
+**modules/dab.py:**
+- `_RTL_GAIN_TABLE`: 29 Einträge, Index 0=0.0 dB bis Index 28=49.6 dB
+- `_get_dab_gain()`: konvertiert dB → nächsten Index (40 dB → Index 22)
+- `-P ppm` aus welle-cli-Kommando entfernt (falsches Flag)
+- `scan_dab_channels()`: komplett neu via welle-cli Webserver + `mux.json`
+  - startet `welle-cli -c CH -g IDX -C 1 -w 7979` pro Kanal
+  - holt `http://127.0.0.1:7979/mux.json` nach 8s Lock-Zeit
+  - strukturierte JSON-Daten: ensemble.label/id, service.sid/label/url_mp3, SNR
+  - Regionalscan (7 Kanäle) + Vollscan-Fallback wenn < 3 Sender
+  - service_id und ensemble werden in dab_stations.json gespeichert
+
+**main_core.py — State-Machine vollständig:**
+- `radio_stop` → `source_state.begin/commit/end_transition("idle")`
+- `scan_up/down` → `source_state.begin/end_transition("scanner")`
+- `scan_next/prev` → `source_state.begin/end_transition("scanner")`
+- `dab_scan` übergibt `settings=settings` an scan_dab_channels()
+
+**ipc.py — Audio-State aus Datei:**
+- `_get_audio_effective()` + `_get_audio_reason()` lesen aus `/tmp/pidrive_audio_state.json`
+- Beseitigt In-Prozess-Inkonsistenz zwischen Core und WebUI
+
+**webui.py:**
+- `get_source_state_debug()` + `source_state` in `/api/state` Response
+
+**diagnose.py:**
+- `check_source_state()`: zeigt source_current, bt_state, audio_route, boot_phase, transition
+
+**install.sh:**
+- Log-Verifikation mit Zeitstempel-Filter (verhindert alte Einträge als "neu")
+
+**Aufräumen:**
+- `Error_v0.8.25.md` entfernt (Debug-Analyse, kein Release-Dokument)
+- `pidrive_debug.sh` (v0.6.0) entfernt — ersetzt durch pidrive_boot_debug.sh
+- `systemd/pidrive.service` (alter monolithischer Service) entfernt
+- `.gitignore`: settings.json kommentiert (Default-Datei bleibt im Repo)
+
+---
+
+**Screenshots welle-cli Webdiagnose (20.04.2026):**
+- Kanal 12B: SNR=0.0, FIC CRC=45 → kein Lock, schlechter Empfang
+- Kanal 15A: SNR=29.7, Freq corr=9 → Signal, aber kein Ensemble-Sync
+- Kanal 13F: Gain=-1 (AGC), Freq corr=433 Hz → sichtbares Spektrum
+
+PPM-Kalibrierung: interner Coarse-Corrector von welle-cli übernimmt Frequenz-Korrektur,
+kein direkter CLI-Parameter nötig oder möglich.
 
 ### v0.9.2 — Settings-Migration, DAB-Gain-Fix, Diagnose-Bugfixes, DAB-Webdiagnose
 
@@ -1866,13 +1920,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.2)
+## Aktueller Stand (v0.9.3)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.2 — Settings-Fix, DAB-Gain-Fix, Diagnose-Bugfixes, DAB-Webdiagnose
-✓ pidrive_display.service   v0.9.2, 20fps
+✓ pidrive_core.service      v0.9.3 — DAB-Gain-Index, mux.json-Scan, State-Machine vollständig
+✓ pidrive_display.service   v0.9.3, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            Gain auf gültige RTL-SDR Stufen quantisiert (40→40.2)

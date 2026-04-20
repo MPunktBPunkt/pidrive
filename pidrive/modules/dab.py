@@ -59,70 +59,155 @@ def save_stations(stations):
     except Exception as e:
         log.error(f"DAB save Fehler: {e}")
 
-def scan_dab_channels(progress_cb=None, channels=None):
-    global _scan_running, _scan_results
-    _scan_running = True
-    _scan_results = []
+def scan_dab_channels(settings=None):
+    """
+    DAB+ Suchlauf via welle-cli Webserver + mux.json (v0.9.3).
 
-    channels = [
+    Neuer Ansatz statt Log-Parsing:
+    - startet welle-cli -c CH -C 1 -w 7979 (Webserver-Modus, Carousel)
+    - holt http://127.0.0.1:7979/mux.json nach Wartezeit
+    - liest strukturierte JSON-Daten: ensemble, services, SNR, service_id
+    - deutlich robuster als stdout-Parsing
+
+    Scannt: Regionale Kanäle 5C,5D,8D,10A,10D,11D,12D + Vollscan-Fallback
+    """
+    import subprocess as _sp
+    import time as _t
+    import json as _j
+    import urllib.request as _ur
+
+    WEB_PORT  = 7979
+    WAIT_LOCK = 8    # Sekunden warten bis OFDM-Lock und FIC-Daten kommen
+    CHANNELS_REGIONAL = ["5C","5D","8D","10A","10D","11D","12D"]
+    CHANNELS_FULL = [
         "5A","5B","5C","5D","6A","6B","6C","6D",
         "7A","7B","7C","7D","8A","8B","8C","8D",
         "9A","9B","9C","9D","10A","10B","10C","10D",
         "11A","11B","11C","11D","12A","12B","12C","12D",
         "13A","13B","13C","13D","13E","13F",
     ]
-    found = []
-    total = len(channels)
 
-    # RTL-SDR einmalig vor dem Scan prüfen
-    if _rtlsdr and _rtlsdr.is_busy():
-        import log as _l
-        _l.warn("DAB Scan: RTL-SDR belegt — Scan abgebrochen")
-        _scan_running = False
-        return []
+    gain_idx = _get_dab_gain(settings)
 
-    for i, ch in enumerate(channels):
-        if not _scan_running:
-            break
-        if progress_cb:
-            progress_cb(int((i - 1) / total * 100),
-                        f"Scanne {ch}... ({i}/{total})",
-                        len(found))
-        # welle-cli 2.2: alle Ausgaben auf stderr → mit 2>&1 fangen
-        import time as _time
-        _t0 = _time.time()
-        log.info(f"DAB Scan: CHANNEL_START {ch} ({i}/{total})")
-        out = _run("timeout 6 welle-cli -c " + ch + " 2>&1",
-                   capture=True, timeout=8)
-        _dur = round(_time.time() - _t0, 2)
-        log.info(f"DAB Scan: CHANNEL_DONE {ch} dur={_dur}s out_len={len(out) if out else 0}")
-        if out and "usb_claim_interface error" in out:
-            log.warn("DAB: RTL-SDR blockiert auf Kanal " + ch +
-                     " — DVB-Treiber geladen?")
-            continue
-        if out:
-            # Strikt: NUR "Service label: NAME" ist ein echter Sender
-            # Alle anderen welle-cli Ausgaben sind Debug/Fehler
-            for line in out.splitlines():
-                line = line.strip()
-                if "Service label:" not in line and "service label:" not in line.lower():
-                    continue
-                name = line.split(":", 1)[-1].strip()
-                if not name or len(name) < 2 or len(name) > 60:
-                    continue
-                # Nochmal prüfen: kein technischer Text
-                bad = ["kHz","MHz","SoapySDR","OFDM","usb_","rtl_",
-                       "welle-cli","InputFactory","Aborted","SyncOn",
-                       "Wait","stream","clock","antenna","[INFO]","Error"]
-                if any(b.lower() in name.lower() for b in bad):
-                    continue
-                if name not in [s["name"] for s in found]:
-                    found.append({"name": name, "channel": ch, "ensemble": ""})
-                    log.info("DAB gefunden: " + name + " auf " + ch)
+    found    = []
+    scanned  = []
 
-    _scan_results = found
-    _scan_running = False
-    log.info(f"DAB Scan: END total_found={len(found)}")
+    # Laufende welle-cli beenden
+    _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
+    _t.sleep(0.5)
+
+    # RTL-SDR verfügbar?
+    if _rtlsdr:
+        usb = _rtlsdr.detect_usb()
+        if not usb.get("present"):
+            log.error("DAB Scan: RTL-SDR nicht erkannt")
+            return []
+        if _rtlsdr.is_busy():
+            log.warn("DAB Scan: RTL-SDR belegt — warte 2s")
+            _t.sleep(2)
+
+    def _scan_channel(ch):
+        """Einen DAB-Kanal scannen, mux.json holen, Services extrahieren."""
+        # Alten Prozess beenden
+        _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
+        _t.sleep(0.3)
+
+        cmd = (f"welle-cli -c {ch} -g {gain_idx} -C 1 -w {WEB_PORT} "
+               f"2>/tmp/pidrive_dab_welle.err")
+        proc = _sp.Popen(cmd, shell=True,
+                          stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        _t.sleep(WAIT_LOCK)
+
+        services = []
+        snr      = 0.0
+        ens_label = ""
+        ens_id    = ""
+        freq_corr = 0
+
+        try:
+            url = f"http://127.0.0.1:{WEB_PORT}/mux.json"
+            resp = _ur.urlopen(url, timeout=3)
+            data = _j.loads(resp.read().decode("utf-8"))
+
+            snr       = float(data.get("demodulator", {}).get("snr", 0)
+                               or data.get("demodulator_snr", 0))
+            ens_label = (data.get("ensemble", {}).get("label", {})
+                           .get("label", "") or "")
+            ens_id    = data.get("ensemble", {}).get("id", "")
+            freq_corr = int(data.get("receiver", {}).get("hardware", {})
+                              .get("freqcorr", 0) or 0)
+
+            raw_svcs  = data.get("services", [])
+            for svc in raw_svcs:
+                name   = (svc.get("label", {}).get("label", "")
+                            or svc.get("label", "")).strip()
+                sid    = svc.get("sid", "")
+                url_mp3= svc.get("url_mp3", "")
+                if name:
+                    services.append({
+                        "name":       name,
+                        "service_id": sid,
+                        "url_mp3":    url_mp3,
+                    })
+
+        except Exception as e:
+            log.info(f"DAB Scan: {ch}: mux.json nicht erreichbar ({e})")
+
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+        _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
+
+        log.info(f"DAB Scan: CHANNEL_INFO ch={ch} ensemble={ens_label!r} "
+                 f"id={ens_id} services={len(services)} snr={snr:.1f} "
+                 f"freqcorr={freq_corr}")
+        return services, ens_label, ens_id, snr
+
+    # --- Regionalscan ---
+    ipc.write_progress("DAB+ Suchlauf", "Regionale Kanäle...", color="blue")
+    for ch in CHANNELS_REGIONAL:
+        ipc.write_progress("DAB+ Suchlauf", f"Kanal {ch}...", color="blue")
+        svcs, ens_label, ens_id, snr = _scan_channel(ch)
+        scanned.append(ch)
+        for svc in svcs:
+            entry = {
+                "name":       svc["name"],
+                "channel":    ch,
+                "ensemble":   ens_label,
+                "service_id": svc["service_id"],
+                "url_mp3":    svc["url_mp3"],
+                "favorite":   False,
+                "enabled":    True,
+            }
+            if not any(e["name"] == svc["name"] and e["channel"] == ch
+                       for e in found):
+                found.append(entry)
+
+    # Vollscan wenn nötig
+    if len(found) < 3:
+        log.info("DAB Scan: Regionalscan < 3 Sender — Vollscan...")
+        ipc.write_progress("DAB+ Suchlauf", "Vollscan...", color="blue")
+        for ch in CHANNELS_FULL:
+            if ch in scanned:
+                continue
+            ipc.write_progress("DAB+ Suchlauf", f"Vollscan {ch}...", color="blue")
+            svcs, ens_label, ens_id, snr = _scan_channel(ch)
+            for svc in svcs:
+                entry = {
+                    "name":       svc["name"],
+                    "channel":    ch,
+                    "ensemble":   ens_label,
+                    "service_id": svc["service_id"],
+                    "url_mp3":    svc["url_mp3"],
+                    "favorite":   False,
+                    "enabled":    True,
+                }
+                if not any(e["name"] == svc["name"] and e["channel"] == ch
+                           for e in found):
+                    found.append(entry)
+
+    log.info(f"DAB Scan: FERTIG — {len(found)} Sender auf {len(scanned)} Kanälen")
     return found
 
 
@@ -138,20 +223,27 @@ def scan_dab_channels_full(progress_cb=None):
     return scan_dab_channels(progress_cb=progress_cb, channels=all_channels)
 
 
-# RTL-SDR R820T gültige Gain-Stufen (aus rtl_test Ausgabe)
-_RTL_VALID_GAINS = [
+# RTL-SDR R820T Gain-Tabelle (aus welle-cli / rtlsdr source)
+# welle-cli -g N erwartet einen INDEX (0-28), NICHT einen dB-Wert!
+# "Unknown gain count40" = Index 40 ist außerhalb des gültigen Bereichs (0-28)
+_RTL_GAIN_TABLE = [
     0.0, 0.9, 1.4, 2.7, 3.7, 7.7, 8.7, 12.5, 14.4, 15.7,
     16.6, 19.7, 20.7, 22.9, 25.4, 28.0, 29.7, 32.8, 33.8,
     36.4, 37.2, 38.6, 40.2, 42.1, 43.4, 43.9, 44.5, 48.0, 49.6
-]
+]  # Index 0 = 0.0 dB, Index 28 = 49.6 dB
 
 def _get_dab_gain(settings=None):
     """
-    DAB Gain für welle-cli (v0.9.2).
-    -1 = Auto Gain (AGC) → gibt "-1" zurück
-    sonst: nächstliegende gültige RTL-SDR Gain-Stufe als String mit einer Dezimalstelle.
-    Hintergrund: welle-cli/RTL-SDR erwartet exakte diskrete Gain-Werte aus der
-    Hardware-Gain-Liste, nicht beliebige Integer.
+    DAB Gain-Index für welle-cli (v0.9.3 — KORREKTUR).
+
+    WICHTIG: welle-cli -g erwartet einen GAIN-INDEX (0-28), KEIN dB-Wert!
+    Quelle: rtl_sdr.cpp setGain(int gain_index) → prüft auf < gains.size()
+    "Unknown gain count40" bedeutete: Index 40 ist out-of-range (max=28)
+
+    Mapping: dab_gain (dB aus settings) → nächster Index in _RTL_GAIN_TABLE
+    -1 → AGC (welle-cli setzt setAgc(true))
+    40 dB → Index 22 (40.2 dB)
+    49 dB → Index 28 (49.6 dB)
     """
     try:
         if settings is None:
@@ -165,9 +257,11 @@ def _get_dab_gain(settings=None):
         g = float(g)
         if g < 0:
             return "-1"
-        # Auf nächste gültige RTL-Gain-Stufe quantisieren
-        nearest = min(_RTL_VALID_GAINS, key=lambda x: abs(x - g))
-        return f"{nearest:.1f}"
+        # dB → nächster Gain-Index
+        idx = min(range(len(_RTL_GAIN_TABLE)), key=lambda i: abs(_RTL_GAIN_TABLE[i] - g))
+        actual_db = _RTL_GAIN_TABLE[idx]
+        log.info(f"DAB gain: {g:.0f} dB → Index {idx} ({actual_db:.1f} dB)")
+        return str(idx)
     except Exception:
         return "-1"
         return str(int(float(g)))
@@ -227,7 +321,10 @@ def play_station(station, S, settings=None):
         import shlex
         _name_q = shlex.quote(name)
         _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
-        _ppm_arg = "" if _ppm_val == 0 else f" -P {_ppm_val}"
+        # v0.9.3: -P ist in welle-cli KEIN PPM-Flag sondern Carousel/PAD-Verhalten!
+        # PPM-Korrektur wird von welle-cli intern über den Coarse-Corrector gemacht.
+        # Der konfigurierte PPM-Wert wird nur geloggt, nicht als CLI-Arg übergeben.
+        _ppm_arg = ""  # bewusst leer — kein -P an welle-cli if _ppm_val == 0 else f" -P {_ppm_val}"
 
         # v0.8.11: welle-cli 2.2 kennt kein '-o -'
         # Korrekte Syntax: -p PROGRAMMNAME gibt Audio nach stdout aus
@@ -239,7 +336,7 @@ def play_station(station, S, settings=None):
         )
 
         if _ppm_val != 0:
-            log.info(f"DAB play: PPM-Korrektur aktiv: {_ppm_val} ppm")
+            log.info(f"DAB play: PPM konfiguriert: {_ppm_val} ppm (interner welle-cli Coarse-Corrector)")
         log.info(f"DAB play: START name={name!r} channel={ch} gain={_gain}")
 
         if _rtlsdr:

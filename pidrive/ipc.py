@@ -95,17 +95,19 @@ def read_json(path, default=None):
 
 
 def _get_audio_effective():
+    """Audio-Effective aus shared State-File (v0.9.3)."""
     try:
-        from modules.audio import get_last_decision
-        return get_last_decision().get("effective", "")
+        from modules.audio import read_last_decision_file
+        return read_last_decision_file().get("effective", "")
     except Exception:
         return ""
 
 
 def _get_audio_reason():
+    """Audio-Reason aus shared State-File (v0.9.3)."""
     try:
-        from modules.audio import get_last_decision
-        return get_last_decision().get("reason", "")
+        from modules.audio import read_last_decision_file
+        return read_last_decision_file().get("reason", "")
     except Exception:
         return ""
 
