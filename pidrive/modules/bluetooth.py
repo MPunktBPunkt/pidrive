@@ -2,7 +2,7 @@
 modules/bluetooth.py - Bluetooth Modul
 PiDrive - pygame-frei, Status via IPC
 
-v0.8.8:
+v0.9.7:
 - _btctl() endlich definiert (war fehlend → NameError bei connect/repair)
 - connect_device(): robusters Trust/Pair/Connect mit 3 Versuchen + Verify
 - repair_device(): nutzt jetzt _btctl korrekt
@@ -52,51 +52,33 @@ def _btctl(cmd, timeout=12):
 
 def _ensure_agent():
     """
-    Bluetooth-Agent via einzigem persistenten bluetoothctl-Prozess — v0.8.14.
+    Bluetooth-Agent registrieren (v0.9.7 Fix).
 
-    Problem vorher (v0.8.13): _btctl() startet pro Befehl einen neuen Subprocess.
-    Agent wird in Subprocess A registriert, ist aber in Subprocess B nicht mehr da.
-    → "No agent is registered" bei default-agent im nächsten _btctl()-Call.
-
-    Fix: agent-Registrierung + default-agent in einem einzigen Prozess via stdin-pipe.
+    Problem mit communicate(): bluetoothctl endet nicht nach "default-agent" —
+    es wartet auf weiteren Input. communicate() blockiert bis zum Timeout,
+    dann ist der Output oft abgeschnitten. Lösung: printf-Pipe via Shell.
     """
     try:
-        proc = subprocess.Popen(
-            ["bluetoothctl"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+        r = subprocess.run(
+            "printf 'agent NoInputNoOutput\\ndefault-agent\\n' | bluetoothctl 2>&1",
+            shell=True, capture_output=True, text=True, timeout=8
         )
-        cmds = "agent NoInputNoOutput\ndefault-agent\n"
-        try:
-            out, _ = proc.communicate(input=cmds, timeout=10)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            out = ""
-
-        low = out.lower()
-        if "default agent request successful" in low or "default agent" in low:
-            log.info("BT agent: bereit (persistenter Prozess)")
+        out = (r.stdout + r.stderr).lower()
+        if "default agent request successful" in out or "default agent" in out:
+            log.info("BT agent: bereit")
             return True
-        # Fallback: agent on statt NoInputNoOutput
-        proc2 = subprocess.Popen(
-            ["bluetoothctl"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+        # Fallback: einfaches "agent on"
+        r2 = subprocess.run(
+            "printf 'agent on\\ndefault-agent\\n' | bluetoothctl 2>&1",
+            shell=True, capture_output=True, text=True, timeout=8
         )
-        try:
-            out2, _ = proc2.communicate(input="agent on\ndefault-agent\n", timeout=10)
-        except subprocess.TimeoutExpired:
-            proc2.kill()
-            out2 = ""
-        if "default agent" in out2.lower():
-            log.info("BT agent: bereit (fallback agent on)")
+        out2 = (r2.stdout + r2.stderr).lower()
+        if "default agent" in out2:
+            log.info("BT agent: bereit (fallback)")
             return True
-        log.warn("BT agent: default-agent nicht bestätigt — Verbindung trotzdem versuchen")
-        return True  # weiter versuchen, auch wenn Agent unsicher
+        # Auch ohne Bestätigung weiterfahren — BlueZ-Agent oft bereits aktiv
+        log.info("BT agent: kein explizites ACK — BlueZ-Agent möglicherweise schon aktiv")
+        return True
     except Exception as e:
         log.warn("BT agent: Fehler: " + str(e))
         return False
@@ -178,7 +160,7 @@ def bt_toggle(S):
 
 
 def scan_devices(S, settings):
-    ipc.write_progress("Bluetooth", "Scanne Geraete (15s)...", color="blue")
+    ipc.write_progress("Bluetooth", "Scanne Geraete (25s)...", color="blue")
     devices = []
     try:
         _btctl("power on", timeout=8)
@@ -188,7 +170,7 @@ def scan_devices(S, settings):
         bt_proc = subprocess.Popen(
             ["bluetoothctl", "scan", "on"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(15)
+        time.sleep(25)   # v0.9.7: 25s — Kopfhörer brauchen oft >15s bis sichtbar
         try:
             bt_proc.terminate()
             bt_proc.wait(timeout=2)
@@ -232,9 +214,11 @@ def scan_devices(S, settings):
 
     ipc.write_json("/tmp/pidrive_bt_devices.json", {"devices": devices})
     ipc.clear_progress()
-    msg = str(len(devices)) + " Geraet(e) — Verbindungen > Geraete"
-    ipc.write_progress("BT Scan", msg, color="green" if devices else "orange")
-    time.sleep(2)
+    # v0.9.7: Feedback zeigt Anzahl + Hinweis auf Untermenü "Geraete"
+    named = [d for d in devices if d.get("name","").count(":") < 4]  # MAC-only herausfiltern
+    msg = f"{len(devices)} Geraet(e) gefunden — Geraete > Verbinden"
+    ipc.write_progress("BT Scan fertig", msg, color="green" if devices else "orange")
+    time.sleep(3)
     ipc.clear_progress()
     S["menu_rev"] = S.get("menu_rev", 0) + 1
 

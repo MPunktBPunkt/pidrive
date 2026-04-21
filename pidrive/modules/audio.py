@@ -1,6 +1,13 @@
 """
 modules/audio.py - Zentraler Audioausgang fuer PiDrive
-PiDrive v0.8.13 - STRICT PulseAudio Only + shared debug state
+PiDrive v0.9.7 - STRICT PulseAudio Only + shared debug state
+
+Neu in v0.9.7:
+- _set_pi_output_klinke() setzt auch ALSA PCM-Volume (numid=1) auf 85%
+- set_default_sink() verschiebt laufende Sink-Inputs (pactl move-sink-input)
+- volume_up/down nutzen echten Sink-Namen statt @DEFAULT_SINK@
+- apply_startup_volume() nutzt echten Sink-Namen
+- select_output_interactive() entfernt (war undefined)
 
 Neu in v0.8.13:
 - _write_audio_state() schreibt letzte Entscheidung in /tmp/pidrive_audio_state.json
@@ -27,14 +34,18 @@ def _set_pi_output_klinke():
     """
     Pi 3B: ALSA-Ausgang physisch auf 3.5mm Klinke schalten.
     amixer numid=3: 0=auto, 1=klinke, 2=HDMI
-    Muss VOR dem Starten von mpv/PulseAudio-Routing gesetzt werden.
-    Verhindert das Problem 'mpv laeuft aber kein Ton' wenn Pi auf HDMI steht.
+    amixer numid=1: PCM Playback Volume — muss auf sinnvollen Wert gesetzt werden,
+    sonst kein Ton auch wenn Routing stimmt (v0.9.7 Fix).
     """
     try:
         import subprocess as _sp
+        # Routing: Klinke
         _sp.run("amixer -q -c 0 cset numid=3 1 2>/dev/null",
                 shell=True, timeout=3)
-        log.info("[AUDIO] Pi Ausgang: Klinke (amixer numid=3=1)")
+        # PCM Volume: 85% vom Maximum (400 * 0.85 = 340)
+        _sp.run("amixer -q -c 0 cset numid=1 340 2>/dev/null",
+                shell=True, timeout=3)
+        log.info("[AUDIO] Pi Ausgang: Klinke (amixer numid=3=1 numid=1=340)")
     except Exception as e:
         log.warn("[AUDIO] amixer klinke: " + str(e))
 
@@ -131,6 +142,11 @@ def get_hdmi_sink() -> str:
 
 
 def set_default_sink(sink_name: str) -> bool:
+    """
+    Setzt PulseAudio Default-Sink UND verschiebt laufende Sink-Inputs (v0.9.7).
+    Ohne move-sink-input hat ein bereits laufender mpv-Prozess keinen Ton auf
+    dem neuen Sink — er bleibt auf dem alten verbunden.
+    """
     if not sink_name:
         return False
     try:
@@ -140,10 +156,31 @@ def set_default_sink(sink_name: str) -> bool:
         )
         if r.returncode == 0:
             log.info("[AUDIO] default sink -> " + sink_name)
-            return True
-        log.warn("[AUDIO] set-default-sink failed: " + sink_name +
-                 " | " + (r.stderr or "").strip()[:60])
-        return False
+        else:
+            log.warn("[AUDIO] set-default-sink failed: " + sink_name +
+                     " | " + (r.stderr or "").strip()[:60])
+            return False
+        # Laufende Streams auf neuen Sink verschieben (verhindert "kein Ton" bei mpv)
+        try:
+            ri = subprocess.run(
+                PA_ENV + " pactl list sink-inputs short 2>/dev/null",
+                shell=True, capture_output=True, text=True, timeout=4
+            )
+            moved = 0
+            for line in ri.stdout.splitlines():
+                parts = line.split()
+                if parts:
+                    mv = subprocess.run(
+                        PA_ENV + f" pactl move-sink-input {parts[0]} {sink_name}",
+                        shell=True, capture_output=True, text=True, timeout=4
+                    )
+                    if mv.returncode == 0:
+                        moved += 1
+            if moved:
+                log.info(f"[AUDIO] moved {moved} sink-input(s) -> {sink_name}")
+        except Exception as em:
+            log.warn("[AUDIO] move-sink-input: " + str(em))
+        return True
     except Exception as e:
         log.error("[AUDIO] set_default_sink: " + str(e))
         return False
@@ -314,18 +351,30 @@ def apply_startup_volume(settings=None):
         vol = 90
     try:
         import subprocess as _sp
+        sink = _get_current_sink()
+        target = sink if sink else "@DEFAULT_SINK@"
         _sp.run(
-            PA_ENV + f" pactl set-sink-volume @DEFAULT_SINK@ {vol}%",
+            PA_ENV + f" pactl set-sink-volume {target} {vol}%",
             shell=True, capture_output=True, timeout=4
         )
-        log.info(f"[AUDIO] startup volume → {vol}%")
+        log.info(f"[AUDIO] startup volume → {vol}% sink={target}")
     except Exception as e:
         log.error("[AUDIO] apply_startup_volume: " + str(e))
 
 
+def _get_current_sink() -> str:
+    """Gibt den aktiven Sink zurück — BT > ALSA. Fallback: leer."""
+    bt = get_bt_sink()
+    if bt:
+        return bt
+    return get_alsa_sink()
+
+
 def volume_up(settings=None):
     try:
-        subprocess.run(PA_ENV + " pactl set-sink-volume @DEFAULT_SINK@ +5%",
+        sink = _get_current_sink()
+        target = sink if sink else "@DEFAULT_SINK@"
+        subprocess.run(PA_ENV + f" pactl set-sink-volume {target} +5%",
                        shell=True, capture_output=True, timeout=3)
         if settings is not None:
             try:
@@ -343,7 +392,9 @@ def volume_up(settings=None):
 
 def volume_down(settings=None):
     try:
-        subprocess.run(PA_ENV + " pactl set-sink-volume @DEFAULT_SINK@ -5%",
+        sink = _get_current_sink()
+        target = sink if sink else "@DEFAULT_SINK@"
+        subprocess.run(PA_ENV + f" pactl set-sink-volume {target} -5%",
                        shell=True, capture_output=True, timeout=3)
         ipc.write_progress("Lautstaerke", "down -5%", color="orange")
         time.sleep(0.8)
