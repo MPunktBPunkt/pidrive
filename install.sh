@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.7           ║
+║        PiDrive Installer v0.9.9           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -297,10 +297,28 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     ok "Raspotify konfiguriert (zentral via PulseAudio)"
 
-  # v0.9.4: Pi 3B Klinken-Ausgang physisch aktivieren
-  # amixer numid=3: 0=auto, 1=klinke, 2=HDMI
-  # Ohne diese Zeile bleibt Pi-Audio oft auf HDMI trotz PulseAudio-Routing
-  amixer -q -c 0 cset numid=3 1 2>/dev/null && ok "Pi Audio: Klinke aktiviert (amixer numid=3=1)" || true
+  # v0.9.9: /etc/asound.conf — ALSA Default auf Klinke (Card 1) setzen
+  # KRITISCH: Auf modernem Pi OS (Kernel >=5.x) ist Card 0 = HDMI, Card 1 = Headphones/Klinke
+  # Ohne asound.conf geht ALSA default auf HDMI → kein Ton aus der Klinke
+  cat > /etc/asound.conf << 'ASOUNDEOF'
+# PiDrive: ALSA Default auf bcm2835 Headphones (Klinke) setzen
+# Card 0 = HDMI, Card 1 = Headphones auf modernem Pi OS
+defaults.pcm.card 1
+defaults.ctl.card 1
+defaults.pcm.device 0
+ASOUNDEOF
+  ok "ALSA: /etc/asound.conf geschrieben (default=card 1 Headphones)"
+
+  # Klinke via amixer auf der richtigen Karte aktivieren
+  # Card-Erkennung: Suche nach 'Headphones' in aplay -l
+  KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{print $2}' | tr -d ':')
+  if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
+  amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
+
+  # PulseAudio neu starten damit es /etc/asound.conf übernimmt
+  systemctl restart pulseaudio 2>/dev/null || true
+  sleep 2
+  ok "PulseAudio: neu gestartet (übernimmt neues ALSA-Mapping)"
 
   # __pycache__ loeschen: alte .pyc mit pygame-Import
   find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true

@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.7
+# PiDrive — Kontext & Projektdokumentation v0.9.8
 
 ## Projektbeschreibung
 
@@ -921,6 +921,31 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.8 — PCM-Unmute, BT-Connect-Lock, Scan-Polling
+
+**Motivation:** Trotz korrektem Audio-Routing kein Ton. BT-Pairing schlägt bei jedem
+Versuch fehl mit "not available". Beide Probleme sind durch Live-Logs eindeutig
+diagnostiziert.
+
+**Bugs behoben:**
+
+| # | Datei | Root Cause | Fix |
+|---|---|---|---|
+| 1 | `modules/audio.py` | `numid=2` (PCM Playback **Switch**) war 0 = gemuted — Ton physisch abgeschaltet | `amixer sset 'PCM' 85% unmute` (name-basiert, alle Kernelversionen) |
+| 2 | `modules/audio.py` | `numid=3` existiert auf Kernel ≥5.x nicht mehr (separate HDMI/Klinke-Karten) — Fehler in `/dev/null` versteckt | Name-basierte Befehle statt numid |
+| 3 | `modules/bluetooth.py` | Nach `remove` ist Gerät in BlueZ unbekannt → 10s Mini-Scan oft zu kurz → trust/pair/connect sofort mit "not available" | Polling alle 2s bis 20s max; Abort wenn Gerät nach Scan nicht gefunden |
+| 4 | `modules/bluetooth.py` | `repair()` + User "Verbinden" starten parallel 2× `connect_device()` → Race Condition in BlueZ | `threading.Lock()` (`_bt_connect_lock`) blockiert parallele Calls |
+| 5 | `install.sh` | Boot-Schritt setzte nur `numid=3=1` (Routing), nicht PCM-Volume/Mute | `amixer sset 'PCM' 85% unmute` beim Installieren |
+
+**Keylearning:**
+- `amixer numid=X` ist instabil über Kernelversionen — immer name-basierte `sset`-Befehle verwenden
+- Nach `bluetoothctl remove` muss das Gerät neu in BlueZ discovered werden bevor pair/trust/connect möglich ist
+- Parallele BT-Connect-Threads durch fehlenden Lock waren latenter Bug seit v0.8.x
+
+**Geänderte Dateien:** `modules/audio.py`, `modules/bluetooth.py`, `install.sh`, `VERSION`
+
+---
 
 ### v0.9.7 — Audio-Fix krit., BT-Agent, Icon, Menü
 
@@ -2018,13 +2043,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.7)
+## Aktueller Stand (v0.9.8)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.7 — Audio-Fix, BT-Agent-Fix, dreistufiges BT-Icon
-✓ pidrive_display.service   v0.9.7, 20fps
+✓ pidrive_core.service      v0.9.8 — PCM-Unmute-Fix, BT-Scan-Polling, Connect-Lock
+✓ pidrive_display.service   v0.9.8, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)

@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.7-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.9-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,24 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.9 (2026-04-21)
+
+**ALSA-Karten-Root-Cause — kein Ton endgültig behoben**
+
+`aplay -l` zeigt: Card 0 = HDMI, Card 1 = Headphones/Klinke. Alle bisherigen
+amixer-Befehle (`-c 0`) trafen HDMI statt Klinke. Fix: `/etc/asound.conf`
+(`defaults.pcm.card 1`), `_get_headphone_card()` per `aplay -l`,
+`get_alsa_sink()` filtert HDMI-Sinks aus.
+
+### v0.9.8 (2026-04-21)
+
+**Kein Ton (PCM-Unmute) & BT-Pairing-Fix**
+
+- `modules/audio.py`: `amixer numid=2` (PCM Mute Switch) war nie auf unmute gesetzt → kein Ton trotz korrektem Routing; Fix: `amixer sset 'PCM' 85% unmute` (name-basiert, kernelversionsunabhängig)
+- `modules/bluetooth.py`: Nach `bluetoothctl remove` war Gerät nicht mehr in BlueZ → 10s Mini-Scan zu kurz; Fix: Polling alle 2s bis 20s + Abort wenn nicht gefunden  
+- `modules/bluetooth.py`: `repair()` + paralleles "Verbinden" starteten zwei `connect_device()`-Threads → Race Condition; Fix: `threading.Lock`
+- `install.sh`: Boot-Setup setzt jetzt `amixer sset 'PCM' 85% unmute`
 
 ### v0.9.7 (2026-04-21)
 
