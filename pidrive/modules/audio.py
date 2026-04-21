@@ -1,6 +1,6 @@
 """
 modules/audio.py - Zentraler Audioausgang fuer PiDrive
-PiDrive v0.9.7 - STRICT PulseAudio Only + shared debug state
+PiDrive v0.9.9 - STRICT PulseAudio Only + shared debug state
 
 Neu in v0.9.7:
 - _set_pi_output_klinke() setzt auch ALSA PCM-Volume (numid=1) auf 85%
@@ -30,33 +30,66 @@ PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
 AUDIO_STATE_FILE = "/tmp/pidrive_audio_state.json"
 
 
-def _set_pi_output_klinke():
+def _get_headphone_card() -> int:
     """
-    Pi 3B: ALSA-Ausgang physisch auf 3.5mm Klinke schalten.
-    amixer numid=3: 0=auto, 1=klinke, 2=HDMI
-    amixer numid=1: PCM Playback Volume — muss auf sinnvollen Wert gesetzt werden,
-    sonst kein Ton auch wenn Routing stimmt (v0.9.7 Fix).
+    Pi 3B Kartenindex für die analoge Klinke ermitteln (v0.9.9).
+
+    Auf aktuellen Pi OS (Kernel ≥ 5.x):
+      Card 0 = bcm2835 HDMI 1  (kein analoger Ausgang!)
+      Card 1 = bcm2835 Headphones  ← Klinke
+
+    Auf sehr alten Kerneln war Card 0 der kombinierte Ausgang (numid=3-Switch).
+    Wir suchen explizit nach der Headphones-Karte.
     """
     try:
         import subprocess as _sp
-        # Routing: Klinke
-        _sp.run("amixer -q -c 0 cset numid=3 1 2>/dev/null",
+        r = _sp.run("aplay -l 2>/dev/null", shell=True,
+                    capture_output=True, text=True, timeout=5)
+        for line in r.stdout.splitlines():
+            low = line.lower()
+            if "headphones" in low or ("card" in low and "analog" in low):
+                # Zeile: "Karte 1: Headphones [bcm2835 Headphones]..."
+                parts = line.split()
+                if len(parts) >= 2:
+                    try:
+                        return int(parts[1].rstrip(":"))
+                    except ValueError:
+                        pass
+    except Exception:
+        pass
+    return 1  # Standardannahme: Card 1 = Headphones auf modernem Pi OS
+
+
+def _set_pi_output_klinke():
+    """
+    Pi 3B: ALSA-Ausgang auf 3.5mm Klinke schalten (v0.9.9).
+
+    Root Cause v0.9.8 und früher: amixer -c 0 → HDMI-Karte!
+    Auf modernem Pi OS (Kernel ≥ 5.x):
+      Card 0 = bcm2835 HDMI   → alles was wir vorher taten, ging zu HDMI
+      Card 1 = bcm2835 Headphones = Klinke
+
+    Fix: _get_headphone_card() sucht die richtige Karte, dann amixer -c N.
+    """
+    try:
+        import subprocess as _sp
+        card = _get_headphone_card()
+        # Volume + UNMUTE auf der richtigen Karte
+        _sp.run(f"amixer -q -c {card} sset 'PCM' 85% unmute 2>/dev/null",
                 shell=True, timeout=3)
-        # PCM Volume: 85% vom Maximum (400 * 0.85 = 340)
-        _sp.run("amixer -q -c 0 cset numid=1 340 2>/dev/null",
-                shell=True, timeout=3)
-        log.info("[AUDIO] Pi Ausgang: Klinke (amixer numid=3=1 numid=1=340)")
+        log.info(f"[AUDIO] Pi Ausgang: Klinke (card {card} PCM unmute 85%)")
     except Exception as e:
         log.warn("[AUDIO] amixer klinke: " + str(e))
 
 
 def _set_pi_output_hdmi():
-    """Pi 3B: ALSA-Ausgang auf HDMI."""
+    """Pi 3B: ALSA-Ausgang auf HDMI (Card 0 auf modernem Pi OS)."""
     try:
         import subprocess as _sp
-        _sp.run("amixer -q -c 0 cset numid=3 2 2>/dev/null",
+        # HDMI ist immer Card 0 auf Pi 3B
+        _sp.run("amixer -q -c 0 sset 'PCM' 85% unmute 2>/dev/null",
                 shell=True, timeout=3)
-        log.info("[AUDIO] Pi Ausgang: HDMI (amixer numid=3=2)")
+        log.info("[AUDIO] Pi Ausgang: HDMI (card 0 PCM unmute 85%)")
     except Exception as e:
         log.warn("[AUDIO] amixer hdmi: " + str(e))
 
@@ -126,7 +159,25 @@ def get_bt_sink() -> str:
 
 
 def get_alsa_sink() -> str:
-    for s in _list_sinks():
+    """
+    Gibt den ALSA Klinken-Sink zurück — HDMI explizit ausgeschlossen (v0.9.9).
+    Priorität: analog-stereo / Headphones > stereo-fallback (nicht-HDMI)
+    """
+    sinks = _list_sinks()
+    # Erst: explizit analoge / Headphones-Sinks bevorzugen
+    for s in sinks:
+        name = s["name"].lower()
+        raw  = s["raw"].lower()
+        if "hdmi" in name or "hdmi" in raw:
+            continue
+        if "alsa_output" in s["name"] and ("analog" in name or "headphone" in name):
+            return s["name"]
+    # Fallback: beliebiger alsa_output ohne HDMI
+    for s in sinks:
+        name = s["name"].lower()
+        raw  = s["raw"].lower()
+        if "hdmi" in name or "hdmi" in raw:
+            continue
         if "alsa_output" in s["name"]:
             return s["name"]
     return ""

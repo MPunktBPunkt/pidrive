@@ -2,7 +2,7 @@
 modules/bluetooth.py - Bluetooth Modul
 PiDrive - pygame-frei, Status via IPC
 
-v0.9.7:
+v0.9.9:
 - _btctl() endlich definiert (war fehlend → NameError bei connect/repair)
 - connect_device(): robusters Trust/Pair/Connect mit 3 Versuchen + Verify
 - repair_device(): nutzt jetzt _btctl korrekt
@@ -13,8 +13,12 @@ v0.9.7:
 import subprocess
 import time
 import json
+import threading
 import log
 import ipc
+
+# Lock verhindert parallele connect_device()-Calls (race condition bei repair+connect)
+_bt_connect_lock = threading.Lock()
 try:
     from modules import source_state as _src_state
 except Exception:
@@ -224,6 +228,22 @@ def scan_devices(S, settings):
 
 
 def connect_device(mac, S, settings):
+    # v0.9.8: Lock verhindert parallele Calls (race condition: repair ruft connect_device
+    # auf, gleichzeitig drückt User "Verbinden" → zwei Threads interferieren in BlueZ)
+    if not _bt_connect_lock.acquire(blocking=False):
+        log.warn("BT connect: bereits ein Connect läuft — abgebrochen")
+        ipc.write_progress("Bluetooth", "Verbindung läuft bereits...", color="orange")
+        time.sleep(2); ipc.clear_progress()
+        return False
+
+    try:
+        return _connect_device_inner(mac, S, settings)
+    finally:
+        _bt_connect_lock.release()
+
+
+def _connect_device_inner(mac, S, settings):
+    """Eigentliche Connect-Logik — nur via connect_device() aufrufen (Lock)."""
     name = mac
     try:
         data = json.load(open("/tmp/pidrive_bt_devices.json"))
@@ -271,29 +291,35 @@ def connect_device(mac, S, settings):
     device_known = (rc_info == 0 and "Device" in out_info and "not available" not in out_info)
 
     if not device_known:
-        log.info(f"BT connect: Gerät {mac} unbekannt — kurzer Discovery-Scan (10s)")
-        ipc.write_progress("Bluetooth", "Suche Gerät...", color="blue")
-        # Kurzen Scan starten damit BlueZ das Gerät findet
+        log.info(f"BT connect: Gerät {mac} unbekannt — Discovery-Scan (max 20s)")
+        ipc.write_progress("Bluetooth", "Suche Gerät... (bis 20s)", color="blue")
         proc_scan = subprocess.Popen(
             ["bluetoothctl", "scan", "on"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
-        import time as _ts; _ts.sleep(10)
+        # v0.9.8: Polling alle 2s statt blindem sleep — Scan bricht früh ab wenn gefunden
+        for _poll in range(10):  # 10 × 2s = 20s max
+            time.sleep(2)
+            rc_p, out_p = _btctl(f"info {mac}", timeout=5)
+            if rc_p == 0 and "Device" in out_p and "not available" not in out_p:
+                device_known = True
+                log.info(f"BT connect: Gerät {mac} nach {(_poll+1)*2}s gefunden")
+                break
         try:
             proc_scan.terminate()
+            proc_scan.wait(timeout=2)
         except Exception:
             pass
-        # Nochmal prüfen
-        rc_info2, out_info2 = _btctl(f"info {mac}", timeout=6)
-        device_known = (rc_info2 == 0 and "Device" in out_info2 and "not available" not in out_info2)
-        if device_known:
-            log.info(f"BT connect: Gerät {mac} nach Scan gefunden")
-        else:
-            log.warn(f"BT connect: Gerät {mac} auch nach Scan nicht bekannt — Pairing nötig")
-            ipc.write_progress("Bluetooth", "Gerät nicht gefunden — Pairing-Modus nötig", color="orange")
-            import time as _tw; _tw.sleep(3)
-            ipc.clear_progress()
-            # Trotzdem versuchen — vielleicht klappt pair
+        if not device_known:
+            # v0.9.8: Sauberer Abort — trust/pair ohne BlueZ-Eintrag schlägt immer fehl
+            log.warn(f"BT connect: Gerät {mac} nach 20s Scan nicht gefunden — Abbruch")
+            ipc.write_progress("Bluetooth",
+                "Nicht gefunden — Pairing-Modus am Kopfhörer aktiv?", color="red")
+            if _src_state: _src_state.set_bt_state("failed")
+            time.sleep(4); ipc.clear_progress()
+            S["bt"] = False; S["bt_status"] = "getrennt"
+            S["menu_rev"] = S.get("menu_rev", 0) + 1
+            return False
     else:
         log.info(f"BT connect: Gerät {mac} BlueZ bekannt")
 
