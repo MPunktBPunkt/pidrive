@@ -83,15 +83,19 @@ apt-get install -y -qq welle.io 2>/dev/null || \
     warn "welle.io nicht verfuegbar — DAB+ spaeter installierbar"
 ok "System-Pakete installiert"
 
-pip3 install mutagen --break-system-packages
-  pip3 install RPi.GPIO --break-system-packages 2>/dev/null || true
-  # v0.9.4: numpy für spectrum.py
-  pip3 install numpy --break-system-packages 2>/dev/null || \
-      apt-get install -y python3-numpy -q 2>/dev/null || true -q 2>/dev/null || \
-pip3 install mutagen -q 2>/dev/null || true
-# v0.9.4: RPi.GPIO für Display-Tasten (Key1/Key2/Key3)
-pip3 install RPi.GPIO --break-system-packages -q 2>/dev/null || true
-ok "Python-Pakete installiert (mutagen + RPi.GPIO)"
+# pip3 Kompatibilität: --break-system-packages nur ab pip 22 (Python 3.10+)
+# Bullseye (Python 3.9) hat pip 21 ohne dieses Flag
+_pip_install() {
+    local pkg="$1"
+    pip3 install "$pkg" --break-system-packages -q 2>/dev/null || \
+    pip3 install "$pkg" -q 2>/dev/null || \
+    true
+}
+_pip_install mutagen
+_pip_install RPi.GPIO
+# v0.9.4: numpy für spectrum.py Prototyp
+apt-get install -y python3-numpy -q 2>/dev/null || _pip_install numpy
+ok "Python-Pakete installiert (mutagen, RPi.GPIO, numpy)"
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 3: Repository klonen / aktualisieren
