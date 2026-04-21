@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.7
+main_core.py - PiDrive Core v0.9.9
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
