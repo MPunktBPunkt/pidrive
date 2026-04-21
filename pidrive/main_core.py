@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.6
+main_core.py - PiDrive Core v0.9.7
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -646,7 +646,8 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "update":
         bg(lambda: update.run_update(S))
     elif cmd == "audio_select":
-        bg(lambda: audio.select_output_interactive(S, settings))
+        # audio_select öffnet das Audio-Untermenü — keine Funktion in audio.py nötig
+        menu_state.navigate_to("audio_out")
 
     log.trigger_received(cmd)
     if cmd.startswith("reload_stations:"):
@@ -1004,6 +1005,14 @@ def startup_tasks(S, settings):
             log.info("Boot: amixer Klinke aktiviert (audio_output=" + _audio_out + ")")
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
+
+    # v0.9.7: Startup-Lautstärke anwenden — apply_startup_volume() war definiert
+    # aber nie aufgerufen. Damit blieb die gespeicherte Lautstärke wirkungslos.
+    try:
+        from modules import audio as _aud_vol
+        _aud_vol.apply_startup_volume(settings)
+    except Exception as _ev:
+        log.warn("Boot startup_volume: " + str(_ev))
 
     source_state.set_boot_phase("restore_source")
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main_display.py - PiDrive Display v0.9.6
+main_display.py - PiDrive Display v0.9.7
 
 Nur Anzeige — kein Audio, kein Trigger, keine Kernlogik.
 Liest Status von /tmp/pidrive_status.json (geschrieben von Core).
@@ -88,15 +88,26 @@ def load_fonts():
 
 
 def draw_status_icons(screen, font_sm, status):
-    """Status-Icons rechts im Header."""
+    """
+    Status-Icons rechts im Header (v0.9.7).
+    BT dreistufig: grau=aus, blau=Adapter AN/kein Gerät, grün=verbunden
+    """
+    bt_connected = status.get("bt",    False)
+    bt_on        = status.get("bt_on", False)
+    if bt_connected:
+        bt_color = C_GREEN
+    elif bt_on:
+        bt_color = C_ACCENT   # Adapter AN aber kein Gerät verbunden
+    else:
+        bt_color = C_DIM
+
     icons = [
-        ("wifi",    "WiFi",  status.get("wifi",    False)),
-        ("bt",      "BT",    status.get("bt",      False)),
-        ("spotify", "Spot",  status.get("spotify", False)),
+        ("WiFi",  C_GREEN if status.get("wifi",    False) else C_DIM),
+        ("BT",    bt_color),
+        ("Spot",  C_GREEN if status.get("spotify", False) else C_DIM),
     ]
     x = W - 8
-    for _, label, active in reversed(icons):
-        color = C_GREEN if active else C_DIM
+    for label, color in reversed(icons):
         t = font_sm.render(label, True, color)
         x -= t.get_width() + 6
         screen.blit(t, (x, 7))
@@ -327,7 +338,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.9.6 gestartet")
+    log.info("PiDrive Display v0.9.7 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 

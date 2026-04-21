@@ -2,7 +2,7 @@
 status.py - System-Status Cache (non-blocking)
 PiDrive Project - GPL-v3
 
-v0.8.9:
+v0.9.7:
 - BT-Status robust via bluetoothctl info (nicht nur hciconfig)
 - bt_device immer konsistent mit bt_status
 - bt_status: verbunden / getrennt / verbindet / aus
@@ -16,7 +16,8 @@ from settings import load_settings
 S = {
     "wifi":            False,
     "wifi_ssid":       "",
-    "bt":              False,
+    "bt":              False,          # True = Gerät verbunden
+    "bt_on":           False,          # True = Adapter UP (auch ohne Verbindung)
     "bt_device":       "",
     "bt_status":       "getrennt",
     "ip":              "",
@@ -71,6 +72,7 @@ def _do_refresh():
         bt_adapter_up = "UP RUNNING" in hc
 
         new["bt"]        = False
+        new["bt_on"]     = bt_adapter_up   # Adapter-State für Icon (dreistufig)
         new["bt_device"] = ""
         new["bt_status"] = "aus" if not bt_adapter_up else "getrennt"
 
