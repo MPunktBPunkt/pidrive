@@ -29,6 +29,11 @@ _DEFAULTS = {
     "fm_gain":            -1,            # -1 = Auto AGC, 0–49 = dB
     # DAB
     "dab_gain":           -1,            # -1 = Auto AGC, gültige RTL-Stufe
+    # v0.9.4: DAB-Scan konfigurierbar
+    "dab_scan_wait_lock": 20,            # Sekunden pro Kanal (schwacher Empfang: 20-30s)
+    "dab_scan_http_timeout": 4,          # HTTP Timeout für mux.json
+    "dab_scan_port":      7981,          # Scan-Port (getrennt von Diagnose-Port 7979)
+    "dab_scan_channels":  [],            # Gezielte Kanäle z.B. ["11D","10A","8D"] — leer=Standard
     # Scanner
     "scanner_vhf_freq":   136.000,
     "scanner_uhf_freq":   400.000,

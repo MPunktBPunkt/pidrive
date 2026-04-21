@@ -42,8 +42,6 @@ ALLOWED_COMMANDS = {
     "reboot", "shutdown", "sys_info", "sys_version", "update",
     "rtlsdr_reset",
     "bt_backup", "bt_restore",
-    "rtlsdr_reset",
-    "bt_backup", "bt_restore",
 }
 
 def read_json(path, default=None):
@@ -334,7 +332,7 @@ def api_cmd():
                 "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
                 "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
                 "bt_connect:", "wifi_connect:", "bt_repair:",
-                "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:")
+                "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:", "dab_scan_channels:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 

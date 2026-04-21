@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.3
+main_core.py - PiDrive Core v0.9.4
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -237,7 +237,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.9.3) ─────────────────────────────────────────────
+    # ── Gain-Steuerung (v0.9.4) ─────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -260,7 +260,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
 
-    # ── PPM + Squelch Trigger (v0.9.3) ─────────────────────────────────────
+    # ── PPM + Squelch Trigger (v0.9.4) ─────────────────────────────────────
     elif cmd.startswith("ppm:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
@@ -302,7 +302,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as e:
             log.error(f"scanner_gain Trigger: {e}")
 
-    # ── RTL-SDR Reset (v0.9.3) ───────────────────────────────────────────────
+    # ── RTL-SDR Reset (v0.9.4) ───────────────────────────────────────────────
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
@@ -404,11 +404,60 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             except Exception as e:
                 log.error(f"SCAN_FAIL source=dab error={e}")
                 ipc.write_progress("DAB+ Fehler", str(e)[:48], color="red")
+                source_state.commit_source("idle")
                 time.sleep(3)
             finally:
+                if not S.get("radio_playing"):
+                    S["control_context"] = "idle"
+                source_state.end_transition()
                 _scan_end()
                 ipc.clear_progress()
         bg(_dab_scan)
+
+    elif cmd.startswith("dab_scan_channels:"):
+        # Gezielter Kanalscan: dab_scan_channels:11D,10A,8D,8B,11B
+        parts = cmd.split(":", 1)
+        if len(parts) == 2:
+            raw   = parts[1].strip()
+            chans = [x.strip().upper() for x in raw.split(",") if x.strip()]
+            def _dab_custom(channels=chans):
+                owner = f"scan:dab:custom:{','.join(channels)}"
+                if not _scan_begin("dab"):
+                    ipc.write_progress("DAB+ Suchlauf", "Schon aktiv", color="orange")
+                    time.sleep(2); ipc.clear_progress(); return
+                if not source_state.begin_transition(owner, "dab"):
+                    ipc.write_progress("DAB+ Suchlauf", "Blockiert", color="orange")
+                    time.sleep(2); ipc.clear_progress(); _scan_end(); return
+                try:
+                    S["control_context"] = "radio_dab_scan"
+                    log.info("SCAN_START source=dab custom=" + ",".join(channels))
+                    scan_settings = dict(settings)
+                    scan_settings["dab_scan_channels"] = channels
+                    results = dab.scan_dab_channels(settings=scan_settings)
+                    count = len(results)
+                    if count > 0:
+                        store.save_dab(results)
+                        source_state.commit_source("dab")
+                        ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
+                        new_root = build_tree(store, S, settings)
+                        menu_state.root = new_root
+                        menu_state.clamp_cursors()
+                        menu_state.rev += 1
+                    else:
+                        source_state.commit_source("idle")
+                        ipc.write_progress("DAB+ Suchlauf", "0 Sender — Liste bleibt", color="orange")
+                    time.sleep(2)
+                except Exception as e:
+                    log.error(f"SCAN_FAIL dab custom: {e}")
+                    source_state.commit_source("idle")
+                    time.sleep(3)
+                finally:
+                    if not S.get("radio_playing"):
+                        S["control_context"] = "idle"
+                    source_state.end_transition()
+                    _scan_end()
+                    ipc.clear_progress()
+            bg(_dab_custom)
 
     # ── FM Suchlauf ──────────────────────────────────────────────────────────
     elif cmd == "fm_scan":
@@ -600,9 +649,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         bg(lambda: audio.select_output_interactive(S, settings))
 
     log.trigger_received(cmd)
-    if cmd in ("dab_scan","fm_scan"):
-        log.info(f"SCAN_START source={cmd.split('_')[0]}")
-    elif cmd.startswith("reload_stations:"):
+    if cmd.startswith("reload_stations:"):
         log.info(f"STATIONS_RELOAD source={cmd.split(':',1)[1]}")
     return rebuild
 
@@ -641,7 +688,7 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.9.3: Status-Felder leeren — verhindert stale State beim Quellenwechsel
+        # v0.9.4: Status-Felder leeren — verhindert stale State beim Quellenwechsel
         S["radio_playing"]    = False
         S["radio_station"]    = ""
         S["radio_name"]       = ""
@@ -674,7 +721,8 @@ def _execute_node(node, menu_state, store, S, settings):
                 elif src == "dab":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
                                       if "  " in node.label else node.label.lstrip("★ ").strip())
-                    dab.play_by_name(_name, S)
+                    _sid = meta.get("service_id", "")
+                    dab.play_by_name(_name, S, service_id=_sid)
                     source_state.commit_source("dab")
                 elif src == "webradio":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
@@ -936,7 +984,7 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # GPIO-Tasten starten (v0.9.3)
+    # GPIO-Tasten starten (v0.9.4)
     try:
         _gpio_active = _gpio_buttons.start()
         if _gpio_active:
@@ -946,7 +994,7 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
-    # v0.9.3: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
+    # v0.9.4: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
     # wenn boot-resume play_station() startet ohne vorherigen get_mpv_args()-Aufruf
     try:
         from modules.audio import _set_pi_output_klinke
@@ -957,7 +1005,7 @@ def startup_tasks(S, settings):
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 
-    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.3)
+    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.4)
     try:
         time.sleep(1)
         last_src   = settings.get("last_source", "")
@@ -1002,7 +1050,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.9.3 gestartet")
+    log.info("PiDrive Core v0.9.4 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
@@ -1014,7 +1062,7 @@ def main():
     _mpris2_player = _mpris2.start_mpris2() if _mpris2 else None
 
     settings = load_settings()
-    # v0.9.3: settings.json auf aktuelle Defaults-Vollständigkeit bringen
+    # v0.9.4: settings.json auf aktuelle Defaults-Vollständigkeit bringen
     try:
         from settings import ensure_settings_file
         ensure_settings_file()
@@ -1038,7 +1086,7 @@ def main():
     store_timer= time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.9.3: BT Auto-Reconnect Watcher starten
+    # v0.9.4: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
     _ready_written = False
     import threading as _thr

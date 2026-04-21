@@ -19,6 +19,25 @@ C_DAB = (0, 200, 180)
 _player_proc = None
 _scan_running = False
 _scan_results = []
+_last_scan_diag = {}
+
+
+def get_last_scan_diag():
+    """Letzte DAB-Scan-Diagnose als Dict (v0.9.4)."""
+    return dict(_last_scan_diag)
+
+
+def _normalize_station(st):
+    """Sichert erwartete Felder für DAB-Stationen."""
+    out = dict(st or {})
+    out.setdefault("service_id", "")
+    out.setdefault("ensemble", "")
+    out.setdefault("channel", "")
+    out.setdefault("favorite", False)
+    out.setdefault("enabled", True)
+    return out
+
+
 
 def _run(cmd, capture=False, timeout=10):
     try:
@@ -61,23 +80,30 @@ def save_stations(stations):
 
 def scan_dab_channels(settings=None):
     """
-    DAB+ Suchlauf via welle-cli Webserver + mux.json (v0.9.3).
+    DAB+ Suchlauf via welle-cli Webserver + mux.json (v0.9.4).
 
-    Neuer Ansatz statt Log-Parsing:
-    - startet welle-cli -c CH -C 1 -w 7979 (Webserver-Modus, Carousel)
-    - holt http://127.0.0.1:7979/mux.json nach Wartezeit
-    - liest strukturierte JSON-Daten: ensemble, services, SNR, service_id
-    - deutlich robuster als stdout-Parsing
-
-    Scannt: Regionale Kanäle 5C,5D,8D,10A,10D,11D,12D + Vollscan-Fallback
+    Konfigurierbar via settings.json:
+    - dab_scan_wait_lock: Sekunden pro Kanal (Standard 20s)
+    - dab_scan_http_timeout: HTTP Timeout mux.json (Standard 4s)
+    - dab_scan_port: getrennt von Diagnose-Port 7979 (Standard 7981)
+    - dab_scan_channels: gezielte Kanäle z.B. ["11D","10A","8D"]
     """
     import subprocess as _sp
     import time as _t
     import json as _j
     import urllib.request as _ur
 
-    WEB_PORT  = 7979
-    WAIT_LOCK = 8    # Sekunden warten bis OFDM-Lock und FIC-Daten kommen
+    if settings is None:
+        try:
+            from settings import load_settings as _ls
+            settings = _ls()
+        except Exception:
+            settings = {}
+
+    SCAN_PORT = int(settings.get("dab_scan_port", 7981) or 7981)
+    WAIT_LOCK = int(settings.get("dab_scan_wait_lock", 20) or 20)
+    WAIT_HTTP = int(settings.get("dab_scan_http_timeout", 4) or 4)
+
     CHANNELS_REGIONAL = ["5C","5D","8D","10A","10D","11D","12D"]
     CHANNELS_FULL = [
         "5A","5B","5C","5D","6A","6B","6C","6D",
@@ -87,16 +113,33 @@ def scan_dab_channels(settings=None):
         "13A","13B","13C","13D","13E","13F",
     ]
 
-    gain_idx = _get_dab_gain(settings)
+    # Gezielte Kanäle aus Settings
+    requested_channels = settings.get("dab_scan_channels", []) or []
+    if isinstance(requested_channels, str):
+        requested_channels = [x.strip().upper() for x in requested_channels.split(",") if x.strip()]
+    requested_channels = [str(x).strip().upper() for x in requested_channels if str(x).strip()]
 
+    if requested_channels:
+        region_list = [ch for ch in requested_channels if ch in CHANNELS_FULL]
+        full_list   = region_list[:]
+        log.info(f"DAB Scan: gezielte Kanäle: {region_list} (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
+    else:
+        region_list = CHANNELS_REGIONAL
+        full_list   = CHANNELS_FULL
+        log.info(f"DAB Scan: Standard-Scan (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
+
+    gain_idx = _get_dab_gain(settings)
     found    = []
     scanned  = []
+
+    global _last_scan_diag
+    _last_scan_diag = {"channels": {}, "ts": int(time.time()),
+                       "wait_lock": WAIT_LOCK, "port": SCAN_PORT}
 
     # Laufende welle-cli beenden
     _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
     _t.sleep(0.5)
 
-    # RTL-SDR verfügbar?
     if _rtlsdr:
         usb = _rtlsdr.detect_usb()
         if not usb.get("present"):
@@ -108,25 +151,26 @@ def scan_dab_channels(settings=None):
 
     def _scan_channel(ch):
         """Einen DAB-Kanal scannen, mux.json holen, Services extrahieren."""
-        # Alten Prozess beenden
         _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
         _t.sleep(0.3)
 
-        cmd = (f"welle-cli -c {ch} -g {gain_idx} -C 1 -w {WEB_PORT} "
+        cmd = (f"welle-cli -c {ch} -g {gain_idx} -C 1 -w {SCAN_PORT} "
                f"2>/tmp/pidrive_dab_welle.err")
-        proc = _sp.Popen(cmd, shell=True,
-                          stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        proc = _sp.Popen(cmd, shell=True, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
         _t.sleep(WAIT_LOCK)
 
-        services = []
-        snr      = 0.0
+        services  = []
+        snr       = 0.0
         ens_label = ""
         ens_id    = ""
         freq_corr = 0
+        fic_crc   = -1
+        last_fct0 = 0
+        rx_gain   = ""
 
         try:
-            url = f"http://127.0.0.1:{WEB_PORT}/mux.json"
-            resp = _ur.urlopen(url, timeout=3)
+            url  = f"http://127.0.0.1:{SCAN_PORT}/mux.json"
+            resp = _ur.urlopen(url, timeout=WAIT_HTTP)
             data = _j.loads(resp.read().decode("utf-8"))
 
             snr       = float(data.get("demodulator", {}).get("snr", 0)
@@ -134,21 +178,23 @@ def scan_dab_channels(settings=None):
             ens_label = (data.get("ensemble", {}).get("label", {})
                            .get("label", "") or "")
             ens_id    = data.get("ensemble", {}).get("id", "")
+            fic_crc   = int(data.get("demodulator", {}).get("fic", {})
+                              .get("numcrcerrors", -1))
+            last_fct0 = int(data.get("demodulator", {})
+                              .get("time_last_fct0_frame", 0) or 0)
             freq_corr = int(data.get("receiver", {}).get("hardware", {})
                               .get("freqcorr", 0) or 0)
+            rx_gain   = str(data.get("receiver", {}).get("hardware", {})
+                              .get("gain", ""))
 
-            raw_svcs  = data.get("services", [])
+            raw_svcs = data.get("services", [])
             for svc in raw_svcs:
-                name   = (svc.get("label", {}).get("label", "")
-                            or svc.get("label", "")).strip()
-                sid    = svc.get("sid", "")
-                url_mp3= svc.get("url_mp3", "")
+                name    = (svc.get("label", {}).get("label", "")
+                             or svc.get("label", "")).strip()
+                sid     = svc.get("sid", "")
+                url_mp3 = svc.get("url_mp3", "")
                 if name:
-                    services.append({
-                        "name":       name,
-                        "service_id": sid,
-                        "url_mp3":    url_mp3,
-                    })
+                    services.append({"name": name, "service_id": sid, "url_mp3": url_mp3})
 
         except Exception as e:
             log.info(f"DAB Scan: {ch}: mux.json nicht erreichbar ({e})")
@@ -161,12 +207,23 @@ def scan_dab_channels(settings=None):
 
         log.info(f"DAB Scan: CHANNEL_INFO ch={ch} ensemble={ens_label!r} "
                  f"id={ens_id} services={len(services)} snr={snr:.1f} "
-                 f"freqcorr={freq_corr}")
+                 f"freqcorr={freq_corr} gain={rx_gain} ficcrc={fic_crc} lastfct0={last_fct0}")
+
+        if snr >= 2.0 and len(services) == 0:
+            log.warn(f"DAB Scan: LOCK_KANDIDAT ch={ch} snr={snr:.1f} keine Services — WAIT_LOCK erhöhen?")
+
+        _last_scan_diag["channels"][ch] = {
+            "ensemble": ens_label, "ensemble_id": ens_id,
+            "services": len(services), "snr": snr,
+            "freqcorr": freq_corr, "gain": rx_gain,
+            "ficcrc": fic_crc, "lastfct0": last_fct0,
+            "service_names": [s["name"] for s in services],
+        }
         return services, ens_label, ens_id, snr
 
     # --- Regionalscan ---
     ipc.write_progress("DAB+ Suchlauf", "Regionale Kanäle...", color="blue")
-    for ch in CHANNELS_REGIONAL:
+    for ch in region_list:
         ipc.write_progress("DAB+ Suchlauf", f"Kanal {ch}...", color="blue")
         svcs, ens_label, ens_id, snr = _scan_channel(ch)
         scanned.append(ch)
@@ -177,18 +234,18 @@ def scan_dab_channels(settings=None):
                 "ensemble":   ens_label,
                 "service_id": svc["service_id"],
                 "url_mp3":    svc["url_mp3"],
+                "id":         f"dab_{svc['service_id'] or svc['name']}",
                 "favorite":   False,
                 "enabled":    True,
             }
-            if not any(e["name"] == svc["name"] and e["channel"] == ch
-                       for e in found):
+            if not any(e["name"] == svc["name"] and e["channel"] == ch for e in found):
                 found.append(entry)
 
     # Vollscan wenn nötig
-    if len(found) < 3:
+    if len(found) < 3 and not requested_channels:
         log.info("DAB Scan: Regionalscan < 3 Sender — Vollscan...")
         ipc.write_progress("DAB+ Suchlauf", "Vollscan...", color="blue")
-        for ch in CHANNELS_FULL:
+        for ch in full_list:
             if ch in scanned:
                 continue
             ipc.write_progress("DAB+ Suchlauf", f"Vollscan {ch}...", color="blue")
@@ -200,14 +257,15 @@ def scan_dab_channels(settings=None):
                     "ensemble":   ens_label,
                     "service_id": svc["service_id"],
                     "url_mp3":    svc["url_mp3"],
+                    "id":         f"dab_{svc['service_id'] or svc['name']}",
                     "favorite":   False,
                     "enabled":    True,
                 }
-                if not any(e["name"] == svc["name"] and e["channel"] == ch
-                           for e in found):
+                if not any(e["name"] == svc["name"] and e["channel"] == ch for e in found):
                     found.append(entry)
 
-    log.info(f"DAB Scan: FERTIG — {len(found)} Sender auf {len(scanned)} Kanälen")
+    _last_scan_diag["found"] = len(found)
+    log.info(f"DAB Scan: FERTIG — {len(found)} Sender auf {len(scanned)} Kanälen (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
     return found
 
 
@@ -234,7 +292,7 @@ _RTL_GAIN_TABLE = [
 
 def _get_dab_gain(settings=None):
     """
-    DAB Gain-Index für welle-cli (v0.9.3 — KORREKTUR).
+    DAB Gain-Index für welle-cli (v0.9.4 — Gain-Index-Fix).
 
     WICHTIG: welle-cli -g erwartet einen GAIN-INDEX (0-28), KEIN dB-Wert!
     Quelle: rtl_sdr.cpp setGain(int gain_index) → prüft auf < gains.size()
@@ -406,16 +464,27 @@ def stop(S):
 
 # build_items() entfernt in v0.7.1 — Menü wird von menu_model.py gebaut
 
-def play_by_name(name, S):
-    """DAB Station nach Name abspielen."""
+def play_by_name(name, S, service_id=""):
+    """
+    DAB Station bevorzugt über service_id, sonst über Name abspielen (v0.9.4).
+    Robuster gegen Dubletten und neue Scans.
+    """
     import json, os
     path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
     try:
         data = json.load(open(path))
         stations = data.get("stations", data) if isinstance(data, dict) else data
+        service_id = str(service_id or "").strip().lower()
+        if service_id:
+            for s in stations:
+                sid = str(s.get("service_id", "") or "").strip().lower()
+                if sid and sid == service_id:
+                    play_station(_normalize_station(s), S)
+                    return
         for s in stations:
             if s.get("name","") == name:
-                play_station(s, S); return
+                play_station(_normalize_station(s), S)
+                return
     except Exception as e:
         log.error(f"DAB play_by_name: {e}")
 

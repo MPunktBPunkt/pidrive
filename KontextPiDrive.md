@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.3
+# PiDrive — Kontext & Projektdokumentation v0.9.4
 
 ## Projektbeschreibung
 
@@ -751,7 +751,7 @@ sudo systemctl restart pidrive
 
 ## Menü-Struktur
 
-PiDrive  (v0.9.3 — Baumbasiert, beliebig tief)
+PiDrive  (v0.9.4 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle                (info)
 │   ├── Titel/Sender          (info)
@@ -904,7 +904,7 @@ sudo systemctl restart pidrive_display
 | pygame border_radius | pygame 1.9.6 | draw.rect() ohne border_radius |
 | Raspotify kein Login | DISABLE_CREDENTIAL_CACHE aktiv | Zeile auskommentieren |
 | Raspotify zu frueh | network.target | network-online.target |
-| Raspotify kein Audio | PulseAudio als root | LIBRESPOT_BACKEND=alsa + DEVICE=hw:1,0 |
+| Raspotify kein Audio | PulseAudio als root | LIBRESPOT_BACKEND=alsa, LIBRESPOT_DEVICE=default, PULSE_SERVER in Service (v0.8.11+) |
 | Raspotify ProtectHome | Service Hardening | ProtectHome=false, PrivateUsers=false |
 | WLAN nach Reboot aus | rfkill | rfkill-unblock.service |
 | Touch reagiert nicht | Hardware-Defekt | USB-Tastatur |
@@ -921,6 +921,76 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.4 — DAB konfigurierbar, FIC-Metriken, Spectrum-Prototyp
+
+**Motivation:** Scan lieferte 0 Sender bei SNR 1–2 dB Innenraumempfang.
+Log-Analyse: WAIT_LOCK=8s zu kurz; keine FIC-Diagnosedaten; fester Port 7979 (Konflikt mit Webdiagnose).
+
+**modules/dab.py:**
+- `scan_dab_channels()` vollständig konfigurierbar via settings.json:
+  - `dab_scan_wait_lock` (Standard 20s): pro Kanal — bei SNR 3–5 dB werden 15–25s benötigt
+  - `dab_scan_http_timeout` (Standard 4s): mux.json HTTP-Timeout
+  - `dab_scan_port` (Standard 7981): getrennt von WebUI-Diagnose-Port 7979
+  - `dab_scan_channels`: gezielte Kanäle z.B. `["11D","10A","8D"]`
+- Neue Debug-Metriken pro Kanal: `ficcrc`, `lastfct0`, `rx_gain`
+- `LOCK_KANDIDAT`-Warnung wenn SNR≥2 aber keine Services (WAIT_LOCK erhöhen)
+- `_last_scan_diag` dict + `get_last_scan_diag()` für WebUI-Diagnose
+- `_normalize_station()`: fehlende Felder ergänzen
+- `play_by_name(name, S, service_id="")`: service_id-Matching vor Name-Matching
+- Vollscan-Fallback nur bei Standard-Scan (nicht bei gezielten Kanälen)
+
+**settings.py + config/settings.json:**
+- Neue Defaults: `dab_scan_wait_lock=20`, `dab_scan_http_timeout=4`,
+  `dab_scan_port=7981`, `dab_scan_channels=["11D","10A","8D","8B","11B"]`
+- settings.json: ppm_correction=49 (aus Messung), dab_gain=-1 (AGC stabil)
+
+**main_core.py:**
+- Doppelter SCAN_START-Log entfernt
+- `dab_scan`: `control_context="radio_dab_scan"` (trennt Scan von Wiedergabe)
+- `dab_scan`: `source_state.begin/commit/end_transition` vollständig
+- Neuer Trigger `dab_scan_channels:11D,10A,8D` für gezielten Scan
+- DAB-Playback: `service_id` an `play_by_name()` übergeben
+
+**modules/spectrum.py — NEU:**
+- Prototyp für FM/Scanner-FastScan (Grundlage Phase 4)
+- `capture_spectrum()`: rtl_sdr IQ-Snapshot → numpy FFT → dB → Peak-Erkennung
+- `sweep_fm_band()`: FM-Band-Sweep 87.5–108 MHz, Peak-Kandidatenliste
+- Nutzt RTL-SDR-Locking aus rtlsdr.py
+- Kein Eingriff in DAB/FM/Scanner-Wiedergabe
+- Voraussetzung: numpy (install.sh ergänzt)
+
+**webui.py:**
+- `GET /api/dab/scan/last`: letzte Scan-Metriken (snr, ficcrc, services pro Kanal)
+- `GET/POST /api/dab/scan/settings`: DAB-Scan-Parameter lesen/speichern
+- `POST /api/dab/scan/custom`: gezielten Scan per API starten
+- `GET /api/spectrum/last`: letzten Spectrum-Snapshot laden
+- `POST /api/spectrum/capture`: Spektrum aufnehmen (mode=single|fm_sweep)
+- `dab_scan_channels:` in ALLOWED prefixes
+
+**index.html:**
+- Neues Panel "DAB+ Scan Einstellungen": WAIT_LOCK, HTTP Timeout, Port, Kanäle
+- Gezielter Scan-Button mit direktem Channel-Input
+- DAB-Scan-Diagnose: snr, ficcrc, services pro Kanal mit ✓/~/- Marker
+- Neues Panel "Spektrum / FM FastScan (Prototyp)": Einzelmessung + FM-Sweep
+- Peaks werden als Frequenz+dB aufgelistet
+
+**install.sh:** numpy Installation ergänzt
+
+---
+
+**Scan-Empfehlung für Innenraum-/Fensterempfang:**
+```bash
+# Gezielte Kanäle mit erhöhter Wartezeit:
+echo "dab_gain:-1" > /tmp/pidrive_cmd
+echo "dab_scan_channels:11D,10A,8D,8B,11B" > /tmp/pidrive_cmd
+# Im Log auf LOCK_KANDIDAT achten — zeigt welche Kanäle Signal haben
+```
+
+**Empfohlene settings.json Werte (Innenraum/schwach):**
+- `dab_scan_wait_lock: 20` (oder 25–30 bei sehr schwachem Signal)
+- `dab_gain: -1` (AGC — stabiler als manueller Wert)
+- `dab_scan_channels: ["11D", "10A", "8D", "8B", "11B"]`
 
 ### v0.9.3 — DAB-Gain-Index-Fix, mux.json-Scan, State-Machine vollständig, Aufräumen
 
@@ -1920,16 +1990,18 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.3)
+## Aktueller Stand (v0.9.4)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.3 — DAB-Gain-Index, mux.json-Scan, State-Machine vollständig
-✓ pidrive_display.service   v0.9.3, 20fps
+✓ pidrive_core.service      v0.9.4 — DAB konfigurierbar, FIC-Metriken, Spectrum-Prototyp
+✓ pidrive_display.service   v0.9.4, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
-✓ modules/dab.py            Gain auf gültige RTL-SDR Stufen quantisiert (40→40.2)
+✓ modules/dab.py            Gain-Index-Fix (v0.9.3), scan_dab_channels mux.json+konfigurierbar (v0.9.4)
+✓ modules/spectrum.py       NEU (v0.9.4): FFT/Peak-Prototyp für FM/Scanner-FastScan
+✓ config/settings.json      v0.9.4: dab_scan_wait_lock=20, dab_scan_channels, ppm=49
 ✓ diagnose.py               amixer Hex-Parse-Fix, Default-Sink Fallback via pactl info
 ✓ webui.py                  /api/runtime, /api/dab/diag, get_settings_debug()
 ✓ index.html                DAB Diagnose Button, refreshRuntime() JS
