@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.5
+# PiDrive — Kontext & Projektdokumentation v0.9.6
 
 ## Projektbeschreibung
 
@@ -922,7 +922,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.9.5 — State-Machine vervollständigt, audio_route live, Lock-Status
+### v0.9.6 — source_state shared, DAB-Debug persistent, BT-Mirrors vollständig
 
 **Motivation:** Scan lieferte 0 Sender bei SNR 1–2 dB Innenraumempfang.
 Log-Analyse: WAIT_LOCK=8s zu kurz; keine FIC-Diagnosedaten; fester Port 7979 (Konflikt mit Webdiagnose).
@@ -1990,17 +1990,17 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.5)
+## Aktueller Stand (v0.9.6)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.5 — State-Machine vervollständigt, audio_route live, Lock-Status
+✓ pidrive_core.service      v0.9.6 — source_state shared, DAB-Debug persistent, BT-Mirrors vollständig
 ✓ pidrive_display.service   v0.9.4, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
-✓ modules/dab.py            mux.json-Scan, _lock_state_name, NO_FCT0_LOCK, Start-Guard (v0.9.5)
-✓ modules/spectrum.py       Phase 2: _dedupe_peaks, min_distance_bins (v0.9.5)
+✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
+✓ modules/spectrum.py       Phase 2: _dedupe_peaks, min_distance_bins; Kandidaten-UI (v0.9.6)
 ✓ config/settings.json      v0.9.5: alle DAB-Scan-Settings, ppm=49, dab_gain=-1
 ✓ diagnose.py               amixer Hex-Parse-Fix, Default-Sink Fallback via pactl info
 ✓ webui.py                  /api/runtime, /api/dab/diag, get_settings_debug()

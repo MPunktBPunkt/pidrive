@@ -99,7 +99,7 @@ ssh -L 5588:127.0.0.1:5588 pi@<PI-IP> -N
 ```
 
 #
-## settings.json — Konfigurationsreferenz (v0.9.5)
+## settings.json — Konfigurationsreferenz (v0.9.6)
 
 | Key | Standard | Erklärung |
 |---|---|---|
@@ -192,7 +192,7 @@ pidrive/
 Baumbasiert (v0.8.x) — beliebig tief, iDrive-kompatibel.
 
 ```
-PiDrive  (v0.9.5 — Baumbasiert, beliebig tief)
+PiDrive  (v0.9.6 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle / Titel         (info)
 │   ├── Spotify An/Aus         (toggle)
@@ -384,7 +384,7 @@ sudo apt install welle.io
 
 ## Changelog
 
-### v0.9.5 (2026-04-21)
+### v0.9.6 (2026-04-21)
 - **State-Machine vervollständigt:** Spotify, Library, DAB-Scan, lib_browse über `begin/commit/end_transition`
 - **`boot_phase` korrekt:** `restore_bt` → `restore_source` → `steady` in `startup_tasks()`
 - **`audio_route` live:** `audio.py` spiegelt `effective` in `source_state` (klinke/bt/hdmi/none)
@@ -483,7 +483,7 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 | Priorität | Feature | Status |
 |---|---|---|
 | 🔧 Kurzfristig | GPIO-Buttons (Key1-3) | offen |
-| ✅ Erledigt | Audio-Routing (Webradio/FM/DAB auf BT) | v0.9.5 |
+| ✅ Erledigt | Audio-Routing (Webradio/FM/DAB auf BT) | v0.9.6 |
 | 🔧 Kurzfristig | resume_state.py (Boot-Resume) | offen |
 | 🔧 Kurzfristig | USB-Tethering Autostart | offen |
 | 🔧 Kurzfristig | WebUI Breadcrumb-Navigation | offen |

@@ -1076,11 +1076,12 @@
     <button onclick="refreshDabScanDebug()" style="margin-top:6px">🔄 DAB Scan Debug</button>
   </section>
 
-  <!-- Spectrum Last (v0.9.5) -->
+  <!-- Spectrum Last (v0.9.6) -->
   <section class="panel">
-    <div class="panel-title">📊 Spectrum Last</div>
+    <div class="panel-title">📊 Spectrum Last / FM Sweep</div>
+    <div id="spectrumCandidatesTable" style="margin-bottom:8px"></div>
     <details>
-      <summary style="cursor:pointer;color:#aaa;font-size:0.8em">Letzter Spectrum-Snapshot</summary>
+      <summary style="cursor:pointer;color:#aaa;font-size:0.8em">Debug JSON</summary>
       <pre id="rtSpectrumJson" style="font-size:0.65em;color:#7cf;white-space:pre-wrap">–</pre>
     </details>
     <button onclick="refreshSpectrumDebug()" style="margin-top:6px">🔄 Spectrum Refresh</button>
@@ -1153,6 +1154,7 @@
         if (el('rtDabScanJson')) el('rtDabScanJson').textContent = JSON.stringify(j.dab_scan_debug || {}, null, 2);
         // spectrum
         if (el('rtSpectrumJson')) el('rtSpectrumJson').textContent = JSON.stringify(j.spectrum_debug || {}, null, 2);
+        renderSpectrumCandidates((j && j.spectrum_debug) || {});
       } catch(e) { console.error('refreshRuntime', e); }
     }
 
@@ -1162,13 +1164,44 @@
       const channels = (data && data.channels) || {};
       const keys = Object.keys(channels);
       if (!keys.length) { root.innerHTML = '<div style="color:#aaa;font-size:0.8em">Noch kein Scan-Ergebnis.</div>'; return; }
-      let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#7cf"><th style="text-align:left">Kanal</th><th>SNR</th><th>FIC CRC</th><th>Svcs</th><th>Lock</th><th>Ensemble</th></tr>';
+      let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#7cf">'
+               + '<th style="text-align:left">Kanal</th><th>SNR</th><th>FIC CRC</th><th>lastFCT0</th><th>Lock</th><th>Svcs</th><th>Ensemble</th></tr>';
       for (const ch of keys) {
         const r = channels[ch] || {};
-        const lockIcon = r.services > 0 ? '✅' : (r.snr >= 2 ? '~' : '–');
-        html += `<tr><td>${lockIcon} ${ch}</td><td>${r.snr ?? '–'}</td><td>${r.ficcrc ?? '–'}</td><td>${r.services ?? 0}</td><td style="font-size:10px">${r.lock_state || '–'}</td><td style="font-size:10px">${r.ensemble || '–'}</td></tr>`;
+        const lockIcon = r.services > 0 ? '✅' : (r.snr >= 2 ? '⚠' : '–');
+        const fct0 = r.lastfct0 ?? '–';
+        html += `<tr>
+          <td>${lockIcon} ${ch}</td>
+          <td>${r.snr ?? '–'}</td>
+          <td>${r.ficcrc ?? '–'}</td>
+          <td style="color:${fct0 === 0 || fct0 === '0' ? '#f77' : '#aef'}">${fct0}</td>
+          <td style="font-size:10px">${r.lock_state || '–'}</td>
+          <td>${r.services ?? 0}</td>
+          <td style="font-size:10px">${r.ensemble || '–'}</td>
+        </tr>`;
       }
       html += '</table>';
+      if (data.wait_lock) html += `<div style="font-size:10px;color:#777;margin-top:4px">WAIT_LOCK=${data.wait_lock}s PORT=${data.port || '–'} Kanäle=${keys.length}</div>`;
+      root.innerHTML = html;
+    }
+
+    function renderSpectrumCandidates(data) {
+      const root = document.getElementById('spectrumCandidatesTable');
+      if (!root) return;
+      const cand = (data && data.candidates) || [];
+      if (!cand.length) {
+        root.innerHTML = '<div style="color:#aaa;font-size:0.8em">Noch keine Sweep-Daten.</div>';
+        return;
+      }
+      let html = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+               + '<tr style="color:#7cf"><th style="text-align:left">Freq (MHz)</th><th>dB</th><th>Hits</th></tr>';
+      for (const c of cand.slice(0, 20)) {
+        html += `<tr><td>${c.freq_mhz ?? '–'}</td><td>${typeof c.db === 'number' ? c.db.toFixed(1) : '–'}</td><td>${c.hits ?? '–'}</td></tr>`;
+      }
+      html += '</table>';
+      if (data.mode === 'fm_sweep') {
+        html += `<div style="font-size:10px;color:#777;margin-top:4px">${data.start_mhz}–${data.stop_mhz} MHz · Schritt ${data.step_mhz} MHz · ${cand.length} Kandidaten</div>`;
+      }
       root.innerHTML = html;
     }
 
@@ -1186,7 +1219,9 @@
       try {
         const r = await fetch('/api/spectrum/last');
         const j = await r.json();
-        if (document.getElementById('rtSpectrumJson')) document.getElementById('rtSpectrumJson').textContent = JSON.stringify((j && j.data) || {}, null, 2);
+        const d = (j && j.data) || {};
+        if (document.getElementById('rtSpectrumJson')) document.getElementById('rtSpectrumJson').textContent = JSON.stringify(d, null, 2);
+        renderSpectrumCandidates(d);
       } catch(e) { console.warn('refreshSpectrumDebug', e); }
     }
     window.addEventListener('load', () => setTimeout(refreshRuntime, 1200));

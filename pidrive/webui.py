@@ -250,7 +250,7 @@ def get_source_state_debug():
         if _base not in sys.path:
             sys.path.insert(0, _base)
         from modules import source_state
-        return source_state.snapshot()
+        return source_state.load_snapshot_file() or source_state.snapshot()
     except Exception as e:
         return {"error": str(e)}
 
@@ -261,7 +261,7 @@ def get_dab_scan_debug():
         if _base not in sys.path:
             sys.path.insert(0, _base)
         from modules import dab
-        return dab.get_last_scan_diag()
+        return dab.load_last_scan_diag_file() or dab.get_last_scan_diag()
     except Exception as e:
         return {"error": str(e)}
 
@@ -386,6 +386,7 @@ def api_runtime():
             "dab_scan_port": settings.get("dab_scan_port", "-"),
             "dab_scan_channels": settings.get("dab_scan_channels", []),
         },
+        "version": get_version(),
         "source_state": get_source_state_debug(),
         "dab_scan_debug": get_dab_scan_debug(),
         "spectrum_debug": get_spectrum_debug(),
@@ -803,6 +804,19 @@ def api_spectrum_last():
         "data": get_spectrum_debug(),
         "age": file_age("/tmp/pidrive_spectrum.json"),
         "exists": os.path.exists("/tmp/pidrive_spectrum.json"),
+    })
+
+
+
+@app.route("/api/debug/summary")
+def api_debug_summary():
+    return jsonify({
+        "ok": True,
+        "version": get_version(),
+        "source_state": get_source_state_debug(),
+        "dab_scan": get_dab_scan_debug(),
+        "spectrum": get_spectrum_debug(),
+        "audio": get_audio_debug(),
     })
 
 

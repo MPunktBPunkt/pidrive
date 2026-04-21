@@ -13,11 +13,14 @@ Drei getrennte State-Ebenen:
   bt_state:       off | idle | connecting | connected | failed
 """
 
+import os
+import json
 import threading
 import time
 import log
 
 _LOCK = threading.RLock()
+STATE_FILE = "/tmp/pidrive_source_state.json"
 
 STATE = {
     "source_current": "idle",   # aktive Quelle
@@ -29,6 +32,27 @@ STATE = {
     "bt_state":       "idle",   # BT-Link-State
     "boot_phase":     "cold_start",  # cold_start | restore_bt | restore_source | steady
 }
+
+
+
+def _write_state_file():
+    """Shared-State atomar in /tmp schreiben (prozessübergreifend)."""
+    try:
+        tmp = STATE_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(STATE, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, STATE_FILE)
+    except Exception as e:
+        log.warn("SOURCE state file write: " + str(e))
+
+
+def load_snapshot_file() -> dict:
+    """Shared-State aus Datei lesen."""
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 
 def snapshot() -> dict:
@@ -55,6 +79,7 @@ def begin_transition(owner: str, target: str, timeout_s: float = 8.0) -> bool:
         STATE["owner"]          = owner
         STATE["source_target"]  = target
         STATE["since"]          = time.time()
+        _write_state_file()
         log.info(f"SOURCE begin: owner={owner} target={target}")
         return True
 
@@ -64,6 +89,7 @@ def commit_source(source_name: str):
     with _LOCK:
         old = STATE["source_current"]
         STATE["source_current"] = source_name
+        _write_state_file()
         log.info(f"SOURCE commit: {old} → {source_name}")
 
 
@@ -71,6 +97,7 @@ def set_audio_route(route: str):
     """Setzt den aktiven Audio-Ausgabepfad."""
     with _LOCK:
         STATE["audio_route"] = route
+        _write_state_file()
         log.info(f"SOURCE audio_route={route}")
 
 
@@ -79,6 +106,7 @@ def set_bt_state(bt_state: str):
     with _LOCK:
         old = STATE["bt_state"]
         STATE["bt_state"] = bt_state
+        _write_state_file()
         if old != bt_state:
             log.info(f"SOURCE bt_state: {old} → {bt_state}")
 
@@ -87,6 +115,7 @@ def set_boot_phase(phase: str):
     """Setzt die Boot-Phase."""
     with _LOCK:
         STATE["boot_phase"] = phase
+        _write_state_file()
         log.info(f"SOURCE boot_phase={phase}")
 
 
@@ -95,10 +124,11 @@ def end_transition():
     with _LOCK:
         duration = time.time() - STATE["since"] if STATE["since"] else 0
         log.info(f"SOURCE end: owner={STATE['owner']} current={STATE['source_current']} dt={duration:.2f}s")
+        STATE["source_target"] = ""
         STATE["transition"]    = False
         STATE["owner"]         = ""
-        STATE["source_target"] = ""
         STATE["since"]         = 0.0
+        _write_state_file()
 
 
 def current_source() -> str:

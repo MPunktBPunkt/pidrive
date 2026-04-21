@@ -256,6 +256,8 @@ def connect_device(mac, S, settings):
     if _src_state:
         if _src_state.in_transition():
             log.warn("BT connect: abgebrochen — Quellen-Transition läuft")
+            if _src_state:
+                _src_state.set_bt_state("failed")
             ipc.clear_progress()
             return False
         _src_state.set_bt_state("connecting")
@@ -389,6 +391,9 @@ def connect_device(mac, S, settings):
     S["bt_status"]  = "verbunden"
     S["bt_sink_mac"] = mac
     S["bt_pa_sink"]  = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+    if _src_state:
+        _src_state.set_bt_state("connected")
+        _src_state.set_audio_route("bt")
 
     # v0.8.25: nach erfolgreichem Connect automatisch Pairing-Keys sichern
     try:
@@ -450,6 +455,9 @@ def disconnect_current(S, settings):
     S["bt_sink_mac"] = ""
     S["bt_pa_sink"]  = ""
     S["bt_status"]   = "getrennt"
+    if _src_state:
+        _src_state.set_bt_state("idle")
+        _src_state.set_audio_route("klinke")
 
     if settings.get("audio_output") == "bt":
         settings["audio_output"] = "klinke"
@@ -538,6 +546,9 @@ def start_auto_reconnect(S, settings):
                             S["bt_status"]  = "verbunden"
                             S["bt_sink_mac"] = mac
                             S["bt_pa_sink"]  = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+                            if _src_state:
+                                _src_state.set_bt_state("connected")
+                                _src_state.set_audio_route("bt")
                             settings["audio_output"] = "bt"
                             from modules import audio as _aud
                             _aud.get_mpv_args(settings, source="bt_auto_reconnect")

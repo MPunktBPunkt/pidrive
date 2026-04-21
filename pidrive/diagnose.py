@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.9.5
+"""diagnose.py - PiDrive System-Diagnose v0.9.6
 
 v0.6.0: Core/Display getrennt.
 - pidrive_core.service  — headless, kein pygame
@@ -433,21 +433,50 @@ def check_processes():
 def check_source_state():
     S("SOURCE STATE (Quellen-Zustandsmaschine)")
     try:
-        import json as _j, sys, os
+        import sys, os, time as _time, json as _j
         sys.path.insert(0, "/home/pi/pidrive/pidrive")
         try:
-            from modules.source_state import snapshot
-            st = snapshot()
-            src = st.get("source_current", "?")
-            bt  = st.get("bt_state", "?")
-            ar  = st.get("audio_route", "?")
-            tr  = st.get("transition", False)
-            bp  = st.get("boot_phase", "?")
+            from modules.source_state import load_snapshot_file, snapshot
+            st = load_snapshot_file() or snapshot()
+            src    = st.get("source_current", "?")
+            bt     = st.get("bt_state", "?")
+            ar     = st.get("audio_route", "?")
+            tr     = st.get("transition", False)
+            bp     = st.get("boot_phase", "?")
+            owner  = st.get("owner", "")
+            target = st.get("source_target", "")
+            since  = st.get("since", 0)
             (ok if not tr else warn)(f"Quelle: {src} | Audio-Route: {ar} | BT: {bt}")
             nfo(f"boot_phase: {bp} | transition: {tr}")
+            if owner:
+                nfo(f"owner: {owner}")
+            if target:
+                nfo(f"target: {target}")
+            if since:
+                try:
+                    age = _time.time() - float(since)
+                    nfo(f"transition_age: {age:.1f}s")
+                except Exception:
+                    pass
             if tr:
-                owner = st.get("owner", "?")
                 warn(f"Transition läuft: owner={owner}")
+            if bp == "cold_start":
+                warn("boot_phase=cold_start — Core evtl. nicht synchron (Shared-State fehlt?)")
+            # Plausibilitätscheck gegen Audio-State
+            try:
+                af = "/tmp/pidrive_audio_state.json"
+                if os.path.exists(af):
+                    with open(af, "r", encoding="utf-8") as f:
+                        ad = _j.load(f)
+                    eff = ad.get("effective", "")
+                    if eff == "klinke" and not ar:
+                        warn("source_state.audio_route leer, Audio-State sagt klinke — Sync-Problem")
+                    elif eff and ar and eff != ar:
+                        warn(f"Audio-State/source_state abweichend: effective={eff} vs audio_route={ar}")
+                    elif eff and ar and eff == ar:
+                        ok(f"source_state.audio_route konsistent: {ar}")
+            except Exception as _se:
+                nfo(f"source/audio Plausibilitätscheck: {_se}")
         except Exception as e:
             warn(f"source_state Import fehlgeschlagen: {e}")
     except Exception as e:
@@ -455,7 +484,7 @@ def check_source_state():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.4\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.6\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()

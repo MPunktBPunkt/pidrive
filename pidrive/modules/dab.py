@@ -20,11 +20,33 @@ _player_proc = None
 _scan_running = False
 _scan_results = []
 _last_scan_diag = {}
+_SCAN_DEBUG_FILE = "/tmp/pidrive_dab_scan_debug.json"
 
 
 def get_last_scan_diag():
     """Letzte DAB-Scan-Diagnose als Dict (v0.9.4)."""
     return dict(_last_scan_diag)
+
+
+
+def _write_scan_diag_file():
+    try:
+        import json as _jj
+        tmp = _SCAN_DEBUG_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            _jj.dump(_last_scan_diag, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, _SCAN_DEBUG_FILE)
+    except Exception as e:
+        log.warn("DAB scan diag file write: " + str(e))
+
+
+def load_last_scan_diag_file():
+    try:
+        import json as _jj
+        with open(_SCAN_DEBUG_FILE, "r", encoding="utf-8") as f:
+            return _jj.load(f)
+    except Exception:
+        return {}
 
 
 def _normalize_station(st):
@@ -148,6 +170,7 @@ def scan_dab_channels(settings=None):
     global _last_scan_diag
     _last_scan_diag = {"channels": {}, "ts": int(time.time()),
                        "wait_lock": WAIT_LOCK, "port": SCAN_PORT}
+    _write_scan_diag_file()
 
     # Laufende welle-cli beenden
     _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
@@ -238,8 +261,9 @@ def scan_dab_channels(settings=None):
             "freqcorr": freq_corr, "gain": rx_gain,
             "ficcrc": fic_crc, "lastfct0": last_fct0,
             "service_names": [s["name"] for s in services],
-            "lock_state": lock_state if "lock_state" in dir() else "unknown",
+            "lock_state": lock_state,
         }
+        _write_scan_diag_file()
         return services, ens_label, ens_id, snr
 
     # --- Regionalscan ---
@@ -286,7 +310,9 @@ def scan_dab_channels(settings=None):
                     found.append(entry)
 
     _last_scan_diag["found"] = len(found)
+    _last_scan_diag["found"] = len(found)
     log.info(f"DAB Scan: FERTIG — {len(found)} Sender auf {len(scanned)} Kanälen (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
+    _write_scan_diag_file()
     return found
 
 
