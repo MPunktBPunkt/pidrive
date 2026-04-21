@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.6
+# PiDrive — Kontext & Projektdokumentation v0.9.7
 
 ## Projektbeschreibung
 
@@ -921,6 +921,34 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.7 — Audio-Fix krit., BT-Agent, Icon, Menü
+
+**Motivation:** Kein Ton auf Klinke trotz korrekt gesetztem Routing. BT-Symbol immer grau.
+Mehrere stille Bugs gefunden und behoben.
+
+**Bugs behoben:**
+
+| # | Datei | Bug | Fix |
+|---|---|---|---|
+| 1 | `modules/audio.py` | `set_default_sink()` verschob keine laufenden Streams → mpv auf altem Sink, kein Ton | `pactl move-sink-input` nach jedem Sink-Wechsel |
+| 2 | `modules/audio.py` | ALSA PCM-Volume (numid=1) nie gesetzt → Hardware stumm | `amixer numid=1=340` in `_set_pi_output_klinke()` |
+| 3 | `modules/audio.py` | `@DEFAULT_SINK@` leer wenn kein Default gesetzt → `volume_up/down` wirkungslos | Echten Sink-Namen via `_get_current_sink()` |
+| 4 | `modules/audio.py` | `apply_startup_volume()` war definiert aber nie aufgerufen | Aufruf in `main_core.py` startup_tasks() |
+| 5 | `main_core.py` | `audio_select` Trigger → `select_output_interactive()` existiert nicht → Crash | Ersetzt durch `menu_state.navigate_to("audio_out")` |
+| 6 | `modules/bluetooth.py` | `_ensure_agent()` mit `communicate()` → bluetoothctl endet nie → Timeout → WARNING | `printf ... | bluetoothctl` Shell-Pipe |
+| 7 | `modules/bluetooth.py` | BT-Scan 15s zu kurz für Kopfhörer im Pairing-Modus | 25s |
+| 8 | `status.py` | `bt_on` (Adapter UP) nicht im S-Dict exportiert | `bt_on` ergänzt |
+| 9 | `main_display.py` | BT-Icon nur grün wenn verbunden, kein Feedback für "Adapter AN" | Dreistufig: grau/blau/grün |
+| 10 | `menu_model.py` | `bt_geraete` nach Info-Nodes → Cursor landet falsch nach Scan | `bt_geraete` direkt nach `bt_scan` |
+
+**Neue Funktion:**
+- `_get_current_sink()` in `audio.py` — ermittelt aktiven Sink (BT > ALSA)
+
+**Geänderte Dateien:** `modules/audio.py`, `main_core.py`, `modules/bluetooth.py`,
+`status.py`, `main_display.py`, `menu_model.py`, `VERSION`
+
+---
 
 ### v0.9.6 — source_state shared, DAB-Debug persistent, BT-Mirrors vollständig
 
@@ -1990,13 +2018,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.6)
+## Aktueller Stand (v0.9.7)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.6 — source_state shared, DAB-Debug persistent, BT-Mirrors vollständig
-✓ pidrive_display.service   v0.9.4, 20fps
+✓ pidrive_core.service      v0.9.7 — Audio-Fix, BT-Agent-Fix, dreistufiges BT-Icon
+✓ pidrive_display.service   v0.9.7, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
@@ -2107,8 +2135,7 @@ Status und serialisierten Quellenwechseln.
 - `settings.json` vollständig mit 34 Keys (v0.9.2)
 
 **Noch offen:**
-- [ ] BT-Agent: `default-agent nicht bestätigt` bleibt als WARNING — Agent-Registrierung
-  im nicht-interaktiven bluetoothctl-Modus noch nicht 100% zuverlässig
+- [x] BT-Agent: `_ensure_agent()` nutzt jetzt printf-Pipe — WARNING behoben (v0.9.7)
 - [ ] BT-Pairing praktisch noch nicht als stabil verifiziert (Feldtest fehlt)
 - [ ] BT Auto-Reconnect: Nach Reboot findet Watcher das Gerät erst nach ~12s Scan-Zyklus
   — erste Verbindung noch nicht so schnell wie gewünscht
@@ -2127,7 +2154,7 @@ Status und serialisierten Quellenwechseln.
 | 2 | Scanner-Settings nicht durchgereicht | `scan_next/prev/jump/step` Trigger in main_core.py übergeben keine settings → PPM/Gain werden in scanner.py neu geladen (funktioniert, aber nicht sauber) | Mittel |
 | 3 | Scanner nicht in source_state integriert | scan_next/prev-Trigger nutzen keine begin_transition() | Mittel |
 | 4 | Installer zeigt alte Version im Log | grep-Pattern `"Core v0.6"` trifft nicht neue Versionen → Log zeigt `v0.8.25` | Niedrig |
-| 5 | BT-Agent WARNING | `default-agent nicht bestätigt` bei jedem Connect-Versuch | Mittel |
+| 5 | ~~BT-Agent WARNING~~ | ~~`default-agent nicht bestätigt` bei jedem Connect-Versuch~~ | ✅ behoben v0.9.7 |
 
 ### Diagnose / Debug
 

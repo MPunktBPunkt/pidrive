@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.4-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.7-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,22 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.7 (2026-04-21)
+
+**Audio-Fixes & BT-Stabilität**
+
+- `audio.py`: `set_default_sink()` verschiebt jetzt laufende Sink-Inputs (`pactl move-sink-input`) — behebt "kein Ton" wenn mpv vor dem Routing-Wechsel gestartet wurde
+- `audio.py`: `_set_pi_output_klinke()` setzt jetzt auch ALSA PCM-Volume (numid=1=340 ≈ 85%) — behebt fehlenden Ton bei fehlendem Hardware-Volumen
+- `audio.py`: `volume_up/down/apply_startup_volume` nutzen echten Sink-Namen statt `@DEFAULT_SINK@` (der bei fehlendem Default leer ist)
+- `main_core.py`: `apply_startup_volume()` wird jetzt beim Boot aufgerufen (war definiert aber nie aufgerufen)
+- `main_core.py`: `audio_select` Trigger crashte auf nicht-existente `select_output_interactive()` — behoben mit Menü-Navigation
+- `bluetooth.py`: `_ensure_agent()` nutzt jetzt `printf ... | bluetoothctl` statt `communicate()` (behebt systematisches WARNING "default-agent nicht bestätigt")
+- `bluetooth.py`: BT-Scan Dauer 15s → 25s (Kopfhörer brauchen oft länger bis sichtbar)
+- `bluetooth.py`: Scan-Abschluss-Feedback klarer ("X Geräte gefunden — Geraete > Verbinden")
+- `status.py`: `bt_on` (Adapter-State) neu im S-Dict — unterscheidet "Adapter AN" von "verbunden"
+- `main_display.py`: BT-Icon dreistufig: Grau=aus, Blau=Adapter AN/kein Gerät, Grün=verbunden
+- `menu_model.py`: `bt_geraete` direkt nach `bt_scan` — Cursor landet nach Scan sofort auf Geräteliste
 
 ### v0.9.6 (2026-04-21)
 - **State-Machine vervollständigt:** Spotify, Library, DAB-Scan, lib_browse über `begin/commit/end_transition`
