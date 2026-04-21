@@ -132,6 +132,17 @@ def play_station(station, S, settings=None):
         log.error(f"FM play: keine Frequenz station={station!r}")
         return
 
+    # v0.9.5: Low-Risk Start-Guard — gleiche Station läuft bereits
+    try:
+        if (S.get("radio_playing")
+                and S.get("radio_type") == "FM"
+                and S.get("radio_name") == name
+                and str(freq) in S.get("radio_station", "")):
+            log.info(f"FM play: bereits aktiv — kein Neustart name={name!r} freq={freq}")
+            return
+    except Exception:
+        pass
+
     try:
         freq_f = float(freq)
     except Exception:

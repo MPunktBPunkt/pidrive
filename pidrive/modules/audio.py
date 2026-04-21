@@ -14,6 +14,10 @@ import subprocess
 import time
 import ipc
 import log
+try:
+    from modules import source_state as _src_state
+except Exception:
+    _src_state = None
 
 PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
 AUDIO_STATE_FILE = "/tmp/pidrive_audio_state.json"
@@ -217,6 +221,20 @@ def get_mpv_args(settings=None, source: str = "") -> list:
         _set_pi_output_klinke()
     elif effective == "hdmi":
         _set_pi_output_hdmi()
+
+    # v0.9.5: audio_route konsistent in source_state spiegeln
+    try:
+        if _src_state:
+            if effective == "klinke":
+                _src_state.set_audio_route("klinke")
+            elif effective == "bt":
+                _src_state.set_audio_route("bt")
+            elif effective == "hdmi":
+                _src_state.set_audio_route("hdmi")
+            elif effective == "none":
+                _src_state.set_audio_route("none")
+    except Exception as _ae:
+        log.warn("[AUDIO] source_state route: " + str(_ae))
 
     log.info("[AUDIO] " + src_tag + " requested=" + requested.ljust(6) +
              " effective=" + effective.ljust(7) +

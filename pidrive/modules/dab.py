@@ -132,6 +132,19 @@ def scan_dab_channels(settings=None):
     found    = []
     scanned  = []
 
+    def _lock_state_name(snr, ens_label, ens_id, services, fic_crc, last_fct0):
+        """Grobe Lock-Interpretation: no_signal / no_fct0_lock / fic_only / ensemble_locked / services_found"""
+        if services > 0:
+            return "services_found"
+        if ens_label or (ens_id and ens_id != "0x0000"):
+            return "ensemble_locked"
+        if int(last_fct0 or 0) == 0:
+            return "no_fct0_lock" if snr >= 2.0 else "no_signal"
+        if fic_crc >= 0:
+            return "fic_only"
+        return "unknown"
+
+
     global _last_scan_diag
     _last_scan_diag = {"channels": {}, "ts": int(time.time()),
                        "wait_lock": WAIT_LOCK, "port": SCAN_PORT}
@@ -205,9 +218,16 @@ def scan_dab_channels(settings=None):
             pass
         _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
 
+        lock_state = _lock_state_name(
+            snr=snr, ens_label=ens_label, ens_id=ens_id,
+            services=len(services), fic_crc=fic_crc, last_fct0=last_fct0
+        )
         log.info(f"DAB Scan: CHANNEL_INFO ch={ch} ensemble={ens_label!r} "
                  f"id={ens_id} services={len(services)} snr={snr:.1f} "
-                 f"freqcorr={freq_corr} gain={rx_gain} ficcrc={fic_crc} lastfct0={last_fct0}")
+                 f"freqcorr={freq_corr} gain={rx_gain} ficcrc={fic_crc} "
+                 f"lastfct0={last_fct0} lock={lock_state}")
+        if int(last_fct0 or 0) == 0:
+            log.warn(f"DAB Scan: NO_FCT0_LOCK ch={ch} lastfct0=0 ensemble={ens_id or '0x0000'}")
 
         if snr >= 2.0 and len(services) == 0:
             log.warn(f"DAB Scan: LOCK_KANDIDAT ch={ch} snr={snr:.1f} keine Services — WAIT_LOCK erhöhen?")
@@ -218,6 +238,7 @@ def scan_dab_channels(settings=None):
             "freqcorr": freq_corr, "gain": rx_gain,
             "ficcrc": fic_crc, "lastfct0": last_fct0,
             "service_names": [s["name"] for s in services],
+            "lock_state": lock_state if "lock_state" in dir() else "unknown",
         }
         return services, ens_label, ens_id, snr
 
@@ -346,6 +367,16 @@ def play_station(station, S, settings=None):
     if not ch:
         log.error(f"DAB play: kein channel station={station!r}")
         return
+
+    # v0.9.5: Low-Risk Start-Guard — gleiche Station läuft bereits
+    try:
+        if (S.get("radio_playing")
+                and S.get("radio_type") == "DAB"
+                and S.get("radio_name") == name):
+            log.info(f"DAB play: bereits aktiv — kein Neustart name={name!r}")
+            return
+    except Exception:
+        pass
 
     if _rtlsdr:
         if not _rtlsdr.detect_usb().get("present"):

@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.4
+main_core.py - PiDrive Core v0.9.5
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1005,6 +1005,8 @@ def startup_tasks(S, settings):
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 
+    source_state.set_boot_phase("restore_source")
+
     # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.4)
     try:
         time.sleep(1)
@@ -1050,7 +1052,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.9.4 gestartet")
+    log.info("PiDrive Core v0.9.5 gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")

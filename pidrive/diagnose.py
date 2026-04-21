@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.9.4
+"""diagnose.py - PiDrive System-Diagnose v0.9.5
 
 v0.6.0: Core/Display getrennt.
 - pidrive_core.service  — headless, kein pygame
@@ -200,6 +200,33 @@ def summary():
     else:
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
+def _get_single_alsa_sink(sinks_text):
+    try:
+        alsa = []
+        for ln in sinks_text.splitlines():
+            parts = ln.split()
+            if len(parts) >= 2 and "alsa_output" in parts[1]:
+                alsa.append(parts[1])
+        return alsa[0] if alsa else ""
+    except Exception:
+        return ""
+
+
+def _parse_amixer_numid3(txt):
+    raw = ""
+    for l in txt.splitlines():
+        if "values=" in l:
+            raw = l.split("values=", 1)[-1].strip().split()[0]
+            break
+    if not raw:
+        return "?"
+    try:
+        return str(int(raw, 0))
+    except Exception:
+        return raw
+
+
+
 def check_audio():
     S("AUDIO (PulseAudio + amixer)")
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
@@ -228,7 +255,20 @@ def check_audio():
     if ds:
         ok(f"Default Sink: {ds}")
     else:
-        warn("Default Sink: leer (pactl get-default-sink + pactl info ergaben nichts)")
+        # Low-Risk Fallback: wenn genau ein ALSA-Sink da ist
+        fallback_sink = ""
+        try:
+            for ln in sinks.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and "alsa_output" in parts[1]:
+                    fallback_sink = parts[1]
+                    break
+        except Exception:
+            fallback_sink = ""
+        if fallback_sink:
+            warn(f"Default Sink: leer — Fallback aus sink list: {fallback_sink}")
+        else:
+            warn("Default Sink: leer (pactl get-default-sink + pactl info ergaben nichts)")
 
     # Sink-Inputs
     si = run(PA + "pactl list sink-inputs short 2>/dev/null")
@@ -242,12 +282,18 @@ def check_audio():
     # amixer numid=3 (Pi 3B Ausgang: 0=auto, 1=klinke, 2=HDMI)
     amix = run("amixer -c 0 cget numid=3 2>/dev/null")
     if amix:
-        val = ""
+        raw_val = ""
         for l in amix.splitlines():
             if "values=" in l:
-                val = l.strip()
+                raw_val = l.split("values=", 1)[-1].strip().split()[0]
+                break
         mapping = {"0": "Auto (unsicher!)", "1": "Klinke ✓", "2": "HDMI (kein Ton auf Klinke!)"}
-        raw = val.split("=")[-1] if "=" in val else "?"
+        raw = "?"
+        try:
+            if raw_val:
+                raw = str(int(raw_val, 0))
+        except Exception:
+            raw = raw_val or "?"
         label = mapping.get(raw, f"Unbekannt ({raw})")
         (ok if raw == "1" else warn)(f"Pi Audio-Ausgang (amixer numid=3): {label}")
     else:
@@ -264,6 +310,10 @@ def check_audio():
             req = state.get("requested", "?")
             rsn = state.get("reason", "?")
             ok(f"Audio-State: requested={req} effective={eff} reason={rsn}")
+            if eff == "klinke":
+                alsa_sink = _get_single_alsa_sink(sinks if "sinks" in dir() else "")
+                if alsa_sink:
+                    ok(f"Klinke-Routing plausibel: effective=klinke + sink={alsa_sink}")
         except Exception as e:
             warn(f"Audio-State: Lesefehler ({e})")
     else:

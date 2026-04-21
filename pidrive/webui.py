@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
 import os
 import json
 import time
@@ -242,6 +243,40 @@ def get_audio_debug() -> dict:
     return data
 
 
+
+def get_source_state_debug():
+    try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from modules import source_state
+        return source_state.snapshot()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def get_dab_scan_debug():
+    try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from modules import dab
+        return dab.get_last_scan_diag()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def get_spectrum_debug():
+    try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from modules import spectrum
+        return spectrum.load_last_spectrum()
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def build_view_model():
     status   = read_json(STATUS_FILE, {})
     menu     = read_json(MENU_FILE,   {})
@@ -287,6 +322,9 @@ def build_view_model():
         "avrcp_age":      file_age(AVRCP_FILE),
         "avrcp_exists":   os.path.exists(AVRCP_FILE),
         "audio_debug":    get_audio_debug(),
+        "source_state":   get_source_state_debug(),
+        "dab_scan_debug": get_dab_scan_debug(),
+        "spectrum_debug": get_spectrum_debug(),
         "list_data":      list_data,
         "list_active":    list_data.get("active", False),
         "list_title":     list_data.get("title", ""),
@@ -320,6 +358,41 @@ def index():
 def api_state():
     return jsonify(build_view_model())
 
+
+@app.route("/api/runtime")
+def api_runtime():
+    try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from settings import load_settings as _ls
+        settings = _ls()
+    except Exception:
+        settings = {}
+
+    return jsonify({
+        "ok": True,
+        "settings": {
+            "audio_output": settings.get("audio_output", "-"),
+            "volume": settings.get("volume", "-"),
+            "fm_gain": settings.get("fm_gain", "-"),
+            "dab_gain": settings.get("dab_gain", "-"),
+            "scanner_gain": settings.get("scanner_gain", "-"),
+            "ppm_correction": settings.get("ppm_correction", "-"),
+            "scanner_squelch": settings.get("scanner_squelch", "-"),
+            "last_source": settings.get("last_source", "-"),
+            "dab_scan_wait_lock": settings.get("dab_scan_wait_lock", "-"),
+            "dab_scan_http_timeout": settings.get("dab_scan_http_timeout", "-"),
+            "dab_scan_port": settings.get("dab_scan_port", "-"),
+            "dab_scan_channels": settings.get("dab_scan_channels", []),
+        },
+        "source_state": get_source_state_debug(),
+        "dab_scan_debug": get_dab_scan_debug(),
+        "spectrum_debug": get_spectrum_debug(),
+        "audio": get_audio_debug(),
+    })
+
+
 @app.route("/api/cmd", methods=["POST"])
 def api_cmd():
     data = request.get_json(silent=True) or {}
@@ -331,7 +404,7 @@ def api_cmd():
     prefixes = ("cat:", "reload_stations:",
                 "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
                 "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
-                "bt_connect:", "wifi_connect:", "bt_repair:",
+                "dab_scan_channels:", "bt_connect:", "wifi_connect:", "bt_repair:",
                 "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:", "dab_scan_channels:")
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
@@ -711,6 +784,26 @@ def api_volume():
         return jsonify({"ok": True, "volume_raw": txt.strip(), "volume": vol or "–"})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
+
+
+
+@app.route("/api/dab/scan/last")
+def api_dab_scan_last():
+    return jsonify({
+        "ok": True,
+        "data": get_dab_scan_debug(),
+        "age": file_age("/tmp/pidrive_dab_scan_debug.json"),
+    })
+
+
+@app.route("/api/spectrum/last")
+def api_spectrum_last():
+    return jsonify({
+        "ok": True,
+        "data": get_spectrum_debug(),
+        "age": file_age("/tmp/pidrive_spectrum.json"),
+        "exists": os.path.exists("/tmp/pidrive_spectrum.json"),
+    })
 
 
 if __name__ == "__main__":

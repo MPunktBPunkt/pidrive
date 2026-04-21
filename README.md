@@ -98,7 +98,26 @@ ssh -L 5588:127.0.0.1:5588 pi@<PI-IP> -N
 # Angezeigte URL im Browser öffnen → Spotify Login
 ```
 
-### Update
+#
+## settings.json — Konfigurationsreferenz (v0.9.5)
+
+| Key | Standard | Erklärung |
+|---|---|---|
+| `ppm_correction` | `49` | Quarzfehler RTL-SDR Stick (ppm) — gemessen per Kalibrierung |
+| `fm_gain` | `30` | FM Gain in dB, `-1` = Auto-AGC |
+| `dab_gain` | `-1` | DAB+ Gain, `-1` = Auto-AGC (empfohlen) |
+| `scanner_gain` | `-1` | Scanner Gain, `-1` = Auto-AGC |
+| `scanner_squelch` | `10` | Rauschunterdrückung, 0=offen, 10=empfindlich, 25=Standard |
+| `dab_scan_wait_lock` | `20` | Sekunden pro DAB-Kanal beim Scan (für schwachen Empfang erhöhen) |
+| `dab_scan_http_timeout` | `4` | HTTP-Timeout für mux.json-Abruf in Sekunden |
+| `dab_scan_port` | `7981` | welle-cli Port beim Scan (getrennt von WebUI-Diagnose Port 7979) |
+| `dab_scan_channels` | `["11D","10A","8D","8B","11B"]` | Gezielte Scan-Kanäle, leer = Vollscan aller 38 Kanäle |
+| `audio_output` | `"auto"` | Audioausgang: `auto`, `klinke`, `bt`, `hdmi` |
+| `volume` | `90` | Startup-Lautstärke in % |
+| `last_source` | `""` | Letzte Quelle für Boot-Resume (FM/DAB/Webradio) |
+
+
+## Update
 
 ```bash
 curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
@@ -173,7 +192,7 @@ pidrive/
 Baumbasiert (v0.8.x) — beliebig tief, iDrive-kompatibel.
 
 ```
-PiDrive  (v0.9.4 — Baumbasiert, beliebig tief)
+PiDrive  (v0.9.5 — Baumbasiert, beliebig tief)
 ├── Jetzt laeuft
 │   ├── Quelle / Titel         (info)
 │   ├── Spotify An/Aus         (toggle)
@@ -363,6 +382,23 @@ sudo apt install welle.io
 
 ## Changelog
 
+## Changelog
+
+### v0.9.5 (2026-04-21)
+- **State-Machine vervollständigt:** Spotify, Library, DAB-Scan, lib_browse über `begin/commit/end_transition`
+- **`boot_phase` korrekt:** `restore_bt` → `restore_source` → `steady` in `startup_tasks()`
+- **`audio_route` live:** `audio.py` spiegelt `effective` in `source_state` (klinke/bt/hdmi/none)
+- **DAB Lock-Status:** `_lock_state_name()` mit `no_signal/no_fct0_lock/fic_only/ensemble_locked/services_found`
+- **`NO_FCT0_LOCK` Warning:** explizite Warnung wenn `lastfct0==0` bei SNR≥2
+- **FM/DAB Start-Guard:** verhindert unnötige Neustarts gleicher Station
+- **WebUI Runtime-Panel:** `/api/runtime` liefert alle Settings inkl. DAB-Scan-Parameter
+- **WebUI Source-State sichtbar:** `get_source_state_debug()` in View-Model und API
+- **WebUI DAB-Scan-Diagnose:** `get_dab_scan_debug()`, `/api/dab/scan/last`, Tabelle mit Lock-Spalte
+- **WebUI Spectrum-Last:** `get_spectrum_debug()`, `/api/spectrum/last`
+- **Diagnose robuster:** Default-Sink Fallback, amixer Parse (`0x1`→`1`), Plausibilitätsprüfung Klinke
+- **spectrum.py Phase 2:** `_dedupe_peaks()`, `min_distance_bins`, kompaktere FM-Kandidatenliste
+- **install.sh:** Log-Prüfung robust (`tail -80 | grep -E`), numpy-Fix für Bullseye/Python 3.9
+
 ### v0.7.20 — Web UI
 - WebUI: Flask-Webinterface auf Port 8080 (`pidrive_web.service`)
 - Menü-Vorschau im Browser, Navigation, Log-Viewer, Diagnose
@@ -447,7 +483,7 @@ GPL-v3 — siehe [LICENSE](LICENSE)
 | Priorität | Feature | Status |
 |---|---|---|
 | 🔧 Kurzfristig | GPIO-Buttons (Key1-3) | offen |
-| ✅ Erledigt | Audio-Routing (Webradio/FM/DAB auf BT) | v0.9.4 |
+| ✅ Erledigt | Audio-Routing (Webradio/FM/DAB auf BT) | v0.9.5 |
 | 🔧 Kurzfristig | resume_state.py (Boot-Resume) | offen |
 | 🔧 Kurzfristig | USB-Tethering Autostart | offen |
 | 🔧 Kurzfristig | WebUI Breadcrumb-Navigation | offen |

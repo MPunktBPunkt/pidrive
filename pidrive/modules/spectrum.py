@@ -1,5 +1,5 @@
 """
-modules/spectrum.py — FFT/Spektrum-Prototyp für FM/Scanner-FastScan (v0.9.4)
+modules/spectrum.py — FFT/Spektrum-Prototyp für FM/Scanner-FastScan (v0.9.5)
 
 Ziel:
 - kurzer passiver IQ-Snapshot vom RTL-SDR
@@ -59,6 +59,22 @@ def _fft_power_db(samples):
     return db.tolist(), len(db)
 
 
+def _dedupe_peaks(peaks, resolution_mhz=0.1):
+    """Peaks auf Raster zusammenführen, stärksten dB behalten, Trefferzahl mitzählen."""
+    buckets = {}
+    for p in peaks:
+        key = round(round(float(p["freq_mhz"]) / resolution_mhz) * resolution_mhz, 3)
+        if key not in buckets:
+            buckets[key] = {"freq_mhz": key, "db": p["db"], "hits": 1}
+        else:
+            buckets[key]["hits"] += 1
+            if p["db"] > buckets[key]["db"]:
+                buckets[key]["db"] = p["db"]
+    result = list(buckets.values())
+    result.sort(key=lambda x: x["db"], reverse=True)
+    return result
+
+
 def _find_peaks(spectrum_db, center_mhz, sample_rate_hz,
                 min_db=None, max_peaks=20):
     """Lokale Maxima im Spektrum finden."""
@@ -83,7 +99,13 @@ def _find_peaks(spectrum_db, center_mhz, sample_rate_hz,
             peaks.append({"bin": i, "freq_mhz": round(freq_mhz, 6), "db": round(v, 2)})
 
     peaks.sort(key=lambda x: x["db"], reverse=True)
-    return peaks[:max_peaks]
+    selected = []
+    for p in peaks:
+        if all(abs(p["bin"] - q["bin"]) >= min_distance_bins for q in selected):
+            selected.append(p)
+        if len(selected) >= max_peaks:
+            break
+    return selected
 
 
 def save_last_spectrum(data: dict):

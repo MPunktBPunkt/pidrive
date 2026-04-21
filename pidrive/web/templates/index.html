@@ -1046,6 +1046,10 @@
             <div class="diag-row"><div class="diag-key">ppm</div><div class="diag-value" id="rtPpm">–</div></div>
             <div class="diag-row"><div class="diag-key">squelch</div><div class="diag-value" id="rtSquelch">–</div></div>
             <div class="diag-row"><div class="diag-key">last_source</div><div class="diag-value" id="rtLastSrc">–</div></div>
+            <div class="diag-row" style="margin-top:6px;border-top:1px solid #333;padding-top:6px"><div class="diag-key" style="color:#7cf">dab_wait_lock</div><div class="diag-value" id="rtDabWaitLock">–</div></div>
+            <div class="diag-row"><div class="diag-key" style="color:#7cf">dab_http_timeout</div><div class="diag-value" id="rtDabHttpTimeout">–</div></div>
+            <div class="diag-row"><div class="diag-key" style="color:#7cf">dab_scan_port</div><div class="diag-value" id="rtDabScanPort">–</div></div>
+            <div class="diag-row"><div class="diag-key" style="color:#7cf">dab_channels</div><div class="diag-value" id="rtDabChannels">–</div></div>
           </div>
           <div class="diag-card">
             <div class="diag-title">Laufende Prozesse</div>
@@ -1054,6 +1058,33 @@
         </div>
         <button onclick="refreshRuntime()">🔄 Runtime Refresh</button>
       </section>
+
+  <!-- SOURCE STATE (v0.9.5) -->
+  <section class="panel">
+    <div class="panel-title">🔀 Source State</div>
+    <pre id="rtSourceStateJson" style="font-size:0.7em;color:#7cf;white-space:pre-wrap">–</pre>
+  </section>
+
+  <!-- DAB Scan Diagnose Tabelle (v0.9.5) -->
+  <section class="panel">
+    <div class="panel-title">📡 DAB Scan Diagnose</div>
+    <div id="dabScanDiagTable" style="margin-bottom:8px"></div>
+    <details>
+      <summary style="cursor:pointer;color:#aaa;font-size:0.8em">Debug JSON</summary>
+      <pre id="rtDabScanJson" style="font-size:0.65em;color:#7cf;white-space:pre-wrap">–</pre>
+    </details>
+    <button onclick="refreshDabScanDebug()" style="margin-top:6px">🔄 DAB Scan Debug</button>
+  </section>
+
+  <!-- Spectrum Last (v0.9.5) -->
+  <section class="panel">
+    <div class="panel-title">📊 Spectrum Last</div>
+    <details>
+      <summary style="cursor:pointer;color:#aaa;font-size:0.8em">Letzter Spectrum-Snapshot</summary>
+      <pre id="rtSpectrumJson" style="font-size:0.65em;color:#7cf;white-space:pre-wrap">–</pre>
+    </details>
+    <button onclick="refreshSpectrumDebug()" style="margin-top:6px">🔄 Spectrum Refresh</button>
+  </section>
 
     <script>
     async function startDabDiag() {
@@ -1110,7 +1141,53 @@
         if (el('rtSquelch'))   el('rtSquelch').textContent   = s.scanner_squelch;
         if (el('rtLastSrc'))   el('rtLastSrc').textContent   = s.last_source || 'idle';
         if (el('rtProcPre'))   el('rtProcPre').textContent   = (p.lines || []).join('\n') || '– keine –';
+        // v0.9.5: neue DAB-Scan-Settings
+        if (el('rtDabWaitLock'))    el('rtDabWaitLock').textContent    = s.dab_scan_wait_lock != null ? s.dab_scan_wait_lock + 's' : '–';
+        if (el('rtDabHttpTimeout')) el('rtDabHttpTimeout').textContent = s.dab_scan_http_timeout != null ? s.dab_scan_http_timeout + 's' : '–';
+        if (el('rtDabScanPort'))    el('rtDabScanPort').textContent    = s.dab_scan_port || '–';
+        if (el('rtDabChannels'))    el('rtDabChannels').textContent    = Array.isArray(s.dab_scan_channels) ? s.dab_scan_channels.join(', ') : (s.dab_scan_channels || '–');
+        // source_state
+        if (el('rtSourceStateJson')) el('rtSourceStateJson').textContent = JSON.stringify(j.source_state || {}, null, 2);
+        // dab_scan_debug
+        if (j.dab_scan_debug) renderDabScanTable(j.dab_scan_debug);
+        if (el('rtDabScanJson')) el('rtDabScanJson').textContent = JSON.stringify(j.dab_scan_debug || {}, null, 2);
+        // spectrum
+        if (el('rtSpectrumJson')) el('rtSpectrumJson').textContent = JSON.stringify(j.spectrum_debug || {}, null, 2);
       } catch(e) { console.error('refreshRuntime', e); }
+    }
+
+    function renderDabScanTable(data) {
+      const root = document.getElementById('dabScanDiagTable');
+      if (!root) return;
+      const channels = (data && data.channels) || {};
+      const keys = Object.keys(channels);
+      if (!keys.length) { root.innerHTML = '<div style="color:#aaa;font-size:0.8em">Noch kein Scan-Ergebnis.</div>'; return; }
+      let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#7cf"><th style="text-align:left">Kanal</th><th>SNR</th><th>FIC CRC</th><th>Svcs</th><th>Lock</th><th>Ensemble</th></tr>';
+      for (const ch of keys) {
+        const r = channels[ch] || {};
+        const lockIcon = r.services > 0 ? '✅' : (r.snr >= 2 ? '~' : '–');
+        html += `<tr><td>${lockIcon} ${ch}</td><td>${r.snr ?? '–'}</td><td>${r.ficcrc ?? '–'}</td><td>${r.services ?? 0}</td><td style="font-size:10px">${r.lock_state || '–'}</td><td style="font-size:10px">${r.ensemble || '–'}</td></tr>`;
+      }
+      html += '</table>';
+      root.innerHTML = html;
+    }
+
+    async function refreshDabScanDebug() {
+      try {
+        const r = await fetch('/api/dab/scan/last');
+        const j = await r.json();
+        const d = (j && j.data) || {};
+        renderDabScanTable(d);
+        if (document.getElementById('rtDabScanJson')) document.getElementById('rtDabScanJson').textContent = JSON.stringify(d, null, 2);
+      } catch(e) { console.warn('refreshDabScanDebug', e); }
+    }
+
+    async function refreshSpectrumDebug() {
+      try {
+        const r = await fetch('/api/spectrum/last');
+        const j = await r.json();
+        if (document.getElementById('rtSpectrumJson')) document.getElementById('rtSpectrumJson').textContent = JSON.stringify((j && j.data) || {}, null, 2);
+      } catch(e) { console.warn('refreshSpectrumDebug', e); }
     }
     window.addEventListener('load', () => setTimeout(refreshRuntime, 1200));
     </script>
