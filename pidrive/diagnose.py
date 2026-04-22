@@ -201,15 +201,36 @@ def summary():
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
 def _get_single_alsa_sink(sinks_text):
+    """Gibt den ersten ALSA-Sink zurück der NICHT HDMI ist (Card 1 = Klinke)."""
     try:
-        alsa = []
+        headphone = []
+        hdmi_only = []
         for ln in sinks_text.splitlines():
             parts = ln.split()
-            if len(parts) >= 2 and "alsa_output" in parts[1]:
-                alsa.append(parts[1])
-        return alsa[0] if alsa else ""
+            if len(parts) < 2 or "alsa_output" not in parts[1]:
+                continue
+            name = parts[1].lower()
+            raw  = ln.lower()
+            if "hdmi" in name or "hdmi" in raw:
+                hdmi_only.append(parts[1])
+            else:
+                headphone.append(parts[1])
+        # Klinken-Sink bevorzugen; HDMI-Sink als letzter Ausweg
+        return headphone[0] if headphone else (hdmi_only[0] if hdmi_only else "")
     except Exception:
         return ""
+
+
+def _sink_is_hdmi(sink_name: str, sinks_text: str = "") -> bool:
+    """Prüft ob ein Sink-Name zu HDMI (Card 0) gehört."""
+    n = sink_name.lower()
+    if "hdmi" in n:
+        return True
+    # .0. im Namen = Card 0 = HDMI auf Pi 3B mit modernem Pi OS
+    import re
+    if re.search(r'alsa_output\.0\.', sink_name):
+        return True
+    return False
 
 
 def _parse_amixer_numid3(txt):
@@ -228,92 +249,167 @@ def _parse_amixer_numid3(txt):
 
 
 def check_audio():
+    """
+    Audio-Diagnose (v0.9.10) — prüft die vollständige Kette:
+    system.pa → PulseAudio-Sinks → Klinken-Sink vorhanden? → Default Sink → Routing
+    """
     S("AUDIO (PulseAudio + amixer)")
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
-    # PulseAudio aktiv?
+    # ── 1. PulseAudio aktiv? ────────────────────────────────────────────────
     pa_state = run("systemctl is-active pulseaudio 2>/dev/null")
     (ok if pa_state == "active" else err)(f"pulseaudio.service: {pa_state}")
 
-    # Sinks
+    # ── 2. system.pa — Card 1 (Headphones/Klinke) geladen? ─────────────────
+    # ROOT CAUSE v0.9.10: setup_bt_audio.sh schrieb system.pa nur mit device_id=0 (HDMI)
+    # → kein Klinken-Sink in PulseAudio → Audio geht zu HDMI → kein Ton
+    sys_pa = "/etc/pulse/system.pa"
+    if os.path.exists(sys_pa):
+        try:
+            with open(sys_pa) as f:
+                spa_content = f.read()
+            has_card0 = "device_id=0" in spa_content
+            has_card1 = "device_id=1" in spa_content
+            if has_card0 and has_card1:
+                ok("system.pa: Card 0 (HDMI) + Card 1 (Headphones/Klinke) ✓")
+            elif has_card1 and not has_card0:
+                ok("system.pa: Card 1 (Headphones/Klinke) geladen — Card 0 fehlt (OK wenn kein HDMI)")
+            elif has_card0 and not has_card1:
+                err("system.pa: NUR Card 0 (HDMI) geladen — Card 1 (Klinke) FEHLT!")
+                err("  → FIX: sudo sed -i 's/device_id=0/device_id=0\\nload-module module-alsa-card device_id=1/' /etc/pulse/system.pa")
+                err("  → dann: sudo systemctl restart pulseaudio")
+            else:
+                warn("system.pa: kein module-alsa-card gefunden")
+        except Exception as e:
+            warn(f"system.pa: Lesefehler ({e})")
+    else:
+        warn("system.pa: /etc/pulse/system.pa nicht gefunden")
+
+    # ── 3. ALSA Hardware (aplay -l) ─────────────────────────────────────────
+    aplay_out = run("aplay -l 2>/dev/null")
+    has_hdmi = "HDMI" in aplay_out or "hdmi" in aplay_out.lower()
+    has_headphones = "Headphones" in aplay_out or "headphones" in aplay_out.lower()
+    if has_headphones:
+        ok("ALSA: bcm2835 Headphones (Klinke) als Hardware erkannt ✓")
+    else:
+        warn("ALSA: kein Headphones-Gerät in aplay -l — Treiberproblem?")
+    if has_hdmi:
+        nfo("ALSA: bcm2835 HDMI vorhanden (Card 0)")
+
+    # ── 4. amixer controls — Klinken-Control ermitteln ──────────────────────
+    # amixer numid=3 ist auf neuem Pi OS NICHT der Routing-Switch!
+    # Auf Kernel >=5.x: Card 0 hat Master Playback Volume, kein Route-Switch
+    # Card 1 (Headphones) hat eigene PCM-Controls
+    amix_c0 = run("amixer -c 0 controls 2>/dev/null")
+    amix_c1 = run("amixer -c 1 controls 2>/dev/null")
+    if amix_c0:
+        has_route_c0 = "PCM Playback Route" in amix_c0 or "Route" in amix_c0
+        has_pcm_c0   = "PCM Playback Volume" in amix_c0 or "Master" in amix_c0
+        if has_route_c0:
+            nfo("amixer Card 0: PCM Playback Route vorhanden (alter Kernel)")
+        elif has_pcm_c0:
+            nfo("amixer Card 0: Master/PCM Volume — kein Route-Switch (neuer Kernel, HDMI)")
+    if amix_c1:
+        has_pcm_c1 = "PCM Playback Volume" in amix_c1
+        has_mute_c1 = "PCM Playback Switch" in amix_c1
+        if has_pcm_c1:
+            vol_c1 = run("amixer -c 1 sget 'PCM' 2>/dev/null")
+            if "on" in vol_c1.lower():
+                ok("amixer Card 1 (Klinke): PCM Playback = on (nicht gemutet) ✓")
+            elif "off" in vol_c1.lower():
+                err("amixer Card 1 (Klinke): PCM Playback GEMUTET — FIX: amixer -c 1 sset 'PCM' 85% unmute")
+            else:
+                nfo(f"amixer Card 1: {vol_c1[:60]}")
+        else:
+            warn("amixer Card 1: kein PCM Playback Volume Control")
+    else:
+        warn("amixer Card 1 nicht erreichbar — Card 1 existiert als ALSA-Gerät?")
+
+    # ── 5. PulseAudio Sinks — Klinken-Sink vorhanden? ───────────────────────
     sinks = run(PA + "pactl list sinks short 2>/dev/null")
+    sink_list = []
     if sinks:
         for s in sinks.splitlines():
-            nfo(f"Sink: {s[:80]}")
+            if not s.strip():
+                continue
+            parts = s.split()
+            if len(parts) >= 2:
+                sink_list.append(parts[1])
+                nfo(f"Sink: {s[:90]}")
     else:
-        warn("Keine PulseAudio-Sinks (pactl nicht erreichbar?)")
+        err("Keine PulseAudio-Sinks — PulseAudio läuft aber keine Sinks?")
 
-    # Default Sink
+    # Kritische Prüfung: gibt es einen Nicht-HDMI ALSA-Sink?
+    klinke_sinks = [s for s in sink_list if "alsa_output" in s and not _sink_is_hdmi(s)]
+    hdmi_sinks   = [s for s in sink_list if "alsa_output" in s and _sink_is_hdmi(s)]
+
+    if klinke_sinks:
+        ok(f"Klinken-Sink vorhanden: {klinke_sinks[0]} ✓")
+    else:
+        err("KEIN Klinken-Sink in PulseAudio!")
+        if hdmi_sinks:
+            err(f"  Nur HDMI-Sink vorhanden: {hdmi_sinks[0]}")
+            err("  → Audio geht zu HDMI → kein Ton auf Klinke")
+            err("  → FIX: sudo sed -i 's/device_id=0/device_id=0\nload-module module-alsa-card device_id=1/' /etc/pulse/system.pa && sudo systemctl restart pulseaudio")
+
+    # ── 6. Default Sink ──────────────────────────────────────────────────────
     ds = run(PA + "pactl get-default-sink 2>/dev/null")
     if not ds:
-        # Fallback: pactl info enthält "Default Sink: NAME"
         info_txt = run(PA + "pactl info 2>/dev/null")
         for ln in info_txt.splitlines():
             if "Default Sink:" in ln:
                 ds = ln.split(":", 1)[1].strip()
                 break
     if ds:
-        ok(f"Default Sink: {ds}")
-    else:
-        # Low-Risk Fallback: wenn genau ein ALSA-Sink da ist
-        fallback_sink = ""
-        try:
-            for ln in sinks.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2 and "alsa_output" in parts[1]:
-                    fallback_sink = parts[1]
-                    break
-        except Exception:
-            fallback_sink = ""
-        if fallback_sink:
-            warn(f"Default Sink: leer — Fallback aus sink list: {fallback_sink}")
+        if _sink_is_hdmi(ds):
+            err(f"Default Sink: {ds} — IST HDMI! Kein Ton auf Klinke")
+            err("  → FIX: pactl set-default-sink " + (klinke_sinks[0] if klinke_sinks else "<klinke-sink>"))
+        elif "alsa_output" in ds:
+            ok(f"Default Sink: {ds} (Klinke) ✓")
         else:
-            warn("Default Sink: leer (pactl get-default-sink + pactl info ergaben nichts)")
+            nfo(f"Default Sink: {ds}")
+    else:
+        err("Default Sink: NICHT GESETZT — mpv wählt ersten verfügbaren Sink (oft HDMI!)")
+        if klinke_sinks:
+            err(f"  → FIX: PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink {klinke_sinks[0]}")
 
-    # Sink-Inputs
+    # ── 7. Sink-Inputs ───────────────────────────────────────────────────────
     si = run(PA + "pactl list sink-inputs short 2>/dev/null")
     if si:
         ok(f"Aktive Sink-Inputs: {len(si.splitlines())} (mpv/librespot?)")
         for s in si.splitlines():
-            nfo(f"  Input: {s[:80]}")
+            nfo(f"  Input: {s[:90]}")
+        # Prüfen ob Inputs auf HDMI-Sink laufen
+        for s in si.splitlines():
+            parts = s.split()
+            if len(parts) >= 2:
+                sink_id = parts[1]
+                # Sink-ID mit Sink-Namen abgleichen
+                for ln in (sinks or "").splitlines():
+                    p = ln.split()
+                    if len(p) >= 2 and p[0] == sink_id and _sink_is_hdmi(p[1]):
+                        err(f"  ⚠ Sink-Input {parts[0]} läuft auf HDMI-Sink! → kein Ton auf Klinke")
     else:
-        warn("Keine aktiven Sink-Inputs — kein Audio läuft gerade?")
+        warn("Keine aktiven Sink-Inputs — kein Audio läuft gerade")
 
-    # amixer numid=3 (Pi 3B Ausgang: 0=auto, 1=klinke, 2=HDMI)
-    amix = run("amixer -c 0 cget numid=3 2>/dev/null")
-    if amix:
-        raw_val = ""
-        for l in amix.splitlines():
-            if "values=" in l:
-                raw_val = l.split("values=", 1)[-1].strip().split()[0]
-                break
-        mapping = {"0": "Auto (unsicher!)", "1": "Klinke ✓", "2": "HDMI (kein Ton auf Klinke!)"}
-        raw = "?"
-        try:
-            if raw_val:
-                raw = str(int(raw_val, 0))
-        except Exception:
-            raw = raw_val or "?"
-        label = mapping.get(raw, f"Unbekannt ({raw})")
-        (ok if raw == "1" else warn)(f"Pi Audio-Ausgang (amixer numid=3): {label}")
-    else:
-        warn("amixer numid=3 nicht lesbar")
-
-    # Audio State File
+    # ── 8. Audio State File ──────────────────────────────────────────────────
     state_file = "/tmp/pidrive_audio_state.json"
     if os.path.exists(state_file):
         import json
         try:
             with open(state_file) as f:
                 state = json.load(f)
-            eff = state.get("effective", "?")
-            req = state.get("requested", "?")
-            rsn = state.get("reason", "?")
+            eff  = state.get("effective", "?")
+            req  = state.get("requested", "?")
+            rsn  = state.get("reason", "?")
+            sink = state.get("sink", "?")
             ok(f"Audio-State: requested={req} effective={eff} reason={rsn}")
-            if eff == "klinke":
-                alsa_sink = _get_single_alsa_sink(sinks if "sinks" in dir() else "")
-                if alsa_sink:
-                    ok(f"Klinke-Routing plausibel: effective=klinke + sink={alsa_sink}")
+            # Kreuzvalidierung: behauptet klinke, aber Sink ist HDMI?
+            if eff == "klinke" and sink and _sink_is_hdmi(sink):
+                err(f"  ⚠ WIDERSPRUCH: effective=klinke aber sink={sink} ist HDMI!")
+                err("     PiDrive glaubt Klinke zu spielen, Audio geht aber zu HDMI")
+            elif eff == "klinke" and sink and not _sink_is_hdmi(sink):
+                ok(f"  Sink={sink} ist Klinke ✓")
         except Exception as e:
             warn(f"Audio-State: Lesefehler ({e})")
     else:
