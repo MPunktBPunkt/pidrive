@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.9           ║
+║        PiDrive Installer v0.9.11           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -315,10 +315,33 @@ ASOUNDEOF
   if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
   amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
 
-  # PulseAudio neu starten damit es /etc/asound.conf übernimmt
+  # v0.9.10: system.pa prüfen — fehlende Card 1 (Headphones) ergänzen
+  # setup_bt_audio.sh schreibt system.pa nur mit device_id=0 (HDMI)
+  # → Klinken-Sink fehlt in PulseAudio! Hier sicherstellen dass card 1 geladen wird.
+  if [ -f /etc/pulse/system.pa ]; then
+    if grep -q "module-alsa-card" /etc/pulse/system.pa && ! grep -q "device_id=1" /etc/pulse/system.pa; then
+      sed -i 's/load-module module-alsa-card device_id=0/load-module module-alsa-card device_id=0\nload-module module-alsa-card device_id=1/' /etc/pulse/system.pa
+      ok "system.pa: Card 1 (Headphones/Klinke) ergänzt"
+    elif ! grep -q "module-alsa-card" /etc/pulse/system.pa; then
+      printf '\nload-module module-alsa-card device_id=1\n' >> /etc/pulse/system.pa
+      ok "system.pa: Card 1 (Headphones/Klinke) hinzugefügt"
+    else
+      ok "system.pa: Card 1 bereits vorhanden"
+    fi
+  fi
+
+  # PulseAudio neu starten damit beide Karten geladen werden
   systemctl restart pulseaudio 2>/dev/null || true
-  sleep 2
-  ok "PulseAudio: neu gestartet (übernimmt neues ALSA-Mapping)"
+  sleep 3
+
+  # Default Sink auf Klinke (card 1) setzen
+  KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | grep -v hdmi | grep -v HDMI | grep "alsa_output" | head -1 | awk '{print $2}')
+  if [ -n "$KLINKE_SINK" ]; then
+    PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink "$KLINKE_SINK" 2>/dev/null || true
+    ok "PulseAudio: Default Sink = $KLINKE_SINK"
+  else
+    ok "PulseAudio: neu gestartet (Sink-Erkennung beim nächsten Start)"
+  fi
 
   # __pycache__ loeschen: alte .pyc mit pygame-Import
   find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true

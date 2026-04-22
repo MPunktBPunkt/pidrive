@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.8
+# PiDrive — Kontext & Projektdokumentation v0.9.11
 
 ## Projektbeschreibung
 
@@ -921,6 +921,50 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.11 — Diagnose erkennt Klinken-Fehler zuverlässig
+
+**Motivation:** diagnose.py zeigte ✓ ALSA Sink auch wenn der Sink HDMI war.
+`check_audio()` prüft jetzt die vollständige Kette: system.pa → ALSA → amixer → PA-Sinks → Routing.
+
+**Geändert: `diagnose.py`**
+- Prüft `/etc/pulse/system.pa` auf `device_id=1` (Klinke) — zeigt Fix-Kommando wenn fehlend
+- Prüft `aplay -l` auf bcm2835 Headphones
+- Prüft `amixer -c 1 sget PCM` auf Mute-Status
+- `_sink_is_hdmi()`: erkennt HDMI per Name UND Card-Index (`.0.` = Card 0 = HDMI)
+- Warnt + Fix-Kommando wenn Klinken-Sink in PulseAudio fehlt
+- Warnt wenn Default Sink HDMI ist
+- Kreuzvalidiert: `effective=klinke` vs. tatsächlicher Sink-Name
+
+**Geänderte Dateien:** `diagnose.py`, `VERSION`
+
+---
+
+### v0.9.11 — Diagnose + v0.9.10 Root Cause Kein Ton: PulseAudio lud nur HDMI (device_id=0)
+
+**Root Cause (endgültig):**
+`setup_bt_audio.sh` schrieb `/etc/pulse/system.pa` mit nur `module-alsa-card device_id=0`
+(= HDMI). Card 1 (bcm2835 Headphones = Klinke) existierte NIE als PulseAudio-Sink.
+
+| # | Datei | Fix |
+|---|---|---|
+| 1 | `setup_bt_audio.sh` | `system.pa` lädt jetzt `device_id=0` (HDMI) + `device_id=1` (Klinke) |
+| 2 | `install.sh` | Patcht laufendes `system.pa` falls `device_id=1` fehlt; setzt Default Sink |
+| 3 | `modules/audio.py` | `_ensure_klinke_sink()` lädt Card 1 dynamisch via `pactl load-module` |
+| 4 | `modules/audio.py` | `get_alsa_sink()` erkennt `.1.stereo-fallback` und `klinke_sink` |
+
+**Geänderte Dateien:** `setup_bt_audio.sh`, `install.sh`, `modules/audio.py`, `VERSION`
+
+---
+
+### v0.9.9 — ALSA-Karten-Root-Cause
+
+**Root Cause:**
+Card 0 = HDMI, Card 1 = Headphones. Alle amixer-Befehle trafen HDMI.
+Fix: `/etc/asound.conf` + `_get_headphone_card()` + `get_alsa_sink()` filtert HDMI.
+*(Unvollständig — PulseAudio hatte immer noch keinen Card-1-Sink)*
+
+---
 
 ### v0.9.8 — PCM-Unmute, BT-Connect-Lock, Scan-Polling
 
@@ -2043,13 +2087,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.8)
+## Aktueller Stand (v0.9.11)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
 ✓ pidrive_core.service      v0.9.8 — PCM-Unmute-Fix, BT-Scan-Polling, Connect-Lock
-✓ pidrive_display.service   v0.9.8, 20fps
+✓ pidrive_display.service   v0.9.11, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)

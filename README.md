@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.9-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.11-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,17 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.11 (2026-04-21)
+
+**Diagnose prüft Klinken-Kette vollständig:** `diagnose.py` prüft jetzt `system.pa`,
+`aplay -l`, amixer Card 1, PulseAudio-Sinks und Routing als Kette mit Fix-Kommandos.
+
+### v0.9.10 (2026-04-21)
+
+**Root Cause kein Ton (endgültig):** `setup_bt_audio.sh` lud in `system.pa` nur
+`module-alsa-card device_id=0` (HDMI) — Card 1 (Klinke) war nie als PA-Sink vorhanden.
+Fix in `setup_bt_audio.sh`, `install.sh`, `audio.py`.
 
 ### v0.9.9 (2026-04-21)
 
