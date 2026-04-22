@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.11           ║
+║        PiDrive Installer v0.9.13           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -334,13 +334,19 @@ ASOUNDEOF
   systemctl restart pulseaudio 2>/dev/null || true
   sleep 3
 
-  # Default Sink auf Klinke (card 1) setzen
-  KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | grep -v hdmi | grep -v HDMI | grep "alsa_output" | head -1 | awk '{print $2}')
+  # v0.9.13: Default Sink auf Klinke (Card 1 = alsa_output.1.*) setzen
+  # ACHTUNG: alsa_output.0.* enthält KEIN "hdmi" im Namen!
+  # -v hdmi filtert NOT, weil "0.stereo-fallback" ≠ "hdmi" — Card-Index ist der Indikator.
+  KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | awk '$2 ~ /alsa_output\.1\./ {print $2; exit}')
+  if [ -z "$KLINKE_SINK" ]; then
+    # Fallback: analog-stereo oder headphone im Namen
+    KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | grep -i 'analog\|headphone' | grep alsa_output | head -1 | awk '{print $2}')
+  fi
   if [ -n "$KLINKE_SINK" ]; then
     PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink "$KLINKE_SINK" 2>/dev/null || true
-    ok "PulseAudio: Default Sink = $KLINKE_SINK"
+    ok "PulseAudio: Default Sink = $KLINKE_SINK (Klinke Card 1)"
   else
-    ok "PulseAudio: neu gestartet (Sink-Erkennung beim nächsten Start)"
+    warn "PulseAudio: Klinken-Sink noch nicht sichtbar — beim ersten Abspielen gesetzt"
   fi
 
   # __pycache__ loeschen: alte .pyc mit pygame-Import

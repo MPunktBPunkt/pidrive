@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.11-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.13-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,17 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.13 (2026-04-22)
+
+**Klinken-Sink Card-Index-Fix:** `alsa_output.0.*` = HDMI (kein "hdmi" im Namen!).
+`get_alsa_sink()` + `install.sh` + WebUI Sink-Typ nutzen jetzt Card-Nummer `.0.`/`.1.`
+als Indikator. WebUI Lautstärke zeigt jetzt Wert auch wenn Default Sink leer.
+
+### v0.9.12 (2026-04-21)
+
+**BT-Diagnose vollständige Kette:** `check_bluetooth()` prüft rfkill, Controller BR/EDR-Fähigkeit,
+system.pa BT-Module, BlueZ-DB Pairing-Keys, BT-Agent und BLE vs. Classic Hinweise.
 
 ### v0.9.11 (2026-04-21)
 

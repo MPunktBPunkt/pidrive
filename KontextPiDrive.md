@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.11
+# PiDrive — Kontext & Projektdokumentation v0.9.13
 
 ## Projektbeschreibung
 
@@ -922,7 +922,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.9.11 — Diagnose erkennt Klinken-Fehler zuverlässig
+### v0.9.13 — Diagnose erkennt Klinken-Fehler zuverlässig
 
 **Motivation:** diagnose.py zeigte ✓ ALSA Sink auch wenn der Sink HDMI war.
 `check_audio()` prüft jetzt die vollständige Kette: system.pa → ALSA → amixer → PA-Sinks → Routing.
@@ -940,7 +940,7 @@ sudo systemctl restart pidrive_display
 
 ---
 
-### v0.9.11 — Diagnose + v0.9.10 Root Cause Kein Ton: PulseAudio lud nur HDMI (device_id=0)
+### v0.9.13 — Diagnose + v0.9.10 Root Cause Kein Ton: PulseAudio lud nur HDMI (device_id=0)
 
 **Root Cause (endgültig):**
 `setup_bt_audio.sh` schrieb `/etc/pulse/system.pa` mit nur `module-alsa-card device_id=0`
@@ -2087,13 +2087,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.11)
+## Aktueller Stand (v0.9.13)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
 ✓ pidrive_core.service      v0.9.8 — PCM-Unmute-Fix, BT-Scan-Polling, Connect-Lock
-✓ pidrive_display.service   v0.9.11, 20fps
+✓ pidrive_display.service   v0.9.13, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)

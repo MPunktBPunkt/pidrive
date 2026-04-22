@@ -175,8 +175,10 @@ def get_audio_debug() -> dict:
             parts = line.split()
             if len(parts) >= 2:
                 name = parts[1]
-                typ  = "bt" if "bluez_sink" in name else \
-                       "hdmi" if "hdmi" in name.lower() else \
+                import re as _re
+                typ  = "bt"   if "bluez_sink"  in name else \
+                       "hdmi" if ("hdmi" in name.lower() or
+                                  _re.search(r"alsa_output\.0\.", name)) else \
                        "alsa" if "alsa_output" in name else "other"
                 data["sinks"].append({
                     "id":   parts[0],
@@ -756,33 +758,61 @@ def api_rtlsdr_calibrate():
 
 @app.route("/api/volume")
 def api_volume():
-    """Gibt aktuelle PulseAudio-Lautstärke zurück (v0.8.16: Default + BT-Sink)."""
+    """
+    PulseAudio-Lautstärke (v0.9.13).
+    @DEFAULT_SINK@ ist im System-Daemon oft leer → Fallback auf echten Sink-Namen.
+    """
     try:
         PA = "PULSE_SERVER=unix:/var/run/pulse/native "
-        # Default Sink Volume
+
+        def _extract_vol(txt):
+            for part in txt.split():
+                if part.endswith("%"):
+                    return part
+            return ""
+
+        def _get_klinke_sink_name():
+            """Card 1 = Klinke: alsa_output.1.* suchen."""
+            import re as _re
+            r = safe_run(PA + "pactl list sinks short 2>/dev/null")
+            for ln in (r.get("stdout","") or "").splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
+                    return parts[1]
+            # Fallback: RUNNING sink der kein HDMI ist
+            for ln in (r.get("stdout","") or "").splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and "alsa_output" in parts[1] and "hdmi" not in parts[1].lower():
+                    return parts[1]
+            return ""
+
+        # 1. @DEFAULT_SINK@ versuchen
         r = safe_run(PA + "pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null")
-        txt = r.get("stdout", "") or ""
-        vol = ""
-        for part in txt.split():
-            if part.endswith("%"):
-                vol = part
-                break
-        # Fallback: pactl list sinks für aktuellen Sink
+        vol = _extract_vol(r.get("stdout","") or "")
+
+        # 2. Wenn leer: echten Sink-Namen verwenden
+        if not vol:
+            sink = _get_klinke_sink_name()
+            if sink:
+                r2 = safe_run(PA + f"pactl get-sink-volume {sink} 2>/dev/null")
+                vol = _extract_vol(r2.get("stdout","") or "")
+
+        # 3. Letzter Fallback: RUNNING sink in pactl list sinks
         if not vol:
             sinks_r = safe_run(PA + "pactl list sinks 2>/dev/null")
             sinks_txt = sinks_r.get("stdout", "") or ""
-            in_default = False
+            capture = False
             for ln in sinks_txt.splitlines():
-                if "* index:" in ln or "State: RUNNING" in ln:
-                    in_default = True
-                if in_default and "Volume:" in ln and "%" in ln:
-                    for part in ln.split():
-                        if part.endswith("%"):
-                            vol = part
-                            break
+                if "State: RUNNING" in ln:
+                    capture = True
+                if capture and "Volume:" in ln and "%" in ln:
+                    vol = _extract_vol(ln)
                     if vol:
                         break
-        return jsonify({"ok": True, "volume_raw": txt.strip(), "volume": vol or "–"})
+                if capture and ln.strip().startswith("index:"):
+                    capture = False  # nächster Sink-Block
+
+        return jsonify({"ok": True, "volume": vol or "–"})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 

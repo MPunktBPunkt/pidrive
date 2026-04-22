@@ -1,6 +1,6 @@
 """
 modules/audio.py - Zentraler Audioausgang fuer PiDrive
-PiDrive v0.9.11 - STRICT PulseAudio Only + shared debug state
+PiDrive v0.9.13 - STRICT PulseAudio Only + shared debug state
 
 Neu in v0.9.7:
 - _set_pi_output_klinke() setzt auch ALSA PCM-Volume (numid=1) auf 85%
@@ -17,6 +17,7 @@ Neu in v0.8.13:
 
 import os
 import json
+import re
 import subprocess
 import time
 import ipc
@@ -158,6 +159,22 @@ def get_bt_sink() -> str:
     return ""
 
 
+def _sink_is_hdmi(sink_name: str) -> bool:
+    """
+    Card 0 = HDMI, Card 1 = Headphones (Klinke) auf Pi 3B mit modernem Pi OS.
+    alsa_output.0.stereo-fallback → HDMI
+    alsa_output.1.stereo-fallback → Klinke
+    Der Name enthält KEIN 'hdmi' — Card-Nummer ist der einzig zuverlässige Indikator.
+    """
+    n = sink_name.lower()
+    if "hdmi" in n:
+        return True
+    # .0. im Namen = Card 0 = HDMI auf Pi 3B
+    if re.search(r'alsa_output\.0\.', sink_name):
+        return True
+    return False
+
+
 def _ensure_klinke_sink() -> bool:
     """
     Lädt Card 1 (Headphones/Klinke) als PulseAudio-Sink falls noch nicht vorhanden (v0.9.10).
@@ -186,30 +203,13 @@ def _ensure_klinke_sink() -> bool:
 
 def get_alsa_sink() -> str:
     """
-    Gibt den ALSA Klinken-Sink zurück (v0.9.10).
-    Priorität: klinke_sink > analog/headphone > alsa_output ohne HDMI
-    HDMI-Sinks (card 0) werden explizit ausgeschlossen.
+    Gibt den ALSA Klinken-Sink zurück (v0.9.13).
+    Card 0 = HDMI, Card 1 = Headphones/Klinke.
+    alsa_output.0.* wird via _sink_is_hdmi() ausgeschlossen.
     """
     sinks = _list_sinks()
-    # 1. Explizit benannter klinke_sink (von setup_bt_audio.sh wenn korrekt konfiguriert)
     for s in sinks:
-        if s["name"] == "klinke_sink":
-            return s["name"]
-    # 2. Analog/Headphones-Sinks bevorzugen
-    for s in sinks:
-        name = s["name"].lower()
-        raw  = s["raw"].lower()
-        if "hdmi" in name or "hdmi" in raw:
-            continue
-        if "alsa_output" in s["name"] and ("analog" in name or "headphone" in name):
-            return s["name"]
-    # 3. Beliebiger alsa_output ohne HDMI (inkl. .1.stereo-fallback)
-    for s in sinks:
-        name = s["name"].lower()
-        raw  = s["raw"].lower()
-        if "hdmi" in name or "hdmi" in raw:
-            continue
-        if "alsa_output" in s["name"]:
+        if "alsa_output" in s["name"] and not _sink_is_hdmi(s["name"]):
             return s["name"]
     return ""
 

@@ -417,21 +417,88 @@ def check_audio():
 
 
 def check_bluetooth():
+    """
+    Bluetooth-Diagnose (v0.9.11) — prüft die vollständige BT-Kette:
+    Controller → rfkill → BlueZ-DB → Pairing-Keys → PulseAudio BT-Module → A2DP-Sink
+    """
     S("BLUETOOTH")
+    PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
-    # Service Status
+    # ── 1. bluetooth.service ────────────────────────────────────────────────
     bt_state = run("systemctl is-active bluetooth 2>/dev/null")
     (ok if bt_state == "active" else err)(f"bluetooth.service: {bt_state}")
 
-    # hci0 vorhanden?
+    # ── 2. rfkill — BT geblockt? ────────────────────────────────────────────
+    rfk = run("rfkill list bluetooth 2>/dev/null")
+    if rfk:
+        soft = "Soft blocked: yes" in rfk
+        hard = "Hard blocked: yes" in rfk
+        if hard:
+            err("rfkill: BT HARD BLOCKED — Hardware-Schalter oder BIOS")
+        elif soft:
+            err("rfkill: BT SOFT BLOCKED — FIX: rfkill unblock bluetooth")
+        else:
+            ok("rfkill: BT nicht blockiert ✓")
+    else:
+        nfo("rfkill: kein BT-Eintrag (normal wenn Dongle noch nicht bereit)")
+
+    # ── 3. hci0 Controller ──────────────────────────────────────────────────
     hci = run("hciconfig hci0 2>/dev/null")
     if hci:
         up = "UP RUNNING" in hci
-        (ok if up else warn)(f"hci0: {'UP RUNNING' if up else 'DOWN / fehlt'}")
+        (ok if up else warn)(f"hci0: {'UP RUNNING ✓' if up else 'DOWN — FIX: hciconfig hci0 up'}")
+        # BT-Version aus hciconfig
+        for ln in hci.splitlines():
+            if "LMP Version" in ln or "HCI Version" in ln:
+                nfo(f"  Controller: {ln.strip()}")
     else:
         err("hci0 nicht gefunden — BT-Dongle fehlt oder Treiber-Problem")
 
-    # Gepaarte Geräte
+    # BT-Controller Capabilities via btmgmt
+    btmgmt = run("btmgmt info 2>/dev/null")
+    if btmgmt:
+        has_bredr = "bredr" in btmgmt.lower()
+        has_le    = "le" in btmgmt.lower()
+        if has_bredr:
+            ok("Controller: BR/EDR (Classic BT) unterstützt ✓ — A2DP möglich")
+        else:
+            err("Controller: kein BR/EDR — A2DP NICHT möglich (Headphones benötigen Classic BT!)")
+        if has_le:
+            nfo("Controller: BLE unterstützt (für PiDrive irrelevant — A2DP nutzt Classic)")
+    else:
+        nfo("btmgmt nicht verfügbar — Controller-Features unbekannt")
+
+    # ── 4. system.pa — BT-Module geladen? ───────────────────────────────────
+    sys_pa = "/etc/pulse/system.pa"
+    if os.path.exists(sys_pa):
+        with open(sys_pa) as f:
+            spa = f.read()
+        has_discover = "module-bluetooth-discover" in spa
+        has_policy   = "module-bluetooth-policy"   in spa
+        if has_discover:
+            ok("system.pa: module-bluetooth-discover ✓")
+        else:
+            err("system.pa: module-bluetooth-discover FEHLT — BT A2DP wird nie als Sink geladen!")
+            err("  → FIX: 'load-module module-bluetooth-discover' in /etc/pulse/system.pa ergänzen")
+        if has_policy:
+            ok("system.pa: module-bluetooth-policy ✓")
+        else:
+            warn("system.pa: module-bluetooth-policy fehlt — Auto-Switching evtl. deaktiviert")
+    else:
+        warn("system.pa: /etc/pulse/system.pa nicht gefunden")
+
+    # ── 5. PulseAudio BT-Module aktiv? ──────────────────────────────────────
+    pa_modules = run(PA + "pactl list modules short 2>/dev/null")
+    if pa_modules:
+        for mod in ["module-bluetooth-discover", "module-bluetooth-policy"]:
+            loaded = mod in pa_modules
+            (ok if loaded else warn)(
+                f"PulseAudio: {mod} {'geladen ✓' if loaded else 'NICHT geladen'}"
+            )
+    else:
+        warn("PulseAudio: Modulliste nicht abrufbar")
+
+    # ── 6. Gepaarte Geräte und BlueZ-DB ─────────────────────────────────────
     paired = run("bluetoothctl paired-devices 2>/dev/null")
     if paired:
         ok(f"Gepaarte Geräte: {len(paired.splitlines())}")
@@ -439,22 +506,73 @@ def check_bluetooth():
             nfo(f"  {l}")
     else:
         warn("Keine gepaarten Geräte in BlueZ-Datenbank")
-        warn("→ Gerät muss neu gepairt werden (bluetoothctl: pair ...)")
+        warn("  → Gerät muss neu gepairt werden (Kopfhörer in Pairing-Modus!)")
 
-    # BT-Agent
-    agent_test = run("echo 'agent on' | timeout 4s bluetoothctl 2>/dev/null")
-    if "registered" in agent_test.lower() or "agent on" in agent_test.lower():
-        ok("BT-Agent: registrierbar")
+    # Letztes bekanntes Gerät aus settings.json
+    try:
+        import json
+        with open(os.path.join(os.path.dirname(__file__), "config", "settings.json")) as f:
+            sett = json.load(f)
+        last_mac  = sett.get("bt_last_mac", "")
+        last_name = sett.get("bt_last_name", "")
+        if last_mac:
+            nfo(f"  Letztes Gerät (settings.json): {last_name} [{last_mac}]")
+            # Ist es in der BlueZ-DB?
+            bt_dir = f"/var/lib/bluetooth"
+            found_in_db = False
+            if os.path.isdir(bt_dir):
+                for adapter in os.listdir(bt_dir):
+                    dev_path = os.path.join(bt_dir, adapter, last_mac)
+                    if os.path.isdir(dev_path):
+                        info_file = os.path.join(dev_path, "info")
+                        if os.path.isfile(info_file):
+                            found_in_db = True
+                            # Prüfe ob gepairt (LinkKey vorhanden)
+                            with open(info_file) as f:
+                                info_content = f.read()
+                            has_key = "[LinkKey]" in info_content or "[LongTermKey]" in info_content
+                            (ok if has_key else warn)(
+                                f"  BlueZ-DB: {last_name} — "
+                                f"{'Pairing-Key vorhanden ✓' if has_key else 'KEIN Pairing-Key — muss neu gepairt werden'}"
+                            )
+            if not found_in_db:
+                err(f"  BlueZ-DB: {last_name} [{last_mac}] NICHT in /var/lib/bluetooth/")
+                err("    → Gerät wurde entfernt oder DB ist leer — Pairing nötig")
+                # Backup vorhanden?
+                backup_dir = os.path.join(os.path.dirname(__file__), "config", "bt_pairs")
+                if os.path.isdir(backup_dir) and any(os.walk(backup_dir)):
+                    warn("    → Backup vorhanden: 'BT Restore' im WebUI versuchen")
+                else:
+                    warn("    → Kein Backup vorhanden — Kopfhörer in Pairing-Modus bringen und neu pairen")
+    except Exception as e:
+        nfo(f"  settings.json: {e}")
+
+    # ── 7. BT-Agent ─────────────────────────────────────────────────────────
+    # Echter Test: gibt BlueZ einen Agent-Confirmation zurück?
+    agent_test = run("printf 'agent NoInputNoOutput\ndefault-agent\n' | timeout 5s bluetoothctl 2>/dev/null")
+    if "default agent request successful" in agent_test.lower():
+        ok("BT-Agent: erfolgreich registriert ✓")
+    elif "default agent" in agent_test.lower():
+        ok("BT-Agent: registrierbar (teilweise bestätigt)")
     else:
-        warn(f"BT-Agent: Antwort: {agent_test[:60]}")
+        warn(f"BT-Agent: kein ACK — Pairing könnte fehlschlagen")
+        nfo("  Hinweis: Agent wird per printf-Pipe registriert; bluetoothd muss laufen")
 
-    # A2DP Sinks in PulseAudio
-    PA = "PULSE_SERVER=unix:/var/run/pulse/native "
-    bt_sinks = run(PA + "pactl list sinks short 2>/dev/null | grep bluez")
+    # ── 8. A2DP Sink in PulseAudio ───────────────────────────────────────────
+    bt_sinks = run(PA + "pactl list sinks short 2>/dev/null")
     if bt_sinks:
-        ok(f"BT A2DP Sink aktiv: {bt_sinks[:80]}")
+        a2dp = [l for l in bt_sinks.splitlines() if "bluez" in l.lower()]
+        if a2dp:
+            ok(f"BT A2DP Sink aktiv: {a2dp[0][:80]} ✓")
+        else:
+            nfo("Kein BT A2DP Sink aktiv (normal wenn kein BT verbunden)")
     else:
-        nfo("Kein BT A2DP Sink aktiv (normal wenn kein BT verbunden)")
+        nfo("PulseAudio Sinks nicht abrufbar")
+
+    # ── 9. Scan-Hinweis ──────────────────────────────────────────────────────
+    nfo("Hinweis: BT-Scan scannt Classic BR/EDR UND BLE gleichzeitig")
+    nfo("  BLE-Geräte haben (random) MACs und sind für A2DP-Audio irrelevant")
+    nfo("  Nur Geräte mit (public) MAC und Audio-Klasse können Kopfhörer sein")
 
 
 def check_rtlsdr():
@@ -580,7 +698,7 @@ def check_source_state():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.6\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.13\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
