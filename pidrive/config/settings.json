@@ -19,10 +19,10 @@
   "ppm_correction": 49,
   "scanner_squelch": 10,
 
-  "dab_scan_wait_lock": 20,
+  "dab_scan_wait_lock": 40,
   "dab_scan_http_timeout": 4,
   "dab_scan_port": 7981,
-  "dab_scan_channels": ["11D", "10A", "8D", "8B", "11B"],
+  "dab_scan_channels": ["11D", "10A", "11B"],
 
   "scanner_vhf_freq": 136.0,
   "scanner_uhf_freq": 400.0,
