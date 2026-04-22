@@ -2,7 +2,7 @@
 modules/bluetooth.py - Bluetooth Modul
 PiDrive - pygame-frei, Status via IPC
 
-v0.9.9:
+v0.9.11:
 - _btctl() endlich definiert (war fehlend → NameError bei connect/repair)
 - connect_device(): robusters Trust/Pair/Connect mit 3 Versuchen + Verify
 - repair_device(): nutzt jetzt _btctl korrekt

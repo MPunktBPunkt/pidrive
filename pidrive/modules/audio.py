@@ -1,6 +1,6 @@
 """
 modules/audio.py - Zentraler Audioausgang fuer PiDrive
-PiDrive v0.9.9 - STRICT PulseAudio Only + shared debug state
+PiDrive v0.9.11 - STRICT PulseAudio Only + shared debug state
 
 Neu in v0.9.7:
 - _set_pi_output_klinke() setzt auch ALSA PCM-Volume (numid=1) auf 85%
@@ -158,13 +158,44 @@ def get_bt_sink() -> str:
     return ""
 
 
-def get_alsa_sink() -> str:
+def _ensure_klinke_sink() -> bool:
     """
-    Gibt den ALSA Klinken-Sink zurück — HDMI explizit ausgeschlossen (v0.9.9).
-    Priorität: analog-stereo / Headphones > stereo-fallback (nicht-HDMI)
+    Lädt Card 1 (Headphones/Klinke) als PulseAudio-Sink falls noch nicht vorhanden (v0.9.10).
+    Root Cause: setup_bt_audio.sh schrieb system.pa nur mit device_id=0 (HDMI).
+    Card 1 wurde nie als PA-Sink geladen → kein Klinken-Audio möglich.
     """
     sinks = _list_sinks()
-    # Erst: explizit analoge / Headphones-Sinks bevorzugen
+    # Prüfen ob ein Nicht-HDMI alsa_output Sink existiert
+    for s in sinks:
+        n, r = s["name"].lower(), s["raw"].lower()
+        if "hdmi" not in n and "hdmi" not in r and "alsa_output" in s["name"]:
+            return True  # Klinken-Sink vorhanden
+    # Card 1 dynamisch laden (Fallback wenn system.pa noch nicht aktualisiert)
+    try:
+        r = _run(
+            PA_ENV + " pactl load-module module-alsa-card device_id=1 2>/dev/null",
+            timeout=5
+        )
+        log.info("[AUDIO] _ensure_klinke_sink: module-alsa-card device_id=1 geladen")
+        import time as _t; _t.sleep(1)
+        return True
+    except Exception as e:
+        log.warn("[AUDIO] _ensure_klinke_sink: " + str(e))
+        return False
+
+
+def get_alsa_sink() -> str:
+    """
+    Gibt den ALSA Klinken-Sink zurück (v0.9.10).
+    Priorität: klinke_sink > analog/headphone > alsa_output ohne HDMI
+    HDMI-Sinks (card 0) werden explizit ausgeschlossen.
+    """
+    sinks = _list_sinks()
+    # 1. Explizit benannter klinke_sink (von setup_bt_audio.sh wenn korrekt konfiguriert)
+    for s in sinks:
+        if s["name"] == "klinke_sink":
+            return s["name"]
+    # 2. Analog/Headphones-Sinks bevorzugen
     for s in sinks:
         name = s["name"].lower()
         raw  = s["raw"].lower()
@@ -172,7 +203,7 @@ def get_alsa_sink() -> str:
             continue
         if "alsa_output" in s["name"] and ("analog" in name or "headphone" in name):
             return s["name"]
-    # Fallback: beliebiger alsa_output ohne HDMI
+    # 3. Beliebiger alsa_output ohne HDMI (inkl. .1.stereo-fallback)
     for s in sinks:
         name = s["name"].lower()
         raw  = s["raw"].lower()
@@ -270,6 +301,11 @@ def get_mpv_args(settings=None, source: str = "") -> list:
                   " effective=none reason=pulseaudio_inactive — strict mode")
         _remember_decision(requested, "none", "pulseaudio_inactive", "", source)
         return ["--ao=pulse"]
+
+    # v0.9.10: Sicherstellen dass Klinken-Sink vorhanden (card 1)
+    # system.pa hatte bisher nur device_id=0 (HDMI) → Klinke nie als Sink geladen
+    if requested in ("klinke", "auto"):
+        _ensure_klinke_sink()
 
     bt_sink   = get_bt_sink()
     alsa_sink = get_alsa_sink()
