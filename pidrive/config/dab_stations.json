@@ -1,12 +1,14 @@
 {
   "version": 1,
-  "updated_at": "2026-04-15T23:20:00",
+  "updated_at": "2026-04-23T08:00:00",
   "stations": [
     {
       "id": "dab_bayern1",
       "name": "Bayern 1",
       "channel": "11D",
       "ensemble": "BR Bayern",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
@@ -15,6 +17,8 @@
       "name": "Bayern 2",
       "channel": "11D",
       "ensemble": "BR Bayern",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
@@ -23,6 +27,8 @@
       "name": "Bayern 3",
       "channel": "11D",
       "ensemble": "BR Bayern",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": true,
       "enabled": true
     },
@@ -31,6 +37,8 @@
       "name": "BR Klassik",
       "channel": "11D",
       "ensemble": "BR Bayern",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
@@ -39,6 +47,8 @@
       "name": "B5 aktuell",
       "channel": "11D",
       "ensemble": "BR Bayern",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
@@ -47,14 +57,19 @@
       "name": "PULS",
       "channel": "11D",
       "ensemble": "BR Bayern",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
+
     {
       "id": "dab_dlf",
       "name": "Deutschlandfunk",
       "channel": "5C",
       "ensemble": "Bundesmux",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
@@ -63,14 +78,19 @@
       "name": "DLF Nova",
       "channel": "5C",
       "ensemble": "Bundesmux",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
+
     {
       "id": "dab_radiobob",
       "name": "RADIO BOB!",
       "channel": "5D",
       "ensemble": "Bundesmux 2",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": true,
       "enabled": true
     },
@@ -79,6 +99,8 @@
       "name": "ROCK ANTENNE",
       "channel": "5D",
       "ensemble": "Bundesmux 2",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": true,
       "enabled": true
     },
@@ -87,22 +109,29 @@
       "name": "Absolut relax",
       "channel": "5D",
       "ensemble": "Bundesmux 2",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
+
     {
       "id": "dab_radio7",
       "name": "Radio 7",
-      "channel": "8D",
-      "ensemble": "BW Regional",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b0b",
+      "url_mp3": "/mp3/0x0b0b",
       "favorite": true,
       "enabled": true
     },
     {
       "id": "dab_donau3fm",
       "name": "DONAU 3 FM",
-      "channel": "8D",
-      "ensemble": "BW Regional",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b04",
+      "url_mp3": "/mp3/0x0b04",
       "favorite": true,
       "enabled": true
     },
@@ -111,6 +140,8 @@
       "name": "SWR3",
       "channel": "8D",
       "ensemble": "SWR BW",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": false,
       "enabled": true
     },
@@ -119,7 +150,150 @@
       "name": "DASDING",
       "channel": "8D",
       "ensemble": "SWR BW",
+      "service_id": "",
+      "url_mp3": "",
       "favorite": true,
+      "enabled": true
+    },
+
+    {
+      "id": "dab_egofm",
+      "name": "egoFM",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b01",
+      "url_mp3": "/mp3/0x0b01",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_hitradio_ohr",
+      "name": "HITRADIO OHR",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b02",
+      "url_mp3": "/mp3/0x0b02",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_radio_regenbogen",
+      "name": "RADIO REGENBOGEN",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b03",
+      "url_mp3": "/mp3/0x0b03",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_bigfm",
+      "name": "bigFM",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b07",
+      "url_mp3": "/mp3/0x0b07",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_rockfm",
+      "name": "ROCK FM",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b08",
+      "url_mp3": "/mp3/0x0b08",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_radio_ton",
+      "name": "Radio Ton",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b06",
+      "url_mp3": "/mp3/0x0b06",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_badenfm",
+      "name": "baden.fm",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b09",
+      "url_mp3": "/mp3/0x0b09",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_die_neue_welle",
+      "name": "die neue welle",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b05",
+      "url_mp3": "/mp3/0x0b05",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_die_neue_1077",
+      "name": "DIE NEUE 107.7",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b0a",
+      "url_mp3": "/mp3/0x0b0a",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_energy_stuttgart",
+      "name": "ENERGY Stuttgart",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b0c",
+      "url_mp3": "/mp3/0x0b0c",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_antenne1nckrburg",
+      "name": "antenne1NCKRBURG",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b0d",
+      "url_mp3": "/mp3/0x0b0d",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_radio_seefunk",
+      "name": "Radio Seefunk",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b0e",
+      "url_mp3": "/mp3/0x0b0e",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_radio_teddy",
+      "name": "RADIO TEDDY",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b0f",
+      "url_mp3": "/mp3/0x0b0f",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "dab_antenne1",
+      "name": "antenne1",
+      "channel": "11B",
+      "ensemble": "OAS BW",
+      "service_id": "0x0b10",
+      "url_mp3": "/mp3/0x0b10",
+      "favorite": false,
       "enabled": true
     }
   ]
