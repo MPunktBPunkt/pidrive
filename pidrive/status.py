@@ -1,11 +1,12 @@
 """
 status.py - System-Status Cache (non-blocking)
-PiDrive Project - GPL-v3
+PiDrive v0.9.14-final
 
-v0.9.7:
-- BT-Status robust via bluetoothctl info (nicht nur hciconfig)
-- bt_device immer konsistent mit bt_status
+Neu/konsolidiert:
+- BT-Status robust via bluetoothctl info
+- bt_device konsistent mit bt_status
 - bt_status: verbunden / getrennt / verbindet / aus
+- exportiert Runtime-Prozessliste für WebUI
 """
 
 import subprocess
@@ -32,6 +33,7 @@ S = {
     "library_playing": False,
     "library_track":   "",
     "audio_output":    "auto",
+    "processes":       [],
     "ts":              0,
 }
 
@@ -61,7 +63,7 @@ def _do_refresh():
     try:
         # WiFi
         rk = _run("rfkill list wifi 2>/dev/null", timeout=2)
-        new["wifi"]     = "Soft blocked: no" in rk
+        new["wifi"] = "Soft blocked: no" in rk
         new["wifi_ssid"] = _run("iwgetid -r 2>/dev/null", timeout=2)
 
         hi = _run("hostname -I 2>/dev/null", timeout=2)
@@ -71,29 +73,30 @@ def _do_refresh():
         hc = _run("hciconfig 2>/dev/null", timeout=2)
         bt_adapter_up = "UP RUNNING" in hc
 
-        new["bt"]        = False
-        new["bt_on"]     = bt_adapter_up   # Adapter-State für Icon (dreistufig)
+        new["bt"] = False
+        new["bt_on"] = bt_adapter_up
         new["bt_device"] = ""
         new["bt_status"] = "aus" if not bt_adapter_up else "getrennt"
 
         if bt_adapter_up:
-            settings  = load_settings()
-            last_mac  = settings.get("bt_last_mac",  "").strip()
+            settings = load_settings()
+            last_mac = settings.get("bt_last_mac", "").strip()
             last_name = settings.get("bt_last_name", "").strip()
 
             if last_mac:
                 info = _run(f"bluetoothctl info {last_mac} 2>/dev/null", timeout=4)
                 low  = info.lower()
+
                 if "connected: yes" in low:
-                    new["bt"]        = True
+                    new["bt"] = True
                     new["bt_device"] = last_name or last_mac
                     new["bt_status"] = "verbunden"
                 elif "paired: yes" in low or "trusted: yes" in low:
-                    new["bt"]        = False
+                    new["bt"] = False
                     new["bt_device"] = last_name or last_mac
                     new["bt_status"] = "getrennt"
                 else:
-                    new["bt"]        = False
+                    new["bt"] = False
                     new["bt_device"] = last_name or ""
                     new["bt_status"] = "getrennt"
 
@@ -114,6 +117,13 @@ def _do_refresh():
                     new["spotify_album"]  = p[3][:30] if len(p) > 3 else ""
             except Exception:
                 pass
+
+        # Runtime-Prozesse für WebUI
+        ps = _run(
+            r"ps ax -o pid=,comm=,cmd= | egrep 'python3|mpv|rtl_fm|welle-cli|librespot|pulseaudio|bluetoothd' | grep -v grep",
+            timeout=4
+        )
+        new["processes"] = [ln.strip() for ln in ps.splitlines() if ln.strip()]
 
     except Exception:
         pass

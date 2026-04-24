@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.13
+main_core.py - PiDrive Core v0.9.14-final
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -23,47 +23,51 @@ except Exception:
     _mpris2 = None
 from menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import source_state
-from modules import (musik, wifi, bluetooth, audio, system as sys_mod,
-                    gpio_buttons as _gpio_buttons,
-                     webradio, dab, fm, library, scanner, update, favorites)
+from modules import (
+    musik, wifi, bluetooth, audio, system as sys_mod,
+    gpio_buttons as _gpio_buttons,
+    webradio, dab, fm, library, scanner, update, favorites
+)
 
 logger = log.setup("core")
 
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
 
-# ── Settings ──────────────────────────────────────────────────────────────────
-
-# load_settings / save_settings aus settings.py importieren
-# (thread-safe: settings.py importiert KEIN main_core)
 from settings import load_settings, save_settings  # noqa: E402
 
 
-# ── Globaler Scan-Guard (verhindert parallele DAB/FM Scans) ─────────────────
+# ── Globaler Scan-Guard ──────────────────────────────────────────────────────
+
 import threading as _scan_threading
 
 _SCAN_LOCK  = _scan_threading.Lock()
 _SCAN_STATE = {"active": False, "source": "", "started_ts": 0}
 
+
 def _scan_begin(source):
-    """Exklusiven Scan-Slot reservieren. True = erfolgreich."""
     with _SCAN_LOCK:
         if _SCAN_STATE["active"]:
             return False
-        _SCAN_STATE.update({"active": True, "source": source,
-                             "started_ts": int(__import__("time").time())})
+        _SCAN_STATE.update({
+            "active": True,
+            "source": source,
+            "started_ts": int(time.time())
+        })
         return True
 
+
 def _scan_end():
-    """Scan-Slot freigeben."""
     with _SCAN_LOCK:
         _SCAN_STATE.update({"active": False, "source": "", "started_ts": 0})
+
 
 def _scan_info():
     with _SCAN_LOCK:
         return dict(_SCAN_STATE)
 
 
-# ── Globaler Source-Switch-Lock (v0.8.10) ──────────────────────────────────────
+# ── Globaler Source-Switch-Lock ──────────────────────────────────────────────
+
 import threading as _src_threading
 
 _SOURCE_SWITCH_LOCK  = _src_threading.Lock()
@@ -95,7 +99,8 @@ def _source_switch_info():
     return dict(_SOURCE_SWITCH_STATE)
 
 
-# ── Trigger-Entprellung (v0.8.7) ───────────────────────────────────────────────
+# ── Trigger-Entprellung ──────────────────────────────────────────────────────
+
 import time as _time_mod
 
 _LAST_TRIGGER_TS: dict = {}
@@ -112,7 +117,6 @@ _LAST_NODE_EXEC_ID  = ""
 
 
 def _debounced(cmd: str) -> bool:
-    """True = Befehl innerhalb Entprellzeit wiederholt → ignorieren."""
     now   = _time_mod.time()
     limit = _TRIGGER_DEBOUNCE.get(cmd)
     if not limit:
@@ -125,13 +129,24 @@ def _debounced(cmd: str) -> bool:
     return False
 
 
-# ── Trigger-Handling ───────────────────────────────────────────────────────────
+# ── BT-Agent früh starten ────────────────────────────────────────────────────
+
+def _start_bt_agent_early():
+    try:
+        if bluetooth.start_agent_session():
+            log.info("BT agent startup: OK")
+        else:
+            log.warn("BT agent startup: failed")
+        bluetooth.start_agent_health_thread()
+    except Exception as e:
+        log.warn("BT agent startup: " + str(e))
+
+
+# ── Trigger-Handling ─────────────────────────────────────────────────────────
 
 def handle_trigger(cmd, menu_state, store, S, settings):
-    """Alle Trigger verarbeiten. Gibt True zurück wenn Menü neu gebaut werden soll."""
     rebuild = False
 
-    # Entprellung für schnelle Doppeldrücker
     if _debounced(cmd):
         return False
 
@@ -139,11 +154,15 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         import threading
         threading.Thread(target=fn, daemon=True).start()
 
-    # ── Navigation ──────────────────────────────────────────────────────────
-    if   cmd == "up":    menu_state.key_up()
-    elif cmd == "down":  menu_state.key_down()
-    elif cmd == "left":  menu_state.key_left()
-    elif cmd == "back":  menu_state.key_back()
+    # ── Navigation ────────────────────────────────────────────────────────
+    if   cmd == "up":
+        menu_state.key_up()
+    elif cmd == "down":
+        menu_state.key_down()
+    elif cmd == "left":
+        menu_state.key_left()
+    elif cmd == "back":
+        menu_state.key_back()
     elif cmd == "enter":
         node = menu_state.key_enter()
         if node and node.type in ("station", "action", "toggle"):
@@ -153,16 +172,16 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         if node and node.type in ("station", "action", "toggle"):
             _execute_node(node, menu_state, store, S, settings)
 
-    # ── Direkt-Kategorie ────────────────────────────────────────────────────
+    # ── Direkt-Kategorie ──────────────────────────────────────────────────
     elif cmd.startswith("cat:"):
         val = cmd[4:]
         menu_state.navigate_to(val)
 
-    # ── Spotify ─────────────────────────────────────────────────────────────
+    # ── Spotify ───────────────────────────────────────────────────────────
     elif cmd in ("spotify_on", "spotify_off", "spotify_toggle"):
         bg(lambda: musik.spotify_toggle(S))
 
-    # ── Audio ────────────────────────────────────────────────────────────────
+    # ── Audio ─────────────────────────────────────────────────────────────
     elif cmd == "audio_klinke":
         bg(lambda: audio.set_output("klinke", settings))
     elif cmd == "audio_hdmi":
@@ -176,7 +195,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "vol_down":
         bg(lambda: audio.volume_down(settings))
 
-    # ── WiFi / BT ────────────────────────────────────────────────────────────
+    # ── WiFi / BT ─────────────────────────────────────────────────────────
     elif cmd in ("wifi_on", "wifi_off", "wifi_toggle"):
         bg(lambda: wifi.wifi_toggle(S))
     elif cmd in ("bt_on", "bt_off", "bt_toggle"):
@@ -205,9 +224,12 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                     log.info(f"BT-Backup: {res['count']} Dateien")
                 else:
                     ipc.write_progress("BT-Backup", f"Fehler: {res.get('error','?')}", color="red")
-                import time as _t; _t.sleep(3); ipc.clear_progress()
+                import time as _t
+                _t.sleep(3)
+                ipc.clear_progress()
             except Exception as e:
-                log.error(f"bt_backup Trigger: {e}"); ipc.clear_progress()
+                log.error(f"bt_backup Trigger: {e}")
+                ipc.clear_progress()
         bg(_do_bt_backup)
 
     elif cmd == "bt_restore":
@@ -216,7 +238,9 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 from modules import bt_backup as _btb
                 if not _btb.has_backup():
                     ipc.write_progress("BT-Restore", "Kein Backup vorhanden!", color="orange")
-                    import time as _t; _t.sleep(3); ipc.clear_progress()
+                    import time as _t
+                    _t.sleep(3)
+                    ipc.clear_progress()
                     return
                 ipc.write_progress("BT-Restore", "Wiederherstellung...", color="blue")
                 res = _btb.restore()
@@ -225,9 +249,12 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                     log.info(f"BT-Restore: {res['count']} Dateien")
                 else:
                     ipc.write_progress("BT-Restore", f"Fehler: {res.get('error','?')}", color="red")
-                import time as _t; _t.sleep(3); ipc.clear_progress()
+                import time as _t
+                _t.sleep(3)
+                ipc.clear_progress()
             except Exception as e:
-                log.error(f"bt_restore Trigger: {e}"); ipc.clear_progress()
+                log.error(f"bt_restore Trigger: {e}")
+                ipc.clear_progress()
         bg(_do_bt_restore)
 
     elif cmd.startswith("bt_repair:"):
@@ -237,15 +264,16 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         ssid = cmd.split(":", 1)[1]
         bg(lambda s=ssid: wifi.connect_network(s, S, settings))
 
-    # ── Gain-Steuerung (v0.9.4) ─────────────────────────────────────────────
+    # ── Gain ──────────────────────────────────────────────────────────────
     elif cmd.startswith("fm_gain:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
             settings["fm_gain"] = val
-            from settings import save_settings
             save_settings(settings)
             ipc.write_progress("FM Gain", f"{'Auto (AGC)' if val == -1 else str(val) + ' dB'}", color="green")
-            import time as _tg; _tg.sleep(1); ipc.clear_progress()
+            import time as _tg
+            _tg.sleep(1)
+            ipc.clear_progress()
         except Exception as e:
             log.error(f"fm_gain Trigger: {e}")
 
@@ -253,38 +281,40 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         try:
             val = int(cmd.split(":", 1)[1].strip())
             settings["dab_gain"] = val
-            from settings import save_settings
             save_settings(settings)
             ipc.write_progress("DAB Gain", f"{'Auto (AGC)' if val == -1 else str(val) + ' dB'}", color="green")
-            import time as _tg2; _tg2.sleep(1); ipc.clear_progress()
+            import time as _tg2
+            _tg2.sleep(1)
+            ipc.clear_progress()
         except Exception as e:
             log.error(f"dab_gain Trigger: {e}")
 
-    # ── PPM + Squelch Trigger (v0.9.4) ─────────────────────────────────────
     elif cmd.startswith("ppm:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
             settings["ppm_correction"] = val
-            from settings import save_settings
             save_settings(settings)
             label = f"{val:+d} ppm" if val != 0 else "deaktiviert (0)"
             ipc.write_progress("PPM", f"Korrektur: {label}", color="green")
             log.info(f"TRIGGER ppm_correction={val}")
-            import time as _tp; _tp.sleep(1); ipc.clear_progress()
+            import time as _tp
+            _tp.sleep(1)
+            ipc.clear_progress()
         except Exception as e:
             log.error(f"ppm Trigger: {e}")
 
     elif cmd.startswith("squelch:"):
         try:
             val = int(cmd.split(":", 1)[1].strip())
-            val = max(0, min(val, 50))  # Bereich 0–50
+            val = max(0, min(val, 50))
             settings["scanner_squelch"] = val
-            from settings import save_settings
             save_settings(settings)
             label = "immer offen" if val == 0 else str(val)
             ipc.write_progress("Squelch", f"Schwelle: {label}", color="green")
             log.info(f"TRIGGER scanner_squelch={val}")
-            import time as _tq; _tq.sleep(1); ipc.clear_progress()
+            import time as _tq
+            _tq.sleep(1)
+            ipc.clear_progress()
         except Exception as e:
             log.error(f"squelch Trigger: {e}")
 
@@ -293,16 +323,17 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             val = int(cmd.split(":", 1)[1].strip())
             val = max(-1, min(val, 49))
             settings["scanner_gain"] = val
-            from settings import save_settings
             save_settings(settings)
             label = "Auto (AGC)" if val == -1 else f"{val} dB"
             ipc.write_progress("Scanner Gain", label, color="green")
             log.info(f"TRIGGER scanner_gain={val}")
-            import time as _tsg; _tsg.sleep(1); ipc.clear_progress()
+            import time as _tsg
+            _tsg.sleep(1)
+            ipc.clear_progress()
         except Exception as e:
             log.error(f"scanner_gain Trigger: {e}")
 
-    # ── RTL-SDR Reset (v0.9.4) ───────────────────────────────────────────────
+    # ── RTL-SDR Reset ─────────────────────────────────────────────────────
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
@@ -315,7 +346,8 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 else:
                     ipc.write_progress("RTL-SDR", "Reset: Stick nicht erkannt — Abziehen/Einstecken nötig", color="orange")
                     log.warn("RTLSDR_RESET: Stick nach Reset nicht erkannt")
-                import time as _t; _t.sleep(3)
+                import time as _t
+                _t.sleep(3)
                 ipc.clear_progress()
             except Exception as e:
                 log.error(f"RTLSDR_RESET Fehler: {e}")
@@ -326,32 +358,39 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         def _radio_stop():
             if source_state.begin_transition("trigger:radio_stop", "idle"):
                 try:
-                    webradio.stop(S); dab.stop(S); fm.stop(S); scanner.stop(S)
-                    S["radio_playing"] = False; S["radio_station"] = ""
-                    S["radio_name"] = ""; S["radio_type"] = ""
+                    webradio.stop(S)
+                    dab.stop(S)
+                    fm.stop(S)
+                    scanner.stop(S)
+                    S["radio_playing"] = False
+                    S["radio_station"] = ""
+                    S["radio_name"] = ""
+                    S["radio_type"] = ""
                     S["control_context"] = "idle"
                     source_state.commit_source("idle")
                 finally:
                     source_state.end_transition()
             else:
-                webradio.stop(S); dab.stop(S); fm.stop(S); scanner.stop(S)
-                S["radio_playing"] = False; S["radio_station"] = ""
-                S["radio_name"] = ""; S["radio_type"] = ""
+                webradio.stop(S)
+                dab.stop(S)
+                fm.stop(S)
+                scanner.stop(S)
+                S["radio_playing"] = False
+                S["radio_station"] = ""
+                S["radio_name"] = ""
+                S["radio_type"] = ""
                 S["control_context"] = "idle"
                 source_state.commit_source("idle")
         bg(_radio_stop)
 
     elif cmd == "radio_restart_on_bt":
-        # Letzte Quelle mit neuem BT-Audio neu starten
         def _radio_restart():
             import time
-            time.sleep(1)  # kurz warten bis BT-Sink stabil
-            # Nur Radioquellen neu starten (nicht MP3/Spotify)
-            _rtype    = S.get("radio_type", "")
+            time.sleep(1)
+            _rtype = S.get("radio_type", "")
             _last_web = settings.get("last_web_station")
             _last_dab = settings.get("last_dab_station")
             _last_fm  = settings.get("last_fm_station")
-            # Nur bekannte Radio-Quellen neu starten
             from modules.audio import is_radio_source
             if not is_radio_source(_rtype):
                 log.info("[AUDIO] radio_restart_on_bt: kein Neustart — source=" + (_rtype or "none"))
@@ -372,7 +411,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "library_stop":
         library.stop_playback(S)
 
-    # ── DAB Suchlauf ─────────────────────────────────────────────────────────
+    # ── DAB Suchlauf ───────────────────────────────────────────────────────
     elif cmd == "dab_scan":
         def _dab_scan():
             if not _scan_begin("dab"):
@@ -380,17 +419,20 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 log.warn("SCAN_BLOCKED source=dab running=" + info.get("source","?"))
                 ipc.write_progress("DAB+ Suchlauf",
                     "Schon aktiv: " + info.get("source","?").upper(), color="orange")
-                time.sleep(2); ipc.clear_progress(); return
+                time.sleep(2)
+                ipc.clear_progress()
+                return
+
             ipc.write_progress("DAB+ Suchlauf", "Scanne Band III ...", color="blue")
             log.info("SCAN_START source=dab")
+
             try:
                 results = dab.scan_dab_channels(settings=settings)
                 count = len(results)
                 if count > 0:
                     store.save_dab(results)
                     log.info(f"SCAN_DONE source=dab count={count}")
-                    ipc.write_progress("DAB+ Suchlauf",
-                        f"{count} Sender gefunden", color="green")
+                    ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
                     time.sleep(2)
                     new_root = build_tree(store, S, settings)
                     menu_state.root = new_root
@@ -398,8 +440,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                     menu_state.rev += 1
                 else:
                     log.warn("SCAN_DONE source=dab count=0 — bestehende Liste bleibt")
-                    ipc.write_progress("DAB+ Suchlauf",
-                        "0 Sender — Liste bleibt erhalten", color="orange")
+                    ipc.write_progress("DAB+ Suchlauf", "0 Sender — Liste bleibt erhalten", color="orange")
                     time.sleep(2)
             except Exception as e:
                 log.error(f"SCAN_FAIL source=dab error={e}")
@@ -415,19 +456,26 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         bg(_dab_scan)
 
     elif cmd.startswith("dab_scan_channels:"):
-        # Gezielter Kanalscan: dab_scan_channels:11D,10A,8D,8B,11B
         parts = cmd.split(":", 1)
         if len(parts) == 2:
-            raw   = parts[1].strip()
+            raw = parts[1].strip()
             chans = [x.strip().upper() for x in raw.split(",") if x.strip()]
+
             def _dab_custom(channels=chans):
                 owner = f"scan:dab:custom:{','.join(channels)}"
                 if not _scan_begin("dab"):
                     ipc.write_progress("DAB+ Suchlauf", "Schon aktiv", color="orange")
-                    time.sleep(2); ipc.clear_progress(); return
+                    time.sleep(2)
+                    ipc.clear_progress()
+                    return
+
                 if not source_state.begin_transition(owner, "dab"):
                     ipc.write_progress("DAB+ Suchlauf", "Blockiert", color="orange")
-                    time.sleep(2); ipc.clear_progress(); _scan_end(); return
+                    time.sleep(2)
+                    ipc.clear_progress()
+                    _scan_end()
+                    return
+
                 try:
                     S["control_context"] = "radio_dab_scan"
                     log.info("SCAN_START source=dab custom=" + ",".join(channels))
@@ -457,9 +505,10 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                     source_state.end_transition()
                     _scan_end()
                     ipc.clear_progress()
+
             bg(_dab_custom)
 
-    # ── FM Suchlauf ──────────────────────────────────────────────────────────
+    # ── FM Suchlauf ────────────────────────────────────────────────────────
     elif cmd == "fm_scan":
         def _fm_scan():
             if not _scan_begin("fm"):
@@ -467,22 +516,25 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 log.warn("SCAN_BLOCKED source=fm running=" + info.get("source","?"))
                 ipc.write_progress("FM Suchlauf",
                     "Schon aktiv: " + info.get("source","?").upper(), color="orange")
-                time.sleep(2); ipc.clear_progress(); return
+                time.sleep(2)
+                ipc.clear_progress()
+                return
+
             ipc.write_progress("FM Suchlauf", "Scanne UKW 87.5–108.0 MHz ...", color="blue")
             log.info("SCAN_START source=fm")
+
             try:
                 results = fm.scan_stations(S, quick_only=True)
                 count = len(results)
                 if count > 0:
                     store.save_fm(results)
                     log.info(f"SCAN_DONE source=fm count={count}")
-                    ipc.write_progress("FM Suchlauf",
-                        f"{count} Sender gefunden ✓", color="green")
+                    ipc.write_progress("FM Suchlauf", f"{count} Sender gefunden ✓", color="green")
                 else:
                     log.warn("SCAN_DONE source=fm count=0 — bestehende Liste bleibt")
-                    ipc.write_progress("FM Suchlauf",
-                        "Kein Sender — Liste bleibt erhalten", color="orange")
+                    ipc.write_progress("FM Suchlauf", "Kein Sender — Liste bleibt erhalten", color="orange")
                 time.sleep(2)
+
                 if count > 0:
                     new_root = build_tree(store, S, settings)
                     menu_state.root = new_root
@@ -495,26 +547,31 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             finally:
                 _scan_end()
                 ipc.clear_progress()
+
         bg(_fm_scan)
 
-    # ── Reload Stationen ─────────────────────────────────────────────────────
+    # ── Reload Stationen ───────────────────────────────────────────────────
     elif cmd.startswith("reload_stations:"):
         _si = _scan_info()
         if _si.get("active"):
             log.warn("STATIONS_RELOAD_BLOCKED scan_running=" + _si.get("source","?"))
-            ipc.write_progress("Senderliste",
+            ipc.write_progress(
+                "Senderliste",
                 "Blockiert: Scan läuft (" + _si.get("source","?").upper() + ")",
-                color="orange")
-            time.sleep(2); ipc.clear_progress()
+                color="orange"
+            )
+            time.sleep(2)
+            ipc.clear_progress()
         else:
             source = cmd.split(":", 1)[1]
             store.reload_source(source)
             rebuild = True
             log.info(f"STATIONS_RELOAD source={source}")
             ipc.write_progress("Senderliste", f"{source} neu geladen", color="green")
-            time.sleep(1); ipc.clear_progress()
+            time.sleep(1)
+            ipc.clear_progress()
 
-    # ── FM Next/Prev ─────────────────────────────────────────────────────────
+    # ── FM Next/Prev ────────────────────────────────────────────────────────
     elif cmd == "fm_next":
         bg(lambda: fm.play_next(S, store.fm))
     elif cmd == "fm_prev":
@@ -522,44 +579,54 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "fm_manual":
         bg(lambda: _fm_manual(S, settings))
 
-    # ── DAB Next/Prev ────────────────────────────────────────────────────────
+    # ── DAB Next/Prev ───────────────────────────────────────────────────────
     elif cmd == "dab_next":
         bg(lambda: dab.play_next(S, store.dab))
     elif cmd == "dab_prev":
         bg(lambda: dab.play_prev(S, store.dab))
 
-    # ── Scanner Bänder ───────────────────────────────────────────────────────
+    # ── Scanner ─────────────────────────────────────────────────────────────
     elif cmd.startswith("scan_up:"):
-        band = cmd.split(":",1)[1]
+        band = cmd.split(":", 1)[1]
         def _scan_up(b=band):
             source_state.begin_transition(f"scan_up:{b}", "scanner")
-            try: scanner.channel_up(b, S, settings)
-            finally: source_state.end_transition()
+            try:
+                scanner.channel_up(b, S)
+            finally:
+                source_state.end_transition()
         bg(_scan_up)
+
     elif cmd.startswith("scan_down:"):
-        band = cmd.split(":",1)[1]
+        band = cmd.split(":", 1)[1]
         def _scan_down(b=band):
             source_state.begin_transition(f"scan_down:{b}", "scanner")
-            try: scanner.channel_down(b, S, settings)
-            finally: source_state.end_transition()
+            try:
+                scanner.channel_down(b, S)
+            finally:
+                source_state.end_transition()
         bg(_scan_down)
+
     elif cmd.startswith("scan_next:"):
-        band = cmd.split(":",1)[1]
+        band = cmd.split(":", 1)[1]
         def _scan_next(b=band):
             if source_state.begin_transition(f"scan_next:{b}", "scanner"):
-                try: scanner.scan_next(b, S, settings)
-                finally: source_state.end_transition()
+                try:
+                    scanner.scan_next(b, S, settings)
+                finally:
+                    source_state.end_transition()
         bg(_scan_next)
+
     elif cmd.startswith("scan_prev:"):
-        band = cmd.split(":",1)[1]
+        band = cmd.split(":", 1)[1]
         def _scan_prev(b=band):
             if source_state.begin_transition(f"scan_prev:{b}", "scanner"):
-                try: scanner.scan_prev(b, S, settings)
-                finally: source_state.end_transition()
+                try:
+                    scanner.scan_prev(b, S, settings)
+                finally:
+                    source_state.end_transition()
         bg(_scan_prev)
 
     elif cmd.startswith("scan_jump:"):
-        # scan_jump:<band>:<delta>  — Kanal-Sprung
         parts = cmd.split(":")
         if len(parts) >= 3:
             band = parts[1]
@@ -571,7 +638,6 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 bg(lambda b=band, d=delta: scanner.channel_jump(b, d, S))
 
     elif cmd.startswith("scan_step:"):
-        # scan_step:<band>:<delta_mhz>  — Frequenzschritt VHF/UHF
         parts = cmd.split(":")
         if len(parts) >= 3:
             band = parts[1]
@@ -583,7 +649,6 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 bg(lambda b=band, d=delta: scanner.freq_step(b, d, S, settings))
 
     elif cmd.startswith("scan_setfreq:"):
-        # scan_setfreq:<band>:<freq_mhz>  — direkte Frequenz setzen
         parts = cmd.split(":")
         if len(parts) >= 3:
             band = parts[1]
@@ -595,7 +660,6 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                 bg(lambda b=band, f=freq: scanner.set_freq(b, f, S, settings))
 
     elif cmd.startswith("scan_inputfreq:"):
-        # scan_inputfreq:<band>  — manuelle Frequenzeingabe
         parts = cmd.split(":")
         if len(parts) >= 2:
             band = parts[1]
@@ -605,13 +669,12 @@ def handle_trigger(cmd, menu_state, store, S, settings):
                     scanner.set_freq(b, freq, S, settings)
             bg(_input_and_set)
 
-    # ── Bibliothek ───────────────────────────────────────────────────────────
+    # ── Bibliothek ─────────────────────────────────────────────────────────
     elif cmd == "lib_browse":
         bg(lambda: library.browse_and_play(S, load_settings()))
 
     elif cmd.startswith("fav_toggle:"):
         payload = cmd[len("fav_toggle:"):]
-        # payload = source:id:name:meta_json
         try:
             import json as _j2
             parts = payload.split(":", 3)
@@ -619,9 +682,12 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             _id   = parts[1]
             _name = parts[2]
             _meta = _j2.loads(parts[3]) if len(parts) > 3 else {}
-            is_now_fav = favorites.toggle({"id": _id, "name": _name,
-                                           "source": _src, "meta": _meta})
-            # Auch im Senderlisten-JSON das favorite-Flag aktualisieren
+            is_now_fav = favorites.toggle({
+                "id": _id,
+                "name": _name,
+                "source": _src,
+                "meta": _meta
+            })
             if _src == "fm":
                 store.set_favorite_fm(_id, is_now_fav)
             elif _src == "dab":
@@ -632,13 +698,15 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         except Exception as _fe:
             log.warn("fav_toggle: " + str(_fe))
 
-    # ── System ───────────────────────────────────────────────────────────────
+    # ── System ──────────────────────────────────────────────────────────────
     elif cmd == "reboot":
         ipc.write_progress("Neustart", "In 3 Sekunden ...", color="orange")
-        time.sleep(3); os.system("reboot")
+        time.sleep(3)
+        os.system("reboot")
     elif cmd == "shutdown":
         ipc.write_progress("Ausschalten", "In 3 Sekunden ...", color="orange")
-        time.sleep(3); os.system("poweroff")
+        time.sleep(3)
+        os.system("poweroff")
     elif cmd == "sys_info":
         bg(lambda: sys_mod.show_info(S, settings))
     elif cmd == "sys_version":
@@ -646,7 +714,6 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "update":
         bg(lambda: update.run_update(S))
     elif cmd == "audio_select":
-        # audio_select öffnet das Audio-Untermenü — keine Funktion in audio.py nötig
         menu_state.navigate_to("audio_out")
 
     log.trigger_received(cmd)
@@ -656,11 +723,9 @@ def handle_trigger(cmd, menu_state, store, S, settings):
 
 
 def _execute_node(node, menu_state, store, S, settings):
-    """Knoten ausführen (station/action/toggle)."""
     global _LAST_NODE_EXEC_TS, _LAST_NODE_EXEC_ID
     import threading
 
-    # Doppelte Ausführung desselben Knotens innerhalb 0.5s verhindern
     now = _time_mod.time()
     node_exec_id = f"{node.type}:{node.id}:{node.action}:{node.source}"
     if node_exec_id == _LAST_NODE_EXEC_ID and (now - _LAST_NODE_EXEC_TS) < 0.5:
@@ -669,10 +734,10 @@ def _execute_node(node, menu_state, store, S, settings):
     _LAST_NODE_EXEC_ID = node_exec_id
     _LAST_NODE_EXEC_TS = now
 
-    def bg(fn): threading.Thread(target=fn, daemon=True).start()
+    def bg(fn):
+        threading.Thread(target=fn, daemon=True).start()
 
     def _stop_all_sources():
-        """Alle Quellen sauber stoppen vor Quellenwechsel."""
         try:
             webradio.stop(S)
         except Exception as e:
@@ -689,16 +754,15 @@ def _execute_node(node, menu_state, store, S, settings):
             scanner.stop(S)
         except Exception as e:
             log.warn(f"stop_all_sources: scanner.stop: {e}")
-        # v0.9.4: Status-Felder leeren — verhindert stale State beim Quellenwechsel
-        S["radio_playing"]    = False
-        S["radio_station"]    = ""
-        S["radio_name"]       = ""
-        S["radio_type"]       = ""
-        S["control_context"]  = "idle"   # Phase 2: Zustand zurücksetzen
+
+        S["radio_playing"] = False
+        S["radio_station"] = ""
+        S["radio_name"] = ""
+        S["radio_type"] = ""
+        S["control_context"] = "idle"
         source_state.commit_source("idle")
         _time_mod.sleep(0.10)
 
-    # Stationen zuerst prüfen — haben action=None, brauchen src/meta
     if node.type == "station":
         log.info(f"PLAY_STATION label={node.label!r} source={node.source} meta={node.meta}")
 
@@ -708,29 +772,34 @@ def _execute_node(node, menu_state, store, S, settings):
                 info = _source_switch_info()
                 log.warn(f"PLAY_STATION blocked by active switch owner={info.get('owner','?')}")
                 return
+
             source_state.begin_transition(owner, node.source or "unknown")
             try:
                 _stop_all_sources()
-                src  = node.source
+                src = node.source
                 meta = node.meta
+
                 if src == "fm":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
-                                      if "  " in node.label else node.label.lstrip("★ ").strip())
+                                     if "  " in node.label else node.label.lstrip("★ ").strip())
                     _freq = meta.get("freq", "")
                     fm.play_station({"name": _name, "freq": _freq}, S, settings)
                     source_state.commit_source("fm")
+
                 elif src == "dab":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
-                                      if "  " in node.label else node.label.lstrip("★ ").strip())
+                                     if "  " in node.label else node.label.lstrip("★ ").strip())
                     _sid = meta.get("service_id", "")
                     dab.play_by_name(_name, S, service_id=_sid)
                     source_state.commit_source("dab")
+
                 elif src == "webradio":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
-                                      if "  " in node.label else node.label.lstrip("★ ").strip())
-                    _url  = meta.get("url", "")
+                                     if "  " in node.label else node.label.lstrip("★ ").strip())
+                    _url = meta.get("url", "")
                     webradio.play_station({"name": _name, "url": _url}, S, settings)
                     source_state.commit_source("webradio")
+
             except Exception as e:
                 log.error(f"PLAY_STATION switch error: {e}")
             finally:
@@ -740,19 +809,16 @@ def _execute_node(node, menu_state, store, S, settings):
         bg(_run_station_switch)
         return
 
-    # action-String muss vorhanden sein (toggle/action/info)
     action = node.action
     if not action:
-        return   # info-Nodes: kein action → nichts tun
+        return
 
     log.info(f"MENU_ACTION id={node.id} type={node.type} action={action}")
 
-    # Toggle-Knoten
     if node.type == "toggle":
         handle_trigger(action, menu_state, store, S, settings)
         return
 
-    # Action-Knoten
     handle_trigger(action, menu_state, store, S, settings)
 
 
@@ -763,21 +829,17 @@ def _fm_manual(S, settings):
 
 
 def check_trigger(menu_state, store, S, settings):
-    """Trigger-Datei auslesen und verarbeiten."""
     if not os.path.exists(ipc.CMD_FILE):
         return False
 
-    # Race condition fix: wenn headless_pick läuft (list aktiv),
-    # Navigation-Trigger NICHT konsumieren — headless_pick liest sie selbst
-    NAV_CMDS = {"up","down","enter","back","left","right"}
+    NAV_CMDS = {"up", "down", "enter", "back", "left", "right"}
     try:
         lst = ipc.read_json(ipc.LIST_FILE, {})
         if lst.get("active"):
-            # Nur cmd lesen ohne zu löschen, dann prüfen ob es Navigation ist
             with open(ipc.CMD_FILE) as f:
                 peek = f.read().strip()
             if peek in NAV_CMDS:
-                return False  # headless_pick soll es lesen
+                return False
     except Exception:
         pass
 
@@ -787,8 +849,10 @@ def check_trigger(menu_state, store, S, settings):
         os.remove(ipc.CMD_FILE)
     except Exception:
         return False
+
     if not cmd:
         return False
+
     try:
         return handle_trigger(cmd, menu_state, store, S, settings)
     except Exception as e:
@@ -796,7 +860,7 @@ def check_trigger(menu_state, store, S, settings):
         return False
 
 
-# ── System-Check ──────────────────────────────────────────────────────────────
+# ── System-Check ────────────────────────────────────────────────────────────
 
 def system_check():
     import subprocess
@@ -804,14 +868,12 @@ def system_check():
     VERSION = open(os.path.join(BASE_DIR, "VERSION")).read().strip()
     log.info(f"  PiDrive Core v{VERSION}")
 
-    # Framebuffer
-    for path, label in [("/dev/fb1","SPI Display"), ("/dev/fb0","HDMI Framebuffer")]:
+    for path, label in [("/dev/fb1", "SPI Display"), ("/dev/fb0", "HDMI Framebuffer")]:
         if os.path.exists(path):
             log.info(f"  ✓ {label}: {path}")
         else:
             log.warn(f"  ✗ {label}: {path} nicht gefunden")
 
-    # USB-Geräte vollständig auflisten
     log.info("  USB-Geraete:")
     try:
         r = subprocess.run("lsusb 2>/dev/null", shell=True,
@@ -820,13 +882,12 @@ def system_check():
             line = line.strip()
             if not line:
                 continue
-            # Bekannte relevante Geräte hervorheben
-            if any(x in line.lower() for x in ["rtl","2832","2838"]):
+            if any(x in line.lower() for x in ["rtl", "2832", "2838"]):
                 log.info(f"    ✓ RTL-SDR: {line}")
-            elif any(x in line.lower() for x in ["bluetooth","broadcom","cambridge"]):
+            elif any(x in line.lower() for x in ["bluetooth", "broadcom", "cambridge"]):
                 log.info(f"    ✓ BT: {line}")
-            elif any(x in line.lower() for x in ["hub","root hub"]):
-                pass  # Hubs nicht loggen
+            elif any(x in line.lower() for x in ["hub", "root hub"]):
+                pass
             else:
                 log.info(f"    · {line}")
         if not r.stdout.strip():
@@ -834,40 +895,33 @@ def system_check():
     except Exception as _e:
         log.warn(f"  USB scan: {_e}")
 
-    # Netzwerkstatus
     log.info("  Netzwerk:")
     try:
-        r = subprocess.run(["ip","-4","addr","show"],
+        r = subprocess.run(["ip", "-4", "addr", "show"],
                            capture_output=True, text=True, timeout=3)
         for line in r.stdout.splitlines():
             if "inet " in line and "127." not in line:
                 parts = line.strip().split()
                 ip   = parts[1].split("/")[0]
                 iface = ""
-                # Find interface name
                 for prev in r.stdout[:r.stdout.find(line)].splitlines():
                     if ":" in prev and not prev.startswith(" "):
                         iface = prev.split(":")[1].strip().split()[0]
                 log.info(f"    ✓ {iface}: {ip}")
         ssid = subprocess.run("iwgetid -r 2>/dev/null",
-                              shell=True, capture_output=True,
-                              text=True, timeout=2).stdout.strip()
+                              shell=True, capture_output=True, text=True, timeout=2).stdout.strip()
         if ssid:
             log.info(f"    ✓ SSID: {ssid}")
     except Exception:
         pass
 
-    # Bluetooth
     try:
         hc = subprocess.run("hciconfig 2>/dev/null",
-                            shell=True, capture_output=True,
-                            text=True, timeout=3)
+                            shell=True, capture_output=True, text=True, timeout=3)
         if "UP RUNNING" in hc.stdout:
             log.info("  ✓ Bluetooth: UP RUNNING")
-            # Gepairte Geräte
             paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
-                                    shell=True, capture_output=True,
-                                    text=True, timeout=3)
+                                    shell=True, capture_output=True, text=True, timeout=3)
             devs = [l for l in paired.stdout.splitlines() if l.startswith("Device")]
             if devs:
                 for d in devs:
@@ -881,9 +935,8 @@ def system_check():
     except Exception:
         pass
 
-    # PulseAudio
     try:
-        pa = subprocess.run(["systemctl","is-active","pulseaudio"],
+        pa = subprocess.run(["systemctl", "is-active", "pulseaudio"],
                             capture_output=True, text=True, timeout=3)
         if pa.stdout.strip() == "active":
             log.info("  ✓ PulseAudio: aktiv (BT A2DP)")
@@ -892,9 +945,8 @@ def system_check():
     except Exception:
         pass
 
-    # Raspotify
     try:
-        sp = subprocess.run(["systemctl","is-active","raspotify"],
+        sp = subprocess.run(["systemctl", "is-active", "raspotify"],
                             capture_output=True, text=True, timeout=3)
         if sp.stdout.strip() == "active":
             log.info("  ✓ Raspotify: aktiv")
@@ -903,7 +955,6 @@ def system_check():
     except Exception:
         pass
 
-    # RTL-SDR: passiver Startup-Check via rtlsdr-Modul (öffnet Device NICHT)
     try:
         from modules import rtlsdr as _rtlsdr_check
         _rtlsdr_check.log_startup_check(log)
@@ -913,18 +964,16 @@ def system_check():
     log.info("--- System-Check OK ---")
 
 
-# ── Menü neu bauen nach Scan/Reload ──────────────────────────────────────────
+# ── Menü neu bauen nach Scan/Reload ────────────────────────────────────────
 
 def rebuild_tree(menu_state, store, S, settings):
-    """Menübaum neu aufbauen, aktuelle Position behalten."""
     old_path = menu_state.path[:]
     new_root = build_tree(store, S, settings)
     menu_state.root = new_root
 
-    # Versuche alte Position wiederherzustellen
     menu_state._stack   = [new_root]
     menu_state._cursors = [0]
-    for label in old_path[1:]:  # root überspringen
+    for label in old_path[1:]:
         found = False
         for i, child in enumerate(menu_state.current.children):
             if child.label == label:
@@ -934,58 +983,28 @@ def rebuild_tree(menu_state, store, S, settings):
                 break
         if not found:
             break
+
     menu_state.clamp_cursors()
     menu_state.rev += 1
     log.info(f"MENU_REBUILD path={'/'.join(menu_state.path)} cursor={menu_state.cursor}")
 
 
-# ── Hauptschleife ──────────────────────────────────────────────────────────────
-
+# ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
     """Einmalig beim Start: BT reconnect + letzte Station wiederherstellen."""
-    import subprocess, time
+    import time
 
-    # BT Auto-reconnect: letztes Geraet zuerst, dann alle gepairten
+    source_state.set_boot_phase("restore_bt")
+
     try:
-        # Letztes bekanntes Geraet hat Prioritaet
-        last_mac = settings.get("bt_last_mac", "")
-        r = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
-                           shell=True, capture_output=True, text=True, timeout=5)
-        paired = []
-        for line in r.stdout.splitlines():
-            p = line.strip().split(" ", 2)
-            if len(p) >= 2 and p[0] == "Device":
-                paired.append((p[1], p[2] if len(p)>2 else p[1]))
-        # Letztes Geraet an den Anfang
-        if last_mac:
-            paired = sorted(paired, key=lambda x: 0 if x[0]==last_mac else 1)
-        for mac, name in paired:
-            subprocess.run("bluetoothctl trust " + mac + " 2>/dev/null",
-                           shell=True, capture_output=True, timeout=3)
-            connected = False
-            # 3 Versuche: BT im Auto ist oft noch nicht ready beim Pi-Start
-            for attempt, wait in enumerate([0, 5, 12]):
-                if wait > 0:
-                    time.sleep(wait)
-                rc = subprocess.run("bluetoothctl connect " + mac + " 2>/dev/null",
-                                    shell=True, capture_output=True,
-                                    text=True, timeout=8)
-                if "successful" in rc.stdout.lower() or "connected" in rc.stdout.lower():
-                    connected = True
-                    break
-                log.info("BT Reconnect Versuch " + str(attempt+1) + " fehlgeschlagen: " + mac)
-            if connected:
-                log.info("BT Auto-reconnect OK: " + mac + " (" + name + ")")
-                settings["bt_last_mac"]  = mac
-                settings["bt_last_name"] = name
-                from modules import bluetooth as _bt
-                _bt.connect_device(mac, S, settings)
-                break
+        if bluetooth.reconnect_known_devices(S, settings):
+            log.info("BT Auto-reconnect: bekanntes Gerät erfolgreich verbunden")
+        else:
+            log.info("BT Auto-reconnect: kein bekanntes Gerät verfügbar")
     except Exception as _e:
         log.warn("BT Auto-reconnect: " + str(_e))
 
-    # GPIO-Tasten starten (v0.9.4)
     try:
         _gpio_active = _gpio_buttons.start()
         if _gpio_active:
@@ -995,8 +1014,6 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
-    # v0.9.4: amixer Klinke beim Start explizit setzen — verhindert "kein Ton"
-    # wenn boot-resume play_station() startet ohne vorherigen get_mpv_args()-Aufruf
     try:
         from modules.audio import _set_pi_output_klinke
         _audio_out = settings.get("audio_output", "auto")
@@ -1006,8 +1023,6 @@ def startup_tasks(S, settings):
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 
-    # v0.9.7: Startup-Lautstärke anwenden — apply_startup_volume() war definiert
-    # aber nie aufgerufen. Damit blieb die gespeicherte Lautstärke wirkungslos.
     try:
         from modules import audio as _aud_vol
         _aud_vol.apply_startup_volume(settings)
@@ -1016,7 +1031,6 @@ def startup_tasks(S, settings):
 
     source_state.set_boot_phase("restore_source")
 
-    # Boot-Resume: letzte Quelle + Station wiederherstellen (v0.9.4)
     try:
         time.sleep(1)
         last_src   = settings.get("last_source", "")
@@ -1026,29 +1040,23 @@ def startup_tasks(S, settings):
 
         if last_src == "fm" and last_fm and last_fm.get("freq"):
             log.info("Boot-Resume: FM → " + str(last_fm.get("name", last_fm.get("freq", ""))))
-            from modules import fm as _fm
-            _fm.play_station(last_fm, S, settings)
+            fm.play_station(last_fm, S, settings)
 
         elif last_src == "dab" and last_dab and last_dab.get("name"):
             log.info("Boot-Resume: DAB → " + str(last_dab.get("name", "")))
-            from modules import dab as _dab
-            _dab.play_station(last_dab, S, settings)
+            dab.play_station(last_dab, S, settings)
 
         elif last_src == "webradio" and last_web and last_web.get("url"):
             log.info("Boot-Resume: Webradio → " + str(last_web.get("name", "")))
-            from modules import webradio as _web
-            _web.play_station(last_web, S, settings)
+            webradio.play_station(last_web, S, settings)
 
         elif last_fm and last_fm.get("freq"):
-            # Fallback: FM auch ohne last_source
             log.info("Boot-Resume: FM (Fallback) → " + str(last_fm.get("name", "")))
-            from modules import fm as _fm
-            _fm.play_station(last_fm, S, settings)
+            fm.play_station(last_fm, S, settings)
 
         elif last_dab and last_dab.get("name"):
             log.info("Boot-Resume: DAB (Fallback) → " + str(last_dab.get("name", "")))
-            from modules import dab as _dab
-            _dab.play_station(last_dab, S, settings)
+            dab.play_station(last_dab, S, settings)
 
         else:
             log.info("Boot-Resume: keine letzte Quelle gespeichert")
@@ -1059,128 +1067,126 @@ def startup_tasks(S, settings):
         source_state.set_boot_phase("steady")
 
 
+# ── Main ────────────────────────────────────────────────────────────────────
+
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.9.6 gestartet")
+    log.info("PiDrive Core v0.9.14-final gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
+    _start_bt_agent_early()
     log.info("  Headless — kein Display benoetigt")
     log.info(f"  Trigger: echo 'cmd' > {ipc.CMD_FILE}")
     log.info("=" * 50)
 
     system_check()
 
-    # MPRIS2: BMW-Display Metadaten
     _mpris2_player = _mpris2.start_mpris2() if _mpris2 else None
 
     settings = load_settings()
-    # v0.9.4: settings.json auf aktuelle Defaults-Vollständigkeit bringen
     try:
         from settings import ensure_settings_file
         ensure_settings_file()
-        settings = load_settings()  # erneut laden nach Normalisierung
+        settings = load_settings()
     except Exception:
         pass
-    S_module.start()   # Status-Thread starten (non-blocking)
+
+    S_module.start()
     S = S_module.S
 
-    # StationStore initialisieren
     store = StationStore(CONFIG_DIR)
     store.load_all()
 
-    # Menübaum aufbauen
-    root       = build_tree(store, S, settings)
+    root = build_tree(store, S, settings)
     menu_state = MenuState(root)
 
-    save_timer = time.time()
-    stat_timer = time.time()
-    ipc_timer  = time.time()
-    store_timer= time.time()
+    stat_timer  = time.time()
+    ipc_timer   = time.time()
+    store_timer = time.time()
 
     log.info("Core-Loop gestartet")
-    # v0.9.4: BT Auto-Reconnect Watcher starten
     bluetooth.start_auto_reconnect(S, settings)
+
     _ready_written = False
     import threading as _thr
-    _thr.Thread(target=startup_tasks, args=(S_module.S, settings),
-                daemon=True).start()
-
+    _thr.Thread(target=startup_tasks, args=(S_module.S, settings), daemon=True).start()
 
     while True:
-        S = S_module.S   # Direkt lesen — Thread aktualisiert im Hintergrund
+        S = S_module.S
 
-        # Trigger prüfen
         needs_rebuild = check_trigger(menu_state, store, S, settings)
         if needs_rebuild:
             rebuild_tree(menu_state, store, S, settings)
 
-        # Scan-triggered rebuild: bt_scan/wifi_scan setzen S['menu_rev']
         cur_s_rev = S.get("menu_rev", 0)
         if cur_s_rev != getattr(main, '_last_s_rev', 0):
             main._last_s_rev = cur_s_rev
             if not needs_rebuild:
                 rebuild_tree(menu_state, store, S, settings)
 
-        # Nach Trigger: IPC sofort schreiben (schnelle Reaktion im Web/Display)
         if needs_rebuild or (os.path.exists(ipc.CMD_FILE) is False and
                              menu_state.rev != getattr(main, '_last_rev', -1)):
             ipc.write_menu(menu_state.export())
             main._last_rev = menu_state.rev
 
-        # StationStore Hot-Reload (alle 10s prüfen)
         if time.time() - store_timer > 10:
             if store.reload_if_changed():
                 rebuild_tree(menu_state, store, S, settings)
             store_timer = time.time()
 
-        # BT Disconnect: Einmalig wenn BT getrennt wird
         bt_now = S.get("bt", False)
         if getattr(main, '_bt_was_connected', False) and not bt_now:
             if settings.get("audio_output") == "bt":
                 log.info("BT getrennt — Audio Fallback auf Klinke")
                 settings["audio_output"] = "klinke"
-                settings["alsa_device"]  = "default"
-                # In Background ausführen, blockiert nicht den Loop
+                settings["alsa_device"] = "default"
+
                 def _bt_disconnect_bg():
                     try:
                         import subprocess
                         PA = "PULSE_SERVER=unix:/var/run/pulse/native"
                         sinks = subprocess.run(
                             PA + " pactl list sinks short 2>/dev/null",
-                            shell=True, capture_output=True, text=True, timeout=3)
+                            shell=True, capture_output=True, text=True, timeout=3
+                        )
                         for line in sinks.stdout.splitlines():
                             if "alsa_output" in line:
                                 alsa_sink = line.split()[1]
                                 subprocess.run(
                                     PA + " pactl set-default-sink " + alsa_sink,
-                                    shell=True, timeout=3)
+                                    shell=True, timeout=3
+                                )
                                 log.info("[AUDIO] bt_disconnected → PA zurück auf " + alsa_sink)
                                 break
-                        # Radioquelle auf Klinke neu starten
+
                         _rtype = S.get("radio_type", "")
                         from modules.audio import is_radio_source
                         if S.get("radio_playing") and is_radio_source(_rtype):
                             log.info("[AUDIO] radio_restart_on_disconnect source=" + _rtype)
                             import time as _td
                             _td.sleep(0.5)
-                            with open("/tmp/pidrive_cmd","w") as _cf:
+                            with open("/tmp/pidrive_cmd", "w") as _cf:
                                 _cf.write("radio_restart_on_bt\n")
                         elif _rtype:
                             log.info("[AUDIO] no restart on disconnect — source=" + _rtype)
                     except Exception as _e:
                         log.warn("BT Disconnect BG: " + str(_e))
+
                 import threading
                 threading.Thread(target=_bt_disconnect_bg, daemon=True).start()
+
         main._bt_was_connected = bt_now
 
-        # IPC schreiben (alle 0.1s — Status-Thread ist non-blocking)
         if time.time() - ipc_timer > 0.1:
             ipc.write_status(S, settings)
             exported = menu_state.export()
             ipc.write_menu(exported)
-            # BMW-Display aktualisieren
+
             if _mpris2:
-                try: _mpris2.update(S, exported)
-                except Exception: pass
+                try:
+                    _mpris2.update(S, exported)
+                except Exception:
+                    pass
+
             ipc_timer = time.time()
             if not _ready_written:
                 try:
@@ -1190,7 +1196,6 @@ def main():
                 except Exception:
                     pass
 
-        # Status-Log (alle 60s)
         if time.time() - stat_timer > 60:
             log.status_update(S["wifi"], S["bt"], S["spotify"],
                               settings.get("audio_output", "auto"))
@@ -1200,4 +1205,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        try:
+            bluetooth.stop_agent_session()
+        except Exception:
+            pass

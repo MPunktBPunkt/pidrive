@@ -24,8 +24,10 @@ PROGRESS_FILE = "/tmp/pidrive_progress.json"
 RTLSDR_FILE  = "/tmp/pidrive_rtlsdr.json"
 AVRCP_FILE   = "/tmp/pidrive_avrcp.json"
 LIST_FILE    = "/tmp/pidrive_list.json"
-LOG_FILE  = "/var/log/pidrive/pidrive.log"
-READY_FILE= "/tmp/pidrive_ready"
+LOG_FILE     = "/var/log/pidrive/pidrive.log"
+READY_FILE   = "/tmp/pidrive_ready"
+KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
+BT_AGENT_FILE = "/tmp/pidrive_bt_agent.json"
 
 ALLOWED_COMMANDS = {
     "up", "down", "left", "right", "enter", "back",
@@ -37,13 +39,20 @@ ALLOWED_COMMANDS = {
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
     "vol_up", "vol_down",
     "gain_fm_auto", "gain_dab_auto",
-    "dab_scan", "fm_scan",
+    "dab_scan", "dab_scan_replace", "fm_scan",
     "fm_next", "fm_prev", "dab_next", "dab_prev",
     "lib_browse",
     "reboot", "shutdown", "sys_info", "sys_version", "update",
     "rtlsdr_reset",
     "bt_backup", "bt_restore",
 }
+
+PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────────────────────────────────────────
 
 def read_json(path, default=None):
     if default is None:
@@ -54,9 +63,11 @@ def read_json(path, default=None):
     except Exception:
         return default
 
+
 def write_cmd(cmd):
     with open(CMD_FILE, "w", encoding="utf-8") as f:
         f.write(cmd.strip() + "\n")
+
 
 def file_age(path):
     try:
@@ -64,8 +75,8 @@ def file_age(path):
     except Exception:
         return None
 
+
 def get_ip():
-    # robust genug für LAN/WLAN-Entwicklung
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -77,6 +88,8 @@ def get_ip():
             return socket.gethostbyname(socket.gethostname())
         except Exception:
             return "?"
+
+
 def safe_run(cmd):
     try:
         r = subprocess.run(
@@ -102,6 +115,7 @@ def safe_run(cmd):
             "cmd": cmd,
         }
 
+
 def get_version():
     try:
         with open(BASE_DIR / "VERSION", "r", encoding="utf-8") as f:
@@ -110,18 +124,30 @@ def get_version():
         return "?"
 
 
-PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+def _sink_is_hdmi(name: str) -> bool:
+    import re
+    n = (name or "").lower()
+    if "hdmi" in n:
+        return True
+    if re.search(r"alsa_output\.0\.", name or ""):
+        return True
+    return False
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Audio Debug
+# ──────────────────────────────────────────────────────────────────────────────
 
 def get_audio_debug() -> dict:
     """
-    Vollstaendiges Audio-Debug-Cockpit fuer WebUI — v0.8.12.
+    Vollständiges Audio-Debug-Cockpit.
     Liefert:
-      - pulse_active: PulseAudio Systemdaemon aktiv?
-      - default_sink: aktueller Default-Sink
-      - sinks:        alle verfuegbaren PulseAudio-Sinks
-      - sink_inputs:  laufende Sink-Inputs mit Prozessnamen
-      - decision:     letzte audio.py Routing-Entscheidung
+      - pulse_active
+      - default_sink
+      - sinks
+      - sink_inputs
+      - decision (/tmp/pidrive_audio_state.json)
+      - current_volume
     """
     data = {
         "pulse_active": False,
@@ -129,13 +155,11 @@ def get_audio_debug() -> dict:
         "sinks": [],
         "sink_inputs": [],
         "decision": {},
+        "current_volume": "–",
     }
 
-    # 1) letzte PiDrive Audio-Entscheidung aus shared state file (v0.8.13)
-    # Liest /tmp/pidrive_audio_state.json — geschrieben vom Core-Prozess
-    # get_last_decision() zeigte nur den WebUI-Prozesszustand, nicht den Core-Zustand
+    # Letzte Core-Entscheidung
     try:
-        import sys
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
@@ -144,18 +168,17 @@ def get_audio_debug() -> dict:
     except Exception:
         data["decision"] = {}
 
-    # 2) PulseAudio aktiv?
+    # PulseAudio aktiv?
     try:
         pa = safe_run("systemctl is-active pulseaudio 2>/dev/null")
         data["pulse_active"] = (pa.get("stdout", "").strip() == "active")
     except Exception:
         pass
 
-    # 3) Default-Sink
+    # Default-Sink
     try:
         ds = safe_run(PA_ENV + " pactl get-default-sink 2>/dev/null")
         data["default_sink"] = (ds.get("stdout", "") or "").strip()
-        # Fallback: pactl info wenn get-default-sink leer ist (v0.8.13)
         if not data["default_sink"]:
             info = safe_run(PA_ENV + " pactl info 2>/dev/null")
             for ln in (info.get("stdout", "") or "").splitlines():
@@ -165,7 +188,7 @@ def get_audio_debug() -> dict:
     except Exception:
         pass
 
-    # 4) Alle Sinks
+    # Alle Sinks
     try:
         sinks = safe_run(PA_ENV + " pactl list sinks short 2>/dev/null")
         out = sinks.get("stdout", "") or ""
@@ -175,21 +198,22 @@ def get_audio_debug() -> dict:
             parts = line.split()
             if len(parts) >= 2:
                 name = parts[1]
-                import re as _re
-                typ  = "bt"   if "bluez_sink"  in name else \
-                       "hdmi" if ("hdmi" in name.lower() or
-                                  _re.search(r"alsa_output\.0\.", name)) else \
-                       "alsa" if "alsa_output" in name else "other"
+                typ = (
+                    "bt" if "bluez_sink" in name else
+                    "hdmi" if _sink_is_hdmi(name) else
+                    "alsa" if "alsa_output" in name else
+                    "other"
+                )
                 data["sinks"].append({
-                    "id":   parts[0],
+                    "id": parts[0],
                     "name": name,
                     "type": typ,
-                    "raw":  line.strip(),
+                    "raw": line.strip(),
                 })
     except Exception:
         pass
 
-    # 5) Sink-Inputs (kurz)
+    # Sink-Inputs kurz
     try:
         sin = safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null")
         out = sin.get("stdout", "") or ""
@@ -198,16 +222,16 @@ def get_audio_debug() -> dict:
                 continue
             parts = line.split()
             data["sink_inputs"].append({
-                "id":     parts[0] if len(parts) > 0 else "",
-                "sink":   parts[1] if len(parts) > 1 else "",
+                "id": parts[0] if len(parts) > 0 else "",
+                "sink": parts[1] if len(parts) > 1 else "",
                 "client": parts[2] if len(parts) > 2 else "",
                 "driver": parts[3] if len(parts) > 3 else "",
-                "raw":    line.strip(),
+                "raw": line.strip(),
             })
     except Exception:
         pass
 
-    # 6) Sink-Input Details: Prozessname aus vollem pactl list
+    # Sink-Input Details
     try:
         detail = safe_run(PA_ENV + " pactl list sink-inputs 2>/dev/null")
         txt = detail.get("stdout", "") or ""
@@ -219,10 +243,10 @@ def get_audio_debug() -> dict:
                 continue
             sid = lines[0].strip()
             item = {
-                "application_name":  "",
-                "process_binary":    "",
-                "process_id":        "",
-                "media_name":        "",
+                "application_name": "",
+                "process_binary": "",
+                "process_id": "",
+                "media_name": "",
             }
             for ln in lines:
                 s = ln.strip()
@@ -242,9 +266,20 @@ def get_audio_debug() -> dict:
     except Exception:
         pass
 
+    # Robuste Lautstärke
+    try:
+        vol = api_volume().json if hasattr(api_volume(), "json") else {}
+        if isinstance(vol, dict):
+            data["current_volume"] = vol.get("volume", "–")
+    except Exception:
+        pass
+
     return data
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Source / DAB / Spectrum Debug
+# ──────────────────────────────────────────────────────────────────────────────
 
 def get_source_state_debug():
     try:
@@ -279,82 +314,93 @@ def get_spectrum_debug():
         return {"error": str(e)}
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# View Model
+# ──────────────────────────────────────────────────────────────────────────────
+
 def build_view_model():
-    status   = read_json(STATUS_FILE, {})
-    menu     = read_json(MENU_FILE,   {})
-    progress = read_json(PROGRESS_FILE, {})
-    rtlsdr   = read_json(RTLSDR_FILE, {})
-    avrcp    = read_json(AVRCP_FILE,  {})
-    list_data= read_json(LIST_FILE,   {})
+    status    = read_json(STATUS_FILE, {})
+    menu      = read_json(MENU_FILE, {})
+    progress  = read_json(PROGRESS_FILE, {})
+    rtlsdr    = read_json(RTLSDR_FILE, {})
+    avrcp     = read_json(AVRCP_FILE, {})
+    list_data = read_json(LIST_FILE, {})
+    bt_known  = read_json(KNOWN_BT_FILE, {"devices": []})
+    bt_agent  = read_json(BT_AGENT_FILE, {})
 
-    # v0.7.0: nodes aus Baummodell, Compat-Fallback
-    nodes      = menu.get("nodes",      [])
+    nodes      = menu.get("nodes", [])
     categories = menu.get("categories", [])
-    items_list = menu.get("items",      [])
+    items_list = menu.get("items", [])
 
-    # Selektierter Knoten
     cursor   = menu.get("cursor", 0)
     sel_node = nodes[cursor] if nodes and cursor < len(nodes) else {}
 
-    # Debug-Info für Phase 2 (GPT-5.4)
     debug = {
-        "rev":           menu.get("rev", 0),
-        "path":          menu.get("path", []),
-        "title":         menu.get("title", ""),
-        "cursor":        cursor,
-        "can_back":      menu.get("can_back", False),
-        "selected_label":sel_node.get("label","") if isinstance(sel_node,dict) else str(sel_node),
-        "selected_type": sel_node.get("type","") if isinstance(sel_node,dict) else "",
-        "node_count":    len(nodes),
-        "core_ready":    os.path.exists(READY_FILE),
-        "status_age":    file_age(STATUS_FILE),
-        "menu_age":      file_age(MENU_FILE),
+        "rev":            menu.get("rev", 0),
+        "path":           menu.get("path", []),
+        "title":          menu.get("title", ""),
+        "cursor":         cursor,
+        "can_back":       menu.get("can_back", False),
+        "selected_label": sel_node.get("label", "") if isinstance(sel_node, dict) else str(sel_node),
+        "selected_type":  sel_node.get("type", "") if isinstance(sel_node, dict) else "",
+        "node_count":     len(nodes),
+        "core_ready":     os.path.exists(READY_FILE),
+        "status_age":     file_age(STATUS_FILE),
+        "menu_age":       file_age(MENU_FILE),
     }
 
     return {
-        "version":        get_version(),
-        "ip":             get_ip(),
-        "status":         status,
-        "menu":           menu,
-        "progress":       progress,
-        "rtlsdr":         rtlsdr,
-        "rtlsdr_age":     file_age(RTLSDR_FILE),
-        "rtlsdr_exists":  os.path.exists(RTLSDR_FILE),
-        "avrcp":          avrcp,
-        "avrcp_age":      file_age(AVRCP_FILE),
-        "avrcp_exists":   os.path.exists(AVRCP_FILE),
-        "audio_debug":    get_audio_debug(),
-        "source_state":   get_source_state_debug(),
-        "dab_scan_debug": get_dab_scan_debug(),
-        "spectrum_debug": get_spectrum_debug(),
-        "list_data":      list_data,
-        "list_active":    list_data.get("active", False),
-        "list_title":     list_data.get("title", ""),
-        "list_items":     list_data.get("items", []),
-        "list_selected":  list_data.get("selected", 0),
-        "nodes":          nodes,
-        "categories":     categories,
-        "items":          items_list,
-        "path":           menu.get("path", []),
-        "cursor":         cursor,
-        "rev":            menu.get("rev", 0),
-        "can_back":       menu.get("can_back", False),
-        "debug":          debug,
-        "status_age":     file_age(STATUS_FILE),
-        "menu_age":       file_age(MENU_FILE),
-        "progress_age":   file_age(PROGRESS_FILE),
-        "list_age":       file_age(LIST_FILE),
-        "status_exists":  os.path.exists(STATUS_FILE),
-        "menu_exists":    os.path.exists(MENU_FILE),
-        "progress_exists":os.path.exists(PROGRESS_FILE),
-        "list_exists":    os.path.exists(LIST_FILE),
-        "log_exists":     os.path.exists(LOG_FILE),
+        "version":         get_version(),
+        "ip":              get_ip(),
+        "status":          status,
+        "menu":            menu,
+        "progress":        progress,
+        "rtlsdr":          rtlsdr,
+        "rtlsdr_age":      file_age(RTLSDR_FILE),
+        "rtlsdr_exists":   os.path.exists(RTLSDR_FILE),
+        "avrcp":           avrcp,
+        "avrcp_age":       file_age(AVRCP_FILE),
+        "avrcp_exists":    os.path.exists(AVRCP_FILE),
+        "audio_debug":     get_audio_debug(),
+        "source_state":    get_source_state_debug(),
+        "dab_scan_debug":  get_dab_scan_debug(),
+        "spectrum_debug":  get_spectrum_debug(),
+        "known_bt_devices": bt_known,
+        "bt_agent":        bt_agent,
+        "list_data":       list_data,
+        "list_active":     list_data.get("active", False),
+        "list_title":      list_data.get("title", ""),
+        "list_items":      list_data.get("items", []),
+        "list_selected":   list_data.get("selected", 0),
+        "nodes":           nodes,
+        "categories":      categories,
+        "items":           items_list,
+        "path":            menu.get("path", []),
+        "cursor":          cursor,
+        "rev":             menu.get("rev", 0),
+        "can_back":        menu.get("can_back", False),
+        "debug":           debug,
+        "status_age":      file_age(STATUS_FILE),
+        "menu_age":        file_age(MENU_FILE),
+        "progress_age":    file_age(PROGRESS_FILE),
+        "list_age":        file_age(LIST_FILE),
+        "status_exists":   os.path.exists(STATUS_FILE),
+        "menu_exists":     os.path.exists(MENU_FILE),
+        "progress_exists": os.path.exists(PROGRESS_FILE),
+        "list_exists":     os.path.exists(LIST_FILE),
+        "log_exists":      os.path.exists(LOG_FILE),
     }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Routes
+# ──────────────────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
     vm = build_view_model()
     return render_template("index.html", vm=vm)
+
 
 @app.route("/api/state")
 def api_state():
@@ -372,6 +418,7 @@ def api_runtime():
     except Exception:
         settings = {}
 
+    status = read_json(STATUS_FILE, {})
     return jsonify({
         "ok": True,
         "settings": {
@@ -393,6 +440,9 @@ def api_runtime():
         "dab_scan_debug": get_dab_scan_debug(),
         "spectrum_debug": get_spectrum_debug(),
         "audio": get_audio_debug(),
+        "known_bt_devices": read_json(KNOWN_BT_FILE, {"devices": []}),
+        "bt_agent": read_json(BT_AGENT_FILE, {}),
+        "processes": status.get("processes", []),
     })
 
 
@@ -404,11 +454,13 @@ def api_cmd():
     if not cmd:
         return jsonify({"ok": False, "error": "Kein Befehl übergeben"}), 400
 
-    prefixes = ("cat:", "reload_stations:",
-                "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
-                "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
-                "dab_scan_channels:", "bt_connect:", "wifi_connect:", "bt_repair:",
-                "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:", "dab_scan_channels:")
+    prefixes = (
+        "cat:", "reload_stations:",
+        "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
+        "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
+        "dab_scan_channels:", "bt_connect:", "wifi_connect:", "bt_repair:",
+        "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:"
+    )
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 
@@ -417,6 +469,39 @@ def api_cmd():
         return jsonify({"ok": True, "cmd": cmd})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/bt/known")
+def api_bt_known():
+    data = read_json(KNOWN_BT_FILE, {"devices": []})
+    devs = data.get("devices", []) if isinstance(data, dict) else []
+    try:
+        devs = sorted(devs, key=lambda d: (
+            0 if d.get("connected") else 1,
+            0 if d.get("paired") else 1,
+            0 if d.get("known") else 1,
+            (d.get("name") or "").lower(),
+            d.get("mac") or ""
+        ))
+    except Exception:
+        pass
+    return jsonify({"ok": True, "data": {"devices": devs}})
+
+
+@app.route("/api/bt/connect_known", methods=["POST"])
+def api_bt_connect_known():
+    data = request.get_json(silent=True) or {}
+    mac = (data.get("mac") or "").strip()
+    if not mac:
+        return jsonify({"ok": False, "error": "mac fehlt"}), 400
+    write_cmd("bt_connect:" + mac)
+    return jsonify({"ok": True, "cmd": "bt_connect:" + mac})
+
+
+@app.route("/api/bt/agent")
+def api_bt_agent():
+    return jsonify({"ok": True, "data": read_json(BT_AGENT_FILE, {})})
+
 
 @app.route("/api/logs")
 def api_logs():
@@ -435,9 +520,9 @@ def api_logs():
 
     return jsonify(safe_run(cmd))
 
+
 @app.route("/api/diagnose")
 def api_diagnose():
-    # Falls diagnose.py vorhanden ist
     diag_py = BASE_DIR / "diagnose.py"
     if diag_py.exists():
         return jsonify(safe_run(f"/usr/bin/python3 {diag_py}"))
@@ -449,57 +534,51 @@ def api_diagnose():
         "cmd": "diagnose.py"
     })
 
+
 @app.route("/api/grep")
 def api_grep():
     cmd = r'''grep -R "pidrive_status\|pidrive_menu\|write_json\|json.dump" /home/pi/pidrive/pidrive -n'''
     return jsonify(safe_run(cmd))
 
+
 @app.route("/api/rtlsdr")
 def api_rtlsdr():
     data = read_json(RTLSDR_FILE, {})
-    return jsonify({"ok": bool(data), "data": data,
-                    "exists": os.path.exists(RTLSDR_FILE),
-                    "age": file_age(RTLSDR_FILE)})
+    return jsonify({
+        "ok": bool(data),
+        "data": data,
+        "exists": os.path.exists(RTLSDR_FILE),
+        "age": file_age(RTLSDR_FILE)
+    })
+
 
 @app.route("/api/rtlsdr/refresh")
 def api_rtlsdr_refresh():
-    """Passive Diagnose neu ausführen (öffnet Device NICHT)."""
     import subprocess as _sp
     try:
-        _sp.run(["/usr/bin/python3",
-                 "/home/pi/pidrive/pidrive/modules/rtlsdr.py",
-                 "--json"],
-                timeout=10, capture_output=True)
+        _sp.run(
+            ["/usr/bin/python3", "/home/pi/pidrive/pidrive/modules/rtlsdr.py", "--json"],
+            timeout=10, capture_output=True
+        )
     except Exception:
         pass
     return jsonify({"ok": True, "data": read_json(RTLSDR_FILE, {})})
 
 
+@app.route("/api/rtlsdr/reset", methods=["POST"])
+def api_rtlsdr_reset():
+    try:
+        write_cmd("rtlsdr_reset")
+        return jsonify({"ok": True, "msg": "RTL-SDR Reset gestartet — dauert ~5s"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/api/dab/diag")
 def api_dab_diag():
-    """
-    Startet welle-cli im Webserver-Diagnose-Modus (-C 1 -w port) (v0.9.2).
-    Zeigt Ensemble-Infos, DLS, Signal im Browser auf http://PI-IP:7979
-
-    Parameter: ?channel=11D&port=7979
-    Stoppt laufenden DAB-Player vorher via radio_stop Trigger.
-    """
     import subprocess as _sp
     channel = request.args.get("channel", "")
     port    = request.args.get("port", "7979")
-
-    if not channel:
-        # Aus aktuellem Status holen
-        try:
-            import pathlib, json as _j
-            st = _j.loads(pathlib.Path(STATUS_FILE).read_text())
-            rt = st.get("radio_type", "")
-            rn = st.get("radio_station", "")
-            if rt == "DAB" and rn:
-                # z.B. "ROCK ANTENNE" — für Kanal brauchen wir anders
-                pass
-        except Exception:
-            pass
 
     if not channel:
         return jsonify({"ok": False, "error": "channel Parameter fehlt (z.B. ?channel=11D)"})
@@ -511,20 +590,16 @@ def api_dab_diag():
     except Exception:
         return jsonify({"ok": False, "error": "Ungültiger Port"})
 
-    # Laufenden Player stoppen
     try:
-        (BASE_DIR / "../pidrive_cmd").write_text("radio_stop\n") if False else None
         with open("/tmp/pidrive_cmd", "w") as _f:
             _f.write("radio_stop\n")
     except Exception:
         pass
 
-    import time as _t
-    _t.sleep(1.5)
+    time.sleep(1.5)
 
-    # Laufende welle-cli Instanzen killen
     _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
-    _t.sleep(0.5)
+    time.sleep(0.5)
 
     cmd = f"welle-cli -c {channel} -C 1 -w {port} 2>&1 &"
     try:
@@ -533,121 +608,67 @@ def api_dab_diag():
         return jsonify({"ok": False, "error": str(e)})
 
     return jsonify({
-        "ok":      True,
+        "ok": True,
         "channel": channel,
-        "port":    port,
-        "url":     f"http://PI_IP:{port}/",
-        "note":    f"welle-cli Webserver gestartet auf Port {port} — Browser: http://[PI-IP]:{port}/",
+        "port": port,
+        "url": f"http://PI_IP:{port}/",
+        "note": f"welle-cli Webserver gestartet auf Port {port} — Browser: http://[PI-IP]:{port}/",
     })
 
 
 @app.route("/api/dab/diag/stop")
 def api_dab_diag_stop():
-    """Stoppt den welle-cli Webserver-Diagnosemodus."""
     import subprocess as _sp
     _sp.run("pkill -f 'welle-cli.*-w' 2>/dev/null", shell=True, capture_output=True)
     return jsonify({"ok": True, "note": "welle-cli Webserver gestoppt"})
 
 
-@app.route("/api/rtlsdr/reset", methods=["POST"])
-def api_rtlsdr_reset():
-    """RTL-SDR USB-Reset via Core-Trigger (v0.8.16). Kein Reboot nötig."""
+@app.route("/api/dab/scan/settings", methods=["GET", "POST"])
+def api_dab_scan_settings():
     try:
-        write_cmd("rtlsdr_reset")
-        return jsonify({"ok": True, "msg": "RTL-SDR Reset gestartet — dauert ~5s"})
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from settings import load_settings as _ls, save_settings as _ss
+        s = _ls()
+
+        if request.method == "GET":
+            return jsonify({
+                "ok": True,
+                "data": {
+                    "dab_scan_wait_lock": s.get("dab_scan_wait_lock", 20),
+                    "dab_scan_http_timeout": s.get("dab_scan_http_timeout", 4),
+                    "dab_scan_port": s.get("dab_scan_port", 7981),
+                    "dab_scan_channels": s.get("dab_scan_channels", []),
+                }
+            })
+
+        data = request.get_json(silent=True) or {}
+        s["dab_scan_wait_lock"] = int(data.get("dab_scan_wait_lock", s.get("dab_scan_wait_lock", 20)))
+        s["dab_scan_http_timeout"] = int(data.get("dab_scan_http_timeout", s.get("dab_scan_http_timeout", 4)))
+        s["dab_scan_port"] = int(data.get("dab_scan_port", s.get("dab_scan_port", 7981)))
+        chans = data.get("dab_scan_channels", s.get("dab_scan_channels", []))
+        if isinstance(chans, str):
+            chans = [x.strip().upper() for x in chans.split(",") if x.strip()]
+        s["dab_scan_channels"] = chans
+        _ss(s)
+        return jsonify({"ok": True, "saved": True, "data": s})
+
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-
-
-def api_ready():
-    import pathlib
-    ready = pathlib.Path("/tmp/pidrive_ready").exists()
-    return jsonify({
-        "core_ready":   ready,
-        "status_ok":    pathlib.Path("/tmp/pidrive_status.json").exists(),
-        "menu_ok":      pathlib.Path("/tmp/pidrive_menu.json").exists(),
-    })
-
-@app.route("/api/nav", methods=["POST"])
-def api_nav():
-    """Direktnavigation: {"target": 3} setzt Cursor auf Index 3.
-    Ersetzt N einzelne up/down-Requests durch einen einzigen Aufruf."""
-    data = request.get_json(silent=True) or {}
-    target = data.get("target")
-    cmd    = data.get("cmd")
-
-    if cmd:
-        # Direkt-Cmd (enter, back etc.)
-        if cmd not in ("enter","back","left","right","up","down"):
-            return jsonify({"ok": False, "error": "cmd nicht erlaubt"}), 400
-        try:
-            write_cmd(cmd)
-            return jsonify({"ok": True, "cmd": cmd})
-        except Exception as e:
-            return jsonify({"ok": False, "error": str(e)}), 500
-
-    if target is None:
-        return jsonify({"ok": False, "error": "target oder cmd fehlt"}), 400
-
-    # Aktuellen Cursor aus menu.json lesen
-    menu = read_json(MENU_FILE, {})
-    current = menu.get("cursor", menu.get("item", 0))
-    steps = int(target) - int(current)
-
-    if steps == 0:
-        # Schon dort — direkt enter
-        try:
-            write_cmd("enter")
-            return jsonify({"ok": True, "steps": 0, "cmd": "enter"})
-        except Exception as e:
-            return jsonify({"ok": False, "error": str(e)}), 500
-
-    direction = "down" if steps > 0 else "up"
-    import time
-    try:
-        for _ in range(abs(steps)):
-            write_cmd(direction)
-            time.sleep(0.06)   # kurze Pause zwischen Schritten
-        write_cmd("enter")
-        return jsonify({"ok": True, "steps": steps, "direction": direction})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-@app.route("/api/service")
-def api_service():
-    name = request.args.get("name", "pidrive_core")
-    if name not in ("pidrive_core", "pidrive_display", "pidrive_web", "pidrive_avrcp"):
-        return jsonify({"ok": False, "error": "Ungültiger Service"}), 400
-    return jsonify(safe_run(f"systemctl status {name} --no-pager"))
-
-
-@app.route("/api/avrcp")
-def api_avrcp():
-    """AVRCP Debug-Status."""
-    data = read_json(AVRCP_FILE, {})
-    return jsonify({
-        "ok":     bool(data),
-        "data":   data,
-        "exists": os.path.exists(AVRCP_FILE),
-        "age":    file_age(AVRCP_FILE),
-    })
+        return jsonify({"ok": False, "error": str(e)})
 
 
 @app.route("/api/audio")
 def api_audio():
-    """Audio-Routing Debug Cockpit — v0.8.12: Sinks + Sink-Inputs + Prozessnamen."""
     return jsonify({
-        "ok":   True,
+        "ok": True,
         "data": get_audio_debug(),
     })
 
 
 @app.route("/api/gain")
 def api_gain():
-    """Gibt aktuelle Gain + PPM + Squelch Einstellungen zurück (v0.8.18)."""
     try:
-        import sys
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
@@ -655,11 +676,11 @@ def api_gain():
         s = _ls()
         return jsonify({
             "ok": True,
-            "fm_gain":        s.get("fm_gain",        -1),
-            "dab_gain":       s.get("dab_gain",       -1),
-            "ppm_correction": s.get("ppm_correction",  0),
-            "scanner_squelch":s.get("scanner_squelch",25),
-            "scanner_gain":   s.get("scanner_gain", -1),
+            "fm_gain": s.get("fm_gain", -1),
+            "dab_gain": s.get("dab_gain", -1),
+            "ppm_correction": s.get("ppm_correction", 0),
+            "scanner_squelch": s.get("scanner_squelch", 25),
+            "scanner_gain": s.get("scanner_gain", -1),
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
@@ -667,15 +688,6 @@ def api_gain():
 
 @app.route("/api/rtlsdr/calibrate")
 def api_rtlsdr_calibrate():
-    """
-    PPM-Kalibrierung via rtl_test -p (v0.8.25).
-
-    rtl_test -p gibt aus:
-      real sample rate: 2047943 current PPM: -28 cumulative PPM: -28
-
-    Methode 1: "cumulative PPM: N" direkt aus rtl_test (zuverlässigste Methode)
-    Methode 2: Samplerate-Berechnung als Fallback
-    """
     import re as _re
     result = safe_run("timeout 32s rtl_test -p 2>&1")
     stdout = result.get("stdout", "") or ""
@@ -684,8 +696,6 @@ def api_rtlsdr_calibrate():
     method = "nicht erkannt"
     lines = stdout.splitlines()
 
-    # Methode 1 (beste): "cumulative PPM: N" — rtl_test gibt dies nach ~30s aus
-    # Zeile sieht aus: "real sample rate: 2047943 current PPM: -28 cumulative PPM: -28"
     cum_ppms = []
     for ln in lines:
         m = _re.search(r'cumulative PPM[: ]+([-+]?[0-9]+)', ln, _re.I)
@@ -696,11 +706,9 @@ def api_rtlsdr_calibrate():
                 pass
 
     if cum_ppms:
-        # Letzten kumulativen PPM-Wert nehmen (stabilstes Ergebnis)
         ppm = cum_ppms[-1]
         method = f"cumulative PPM aus rtl_test ({len(cum_ppms)} Messungen, letzter Wert)"
 
-    # Methode 2: "current PPM: N" wenn kein kumulativer Wert
     if ppm is None:
         cur_ppms = []
         for ln in lines:
@@ -711,27 +719,24 @@ def api_rtlsdr_calibrate():
                 except Exception:
                     pass
         if cur_ppms:
-            # Median der aktuellen PPM-Werte (robuster als letzter Wert)
             cur_ppms.sort()
             ppm = cur_ppms[len(cur_ppms)//2]
             method = f"current PPM Median aus {len(cur_ppms)} Werten"
 
-    # Methode 3: Samplerate-Berechnung
     if ppm is None:
         for ln in lines:
             m = _re.search(r'real sample rate[: ]+([\d.]+)', ln, _re.I)
             if m:
                 try:
                     measured = float(m.group(1))
-                    nominal  = 2048000.0
-                    ppm_raw  = (measured - nominal) / nominal * 1e6
-                    ppm      = round(ppm_raw)
-                    method   = f"Samplerate-Berechnung ({measured:.0f} S/s)"
+                    nominal = 2048000.0
+                    ppm_raw = (measured - nominal) / nominal * 1e6
+                    ppm = round(ppm_raw)
+                    method = f"Samplerate-Berechnung ({measured:.0f} S/s)"
                 except Exception:
                     pass
                 break
 
-    # Hinweise
     hints = []
     if ppm is None:
         hints.append("Kein PPM-Wert erkannt — mögliche Ursachen:")
@@ -748,58 +753,77 @@ def api_rtlsdr_calibrate():
         hints.append("Nach Übernehmen → FM neu starten um Wert zu aktivieren")
 
     return jsonify({
-        "ok":            True,
-        "stdout":        stdout[-1000:],
+        "ok": True,
+        "stdout": stdout[-1000:],
         "suggested_ppm": ppm,
-        "method":        method,
-        "hints":         hints,
+        "method": method,
+        "hints": hints,
     })
 
 
 @app.route("/api/volume")
 def api_volume():
     """
-    PulseAudio-Lautstärke (v0.9.13).
-    @DEFAULT_SINK@ ist im System-Daemon oft leer → Fallback auf echten Sink-Namen.
+    PulseAudio-Lautstärke:
+    1. aktiver sink-input
+    2. default sink
+    3. card-1 / Klinke
+    4. Nicht-HDMI ALSA
     """
     try:
-        PA = "PULSE_SERVER=unix:/var/run/pulse/native "
-
         def _extract_vol(txt):
             for part in txt.split():
                 if part.endswith("%"):
                     return part
             return ""
 
-        def _get_klinke_sink_name():
-            """Card 1 = Klinke: alsa_output.1.* suchen."""
+        def _find_real_sink():
             import re as _re
-            r = safe_run(PA + "pactl list sinks short 2>/dev/null")
-            for ln in (r.get("stdout","") or "").splitlines():
+
+            # 1) aktiver sink-input
+            sin = safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null").get("stdout", "")
+            sinks = safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout", "")
+            sink_id = ""
+            for ln in sin.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2:
+                    sink_id = parts[1]
+                    break
+            if sink_id:
+                for ln in sinks.splitlines():
+                    parts = ln.split()
+                    if len(parts) >= 2 and parts[0] == sink_id:
+                        return parts[1]
+
+            # 2) default sink
+            ds = safe_run(PA_ENV + " pactl get-default-sink 2>/dev/null").get("stdout", "").strip()
+            if ds:
+                return ds
+
+            # 3) card 1 (Klinke)
+            for ln in sinks.splitlines():
                 parts = ln.split()
                 if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
                     return parts[1]
-            # Fallback: RUNNING sink der kein HDMI ist
-            for ln in (r.get("stdout","") or "").splitlines():
+
+            # 4) Nicht-HDMI ALSA
+            for ln in sinks.splitlines():
                 parts = ln.split()
-                if len(parts) >= 2 and "alsa_output" in parts[1] and "hdmi" not in parts[1].lower():
+                if len(parts) >= 2 and "alsa_output" in parts[1] and not _sink_is_hdmi(parts[1]):
                     return parts[1]
             return ""
 
-        # 1. @DEFAULT_SINK@ versuchen
-        r = safe_run(PA + "pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null")
-        vol = _extract_vol(r.get("stdout","") or "")
+        r = safe_run(PA_ENV + " pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null")
+        vol = _extract_vol(r.get("stdout", "") or "")
 
-        # 2. Wenn leer: echten Sink-Namen verwenden
         if not vol:
-            sink = _get_klinke_sink_name()
+            sink = _find_real_sink()
             if sink:
-                r2 = safe_run(PA + f"pactl get-sink-volume {sink} 2>/dev/null")
-                vol = _extract_vol(r2.get("stdout","") or "")
+                r2 = safe_run(PA_ENV + f" pactl get-sink-volume {sink} 2>/dev/null")
+                vol = _extract_vol(r2.get("stdout", "") or "")
 
-        # 3. Letzter Fallback: RUNNING sink in pactl list sinks
         if not vol:
-            sinks_r = safe_run(PA + "pactl list sinks 2>/dev/null")
+            sinks_r = safe_run(PA_ENV + " pactl list sinks 2>/dev/null")
             sinks_txt = sinks_r.get("stdout", "") or ""
             capture = False
             for ln in sinks_txt.splitlines():
@@ -810,12 +834,11 @@ def api_volume():
                     if vol:
                         break
                 if capture and ln.strip().startswith("index:"):
-                    capture = False  # nächster Sink-Block
+                    capture = False
 
-        return jsonify({"ok": True, "volume": vol or "–"})
+        return jsonify({"ok": True, "volume": vol or "–", "sink": _find_real_sink()})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
-
 
 
 @app.route("/api/dab/scan/last")
@@ -837,6 +860,24 @@ def api_spectrum_last():
     })
 
 
+@app.route("/api/avrcp")
+def api_avrcp():
+    data = read_json(AVRCP_FILE, {})
+    return jsonify({
+        "ok": bool(data),
+        "data": data,
+        "exists": os.path.exists(AVRCP_FILE),
+        "age": file_age(AVRCP_FILE),
+    })
+
+
+@app.route("/api/service")
+def api_service():
+    name = request.args.get("name", "pidrive_core")
+    if name not in ("pidrive_core", "pidrive_display", "pidrive_web", "pidrive_avrcp"):
+        return jsonify({"ok": False, "error": "Ungültiger Service"}), 400
+    return jsonify(safe_run(f"systemctl status {name} --no-pager"))
+
 
 @app.route("/api/debug/summary")
 def api_debug_summary():
@@ -847,6 +888,8 @@ def api_debug_summary():
         "dab_scan": get_dab_scan_debug(),
         "spectrum": get_spectrum_debug(),
         "audio": get_audio_debug(),
+        "known_bt_devices": read_json(KNOWN_BT_FILE, {"devices": []}),
+        "bt_agent": read_json(BT_AGENT_FILE, {}),
     })
 
 
