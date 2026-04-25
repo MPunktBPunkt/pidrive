@@ -71,8 +71,10 @@ body { min-height: 100vh; }
 .meta span { color: var(--muted); font-size: 15px; }
 
 .flag { font-size: 15px; font-weight: bold; transition: color 0.15s ease; }
-.flag.on  { color: var(--green); }
-.flag.off { color: var(--muted); }
+.flag.on           { color: var(--green); }
+.flag.off          { color: var(--muted); }
+.flag.bt-connected { color: var(--green); }   /* BT verbunden = grün */
+.flag.bt-on        { color: #5aabff; }        /* Adapter AN, kein Gerät = blau */
 
 /* Debug-Bar */
 .debug-bar {
@@ -134,8 +136,10 @@ body { min-height: 100vh; }
 .display-top .ip    { color: #8bb7d9; font-size: 18px; text-align: center; flex: 1; }
 
 .right-status { display: flex; gap: 10px; font-size: 18px; white-space: nowrap; }
-.right-status .on  { color: var(--green); }
-.right-status .off { color: #8aa5bb; }
+.right-status .on           { color: var(--green); }
+.right-status .off          { color: #8aa5bb; }
+.right-status .bt-connected { color: var(--green); }
+.right-status .bt-on        { color: #5aabff; }
 
 /* Einspaltiger Menübereich */
 .display-body.single-column {
