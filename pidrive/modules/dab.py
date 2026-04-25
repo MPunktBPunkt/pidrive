@@ -452,27 +452,32 @@ def play_station(station, S, settings=None):
             log.error(f"DAB strict-mode: Abbruch name={name!r} channel={ch} sid={sid!r} reason={_adec.get('reason','?')}")
             return
 
+        _ppm_val  = int(settings.get("ppm_correction", 0)) if settings else 0
+        _dab_port = int(settings.get("dab_scan_port", 7981) if settings else 7981)
+
+        # ── Schritt 1: welle-cli als HTTP-Server starten ─────────────────────
+        # v0.9.16: Architektur wie Webradio — welle-cli als HTTP-Daemon,
+        # mpv verbindet auf http://localhost:<port>/mp3/<sid_dec>
+        # Problem vorher: welle-cli stdout-Pipe → mpv. welle-cli gibt raw PCM aus
+        # (kein Container, kein Header) → mpv erkennt Format nicht → kein Ton.
         import shlex
         _name_q = shlex.quote(name)
-        _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
-        _ppm_arg = ""  # bewusst leer — Coarse Corrector in welle-cli arbeitet intern [1]
-
-        # v0.9.15: PULSE_SERVER vor mpv in der Pipe — ohne env findet mpv den System-Daemon nicht
-        _cmd = (
-            "welle-cli -c " + ch + " -g " + _gain + _ppm_arg +
-            " -p " + _name_q + " 2>/tmp/pidrive_dab_welle.err | "
-            + (_mpv_env + " " if _mpv_env else "") +
-            "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
+        _welle_cmd = (
+            # -p nötig: ohne -p wartet welle-cli auf interaktive Eingabe → kein HTTP-Server!
+            # < /dev/null: verhindert stdin-Blockierung im Hintergrund-Prozess
+            "welle-cli -c " + ch + " -g " + _gain +
+            " -p " + _name_q +
+            " < /dev/null"
+            " 2>/tmp/pidrive_dab_welle.err"
         )
-
-        if _ppm_val != 0:
-            log.info(f"DAB play: PPM konfiguriert: {_ppm_val} ppm (interner welle-cli Coarse-Corrector)")
         log.info(f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain}")
+        if _ppm_val != 0:
+            log.info(f"DAB play: PPM konfiguriert: {_ppm_val} ppm")
 
         if _rtlsdr:
             try:
-                _player_proc = _rtlsdr.start_process(
-                    _cmd, owner="dab_play", shell=True,
+                _rtlsdr.start_process(
+                    _welle_cmd, owner="dab_play", shell=True,
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
                 )
             except Exception as _e:
@@ -481,12 +486,29 @@ def play_station(station, S, settings=None):
                 log.error("DAB: RTL-SDR Lock: " + str(_e))
                 return
         else:
-            _player_proc = subprocess.Popen(
-                _cmd, shell=True,
+            subprocess.Popen(
+                _welle_cmd, shell=True,
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
-        time.sleep(1.2)
+        # ── Schritt 2: HTTP-Server abwarten (max 8s, poll alle 1s) ──────────
+        import urllib.request as _ur2
+        _sid_dec = str(int(sid, 16)) if (sid and sid.startswith("0x")) else str(sid or "0")
+        _http_url = f"http://127.0.0.1:{_dab_port}/mp3/{_sid_dec}"
+        _ready = False
+        for _w in range(8):
+            time.sleep(1)
+            try:
+                _ur2.urlopen(f"http://127.0.0.1:{_dab_port}/", timeout=1).close()
+                _ready = True
+                log.info(f"DAB play: HTTP-Server bereit nach {_w+1}s")
+                break
+            except Exception:
+                pass
+        if not _ready:
+            log.warn(f"DAB play: HTTP-Server nach 8s nicht erreichbar — Fortsetzung trotzdem")
+
+        # welle-cli Log ausgeben
         try:
             if os.path.exists("/tmp/pidrive_dab_welle.err"):
                 with open("/tmp/pidrive_dab_welle.err", "r", encoding="utf-8", errors="ignore") as _f:
@@ -495,6 +517,21 @@ def play_station(station, S, settings=None):
                     log.info("DAB welle-cli: " + _ln[:200])
         except Exception:
             pass
+
+        # ── Schritt 3: mpv auf HTTP-URL starten (wie Webradio) ──────────────
+        _mpv_env_dict = __import__("os").environ.copy()
+        if _mpv_env:
+            for _kv in _mpv_env.split():
+                if "=" in _kv:
+                    _k2, _v2 = _kv.split("=", 1)
+                    _mpv_env_dict[_k2] = _v2
+        _player_proc = subprocess.Popen(
+            ["mpv", "--no-video", "--really-quiet",
+             "--title=pidrive_dab"] + _mpv_opts + [_http_url],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env=_mpv_env_dict
+        )
+        log.info(f"DAB play: mpv → {_http_url}")
 
         S["radio_playing"] = True
         S["radio_station"] = "DAB: " + name
@@ -507,9 +544,10 @@ def play_station(station, S, settings=None):
 
         # v0.9.15: DLS Metadaten-Polling (Dynamic Label Service = Lied/Artist vom Sender)
         # welle-cli liefert DLS-Text per mux.json → alle 8s pollen und S[track]/S[artist] setzen
-        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower()):
+        _dls_port = int(settings.get("dab_scan_port", 7981) if settings else 7981)
+        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=_dls_port):
             import urllib.request as _ur, json as _json
-            _url = f"http://127.0.0.1:{SCAN_PORT}/mux.json"
+            _url = f"http://127.0.0.1:{_port}/mux.json"
             while S.get("radio_playing") and S.get("radio_name") == _name:
                 _time.sleep(8)
                 if not (S.get("radio_playing") and S.get("radio_name") == _name):
@@ -545,27 +583,36 @@ def stop(S):
     global _player_proc, _scan_running
     log.info("DAB stop: requested")
     _scan_running = False
-    _bg("pkill -f pidrive_dab 2>/dev/null")
-    _bg("pkill -f welle-cli 2>/dev/null")
-    _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_dab' 2>/dev/null")
 
+    # mpv zuerst stoppen (gibt USB frei wenn er via Popen läuft)
+    if _player_proc:
+        try:
+            _player_proc.terminate()
+            _player_proc.wait(timeout=2)
+        except Exception:
+            pass
+
+    # welle-cli via rtlsdr-Lock beenden (gibt RTL-SDR USB frei)
     if _rtlsdr:
         try:
             _rtlsdr.stop_process()
         except Exception:
             pass
 
-    if _player_proc:
-        try:
-            _player_proc.terminate()
-        except Exception:
-            pass
-        _player_proc = None
+    # Sicherheits-pkill synchron — wichtig bei Senderwechsel (v0.9.17)
+    import subprocess as _sp
+    _sp.run("pkill -f welle-cli 2>/dev/null",
+            shell=True, timeout=3, capture_output=True)
+    _sp.run("pkill -f 'mpv --no-video --really-quiet --title=pidrive_dab' 2>/dev/null",
+            shell=True, timeout=3, capture_output=True)
 
+    _player_proc = None
     S["radio_playing"] = False
     if S.get("radio_type") == "DAB":
         S["radio_station"] = ""
-    time.sleep(0.25)
+
+    # RTL-SDR USB braucht ~1s zum Freigeben — sonst usb_claim_interface -6 beim nächsten Start
+    time.sleep(1.0)
     log.info("DAB stop: done")
 
 
