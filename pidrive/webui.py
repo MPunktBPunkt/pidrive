@@ -367,6 +367,7 @@ def build_view_model():
         "spectrum_debug":  get_spectrum_debug(),
         "known_bt_devices": bt_known,
         "bt_agent":        bt_agent,
+        "processes":       status.get("processes", []),  # für renderProcesses
         "list_data":       list_data,
         "list_active":     list_data.get("active", False),
         "list_title":      list_data.get("title", ""),

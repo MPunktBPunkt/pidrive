@@ -117,6 +117,8 @@ def write_status(S, settings):
         "wifi":      S.get("wifi",    False),
         "wifi_ssid": S.get("wifi_ssid", ""),
         "bt":        S.get("bt",      False),
+        "bt_on":     S.get("bt_on",   False),   # Adapter-UP (dreistufiges BT-Icon)
+        "bt_status": S.get("bt_status", "getrennt"),
         "bt_device": S.get("bt_device", ""),
         "spotify":   S.get("spotify", False),
         "track":     S.get("track", S.get("spotify_track",  "")),
