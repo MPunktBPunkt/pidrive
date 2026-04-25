@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.13-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.15-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,20 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.15 (2026-04-25)
+
+**Ton auf Klinke für DAB/FM endgültig behoben:** mpv lief als root ohne
+`PULSE_SERVER` → fand PulseAudio nicht → ALSA Card 0 (HDMI) → kein Ton.
+Fix: `PULSE_SERVER=unix:/var/run/pulse/native PULSE_SINK=<sink>` als Shell-Env-Präfix.
+Außerdem: DAB+ DLS-Metadaten (Lied/Artist), DAB-Menü nach Kanal gruppiert,
+WebUI Menü-Baum live, Volume via `pactl list sinks`.
+
+### v0.9.14 (2026-04-25)
+
+**Persistenter BT-Agent + Bekannte Geräte + DAB dict.strip Fix:**
+`svc.get("label",{}).strip()` → AttributeError behoben. BT-Icon dreistufig
+(grau/blau/grün). pulse-access Gruppe für PulseAudio-Permissions. VERSION konsistent.
 
 ### v0.9.13 (2026-04-22)
 

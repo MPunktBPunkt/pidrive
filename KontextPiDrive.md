@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.13
+# PiDrive — Kontext & Projektdokumentation v0.9.15
 
 ## Projektbeschreibung
 
@@ -921,6 +921,57 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.15 — PULSE_SERVER-Fix: Ton auf Klinke für DAB/FM + DLS-Metadaten
+
+**Root Cause kein Ton DAB/FM (endgültig):**
+Webradio nutzt `Popen(["mpv", ..., url])` — funktionierte.
+DAB/FM nutzen `shell=True, "welle-cli ... | mpv ... -"` — mpv als root-Prozess
+kennt nur `/run/user/0/pulse/native` (existiert nicht), nicht `/var/run/pulse/native`.
+→ mpv fiel auf ALSA Card 0 (HDMI) zurück → kein Ton.
+
+Fix: `PULSE_SERVER=unix:/var/run/pulse/native PULSE_SINK=<klinke_sink>` als Shell-Env-Prefix.
+
+| # | Datei | Fix |
+|---|---|---|
+| 1 | `modules/dab.py` | PULSE_SERVER+PULSE_SINK vor mpv in welle-cli Pipe |
+| 2 | `modules/fm.py` | PULSE_SERVER+PULSE_SINK vor mpv in rtl_fm Pipe |
+| 3 | `modules/audio.py` | `get_mpv_args()` gibt `["PULSE_SERVER=... PULSE_SINK=...", "--ao=pulse"]` zurück |
+| 4 | `modules/dab.py` | DLS-Poller: pollt mux.json alle 8s → `S["track"]` + `S["artist"]` |
+| 5 | `menu_model.py` | DAB Sender nach Kanal gruppiert (★ Favoriten + 11D/10A/11B als Unterordner) |
+| 6 | `webui.py` | `api_volume()`: parst aus `pactl list sinks` statt `get-sink-volume` |
+| 7 | `web/templates/index.html` | Menü-Baum live via `renderMenuTree()` statt statischem Jinja |
+
+**Keylearning:**
+- `PULSE_SERVER` muss für alle root-Prozesse explizit gesetzt werden
+- `PULSE_SINK` ersetzt `set-default-sink` (Permissions-Problem) und `--audio-device` (mpv <0.35 Bug)
+- DLS-Format: meist `Artist - Titel`, manchmal frei (Nachrichten, Promo-Texte)
+
+**Geänderte Dateien:** `modules/dab.py`, `modules/fm.py`, `modules/audio.py`,
+`menu_model.py`, `webui.py`, `web/templates/index.html`, `VERSION`
+
+---
+
+### v0.9.14 — Persistenter BT-Agent, Bekannte Geräte, DAB dict.strip Fix
+
+**Motivation:** v0.9.13 aus externem Patch-Prozess erhalten.
+v0.9.14 enthielt persistenten BT-Agent-Lifecycle und Known-Devices-Verwaltung.
+Nachträglich korrigiert (v0.9.14_fixed2):
+
+| # | Datei | Fix |
+|---|---|---|
+| 1 | `modules/dab.py` | `svc.get("label",{})` → `.strip()` auf Dict → `AttributeError` behoben |
+| 2 | `modules/audio.py` | `get_alsa_sink()` + `_sink_is_hdmi()` Card-Index-Prüfung |
+| 3 | `install.sh` | `KLINKE_SINK` per `awk '$2 ~ /alsa_output\.1\./'` statt `-v hdmi` |
+| 4 | `ipc.py` | `bt_on` + `bt_status` in `write_status()` geschrieben |
+| 5 | `web/templates/index.html` | BT-Icon dreistufig (grau/blau/grün) + `knownBtDevicesBox` |
+| 6 | `setup_bt_audio.sh` | `pulse-access` Gruppe; `auth-group=pulse-access` in system.pa |
+| 7 | `pidrive/VERSION` | Konsistent auf 0.9.14 (war 0.9.13 bei 0.9.14-final in main_core) |
+
+**Geänderte Dateien:** `modules/dab.py`, `modules/audio.py`, `install.sh`,
+`ipc.py`, `setup_bt_audio.sh`, `web/templates/index.html`, `VERSION`
+
+---
 
 ### v0.9.13 — Diagnose erkennt Klinken-Fehler zuverlässig
 
@@ -2087,13 +2138,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.13)
+## Aktueller Stand (v0.9.15)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.8 — PCM-Unmute-Fix, BT-Scan-Polling, Connect-Lock
-✓ pidrive_display.service   v0.9.13, 20fps
+✓ pidrive_core.service      v0.9.15 — PULSE_SERVER-Fix (Ton auf Klinke), DLS-Metadaten
+✓ pidrive_display.service   v0.9.15, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
