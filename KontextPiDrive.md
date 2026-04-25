@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.17
+# PiDrive — Kontext & Projektdokumentation v0.9.18
 
 ## Projektbeschreibung
 
@@ -921,6 +921,22 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.18 — NameError VERSION fix (Core-Crash)
+
+**Bug:** In v0.9.16 wurde `log.info(f"PiDrive Core v{VERSION} gestartet")` eingeführt.
+`VERSION` wird aber erst in `system_check()` (Zeile ~868) aus der Datei gelesen —
+der Banner-Aufruf steht in `main()` davor → `NameError` → Core crasht sofort beim Start.
+
+**Fix:** `VERSION` am Anfang von `main()` aus Datei lesen (vor dem Banner).
+
+| Datei | Fix |
+|---|---|
+| `main_core.py` | `VERSION = open(...VERSION).read().strip()` ganz am Anfang von `main()` |
+
+**Geänderte Dateien:** `main_core.py`, `VERSION`
+
+---
 
 ### v0.9.17 — DAB Ton: welle-cli HTTP-Server + mpv URL (wie Webradio)
 
@@ -2176,13 +2192,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.17)
+## Aktueller Stand (v0.9.18)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.17 — DAB HTTP-URL Fix (Ton endgültig)
-✓ pidrive_display.service   v0.9.17, 20fps
+✓ pidrive_core.service      v0.9.18 — VERSION-Scope-Fix (Core startet wieder)
+✓ pidrive_display.service   v0.9.18, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
