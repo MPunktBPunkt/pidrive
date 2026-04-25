@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.15
+main_core.py - PiDrive Core v0.9.17
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1071,7 +1071,7 @@ def startup_tasks(S, settings):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Core v0.9.14 gestartet")
+    log.info(f"PiDrive Core v{VERSION} gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     _start_bt_agent_early()
     log.info("  Headless — kein Display benoetigt")
