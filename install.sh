@@ -330,6 +330,12 @@ ASOUNDEOF
     fi
   fi
 
+  # v0.9.14: pulse-access Gruppe sicherstellen BEVOR PulseAudio startet
+  groupadd -f pulse-access 2>/dev/null || true
+  usermod -aG pulse-access root 2>/dev/null || true
+  usermod -aG pulse-access pi   2>/dev/null || true
+  ok "pulse-access Gruppe: root + pi hinzugefügt"
+
   # PulseAudio neu starten damit beide Karten geladen werden
   systemctl restart pulseaudio 2>/dev/null || true
   sleep 3

@@ -53,14 +53,19 @@ load-module module-bluetooth-policy
 load-module module-bluetooth-discover
 # Automatisches Umschalten auf BT wenn verbunden, Fallback auf Klinke
 load-module module-switch-on-connect
-load-module module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native
+load-module module-native-protocol-unix auth-anonymous=1 auth-group=pulse-access socket=/var/run/pulse/native
 EOF
 ok "PulseAudio system.pa konfiguriert (card 0=HDMI + card 1=Klinke)"
 
 # 4. PulseAudio runtime-Verzeichnis
 mkdir -p /var/run/pulse
 chown pulse:pulse /var/run/pulse 2>/dev/null || true
-ok "PulseAudio runtime-Verzeichnis"
+chmod 755 /var/run/pulse 2>/dev/null || true
+# v0.9.14 Fix: pulse-access Gruppe für PulseAudio socket-Zugriff durch root/pi
+groupadd -f pulse-access 2>/dev/null || true
+usermod -aG pulse-access root 2>/dev/null || true
+usermod -aG pulse-access pi   2>/dev/null || true
+ok "PulseAudio runtime-Verzeichnis + pulse-access Gruppe"
 
 # 5. PulseAudio systemd-Service
 cat > /etc/systemd/system/pulseaudio.service << 'EOF'
