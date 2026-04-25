@@ -264,7 +264,11 @@ def scan_dab_channels(settings=None):
 
             raw_svcs = data.get("services", [])
             for svc in raw_svcs:
-                name = (svc.get("label", {}).get("label", "") or svc.get("label", "")).strip()
+                # v0.9.14 Fix: label kann ein Dict sein → immer str() casten vor strip()
+                _lbl = svc.get("label", "")
+                if isinstance(_lbl, dict):
+                    _lbl = _lbl.get("label", "") or ""
+                name = str(_lbl or "").strip()
                 sid  = str(svc.get("sid", "") or "").strip()
                 url_mp3 = str(svc.get("url_mp3", "") or "").strip()
                 if name:

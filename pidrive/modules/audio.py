@@ -365,6 +365,11 @@ def get_mpv_args(settings=None, source: str = "") -> list:
              " reason=" + reason + " sink=" + (sink or "-"))
 
     _remember_decision(requested, effective, reason, sink, source)
+    # v0.9.14 Fix: --audio-device=pulse/<sink> statt set-default-sink
+    # set-default-sink schlägt in PulseAudio --system Mode ohne pulse-access Gruppe fehl
+    # --audio-device bindet mpv direkt an den gewünschten Sink — kein Permissions-Problem
+    if sink:
+        return ["--ao=pulse", f"--audio-device=pulse/{sink}"]
     return ["--ao=pulse"]
 
 
