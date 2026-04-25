@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.17
+main_core.py - PiDrive Core v0.9.18
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1070,6 +1070,12 @@ def startup_tasks(S, settings):
 # ── Main ────────────────────────────────────────────────────────────────────
 
 def main():
+    # VERSION aus Datei lesen — muss vor dem Banner passieren
+    global VERSION
+    try:
+        VERSION = open(os.path.join(BASE_DIR, "VERSION")).read().strip()
+    except Exception:
+        VERSION = "?"
     log.info("=" * 50)
     log.info(f"PiDrive Core v{VERSION} gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
