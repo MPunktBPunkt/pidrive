@@ -17,7 +17,7 @@
     </div>
     <div class="flags">
       <span class="flag {{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
-      <span class="flag {{ 'on' if vm['status'].get('bt') or vm['status'].get('bt_on') else 'off' }}">BT</span>
+      <span class="flag {{ 'bt-connected' if vm['status'].get('bt') else ('bt-on' if vm['status'].get('bt_on') else 'off') }}" id="flagBT">BT</span>
       <span class="flag {{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
     </div>
   </div>
@@ -38,7 +38,7 @@
             <div class="ip">{{ vm["ip"] }}</div>
             <div class="right-status">
               <span class="{{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
-              <span class="{{ 'on' if vm['status'].get('bt') or vm['status'].get('bt_on') else 'off' }}">BT</span>
+              <span class="{{ 'bt-connected' if vm['status'].get('bt') else ('bt-on' if vm['status'].get('bt_on') else 'off') }}">BT</span>
               <span class="{{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
             </div>
           </div>
@@ -320,6 +320,7 @@
               <div class="diag-row"><div class="diag-key">Backup-Status</div><div class="diag-value" id="btBackupState">…</div></div>
               <div class="diag-row"><div class="diag-key">Datum</div><div class="diag-value" id="btBackupDate">–</div></div>
               <div class="diag-row"><div class="diag-key">Geräte</div><div class="diag-value" id="btBackupDevices">–</div></div>
+              <div class="diag-row"><div class="diag-key">Bekannte Geräte</div><div class="diag-value" id="knownBtDevicesBox">– keine –</div></div>
             </div>
             <div class="diag-actions">
               <button onclick="sendCmd('bt_backup')">💾 Jetzt sichern</button>
@@ -1176,6 +1177,12 @@ async function refreshAll() {
     refreshAudio();
     refreshVolume();
     refreshBtAgent();
+    // BT-Icon live aktualisieren (dreistufig: grau/blau/grün)
+    const st = vmLast.status || {};
+    const btEl = document.getElementById('flagBT');
+    if (btEl) {
+      btEl.className = 'flag ' + (st.bt ? 'bt-connected' : st.bt_on ? 'bt-on' : 'off');
+    }
   } catch (e) {
     console.warn('refreshAll', e);
   }
