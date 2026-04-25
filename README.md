@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.15-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.17-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,17 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.17 (2026-04-25)
+
+**DAB Ton endgültig:** welle-cli gibt raw PCM aus (kein Header) → mpv konnte Format
+nicht erkennen. Fix: welle-cli als HTTP-Server, mpv auf `http://localhost:7981/mp3/<sid>` —
+identische Architektur zu Webradio.
+
+### v0.9.16 (2026-04-25)
+
+**Drei Bugfixes:** DLS-Poller `NameError: SCAN_PORT` behoben (Closure-Scope),
+Versions-Banner in `main_core.py` dynamisch, `diagnose.py` zeigt korrekte Version.
 
 ### v0.9.15 (2026-04-25)
 

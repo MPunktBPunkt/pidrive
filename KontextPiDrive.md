@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.15
+# PiDrive — Kontext & Projektdokumentation v0.9.17
 
 ## Projektbeschreibung
 
@@ -921,6 +921,44 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.17 — DAB Ton: welle-cli HTTP-Server + mpv URL (wie Webradio)
+
+**Root Cause DAB kein Ton:**
+`welle-cli` gibt bei stdout-Pipe **raw PCM** aus (keine Datei-Header, kein Container).
+mpv liest stdin ohne `--demuxer=rawaudio`-Flags → kann Format nicht erkennen → kein Ton.
+Webradio funktionierte weil mpv direkt eine HTTP-URL bekommt (fertig dekodiertes MP3).
+
+**Fix — neue DAB-Architektur:**
+1. `welle-cli -c CHANNEL -g GAIN` startet als HTTP-Server im Hintergrund
+2. PiDrive wartet bis HTTP-Server antwortet (max 8s, poll alle 1s)
+3. `mpv http://localhost:7981/mp3/<sid_dec>` — identisch zu Webradio-Ansatz
+
+```
+# Vorher (v0.9.15-v0.9.16 — raw PCM, kein Ton):
+welle-cli -c 11B -g -1 -p 'NAME' | mpv --ao=pulse -
+
+# Jetzt (v0.9.17 — MP3 via HTTP, Ton wie Webradio):
+welle-cli -c 11B -g -1 &
+warte bis http://localhost:7981/ antwortet
+mpv http://localhost:7981/mp3/4874 --ao=pulse
+```
+
+**Geänderte Dateien:** `modules/dab.py`, `VERSION`
+
+---
+
+### v0.9.16 — DLS-Fix, Version-Konsistenz
+
+| # | Datei | Bug | Fix |
+|---|---|---|---|
+| 1 | `modules/dab.py` | `NameError: SCAN_PORT not defined` in `_dls_poller` (Closure-Scope) | Port als Default-Arg `_port=_dls_port` übergeben |
+| 2 | `main_core.py` | Erster Log-Banner zeigte hardcodiert `v0.9.14 gestartet` | Dynamisch: `f"PiDrive Core v{VERSION} gestartet"` |
+| 3 | `diagnose.py` | Versions-Header zeigte `v0.9.14-final` | Dynamisch auf aktuelle VERSION |
+
+**Geänderte Dateien:** `modules/dab.py`, `main_core.py`, `diagnose.py`, `VERSION`
+
+---
 
 ### v0.9.15 — PULSE_SERVER-Fix: Ton auf Klinke für DAB/FM + DLS-Metadaten
 
@@ -2138,13 +2176,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.15)
+## Aktueller Stand (v0.9.17)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.15 — PULSE_SERVER-Fix (Ton auf Klinke), DLS-Metadaten
-✓ pidrive_display.service   v0.9.15, 20fps
+✓ pidrive_core.service      v0.9.17 — DAB HTTP-URL Fix (Ton endgültig)
+✓ pidrive_display.service   v0.9.17, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
