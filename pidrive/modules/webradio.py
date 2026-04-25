@@ -58,7 +58,9 @@ def play_station(station, S, settings=None):
         from modules import audio as _audio
         import mpv_meta
 
-        mpv_args = _audio.get_mpv_args(settings, source="webradio")
+        _mpv_raw3  = _audio.get_mpv_args(settings, source="webradio")
+        _mpv_env3  = _mpv_raw3[0] if _mpv_raw3 and not _mpv_raw3[0].startswith("--") else ""
+        mpv_args   = _mpv_raw3[1:] if _mpv_env3 else _mpv_raw3
 
         # Strict Mode: abbrechen wenn PulseAudio inaktiv
         _adec = _audio.get_last_decision()
@@ -77,11 +79,20 @@ def play_station(station, S, settings=None):
         except FileNotFoundError:
             pass
 
+        # v0.9.15: env für mpv damit PulseAudio System-Daemon gefunden wird
+        import os as _os
+        _mpv_env_dict = _os.environ.copy()
+        if _mpv_env3:
+            for _kv in _mpv_env3.split():
+                if "=" in _kv:
+                    _k, _v = _kv.split("=", 1)
+                    _mpv_env_dict[_k] = _v
         _player_proc = subprocess.Popen(
             ["mpv", "--no-video", "--really-quiet",
              "--title=pidrive_radio",
              "--input-ipc-server=" + sock] + mpv_args + [url],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env=_mpv_env_dict
         )
 
         S["track"]         = ""

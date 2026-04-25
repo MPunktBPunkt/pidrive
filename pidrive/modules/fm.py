@@ -198,7 +198,9 @@ def play_station(station, S, settings=None):
 
         # v0.8.12: Zielarchitektur Option B — immer über zentrales PulseAudio
         from modules import audio as _audio
-        _mpv_extra = _audio.get_mpv_args(settings, source="fm")
+        _mpv_raw2  = _audio.get_mpv_args(settings, source="fm")
+        _mpv_env2  = _mpv_raw2[0] if _mpv_raw2 and not _mpv_raw2[0].startswith("--") else ""
+        _mpv_extra = _mpv_raw2[1:] if _mpv_env2 else _mpv_raw2
 
         # Strict Mode: abbrechen wenn PulseAudio inaktiv
         _adec = _audio.get_last_decision()
@@ -216,8 +218,10 @@ def play_station(station, S, settings=None):
         _fm_gain_arg = "" if str(_fm_gain_val) == "-1" else f" -g {_fm_gain_val}"
         _ppm_val     = int(settings.get("ppm_correction", 0)) if settings else 0
         _ppm_arg     = "" if _ppm_val == 0 else f" -p {_ppm_val}"
+        # v0.9.15: PULSE_SERVER vor mpv — ohne env findet mpv den System-Daemon nicht
         cmd = (
             "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + _ppm_arg + " -A fast - 2>/dev/null | "
+            + (_mpv_env2 + " " if _mpv_env2 else "") +
             "mpv --no-video --really-quiet --title=pidrive_fm "
             "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
             "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"

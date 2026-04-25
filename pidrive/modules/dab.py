@@ -435,7 +435,11 @@ def play_station(station, S, settings=None):
 
     try:
         from modules import audio as _audio
-        _mpv_args = " ".join(_audio.get_mpv_args(settings, source="dab"))
+        _mpv_raw  = _audio.get_mpv_args(settings, source="dab")
+        # v0.9.15: erstes Element ist PULSE_SERVER/PULSE_SINK env-prefix
+        _mpv_env  = _mpv_raw[0] if _mpv_raw and not _mpv_raw[0].startswith("--") else ""
+        _mpv_opts = _mpv_raw[1:] if _mpv_env else _mpv_raw
+        _mpv_args = " ".join(_mpv_opts)
         _gain     = _get_dab_gain(settings)
 
         _adec = _audio.get_last_decision()
@@ -453,9 +457,11 @@ def play_station(station, S, settings=None):
         _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
         _ppm_arg = ""  # bewusst leer — Coarse Corrector in welle-cli arbeitet intern [1]
 
+        # v0.9.15: PULSE_SERVER vor mpv in der Pipe — ohne env findet mpv den System-Daemon nicht
         _cmd = (
             "welle-cli -c " + ch + " -g " + _gain + _ppm_arg +
             " -p " + _name_q + " 2>/tmp/pidrive_dab_welle.err | "
+            + (_mpv_env + " " if _mpv_env else "") +
             "mpv --no-video --really-quiet --title=pidrive_dab " + _mpv_args + " - 2>/dev/null"
         )
 
@@ -494,8 +500,40 @@ def play_station(station, S, settings=None):
         S["radio_station"] = "DAB: " + name
         S["radio_name"]    = name
         S["radio_type"]    = "DAB"
+        S["track"]         = ""
+        S["artist"]        = ""
         S["control_context"] = "radio_dab"
         log.action("DAB", "Wiedergabe: " + name + " (" + ch + ", sid=" + (sid or "-") + ")")
+
+        # v0.9.15: DLS Metadaten-Polling (Dynamic Label Service = Lied/Artist vom Sender)
+        # welle-cli liefert DLS-Text per mux.json → alle 8s pollen und S[track]/S[artist] setzen
+        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower()):
+            import urllib.request as _ur, json as _json
+            _url = f"http://127.0.0.1:{SCAN_PORT}/mux.json"
+            while S.get("radio_playing") and S.get("radio_name") == _name:
+                _time.sleep(8)
+                if not (S.get("radio_playing") and S.get("radio_name") == _name):
+                    break
+                try:
+                    _resp = _ur.urlopen(_url, timeout=3)
+                    _data = _json.loads(_resp.read().decode("utf-8"))
+                    for _svc in _data.get("services", []):
+                        if str(_svc.get("sid","") or "").strip().lower() == _sid:
+                            _dls = str(_svc.get("dls","") or "").strip()
+                            if _dls:
+                                if " - " in _dls:
+                                    _parts = _dls.split(" - ", 1)
+                                    S["artist"] = _parts[0].strip()
+                                    S["track"]  = _parts[1].strip()
+                                else:
+                                    S["artist"] = ""
+                                    S["track"]  = _dls
+                            break
+                except Exception:
+                    pass  # Metadaten sind optional, stille Fehler
+
+        import threading as _thr_dls
+        _thr_dls.Thread(target=_dls_poller, daemon=True).start()
 
     except Exception as e:
         S["radio_playing"] = False

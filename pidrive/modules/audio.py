@@ -365,12 +365,14 @@ def get_mpv_args(settings=None, source: str = "") -> list:
              " reason=" + reason + " sink=" + (sink or "-"))
 
     _remember_decision(requested, effective, reason, sink, source)
-    # v0.9.14 Fix: --audio-device=pulse/<sink> statt set-default-sink
-    # set-default-sink schlägt in PulseAudio --system Mode ohne pulse-access Gruppe fehl
-    # --audio-device bindet mpv direkt an den gewünschten Sink — kein Permissions-Problem
+    # v0.9.15 Fix: PULSE_SERVER + PULSE_SINK als Shell-Prefix statt --audio-device
+    # --audio-device=pulse/<sink> funktioniert nur auf mpv >= 0.35, Pi hat 0.29.x
+    # PULSE_SERVER nötig damit mpv (läuft als root) den System-Daemon findet
+    # Rückgabe: [env_prefix, --ao=pulse] — der Aufrufer baut daraus den Shell-Befehl
+    pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
     if sink:
-        return ["--ao=pulse", f"--audio-device=pulse/{sink}"]
-    return ["--ao=pulse"]
+        pulse_env += f" PULSE_SINK={sink}"
+    return [pulse_env, "--ao=pulse"]
 
 
 def set_output(mode: str, settings: dict):
@@ -460,6 +462,37 @@ def _get_current_sink() -> str:
     if bt:
         return bt
     return get_alsa_sink()
+
+
+def get_sink_volume(sink_name: str = "") -> str:
+    """
+    Liest die aktuelle PulseAudio-Lautstärke eines Sinks (v0.9.15).
+    Parst aus 'pactl list sinks' statt 'pactl get-sink-volume',
+    weil letzteres in PulseAudio --system Mode oft fehlschlägt.
+    """
+    if not sink_name:
+        sink_name = _get_current_sink()
+    if not sink_name:
+        return ""
+    try:
+        out = _run(PA_ENV + " pactl list sinks 2>/dev/null", 5)
+        in_sink = False
+        for ln in out.splitlines():
+            if sink_name in ln and ("Name:" in ln or "alsa_output" in ln):
+                in_sink = True
+            if in_sink:
+                if ln.strip().startswith("Volume:") and "%" in ln:
+                    import re as _re
+                    m = _re.search(r"(\d+)%", ln)
+                    if m:
+                        return m.group(1) + "%"
+                # Nächster Sink-Block
+                if ln.startswith("    Name:") or ln.startswith("Sink #"):
+                    if sink_name not in ln:
+                        in_sink = False
+        return ""
+    except Exception:
+        return ""
 
 
 def volume_up(settings=None):
