@@ -565,39 +565,62 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         return nodes
 
     def _station_nodes_dab(stations):
-        favs   = [s for s in stations if s.get("favorite")]
-        others = [s for s in stations if not s.get("favorite")]
-        nodes  = []
-
-        for s in (favs + others):
-            name = s.get("name", s.get("service_name", "?"))
-            fav  = "★ " if s.get("favorite") else ""
-            ens  = s.get("ensemble", "")
-            sid  = str(s.get("service_id", "") or "").strip()
-            ch   = str(s.get("channel", "") or "").strip().upper()
-
-            label = f"{fav}{name}  [{ens}]" if ens else f"{fav}{name}"
+        """
+        DAB Sender nach Kanal gruppiert (v0.9.15).
+        Favoriten oben als eigene Gruppe, dann Unterordner pro Kanal.
+        Ohne Gruppierung wäre die Liste mit vielen Sendern unübersichtlich.
+        """
+        def _make_node(s):
+            name   = s.get("name", s.get("service_name", "?"))
+            fav    = "★ " if s.get("favorite") else ""
+            ens    = s.get("ensemble", "")
+            sid    = str(s.get("service_id", "") or "").strip()
+            ch     = str(s.get("channel", "") or "").strip().upper()
             active = (
                 S.get("radio_type") == "DAB" and
                 (S.get("radio_station", "") == name or S.get("radio_name", "") == name)
             )
+            _did = f"dab_{sid or name.lower().replace(' ','_')}"
+            _meta = {"ensemble": ens, "service_id": sid, "channel": ch,
+                     "url_mp3": s.get("url_mp3", ""), "name": name,
+                     "favorite": s.get("favorite", False)}
+            return MenuNode(
+                id=_did, label=f"{fav}{name}", type="station",
+                source="dab", playable=True, active=active, meta=_meta,
+                children=[_fav_node(_did, name, "dab", _meta, s.get("favorite", False))]
+            )
 
-            _did = f"dab_{sid or name}"
-            _meta_dab = {
-                "ensemble": ens,
-                "service_id": sid,
-                "channel": ch,
-                "url_mp3": s.get("url_mp3", ""),
-                "name": name,
-                "favorite": s.get("favorite", False),
-            }
+        favs = [s for s in stations if s.get("favorite")]
+        nodes = []
 
+        # Favoriten als eigene Gruppe ganz oben
+        if favs:
             nodes.append(MenuNode(
-                id=_did, label=label, type="station",
-                source="dab", playable=True, active=active,
-                meta=_meta_dab,
-                children=[_fav_node(_did, name, "dab", _meta_dab, s.get("favorite", False))]
+                id="dab_favs", label=f"★ Favoriten ({len(favs)})", type="folder",
+                children=[_make_node(s) for s in favs]
             ))
+
+        # Alle Sender nach Kanal gruppieren
+        channels_seen = []
+        by_channel = {}
+        for s in stations:
+            ch  = str(s.get("channel", "") or "").strip().upper() or "?"
+            ens = s.get("ensemble", "")
+            if ch not in by_channel:
+                by_channel[ch] = {"ens": ens, "stations": []}
+                channels_seen.append(ch)
+            by_channel[ch]["stations"].append(s)
+
+        for ch in channels_seen:
+            group     = by_channel[ch]
+            ens_label = group["ens"] or ch
+            ch_nodes  = [_make_node(s) for s in group["stations"]]
+            folder_label = f"{ch}  {ens_label}" if ens_label != ch else ch
+            nodes.append(MenuNode(
+                id=f"dab_ch_{ch.lower()}", label=folder_label, type="folder",
+                children=ch_nodes
+            ))
+
         return nodes
 
     def _station_nodes_web(stations):

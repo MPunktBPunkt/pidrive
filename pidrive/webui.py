@@ -765,81 +765,50 @@ def api_rtlsdr_calibrate():
 @app.route("/api/volume")
 def api_volume():
     """
-    PulseAudio-Lautstärke:
-    1. aktiver sink-input
-    2. default sink
-    3. card-1 / Klinke
-    4. Nicht-HDMI ALSA
+    PulseAudio-Lautstärke (v0.9.15).
+    Parst aus pactl list sinks statt get-sink-volume, da letzteres in --system Mode fehlschlägt.
     """
     try:
-        def _extract_vol(txt):
-            for part in txt.split():
-                if part.endswith("%"):
-                    return part
-            return ""
+        import re as _re
+        import sys as _sys
+        _b = str(BASE_DIR)
+        if _b not in _sys.path:
+            _sys.path.insert(0, _b)
 
-        def _find_real_sink():
-            import re as _re
-
-            # 1) aktiver sink-input
-            sin = safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null").get("stdout", "")
-            sinks = safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout", "")
-            sink_id = ""
-            for ln in sin.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2:
-                    sink_id = parts[1]
-                    break
-            if sink_id:
-                for ln in sinks.splitlines():
-                    parts = ln.split()
-                    if len(parts) >= 2 and parts[0] == sink_id:
-                        return parts[1]
-
-            # 2) default sink
-            ds = safe_run(PA_ENV + " pactl get-default-sink 2>/dev/null").get("stdout", "").strip()
-            if ds:
-                return ds
-
-            # 3) card 1 (Klinke)
-            for ln in sinks.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
-                    return parts[1]
-
-            # 4) Nicht-HDMI ALSA
-            for ln in sinks.splitlines():
+        # Klinken-Sink ermitteln (card 1)
+        sinks_out = (safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout","") or "")
+        sink = ""
+        for ln in sinks_out.splitlines():
+            parts = ln.split()
+            if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
+                sink = parts[1]; break
+        if not sink:
+            for ln in sinks_out.splitlines():
                 parts = ln.split()
                 if len(parts) >= 2 and "alsa_output" in parts[1] and not _sink_is_hdmi(parts[1]):
-                    return parts[1]
-            return ""
+                    sink = parts[1]; break
 
-        r = safe_run(PA_ENV + " pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null")
-        vol = _extract_vol(r.get("stdout", "") or "")
-
-        if not vol:
-            sink = _find_real_sink()
-            if sink:
-                r2 = safe_run(PA_ENV + f" pactl get-sink-volume {sink} 2>/dev/null")
-                vol = _extract_vol(r2.get("stdout", "") or "")
-
-        if not vol:
-            sinks_r = safe_run(PA_ENV + " pactl list sinks 2>/dev/null")
-            sinks_txt = sinks_r.get("stdout", "") or ""
-            capture = False
-            for ln in sinks_txt.splitlines():
-                if "State: RUNNING" in ln:
-                    capture = True
-                if capture and "Volume:" in ln and "%" in ln:
-                    vol = _extract_vol(ln)
-                    if vol:
+        # Volume aus pactl list sinks (long) parsen — zuverlässig in --system Mode
+        vol = ""
+        if sink:
+            full_out = (safe_run(PA_ENV + " pactl list sinks 2>/dev/null").get("stdout","") or "")
+            in_target = False
+            for ln in full_out.splitlines():
+                if f"Name: {sink}" in ln:
+                    in_target = True
+                if in_target:
+                    if ln.strip().startswith("Volume:") and "%" in ln:
+                        m = _re.search(r"(\d+)%", ln)
+                        if m:
+                            vol = m.group(1) + "%"
+                            break
+                    # Nächster Sink-Block → Ende
+                    if in_target and ln.startswith("    Name:") and sink not in ln:
                         break
-                if capture and ln.strip().startswith("index:"):
-                    capture = False
 
-        return jsonify({"ok": True, "volume": vol or "–", "sink": _find_real_sink()})
+        return jsonify({"ok": True, "volume": vol or "–", "sink": sink or ""})
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
+        return jsonify({"ok": False, "error": str(e), "volume": "–"})
 
 
 @app.route("/api/dab/scan/last")
