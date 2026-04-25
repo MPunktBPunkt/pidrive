@@ -44,7 +44,7 @@
           </div>
 
           <div class="display-body single-column">
-            <div class="menu-tree">
+            <div class="menu-tree" id="menuTreeWrap">
               {% set path = vm["path"] %}
               {% set nodes = vm["nodes"] %}
               {% set cursor = vm["cursor"] %}
@@ -1161,10 +1161,43 @@ async function refreshVolume() {
 
 let vmLast = {{ vm | tojson }};
 
+function renderMenuTree(vm) {
+  const wrap = document.getElementById('menuTreeWrap');
+  if (!wrap) return;
+  const nodes  = vm.nodes  || [];
+  const path   = vm.path   || ['PiDrive'];
+  const cursor = vm.cursor || 0;
+  const canBack = vm.can_back || false;
+  const icons  = {folder:'▸', station:'♪', action:'→', toggle:'◉', info:'ℹ', value:'±'};
+  let html = '<div class="breadcrumb">';
+  if (canBack) html += '<span class="back-btn">◄</span> ';
+  html += path.join(' › ');
+  html += '</div>';
+  if (nodes.length) {
+    nodes.forEach((n, i) => {
+      const ntype = n.type || 'folder';
+      const label = n.label || '?';
+      const active = n.active || false;
+      const hasCh  = n.has_children || false;
+      const sel    = (i === cursor) ? ' selected' : '';
+      const play   = active ? ' playing' : '';
+      html += `<div class="tree-item type-${ntype}${sel}${play}">`;
+      html += `<span class="node-icon">${icons[ntype] || '▸'}</span>`;
+      html += `<span class="node-label">${label}</span>`;
+      if (hasCh) html += '<span class="node-arrow">›</span>';
+      html += '</div>';
+    });
+  } else {
+    html += '<div class="tree-item type-info"><span class="node-icon">ℹ</span><span class="node-label">Keine Daten</span></div>';
+  }
+  wrap.innerHTML = html;
+}
+
 async function refreshAll() {
   try {
     const r = await fetch('/api/state');
     vmLast = await r.json();
+    renderMenuTree(vmLast);
     renderRuntimeInfo(vmLast);
     setStatusBar(
       `PiDrive | Rev=${vmLast?.debug?.rev || 0} | Pfad=${(vmLast?.path || ['PiDrive']).join(' › ')} | ` +
