@@ -436,9 +436,10 @@ def play_station(station, S, settings=None):
     try:
         from modules import audio as _audio
         _mpv_raw  = _audio.get_mpv_args(settings, source="dab")
-        # v0.9.15: erstes Element ist PULSE_SERVER/PULSE_SINK env-prefix
+        # Index 0: env-prefix (leer bei ALSA-Modus) oder "PULSE_SERVER=..." bei BT
         _mpv_env  = _mpv_raw[0] if _mpv_raw and not _mpv_raw[0].startswith("--") else ""
-        _mpv_opts = _mpv_raw[1:] if _mpv_env else _mpv_raw
+        # Leeren ersten Eintrag herausfiltern
+        _mpv_opts = [a for a in (_mpv_raw[1:] if _mpv_env is not None else _mpv_raw) if a]
         _mpv_args = " ".join(_mpv_opts)
         _gain     = _get_dab_gain(settings)
 
@@ -496,7 +497,7 @@ def play_station(station, S, settings=None):
         _sid_dec = str(int(sid, 16)) if (sid and sid.startswith("0x")) else str(sid or "0")
         _http_url = f"http://127.0.0.1:{_dab_port}/mp3/{_sid_dec}"
         _ready = False
-        for _w in range(8):
+        for _w in range(15):   # max 15s — welle-cli braucht beim ersten Start länger
             time.sleep(1)
             try:
                 _ur2.urlopen(f"http://127.0.0.1:{_dab_port}/", timeout=1).close()
@@ -506,7 +507,7 @@ def play_station(station, S, settings=None):
             except Exception:
                 pass
         if not _ready:
-            log.warn(f"DAB play: HTTP-Server nach 8s nicht erreichbar — Fortsetzung trotzdem")
+            log.warn(f"DAB play: HTTP-Server nach 15s nicht erreichbar — Fortsetzung trotzdem")
 
         # welle-cli Log ausgeben
         try:
@@ -546,10 +547,10 @@ def play_station(station, S, settings=None):
         # welle-cli liefert DLS-Text per mux.json → alle 8s pollen und S[track]/S[artist] setzen
         _dls_port = int(settings.get("dab_scan_port", 7981) if settings else 7981)
         def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=_dls_port):
-            import urllib.request as _ur, json as _json
+            import urllib.request as _ur, json as _json, time as _tm
             _url = f"http://127.0.0.1:{_port}/mux.json"
             while S.get("radio_playing") and S.get("radio_name") == _name:
-                _time.sleep(8)
+                _tm.sleep(8)
                 if not (S.get("radio_playing") and S.get("radio_name") == _name):
                     break
                 try:

@@ -369,10 +369,24 @@ def get_mpv_args(settings=None, source: str = "") -> list:
     # --audio-device=pulse/<sink> funktioniert nur auf mpv >= 0.35, Pi hat 0.29.x
     # PULSE_SERVER nötig damit mpv (läuft als root) den System-Daemon findet
     # Rückgabe: [env_prefix, --ao=pulse] — der Aufrufer baut daraus den Shell-Befehl
-    pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
-    if sink:
+    # v0.9.18: FM/DAB nutzen --ao=alsa direkt auf hw:1,0 (Klinke)
+    # PulseAudio --system Mode hat Resampling-Probleme mit raw PCM von rtl_fm/welle-cli.
+    # Webradio/Spotify nutzen weiterhin PulseAudio (BT-kompatibel).
+    # Für BT (A2DP) weiterhin PulseAudio.
+    if effective == "bt" and sink:
+        pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
         pulse_env += f" PULSE_SINK={sink}"
-    return [pulse_env, "--ao=pulse"]
+        return [pulse_env, "--ao=pulse"]
+    elif effective in ("klinke", "auto") and source in ("fm", "dab"):
+        # ALSA direkt → card 1 = bcm2835 Headphones (Klinke), kein PulseAudio nötig
+        card = _get_headphone_card()
+        return ["", f"--ao=alsa", f"--alsa-device=hw:{card},0"]
+    else:
+        # Webradio, Spotify etc.: PulseAudio (BT-fähig)
+        pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
+        if sink:
+            pulse_env += f" PULSE_SINK={sink}"
+        return [pulse_env, "--ao=pulse"]
 
 
 def set_output(mode: str, settings: dict):

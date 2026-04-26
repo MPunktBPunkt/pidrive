@@ -199,8 +199,12 @@ def play_station(station, S, settings=None):
         # v0.8.12: Zielarchitektur Option B — immer über zentrales PulseAudio
         from modules import audio as _audio
         _mpv_raw2  = _audio.get_mpv_args(settings, source="fm")
+        # Index 0: env-prefix (leer bei ALSA-Modus) oder "PULSE_SERVER=..." bei BT
         _mpv_env2  = _mpv_raw2[0] if _mpv_raw2 and not _mpv_raw2[0].startswith("--") else ""
-        _mpv_extra = _mpv_raw2[1:] if _mpv_env2 else _mpv_raw2
+        _mpv_extra = _mpv_raw2[1:] if _mpv_env2 is not None else _mpv_raw2
+        # Leeren env-prefix herausfiltern
+        if not _mpv_env2:
+            _mpv_extra = [a for a in _mpv_raw2 if a and not a == ""]
 
         # Strict Mode: abbrechen wenn PulseAudio inaktiv
         _adec = _audio.get_last_decision()
