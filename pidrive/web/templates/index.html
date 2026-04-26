@@ -1,557 +1,589 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>PiDrive v{{ vm["version"] }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PiDrive {{ vm["version"] }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+/* ── Tab Navigation ─────────────────────────────────── */
+.tabs { display:flex; background:#0a0f14; border-bottom:2px solid #1e2d3d; position:sticky; top:0; z-index:100; }
+.tab-btn { flex:1; padding:10px 4px; background:none; border:none; color:#8aa5bb; font-size:12px; font-weight:600; cursor:pointer; letter-spacing:.04em; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s; }
+.tab-btn.active { color:#58a6ff; border-bottom-color:#58a6ff; }
+.tab-btn:hover:not(.active) { color:#cdd9e5; background:#111b22; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+
+/* ── Menu Tree ──────────────────────────────────────── */
+.menu-tree { background:#0d1117; border-radius:6px; overflow:hidden; margin:8px 0; }
+.breadcrumb { font-size:11px; color:#58a6ff; padding:6px 10px; border-bottom:1px solid #1e2d3d; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tree-item { display:flex; align-items:center; padding:7px 10px; border-bottom:1px solid #111b22; cursor:pointer; transition:background .1s; font-size:13px; }
+.tree-item:last-child { border-bottom:none; }
+.tree-item:hover { background:#161b22; }
+.tree-item.selected { background:#1a2332; border-left:3px solid #58a6ff; padding-left:7px; }
+.tree-item.playing { color:#3fb950; }
+.node-icon { width:16px; font-size:11px; color:#666; flex-shrink:0; }
+.node-label { flex:1; }
+.node-arrow { color:#444; font-size:11px; }
+.type-folder .node-icon { color:#58a6ff; }
+.type-station .node-icon { color:#3fb950; }
+
+/* ── Quick Status Strip ──────────────────────────────── */
+.now-playing { background:#0d1117; border-radius:6px; padding:8px 12px; margin:4px 0 8px; }
+.now-playing .track { font-size:14px; font-weight:600; color:#cdd9e5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.now-playing .meta { font-size:11px; color:#8aa5bb; margin-top:2px; }
+
+/* ── Nav Pad ─────────────────────────────────────────── */
+.nav-pad { display:grid; grid-template-rows:auto auto auto; gap:4px; width:140px; margin:0 auto 12px; }
+.nav-pad .primary { background:#1a2332; border:1px solid #2a3f55; color:#cdd9e5; font-size:18px; padding:10px; border-radius:6px; cursor:pointer; transition:all .1s; }
+.nav-pad .primary:hover { background:#233042; border-color:#58a6ff; }
+.nav-middle { display:flex; gap:4px; }
+.nav-middle .primary { flex:1; }
+.back-btn-row { text-align:center; margin-top:4px; }
+.back-btn-row button { background:#111b22; color:#8aa5bb; border:1px solid #1e2d3d; padding:6px 20px; border-radius:4px; cursor:pointer; font-size:12px; }
+
+/* ── Raw JSON toggle ─────────────────────────────────── */
+.raw-toggle { font-size:11px; color:#58a6ff; cursor:pointer; background:none; border:none; padding:4px 0; }
+.raw-box { display:none; }
+.raw-box.open { display:block; }
+
+/* ── Sink Input Table ────────────────────────────────── */
+.sink-table { width:100%; font-size:11px; border-collapse:collapse; }
+.sink-table th { background:#111b22; padding:4px 6px; text-align:left; color:#8aa5bb; font-weight:600; }
+.sink-table td { padding:4px 6px; border-top:1px solid #111b22; }
+
+/* ── Tab-specific polling indicator ─────────────────── */
+.poll-badge { font-size:10px; color:#3a5068; margin-left:4px; }
+</style>
 </head>
 <body>
-<div class="app">
+<header class="top-bar">
+  <div class="meta">
+    <span class="version">v{{ vm["version"] }}</span>
+    <span class="ip">{{ vm["ip"] }}</span>
+  </div>
+  <div class="flags right-status">
+    <span class="flag {{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
+    <span class="flag {{ 'bt-connected' if vm['status'].get('bt') else ('bt-on' if vm['status'].get('bt_on') else 'off') }}" id="flagBT">BT</span>
+    <span class="flag {{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
+  </div>
+</header>
 
-  <div class="topbar">
-    <div class="brand">PiDrive</div>
-    <div class="meta">
-      <span>v{{ vm["version"] }}</span>
-      <span>{{ vm["ip"] }}</span>
-    </div>
-    <div class="flags">
-      <span class="flag {{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
-      <span class="flag {{ 'bt-connected' if vm['status'].get('bt') else ('bt-on' if vm['status'].get('bt_on') else 'off') }}" id="flagBT">BT</span>
-      <span class="flag {{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
+{% if vm.get("progress", {}).get("active") %}
+<div class="progress-bar">{{ vm["progress"].get("title","") }} — {{ vm["progress"].get("message","") }}</div>
+{% endif %}
+
+<div id="statusBar" class="debug-bar">Initialisiere...</div>
+
+<!-- ── BT Agent Banner ── -->
+{% set bt_agent = vm.get("bt_agent", {}) %}
+{% if bt_agent.get("running") %}
+<div class="bt-agent-bar">BT-Agent läuft (PID {{ bt_agent.get("pid","?") }}) | ready={{ bt_agent.get("ready","?")|lower }} | health={{ bt_agent.get("health_ok","?")|lower }}</div>
+{% endif %}
+
+<!-- ═══ TABS ═══ -->
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showTab('t1')">🎛 Steuerung</button>
+  <button class="tab-btn" onclick="showTab('t2')">🔊 Audio</button>
+  <button class="tab-btn" onclick="showTab('t3')">📡 DAB/FM</button>
+  <button class="tab-btn" onclick="showTab('t4')">🪲 Debug</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 1: STEUERUNG                                   -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane active" id="t1">
+
+  <!-- Now Playing -->
+  <div class="container">
+    <div class="now-playing">
+      <div class="track" id="nowTrack">{{ vm['status'].get('track','') or vm['status'].get('radio_name','') or '–' }}</div>
+      <div class="meta" id="nowMeta">
+        {% if vm['status'].get('artist') %}{{ vm['status']['artist'] }} · {% endif %}
+        {{ vm['status'].get('radio_type','') or '' }}
+        {{ vm['status'].get('radio_name','') or '' }}
+      </div>
     </div>
   </div>
 
-  <div id="statusBar" class="debug-bar">Initialisiere...</div>
-
-  <div class="main-grid">
-
-    <!-- Linke Spalte -->
-    <div>
-
-      <section class="panel">
-        <div class="panel-title">Display-Vorschau</div>
-
-        <div class="display-mock">
-          <div class="display-top">
-            <div class="title">PiDrive</div>
-            <div class="ip">{{ vm["ip"] }}</div>
-            <div class="right-status">
-              <span class="{{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
-              <span class="{{ 'bt-connected' if vm['status'].get('bt') else ('bt-on' if vm['status'].get('bt_on') else 'off') }}">BT</span>
-              <span class="{{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
-            </div>
+  <!-- Display-Vorschau: Menu Tree -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">
+        Display-Vorschau
+        <span class="right-status">
+          <span class="{{ 'on' if vm['status'].get('wifi') else 'off' }}">WiFi</span>
+          <span class="{{ 'bt-connected' if vm['status'].get('bt') else ('bt-on' if vm['status'].get('bt_on') else 'off') }}">BT</span>
+          <span class="{{ 'on' if vm['status'].get('spotify') else 'off' }}">Spot</span>
+        </span>
+      </div>
+      <div class="menu-tree" id="menuTreeWrap">
+        {% set path = vm["path"] %}
+        {% set nodes = vm["nodes"] %}
+        {% set cursor = vm["cursor"] %}
+        {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
+        <div class="breadcrumb">{{ path|join(' › ') }}</div>
+        {% for node in nodes %}
+          <div class="tree-item type-{{ node.type }}{% if loop.index0 == cursor %} selected{% endif %}{% if node.active %} playing{% endif %}">
+            <span class="node-icon">{{ icons.get(node.type, '▸') }}</span>
+            <span class="node-label">{{ node.label }}</span>
+            {% if node.has_children %}<span class="node-arrow">›</span>{% endif %}
           </div>
-
-          <div class="display-body single-column">
-            <div class="menu-tree" id="menuTreeWrap">
-              {% set path = vm["path"] %}
-              {% set nodes = vm["nodes"] %}
-              {% set cursor = vm["cursor"] %}
-              {% set icons = {"folder":"▸","station":"♪","action":"→","toggle":"◉","info":"ℹ","value":"±"} %}
-
-              <div class="breadcrumb">
-                {% if vm["can_back"] %}
-                  <span class="back-btn">◄</span>
-                {% endif %}
-                {{ path | join(" › ") if path else "PiDrive" }}
-              </div>
-
-              {% if nodes %}
-                {% for node in nodes %}
-                  {% set ntype = node.get("type", "folder") if node is mapping else "folder" %}
-                  {% set label = node.get("label", "?") if node is mapping else node %}
-                  {% set active = node.get("active", false) if node is mapping else false %}
-                  {% set has_ch = node.get("has_children", false) if node is mapping else false %}
-                  <div class="tree-item type-{{ ntype }} {% if loop.index0 == cursor %}selected{% endif %} {% if active %}playing{% endif %}">
-                    <span class="node-icon">{{ icons.get(ntype, "▸") }}</span>
-                    <span class="node-label">{{ label }}</span>
-                    {% if has_ch %}<span class="node-arrow">›</span>{% endif %}
-                  </div>
-                {% endfor %}
-              {% elif vm["items"] %}
-                {% for item in vm["items"] %}
-                  <div class="tree-item">
-                    <span class="node-icon">▸</span>
-                    <span class="node-label">{{ item }}</span>
-                  </div>
-                {% endfor %}
-              {% else %}
-                <div class="tree-item type-info">
-                  <span class="node-icon">ℹ</span>
-                  <span class="node-label">Keine Daten</span>
-                </div>
-              {% endif %}
-            </div>
-
-            <div class="display-footer">
-              Audio: {{ vm["status"].get('audio_out', 'auto') }}
-            </div>
-
-            <div class="list-overlay" id="listOverlay" style="display:none">
-              <div class="list-title">Auswahl</div>
-              <div id="listItems"></div>
-              <div class="list-hint">↑↓ navigieren — Enter wählen — Back abbrechen</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="ipc-state">
-          Core: <span id="coreReady">...</span><br>
-          Rev: <span id="menuRev">0</span> | Pfad: <span id="menuPath">PiDrive</span><br>
-          Auswahl: <span id="selectedNode">...</span> | <span id="nodeCount">0</span> Eintraege<br>
-          Status: <span id="statusAge">...</span> | Menue: <span id="menuAge">...</span>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-title">Steuerung</div>
-
-        <div class="nav-pad">
-          <button class="primary" onclick="sendCmd('up')">↑</button>
-          <div class="nav-middle">
-            <button class="primary" onclick="sendCmd('left')">←</button>
-            <button class="primary" onclick="sendCmd('enter')">Enter</button>
-            <button class="primary" onclick="sendCmd('right')">→</button>
-          </div>
-          <button class="primary" onclick="sendCmd('down')">↓</button>
-          <button onclick="sendCmd('back')">Back</button>
-        </div>
-
-        <div class="button-grid">
-          <button onclick="sendCmd('cat:0')">Jetzt laeuft</button>
-          <button onclick="sendCmd('cat:2')">Quellen</button>
-          <button onclick="sendCmd('cat:3')">Verbindungen</button>
-          <button onclick="sendCmd('cat:4')">System</button>
-
-          <button onclick="sendCmd('spotify_toggle')">Spotify</button>
-          <button onclick="sendCmd('bt_scan')">BT Scan</button>
-          <button onclick="sendCmd('wifi_scan')">WiFi Scan</button>
-          <button onclick="sendCmd('radio_stop')">Radio Stop</button>
-
-          <button onclick="sendCmd('fm_next')">FM Naechster</button>
-          <button onclick="sendCmd('dab_next')">DAB Naechster</button>
-          <button onclick="startDabScanMerge()">DAB+ Suchlauf</button>
-          <button onclick="sendCmd('fm_scan')">FM Suchlauf</button>
-
-          <button onclick="startDabDiag()">🔍 DAB Diagnose</button>
-          <button onclick="stopDabDiag()">⏹ DAB Diag Stop</button>
-          <button onclick="sendCmd('reload_stations:webradio')">Web Reload</button>
-          <button onclick="sendCmd('library_stop')">Biblio Stop</button>
-
-          <button onclick="sendCmd('audio_klinke')">Klinke</button>
-          <button onclick="sendCmd('audio_hdmi')">HDMI</button>
-          <button onclick="sendCmd('vol_up')">Lauter</button>
-          <button onclick="sendCmd('vol_down')">Leiser</button>
-
-          <button onclick="sendCmd('scan_step:vhf:0.025')">VHF +25k</button>
-          <button onclick="sendCmd('scan_step:vhf:-0.025')">VHF -25k</button>
-          <button onclick="sendCmd('scan_step:uhf:0.025')">UHF +25k</button>
-          <button onclick="sendCmd('scan_step:uhf:-0.025')">UHF -25k</button>
-
-          <button onclick="sendCmd('scan_jump:cb:10')">CB +10</button>
-          <button onclick="sendCmd('scan_jump:cb:-10')">CB -10</button>
-          <button onclick="sendCmd('scanner_gain:-1')">Scan Auto Gain</button>
-          <button onclick="sendCmd('scanner_gain:30')">Scan 30dB</button>
-
-          <button onclick="sendCmd('bt_disconnect')">BT Trennen</button>
-          <button onclick="sendCmd('bt_reconnect_last')">BT Reconnect</button>
-          <button onclick="sendCmd('bt_backup')">BT Backup</button>
-          <button onclick="sendCmd('bt_restore')">BT Restore</button>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-title">RTL-SDR Diagnose</div>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Status</div>
-            <div class="diag-list" id="rtlsdrSummaryBox">
-              <div class="diag-row"><div class="diag-key">Stick</div><div class="diag-value">…</div></div>
-              <div class="diag-row"><div class="diag-key">Busy</div><div class="diag-value">…</div></div>
-              <div class="diag-row"><div class="diag-key">DVB-Treiber</div><div class="diag-value">…</div></div>
-              <div class="diag-row"><div class="diag-key">Unterspannung</div><div class="diag-value">…</div></div>
-            </div>
-            <div class="diag-chipbar" id="rtlsdrToolsBar"></div>
-            <div class="diag-actions">
-              <button onclick="refreshRtlsdr()">🔄 Passive Diagnose</button>
-              <button class="danger" onclick="resetRtlsdr()">⚡ RTL-SDR Reset</button>
-            </div>
-            <div class="diag-note">
-              Passive Diagnose öffnet den RTL-SDR Stick nicht.<br>
-              Für aktiven Test: Core stoppen, dann SSH:<br>
-              <code>python3 ~/pidrive/pidrive/modules/rtlsdr.py --active</code>
-            </div>
-          </div>
-          <div class="diag-card">
-            <div class="diag-title">Debug-JSON</div>
-            <pre class="diag-json" id="rtlsdrJson">{{ vm["rtlsdr"] | tojson(indent=2) }}</pre>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-title">AVRCP / BMW Debug</div>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Status</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">Service</div><div class="diag-value" id="avrcpService">…</div></div>
-              <div class="diag-row"><div class="diag-key">Debug-JSON</div><div class="diag-value" id="avrcpAge">…</div></div>
-              <div class="diag-row"><div class="diag-key">Letztes Event</div><div class="diag-value" id="avrcpEvent">–</div></div>
-              <div class="diag-row"><div class="diag-key">Kontext</div><div class="diag-value" id="avrcpContext">–</div></div>
-              <div class="diag-row"><div class="diag-key">Trigger</div><div class="diag-value" id="avrcpTrigger">–</div></div>
-              <div class="diag-row"><div class="diag-key">Quelle</div><div class="diag-value" id="avrcpSource">–</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="refreshAvrcp()">🔄 AVRCP Refresh</button>
-              <button onclick="loadLog('avrcp')">AVRCP Log laden</button>
-            </div>
-          </div>
-          <div class="diag-card">
-            <div class="diag-title">AVRCP Debug-JSON</div>
-            <pre class="diag-json" id="avrcpJson">{{ vm["avrcp"] | tojson(indent=2) }}</pre>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-title">🎚️ Lautstärke & Empfang (Gain)</div>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Lautstärke</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">Aktuell</div><div class="diag-value" id="volumeCurrent">…</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="sendCmd('vol_up')">▲ +5%</button>
-              <button onclick="sendCmd('vol_down')">▼ -5%</button>
-              <button onclick="refreshVolume()">🔄 Refresh</button>
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">FM Empfang (Gain)</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">FM Gain</div><div class="diag-value" id="fmGainValue">…</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="sendCmd('fm_gain:-1')">Auto (AGC)</button>
-              <button onclick="sendCmd('fm_gain:10')">10 dB</button>
-              <button onclick="sendCmd('fm_gain:20')">20 dB</button>
-              <button onclick="sendCmd('fm_gain:30')">30 dB</button>
-              <button onclick="sendCmd('fm_gain:40')">40 dB</button>
-              <button onclick="sendCmd('fm_gain:49')">49 dB (max)</button>
-            </div>
-            <div class="diag-note">
-              -1 = Auto AGC. Höher = mehr Verstärkung bei schwachem Signal.<br>
-              Bei gutem Empfang: Auto. Bei schwachem Empfang: 30–40 dB testen.
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">DAB+ Empfang (Gain)</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">DAB Gain</div><div class="diag-value" id="dabGainValue">…</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="sendCmd('dab_gain:-1')">Auto (AGC)</button>
-              <button onclick="sendCmd('dab_gain:10')">10 dB</button>
-              <button onclick="sendCmd('dab_gain:20')">20 dB</button>
-              <button onclick="sendCmd('dab_gain:30')">30 dB</button>
-              <button onclick="sendCmd('dab_gain:40')">40 dB</button>
-              <button onclick="sendCmd('dab_gain:49')">49 dB (max)</button>
-            </div>
-            <div class="diag-note">
-              DAB braucht oft mehr Gain als FM — bei schlechter Antenne 35–49 testen.
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">📡 PPM Frequenzkorrektur</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value" id="ppmValue">…</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="setPpm(0)">0 (aus)</button>
-              <button onclick="setPpm(-50)">-50</button>
-              <button onclick="setPpm(-25)">-25</button>
-              <button onclick="setPpm(-10)">-10</button>
-              <button onclick="setPpm(10)">+10</button>
-              <button onclick="setPpm(25)">+25</button>
-              <button onclick="setPpm(50)">+50</button>
-            </div>
-            <div class="diag-actions">
-              <button onclick="applyPpmPrompt()">Setzen</button>
-              <button onclick="calibratePpm()">🔬 Kalibrieren</button>
-            </div>
-            <div class="diag-note">
-              <strong>Was ist PPM?</strong> Quarzfehler des RTL-SDR Sticks (typisch ±20–100 ppm).<br>
-              Bei 100 MHz: 50 ppm = 5 kHz Versatz → schlechtere FM-Stereo-Trennung, DAB-Aussetzer.<br>
-              <strong>Wie kalibrieren?</strong> 🔬 Kalibrieren drücken (30s, Stick darf nichts anderes tun) → Wert übernehmen → beim nächsten FM/DAB Start automatisch aktiv.<br>
-              <strong>Oder manuell:</strong> FM-Sender hören → ±10 ppm ausprobieren → besser klingt = richtig.<br>
-              0 = deaktiviert (Werkseinstellung). Nach Übernehmen neu abspielen.
-            </div>
-            <pre id="ppmCalJson">–</pre>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">🔇 Scanner Squelch</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">Schwelle</div><div class="diag-value" id="squelchValue">…</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="sendCmd('squelch:0')">0 (offen)</button>
-              <button onclick="sendCmd('squelch:10')">10 empf.</button>
-              <button onclick="sendCmd('squelch:15')">15</button>
-              <button onclick="sendCmd('squelch:20')">20</button>
-              <button onclick="sendCmd('squelch:25')">25 std.</button>
-              <button onclick="sendCmd('squelch:35')">35</button>
-            </div>
-            <div class="diag-note">
-              0 = immer offen (viel Rauschen). 10–15 = empfindlich. 25 = Standard. 35 = nur starke Signale.<br>
-              Bei schlechtem Empfang: 10–15 testen.
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">🔐 Bluetooth Pairing-Keys Backup</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">Backup-Status</div><div class="diag-value" id="btBackupState">…</div></div>
-              <div class="diag-row"><div class="diag-key">Datum</div><div class="diag-value" id="btBackupDate">–</div></div>
-              <div class="diag-row"><div class="diag-key">Geräte</div><div class="diag-value" id="btBackupDevices">–</div></div>
-              <div class="diag-row"><div class="diag-key">Bekannte Geräte</div><div class="diag-value" id="knownBtDevicesBox">– keine –</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="sendCmd('bt_backup')">💾 Jetzt sichern</button>
-              <button onclick="sendCmd('bt_restore')">🔄 Wiederherstellen</button>
-              <button onclick="refreshKnownBtDevices()">🔄 Status</button>
-            </div>
-            <div class="diag-note">
-              Wann sichern? Nach jedem erfolgreichen Pairing sofort.<br>
-              Wann wiederherstellen? Wenn BT nach Reboot "not available" meldet.<br>
-              Auto-Restore beim Boot: aktiv — greift wenn BlueZ-DB leer ist.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-title">Audio Debug Cockpit</div>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Routing-Entscheidung</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">PulseAudio</div><div class="diag-value" id="audioPulseActive">…</div></div>
-              <div class="diag-row"><div class="diag-key">Default Sink</div><div class="diag-value" id="audioDefaultSink">…</div></div>
-              <div class="diag-row"><div class="diag-key">BT A2DP Sink</div><div class="diag-value" id="audioBtSink">–</div></div>
-              <div class="diag-row"><div class="diag-key">ALSA Sink</div><div class="diag-value" id="audioAlsaSink">–</div></div>
-              <div class="diag-row"><div class="diag-key">Requested</div><div class="diag-value" id="audioRequested">–</div></div>
-              <div class="diag-row"><div class="diag-key">Effective</div><div class="diag-value" id="audioEffective">–</div></div>
-              <div class="diag-row"><div class="diag-key">Reason</div><div class="diag-value" id="audioReason">–</div></div>
-              <div class="diag-row"><div class="diag-key">Quelle</div><div class="diag-value" id="audioSource">–</div></div>
-              <div class="diag-row"><div class="diag-key">Runtime Sink</div><div class="diag-value" id="audioRuntimeSink">–</div></div>
-              <div class="diag-row"><div class="diag-key">Verify</div><div class="diag-value" id="audioVerify">–</div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="refreshAudio()">🔄 Audio Refresh</button>
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">Aktive Sink-Inputs</div>
-            <div id="audioInputsBox">– keine aktiven Inputs –</div>
-            <div class="diag-title" style="margin-top:14px">Alle Sinks</div>
-            <div id="audioSinksBox">– keine –</div>
-          </div>
-        </div>
-
-        <div class="json-wrap" style="margin-top:12px">
-          <div>
-            <div class="diag-title">Rohdaten</div>
-            <div class="diag-title">Status</div>
-            <pre>{{ vm["status"] | tojson(indent=2) }}</pre>
-          </div>
-          <div>
-            <div class="diag-title">Menue</div>
-            <pre>{{ vm["menu"] | tojson(indent=2) }}</pre>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel tabs-panel">
-        <div class="tab-buttons">
-          <button onclick="loadLog('core')">Core Log</button>
-          <button onclick="loadLog('display')">Display Log</button>
-          <button onclick="loadLog('app')">App Log</button>
-          <button onclick="runDiagnose()">Diagnose</button>
-          <button onclick="runGrep()">Grep</button>
-          <button onclick="loadService('pidrive_core')">Core Status</button>
-          <button onclick="loadService('pidrive_display')">Display Status</button>
-          <button onclick="loadService('pidrive_web')">Web Status</button>
-          <button onclick="loadLog('avrcp')">AVRCP Log</button>
-          <button onclick="loadService('pidrive_avrcp')">AVRCP Status</button>
-          <button onclick="refreshAll()">Refresh</button>
-          <button onclick="loadAllLogs()">📋 Alle</button>
-          <button onclick="copyLogToClipboard(event)">⎘ Copy</button>
-        </div>
-        <pre id="logOutput">Bereit.</pre>
-      </section>
-
-    </div>
-
-    <!-- Rechte Spalte -->
-    <div>
-
-      <section class="panel">
-        <h3>⚙️ Runtime / Startwerte</h3>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Aktive Settings</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">audio_output</div><div class="diag-value" id="rt_audio_output">–</div></div>
-              <div class="diag-row"><div class="diag-key">volume</div><div class="diag-value" id="rt_volume">–</div></div>
-              <div class="diag-row"><div class="diag-key">fm_gain</div><div class="diag-value" id="rt_fm_gain">–</div></div>
-              <div class="diag-row"><div class="diag-key">dab_gain</div><div class="diag-value" id="rt_dab_gain">–</div></div>
-              <div class="diag-row"><div class="diag-key">scanner_gain</div><div class="diag-value" id="rt_scanner_gain">–</div></div>
-              <div class="diag-row"><div class="diag-key">ppm</div><div class="diag-value" id="rt_ppm">–</div></div>
-              <div class="diag-row"><div class="diag-key">squelch</div><div class="diag-value" id="rt_squelch">–</div></div>
-              <div class="diag-row"><div class="diag-key">last_source</div><div class="diag-value" id="rt_last_source">–</div></div>
-              <div class="diag-row"><div class="diag-key">dab_wait_lock</div><div class="diag-value" id="rt_dab_wait_lock">–</div></div>
-              <div class="diag-row"><div class="diag-key">dab_http_timeout</div><div class="diag-value" id="rt_dab_http_timeout">–</div></div>
-              <div class="diag-row"><div class="diag-key">dab_scan_port</div><div class="diag-value" id="rt_dab_scan_port">–</div></div>
-              <div class="diag-row"><div class="diag-key">dab_channels</div><div class="diag-value" id="rt_dab_scan_channels">–</div></div>
-            </div>
-
-            <div class="diag-title" style="margin-top:14px">Laufende Prozesse</div>
-            <div id="runtimeProcessesBox">– keine –</div>
-
-            <div class="diag-actions">
-              <button onclick="refreshRuntimePanel()">🔄 Runtime Refresh</button>
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">🔀 Source State</div>
-            <pre id="sourceStateJson">{{ vm.get("source_state", {}) | tojson(indent=2) }}</pre>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h3>📡 DAB Scan Diagnose</h3>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Kanalübersicht</div>
-            <div id="dabScanDiagTable"></div>
-            <div class="diag-actions">
-              <button onclick="refreshDabScanDebug()">🔄 DAB Scan Debug</button>
-            </div>
-          </div>
-          <div class="diag-card">
-            <div class="diag-title">Debug JSON</div>
-            <pre id="dabScanDebugJson">{{ vm.get("dab_scan_debug", {}) | tojson(indent=2) }}</pre>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h3>📊 Spectrum Last / FM Sweep</h3>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Letzter Snapshot</div>
-            <pre id="spectrumDebugJson">{{ vm.get("spectrum_debug", {}) | tojson(indent=2) }}</pre>
-            <div class="diag-actions">
-              <button onclick="refreshSpectrumDebug()">🔄 Spectrum Refresh</button>
-            </div>
-          </div>
-          <div class="diag-card">
-            <div class="diag-title">Kandidaten</div>
-            <div id="spectrumCandidatesTable">–</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h3>📡 DAB+ Scan Einstellungen</h3>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Scan-Parameter</div>
-            <div class="diag-list">
-              <div class="diag-row">
-                <div class="diag-key">WAIT_LOCK (s)</div>
-                <div class="diag-value"><input id="dabWaitLockInput" type="number" min="1" max="120" value="20"></div>
-              </div>
-              <div class="diag-row">
-                <div class="diag-key">HTTP Timeout (s)</div>
-                <div class="diag-value"><input id="dabHttpTimeoutInput" type="number" min="1" max="30" value="4"></div>
-              </div>
-              <div class="diag-row">
-                <div class="diag-key">Scan-Port</div>
-                <div class="diag-value"><input id="dabScanPortInput" type="number" min="1024" max="65535" value="7981"></div>
-              </div>
-              <div class="diag-row">
-                <div class="diag-key">Kanäle (CSV)</div>
-                <div class="diag-value"><input id="dabScanChannelsInput" type="text" value="11D, 10A, 8D, 8B, 11B"></div>
-              </div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="saveDabScanSettings()">💾 Speichern</button>
-              <button onclick="loadDabScanSettings()">🔄 Laden</button>
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">Gezielter Scan</div>
-            <div class="diag-actions">
-              <button onclick="startDabScanMerge()">▶ Scan starten</button>
-              <button onclick="startDabScanReplace()">♻ Scan ersetzen</button>
-              <button onclick="refreshDabScanDebug()">🔍 Scan-Diagnose</button>
-            </div>
-            <div id="dabScanCompactBox">–</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h3>📊 Spektrum / FM FastScan (Prototyp)</h3>
-        <div class="diag-grid">
-          <div class="diag-card">
-            <div class="diag-title">Einzelmessung</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">Center (MHz)</div><div class="diag-value"><input id="specCenterInput" type="number" step="0.1" value="100.0"></div></div>
-              <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value"><input id="specPpmInput" type="number" step="1" value="0"></div></div>
-              <div class="diag-row"><div class="diag-key">Gain</div><div class="diag-value"><input id="specGainInput" type="number" step="1" value="-1"></div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="captureSpectrum()">📡 Snapshot</button>
-            </div>
-          </div>
-
-          <div class="diag-card">
-            <div class="diag-title">FM-Band-Sweep</div>
-            <div class="diag-list">
-              <div class="diag-row"><div class="diag-key">Start–Stop MHz</div><div class="diag-value"><input id="specSweepRangeInput" type="text" value="87.5-108.0"></div></div>
-              <div class="diag-row"><div class="diag-key">Schritt (MHz)</div><div class="diag-value"><input id="specSweepStepInput" type="number" step="0.1" value="1.0"></div></div>
-            </div>
-            <div class="diag-actions">
-              <button onclick="captureSweep()">▶ FM Sweep</button>
-            </div>
-            <div class="diag-note">Braucht: rtl_sdr + numpy (apt install python3-numpy)</div>
-          </div>
-        </div>
-      </section>
-
+        {% else %}
+          <div class="tree-item type-info"><span class="node-icon">ℹ</span><span class="node-label">Keine Daten</span></div>
+        {% endfor %}
+      </div>
+      <div class="list-overlay" id="listOverlay" style="display:none">
+        <div class="list-title">Liste</div>
+        <div id="listItems"></div>
+      </div>
+      <div class="ipc-state">
+        Audio: <span id="audioMode">{{ vm['status'].get('audio_effective','auto') }}</span><br>
+        Core: <span id="coreReady">{% if vm.get('debug',{}).get('core_ready') %}✓ bereit{% else %}…{% endif %}</span><br>
+        Rev: <span id="menuRev">{{ vm.get('debug',{}).get('rev',0) }}</span> | Pfad: <span id="menuPath">{{ (vm.get('path') or ['PiDrive'])|join(' > ') }}</span><br>
+        Auswahl: <span id="selectedNode">{{ vm.get('debug',{}).get('selected_label','...') }}</span> | <span id="nodeCount">{{ vm.get('debug',{}).get('node_count',0) }}</span> Eintraege<br>
+        Status: <span id="statusAge">{{ vm.get('debug',{}).get('status_age','…') }}</span> | Menue: <span id="menuAge">{{ vm.get('debug',{}).get('menu_age','…') }}</span>
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- Navigation -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">Steuerung</div>
+      <div class="nav-pad">
+        <button class="primary" onclick="sendCmd('up')">↑</button>
+        <div class="nav-middle">
+          <button class="primary" onclick="sendCmd('left')">←</button>
+          <button class="primary" onclick="sendCmd('enter')">Enter</button>
+          <button class="primary" onclick="sendCmd('right')">→</button>
+        </div>
+        <button class="primary" onclick="sendCmd('down')">↓</button>
+        <div class="back-btn-row"><button onclick="sendCmd('back')">Back</button></div>
+      </div>
+
+      <div class="button-grid">
+        <button onclick="sendCmd('cat:0')">Jetzt laeuft</button>
+        <button onclick="sendCmd('cat:2')">Quellen</button>
+        <button onclick="sendCmd('cat:3')">Verbindungen</button>
+        <button onclick="sendCmd('cat:4')">System</button>
+        <button onclick="sendCmd('spotify_toggle')">Spotify</button>
+        <button onclick="sendCmd('bt_scan')">BT Scan</button>
+        <button onclick="sendCmd('wifi_scan')">WiFi Scan</button>
+        <button onclick="sendCmd('radio_stop')">Radio Stop</button>
+        <button onclick="sendCmd('fm_next')">FM Naechster</button>
+        <button onclick="sendCmd('dab_next')">DAB Naechster</button>
+        <button onclick="startDabScanMerge()">DAB+ Suchlauf</button>
+        <button onclick="sendCmd('fm_scan')">FM Suchlauf</button>
+        <button onclick="sendCmd('audio_klinke')">Klinke</button>
+        <button onclick="sendCmd('audio_hdmi')">HDMI</button>
+        <button onclick="sendCmd('vol_up')">Lauter</button>
+        <button onclick="sendCmd('vol_down')">Leiser</button>
+        <button onclick="sendCmd('bt_disconnect')">BT Trennen</button>
+        <button onclick="sendCmd('bt_reconnect_last')">BT Reconnect</button>
+        <button onclick="sendCmd('bt_backup')">BT Backup</button>
+        <button onclick="sendCmd('bt_restore')">BT Restore</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rohdaten -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">
+        Rohdaten
+        <button class="raw-toggle" onclick="toggleRaw('rawStatus')">▾ Status</button>
+        <button class="raw-toggle" onclick="toggleRaw('rawMenu')">▾ Menü</button>
+      </div>
+      <div id="rawStatus" class="raw-box">
+        <pre class="diag-json" id="statusJsonPre">{{ vm["status"] | tojson(indent=2) }}</pre>
+      </div>
+      <div id="rawMenu" class="raw-box">
+        <pre class="diag-json" id="menuJsonPre">{{ vm["menu"] | tojson(indent=2) }}</pre>
+      </div>
+    </div>
+  </div>
+</div><!-- /t1 -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 2: AUDIO                                       -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="t2">
+
+  <!-- Lautstärke & Gain -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">🎚️ Lautstärke &amp; Empfang (Gain)</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Lautstärke</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Aktuell</div><div class="diag-value" id="volumeCurrent">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('vol_up')">▲ +5%</button>
+            <button onclick="sendCmd('vol_down')">▼ -5%</button>
+            <button onclick="refreshVolume()">🔄 Refresh</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">FM Empfang (Gain)</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">FM Gain</div><div class="diag-value" id="fmGainValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('fm_gain:-1')">Auto (AGC)</button>
+            <button onclick="sendCmd('fm_gain:10')">10 dB</button>
+            <button onclick="sendCmd('fm_gain:20')">20 dB</button>
+            <button onclick="sendCmd('fm_gain:30')">30 dB</button>
+            <button onclick="sendCmd('fm_gain:40')">40 dB</button>
+            <button onclick="sendCmd('fm_gain:49')">49 dB (max)</button>
+          </div>
+          <p class="help-text">-1 = Auto AGC. Höher = mehr Verstärkung bei schwachem Signal.</p>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">DAB+ Empfang (Gain)</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">DAB Gain</div><div class="diag-value" id="dabGainValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('dab_gain:-1')">Auto (AGC)</button>
+            <button onclick="sendCmd('dab_gain:10')">10 dB</button>
+            <button onclick="sendCmd('dab_gain:20')">20 dB</button>
+            <button onclick="sendCmd('dab_gain:30')">30 dB</button>
+            <button onclick="sendCmd('dab_gain:40')">40 dB</button>
+            <button onclick="sendCmd('dab_gain:49')">49 dB (max)</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">📡 PPM Frequenzkorrektur</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value" id="ppmValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="setPpm(0)">0 (aus)</button>
+            <button onclick="setPpm(-50)">-50</button>
+            <button onclick="setPpm(-25)">-25</button>
+            <button onclick="setPpm(-10)">-10</button>
+            <button onclick="setPpm(10)">+10</button>
+            <button onclick="setPpm(25)">+25</button>
+            <button onclick="setPpm(50)">+50</button>
+            <button onclick="applyPpmPrompt()">Setzen</button>
+            <button onclick="calibratePpm()">🔬 Kalibrieren</button>
+          </div>
+          <pre id="ppmCalJson">–</pre>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">🔇 Scanner Squelch</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Schwelle</div><div class="diag-value" id="squelchValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('squelch:0')">0 (offen)</button>
+            <button onclick="sendCmd('squelch:10')">10 empf.</button>
+            <button onclick="sendCmd('squelch:15')">15</button>
+            <button onclick="sendCmd('squelch:20')">20</button>
+            <button onclick="sendCmd('squelch:25')">25 std.</button>
+            <button onclick="sendCmd('squelch:35')">35</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BT Backup -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">🔐 Bluetooth Pairing-Keys Backup</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Backup-Status</div><div class="diag-value" id="btBackupState">…</div></div>
+            <div class="diag-row"><div class="diag-key">Datum</div><div class="diag-value" id="btBackupDate">–</div></div>
+            <div class="diag-row"><div class="diag-key">Geräte</div><div class="diag-value" id="btBackupDevices">–</div></div>
+            <div class="diag-row"><div class="diag-key">Bekannte Geräte</div><div class="diag-value" id="knownBtDevicesBox">– keine –</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('bt_backup')">💾 Jetzt sichern</button>
+            <button onclick="sendCmd('bt_restore')">🔄 Wiederherstellen</button>
+            <button onclick="refreshKnownBtDevices()">🔄 Status</button>
+          </div>
+          <p class="help-text">Wann sichern? Nach jedem erfolgreichen Pairing sofort.<br>
+          Wann wiederherstellen? Wenn BT nach Reboot "not available" meldet.<br>
+          Auto-Restore beim Boot: aktiv — greift wenn BlueZ-DB leer ist.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Debug Cockpit -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">Audio Debug Cockpit</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Routing-Entscheidung</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">PulseAudio</div><div class="diag-value" id="audioPulseActive">…</div></div>
+            <div class="diag-row"><div class="diag-key">Default Sink</div><div class="diag-value" id="audioDefaultSink">…</div></div>
+            <div class="diag-row"><div class="diag-key">BT A2DP Sink</div><div class="diag-value" id="audioBtSink">–</div></div>
+            <div class="diag-row"><div class="diag-key">ALSA Sink</div><div class="diag-value" id="audioAlsaSink">–</div></div>
+            <div class="diag-row"><div class="diag-key">Requested</div><div class="diag-value" id="audioRequested">–</div></div>
+            <div class="diag-row"><div class="diag-key">Effective</div><div class="diag-value" id="audioEffective">–</div></div>
+            <div class="diag-row"><div class="diag-key">Reason</div><div class="diag-value" id="audioReason">–</div></div>
+            <div class="diag-row"><div class="diag-key">Quelle</div><div class="diag-value" id="audioSource">–</div></div>
+            <div class="diag-row"><div class="diag-key">Runtime Sink</div><div class="diag-value" id="audioRuntimeSink">–</div></div>
+            <div class="diag-row"><div class="diag-key">Verify</div><div class="diag-value" id="audioVerify">–</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="refreshAudio()">🔄 Audio Refresh</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Aktive Sink-Inputs</div>
+          <div id="audioInputsBox">– keine aktiven Inputs –</div>
+          <div class="diag-title" style="margin-top:10px">Alle Sinks</div>
+          <div id="audioSinksBox">– keine –</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /t2 -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 3: DAB/FM/RTL-SDR                             -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="t3">
+
+  <!-- RTL-SDR -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">RTL-SDR Diagnose</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Status</div>
+          <div class="diag-list" id="rtlsdrSummaryBox">
+            <div class="diag-row"><div class="diag-key">Stick</div><div class="diag-value">…</div></div>
+            <div class="diag-row"><div class="diag-key">Busy</div><div class="diag-value">…</div></div>
+            <div class="diag-row"><div class="diag-key">DVB-Treiber</div><div class="diag-value">…</div></div>
+            <div class="diag-row"><div class="diag-key">Unterspannung</div><div class="diag-value">…</div></div>
+          </div>
+          <div class="diag-chipbar" id="rtlsdrToolsBar"></div>
+          <div class="diag-actions">
+            <button onclick="refreshRtlsdr()">🔄 Passive Diagnose</button>
+            <button onclick="resetRtlsdr()">⚡ RTL-SDR Reset</button>
+          </div>
+          <p class="help-text">Passive Diagnose öffnet den RTL-SDR Stick nicht.</p>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Debug-JSON</div>
+          <pre class="diag-json" id="rtlsdrJson">{{ vm["rtlsdr"] | tojson(indent=2) }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AVRCP -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">AVRCP / BMW Debug</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Status</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Service</div><div class="diag-value" id="avrcpService">…</div></div>
+            <div class="diag-row"><div class="diag-key">Debug-JSON</div><div class="diag-value" id="avrcpAge">…</div></div>
+            <div class="diag-row"><div class="diag-key">Letztes Event</div><div class="diag-value" id="avrcpEvent">–</div></div>
+            <div class="diag-row"><div class="diag-key">Kontext</div><div class="diag-value" id="avrcpContext">–</div></div>
+            <div class="diag-row"><div class="diag-key">Trigger</div><div class="diag-value" id="avrcpTrigger">–</div></div>
+            <div class="diag-row"><div class="diag-key">Quelle</div><div class="diag-value" id="avrcpSource">–</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="refreshAvrcp()">🔄 AVRCP Refresh</button>
+            <button onclick="loadLog('avrcp')">AVRCP Log laden</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">AVRCP Debug-JSON</div>
+          <pre class="diag-json" id="avrcpJson">{{ vm["avrcp"] | tojson(indent=2) }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAB Scan -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📡 DAB Scan Diagnose</div>
+      <div id="dabScanTableBox">
+        <p class="help-text">Noch kein Scan-Ergebnis.</p>
+      </div>
+      <div class="diag-actions">
+        <button onclick="refreshDabScanDebug()">🔄 DAB Scan Debug</button>
+      </div>
+      <details style="margin-top:8px">
+        <summary style="font-size:12px;color:#8aa5bb;cursor:pointer">Debug JSON</summary>
+        <pre class="diag-json" id="dabScanJson">{{ vm.get("dab_scan_debug",{}) | tojson(indent=2) }}</pre>
+      </details>
+    </div>
+  </div>
+
+  <!-- DAB Scan Settings -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📡 DAB+ Scan Einstellungen</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Scan-Parameter</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">WAIT_LOCK (s)</div><div class="diag-value"><input id="dabWaitLock" type="number" style="width:60px" value="{{ vm.get('source_state',{}).get('dab_scan_wait_lock',40) }}"></div></div>
+            <div class="diag-row"><div class="diag-key">HTTP Timeout (s)</div><div class="diag-value"><input id="dabHttpTimeout" type="number" style="width:60px" value="4"></div></div>
+            <div class="diag-row"><div class="diag-key">Scan-Port</div><div class="diag-value"><input id="dabScanPort" type="number" style="width:70px" value="7981"></div></div>
+            <div class="diag-row"><div class="diag-key">Kanäle (CSV)</div><div class="diag-value"><input id="dabChannels" type="text" style="width:120px" value="11D, 10A, 11B"></div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="saveDabScanSettings()">💾 Speichern</button>
+            <button onclick="loadDabScanSettings()">🔄 Laden</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Gezielter Scan</div>
+          <div class="diag-actions">
+            <button onclick="startDabScanMerge()">▶ Scan starten</button>
+            <button onclick="startDabScanReplace()">♻ Scan ersetzen</button>
+            <button onclick="refreshDabScanDebug()">🔍 Scan-Diagnose</button>
+          </div>
+          <div id="dabScanDiagText" style="font-size:11px;color:#8aa5bb;margin-top:6px">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spectrum -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📊 Spektrum / FM FastScan</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Einzelmessung</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Center (MHz)</div><div class="diag-value"><input id="specCenter" type="text" style="width:70px" value="100.0"></div></div>
+            <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value"><input id="specPpm" type="number" style="width:60px" value="0"></div></div>
+            <div class="diag-row"><div class="diag-key">Gain</div><div class="diag-value"><input id="specGain" type="number" style="width:60px" value="-1"></div></div>
+          </div>
+          <div class="diag-actions"><button onclick="captureSpectrum()">📡 Snapshot</button></div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">FM-Band-Sweep</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Start–Stop MHz</div><div class="diag-value"><input id="sweepRange" type="text" style="width:100px" value="87.5-108.0"></div></div>
+            <div class="diag-row"><div class="diag-key">Schritt (MHz)</div><div class="diag-value"><input id="sweepStep" type="text" style="width:60px" value="1.0"></div></div>
+          </div>
+          <div class="diag-actions"><button onclick="captureSweep()">▶ FM Sweep</button></div>
+          <p class="help-text">Braucht: rtl_sdr + numpy</p>
+        </div>
+      </div>
+      <div id="spectrumCandidates" style="margin-top:8px;font-size:12px;color:#8aa5bb">–</div>
+    </div>
+  </div>
+
+</div><!-- /t3 -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 4: LOG & DEBUG                                 -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="t4">
+
+  <!-- Log -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">Log</div>
+      <div class="log-buttons" style="flex-wrap:wrap;display:flex;gap:4px;margin-bottom:8px">
+        <button onclick="loadLog('core')">Core Log</button>
+        <button onclick="loadLog('display')">Display Log</button>
+        <button onclick="loadLog('app')">App Log</button>
+        <button onclick="runDiagnose()">Diagnose</button>
+        <button onclick="runGrep()">Grep</button>
+        <button onclick="loadService('core')">Core Status</button>
+        <button onclick="loadService('display')">Display Status</button>
+        <button onclick="loadService('web')">Web Status</button>
+        <button onclick="loadLog('avrcp')">AVRCP Log</button>
+        <button onclick="loadService('avrcp')">AVRCP Status</button>
+        <button onclick="loadAllLogs()">📋 Alle</button>
+        <button id="copyLogBtn" onclick="copyLogToClipboard(event)">⎘ Copy</button>
+      </div>
+      <pre id="logOutput" style="max-height:400px;overflow-y:auto">Bereit.</pre>
+    </div>
+  </div>
+
+  <!-- Runtime Settings -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">⚙️ Runtime / Startwerte</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Aktive Settings</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">audio_output</div><div class="diag-value" id="rt_audio_output">–</div></div>
+            <div class="diag-row"><div class="diag-key">volume</div><div class="diag-value" id="rt_volume">–</div></div>
+            <div class="diag-row"><div class="diag-key">fm_gain</div><div class="diag-value" id="rt_fm_gain">–</div></div>
+            <div class="diag-row"><div class="diag-key">dab_gain</div><div class="diag-value" id="rt_dab_gain">–</div></div>
+            <div class="diag-row"><div class="diag-key">scanner_gain</div><div class="diag-value" id="rt_scanner_gain">–</div></div>
+            <div class="diag-row"><div class="diag-key">ppm</div><div class="diag-value" id="rt_ppm">–</div></div>
+            <div class="diag-row"><div class="diag-key">squelch</div><div class="diag-value" id="rt_squelch">–</div></div>
+            <div class="diag-row"><div class="diag-key">last_source</div><div class="diag-value" id="rt_last_source">–</div></div>
+            <div class="diag-row"><div class="diag-key">dab_wait_lock</div><div class="diag-value" id="rt_dab_wait_lock">–</div></div>
+            <div class="diag-row"><div class="diag-key">dab_http_timeout</div><div class="diag-value" id="rt_dab_http_timeout">–</div></div>
+            <div class="diag-row"><div class="diag-key">dab_scan_port</div><div class="diag-value" id="rt_dab_scan_port">–</div></div>
+            <div class="diag-row"><div class="diag-key">dab_channels</div><div class="diag-value" id="rt_dab_channels">–</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="refreshRuntimePanel()">🔄 Runtime Refresh</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">🔀 Source State</div>
+          <pre class="diag-json" id="sourceStateJson">{{ vm.get("source_state",{}) | tojson(indent=2) }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /t4 -->
 
 <script>
+let vmLast = {{ vm | tojson }};
+let activeTab = 't1';
+const tabPollers = {};
+
+// ── Tab Management ─────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    if (b.getAttribute('onclick').includes(id)) b.classList.add('active');
+  });
+  activeTab = id;
+  // Trigger immediate refresh for newly shown tab
+  if (id === 't2') { refreshAudio(); refreshVolume(); refreshGain(); refreshKnownBtDevices(); }
+  if (id === 't3') { refreshRtlsdr(); refreshAvrcp(); refreshDabScanDebug(); }
+  if (id === 't4') { refreshRuntimePanel(); }
+}
+
+function toggleRaw(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// ── Status Bar ─────────────────────────────────────────────────────────────
 function setStatusBar(txt) {
   const el = document.getElementById('statusBar');
   if (el) el.textContent = txt;
 }
 
+// ── Send Command ───────────────────────────────────────────────────────────
 async function sendCmd(cmd) {
   try {
     const r = await fetch('/api/cmd', {
@@ -561,606 +593,372 @@ async function sendCmd(cmd) {
     });
     const j = await r.json();
     if (!j.ok) alert('Fehler: ' + (j.error || '?'));
-    refreshAll();
-  } catch (e) {
-    console.warn('sendCmd', e);
-  }
+    refreshCore();
+  } catch (e) { console.warn('sendCmd', e); }
 }
 
+// ── Log functions ──────────────────────────────────────────────────────────
 async function loadLog(target) {
   const r = await fetch('/api/logs?target=' + encodeURIComponent(target));
   const j = await r.json();
   document.getElementById('logOutput').textContent =
     (j.stdout || '') + (j.stderr ? '\n\n' + j.stderr : '');
 }
-
 async function loadService(name) {
   const r = await fetch('/api/service?name=' + encodeURIComponent(name));
   const j = await r.json();
   document.getElementById('logOutput').textContent =
     (j.stdout || '') + (j.stderr ? '\n\n' + j.stderr : '');
 }
-
 async function runDiagnose() {
   const r = await fetch('/api/diagnose');
   const j = await r.json();
   document.getElementById('logOutput').textContent =
     (j.stdout || '') + (j.stderr ? '\n\n' + j.stderr : '');
 }
-
 async function runGrep() {
   const r = await fetch('/api/grep');
   const j = await r.json();
   document.getElementById('logOutput').textContent =
     (j.stdout || '') + (j.stderr ? '\n\n' + j.stderr : '');
 }
-
 async function loadAllLogs() {
+  const ts = new Date().toLocaleString('de');
+  document.getElementById('logOutput').textContent = `=== PiDrive Log-Snapshot ${ts} ===\n\nLädt...`;
   const [core, display, app, diag] = await Promise.all([
     fetch('/api/logs?target=core').then(r => r.json()),
     fetch('/api/logs?target=display').then(r => r.json()),
     fetch('/api/logs?target=app').then(r => r.json()),
-    fetch('/api/diagnose').then(r => r.json())
+    fetch('/api/diagnose').then(r => r.json()),
   ]);
-
-  const parts = [
-    `=== PiDrive Log-Snapshot ${new Date().toLocaleString()} ===`,
-    '',
-    '----------------------------------------',
-    '--- Core Log ---',
-    '----------------------------------------',
-    core.stdout || core.stderr || '(leer)',
-    '',
-    '----------------------------------------',
-    '--- Display Log ---',
-    '----------------------------------------',
-    display.stdout || display.stderr || '(leer)',
-    '',
-    '----------------------------------------',
-    '--- App Log ---',
-    '----------------------------------------',
-    app.stdout || app.stderr || '(leer)',
-    '',
-    '----------------------------------------',
-    '--- Diagnose ---',
-    '----------------------------------------',
-    diag.stdout || diag.stderr || '(leer)'
-  ];
-
-  document.getElementById('logOutput').textContent = parts.join('\n');
+  const sep = (t) => `\n\n${'─'.repeat(40)}\n--- ${t} ---\n${'─'.repeat(40)}\n`;
+  document.getElementById('logOutput').textContent =
+    `=== PiDrive Log-Snapshot ${ts} ===` +
+    sep('Core Log') + (core.stdout||'') +
+    sep('Display Log') + (display.stdout||'') +
+    sep('App Log') + (app.stdout||'') +
+    sep('Diagnose') + (diag.stdout||'');
 }
-
 async function copyLogToClipboard(evt) {
-  const txt = document.getElementById('logOutput').textContent || '';
-  try {
-    await navigator.clipboard.writeText(txt);
-    const btn = evt?.target;
-    if (btn) {
-      const old = btn.textContent;
-      btn.textContent = '✓ Kopiert!';
-      setTimeout(() => btn.textContent = old, 1200);
-    }
-  } catch (e) {
-    const ta = document.createElement('textarea');
-    ta.value = txt;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-  }
+  const txt = document.getElementById('logOutput').textContent;
+  try { await navigator.clipboard.writeText(txt); evt.target.textContent = '✓ Kopiert'; setTimeout(()=>{evt.target.textContent='⎘ Copy'},2000); }
+  catch(e) { console.warn(e); }
 }
 
+// ── Render functions (unchanged) ───────────────────────────────────────────
 function renderRuntimeInfo(vm) {
-  document.getElementById('menuRev').textContent = vm?.menu?.rev ?? 0;
-  document.getElementById('menuPath').textContent = (vm?.path || ['PiDrive']).join(' > ');
-  document.getElementById('selectedNode').textContent = vm?.debug?.selected_label || '...';
-  document.getElementById('nodeCount').textContent = vm?.debug?.node_count || 0;
-  document.getElementById('coreReady').textContent = vm?.debug?.core_ready ? '✓ bereit' : '…';
-  document.getElementById('statusAge').textContent = vm?.debug?.status_age != null ? `OK (${vm.debug.status_age}s)` : '…';
-  document.getElementById('menuAge').textContent = vm?.debug?.menu_age != null ? `OK (${vm.debug.menu_age}s)` : '…';
+  const d = vm.debug || {};
+  const el = (id) => document.getElementById(id);
+  if (el('coreReady'))    el('coreReady').textContent    = d.core_ready ? '✓ bereit' : '…';
+  if (el('menuRev'))      el('menuRev').textContent      = d.rev || 0;
+  if (el('menuPath'))     el('menuPath').textContent     = (vm.path || ['PiDrive']).join(' > ');
+  if (el('selectedNode')) el('selectedNode').textContent = d.selected_label || '...';
+  if (el('nodeCount'))    el('nodeCount').textContent    = d.node_count || 0;
+  if (el('statusAge'))    el('statusAge').textContent    = d.status_age != null ? d.status_age + 's' : '…';
+  if (el('menuAge'))      el('menuAge').textContent      = d.menu_age   != null ? d.menu_age   + 's' : '…';
+  if (el('audioMode'))    el('audioMode').textContent    = (vm.status||{}).audio_effective || 'auto';
+  // Now Playing
+  const st = vm.status || {};
+  if (el('nowTrack')) el('nowTrack').textContent = st.track || st.radio_name || '–';
+  if (el('nowMeta'))  el('nowMeta').textContent  = [st.artist, st.radio_type, st.radio_name].filter(Boolean).join(' · ') || '–';
+  // Raw JSON
+  if (el('statusJsonPre')) el('statusJsonPre').textContent = JSON.stringify(vm.status||{}, null, 2);
+  if (el('menuJsonPre'))   el('menuJsonPre').textContent   = JSON.stringify(vm.menu||{}, null, 2);
 }
 
 function renderRtlsdr(data) {
-  const r = data || {};
-  const usb = r.usb || {};
-  const th = r.throttled || {};
-  const dvb = r.dvb_modules || [];
-  const tools = r.tools || {};
-  const busy = !!r.busy;
-
-  document.getElementById('rtlsdrSummaryBox').innerHTML = `
-    <div class="diag-row"><div class="diag-key">Stick</div><div class="diag-value">${usb.present ? '✓ erkannt' : '⚠ nicht erkannt'}</div></div>
-    <div class="diag-row"><div class="diag-key">Busy</div><div class="diag-value">${busy ? '⚠ belegt' : '✓ frei'}</div></div>
-    <div class="diag-row"><div class="diag-key">DVB-Treiber</div><div class="diag-value">${dvb.length ? '⚠ geladen' : '✓ keine'}</div></div>
-    <div class="diag-row"><div class="diag-key">Unterspannung</div><div class="diag-value">${th.raw || '–'}</div></div>
-  `;
-
-  const toolNames = ['rtl_fm', 'rtl_test', 'welle-cli'];
-  const chips = toolNames.map(t =>
-    `<span class="diag-chip ${tools[t] ? 'ok' : 'bad'}">${tools[t] ? '✓' : '✗'} ${t}</span>`
-  );
-  document.getElementById('rtlsdrToolsBar').innerHTML = chips.join(' ');
-  document.getElementById('rtlsdrJson').textContent = JSON.stringify(r, null, 2);
+  const box = document.getElementById('rtlsdrSummaryBox');
+  if (!box) return;
+  const usb  = data.usb || {};
+  const thr  = data.throttled || {};
+  const tools = data.tools || {};
+  const lock = data.lock_state || {};
+  box.innerHTML = `
+    <div class="diag-row"><div class="diag-key">Stick</div><div class="diag-value">${usb.present ? '✓ erkannt' : '✗ fehlt'}</div></div>
+    <div class="diag-row"><div class="diag-key">Busy</div><div class="diag-value">${data.busy ? '⚠ belegt' : '✓ frei'}</div></div>
+    <div class="diag-row"><div class="diag-key">DVB-Treiber</div><div class="diag-value">${(data.dvb_modules||[]).length===0 ? '✓ keine' : '⚠ aktiv'}</div></div>
+    <div class="diag-row"><div class="diag-key">Unterspannung</div><div class="diag-value">${thr.raw || '–'}</div></div>`;
+  const bar = document.getElementById('rtlsdrToolsBar');
+  if (bar) bar.innerHTML = Object.keys(tools).map(t =>
+    `<span class="diag-chip ${tools[t] ? 'ok' : 'err'}">✓ ${t}</span>`).join('');
+  const jsEl = document.getElementById('rtlsdrJson');
+  if (jsEl) jsEl.textContent = JSON.stringify(data, null, 2);
 }
 
 function renderAvrcp(data, age) {
-  document.getElementById('avrcpAge').textContent = age != null ? `OK (${age}s)` : '…';
-  document.getElementById('avrcpEvent').textContent = data?.last_event || '–';
-  document.getElementById('avrcpContext').textContent = data?.context || '–';
-  document.getElementById('avrcpTrigger').textContent = data?.trigger || '–';
-  document.getElementById('avrcpSource').textContent = data?.source || '–';
-  document.getElementById('avrcpJson').textContent = JSON.stringify(data || {}, null, 2);
+  const el = (id) => document.getElementById(id);
+  if (el('avrcpService')) el('avrcpService').textContent = 'aktiv ✓';
+  if (el('avrcpAge'))     el('avrcpAge').textContent     = age != null ? `OK (${age}s)` : '–';
+  if (el('avrcpEvent'))   el('avrcpEvent').textContent   = data.last_event || '–';
+  if (el('avrcpContext')) el('avrcpContext').textContent = data.context    || '–';
+  if (el('avrcpTrigger')) el('avrcpTrigger').textContent= data.trigger    || '–';
+  if (el('avrcpSource'))  el('avrcpSource').textContent = data.source     || '–';
+  const jsEl = document.getElementById('avrcpJson');
+  if (jsEl) jsEl.textContent = JSON.stringify(data, null, 2);
 }
 
 async function refreshAvrcp() {
   try {
-    const [av, svc] = await Promise.all([
-      fetch('/api/avrcp').then(r => r.json()),
-      fetch('/api/service?name=pidrive_avrcp').then(r => r.json())
-    ]);
-    document.getElementById('avrcpService').textContent = svc?.stdout?.includes('Active: active') ? 'aktiv ✓' : '…';
-    renderAvrcp(av?.data || {}, av?.age);
-  } catch (e) {
-    console.warn('refreshAvrcp', e);
-  }
+    const r = await fetch('/api/avrcp'); const j = await r.json();
+    renderAvrcp(j.data || {}, j.age_s);
+  } catch(e) {}
 }
 
 async function refreshRtlsdr() {
   try {
-    const r = await fetch('/api/rtlsdr/refresh');
-    const j = await r.json();
+    const r = await fetch('/api/rtlsdr'); const j = await r.json();
     renderRtlsdr(j.data || {});
-  } catch (e) {
-    console.warn('refreshRtlsdr', e);
-  }
+  } catch(e) {}
 }
 
 async function resetRtlsdr() {
-  try {
-    const r = await fetch('/api/rtlsdr/reset', {method: 'POST'});
-    const j = await r.json();
-    if (!j.ok) alert('Reset-Fehler: ' + (j.error || '?'));
-    setTimeout(refreshRtlsdr, 7000);
-  } catch (e) {
-    console.warn('resetRtlsdr', e);
-  }
+  await fetch('/api/rtlsdr_reset', {method:'POST'});
+  setTimeout(refreshRtlsdr, 2000);
 }
 
 async function refreshGain() {
   try {
-    const r = await fetch('/api/gain');
-    const j = await r.json();
-    if (!j.ok) return;
-    document.getElementById('fmGainValue').textContent =
-      (j.fm_gain === -1 ? 'Auto (AGC)' : `${j.fm_gain} dB`);
-    document.getElementById('dabGainValue').textContent =
-      (j.dab_gain === -1 ? 'Auto (AGC)' : `${j.dab_gain} dB`);
-    document.getElementById('ppmValue').textContent =
-      (j.ppm_correction > 0 ? `+${j.ppm_correction} ppm` : `${j.ppm_correction} ppm`);
-    document.getElementById('squelchValue').textContent =
-      `${j.scanner_squelch} ${j.scanner_squelch === 25 ? '(Standard: 25)' : ''}`;
-  } catch (e) {
-    console.warn('refreshGain', e);
-  }
+    const r = await fetch('/api/runtime'); const j = await r.json();
+    const s = j.settings || {};
+    const el = (id) => document.getElementById(id);
+    const gMap = {'-1':'Auto (AGC)','10':'10 dB','20':'20 dB','30':'30 dB','40':'40 dB','49':'49 dB (max)'};
+    if (el('fmGainValue'))  el('fmGainValue').textContent  = gMap[String(s.fm_gain)]  || s.fm_gain  + ' dB';
+    if (el('dabGainValue')) el('dabGainValue').textContent = gMap[String(s.dab_gain)] || s.dab_gain + ' dB';
+    if (el('ppmValue'))     el('ppmValue').textContent     = s.ppm_correction > 0 ? '+'+s.ppm_correction+' ppm' : s.ppm_correction+' ppm';
+    if (el('squelchValue')) el('squelchValue').textContent = s.squelch;
+  } catch(e) {}
 }
 
 function setPpm(v) { sendCmd(`ppm:${v}`); }
 function applyPpmPrompt() {
-  const v = prompt('PPM-Wert eingeben:', '0');
-  if (v !== null && v !== '') sendCmd(`ppm:${parseInt(v, 10)}`);
+  const v = prompt('PPM Wert (-100 bis +100):', '0');
+  if (v !== null) setPpm(parseInt(v)||0);
 }
-
 async function calibratePpm() {
+  const el = document.getElementById('ppmCalJson');
+  if (el) el.textContent = 'Kalibriere (30s)...';
   try {
-    document.getElementById('ppmCalJson').textContent = 'Kalibrierung läuft...';
-    const r = await fetch('/api/rtlsdr/calibrate');
+    const r = await fetch('/api/ppm_calibrate', {method:'POST'});
     const j = await r.json();
-    document.getElementById('ppmCalJson').textContent = JSON.stringify(j, null, 2);
-  } catch (e) {
-    console.warn('calibratePpm', e);
-  }
+    if (el) el.textContent = JSON.stringify(j, null, 2);
+  } catch(e) { if (el) el.textContent = 'Fehler: ' + e; }
 }
 
 function renderAudio(data) {
-  const d = data || {};
-  const dec = d.decision || {};
-  const sinks = d.sinks || [];
-  const ins = d.sink_inputs || [];
+  const el = (id) => document.getElementById(id);
+  const sinks = data.sinks || [];
+  const inp   = data.sink_inputs || [];
+  const dec   = data.decision || {};
+  const fmt = (v) => v || '–';
 
-  document.getElementById('audioPulseActive').textContent = d.pulse_active ? '✓ aktiv' : '✗ inaktiv';
-  document.getElementById('audioDefaultSink').textContent = d.default_sink || '–';
+  if (el('audioPulseActive'))  el('audioPulseActive').textContent  = data.pa_active ? '✓ aktiv' : '✗ inaktiv';
+  if (el('audioDefaultSink'))  el('audioDefaultSink').textContent  = fmt(data.default_sink);
+  const bt   = sinks.find(s => s.type === 'bt');
+  const alsa = sinks.find(s => s.type === 'alsa');
+  if (el('audioBtSink'))       el('audioBtSink').textContent       = bt   ? '✓ ' + bt.name.slice(0,30) : '– kein A2DP';
+  if (el('audioAlsaSink'))     el('audioAlsaSink').textContent     = alsa ? '✓ ' + alsa.name.replace('alsa_output.','').replace('.stereo-fallback','') : '–';
+  if (el('audioRequested'))    el('audioRequested').textContent    = fmt(dec.requested);
+  if (el('audioEffective'))    el('audioEffective').textContent    = fmt(dec.effective);
+  if (el('audioReason'))       el('audioReason').textContent       = fmt(dec.reason);
+  if (el('audioSource'))       el('audioSource').textContent       = fmt(dec.source);
+  if (el('audioRuntimeSink'))  el('audioRuntimeSink').textContent  = fmt(dec.sink);
+  if (el('audioVerify'))       el('audioVerify').textContent       = fmt(data.verify);
 
-  const btSink = sinks.find(s => s.type === 'bt');
-  const alsaSink = sinks.find(s => s.type === 'alsa');
-
-  document.getElementById('audioBtSink').textContent = btSink ? `✓ ${btSink.name.replace('alsa_output.', '').replace('bluez_sink.', '')}` : '– kein A2DP';
-  document.getElementById('audioAlsaSink').textContent = alsaSink ? `✓ ${alsaSink.name.replace('alsa_output.', '')}` : '–';
-
-  document.getElementById('audioRequested').textContent = dec.requested || '–';
-  document.getElementById('audioEffective').textContent = dec.effective || '–';
-  document.getElementById('audioReason').textContent = dec.reason || '–';
-  document.getElementById('audioSource').textContent = dec.source || '–';
-  document.getElementById('audioRuntimeSink').textContent = dec.runtime_sink || dec.sink || '–';
-  document.getElementById('audioVerify').textContent =
-    (dec.verify_ok === true) ? '✓ OK' : (dec.verify_reason || '–');
-
-  if (!ins.length) {
-    document.getElementById('audioInputsBox').textContent = '– keine aktiven Inputs –';
-  } else {
-    let html = '<table style="width:100%;font-size:13px;border-collapse:collapse">';
-    html += '<tr><th>ID</th><th>Sink</th><th>App</th><th>Binary</th><th>PID</th></tr>';
-    for (const row of ins) {
-      html += `<tr>
-        <td>${row.id || ''}</td>
-        <td>${row.sink || ''}</td>
-        <td>${row.application_name || row.client || '–'}</td>
-        <td>${row.process_binary || '–'}</td>
-        <td>${row.process_id || '–'}</td>
-      </tr>`;
+  if (el('audioInputsBox')) {
+    if (!inp.length) { el('audioInputsBox').textContent = '– keine aktiven Inputs –'; }
+    else {
+      el('audioInputsBox').innerHTML = `<table class="sink-table"><tr><th>ID</th><th>Sink</th><th>App</th><th>Binary</th><th>PID</th></tr>` +
+        inp.map(i => `<tr><td>${i.id||'–'}</td><td>${i.sink_id||'–'}</td><td>${i.app_name||'–'}</td><td>${i.binary||'–'}</td><td>${i.pid||'–'}</td></tr>`).join('') +
+        `</table>`;
     }
-    html += '</table>';
-    document.getElementById('audioInputsBox').innerHTML = html;
   }
-
-  if (!sinks.length) {
-    document.getElementById('audioSinksBox').textContent = '– keine –';
-  } else {
-    const lines = sinks.map(s => {
-      const mark = d.default_sink === s.name ? ' ◀ default' : '';
-      return `[${s.id}] ${s.name}${mark}`;
-    });
-    document.getElementById('audioSinksBox').innerHTML =
-      '<pre style="min-height:0;margin:0">' + lines.join('\n') + '</pre>';
+  if (el('audioSinksBox')) {
+    el('audioSinksBox').innerHTML = sinks.map((s,i) =>
+      `<span style="color:${s.type==='bt'?'#58a6ff':s.type==='alsa'?'#3fb950':'#f0883e'}">[${i}] ${s.name.replace('alsa_output.','')}</span>`
+    ).join('<br>') || '–';
   }
 }
 
 async function refreshAudio() {
   try {
-    const r = await fetch('/api/audio');
-    const j = await r.json();
-    renderAudio((j && j.data) || {});
-  } catch (e) {
-    console.warn('refreshAudio', e);
-  }
+    const r = await fetch('/api/audio_debug'); const j = await r.json();
+    renderAudio(j.data || {});
+  } catch(e) {}
 }
 
 function renderProcesses(items) {
-  const el = document.getElementById('runtimeProcessesBox');
-  if (!el) return;
-  if (!items || !items.length) {
-    el.innerHTML = '– keine –';
-    return;
-  }
-  el.innerHTML = '<ul class="diag-proc-list">' +
-    items.map(x => `<li>${x}</li>`).join('') + '</ul>';
+  // Not shown in new layout, noop
 }
 
 function sortKnownBtDevices(devs) {
-  return [...(devs || [])].sort((a, b) => {
-    const ka = [
-      a.connected ? 0 : 1,
-      a.paired ? 0 : 1,
-      a.known ? 0 : 1,
-      (a.name || '').toLowerCase(),
-      a.mac || ''
-    ];
-    const kb = [
-      b.connected ? 0 : 1,
-      b.paired ? 0 : 1,
-      b.known ? 0 : 1,
-      (b.name || '').toLowerCase(),
-      b.mac || ''
-    ];
-    for (let i = 0; i < ka.length; i++) {
-      if (ka[i] < kb[i]) return -1;
-      if (ka[i] > kb[i]) return 1;
-    }
-    return 0;
-  });
+  const arr = Object.entries(devs || {});
+  arr.sort((a,b) => (b[1].paired?1:0) - (a[1].paired?1:0));
+  return arr;
 }
 
 function renderKnownBtDevices(data) {
   const el = document.getElementById('knownBtDevicesBox');
   if (!el) return;
-
-  const devs = sortKnownBtDevices((data && data.devices) || []);
-  if (!devs.length) {
-    el.innerHTML = '– keine –';
-    document.getElementById('btBackupState').textContent = '…';
-    document.getElementById('btBackupDate').textContent = '–';
-    document.getElementById('btBackupDevices').textContent = '–';
-    return;
-  }
-
-  let html = '<div class="diag-list">';
-  for (const d of devs) {
-    const mac = d.mac || '?';
-    const name = d.name || mac;
-    const badges = [];
-    if (d.connected) badges.push('<span class="diag-chip ok">verbunden</span>');
-    if (d.paired) badges.push('<span class="diag-chip ok">paired</span>');
-    if (d.known) badges.push('<span class="diag-chip warn">known</span>');
-    html += `
-      <div class="diag-row">
-        <div class="diag-key">${name}<br><span class="diag-muted">${mac}</span></div>
-        <div class="diag-value">
-          ${badges.join(' ')}
-          <div class="diag-actions" style="margin-top:8px;justify-content:flex-end">
-            <button onclick="connectKnownBtDevice('${mac}')">🔗 Verbinden</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  html += '</div>';
-  el.innerHTML = html;
-
-  document.getElementById('btBackupState').textContent = `✓ ${devs.length} bekannt`;
-  document.getElementById('btBackupDate').textContent = 'Datei /tmp/pidrive_bt_known_devices.json';
-  document.getElementById('btBackupDevices').textContent = devs.map(d => d.name || d.mac).slice(0, 4).join(', ');
+  const devs = data.devices || (Array.isArray(data) ? data : []);
+  if (!devs.length && !Object.keys(data||{}).length) { el.textContent = '– keine –'; return; }
+  const entries = Array.isArray(devs) ? devs.map(d=>[d.mac, d]) : sortKnownBtDevices(data);
+  const btBackup = document.getElementById('btBackupDevices');
+  if (btBackup) btBackup.textContent = entries.length;
+  el.innerHTML = entries.map(([mac, info]) => {
+    const paired = info.paired ? 'paired known' : 'known';
+    return `<div style="padding:4px 0;border-bottom:1px solid #111b22">
+      <strong>${info.name||mac}</strong><br>
+      <span style="font-size:11px;color:#8aa5bb">${mac}<br>${paired}</span>
+      <button onclick="connectKnownBtDevice('${mac}')" style="margin-left:8px;font-size:11px">🔗 Verbinden</button>
+    </div>`;
+  }).join('');
+  const bsEl = document.getElementById('btBackupState');
+  if (bsEl) bsEl.textContent = `✓ ${entries.length} bekannt`;
+  const bdEl = document.getElementById('btBackupDate');
+  if (bdEl) bdEl.textContent = 'Datei /tmp/pidrive_bt_known_devices.json';
 }
 
-async function connectKnownBtDevice(mac) {
-  try {
-    const r = await fetch('/api/bt/connect_known', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({mac})
-    });
-    const j = await r.json();
-    if (!j.ok) {
-      alert('BT Connect Fehler: ' + (j.error || '?'));
-      return;
-    }
-    alert('BT-Verbindung angestoßen: ' + mac);
-  } catch (e) {
-    console.warn('connectKnownBtDevice', e);
-    alert('BT-Verbindung fehlgeschlagen');
-  }
-}
+async function connectKnownBtDevice(mac) { sendCmd('bt_connect:' + mac); }
 
 async function refreshKnownBtDevices() {
   try {
-    const r = await fetch('/api/bt/known');
-    const j = await r.json();
-    renderKnownBtDevices((j && j.data) || {});
-  } catch (e) {
-    console.warn('refreshKnownBtDevices', e);
-  }
+    const r = await fetch('/api/bt_known_devices'); const j = await r.json();
+    renderKnownBtDevices(j.data || {});
+  } catch(e) {}
 }
 
 async function refreshBtAgent() {
-  try {
-    const r = await fetch('/api/bt/agent');
-    const j = await r.json();
-    const data = (j && j.data) || {};
-    if (data.running) {
-      setStatusBar(`BT-Agent läuft (PID ${data.pid || 0}) | ready=${data.ready} | health=${data.health_ok}`);
-    }
-  } catch (e) {
-    console.warn('refreshBtAgent', e);
-  }
+  // Agent shown in banner — noop here
 }
 
 function renderDabScanTable(data) {
-  const root = document.getElementById('dabScanDiagTable');
-  const compact = document.getElementById('dabScanCompactBox');
-  if (!root) return;
-
-  const channels = (data && data.channels) || {};
-  const keys = Object.keys(channels);
-
-  if (!keys.length) {
-    root.innerHTML = '<div class="diag-note">Noch kein Scan-Ergebnis.</div>';
-    if (compact) compact.innerHTML = '–';
+  const box = document.getElementById('dabScanTableBox');
+  if (!box) return;
+  const chs = data.channels || {};
+  if (!Object.keys(chs).length) {
+    const txt = document.getElementById('dabScanDiagText');
+    if (txt) txt.textContent = '–';
     return;
   }
-
-  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
-  html += '<tr><th style="text-align:left">Kanal</th><th>SNR</th><th>FIC CRC</th><th>lastFCT0</th><th>Lock</th><th>Svcs</th><th>Ensemble</th></tr>';
-
-  let compactLines = [];
-  for (const ch of keys.sort()) {
-    const r = channels[ch] || {};
-    const snr = (r.snr ?? 0);
-    const fic = (r.ficcrc ?? '-');
-    const fct0 = (r.lastfct0 ?? '-');
-    const lock = (r.lock_state || '–');
-    const svc = (r.services ?? 0);
-    const ens = ((r.ensemble || '').trim() || '–');
-    const mark = svc > 0 ? '✅' : (snr >= 2 ? '⚠' : '–');
-
-    html += `<tr>
-      <td>${mark} ${ch}</td>
-      <td>${snr}</td>
-      <td>${fic}</td>
-      <td>${fct0}</td>
-      <td>${lock}</td>
-      <td>${svc}</td>
-      <td>${ens}</td>
+  const rows = Object.entries(chs).map(([ch, info]) => {
+    const ok = info.lock_state === 'services_found';
+    const names = (info.service_names || []).join(', ');
+    return `<tr>
+      <td>${ok?'✅':'⚠'} ${ch}</td>
+      <td>${info.snr??'–'}</td>
+      <td>${info.ficcrc??'–'}</td>
+      <td>${info.lastfct0??'–'}</td>
+      <td>${info.lock_state||'–'}</td>
+      <td>${info.services??'–'}</td>
+      <td>${info.ensemble||'–'}</td>
     </tr>`;
-
-    const names = (r.service_names || []).join(', ');
-    compactLines.push(`${svc > 0 ? '✓' : '~'} ${ch}: snr=${snr} ficcrc=${fic} svc=${svc}${names ? ' ' + names : ''}`);
-  }
-  html += '</table>';
-  root.innerHTML = html;
-
-  if (compact) {
-    compact.innerHTML =
-      `Scan ts: ${data.ts || '-'} | WAIT_LOCK: ${data.wait_lock || '-'}s\n\n` +
-      compactLines.join('\n');
-  }
+  }).join('');
+  box.innerHTML = `<table class="sink-table">
+    <tr><th>Kanal</th><th>SNR</th><th>FIC CRC</th><th>lastFCT0</th><th>Lock</th><th>Svcs</th><th>Ensemble</th></tr>
+    ${rows}
+  </table>`;
+  // Diagnose text
+  const diagTxt = Object.entries(chs).map(([ch, info]) => {
+    const ok = info.lock_state === 'services_found';
+    const names = (info.service_names || []).join(', ');
+    return `${ok?'✓':'✗'} ${ch}: snr=${info.snr} ficcrc=${info.ficcrc} svc=${info.services} ${names}`;
+  }).join(' ');
+  const txt = document.getElementById('dabScanDiagText');
+  if (txt && data.ts) txt.textContent = `Scan ts: ${data.ts} | WAIT_LOCK: ${data.wait_lock}s ${diagTxt}`;
+  const jsEl = document.getElementById('dabScanJson');
+  if (jsEl) jsEl.textContent = JSON.stringify(data, null, 2);
 }
 
 function renderSpectrumCandidates(data) {
-  const root = document.getElementById('spectrumCandidatesTable');
-  if (!root) return;
-  const cand = (data && data.candidates) || [];
-  if (!cand.length) {
-    root.innerHTML = '–';
-    return;
-  }
-  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
-  html += '<tr><th style="text-align:left">Freq MHz</th><th>dB</th><th>Hits</th></tr>';
-  for (const c of cand.slice(0, 20)) {
-    html += `<tr><td>${c.freq_mhz ?? '–'}</td><td>${c.db ?? '–'}</td><td>${c.hits ?? '–'}</td></tr>`;
-  }
-  html += '</table>';
-  root.innerHTML = html;
+  const el = document.getElementById('spectrumCandidates');
+  if (!el) return;
+  const cands = data.candidates || [];
+  el.textContent = cands.length ? cands.map(c=>`${c.freq_mhz} MHz (${c.power_db} dB)`).join('  ') : '–';
 }
 
 async function refreshRuntimePanel() {
   try {
-    const r = await fetch('/api/runtime');
-    const j = await r.json();
-    const s = (j && j.settings) || {};
-
-    document.getElementById('rt_audio_output').textContent = s.audio_output ?? '–';
-    document.getElementById('rt_volume').textContent = s.volume ?? '–';
-    document.getElementById('rt_fm_gain').textContent = s.fm_gain ?? '–';
-    document.getElementById('rt_dab_gain').textContent = s.dab_gain ?? '–';
-    document.getElementById('rt_scanner_gain').textContent = s.scanner_gain ?? '–';
-    document.getElementById('rt_ppm').textContent = s.ppm_correction ?? '–';
-    document.getElementById('rt_squelch').textContent = s.scanner_squelch ?? '–';
-    document.getElementById('rt_last_source').textContent = s.last_source ?? '–';
-    document.getElementById('rt_dab_wait_lock').textContent = s.dab_scan_wait_lock ?? '–';
-    document.getElementById('rt_dab_http_timeout').textContent = s.dab_scan_http_timeout ?? '–';
-    document.getElementById('rt_dab_scan_port').textContent = s.dab_scan_port ?? '–';
-    document.getElementById('rt_dab_scan_channels').textContent =
-      Array.isArray(s.dab_scan_channels) ? s.dab_scan_channels.join(', ') : (s.dab_scan_channels || '–');
-
-    document.getElementById('sourceStateJson').textContent =
-      JSON.stringify((j && j.source_state) || {}, null, 2);
-
-    renderProcesses((j && j.processes) || []);
-    renderKnownBtDevices((j && j.known_bt_devices) || {});
-    renderDabScanTable((j && j.dab_scan_debug) || {});
-    renderSpectrumCandidates((j && j.spectrum_debug) || {});
-
-    renderAudio((j && j.audio) || {});
-    renderRuntimeInfo(vmLast || {});
-  } catch (e) {
-    console.warn('refreshRuntimePanel', e);
-  }
+    const r = await fetch('/api/runtime'); const j = await r.json();
+    const s = j.settings || {};
+    const map = {
+      rt_audio_output: s.audio_output, rt_volume: s.volume,
+      rt_fm_gain: s.fm_gain, rt_dab_gain: s.dab_gain,
+      rt_scanner_gain: s.scanner_gain, rt_ppm: s.ppm_correction,
+      rt_squelch: s.squelch, rt_last_source: s.last_source,
+      rt_dab_wait_lock: s.dab_scan_wait_lock,
+      rt_dab_http_timeout: s.dab_scan_http_timeout,
+      rt_dab_scan_port: s.dab_scan_port, rt_dab_channels: s.dab_channels
+    };
+    Object.entries(map).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val ?? '–';
+    });
+    const ssEl = document.getElementById('sourceStateJson');
+    if (ssEl) ssEl.textContent = JSON.stringify(j.source_state || {}, null, 2);
+  } catch(e) {}
 }
 
 async function refreshDabScanDebug() {
   try {
-    const r = await fetch('/api/dab/scan/last');
-    const j = await r.json();
-    const d = (j && j.data) || {};
-    document.getElementById('dabScanDebugJson').textContent = JSON.stringify(d, null, 2);
-    renderDabScanTable(d);
-  } catch (e) {
-    console.warn('refreshDabScanDebug', e);
-  }
+    const r = await fetch('/api/dab_scan_debug'); const j = await r.json();
+    renderDabScanTable(j.data || {});
+  } catch(e) {}
 }
 
 async function refreshSpectrumDebug() {
   try {
-    const r = await fetch('/api/spectrum/last');
-    const j = await r.json();
-    const d = (j && j.data) || {};
-    document.getElementById('spectrumDebugJson').textContent = JSON.stringify(d, null, 2);
-    renderSpectrumCandidates(d);
-  } catch (e) {
-    console.warn('refreshSpectrumDebug', e);
-  }
+    const r = await fetch('/api/spectrum_debug'); const j = await r.json();
+    renderSpectrumCandidates(j.data || {});
+  } catch(e) {}
 }
 
 async function saveDabScanSettings() {
-  const payload = {
-    dab_scan_wait_lock: parseInt(document.getElementById('dabWaitLockInput').value || '20', 10),
-    dab_scan_http_timeout: parseInt(document.getElementById('dabHttpTimeoutInput').value || '4', 10),
-    dab_scan_port: parseInt(document.getElementById('dabScanPortInput').value || '7981', 10),
-    dab_scan_channels: (document.getElementById('dabScanChannelsInput').value || '')
-      .split(',').map(x => x.trim()).filter(Boolean)
+  const data = {
+    dab_scan_wait_lock: parseInt(document.getElementById('dabWaitLock').value)||20,
+    dab_scan_http_timeout: parseInt(document.getElementById('dabHttpTimeout').value)||4,
+    dab_scan_port: parseInt(document.getElementById('dabScanPort').value)||7981,
+    dab_channels: document.getElementById('dabChannels').value || '11D,10A,11B'
   };
-  try {
-    const r = await fetch('/api/dab/scan/settings', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const j = await r.json();
-    alert(j.ok ? 'DAB-Scan-Settings gespeichert' : ('Fehler: ' + (j.error || '?')));
-  } catch (e) {
-    console.warn('saveDabScanSettings', e);
-    alert('DAB-Settings konnten nicht gespeichert werden');
-  }
+  await fetch('/api/dab/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
 }
 
 async function loadDabScanSettings() {
   try {
-    const r = await fetch('/api/dab/scan/settings');
-    const j = await r.json();
-    const d = (j && j.data) || {};
-    document.getElementById('dabWaitLockInput').value = d.dab_scan_wait_lock ?? 20;
-    document.getElementById('dabHttpTimeoutInput').value = d.dab_scan_http_timeout ?? 4;
-    document.getElementById('dabScanPortInput').value = d.dab_scan_port ?? 7981;
-    document.getElementById('dabScanChannelsInput').value =
-      Array.isArray(d.dab_scan_channels) ? d.dab_scan_channels.join(', ') : '';
-  } catch (e) {
-    console.warn('loadDabScanSettings', e);
-  }
+    const r = await fetch('/api/runtime'); const j = await r.json();
+    const s = j.settings || {};
+    const map = {dabWaitLock: s.dab_scan_wait_lock, dabHttpTimeout: s.dab_scan_http_timeout,
+                  dabScanPort: s.dab_scan_port, dabChannels: s.dab_channels};
+    Object.entries(map).forEach(([id,val]) => { const el = document.getElementById(id); if(el&&val!=null) el.value=val; });
+  } catch(e) {}
 }
 
-async function startDabScanMerge() {
-  const r = await fetch('/api/cmd', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({cmd: 'dab_scan'})
-  });
-  const j = await r.json();
-  if (!j.ok) alert('DAB Merge-Scan Fehler');
-}
-
-async function startDabScanReplace() {
-  const r = await fetch('/api/cmd', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({cmd: 'dab_scan_replace'})
-  });
-  const j = await r.json();
-  if (!j.ok) alert('DAB Replace-Scan Fehler');
-}
-
-async function startDabDiag() {
-  const ch = prompt('DAB-Kanal eingeben (z.B. 11D):', '11D');
-  if (!ch) return;
-  const r = await fetch('/api/dab/diag?channel=' + encodeURIComponent(ch) + '&port=7979');
-  const j = await r.json();
-  alert(j.ok ? (j.note || 'DAB Diagnose gestartet') : ('Fehler: ' + (j.error || '?')));
-}
-
-async function stopDabDiag() {
-  const r = await fetch('/api/dab/diag/stop');
-  const j = await r.json();
-  alert(j.ok ? 'DAB Diagnose gestoppt' : 'Fehler');
-}
-
+async function startDabScanMerge()   { sendCmd('dab_scan'); }
+async function startDabScanReplace() { await fetch('/api/dab/scan/replace',{method:'POST'}); }
+async function startDabDiag()        { sendCmd('dab_diag_start'); }
+async function stopDabDiag()         { sendCmd('dab_diag_stop'); }
 async function captureSpectrum() {
-  alert('Spectrum-Capture-Backend hier noch nicht verdrahtet.');
+  const c = document.getElementById('specCenter').value;
+  const p = document.getElementById('specPpm').value;
+  const g = document.getElementById('specGain').value;
+  await fetch(`/api/spectrum?center=${c}&ppm=${p}&gain=${g}`,{method:'POST'});
+  setTimeout(refreshSpectrumDebug, 35000);
 }
-
 async function captureSweep() {
-  alert('Spectrum-Sweep-Backend hier noch nicht verdrahtet.');
+  const range = document.getElementById('sweepRange').value;
+  const step  = document.getElementById('sweepStep').value;
+  await fetch(`/api/spectrum/sweep?range=${range}&step=${step}`,{method:'POST'});
+  setTimeout(refreshSpectrumDebug, 60000);
 }
 
 async function refreshVolume() {
   try {
-    const r = await fetch('/api/volume');
-    const j = await r.json();
-    document.getElementById('volumeCurrent').textContent =
-      `${(j && j.volume) || '–'}${(j && j.sink) ? '  [' + j.sink + ']' : ''}`;
-  } catch (e) {
-    console.warn('refreshVolume', e);
-  }
+    const r = await fetch('/api/volume'); const j = await r.json();
+    const el = document.getElementById('volumeCurrent');
+    if (el) el.textContent = j.volume + (j.sink ? ' ['+j.sink.replace('alsa_output.','').replace('.stereo-fallback','')+']' : '');
+  } catch(e) {}
 }
 
-let vmLast = {{ vm | tojson }};
-
+// ── Menu Tree live ─────────────────────────────────────────────────────────
 function renderMenuTree(vm) {
   const wrap = document.getElementById('menuTreeWrap');
   if (!wrap) return;
@@ -1169,23 +967,17 @@ function renderMenuTree(vm) {
   const cursor = vm.cursor || 0;
   const canBack = vm.can_back || false;
   const icons  = {folder:'▸', station:'♪', action:'→', toggle:'◉', info:'ℹ', value:'±'};
-  let html = '<div class="breadcrumb">';
-  if (canBack) html += '<span class="back-btn">◄</span> ';
-  html += path.join(' › ');
-  html += '</div>';
+  let html = `<div class="breadcrumb">${canBack?'<span class="back-btn">◄</span> ':''}${path.join(' › ')}</div>`;
   if (nodes.length) {
     nodes.forEach((n, i) => {
       const ntype = n.type || 'folder';
-      const label = n.label || '?';
-      const active = n.active || false;
-      const hasCh  = n.has_children || false;
-      const sel    = (i === cursor) ? ' selected' : '';
-      const play   = active ? ' playing' : '';
-      html += `<div class="tree-item type-${ntype}${sel}${play}">`;
-      html += `<span class="node-icon">${icons[ntype] || '▸'}</span>`;
-      html += `<span class="node-label">${label}</span>`;
-      if (hasCh) html += '<span class="node-arrow">›</span>';
-      html += '</div>';
+      const sel  = (i === cursor) ? ' selected' : '';
+      const play = n.active ? ' playing' : '';
+      html += `<div class="tree-item type-${ntype}${sel}${play}">
+        <span class="node-icon">${icons[ntype]||'▸'}</span>
+        <span class="node-label">${n.label||'?'}</span>
+        ${n.has_children ? '<span class="node-arrow">›</span>' : ''}
+      </div>`;
     });
   } else {
     html += '<div class="tree-item type-info"><span class="node-icon">ℹ</span><span class="node-label">Keine Daten</span></div>';
@@ -1193,55 +985,51 @@ function renderMenuTree(vm) {
   wrap.innerHTML = html;
 }
 
-async function refreshAll() {
+// ── Core refresh (fast, Tab 1 only) ───────────────────────────────────────
+async function refreshCore() {
   try {
     const r = await fetch('/api/state');
     vmLast = await r.json();
     renderMenuTree(vmLast);
     renderRuntimeInfo(vmLast);
     setStatusBar(
-      `PiDrive | Rev=${vmLast?.debug?.rev || 0} | Pfad=${(vmLast?.path || ['PiDrive']).join(' › ')} | ` +
-      `Status=${vmLast?.debug?.status_age ?? '?'}s | Menü=${vmLast?.debug?.menu_age ?? '?'}s`
+      `PiDrive | Rev=${vmLast?.debug?.rev||0} | Pfad=${(vmLast?.path||['PiDrive']).join(' › ')} | ` +
+      `Status=${vmLast?.debug?.status_age??'?'}s | Menü=${vmLast?.debug?.menu_age??'?'}s`
     );
-    refreshRuntimePanel();
-    refreshRtlsdr();
-    refreshAvrcp();
-    refreshGain();
-    refreshAudio();
-    refreshVolume();
-    refreshBtAgent();
-    // BT-Icon live aktualisieren (dreistufig: grau/blau/grün)
+    // BT icon
     const st = vmLast.status || {};
     const btEl = document.getElementById('flagBT');
-    if (btEl) {
-      btEl.className = 'flag ' + (st.bt ? 'bt-connected' : st.bt_on ? 'bt-on' : 'off');
-    }
-  } catch (e) {
-    console.warn('refreshAll', e);
-  }
+    if (btEl) btEl.className = 'flag ' + (st.bt ? 'bt-connected' : st.bt_on ? 'bt-on' : 'off');
+  } catch(e) { console.warn('refreshCore', e); }
 }
+
+// ── Slow refresh (active tab dependent) ───────────────────────────────────
+async function refreshActive() {
+  refreshCore();  // always fast
+  if (activeTab === 't2') { refreshAudio(); refreshVolume(); }
+  if (activeTab === 't3') { refreshRtlsdr(); refreshAvrcp(); }
+  if (activeTab === 't4') { refreshRuntimePanel(); }
+}
+
+// ── Legacy alias ──────────────────────────────────────────────────────────
+async function refreshAll() { return refreshActive(); }
 
 document.addEventListener('DOMContentLoaded', () => {
   renderRuntimeInfo(vmLast);
-  setStatusBar(
-    `PiDrive | Rev=${vmLast?.debug?.rev || 0} | Pfad=${(vmLast?.path || ['PiDrive']).join(' › ')} | ` +
-    `Status=${vmLast?.debug?.status_age ?? '?'}s | Menü=${vmLast?.debug?.menu_age ?? '?'}s`
-  );
-
+  setStatusBar(`PiDrive | Rev=${vmLast?.debug?.rev||0} | Pfad=${(vmLast?.path||['PiDrive']).join(' › ')} | Status=…s | Menü=…s`);
   renderRtlsdr(vmLast.rtlsdr || {});
   renderAvrcp(vmLast.avrcp || {}, vmLast.avrcp_age);
   renderAudio(vmLast.audio_debug || {});
   renderDabScanTable(vmLast.dab_scan_debug || {});
   renderSpectrumCandidates(vmLast.spectrum_debug || {});
   renderKnownBtDevices(vmLast.known_bt_devices || {});
-  renderProcesses(vmLast.status?.processes || []);
-
   refreshGain();
   loadDabScanSettings();
   refreshVolume();
-  refreshBtAgent();
 
-  setInterval(refreshAll, 5000);
+  // Tab 1: fast poll 1.5s, other tabs: 5s
+  setInterval(refreshCore, 1500);
+  setInterval(refreshActive, 5000);
 });
 </script>
 </body>
