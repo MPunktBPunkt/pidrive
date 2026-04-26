@@ -229,10 +229,13 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
     freq_hz = int(freq_mhz * 1e6)
     sr = max(48000, bandwidth_hz * 4)
     try:
+        # v0.9.22: ALSA direkt wie FM (kein PulseAudio-Resampling für raw PCM)
+        from modules.audio import _get_headphone_card as _ghc2
+        _sc = _ghc2()
         cmd = (f"rtl_fm -M fm -f {freq_hz} -s {bandwidth_hz}{_ppm_arg}{_gain_arg} -r {sr} - 2>/dev/null | "
                f"mpv --no-video --really-quiet --title=pidrive_scanner "
                f"--demuxer=rawaudio --demuxer-rawaudio-rate={sr} "
-               f"--demuxer-rawaudio-channels=1 --ao=pulse - 2>/dev/null")
+               f"--demuxer-rawaudio-channels=1 --ao=alsa --alsa-device=hw:{_sc},0 - 2>/dev/null")
         if _rtlsdr:
             usb = _rtlsdr.detect_usb()
             if not usb.get("present"):

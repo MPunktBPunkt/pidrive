@@ -457,27 +457,12 @@ def play_station(station, S, settings=None):
         _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
         _name_q  = shlex.quote(name)
 
-        # v0.9.21: welle-cli -p "NAME" → lokaler ALSA-Output (kein HTTP-Server, kein mpv)
-        # welle-cli decodiert DAB und spielt direkt via ALSA ab.
-        # PulseAudio routet das automatisch: Klinke wenn kein BT, BT-A2DP wenn verbunden.
-        # Identisch zu FM (rtl_fm) und Webradio — alles läuft durch PulseAudio.
-        #
-        # Env: PULSE_SERVER damit PulseAudio als root-Prozess gefunden wird
-        # PULSE_SINK: gewünschter Sink (Klinke oder BT)
-        _pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
-        if _mpv_env and "PULSE_SINK=" in _mpv_env:
-            # BT-Modus: Sink aus Audio-Routing übernehmen
-            for _kv in _mpv_env.split():
-                if _kv.startswith("PULSE_SINK="):
-                    _pulse_env += " " + _kv
-        else:
-            # Klinke-Modus: Card 1
-            from modules.audio import _get_headphone_card as _ghc
-            _card = _ghc()
-            _pulse_env += f" PULSE_SINK=alsa_output.{_card}.stereo-fallback"
-
+        # v0.9.22: welle-cli OHNE PulseAudio-Env starten.
+        # PULSE_SERVER/PULSE_SINK verursachen bei RTL2838 einen OFDM-Sync-Fehler.
+        # welle-cli läuft via ALSA → PulseAudio routet automatisch (Klinke oder BT).
+        # Das ist identisch zum manuellen Start der funktioniert:
+        #   welle-cli -c 10A -p "NAME"  (kein PULSE_SERVER, kein PULSE_SINK)
         _welle_cmd = (
-            _pulse_env + " " +
             "welle-cli -c " + ch + " -g " + _gain +
             " -p " + _name_q +
             " < /dev/null" +
@@ -487,7 +472,6 @@ def play_station(station, S, settings=None):
         log.info(f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain}")
         if _ppm_val != 0:
             log.info(f"DAB play: PPM konfiguriert: {_ppm_val} ppm")
-        log.info(f"DAB play: CMD {_welle_cmd[:120]}")
 
         if _rtlsdr:
             try:
@@ -516,6 +500,8 @@ def play_station(station, S, settings=None):
                     log.info("DAB welle-cli: " + _ln[:200])
         except Exception:
             pass
+
+
 
         S["radio_playing"] = True
         S["radio_station"] = "DAB: " + name
