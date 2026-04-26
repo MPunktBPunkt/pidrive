@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.20
+# PiDrive — Kontext & Projektdokumentation v0.9.21
 
 ## Projektbeschreibung
 
@@ -922,7 +922,42 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.9.20 — FM/DAB: --ao=alsa direkt (PulseAudio-Pipe-Problem)
+### v0.9.21 — DAB: welle-cli -p ALSA-direkt, BT-Scan fix
+
+| # | Datei | Fix |
+|---|---|---|
+| 1 | `modules/dab.py` | `welle-cli -p "NAME"` → direkte ALSA/PulseAudio-Ausgabe (kein HTTP-Modus) |
+| 2 | `modules/bluetooth.py` | BT Scan: `scan on`/`scan off` statt printf-Pipe (findet jetzt neue Geräte) |
+| 3 | `modules/dab.py` | Scan: `url_mp3` nicht mehr befüllen (HTTP-Modus obsolet) |
+
+**Geänderte Dateien:** `modules/dab.py`, `modules/bluetooth.py`, `VERSION`
+
+---
+
+### v0.9.20 — WebUI Tabs, DLS-Fix, HTTP-Timeout 15s
+
+**WebUI in 4 Tabs:**
+- Tab 1 Steuerung: Menü-Baum, Now Playing, Nav-Buttons, Rohdaten — 1.5s Poll
+- Tab 2 Audio: Lautstärke, Gain, PPM, Squelch, BT Backup, Audio Debug — 5s Poll aktiv
+- Tab 3 DAB/FM: RTL-SDR, AVRCP, DAB Scan, Spektrum — 5s Poll aktiv
+- Tab 4 Log & Debug: Logs, Runtime Settings, Source State — 5s Poll aktiv
+
+**Fixes:** `_time.sleep(8)` → `_tm.sleep(8)` (NameError); HTTP-Timeout 8s → 15s.
+
+**Geänderte Dateien:** `web/templates/index.html`, `modules/dab.py`, `VERSION`
+
+---
+
+### v0.9.19 — FM/DAB: --ao=alsa direkt (PulseAudio-Pipe-Problem)
+
+PulseAudio `--system` resampled raw PCM aus Pipes nicht zuverlässig → stille Ausgabe trotz Sink-Input.
+Fix: `--ao=alsa --alsa-device=hw:N,0` für FM; DAB noch im HTTP-Modus (erst v0.9.21 korrekt).
+
+**Geänderte Dateien:** `modules/audio.py`, `modules/fm.py`, `modules/dab.py`, `VERSION`
+
+---
+
+### v0.9.21 — FM/DAB: --ao=alsa direkt (PulseAudio-Pipe-Problem)
 
 **Root Cause FM/DAB kein Ton:**
 PulseAudio `--system` Mode hat Resampling-Probleme mit raw PCM aus stdout-Pipes
@@ -2223,54 +2258,39 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.20)
+## Aktueller Stand (v0.9.21)
 
-**System läuft stabil** — 16.04.2026:
+**System läuft stabil** — 26.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.20 — WebUI Tabs, DLS-Fix, HTTP-Timeout 15s
-✓ pidrive_display.service   v0.9.20, 20fps
-✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
-✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
-✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
-✓ modules/spectrum.py       Phase 2: _dedupe_peaks, min_distance_bins; Kandidaten-UI (v0.9.6)
-✓ config/settings.json      v0.9.5: alle DAB-Scan-Settings, ppm=49, dab_gain=-1
-✓ diagnose.py               amixer Hex-Parse-Fix, Default-Sink Fallback via pactl info
-✓ webui.py                  /api/runtime, /api/dab/diag, get_settings_debug()
-✓ index.html                DAB Diagnose Button, refreshRuntime() JS
-✓ pidrive_web.service       http://<PI-IP>:8080 + RTL-SDR + AVRCP + Audio Debug Cockpit
-✓ audio.py                  Audio-State-File /tmp/pidrive_audio_state.json (v0.8.13)
-✓ webui.py                  Audio Debug liest aus State-File statt Modulzustand
-✓ scanner.py                _scan_abort Flag — kein Status-Überschreiben mehr
-✓ bluetooth.py              Scanner stoppen vor BT-Connect, Disconnect vor Connect
-✓ main_core.py              Status-Felder in _stop_all_sources() geleert
-✓ install.sh                WebUI Import-Smoke-Test (verhindert v0.8.12-Strukturfehler)
-✓ pidrive_avrcp.service     BMW iDrive AVRCP 1.5, Debug-JSON sofort sichtbar
-✓ pulseaudio.service        BT A2DP Audio — systemweiter Daemon
-✓ audio.py                  Zielarchitektur Option B: alle Quellen über systemweiten PulseAudio
-✓ audio.py                  Strict Mode: kein ALSA-Fallback, effective=none bei inaktivem PA
-✓ fm.py                     FM einheitlich über mpv --ao=pulse, Strict Mode Guard
-✓ dab.py                    welle-cli -p PROGRAMMNAME, Strict Mode Guard
-✓ webradio.py               Strict Mode Guard bei PulseAudio inaktiv
-✓ diagnose.py               Versionsstring v0.7.10 → v0.8.12
-✓ webui.py                  build_view_model() Strukturfehler behoben (WebUI-Absturz)
-✓ webui.py                  get_audio_debug(): Sinks + Sink-Inputs + Prozessnamen
-✓ index.html                Audio Debug Cockpit: Sink-Inputs-Tabelle mit App/Binary/PID
-✓ main_core.py              Versionsstring v0.8.6 → v0.8.12 (korrekt)
-✓ main_display.py           Versionsstring v0.8.9 → v0.8.12 (korrekt)
-✓ pidrive_car_only_cleanup.sh  Car-Only Cleanup Script — gehärtet (pkill -9, linger, Overrides)
-✓ install.sh                Optionaler Car-Only Cleanup + Raspotify auf PulseAudio umgestellt
-✓ AVRCP kontextsensitiv     menu / radio / scanner / list_overlay
-✓ Favoriten                 FM/DAB+/Webradio, config/favorites.json
-✓ Senderlisten Memmingen    24 FM + 15 DAB+ Sender für Raum Memmingen/Allgäu
+✓ pidrive_core.service      v0.9.21 — DAB: welle-cli -p ALSA-direkt, BT-Scan fix
+✓ pidrive_display.service   v0.9.21, 20fps
+✓ modules/dab.py            welle-cli -p → ALSA direkt (kein HTTP-Modus)
+✓ modules/fm.py             rtl_fm | mpv --ao=alsa hw:1,0
+✓ modules/bluetooth.py      BT Scan: scan on/off; BT Agent persistent
+✓ modules/audio.py          get_mpv_args: ALSA für FM/DAB, PulseAudio für Webradio/BT
+✓ webui.py                  4-Tab WebUI, 1.5s Poll Tab 1
+✓ web/templates/index.html  Tabs: Steuerung / Audio / DAB+FM / Log
+✓ config/dab_stations.json  32 Sender (11D/10A/11B, MHT-Import)
+✓ config/settings.json      ppm=49, fm_gain=30, dab_gain=-1, squelch=10
 ```
 
-**Offene Punkte:**
-- GPIO-Buttons (Key1=GPIO23, Key2=GPIO24, Key3=GPIO25)
-- BMW iDrive AVRCP Praxistest im Auto (code-seitig fertig, Feldtest ausstehend)
-- BT Pairing nach Reboot stabil machen (v0.8.15 verbessert, weiteres Testen nötig)
-- resume_state.py / last_state.json für Boot-Resume
-- BT Auto-Reconnect im Laufzeitbetrieb (Kopfhörer der nach Start eingeschaltet wird)
+**Hardware:** Raspberry Pi 3B, Joy-IT RB-TFT3.5 (480×320, fb1),
+RTL2838 DVB-T (0bda:2838), Cambridge Silicon Radio BT-Dongle.
+
+**Aktuelle Quellen-Architektur:**
+
+| Quelle | Befehl | Audio-Routing |
+|---|---|---|
+| FM | `rtl_fm ... \| mpv --ao=alsa hw:1,0` | ALSA direkt (kein PulseAudio) |
+| DAB | `welle-cli -p "NAME"` mit PULSE_SERVER/PULSE_SINK | PulseAudio (BT-fähig) |
+| Webradio | `mpv --ao=pulse http://url` | PulseAudio (BT-fähig) |
+| Spotify | librespot → PulseAudio | PulseAudio (BT-fähig) |
+
+**Bekannte Einschränkungen:**
+- Volume-Anzeige zeigt "–" wenn kein PulseAudio Default Sink gesetzt
+- BT Pairing muss manuell via bluetoothctl erfolgen (PiDrive kann nur verbinden)
+- DAB Frequenzkorrektur (PPM) wird von welle-cli intern gehandhabt (coarseCorrector)
 
 
 ## Entwicklungs-Phasen & Roadmap
