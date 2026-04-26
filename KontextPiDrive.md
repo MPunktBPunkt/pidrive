@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.21
+# PiDrive — Kontext & Projektdokumentation v0.9.22
 
 ## Projektbeschreibung
 
@@ -921,6 +921,32 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.22 — DAB: PULSE_ENV entfernt, Scanner: --ao=alsa
+
+**Root Cause DAB kein Ton auf BT:**
+`PULSE_SERVER`/`PULSE_SINK` im welle-cli Env verursachen einen RTL2838-Timing-Fehler:
+- PulseAudio-Backend initialisiert den SDR anders → PLL-Lock kommt zu spät
+- OFDM-Sync bricht ab: `SyncOnPhase failed`
+- Manueller Start (ohne PULSE_*) → sofort Sync → Ton
+
+**Beweis:** Manuelle Test `welle-cli -c 10A -p "ROCK ANTENNE BAY"` funktionierte.
+PiDrive-Start mit PULSE_ENV → `Lost coarse sync`. Ohne PULSE_ENV → Audio.
+
+**Fix:** welle-cli ohne jegliche PulseAudio-Env-Variablen starten.
+ALSA → PulseAudio funktioniert automatisch. BT-Routing übernimmt PulseAudio Default-Routing.
+
+**Scanner kein Ton:** Identisches Problem — `--ao=pulse` ohne PULSE_SERVER,
+mpv findet System-Daemon nicht → ALSA Card 0 (HDMI). Fix: `--ao=alsa hw:1,0`.
+
+| # | Datei | Fix |
+|---|---|---|
+| 1 | `modules/dab.py` | PULSE_SERVER/PULSE_SINK aus welle-cli-Befehl entfernt |
+| 2 | `modules/scanner.py` | `--ao=pulse` → `--ao=alsa --alsa-device=hw:N,0` |
+
+**Geänderte Dateien:** `modules/dab.py`, `modules/scanner.py`, `VERSION`
+
+---
 
 ### v0.9.21 — DAB: welle-cli -p ALSA-direkt, BT-Scan fix
 
@@ -2258,13 +2284,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.21)
+## Aktueller Stand (v0.9.22)
 
 **System läuft stabil** — 26.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.21 — DAB: welle-cli -p ALSA-direkt, BT-Scan fix
-✓ pidrive_display.service   v0.9.21, 20fps
+✓ pidrive_core.service      v0.9.22 — DAB: kein PULSE_ENV, Scanner: --ao=alsa
+✓ pidrive_display.service   v0.9.22, 20fps
 ✓ modules/dab.py            welle-cli -p → ALSA direkt (kein HTTP-Modus)
 ✓ modules/fm.py             rtl_fm | mpv --ao=alsa hw:1,0
 ✓ modules/bluetooth.py      BT Scan: scan on/off; BT Agent persistent
