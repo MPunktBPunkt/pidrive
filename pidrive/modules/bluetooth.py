@@ -572,27 +572,22 @@ def scan_devices(S, settings):
         _btctl("power on", timeout=8)
         _ensure_agent()
 
-        # Classic BR/EDR bevorzugen [2]
-        bt_proc = subprocess.Popen(
-            "printf 'menu scan\ntransport bredr\nback\nscan on\n' | bluetoothctl",
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+        # v0.9.21: Echtes Scan-on/off via bluetoothctl — findet auch neue (ungepairte) Geräte
+        # Die printf-Pipe-Methode war unzuverlässig und startete keinen echten Discovery-Scan.
+        # Jetzt: scan on → warten → devices → scan off
+        subprocess.run(
+            "bluetoothctl -- scan on 2>/dev/null &",
+            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
-
+        log.info("BT scan: Discovery gestartet (25s)")
         time.sleep(25)
 
-        try:
-            bt_proc.terminate()
-            bt_proc.wait(timeout=2)
-        except Exception:
-            try:
-                bt_proc.kill()
-            except Exception:
-                pass
-
-        subprocess.run("pkill -f 'bluetoothctl scan' 2>/dev/null",
-                       shell=True, capture_output=True)
+        subprocess.run(
+            "bluetoothctl -- scan off 2>/dev/null",
+            shell=True, capture_output=True, timeout=5
+        )
+        log.info("BT scan: Discovery beendet")
+        time.sleep(1)
 
         r_paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
                                   shell=True, capture_output=True, text=True, timeout=5)
@@ -646,6 +641,17 @@ def scan_devices(S, settings):
     time.sleep(3)
     ipc.clear_progress()
     S["menu_rev"] = S.get("menu_rev", 0) + 1
+
+
+def stop_scan():
+    """Stoppt einen laufenden BT-Scan (v0.9.21)."""
+    try:
+        import subprocess as _sp
+        _sp.run("bluetoothctl -- scan off 2>/dev/null",
+                shell=True, capture_output=True, timeout=5)
+        log.info("BT scan: Discovery gestoppt (Menü verlassen)")
+    except Exception as _e:
+        log.warn(f"BT stop_scan: {_e}")
 
 
 def connect_device(mac, S, settings):

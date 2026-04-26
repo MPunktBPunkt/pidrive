@@ -152,10 +152,19 @@ def _list_sinks() -> list:
     return sinks
 
 
-def get_bt_sink() -> str:
-    for s in _list_sinks():
-        if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
-            return s["name"]
+def get_bt_sink(retry: int = 1) -> str:
+    """
+    Gibt den BT A2DP Sink zurück (v0.9.21).
+    retry=3: wartet bis zu 3x1s auf A2DP-Aushandlung nach BT-Connect.
+    PulseAudio registriert A2DP-Sink erst ~1-2s nach bluetoothctl connect.
+    """
+    import time as _t
+    for attempt in range(max(1, retry)):
+        for s in _list_sinks():
+            if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
+                return s["name"]
+        if attempt < retry - 1:
+            _t.sleep(1)
     return ""
 
 
@@ -328,6 +337,10 @@ def get_mpv_args(settings=None, source: str = "") -> list:
     elif requested == "klinke":
         effective, reason, sink = "klinke", "klinke_requested", alsa_sink
     else:  # auto
+        # v0.9.21: wenn BT-State "connected" ist aber Sink noch nicht sichtbar,
+        # 3x wiederholen (A2DP-Aushandlung kann ~2s dauern)
+        if not bt_sink:
+            bt_sink = get_bt_sink(retry=3)
         if bt_sink:
             effective, reason, sink = "bt",     "a2dp_sink_available",  bt_sink
         else:
