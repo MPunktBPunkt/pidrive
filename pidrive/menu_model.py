@@ -101,6 +101,13 @@ class MenuState:
             return None
         return nodes[min(self.cursor, len(nodes) - 1)]
 
+    @property
+    def selected_folder(self) -> Optional[MenuNode]:
+        """Aktuell geöffneter Folder (letztes Element im Stack, v0.9.21)."""
+        if len(self._stack) > 1:
+            return self._stack[-1]
+        return None
+
     def key_up(self):
         if self._cursors[-1] > 0:
             self._cursors[-1] -= 1

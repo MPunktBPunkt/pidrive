@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.20
+main_core.py - PiDrive Core v0.9.21
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -162,15 +162,27 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "left":
         menu_state.key_left()
     elif cmd == "back":
+        # v0.9.21: BT-Geräteliste verlassen → Scan stoppen
+        _leaving_node = menu_state.selected_folder
         menu_state.key_back()
+        if _leaving_node and getattr(_leaving_node, "id", "") == "bt_geraete":
+            log.info("MENU bt_geraete: Auto-Scan gestoppt (back)")
+            bg(lambda: bt.stop_scan())
     elif cmd == "enter":
         node = menu_state.key_enter()
         if node and node.type in ("station", "action", "toggle"):
             _execute_node(node, menu_state, store, S, settings)
+        # v0.9.21: BT-Geräteliste betreten → Scan automatisch starten
+        if node and node.type == "folder" and node.id == "bt_geraete":
+            log.info("MENU bt_geraete: Auto-Scan gestartet")
+            bg(lambda: bt.scan_devices(S, settings))
     elif cmd == "right":
         node = menu_state.key_right()
         if node and node.type in ("station", "action", "toggle"):
             _execute_node(node, menu_state, store, S, settings)
+        if node and node.type == "folder" and node.id == "bt_geraete":
+            log.info("MENU bt_geraete: Auto-Scan gestartet (right)")
+            bg(lambda: bt.scan_devices(S, settings))
 
     # ── Direkt-Kategorie ──────────────────────────────────────────────────
     elif cmd.startswith("cat:"):
@@ -386,7 +398,9 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "radio_restart_on_bt":
         def _radio_restart():
             import time
-            time.sleep(1)
+            # v0.9.21: 3s warten — PulseAudio braucht ~2s um A2DP-Sink zu registrieren
+            # Ohne Wartezeit findet get_bt_sink() den Sink noch nicht → Klinke statt BT
+            time.sleep(3)
             _rtype = S.get("radio_type", "")
             _last_web = settings.get("last_web_station")
             _last_dab = settings.get("last_dab_station")
