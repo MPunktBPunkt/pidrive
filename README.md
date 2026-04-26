@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.18-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.20-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,17 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.20 (2026-04-26)
+
+**WebUI in 4 Tabs** (Steuerung 1.5s Poll / Audio / DAB+FM+RTL / Log+Debug).
+DLS NameError `_time` behoben. HTTP-Timeout 15s für welle-cli Start.
+
+### v0.9.19 (2026-04-25)
+
+**FM/DAB Ton:** PulseAudio --system hat Resampling-Problem mit raw PCM Pipes.
+Fix: `--ao=alsa --alsa-device=hw:1,0` für FM/DAB direkt, kein PulseAudio-Umweg.
+BT (A2DP) nutzt weiterhin PulseAudio.
 
 ### v0.9.18 (2026-04-25)
 

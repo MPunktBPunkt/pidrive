@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.18
+# PiDrive — Kontext & Projektdokumentation v0.9.20
 
 ## Projektbeschreibung
 
@@ -921,6 +921,37 @@ sudo systemctl restart pidrive_display
 ---
 
 ## Changelog
+
+### v0.9.20 — FM/DAB: --ao=alsa direkt (PulseAudio-Pipe-Problem)
+
+**Root Cause FM/DAB kein Ton:**
+PulseAudio `--system` Mode hat Resampling-Probleme mit raw PCM aus stdout-Pipes
+(rtl_fm 32kHz mono → PA 44.1kHz stereo). Sink-Input war vorhanden (mpv verbunden),
+aber PulseAudio produzierte kein hörbares Audio.
+
+Webradio nutzt HTTP-URL → mpv verarbeitet fertiges MP3 → kein Resampling-Problem.
+
+**Fix: `--ao=alsa --alsa-device=hw:N,0` für FM und DAB (Klinke)**
+
+```
+# Vorher (PulseAudio -- stille Ausgabe trotz Sink-Input):
+mpv --ao=pulse --demuxer=rawaudio --demuxer-rawaudio-rate=32000 ...
+
+# Jetzt (ALSA direkt -- immer Ton):
+mpv --ao=alsa --alsa-device=hw:1,0 --demuxer=rawaudio --demuxer-rawaudio-rate=32000 ...
+```
+
+BT (A2DP) nutzt weiterhin PulseAudio (muss durch PA für BT-Routing).
+
+| # | Datei | Fix |
+|---|---|---|
+| 1 | `modules/audio.py` | `get_mpv_args()` gibt `["", "--ao=alsa", "--alsa-device=hw:N,0"]` für FM/DAB Klinke zurück |
+| 2 | `modules/fm.py` | Leeren env-prefix herausfiltern |
+| 3 | `modules/dab.py` | Leeren env-prefix herausfiltern |
+
+**Geänderte Dateien:** `modules/audio.py`, `modules/fm.py`, `modules/dab.py`, `VERSION`
+
+---
 
 ### v0.9.18 — NameError VERSION fix (Core-Crash)
 
@@ -2192,13 +2223,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.18)
+## Aktueller Stand (v0.9.20)
 
 **System läuft stabil** — 16.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.18 — VERSION-Scope-Fix (Core startet wieder)
-✓ pidrive_display.service   v0.9.18, 20fps
+✓ pidrive_core.service      v0.9.20 — WebUI Tabs, DLS-Fix, HTTP-Timeout 15s
+✓ pidrive_display.service   v0.9.20, 20fps
 ✓ settings.py               vollständige Defaults (34 Keys), ensure_settings_file()
 ✓ config/settings.json      vollständig: ppm=55, fm_gain=30, dab_gain=40, squelch=10
 ✓ modules/dab.py            + _write_scan_diag_file, load_last_scan_diag_file (v0.9.6)
