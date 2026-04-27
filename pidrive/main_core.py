@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.26
+main_core.py - PiDrive Core v0.9.27
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1067,24 +1067,31 @@ def startup_tasks(S, settings):
         last_dab   = settings.get("last_dab_station")
         last_web   = settings.get("last_web_station")
 
+        # v0.9.27: last_source ist die autoritäre Quelle — kein Fallback der überschreibt
         if last_src == "fm" and last_fm and last_fm.get("freq"):
             log.info("Boot-Resume: FM → " + str(last_fm.get("name", last_fm.get("freq", ""))))
             fm.play_station(last_fm, S, settings)
 
         elif last_src == "dab" and last_dab and last_dab.get("name"):
-            log.info("Boot-Resume: DAB → " + str(last_dab.get("name", "")))
+            # DAB-Resume: service_id + channel bevorzugt (stabil, kein Name-Lookup nötig)
+            _sid = last_dab.get("service_id", "")
+            _ch  = last_dab.get("channel", "")
+            _nm  = last_dab.get("name", "")
+            log.info(f"Boot-Resume: DAB → {_nm} (ch={_ch} sid={_sid})")
             dab.play_station(last_dab, S, settings)
 
         elif last_src == "webradio" and last_web and last_web.get("url"):
             log.info("Boot-Resume: Webradio → " + str(last_web.get("name", "")))
             webradio.play_station(last_web, S, settings)
 
-        elif last_fm and last_fm.get("freq"):
-            log.info("Boot-Resume: FM (Fallback) → " + str(last_fm.get("name", "")))
+        elif last_src and not last_src:
+            pass  # last_source explizit leer → kein Resume
+        elif last_fm and last_fm.get("freq") and not last_src:
+            # Nur Fallback wenn last_source wirklich leer (Erststart / Migration)
+            log.info("Boot-Resume: FM (Erststart-Fallback) → " + str(last_fm.get("name", "")))
             fm.play_station(last_fm, S, settings)
-
-        elif last_dab and last_dab.get("name"):
-            log.info("Boot-Resume: DAB (Fallback) → " + str(last_dab.get("name", "")))
+        elif last_dab and last_dab.get("name") and not last_src:
+            log.info("Boot-Resume: DAB (Erststart-Fallback) → " + str(last_dab.get("name", "")))
             dab.play_station(last_dab, S, settings)
 
         else:

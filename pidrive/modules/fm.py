@@ -130,13 +130,17 @@ def play_station(station, S, settings=None):
     name = station.get("name", "")
 
     if settings is not None:
-        settings["last_fm_station"] = station
+        # v0.9.27: last_source setzen + save_settings()
+        settings["last_source"] = "fm"
+        settings["last_fm_station"] = {
+            "name": station.get("name", ""),
+            "freq": station.get("freq", ""),
+        }
         try:
-            import json as _j
-            with open("/home/pi/pidrive/pidrive/config/settings.json", "w") as _f:
-                _j.dump(settings, _f, indent=2)
-        except Exception:
-            pass
+            from settings import save_settings as _save_s
+            _save_s(settings)
+        except Exception as _se:
+            log.warn(f"FM: save_settings failed: {_se}")
 
     if not freq:
         log.error(f"FM play: keine Frequenz station={station!r}")

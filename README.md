@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.26-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.27-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,11 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.27 (2026-04-27)
+
+Boot-Resume: DAB/FM setzen jetzt `last_source` und benutzen `save_settings()`.
+Nach ROCK FM → Reboot: `Boot-Resume: DAB → ROCK FM` statt Webradio.
 
 ### v0.9.26 (2026-04-27)
 

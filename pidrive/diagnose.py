@@ -637,6 +637,17 @@ def check_rtlsdr():
                 f"ppm={sett.get('ppm_correction',0)} "
                 f"squelch={sett.get('scanner_squelch',25)}"
             )
+            # v0.9.27: Resume-State anzeigen
+            _ls  = sett.get("last_source", "–")
+            _ld  = (sett.get("last_dab_station") or {})
+            _lw  = (sett.get("last_web_station") or {})
+            _lf  = (sett.get("last_fm_station") or {})
+            nfo(
+                f"Resume:   last_source={_ls}"
+                f"  dab={_ld.get('name','–')} ch={_ld.get('channel','–')} sid={_ld.get('service_id','–')}"
+                f"  web={_lw.get('name','–')}"
+                f"  fm={_lf.get('freq','–')} MHz"
+            )
         except Exception:
             pass
 
@@ -764,7 +775,7 @@ def summary():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.26\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.27\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()

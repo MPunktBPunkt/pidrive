@@ -397,12 +397,20 @@ def play_station(station, S, settings=None):
     stop(S)
 
     if settings is not None:
-        settings["last_dab_station"] = station
+        # v0.9.27: last_source setzen + vollständige Stationsdaten + save_settings()
+        settings["last_source"] = "dab"
+        settings["last_dab_station"] = {
+            "name":       station.get("name", ""),
+            "channel":    station.get("channel", ""),
+            "service_id": station.get("service_id", ""),
+            "ensemble":   station.get("ensemble", ""),
+            "url_mp3":    station.get("url_mp3", ""),
+        }
         try:
-            with open("/home/pi/pidrive/pidrive/config/settings.json", "w", encoding="utf-8") as _f:
-                json.dump(settings, _f, indent=2, ensure_ascii=False)
-        except Exception:
-            pass
+            from settings import save_settings as _save_s
+            _save_s(settings)
+        except Exception as _se:
+            log.warn(f"DAB: save_settings failed: {_se}")
 
     ch   = station.get("channel", "")
     name = station.get("name", "")
