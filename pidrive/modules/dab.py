@@ -462,9 +462,13 @@ def play_station(station, S, settings=None):
         # welle-cli läuft via ALSA → PulseAudio routet automatisch (Klinke oder BT).
         # Das ist identisch zum manuellen Start der funktioniert:
         #   welle-cli -c 10A -p "NAME"  (kein PULSE_SERVER, kein PULSE_SINK)
+        _dab_port = int(settings.get("dab_scan_port", 7981) if settings else 7981)
+        # v0.9.26: -w PORT aktiviert HTTP-API für mux.json/DLS-Metadaten
+        # Audio bleibt ALSA-direkt via -p NAME — KEIN PULSE_ENV (würde OFDM stören)
         _welle_cmd = (
             "welle-cli -c " + ch + " -g " + _gain +
             " -p " + _name_q +
+            " -w " + str(_dab_port) +
             " < /dev/null" +
             " 2>/tmp/pidrive_dab_welle.err"
         )
@@ -492,12 +496,33 @@ def play_station(station, S, settings=None):
 
         # welle-cli braucht ~3s bis OFDM-Sync + Audio-Start
         time.sleep(3)
+        _sync_ok = False
+        _last_err = ""
         try:
             if os.path.exists("/tmp/pidrive_dab_welle.err"):
                 with open("/tmp/pidrive_dab_welle.err", "r", encoding="utf-8", errors="ignore") as _f:
-                    _lines = [ln.strip() for ln in _f.readlines()[-6:] if ln.strip()]
-                for _ln in _lines:
+                    _err_lines = [ln.strip() for ln in _f.readlines()[-10:] if ln.strip()]
+                for _ln in _err_lines:
                     log.info("DAB welle-cli: " + _ln[:200])
+                    if "found sync" in _ln.lower() or "superframe sync" in _ln.lower():
+                        _sync_ok = True
+                    if "failed" in _ln.lower() or "lost" in _ln.lower():
+                        _last_err = _ln[:120]
+        except Exception:
+            pass
+
+        # v0.9.26: Play-Debug-JSON für Diagnose
+        try:
+            import json as _json_dbg
+            _dbg = {
+                "name": name, "channel": ch, "service_id": sid,
+                "gain": _gain, "ppm": _ppm_val,
+                "started_ts": time.time(),
+                "sync_ok": _sync_ok,
+                "last_error_line": _last_err,
+            }
+            with open("/tmp/pidrive_dab_play_debug.json", "w") as _dbgf:
+                _json_dbg.dump(_dbg, _dbgf)
         except Exception:
             pass
 
@@ -514,31 +539,45 @@ def play_station(station, S, settings=None):
 
         # v0.9.15: DLS Metadaten-Polling (Dynamic Label Service = Lied/Artist vom Sender)
         # welle-cli liefert DLS-Text per mux.json → alle 8s pollen und S[track]/S[artist] setzen
-        _dls_port = int(settings.get("dab_scan_port", 7981) if settings else 7981)
-        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=_dls_port):
+        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=_dab_port):
+            # v0.9.26: DLS-Poller wartet zuerst bis welle-cli HTTP-Server bereit ist
             import urllib.request as _ur, json as _json, time as _tm
             _url = f"http://127.0.0.1:{_port}/mux.json"
+            _last_dls = ""
+            # Warten bis HTTP-Server antwortet (max 10s)
+            for _w in range(10):
+                _tm.sleep(1)
+                try:
+                    _ur.urlopen(f"http://127.0.0.1:{_port}/", timeout=1).close()
+                    break
+                except Exception:
+                    pass
             while S.get("radio_playing") and S.get("radio_name") == _name:
                 _tm.sleep(8)
                 if not (S.get("radio_playing") and S.get("radio_name") == _name):
                     break
                 try:
-                    _resp = _ur.urlopen(_url, timeout=3)
+                    _resp = _ur.urlopen(_url, timeout=4)
                     _data = _json.loads(_resp.read().decode("utf-8"))
                     for _svc in _data.get("services", []):
-                        if str(_svc.get("sid","") or "").strip().lower() == _sid:
+                        _svc_sid = str(_svc.get("sid","") or "").strip().lower()
+                        if _svc_sid == _sid or _svc.get("label","").strip() == _name:
                             _dls = str(_svc.get("dls","") or "").strip()
-                            if _dls:
+                            if _dls and _dls != _last_dls:
+                                # Nur bei Änderung loggen
                                 if " - " in _dls:
                                     _parts = _dls.split(" - ", 1)
                                     S["artist"] = _parts[0].strip()
                                     S["track"]  = _parts[1].strip()
+                                    log.info(f"[DAB DLS] {_name}: {_parts[0].strip()} – {_parts[1].strip()}")
                                 else:
                                     S["artist"] = ""
                                     S["track"]  = _dls
+                                    log.info(f"[DAB DLS] {_name}: {_dls[:80]}")
+                                _last_dls = _dls
                             break
                 except Exception:
-                    pass  # Metadaten sind optional, stille Fehler
+                    pass  # Metadaten optional — stille Fehler
 
         import threading as _thr_dls
         _thr_dls.Thread(target=_dls_poller, daemon=True).start()

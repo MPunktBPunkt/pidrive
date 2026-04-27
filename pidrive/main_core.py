@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.25
+main_core.py - PiDrive Core v0.9.26
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1013,11 +1013,14 @@ def startup_tasks(S, settings):
 
     try:
         if bluetooth.reconnect_known_devices(S, settings):
-            log.info("BT Auto-reconnect: bekanntes Gerät erfolgreich verbunden")
+            log.info("BT Boot-Reconnect: verbunden")
         else:
-            log.info("BT Auto-reconnect: kein bekanntes Gerät verfügbar")
+            # v0.9.26: bt_state explizit auf failed setzen statt in "connecting" hängen
+            source_state.set_bt_state("failed")
+            log.info("BT Boot-Reconnect: kein Gerät verfügbar → bt_state=failed")
     except Exception as _e:
-        log.warn("BT Auto-reconnect: " + str(_e))
+        source_state.set_bt_state("failed")
+        log.warn("BT Boot-Reconnect: " + str(_e))
 
     try:
         _gpio_active = _gpio_buttons.start()
@@ -1034,6 +1037,9 @@ def startup_tasks(S, settings):
         if _audio_out not in ("bt", "hdmi"):
             _set_pi_output_klinke()
             log.info("Boot: amixer Klinke aktiviert (audio_output=" + _audio_out + ")")
+            # v0.9.26: audio_route auf klinke setzen wenn kein BT aktiv
+            if not S.get("bt"):
+                source_state.set_audio_route("klinke")
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 

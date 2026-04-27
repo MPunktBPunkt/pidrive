@@ -158,22 +158,36 @@ def get_audio_debug() -> dict:
         "current_volume": "–",
     }
 
-    # Letzte Core-Entscheidung
+    # Letzte Core-Entscheidung + Fallback-Badge
     try:
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
         from modules.audio import read_last_decision_file
         data["decision"] = read_last_decision_file()
+        # v0.9.26: Fallback-Badge wenn requested≠effective
+        dec = data["decision"]
+        data["fallback_active"] = bool(
+            dec.get("requested") and dec.get("effective") and
+            dec.get("requested") != dec.get("effective")
+        )
+        data["fallback_reason"] = dec.get("reason", "")
     except Exception:
         data["decision"] = {}
+        data["fallback_active"] = False
+        data["fallback_reason"] = ""
 
-    # PulseAudio aktiv?
+    # PulseAudio aktiv? v0.9.26: systemctl UND pactl-Fallback
     try:
         pa = safe_run("systemctl is-active pulseaudio 2>/dev/null")
-        data["pulse_active"] = (pa.get("stdout", "").strip() == "active")
+        pa_sys = (pa.get("stdout", "").strip() in ("active", "activating"))
+        if not pa_sys:
+            # Fallback: direkt testen ob pactl antwortet
+            pa2 = safe_run(PA_ENV + " pactl info 2>/dev/null")
+            pa_sys = bool(pa2.get("stdout", "").strip())
+        data["pulse_active"] = pa_sys
     except Exception:
-        pass
+        data["pulse_active"] = False
 
     # Default-Sink
     try:
@@ -213,7 +227,7 @@ def get_audio_debug() -> dict:
     except Exception:
         pass
 
-    # Sink-Inputs kurz
+    # Sink-Inputs kurz — v0.9.26: nur echte Inputs (id muss Zahl sein)
     try:
         sin = safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null")
         out = sin.get("stdout", "") or ""
@@ -221,12 +235,14 @@ def get_audio_debug() -> dict:
             if not line.strip():
                 continue
             parts = line.split()
+            if not parts or not parts[0].isdigit():
+                continue  # keine Platzhalterzeile
             data["sink_inputs"].append({
-                "id": parts[0] if len(parts) > 0 else "",
-                "sink": parts[1] if len(parts) > 1 else "",
+                "id":     parts[0],
+                "sink_id": parts[1] if len(parts) > 1 else "",
                 "client": parts[2] if len(parts) > 2 else "",
                 "driver": parts[3] if len(parts) > 3 else "",
-                "raw": line.strip(),
+                "raw":    line.strip(),
             })
     except Exception:
         pass
@@ -260,9 +276,15 @@ def get_audio_debug() -> dict:
                     item["media_name"] = s.split('"')[1]
             parsed[sid] = item
 
+        # Sink-ID zu Namen auflösen
+        sink_id_map = {s["id"]: s["name"] for s in data["sinks"]}
         for row in data["sink_inputs"]:
             extra = parsed.get(str(row.get("id", "")), {})
             row.update(extra)
+            row["app_name"] = extra.get("application_name") or extra.get("media_name") or ""
+            row["binary"]   = extra.get("process_binary", "")
+            row["pid"]      = extra.get("process_id", "")
+            row["sink_name"]= sink_id_map.get(row.get("sink_id", ""), "")
     except Exception:
         pass
 
@@ -555,15 +577,19 @@ def api_rtlsdr():
 
 @app.route("/api/rtlsdr/refresh")
 def api_rtlsdr_refresh():
-    import subprocess as _sp
+    import subprocess as _sp, sys as _sys
     try:
-        _sp.run(
-            ["/usr/bin/python3", "/home/pi/pidrive/pidrive/modules/rtlsdr.py", "--json"],
-            timeout=10, capture_output=True
-        )
-    except Exception:
-        pass
-    return jsonify({"ok": True, "data": read_json(RTLSDR_FILE, {})})
+        # v0.9.26: BASE_DIR-relativer Pfad statt Hardcode
+        _rtl_py = str(BASE_DIR / "modules" / "rtlsdr.py")
+        _r = _sp.run([_sys.executable, _rtl_py, "--json"],
+                     timeout=10, capture_output=True)
+    except Exception as _e:
+        return jsonify({"ok": False, "error": str(_e),
+                        "data": read_json(RTLSDR_FILE, {}),
+                        "file_exists": os.path.exists(RTLSDR_FILE)})
+    data = read_json(RTLSDR_FILE, {})
+    return jsonify({"ok": True, "data": data,
+                    "file_exists": os.path.exists(RTLSDR_FILE)})
 
 
 @app.route("/api/rtlsdr/reset", methods=["POST"])
@@ -775,18 +801,55 @@ def api_volume():
         if _b not in _sys.path:
             _sys.path.insert(0, _b)
 
-        # Klinken-Sink ermitteln (card 1)
+        # v0.9.26: Sink-Hierarchie:
+        # 1. aktiver Sink-Input (was gerade läuft)
+        # 2. BT A2DP Sink wenn verbunden
+        # 3. alsa_output.1.* (Klinke Card 1)
+        # 4. Nicht-HDMI ALSA
         sinks_out = (safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout","") or "")
         sink = ""
+        source_label = ""
+
+        # 1. Welcher Sink hat gerade einen Input?
+        sin_out = (safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null").get("stdout","") or "")
+        active_sink_ids = set()
+        for ln in sin_out.splitlines():
+            p = ln.split()
+            if len(p) >= 2 and p[0].isdigit():
+                active_sink_ids.add(p[1])
+
+        # Sink-ID → Name mappen
+        sink_id_to_name = {}
         for ln in sinks_out.splitlines():
-            parts = ln.split()
-            if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
-                sink = parts[1]; break
+            p = ln.split()
+            if len(p) >= 2:
+                sink_id_to_name[p[0]] = p[1]
+
+        for sid in active_sink_ids:
+            sname = sink_id_to_name.get(sid, "")
+            if sname:
+                sink = sname
+                source_label = "active_input"
+                break
+
         if not sink:
+            # 2. BT A2DP
+            for ln in sinks_out.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and "bluez_sink" in parts[1] and "a2dp_sink" in parts[1]:
+                    sink = parts[1]; source_label = "bt_sink"; break
+        if not sink:
+            # 3. Klinke Card 1
+            for ln in sinks_out.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
+                    sink = parts[1]; source_label = "alsa_card1"; break
+        if not sink:
+            # 4. Nicht-HDMI ALSA
             for ln in sinks_out.splitlines():
                 parts = ln.split()
                 if len(parts) >= 2 and "alsa_output" in parts[1] and not _sink_is_hdmi(parts[1]):
-                    sink = parts[1]; break
+                    sink = parts[1]; source_label = "alsa_fallback"; break
 
         # Volume aus pactl list sinks (long) parsen — zuverlässig in --system Mode
         vol = ""
@@ -806,7 +869,8 @@ def api_volume():
                     if in_target and ln.startswith("    Name:") and sink not in ln:
                         break
 
-        return jsonify({"ok": True, "volume": vol or "–", "sink": sink or ""})
+        return jsonify({"ok": True, "volume": vol or "–",
+                        "sink": sink or "", "source": source_label})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e), "volume": "–"})
 

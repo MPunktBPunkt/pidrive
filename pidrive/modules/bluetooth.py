@@ -1038,9 +1038,13 @@ def start_auto_reconnect(S, settings):
                 log.warn("BT auto-reconnect Watcher: " + str(e))
                 _fail_streak += 1
 
-            # Backoff: nach jedem Fehler länger warten
+            # Backoff: nach jedem Fehler länger warten (explizit loggen)
             _interval = _INTERVALS[min(_fail_streak, len(_INTERVALS)-1)]
+            if not S.get("bt", False) and _fail_streak > 0:
+                log.info(f"BT auto-reconnect: nächster Versuch in {_interval}s (Versuch #{_fail_streak})")
             time.sleep(_interval if not S.get("bt", False) else 20)
+
+        log.info("BT auto-reconnect Watcher: beendet (20min Limit oder Stop-Flag)")
 
     _reconnect_thread = _th.Thread(target=_watcher, daemon=True, name="bt_auto_reconnect")
     _reconnect_thread.start()

@@ -322,7 +322,7 @@
       <div class="panel-title">Audio Debug Cockpit</div>
       <div class="diag-grid">
         <div class="diag-card">
-          <div class="diag-title">Routing-Entscheidung</div>
+          <div class="diag-title">Routing-Entscheidung <span id="fallbackBadge" style="display:none;background:#7c3a00;color:#ffd;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:6px">⚠ Fallback</span></div>
           <div class="diag-list">
             <div class="diag-row"><div class="diag-key">PulseAudio</div><div class="diag-value" id="audioPulseActive">…</div></div>
             <div class="diag-row"><div class="diag-key">Default Sink</div><div class="diag-value" id="audioDefaultSink">…</div></div>
@@ -568,7 +568,9 @@ function showTab(id) {
   activeTab = id;
   // Trigger immediate refresh for newly shown tab
   if (id === 't2') { refreshAudio(); refreshVolume(); refreshGain(); refreshKnownBtDevices(); }
-  if (id === 't3') { refreshRtlsdr(); refreshAvrcp(); refreshDabScanDebug(); }
+  if (id === 't3') { refreshRtlsdr(); refreshAvrcp(); refreshDabScanDebug();
+    fetch('/api/rtlsdr').then(r=>r.json()).then(j=>{ if(!j.exists) fetch('/api/rtlsdr/refresh'); }).catch(()=>{});
+  }
   if (id === 't4') { refreshRuntimePanel(); }
 }
 
@@ -666,13 +668,20 @@ function renderRuntimeInfo(vm) {
   if (el('menuJsonPre'))   el('menuJsonPre').textContent   = JSON.stringify(vm.menu||{}, null, 2);
 }
 
-function renderRtlsdr(data) {
+function renderRtlsdr(data, fileExists) {
   const box = document.getElementById('rtlsdrSummaryBox');
   if (!box) return;
+  const hasData = data && Object.keys(data).length > 0;
+  if (!hasData) {
+    box.innerHTML = `<div class="diag-row"><div class="diag-key">Status</div>
+      <div class="diag-value" style="color:#8aa5bb">
+        ${fileExists===false ? 'Keine Diagnosedatei — 🔄 Passive Diagnose drücken' : 'Wird geladen…'}
+      </div></div>`;
+    return;
+  }
   const usb  = data.usb || {};
   const thr  = data.throttled || {};
   const tools = data.tools || {};
-  const lock = data.lock_state || {};
   box.innerHTML = `
     <div class="diag-row"><div class="diag-key">Stick</div><div class="diag-value">${usb.present ? '✓ erkannt' : '✗ fehlt'}</div></div>
     <div class="diag-row"><div class="diag-key">Busy</div><div class="diag-value">${data.busy ? '⚠ belegt' : '✓ frei'}</div></div>
@@ -707,7 +716,7 @@ async function refreshAvrcp() {
 async function refreshRtlsdr() {
   try {
     const r = await fetch('/api/rtlsdr'); const j = await r.json();
-    renderRtlsdr(j.data || {});
+    renderRtlsdr(j.data || {}, j.exists);
   } catch(e) {}
 }
 
@@ -763,12 +772,17 @@ function renderAudio(data) {
   if (el('audioSource'))       el('audioSource').textContent       = fmt(dec.source);
   if (el('audioRuntimeSink'))  el('audioRuntimeSink').textContent  = fmt(dec.sink);
   if (el('audioVerify'))       el('audioVerify').textContent       = fmt(data.verify);
+  const badge = document.getElementById('fallbackBadge');
+  if (badge) badge.style.display = data.fallback_active ? 'inline' : 'none';
 
   if (el('audioInputsBox')) {
     if (!inp.length) { el('audioInputsBox').textContent = '– keine aktiven Inputs –'; }
     else {
-      el('audioInputsBox').innerHTML = `<table class="sink-table"><tr><th>ID</th><th>Sink</th><th>App</th><th>Binary</th><th>PID</th></tr>` +
-        inp.map(i => `<tr><td>${i.id||'–'}</td><td>${i.sink_id||'–'}</td><td>${i.app_name||'–'}</td><td>${i.binary||'–'}</td><td>${i.pid||'–'}</td></tr>`).join('') +
+      el('audioInputsBox').innerHTML = `<table class="sink-table"><tr><th>ID</th><th>Sink</th><th>App</th><th>PID</th></tr>` +
+        inp.map(i => {
+          const sn = (i.sink_name||i.sink_id||'–').replace('alsa_output.1.stereo-fallback','Klinke').replace('alsa_output.0.stereo-fallback','HDMI').replace(/bluez_sink[^.]*[.].*a2dp_sink/,'BT');
+          return `<tr><td>${i.id||'–'}</td><td>${sn}</td><td>${i.app_name||i.application_name||i.client||'–'}</td><td>${i.pid||i.process_id||'–'}</td></tr>`;
+        }).join('') +
         `</table>`;
     }
   }

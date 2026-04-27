@@ -112,6 +112,16 @@ def save_stations(stations):
         log.error(f"FM Stationen speichern: {e}")
 
 
+def update_rds_metadata(station_name: str, S: dict):
+    """
+    FM RDS-Hook (v0.9.26) — aktuell No-Op.
+    rtl_fm → mpv Pipe liefert nur Audio, kein RDS an PiDrive.
+    Für RDS: separater Decoder (redsea, rtl_fm -R) nötig.
+    RDS-Felder: PS (Name), RT (Radiotext), RT+ (Artist/Titel).
+    """
+    pass  # Kein Fake-RDS
+
+
 def play_station(station, S, settings=None):
     """FM Station abspielen via rtl_fm | mpv --ao=pulse (v0.8.11: einheitlich)."""
     global _player_proc, _last_start_ts, _last_station_key
@@ -250,10 +260,13 @@ def play_station(station, S, settings=None):
         S["radio_station"]  = f"FM: {name} ({freq_f:.1f} MHz)"
         S["radio_name"]     = name
         S["radio_type"]     = "FM"
-        S["control_context"] = "radio_fm"  # Phase 2 state
+        S["track"]          = ""
+        S["artist"]         = ""
+        S["control_context"] = "radio_fm"
         _last_start_ts      = now
         _last_station_key   = cur_key
-
+        # v0.9.26: RDS-Hook — aktuell No-Op (rtl_fm liefert kein RDS)
+        update_rds_metadata(name, S)
         log.action("FM", f"Wiedergabe: {name} ({freq_f:.1f} MHz)")
 
     except Exception as e:
