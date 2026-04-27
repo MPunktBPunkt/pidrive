@@ -477,14 +477,18 @@
         <div class="diag-card">
           <div class="diag-title">FM-Band-Sweep</div>
           <div class="diag-list">
-            <div class="diag-row"><div class="diag-key">Start–Stop MHz</div><div class="diag-value"><input id="sweepRange" type="text" style="width:100px" value="87.5-108.0"></div></div>
+            <div class="diag-row"><div class="diag-key">Start MHz</div><div class="diag-value"><input id="sweepStart" type="text" style="width:60px" value="87.5"></div></div>
+            <div class="diag-row"><div class="diag-key">Stop MHz</div><div class="diag-value"><input id="sweepStop" type="text" style="width:60px" value="108.0"></div></div>
             <div class="diag-row"><div class="diag-key">Schritt (MHz)</div><div class="diag-value"><input id="sweepStep" type="text" style="width:60px" value="1.0"></div></div>
           </div>
-          <div class="diag-actions"><button onclick="captureSweep()">▶ FM Sweep</button></div>
-          <p class="help-text">Braucht: rtl_sdr + numpy</p>
+          <div class="diag-actions">
+            <button onclick="captureSweep()" id="sweepBtn">▶ FM Sweep starten</button>
+            <span id="sweepStatus" style="margin-left:8px;font-size:11px;color:#8aa5bb"></span>
+          </div>
+          <p class="help-text">Braucht: rtl_sdr + numpy — Dauer: ~30–120s</p>
         </div>
       </div>
-      <div id="spectrumCandidates" style="margin-top:8px;font-size:12px;color:#8aa5bb">–</div>
+      <div id="spectrumCandidates" style="margin-top:8px;font-size:12px">–</div>
     </div>
   </div>
 
@@ -978,10 +982,45 @@ async function captureSpectrum() {
   setTimeout(refreshSpectrumDebug, 35000);
 }
 async function captureSweep() {
-  const range = document.getElementById('sweepRange').value;
-  const step  = document.getElementById('sweepStep').value;
-  await fetch(`/api/spectrum/sweep?range=${range}&step=${step}`,{method:'POST'});
-  setTimeout(refreshSpectrumDebug, 60000);
+  const start = document.getElementById('sweepStart')?.value || '87.5';
+  const stop  = document.getElementById('sweepStop')?.value || '108.0';
+  const step  = document.getElementById('sweepStep')?.value || '1.0';
+  const btn = document.getElementById('sweepBtn');
+  const status = document.getElementById('sweepStatus');
+  const cands  = document.getElementById('spectrumCandidates');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = '⏳ Sweep läuft … (ca. 30–120s)';
+  if (cands) cands.innerHTML = '';
+  try {
+    const r = await fetch(`/api/spectrum/capture?mode=fm_sweep&start_mhz=${start}&stop_mhz=${stop}&step_mhz=${step}`);
+    const j = await r.json();
+    if (j.ok) {
+      const cList = j.candidates || [];
+      const wList = j.candidates_weak || [];
+      if (status) status.textContent = `✓ ${cList.length} bestätigt, ${wList.length} schwach`;
+      if (cands) {
+        if (!cList.length && !wList.length) {
+          cands.innerHTML = '<span style="color:#8aa5bb">Keine Kandidaten gefunden</span>';
+        } else {
+          let rows = '<table class="sink-table"><tr><th>MHz</th><th>dB</th><th>Treffer</th><th>Status</th></tr>';
+          cList.forEach(c => {
+            rows += `<tr><td>${parseFloat(c.freq_mhz).toFixed(1)}</td><td>${parseFloat(c.db).toFixed(1)}</td><td>${c.hits||1}</td><td style="color:#3fb950">✓</td></tr>`;
+          });
+          wList.slice(0,8).forEach(c => {
+            rows += `<tr style="opacity:0.55"><td>${parseFloat(c.freq_mhz).toFixed(1)}</td><td>${parseFloat(c.db).toFixed(1)}</td><td>${c.hits||1}</td><td style="color:#f0883e">~</td></tr>`;
+          });
+          rows += '</table>';
+          cands.innerHTML = rows;
+        }
+      }
+    } else {
+      if (status) status.textContent = '✗ ' + (j.error || 'Fehler');
+    }
+  } catch(e) {
+    if (status) status.textContent = 'Fehler: ' + e;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function refreshVolume() {
