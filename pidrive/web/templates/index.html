@@ -517,6 +517,20 @@
     </div>
   </div>
 
+  <!-- Systemressourcen -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">💾 Systemressourcen</div>
+      <div style="font-size:12px">
+        <button onclick="refreshSysRes()" style="margin-bottom:6px">🔄 Refresh</button>
+        <div id="sysresDisk" style="color:#8aa5bb">–</div>
+        <div id="sysresRam" style="color:#8aa5bb">–</div>
+        <div id="sysresUptime" style="color:#8aa5bb">–</div>
+        <div id="sysresLogs" style="color:#8aa5bb">–</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Runtime Settings -->
   <div class="container">
     <div class="panel">
@@ -571,7 +585,7 @@ function showTab(id) {
   if (id === 't3') { refreshRtlsdr(); refreshAvrcp(); refreshDabScanDebug();
     fetch('/api/rtlsdr').then(r=>r.json()).then(j=>{ if(!j.exists) fetch('/api/rtlsdr/refresh'); }).catch(()=>{});
   }
-  if (id === 't4') { refreshRuntimePanel(); }
+  if (id === 't4') { refreshRuntimePanel(); refreshSysRes(); }
 }
 
 function toggleRaw(id) {
@@ -1040,6 +1054,23 @@ async function refreshActive() {
 
 // ── Legacy alias ──────────────────────────────────────────────────────────
 async function refreshAll() { return refreshActive(); }
+
+async function refreshSysRes() {
+  try {
+    const r = await fetch('/api/system/resources'); const j = await r.json();
+    const el = (id) => document.getElementById(id);
+    if(el('sysresDisk')) el('sysresDisk').innerHTML =
+      'Speicher: ' + (j.disk_used||'–') + ' genutzt, ' + (j.disk_avail||'–') +
+      ' frei (' + (j.disk_pct||'–') + ')' + (j.disk_warn?' ⚠ VOLL!':' ✓');
+    if(el('sysresRam')) el('sysresRam').innerHTML =
+      'RAM: ' + (j.ram_used_mb||'–') + ' MB / ' + (j.ram_total_mb||'–') + ' MB gesamt';
+    if(el('sysresUptime')) el('sysresUptime').innerHTML = 'Uptime: ' + (j.uptime||'–');
+    if(el('sysresLogs') && j.logs) {
+      const ll = Object.entries(j.logs).map(([n,v])=>n+': '+v.size_kb+' KB'+(v.size_kb>400?' ⚠':' ✓')).join(' | ');
+      el('sysresLogs').innerHTML = 'Logs: ' + ll;
+    }
+  } catch(e) {}
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   renderRuntimeInfo(vmLast);

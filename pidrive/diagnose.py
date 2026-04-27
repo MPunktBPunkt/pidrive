@@ -774,8 +774,36 @@ def summary():
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
 
+def check_resources():
+    """v0.9.28: Systemressourcen — Speicher, RAM, Logs."""
+    S("SYSTEMRESSOURCEN")
+    try:
+        df_out = run("df -h / 2>/dev/null")
+        for line in df_out.splitlines():
+            parts = line.split()
+            if len(parts) >= 5 and parts[0] != "Filesystem":
+                pct_val = int(parts[4].rstrip('%')) if parts[4].rstrip('%').isdigit() else 0
+                flag = "⚠" if pct_val > 80 else "✓"
+                nfo(f"SD-Karte: {flag} {parts[2]} genutzt, {parts[3]} frei ({parts[4]} voll)")
+        free_out = run("free -h 2>/dev/null")
+        for line in free_out.splitlines():
+            if line.startswith("Mem:"):
+                p = line.split()
+                nfo(f"RAM: {p[1]} gesamt  {p[2]} genutzt  {p[3]} frei")
+        nfo(f"Uptime: {run('uptime -p 2>/dev/null')}")
+        LOG_DIR = "/var/log/pidrive"
+        for lf in ["pidrive.log", "core.log", "display.log"]:
+            lpath = f"{LOG_DIR}/{lf}"
+            if os.path.exists(lpath):
+                kb = os.path.getsize(lpath) / 1024
+                flag = "⚠" if kb > 400 else "✓"
+                nfo(f"Log {lf}: {flag} {kb:.0f} KB")
+    except Exception as _e:
+        warn(f"Ressourcen: {_e}")
+
+
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.27\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.28\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
@@ -790,6 +818,7 @@ def main():
     check_rtlsdr()
     check_processes()
     check_source_state()
+    check_resources()
     test_sdl()
     summary()
 

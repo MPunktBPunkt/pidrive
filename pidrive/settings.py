@@ -46,10 +46,12 @@ _DEFAULTS = {
     "bt_last_name":       "",
     "bt_sink_mac":        "",
     "bt_pa_sink":         "",
-    # Boot-Resume
-    "last_source":        "",            # fm | dab | webradio
+    # Boot-Resume — v0.9.28: ROCK FM als Erststart-Default (kein leerer Resume)
+    "last_source":        "dab",         # fm | dab | webradio
     "last_fm_station":    None,
-    "last_dab_station":   None,
+    "last_dab_station":   {"name": "ROCK FM", "channel": "11B",
+                           "service_id": "0xd30e", "ensemble": "OAS BW",
+                           "url_mp3": ""},
     "last_web_station":   None,
 }
 

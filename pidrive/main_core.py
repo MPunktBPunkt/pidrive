@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.27
+main_core.py - PiDrive Core v0.9.28
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1113,6 +1113,9 @@ def main():
     except Exception:
         VERSION = "?"
     log.info("=" * 50)
+    # v0.9.28: Klarer Boot-Marker für Log-Auswertung
+    import datetime as _dt
+    log.info(f"===== BOOT {_dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} PiDrive v{VERSION} =====")
     log.info(f"PiDrive Core v{VERSION} gestartet")
     log.info(f"  PID={os.getpid()}  UID={os.getuid()}")
     _start_bt_agent_early()

@@ -931,5 +931,39 @@ def api_debug_summary():
     })
 
 
+@app.route("/api/system/resources")
+def api_system_resources():
+    """v0.9.28: Systemressourcen für WebUI Debug-Tab."""
+    import subprocess as _sp2
+    data = {"ok": True}
+    try:
+        df = _sp2.run("df -h / 2>/dev/null", shell=True, capture_output=True, text=True).stdout
+        for ln in df.splitlines():
+            p = ln.split()
+            if len(p) >= 5 and p[0] != "Filesystem":
+                pct_int = int(p[4].rstrip('%')) if p[4].rstrip('%').isdigit() else 0
+                data.update({"disk_used": p[2], "disk_avail": p[3],
+                             "disk_pct": p[4], "disk_warn": pct_int > 80})
+    except Exception: pass
+    try:
+        fr = _sp2.run("free -m 2>/dev/null", shell=True, capture_output=True, text=True).stdout
+        for ln in fr.splitlines():
+            if ln.startswith("Mem:"):
+                p = ln.split()
+                data.update({"ram_total_mb": p[1], "ram_used_mb": p[2], "ram_free_mb": p[3]})
+    except Exception: pass
+    try:
+        data["uptime"] = _sp2.run("uptime -p 2>/dev/null", shell=True,
+                                   capture_output=True, text=True).stdout.strip()
+    except Exception: pass
+    logs = {}
+    for lf in ["pidrive.log", "core.log", "display.log"]:
+        lp = f"/var/log/pidrive/{lf}"
+        if os.path.exists(lp):
+            logs[lf] = {"size_kb": round(os.path.getsize(lp) / 1024, 1)}
+    data["logs"] = logs
+    return jsonify(data)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)

@@ -2,38 +2,40 @@
   "device_name": "PiDrive",
   "display_brightness": 100,
   "theme": "dark",
-
   "spotify_enabled": true,
   "webradio_enabled": true,
   "dabfm_enabled": true,
-
   "music_path": "/home/pi/Musik",
   "audio_output": "auto",
   "volume": 90,
-
   "fm_freq": "98.5",
   "fm_gain": 30,
   "dab_gain": -1,
   "scanner_gain": -1,
-
   "ppm_correction": 49,
   "scanner_squelch": 10,
-
   "dab_scan_wait_lock": 40,
   "dab_scan_http_timeout": 4,
   "dab_scan_port": 7981,
-  "dab_scan_channels": ["11D", "10A", "11B"],
-
+  "dab_scan_channels": [
+    "11D",
+    "10A",
+    "11B"
+  ],
   "scanner_vhf_freq": 136.0,
   "scanner_uhf_freq": 400.0,
-
   "bt_last_mac": "",
   "bt_last_name": "",
   "bt_sink_mac": "",
   "bt_pa_sink": "",
-
-  "last_source": "",
+  "last_source": "dab",
   "last_fm_station": null,
-  "last_dab_station": null,
+  "last_dab_station": {
+    "name": "ROCK FM",
+    "channel": "11B",
+    "service_id": "0xd30e",
+    "ensemble": "OAS BW",
+    "url_mp3": ""
+  },
   "last_web_station": null
 }

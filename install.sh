@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.27           ║
+║        PiDrive Installer v0.9.28           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -104,7 +104,19 @@ info "3/10 Repository von GitHub..."
 if [ -d "$INSTALL_DIR/.git" ]; then
     info "Update von GitHub..."
     cd "$INSTALL_DIR"
+    # v0.9.28: settings.json vor git pull sichern — Runtime-Werte nicht überschreiben
+    _SETTINGS_FILE="$INSTALL_DIR/pidrive/config/settings.json"
+    _SETTINGS_BAK="/tmp/pidrive_settings_backup.json"
+    if [ -f "$_SETTINGS_FILE" ]; then
+        cp "$_SETTINGS_FILE" "$_SETTINGS_BAK"
+        info "settings.json gesichert → $_SETTINGS_BAK"
+    fi
     sudo -u "$REAL_USER" git pull
+    # settings.json wiederherstellen wenn vorhanden (git pull darf es nicht überschreiben)
+    if [ -f "$_SETTINGS_BAK" ]; then
+        cp "$_SETTINGS_BAK" "$_SETTINGS_FILE"
+        ok "settings.json wiederhergestellt (Benutzer-Einstellungen erhalten)"
+    fi
     # Veraltete .bak-Dateien entfernen
   find "$INSTALL_DIR" -name "*.bak" -delete 2>/dev/null || true
   # Altlasten explizit entfernen
