@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.28           ║
+║        PiDrive Installer v0.9.29           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -104,18 +104,33 @@ info "3/10 Repository von GitHub..."
 if [ -d "$INSTALL_DIR/.git" ]; then
     info "Update von GitHub..."
     cd "$INSTALL_DIR"
-    # v0.9.28: settings.json vor git pull sichern — Runtime-Werte nicht überschreiben
+    # v0.9.29: settings.json schützen — git stash + restore + key-merge
     _SETTINGS_FILE="$INSTALL_DIR/pidrive/config/settings.json"
     _SETTINGS_BAK="/tmp/pidrive_settings_backup.json"
     if [ -f "$_SETTINGS_FILE" ]; then
         cp "$_SETTINGS_FILE" "$_SETTINGS_BAK"
-        info "settings.json gesichert → $_SETTINGS_BAK"
+        # git stash: legt lokale Änderungen beiseite damit git pull nicht abbricht
+        cd "$INSTALL_DIR"
+        sudo -u "$REAL_USER" git stash 2>/dev/null || true
+        info "settings.json gesichert (git stash)"
     fi
     sudo -u "$REAL_USER" git pull
-    # settings.json wiederherstellen wenn vorhanden (git pull darf es nicht überschreiben)
+    # settings.json: Backup wiederherstellen (überschreibt Repo-Default)
     if [ -f "$_SETTINGS_BAK" ]; then
         cp "$_SETTINGS_BAK" "$_SETTINGS_FILE"
         ok "settings.json wiederhergestellt (Benutzer-Einstellungen erhalten)"
+        # Fehlende neue Keys aus Defaults ergänzen
+        python3 -c "
+import sys
+sys.path.insert(0, '$INSTALL_DIR/pidrive')
+try:
+    from settings import load_settings, save_settings
+    s = load_settings()
+    save_settings(s)
+    print('  ✓ settings.json: fehlende Keys ergänzt')
+except Exception as e:
+    print(f'  ⚠ settings merge: {e}')
+" 2>/dev/null || true
     fi
     # Veraltete .bak-Dateien entfernen
   find "$INSTALL_DIR" -name "*.bak" -delete 2>/dev/null || true
