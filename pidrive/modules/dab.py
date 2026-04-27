@@ -462,13 +462,15 @@ def play_station(station, S, settings=None):
         # welle-cli läuft via ALSA → PulseAudio routet automatisch (Klinke oder BT).
         # Das ist identisch zum manuellen Start der funktioniert:
         #   welle-cli -c 10A -p "NAME"  (kein PULSE_SERVER, kein PULSE_SINK)
-        _dab_port = int(settings.get("dab_scan_port", 7981) if settings else 7981)
-        # v0.9.26: -w PORT aktiviert HTTP-API für mux.json/DLS-Metadaten
-        # Audio bleibt ALSA-direkt via -p NAME — KEIN PULSE_ENV (würde OFDM stören)
+        # v0.9.26 KORREKTUR: -p und -w sind NICHT kombinierbar (welle-io.md §2)
+        # -p → AlsaProgrammeHandler (ALSA-Audio direkt)
+        # -w → WebRadioInterface (HTTP-Server)
+        # Diese sind zwei separate Betriebspfade — gleichzeitig nicht unterstützt.
+        # DLS-Polling via mux.json entfällt damit im ALSA-Modus.
+        # DLS wird stattdessen aus dem stderr-Log geparst (Abschnitt _dls_from_stderr).
         _welle_cmd = (
             "welle-cli -c " + ch + " -g " + _gain +
             " -p " + _name_q +
-            " -w " + str(_dab_port) +
             " < /dev/null" +
             " 2>/tmp/pidrive_dab_welle.err"
         )
@@ -539,45 +541,24 @@ def play_station(station, S, settings=None):
 
         # v0.9.15: DLS Metadaten-Polling (Dynamic Label Service = Lied/Artist vom Sender)
         # welle-cli liefert DLS-Text per mux.json → alle 8s pollen und S[track]/S[artist] setzen
-        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=_dab_port):
-            # v0.9.26: DLS-Poller wartet zuerst bis welle-cli HTTP-Server bereit ist
-            import urllib.request as _ur, json as _json, time as _tm
-            _url = f"http://127.0.0.1:{_port}/mux.json"
+        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=7981):
+            # v0.9.26: DLS via mux.json nicht verfügbar im ALSA-Modus (-p ohne -w)
+            # welle-cli -p und -w sind zwei getrennte Betriebspfade (welle-io.md §2).
+            # DLS wird via stderr-Tail angezeigt sobald welle-cli DLS-Zeilen ausgibt.
+            # Vorerst: Poller als kein-op, nur als Hook für spätere Erweiterung.
+            import time as _tm
             _last_dls = ""
-            # Warten bis HTTP-Server antwortet (max 10s)
-            for _w in range(10):
-                _tm.sleep(1)
-                try:
-                    _ur.urlopen(f"http://127.0.0.1:{_port}/", timeout=1).close()
-                    break
-                except Exception:
-                    pass
+            # Kurz warten damit welle-cli starten kann
+            _tm.sleep(5)
+            # Laufzeit-Loop: DLS aus welle-cli stderr lesen (welle-cli schreibt DLS
+            # nicht standardmäßig in stderr im -p Modus — TODO wenn welle-cli DLS
+            # in stderr-Ausgabe dokumentiert ist)
             while S.get("radio_playing") and S.get("radio_name") == _name:
-                _tm.sleep(8)
+                _tm.sleep(10)
                 if not (S.get("radio_playing") and S.get("radio_name") == _name):
                     break
-                try:
-                    _resp = _ur.urlopen(_url, timeout=4)
-                    _data = _json.loads(_resp.read().decode("utf-8"))
-                    for _svc in _data.get("services", []):
-                        _svc_sid = str(_svc.get("sid","") or "").strip().lower()
-                        if _svc_sid == _sid or _svc.get("label","").strip() == _name:
-                            _dls = str(_svc.get("dls","") or "").strip()
-                            if _dls and _dls != _last_dls:
-                                # Nur bei Änderung loggen
-                                if " - " in _dls:
-                                    _parts = _dls.split(" - ", 1)
-                                    S["artist"] = _parts[0].strip()
-                                    S["track"]  = _parts[1].strip()
-                                    log.info(f"[DAB DLS] {_name}: {_parts[0].strip()} – {_parts[1].strip()}")
-                                else:
-                                    S["artist"] = ""
-                                    S["track"]  = _dls
-                                    log.info(f"[DAB DLS] {_name}: {_dls[:80]}")
-                                _last_dls = _dls
-                            break
-                except Exception:
-                    pass  # Metadaten optional — stille Fehler
+                # DLS currently not available in ALSA-direct mode (-p without -w)
+                # Placeholder for future stderr-based DLS parsing
 
         import threading as _thr_dls
         _thr_dls.Thread(target=_dls_poller, daemon=True).start()

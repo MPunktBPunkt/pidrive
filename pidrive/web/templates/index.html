@@ -760,7 +760,13 @@ function renderAudio(data) {
   const dec   = data.decision || {};
   const fmt = (v) => v || '–';
 
-  if (el('audioPulseActive'))  el('audioPulseActive').textContent  = data.pa_active ? '✓ aktiv' : '✗ inaktiv';
+  // PA drei Zustände: true / "service_only" / false
+  const paEl = el('audioPulseActive');
+  if (paEl) {
+    if (data.pa_active === true)           paEl.textContent = '✓ aktiv';
+    else if (data.pa_active === 'service_only') paEl.textContent = '⚠ Dienst läuft, Socket leer';
+    else                                    paEl.textContent = '✗ inaktiv';
+  }
   if (el('audioDefaultSink'))  el('audioDefaultSink').textContent  = fmt(data.default_sink);
   const bt   = sinks.find(s => s.type === 'bt');
   const alsa = sinks.find(s => s.type === 'alsa');

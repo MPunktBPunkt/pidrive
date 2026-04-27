@@ -177,15 +177,19 @@ def get_audio_debug() -> dict:
         data["fallback_active"] = False
         data["fallback_reason"] = ""
 
-    # PulseAudio aktiv? v0.9.26: systemctl UND pactl-Fallback
+    # PulseAudio — drei Zustände (v0.9.26 Korrektur):
+    # "active"   : systemctl aktiv UND pactl antwortet
+    # "service"  : systemctl aktiv, aber pactl leer (Socket-Problem)
+    # False      : systemctl nicht aktiv
     try:
-        pa = safe_run("systemctl is-active pulseaudio 2>/dev/null")
-        pa_sys = (pa.get("stdout", "").strip() in ("active", "activating"))
-        if not pa_sys:
-            # Fallback: direkt testen ob pactl antwortet
+        pa_svc = safe_run("systemctl is-active pulseaudio 2>/dev/null")
+        pa_svc_ok = (pa_svc.get("stdout", "").strip() in ("active", "activating"))
+        if pa_svc_ok:
             pa2 = safe_run(PA_ENV + " pactl info 2>/dev/null")
-            pa_sys = bool(pa2.get("stdout", "").strip())
-        data["pulse_active"] = pa_sys
+            pa_api_ok = bool(pa2.get("stdout", "").strip())
+            data["pulse_active"] = True if pa_api_ok else "service_only"
+        else:
+            data["pulse_active"] = False
     except Exception:
         data["pulse_active"] = False
 
