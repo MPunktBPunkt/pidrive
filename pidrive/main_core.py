@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.22
+main_core.py - PiDrive Core v0.9.24
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1168,15 +1168,27 @@ def main():
                             PA + " pactl list sinks short 2>/dev/null",
                             shell=True, capture_output=True, text=True, timeout=3
                         )
+                        import re as _re
+                        alsa_sink = ""
                         for line in sinks.stdout.splitlines():
-                            if "alsa_output" in line:
-                                alsa_sink = line.split()[1]
-                                subprocess.run(
-                                    PA + " pactl set-default-sink " + alsa_sink,
-                                    shell=True, timeout=3
-                                )
-                                log.info("[AUDIO] bt_disconnected → PA zurück auf " + alsa_sink)
+                            parts = line.split()
+                            if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
+                                alsa_sink = parts[1]
                                 break
+                        if not alsa_sink:
+                            # Fallback: erstes ALSA das kein HDMI (Card 0) ist
+                            for line in sinks.stdout.splitlines():
+                                parts = line.split()
+                                if (len(parts) >= 2 and "alsa_output" in parts[1]
+                                        and not _re.search(r"alsa_output\.0\.", parts[1])):
+                                    alsa_sink = parts[1]
+                                    break
+                        if alsa_sink:
+                            subprocess.run(
+                                PA + " pactl set-default-sink " + alsa_sink,
+                                shell=True, timeout=3
+                            )
+                            log.info("[AUDIO] bt_disconnected → PA zurück auf " + alsa_sink)
 
                         _rtype = S.get("radio_type", "")
                         from modules.audio import is_radio_source

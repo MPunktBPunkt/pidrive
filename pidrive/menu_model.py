@@ -24,6 +24,7 @@ DAB-Migration / Merge:
 
 import os
 import json
+from modules.scanner import BANDS, VHF_RANGE, UHF_RANGE
 try:
     from modules import favorites as _fav_mod
 except Exception:
@@ -717,6 +718,10 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             S.get("radio_type") == "SCANNER" and
             band_id.upper() in S.get("radio_station", "").upper()
         )
+        # v0.9.24: VHF/UHF — Startfrequenz zeigen wenn noch kein Schritt
+        if not current_info and BANDS.get(band_id, {}).get("band"):
+            _b = BANDS[band_id]["band"]
+            current_info = f"{_b.get('start', _b.get('min', 0)):.3f} MHz"
         info_label = f"▶ {current_info}" if (active and current_info) else (current_info or "– kein Kanal aktiv –")
         return MenuNode(id=band_id, label=label, type="folder", active=active, children=[
             MenuNode(id=f"{band_id}_info", label=info_label, type="info"),
