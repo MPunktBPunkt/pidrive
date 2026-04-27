@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.28
+main_core.py - PiDrive Core v0.9.29
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1066,6 +1066,11 @@ def startup_tasks(S, settings):
         last_fm    = settings.get("last_fm_station")
         last_dab   = settings.get("last_dab_station")
         last_web   = settings.get("last_web_station")
+        # v0.9.29: Resume-State sofort loggen für Diagnose
+        _dab_name = (last_dab or {}).get("name", "–") if last_dab else "–"
+        _dab_sid  = (last_dab or {}).get("service_id", "–") if last_dab else "–"
+        _web_name = (last_web or {}).get("name", "–") if last_web else "–"
+        log.info(f"Boot-Resume-State: last_source={last_src!r} dab={_dab_name}({_dab_sid}) web={_web_name}")
 
         # v0.9.27: last_source ist die autoritäre Quelle — kein Fallback der überschreibt
         if last_src == "fm" and last_fm and last_fm.get("freq"):

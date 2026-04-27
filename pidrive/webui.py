@@ -456,11 +456,13 @@ def api_runtime():
             "scanner_gain": settings.get("scanner_gain", "-"),
             "ppm_correction": settings.get("ppm_correction", "-"),
             "scanner_squelch": settings.get("scanner_squelch", "-"),
+            "squelch": settings.get("scanner_squelch", "-"),   # alias für index.html
             "last_source": settings.get("last_source", "-"),
             "dab_scan_wait_lock": settings.get("dab_scan_wait_lock", "-"),
             "dab_scan_http_timeout": settings.get("dab_scan_http_timeout", "-"),
             "dab_scan_port": settings.get("dab_scan_port", "-"),
             "dab_scan_channels": settings.get("dab_scan_channels", []),
+            "dab_channels": ", ".join(settings.get("dab_scan_channels", [])) or "-",
         },
         "version": get_version(),
         "source_state": get_source_state_debug(),
@@ -855,23 +857,26 @@ def api_volume():
                 if len(parts) >= 2 and "alsa_output" in parts[1] and not _sink_is_hdmi(parts[1]):
                     sink = parts[1]; source_label = "alsa_fallback"; break
 
-        # Volume aus pactl list sinks (long) parsen — zuverlässig in --system Mode
+        # Volume aus pactl list sinks parsen — v0.9.29: korrektes Format-Matching
+        # pactl list sinks liefert: "	name = <sink_name>" (Tab+Klein)
+        # NICHT "Name: <sink>" (Groß) — das war das Bug
         vol = ""
         if sink:
             full_out = (safe_run(PA_ENV + " pactl list sinks 2>/dev/null").get("stdout","") or "")
             in_target = False
             for ln in full_out.splitlines():
-                if f"Name: {sink}" in ln:
+                # Sink-Block erkennen: "name = <sink_name>" (kleingeschrieben, mit Tabs)
+                if _re.search(r"name\s*=\s*" + _re.escape(sink), ln):
                     in_target = True
+                elif ln.strip().startswith("Sink #") or (in_target and _re.search(r"name\s*=\s*\S+", ln) and sink not in ln):
+                    if in_target:
+                        break  # nächster Sink-Block → aufhören
                 if in_target:
                     if ln.strip().startswith("Volume:") and "%" in ln:
                         m = _re.search(r"(\d+)%", ln)
                         if m:
                             vol = m.group(1) + "%"
                             break
-                    # Nächster Sink-Block → Ende
-                    if in_target and ln.startswith("    Name:") and sink not in ln:
-                        break
 
         return jsonify({"ok": True, "volume": vol or "–",
                         "sink": sink or "", "source": source_label})
@@ -896,6 +901,51 @@ def api_spectrum_last():
         "age": file_age("/tmp/pidrive_spectrum.json"),
         "exists": os.path.exists("/tmp/pidrive_spectrum.json"),
     })
+
+
+@app.route("/api/spectrum/capture", methods=["GET", "POST"])
+def api_spectrum_capture():
+    """
+    v0.9.29: FM-Band-Sweep anstoßen.
+    Parameter (GET oder POST JSON):
+      mode: "fm_sweep" | "single"
+      start_mhz, stop_mhz, step_mhz (für fm_sweep)
+      center_mhz (für single)
+      ppm, gain
+    Läuft synchron — kann 30–120s dauern.
+    Gibt candidates (bestätigt) und candidates_weak zurück.
+    """
+    args = request.get_json(silent=True) or request.args
+    mode = args.get("mode", "fm_sweep")
+    ppm  = int(args.get("ppm", 49))
+    gain = int(args.get("gain", -1))
+    try:
+        from modules import spectrum
+        if mode == "fm_sweep":
+            start = float(args.get("start_mhz", 87.5))
+            stop  = float(args.get("stop_mhz", 108.0))
+            step  = float(args.get("step_mhz", 1.0))
+            result = spectrum.sweep_fm_band(
+                start_mhz=start, stop_mhz=stop, step_mhz=step,
+                ppm=ppm, gain=gain)
+        else:
+            center = float(args.get("center_mhz", 98.0))
+            result = spectrum.capture_spectrum(center_mhz=center, ppm=ppm, gain=gain)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+@app.route("/api/spectrum/stations")
+def api_spectrum_stations():
+    """v0.9.29: Bestätigte FM-Stationen aus letztem Sweep."""
+    try:
+        from modules import spectrum
+        min_hits = int(request.args.get("min_hits", 2))
+        stations = spectrum.get_confirmed_stations(min_hits=min_hits)
+        return jsonify({"ok": True, "stations": stations, "count": len(stations)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
 
 
 @app.route("/api/avrcp")

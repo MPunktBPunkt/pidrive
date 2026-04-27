@@ -627,7 +627,9 @@ def check_rtlsdr():
     else:
         nfo("Kein RTL-SDR State File — normal beim Start")
 
-    settings_file = "/home/pi/pidrive/pidrive/config/settings.json"
+    # v0.9.29: dynamischer Pfad statt hardcode /home/pi
+    _diag_base = os.path.dirname(os.path.abspath(__file__))
+    settings_file = os.path.join(_diag_base, "config", "settings.json")
     if os.path.exists(settings_file):
         try:
             sett = _read_json(settings_file, {})
@@ -781,10 +783,13 @@ def check_resources():
         df_out = run("df -h / 2>/dev/null")
         for line in df_out.splitlines():
             parts = line.split()
-            if len(parts) >= 5 and parts[0] != "Filesystem":
-                pct_val = int(parts[4].rstrip('%')) if parts[4].rstrip('%').isdigit() else 0
+            # Nur Datenzeile: parts[4] muss "XX%" sein (kein Header "Verw%" o.ä.)
+            if (len(parts) >= 5 and parts[0] != "Filesystem"
+                    and parts[4].rstrip('%').isdigit()):
+                pct_val = int(parts[4].rstrip('%'))
                 flag = "⚠" if pct_val > 80 else "✓"
                 nfo(f"SD-Karte: {flag} {parts[2]} genutzt, {parts[3]} frei ({parts[4]} voll)")
+                break  # Nur erste Datenzeile
         free_out = run("free -h 2>/dev/null")
         for line in free_out.splitlines():
             if line.startswith("Mem:"):
@@ -803,7 +808,7 @@ def check_resources():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.28\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.29\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
