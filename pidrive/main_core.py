@@ -1,5 +1,5 @@
 """
-main_core.py - PiDrive Core v0.9.24
+main_core.py - PiDrive Core v0.9.25
 
 Headless Core — kein pygame, kein Display.
 Baumbasiertes Menümodell (menu_model.py).
@@ -1039,6 +1039,15 @@ def startup_tasks(S, settings):
 
     try:
         from modules import audio as _aud_vol
+        # v0.9.25: Volume in settings.json auf max 100% korrigieren
+        try:
+            if int(settings.get("volume", 90)) > 100:
+                settings["volume"] = 90
+                from settings import save_settings
+                save_settings(settings)
+                log.info("[AUDIO] volume > 100 in settings → auf 90% korrigiert")
+        except Exception:
+            pass
         _aud_vol.apply_startup_volume(settings)
     except Exception as _ev:
         log.warn("Boot startup_volume: " + str(_ev))

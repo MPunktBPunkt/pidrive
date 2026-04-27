@@ -989,13 +989,26 @@ def start_auto_reconnect(S, settings):
     import threading as _th
 
     def _watcher():
+        # v0.9.25: Exponential Backoff — kein Spam bei abgeschaltetem Kopfhörer
+        # Intervall-Schema: 12s → 20s → 30s → 60s → 120s → 300s → Stop nach 20min
+        _INTERVALS = [12, 12, 20, 20, 30, 60, 120, 300]
+        _MAX_RUNTIME = 20 * 60  # 20 Minuten, dann aufhören
+        _fail_streak  = 0
+        _start_ts     = time.time()
+
         time.sleep(6)
         while not _reconnect_stop:
             try:
-                mac = settings.get("bt_last_mac", "")
+                # Nach MAX_RUNTIME aufhören — Benutzer muss manuell reconnecten
+                if time.time() - _start_ts > _MAX_RUNTIME:
+                    log.info("BT auto-reconnect: aufgehört nach 20min ohne Erfolg")
+                    break
+
+                mac  = settings.get("bt_last_mac", "")
                 name = settings.get("bt_last_name", "")
                 if mac and not S.get("bt", False):
                     if _src_state and _src_state.in_transition():
+                        time.sleep(5)
                         continue
                     rc, out = _btctl(f"info {mac}", timeout=5)
                     low = out.lower()
@@ -1016,12 +1029,18 @@ def start_auto_reconnect(S, settings):
                             settings["audio_output"] = "bt"
                             from modules import audio as _aud
                             _aud.get_mpv_args(settings, source="bt_auto_reconnect")
+                            _fail_streak = 0
+                            _start_ts = time.time()  # Timer zurücksetzen nach Erfolg
                         else:
-                            log.info(f"BT auto-reconnect: fehlgeschlagen mac={mac} ({out2[:80]})")
+                            _fail_streak += 1
+                            log.info(f"BT auto-reconnect: fehlgeschlagen #{_fail_streak} mac={mac} ({out2[:60]})")
             except Exception as e:
                 log.warn("BT auto-reconnect Watcher: " + str(e))
+                _fail_streak += 1
 
-            time.sleep(12 if not S.get("bt", False) else 20)
+            # Backoff: nach jedem Fehler länger warten
+            _interval = _INTERVALS[min(_fail_streak, len(_INTERVALS)-1)]
+            time.sleep(_interval if not S.get("bt", False) else 20)
 
     _reconnect_thread = _th.Thread(target=_watcher, daemon=True, name="bt_auto_reconnect")
     _reconnect_thread.start()

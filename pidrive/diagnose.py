@@ -764,7 +764,7 @@ def summary():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.24\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.25\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
