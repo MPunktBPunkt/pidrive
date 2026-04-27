@@ -168,6 +168,11 @@ def get_bt_sink(retry: int = 1) -> str:
     return ""
 
 
+def is_radio_source(radio_type: str) -> bool:
+    """True wenn eine Radio-Quelle läuft die nach BT-Wechsel neugestartet werden soll."""
+    return str(radio_type or "").upper() in ("FM", "DAB", "WEB", "SCANNER")
+
+
 def _sink_is_hdmi(sink_name: str) -> bool:
     """
     Card 0 = HDMI, Card 1 = Headphones (Klinke) auf Pi 3B mit modernem Pi OS.
@@ -456,8 +461,11 @@ def set_output(mode: str, settings: dict):
 
 def apply_startup_volume(settings=None):
     """
-    Gespeicherte Lautstärke beim Boot auf Default-Sink anwenden (v0.9.0).
-    Wird in main_core.py startup_tasks() aufgerufen.
+    Lautstärke beim Boot anwenden. v0.9.24:
+    - Default 90% (kein volume > 100% beim Start)
+    - Alle PulseAudio-Sinks werden gesetzt
+    - amixer Card 1 mitziehen (FM/Scanner ALSA direkt)
+    - Gespeicherter Wert bleibt über Neustarts erhalten
     """
     if settings is None:
         try:
@@ -467,18 +475,25 @@ def apply_startup_volume(settings=None):
             settings = {}
     vol = settings.get("volume", 90)
     try:
-        vol = max(0, min(int(vol), 150))
+        vol = max(0, min(int(vol), 100))   # Hard cap 100%
     except Exception:
         vol = 90
     try:
         import subprocess as _sp
-        sink = _get_current_sink()
-        target = sink if sink else "@DEFAULT_SINK@"
-        _sp.run(
-            PA_ENV + f" pactl set-sink-volume {target} {vol}%",
-            shell=True, capture_output=True, timeout=4
-        )
-        log.info(f"[AUDIO] startup volume → {vol}% sink={target}")
+        # Alle PA-Sinks setzen
+        sinks_r = _sp.run(PA_ENV + " pactl list sinks short 2>/dev/null",
+                          shell=True, capture_output=True, text=True, timeout=4)
+        n = 0
+        for _ln in sinks_r.stdout.splitlines():
+            _p = _ln.split()
+            if len(_p) >= 2:
+                _sp.run(PA_ENV + f" pactl set-sink-volume {_p[1]} {vol}%",
+                        shell=True, capture_output=True, timeout=3)
+                n += 1
+        # amixer Card 1 für FM/Scanner
+        _sp.run(f"amixer -c 1 sset PCM {vol}% 2>/dev/null",
+                shell=True, capture_output=True, timeout=3)
+        log.info(f"[AUDIO] startup volume → {vol}% auf {n} PA-Sinks + amixer Card 1")
     except Exception as e:
         log.error("[AUDIO] apply_startup_volume: " + str(e))
 
@@ -535,6 +550,12 @@ def volume_up(settings=None):
                 save_settings(settings)
             except Exception:
                 pass
+        try:
+            _v = min(100, int(settings.get("volume", 90)) if settings else 90)
+            subprocess.run(f"amixer -c 1 sset PCM {_v}% 2>/dev/null",
+                           shell=True, capture_output=True, timeout=2)
+        except Exception:
+            pass
         ipc.write_progress("Lautstaerke", "up +5%", color="green")
         time.sleep(0.8)
         ipc.clear_progress()
@@ -548,6 +569,19 @@ def volume_down(settings=None):
         target = sink if sink else "@DEFAULT_SINK@"
         subprocess.run(PA_ENV + f" pactl set-sink-volume {target} -5%",
                        shell=True, capture_output=True, timeout=3)
+        if settings is not None:
+            try:
+                settings["volume"] = max(0, int(settings.get("volume", 90)) - 5)
+                from settings import save_settings
+                save_settings(settings)
+            except Exception:
+                pass
+        try:
+            _v = max(0, int(settings.get("volume", 90)) if settings else 90)
+            subprocess.run(f"amixer -c 1 sset PCM {_v}% 2>/dev/null",
+                           shell=True, capture_output=True, timeout=2)
+        except Exception:
+            pass
         ipc.write_progress("Lautstaerke", "down -5%", color="orange")
         time.sleep(0.8)
         ipc.clear_progress()
