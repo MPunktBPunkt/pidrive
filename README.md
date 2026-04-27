@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.9.22-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.9.24-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -383,6 +383,16 @@ sudo apt install welle.io
 ## Changelog
 
 ## Changelog
+
+### v0.9.24 (2026-04-26)
+
+Volume: alle Sinks auf 90% beim Start, vol_down speichert, amixer Card 1 sync.
+VHF/UHF zeigt Startfrequenz bevor erster Schritt gemacht wurde.
+
+### v0.9.23 (2026-04-26)
+
+`is_radio_source` ImportError behoben. BT-Disconnect Fallback auf Card 1 (Klinke)
+statt Card 0 (HDMI). Volume-Anzeige zeigt Klinke/HDMI/BT statt rohem Sink-Namen.
 
 ### v0.9.22 (2026-04-26)
 

@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.9.22
+# PiDrive — Kontext & Projektdokumentation v0.9.24
 
 ## Projektbeschreibung
 
@@ -922,7 +922,7 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.9.22 — DAB: PULSE_ENV entfernt, Scanner: --ao=alsa
+### v0.9.24 — DAB: PULSE_ENV entfernt, Scanner: --ao=alsa
 
 **Root Cause DAB kein Ton auf BT:**
 `PULSE_SERVER`/`PULSE_SINK` im welle-cli Env verursachen einen RTL2838-Timing-Fehler:
@@ -2284,13 +2284,13 @@ Kalibrierungsbutton fand deshalb oft nichts und zeigte keine Hilfe.
 - Webradio, MP3 Bibliothek mit Album-Art
 
 
-## Aktueller Stand (v0.9.22)
+## Aktueller Stand (v0.9.24)
 
 **System läuft stabil** — 26.04.2026:
 
 ```
-✓ pidrive_core.service      v0.9.22 — DAB: kein PULSE_ENV, Scanner: --ao=alsa
-✓ pidrive_display.service   v0.9.22, 20fps
+✓ pidrive_core.service      v0.9.24 — Volume: alle Sinks 90%, amixer sync, vol_down speichert
+✓ pidrive_display.service   v0.9.24, 20fps
 ✓ modules/dab.py            welle-cli -p → ALSA direkt (kein HTTP-Modus)
 ✓ modules/fm.py             rtl_fm | mpv --ao=alsa hw:1,0
 ✓ modules/bluetooth.py      BT Scan: scan on/off; BT Agent persistent
