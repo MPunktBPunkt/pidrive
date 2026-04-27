@@ -1013,7 +1013,7 @@ def start_auto_reconnect(S, settings):
                     rc, out = _btctl(f"info {mac}", timeout=5)
                     low = out.lower()
                     if rc == 0 and "name:" in low and "connected: no" in low:
-                        log.info(f"BT auto-reconnect: Gerät sichtbar, versuche Connect mac={mac}")
+                        log.info(f"BT auto-reconnect [Watcher]: Gerät sichtbar, versuche Connect mac={mac}")
                         rc2, out2 = _btctl(f"connect {mac}", timeout=15)
                         low2 = out2.lower()
                         if any(x in low2 for x in ["successful", "connected: yes"]):

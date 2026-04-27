@@ -126,6 +126,19 @@ def load_last_spectrum() -> dict:
         return {}
 
 
+def get_confirmed_stations(min_hits: int = 2) -> list:
+    """
+    v0.9.29: Stabile FM-Stationen aus letztem Sweep laden.
+    Gibt bereinigte Liste mit freq_mhz, db, hits zurück.
+    Nur für Testanzeige — nicht automatisch in fm_stations.json übernehmen.
+    """
+    data = load_last_spectrum()
+    if not data or data.get("mode") != "fm_sweep":
+        return []
+    confirmed = data.get("candidates", [])
+    return [c for c in confirmed if c.get("hits", 1) >= min_hits]
+
+
 def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=262144,
                      ppm=0, gain=-1, peak_threshold_db=None):
     """
@@ -214,14 +227,18 @@ def sweep_fm_band(start_mhz=87.5, stop_mhz=108.0, step_mhz=1.0,
                       "peak_count": len(peaks), "top_peaks": peaks[:8]})
         all_peaks.extend(peaks)
 
-    # Grobe Deduplizierung: 0.1 MHz Auflösung
-    seen = {}
-    for p in all_peaks:
-        key = round(float(p["freq_mhz"]), 1)
-        if seen.get(key) is None or p["db"] > seen[key]["db"]:
-            seen[key] = p
+    # v0.9.29: Deduplizierung via _dedupe_peaks (0.1 MHz Raster) + Mehrfachbestätigung
+    # Kandidat gilt als stabil wenn hits >= min_hits (Standard: 2 Fenster)
+    all_deduped = _dedupe_peaks(all_peaks, resolution_mhz=0.1)
 
-    candidates = sorted(seen.values(), key=lambda x: x["db"], reverse=True)
+    # FM-Band-Filter: nur 87.5–108.0 MHz
+    fm_candidates = [c for c in all_deduped
+                     if 87.4 <= c["freq_mhz"] <= 108.1]
+
+    # Stabile Kandidaten: in ≥ min_hits Sweep-Fenstern gesehen
+    min_hits = max(1, int(len(centers) * 0.3))  # 30% der Fenster = bestätigt
+    confirmed  = [c for c in fm_candidates if c.get("hits", 1) >= min_hits]
+    unconfirmed = [c for c in fm_candidates if c.get("hits", 1) < min_hits]
 
     result = {
         "ok":             True,
@@ -233,8 +250,13 @@ def sweep_fm_band(start_mhz=87.5, stop_mhz=108.0, step_mhz=1.0,
         "sample_count":   int(sample_count),
         "ppm":            int(ppm),
         "gain":           int(gain),
+        "min_hits":       min_hits,
+        "windows_total":  len(centers),
+        "windows_ok":     sum(1 for w in sweep if w.get("ok")),
         "windows":        sweep,
-        "candidates":     candidates[:60],
+        "candidates":          confirmed[:40],      # stabile Kandidaten
+        "candidates_weak":     unconfirmed[:20],    # einmalige Kandidaten
+        "candidates_all_count": len(fm_candidates),
         "ts":             int(time.time()),
     }
     save_last_spectrum(result)
