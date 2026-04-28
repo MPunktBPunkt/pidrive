@@ -383,6 +383,7 @@
         <div class="diag-row"><div class="diag-key">Gain (aktiv)</div><div class="diag-value" id="dabStatusGain">–</div></div>
         <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value" id="dabStatusPpm">–</div></div>
         <div class="diag-row"><div class="diag-key">Letzter Fehler</div><div class="diag-value" id="dabStatusErr">–</div></div>
+        <div class="diag-row"><div class="diag-key">DLS (Artist/Titel)</div><div class="diag-value" id="dabStatusDls">–</div></div>
       </div>
       <div class="diag-actions">
         <button onclick="refreshDabStatus()">🔄 Refresh</button>
@@ -1168,11 +1169,22 @@ async function refreshDabStatus() {
     const d = j.data;
     if(el('dabStatusName')) el('dabStatusName').textContent = d.name || '–';
     if(el('dabStatusCh'))   el('dabStatusCh').textContent   = (d.channel||'–') + ' / ' + (d.service_id||'–');
-    if(el('dabStatusLock')) el('dabStatusLock').textContent = d.sync_ok ? '✓ Sync OK' : ('✗ kein Lock' + (d.last_error_line ? ': ' + d.last_error_line : ''));
-    if(el('dabStatusSnr'))  el('dabStatusSnr').textContent  = d.sync_ok ? '✓' : '– (SyncOnPhase failed)';
-    if(el('dabStatusGain')) el('dabStatusGain').textContent = d.gain === '-1' ? 'Auto (AGC)' : (d.gain + ' dB');
+    const lockStr = d.sync_ok
+      ? ('✓ Locked' + (d.dab_state ? ' ['+d.dab_state+']' : ''))
+      : ('✗ ' + (d.dab_state||'kein Lock') + (d.last_error_line ? ': '+d.last_error_line : ''));
+    if(el('dabStatusLock')) el('dabStatusLock').textContent = lockStr;
+    if(el('dabStatusSnr'))  el('dabStatusSnr').textContent  = d.sync_ok ? '✓ Superframe sync' : 'SyncOnPhase failed (normal < 5s)';
+    if(el('dabStatusGain')) el('dabStatusGain').textContent = d.gain === '-1' || d.gain === -1 ? 'Auto (AGC)' : (d.gain + ' dB');
     if(el('dabStatusPpm'))  el('dabStatusPpm').textContent  = '+' + (d.ppm || 0) + ' ppm';
     if(el('dabStatusErr'))  el('dabStatusErr').textContent  = d.last_error_line || '–';
+    // DLS: live aus Core-Status
+    try {
+      const rs = await fetch('/api/status'); const js = await rs.json();
+      const st = js.status || {};
+      const dls = (st.artist && st.track) ? st.artist+' – '+st.track
+                : (st.track || st.artist || '–');
+      if(el('dabStatusDls')) el('dabStatusDls').textContent = dls;
+    } catch(e2) {}
   } catch(e) { console.log('dabStatus:', e); }
 }
 
