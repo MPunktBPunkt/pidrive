@@ -1,10 +1,9 @@
 """
-modules/scanner.py - Funkscanner mit RTL-SDR
-PiDrive - GPL-v3
-
-PMR446 (8 Kanaele), Freenet (4), LPD433 (69), VHF (136-174 MHz), UHF (400-470 MHz)
-Scan-Funktion: Squelch-Erkennung via rtl_fm -l, stoppt bei Signal.
+modules/scanner.py — VHF/UHF/CB-Scanner via rtl_fm (ALSA-direkt)
+Aufrufer: main_core.py
+Abhängig von: modules/audio.py, modules/source_state.py, ipc.py
 """
+
 
 import subprocess
 try:

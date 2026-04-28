@@ -1,17 +1,10 @@
 """
-modules/source_state.py — Zentrale Source-State-Machine für PiDrive (v0.9.0)
-
-Ziel:
-- genau eine aktive Hauptquelle zu jeder Zeit
-- serialisierte Quellenwechsel (kein simultanes FM+Scanner+BT)
-- Scanner/BT/Audio-Routing respektieren dieselbe Wahrheit
-- Race-Conditions zwischen Scanner, BT-Reconnect und Quellenwechsel reduzieren
-
-Drei getrennte State-Ebenen:
-  source_current: idle | fm | dab | webradio | scanner | spotify | library
-  audio_route:    klinke | bt | hdmi | none
-  bt_state:       off | idle | connecting | connected | failed
+modules/source_state.py — Zustandsspiegel (kein Regler)
+Aufrufer: alle modules/*, main_core.py, webui.py, ipc.py
+Schreibt: /tmp/pidrive_source_state.json
+Hinweis: source_state steuert NICHT — er spiegelt nur. Audio/BT über audio.py/bluetooth.py ändern.
 """
+
 
 import os
 import json

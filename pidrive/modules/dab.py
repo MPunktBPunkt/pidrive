@@ -1,13 +1,11 @@
 """
-modules/dab.py - DAB+ Radio
-PiDrive v0.9.14-final — service_id/url_mp3 hardened
-
-Wichtige Punkte:
-- DAB-Scan via welle-cli Webserver + mux.json
-- service_id (sid) und url_mp3 werden konsequent gespeichert
-- play_by_name() bevorzugt service_id vor Name
-- Scan-Diagnose wird prozessübergreifend persistiert
+modules/dab.py — DAB+ Wiedergabe und Scan via welle-cli (ALSA-Direktmodus)
+Aufrufer: main_core.py
+Abhängig von: modules/audio.py, modules/source_state.py, ipc.py
+Schreibt: /tmp/pidrive_dab_play_debug.json, settings[last_dab_station], dab_stations.json
+Hinweis: welle-cli -p = ALSA-direkt, KEIN PulseAudio (OFDM-Timing-sensitiv)
 """
+
 
 import subprocess
 try:

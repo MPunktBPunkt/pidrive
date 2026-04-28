@@ -1,3 +1,10 @@
+"""
+main_display.py — Display-Rendering (pygame/fbcon)
+Aufrufer: systemd pidrive_display.service
+Abhängig von: ipc.py (liest /tmp/pidrive_status.json, /tmp/pidrive_menu.json)
+Schreibt: /dev/fb1 (SPI-Display direkt via SDL_FBDEV)
+"""
+
 #!/usr/bin/env python3
 """
 main_display.py - PiDrive Display v0.9.30

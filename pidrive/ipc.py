@@ -1,69 +1,10 @@
 """
-ipc.py - PiDrive IPC v0.7.10
-Atomares JSON zwischen Core, Display und Web UI.
-
-IPC-VERTRAG (stabil ab v0.7.10):
-============================================================
-STATUS: /tmp/pidrive_status.json
-  wifi      bool     WLAN verbunden
-  wifi_ssid str      Netzwerkname
-  bt        bool     Bluetooth aktiv
-  bt_device str      verbundenes Gerät
-  spotify   bool     Spotify aktiv
-  track     str      Spotify Titel
-  artist    str      Spotify Artist
-  album     str      Spotify Album
-  radio     bool     Radio aktiv
-  radio_name str     Sendername
-  radio_type str     WEB/DAB/FM/SCANNER
-  library   bool     Bibliothek aktiv
-  lib_track str      aktueller Track
-  audio_out str      Audioausgang (klinke/hdmi/bt/auto)
-  ip        str      IP-Adresse
-  ts        int      Unix-Timestamp
-
-MENÜ: /tmp/pidrive_menu.json
-  rev       int      Änderungszähler (steigt bei jeder Navigation)
-  path      list     Pfad-Labels ["PiDrive","Quellen","FM Radio","Sender"]
-  title     str      letzten 2 Pfad-Elemente als String
-  cursor    int      selektierter Index in nodes[]
-  can_back  bool     true wenn nicht im Root
-  nodes     list     aktuelle Knoten (id/label/type/active/playable/meta)
-  -- Compat-Felder (für alte Display/Web-Versionen) --
-  cat       int      Root-Kategorie Index
-  cat_label str      Root-Kategorie Label
-  item      int      = cursor
-  item_label str     = nodes[cursor].label
-  categories list    Root-Kategorie Labels
-  items     list     nodes[].label Liste
-
-PROGRESS: /tmp/pidrive_progress.json
-  active    bool
-  title     str
-  message   str
-  pct       int|null  0-100 für Fortschrittsbalken
-  color     str       blue/green/orange/red
-
-LIST: /tmp/pidrive_list.json (headless_pick)
-  active    bool
-  title     str
-  items     list
-  selected  int
-
-COMMAND: /tmp/pidrive_cmd
-  up/down/left/right/enter/back
-  cat:0..3
-  dab_scan, fm_scan
-  fm_next, fm_prev, dab_next, dab_prev
-  reload_stations:dab|fm|webradio
-  scan_up:band, scan_down:band, scan_next:band, scan_prev:band
-  wifi_on/off/toggle, bt_on/off/toggle
-  spotify_on/off/toggle
-  audio_klinke/hdmi/bt/all
-  vol_up, vol_down
-  reboot, shutdown, update
-============================================================
+ipc.py — Inter-Process-Communication (JSON-Dateien in /tmp)
+Aufrufer: main_core.py, main_display.py, webui.py, diagnose.py
+Schreibt: /tmp/pidrive_status.json, /tmp/pidrive_menu.json, /tmp/pidrive_cmd
+Liest: /tmp/pidrive_cmd (Trigger-Datei für Befehle)
 """
+
 
 import os, json, time
 

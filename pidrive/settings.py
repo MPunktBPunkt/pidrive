@@ -1,8 +1,10 @@
 """
-settings.py — Zentrales Settings-Modul für PiDrive
-
-v0.8.9: fehlende Schlüssel werden mit Defaults aufgefüllt (merge)
+settings.py — Settings-Persistenz (JSON, atomic write)
+Aufrufer: main_core.py, alle modules/, webui.py, diagnose.py
+Schreibt: pidrive/config/settings.json (atomic via .tmp + rename)
+Wichtig: settings.json ist in .gitignore — nie von git überschreiben lassen
 """
+
 
 import json
 import os

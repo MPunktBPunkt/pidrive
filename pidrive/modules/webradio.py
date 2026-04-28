@@ -1,7 +1,10 @@
 """
-modules/webradio.py - Webradio Modul
-PiDrive v0.8.10 - pygame-frei, Altlasten entfernt, load_stations dict-robust
+modules/webradio.py — Webradio via mpv (PulseAudio)
+Aufrufer: main_core.py
+Abhängig von: modules/audio.py, modules/source_state.py, ipc.py
+Schreibt: settings[last_web_station], settings[last_source]
 """
+
 
 import subprocess
 import json

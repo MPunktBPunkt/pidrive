@@ -1,7 +1,9 @@
 """
-modules/wifi.py - WiFi Modul
-PiDrive v0.8.10 - pygame-frei, Altlasten entfernt
+modules/wifi.py — WiFi-Verbindung via nmcli
+Aufrufer: main_core.py
+Abhängig von: ipc.py
 """
+
 
 import subprocess
 import time

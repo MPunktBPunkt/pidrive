@@ -1,16 +1,11 @@
 """
-modules/spectrum.py — FFT/Spektrum-Prototyp für FM/Scanner-FastScan (v0.9.5)
-
-Ziel:
-- kurzer passiver IQ-Snapshot vom RTL-SDR
-- FFT + Peak-Erkennung
-- Grundlage für späteren FastScan FM/Scanner
-- kein Eingriff in DAB/FM/Scanner-Wiedergabe
-
-Voraussetzungen:
-- rtl_sdr Binary installiert (apt install rtl-sdr)
-- numpy installiert (apt install python3-numpy)
+modules/spectrum.py — FM FastScan / FFT-Spektrum (experimentell)
+Aufrufer: webui.py (/api/spectrum/capture), main_core.py (optional)
+Abhängig von: numpy, subprocess (rtl_sdr)
+Schreibt: /tmp/pidrive_spectrum.json
+Hinweis: Prototyp — kein Einfluss auf normalen FM-Betrieb
 """
+
 
 import os
 import json

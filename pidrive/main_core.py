@@ -1,13 +1,10 @@
 """
-main_core.py - PiDrive Core v0.9.30
-
-Headless Core — kein pygame, kein Display.
-Baumbasiertes Menümodell (menu_model.py).
-Stationslisten aus JSON (StationStore, Hot-Reload).
-Suchlauf → JSON speichern → Menü sofort aktualisieren.
-
-Triggerbasierte Steuerung: echo 'cmd' > /tmp/pidrive_cmd
+main_core.py — PiDrive Hauptprozess (Core)
+Aufrufer: systemd pidrive_core.service
+Abhängig von: alle modules/*, ipc.py, settings.py, menu_model.py
+Schreibt: /tmp/pidrive_cmd (liest), /tmp/pidrive_status.json, /tmp/pidrive_menu.json
 """
+
 
 import sys, os, time, json, signal
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

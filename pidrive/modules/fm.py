@@ -1,19 +1,11 @@
 """
-modules/fm.py - FM Radio mit RTL-SDR
-PiDrive - GPL-v3
-
-Hardware: RTL-SDR Stick
-Software: rtl-sdr Paket (rtl_fm) + mpv --ao=pulse (v0.8.11)
-
-Frequenzen werden in config/fm_stations.json gespeichert.
-Format: [{"name": "Bayern 3", "freq": "99.4"}]
-        oder {"stations": [...], "freq_mhz": ...}  (Scan-Format)
-
-v0.8.7:
-- _get_freq(): liest 'freq' ODER 'freq_mhz' — behebt fm_next/fm_prev Bug
-- play_station(): Doppelstart-Entprellung (_last_station_key / _last_start_ts)
-- play_next/prev(): robustes Matching nach Name UND Frequenz
+modules/fm.py — FM-Wiedergabe via rtl_fm | mpv (ALSA-direkt)
+Aufrufer: main_core.py
+Abhängig von: modules/audio.py, modules/source_state.py, ipc.py
+Schreibt: settings[last_fm_station], settings[last_source]
+Hinweis: kein RDS — rtl_fm liefert nur Audio-PCM an PiDrive
 """
+
 
 import subprocess
 try:
