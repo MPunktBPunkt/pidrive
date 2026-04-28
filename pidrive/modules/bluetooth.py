@@ -1,20 +1,51 @@
 """
-modules/bluetooth.py - Bluetooth Modul
-PiDrive v0.9.14-final - persistent agent lifecycle + known devices + reconnect
+modules/bluetooth.py — Bluetooth-Modul für PiDrive
+===================================================
 
-Ziele:
-- persistenter bluetoothctl-Agent statt kurzlebiger Einmal-Prozesse
-- bekannte Geräte dedupliziert aus:
-  - persistenter known-Datei
-  - BlueZ-DB (/var/lib/bluetooth)
-  - bluetoothctl paired-devices
-- Reconnect bekannter Geräte mit Priorität + Cooldown
-- BT-Scan speichert bekannte / gepaarte Geräte fortlaufend
+SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
+──────────────────────────────────────
 
-Wichtige Hintergrundprobleme:
-- bluetoothctl scan on ohne Filter zeigt viele BLE-Geräte mit random MACs,
-  die für A2DP irrelevant sind [2]
-- der bisherige Agent war nicht persistent genug [2]
+## Wer ruft was auf?
+
+    main_core.py    → start_agent(), reconnect_known_devices(),
+                      start_auto_reconnect(), connect_device(), disconnect_device()
+    webui.py        → scan_and_store(), connect_device(), get_known_devices(),
+                      backup_known_devices(), restore_known_devices()
+
+## Öffentliche API
+
+    start_agent() → bool
+        Startet bluetoothctl-Agent persistent im Hintergrund (einmalig beim Boot).
+
+    reconnect_known_devices(S, settings) → bool
+        Boot-Reconnect: versucht bekannte Geräte einmalig zu verbinden.
+        True = mindestens ein Gerät verbunden. Setzt bt_state = "connected"/"failed".
+
+    start_auto_reconnect(S, settings)
+        Hintergrund-Watcher. Backoff: 12s → 300s, Stop nach 20min.
+        Log-Prefix: "BT auto-reconnect [Watcher]:" (trennt von Boot-Pfad).
+
+    connect_device(mac, name, settings, S) → bool
+        Ablauf: disconnect → trust → pair → connect → PA-Sink setzen.
+        Setzt settings["audio_output"] = "bt".
+
+## Zwei Reconnect-Pfade (bewusst getrennt)
+
+    BOOT:     reconnect_known_devices() — aus /tmp/pidrive_bt_known_devices.json
+    WATCHER:  start_auto_reconnect()   — aus settings["bt_last_mac"]
+    Log unterscheidet: "BT Boot-Reconnect:" vs. "BT auto-reconnect [Watcher]:"
+
+## State Machine
+
+    source_state.bt_state: "idle" | "connecting" | "connected" | "failed"
+    Nur bluetooth.py und main_core.py setzen bt_state.
+    source_state steuert BT nicht — nur Spiegel.
+
+## A2DP-Voraussetzungen
+
+    - Gerät: Classic BR/EDR (public MAC, nicht BLE random MAC)
+    - PulseAudio: module-bluetooth-discover + module-bluetooth-policy geladen
+    - Nach connect: ~2-3s Wartezeit bis PA A2DP-Sink registriert
 """
 
 import subprocess
@@ -547,15 +578,18 @@ def _set_raspotify_device(device, restart=True):
 # ──────────────────────────────────────────────────────────────────────────────
 
 def bt_toggle(S):
-    if S.get("bt"):
+    # v0.9.29: bt_on = Adapter UP (blau), bt = Gerät verbunden (grün)
+    if S.get("bt_on", False) or S.get("bt", False):
         log.info("BT toggle: OFF")
         _bg("bluetoothctl power off; hciconfig hci0 down")
         S["bt"] = False
+        S["bt_on"] = False
         S["bt_device"] = ""
         S["bt_status"] = "aus"
     else:
         log.info("BT toggle: ON")
         _bg("rfkill unblock bluetooth; hciconfig hci0 up; bluetoothctl power on")
+        S["bt_on"] = True
         S["bt_status"] = "getrennt"
 
     S["ts"] = 0
@@ -569,7 +603,8 @@ def scan_devices(S, settings):
     known_map = {d["mac"].upper(): d for d in known_devices}
 
     try:
-        _btctl("power on", timeout=8)
+        # v0.9.29: BT einschalten wenn nötig
+        _ensure_bt_on(S)
         _ensure_agent()
 
         # v0.9.21: Echtes Scan-on/off via bluetoothctl — findet auch neue (ungepairte) Geräte
@@ -763,7 +798,23 @@ def _connect_device_inner(mac, S, settings):
         log.info(f"BT connect: Paired:no erkannt — remove für Neu-Pairing mac={mac}")
         ipc.write_progress("Bluetooth", "Kopplung erneuern...", color="blue")
         _btctl(f"remove {mac}", timeout=10)
-        time.sleep(2)
+        # v0.9.29: Nach remove kurzen Scan starten damit BlueZ das Gerät wieder sieht
+        # Ohne Re-Scan schlägt trust sofort fehl ("not available")
+        ipc.write_progress("Bluetooth", "Warte auf Gerät...", color="blue")
+        _scan_proc = subprocess.Popen(
+            "printf 'scan on\n' | bluetoothctl",
+            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        for _rw in range(8):   # max 16s warten
+            time.sleep(2)
+            _rc_w, _out_w = _btctl(f"info {mac}", timeout=5)
+            if _rc_w == 0 and "Device" in _out_w and "not available" not in _out_w:
+                log.info(f"BT connect: Gerät nach remove wieder sichtbar ({(_rw+1)*2}s)")
+                break
+        try:
+            _scan_proc.terminate(); _scan_proc.wait(timeout=2)
+        except Exception:
+            pass
 
     attempts = [
         ("trust",   f"trust {mac}",   8),
@@ -799,6 +850,10 @@ def _connect_device_inner(mac, S, settings):
         elif step_name == "trust":
             if any(x in low for x in ["succeeded", "trust succeeded", "changing"]):
                 log.info(f"BT connect: TRUST ok mac={mac}")
+            else:
+                # v0.9.29: trust kann nach remove temporär fehlschlagen —
+                # kein Abbruch, pair+connect versuchen trotzdem
+                log.warn(f"BT connect: TRUST nicht bestätigt mac={mac} out={out[:60]} — weiter")
 
         elif step_name == "connect":
             if any(x in low for x in [
@@ -840,6 +895,7 @@ def _connect_device_inner(mac, S, settings):
         return False
 
     S["bt"] = True
+    S["bt_on"] = True   # v0.9.29: Adapter explizit als aktiv markieren
     S["bt_device"] = name
     S["bt_status"] = "verbunden"
     S["bt_sink_mac"] = mac
@@ -989,6 +1045,8 @@ def start_auto_reconnect(S, settings):
     import threading as _th
 
     def _watcher():
+        # v0.9.29: Kurz warten, damit Boot-Connect abgeschlossen ist bevor Watcher feuert
+        time.sleep(4)
         # v0.9.25: Exponential Backoff — kein Spam bei abgeschaltetem Kopfhörer
         # Intervall-Schema: 12s → 20s → 30s → 60s → 120s → 300s → Stop nach 20min
         _INTERVALS = [12, 12, 20, 20, 30, 60, 120, 300]

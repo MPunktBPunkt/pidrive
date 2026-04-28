@@ -822,10 +822,11 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                     type="folder",
                     meta={"mac": _m, "name": _n},
                     children=[
+                        # v0.9.29: Verbinden = connect_device() erkennt selbst ob pair nötig
                         MenuNode(id="btconn_" + _m.replace(":", ""), label="Verbinden",
                                  type="action", action="bt_connect:" + _m),
-                        MenuNode(id="btrep_" + _m.replace(":", ""), label="Neu koppeln",
-                                 type="action", action="bt_repair:" + _m),
+                        MenuNode(id="btforget_" + _m.replace(":", ""), label="Vergessen",
+                                 type="action", action="bt_forget:" + _m),
                     ]
                 ))
     except Exception:

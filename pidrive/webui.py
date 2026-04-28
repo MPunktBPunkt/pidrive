@@ -893,6 +893,21 @@ def api_dab_scan_last():
     })
 
 
+@app.route("/api/dab/status")
+def api_dab_status():
+    """v0.9.29: DAB Signalstatus aus /tmp/pidrive_dab_play_debug.json."""
+    debug_file = "/tmp/pidrive_dab_play_debug.json"
+    if not os.path.exists(debug_file):
+        return jsonify({"ok": True, "data": None, "exists": False})
+    try:
+        with open(debug_file) as _f:
+            data = json.load(_f)
+        return jsonify({"ok": True, "data": data,
+                        "age": file_age(debug_file), "exists": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "exists": True})
+
+
 @app.route("/api/spectrum/last")
 def api_spectrum_last():
     return jsonify({

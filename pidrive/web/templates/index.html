@@ -85,7 +85,9 @@
 <nav class="tabs">
   <button class="tab-btn active" onclick="showTab('t1')">🎛 Steuerung</button>
   <button class="tab-btn" onclick="showTab('t2')">🔊 Audio</button>
-  <button class="tab-btn" onclick="showTab('t3')">📡 DAB/FM</button>
+  <button class="tab-btn" onclick="showTab('t3')">📻 DAB+</button>
+  <button class="tab-btn" onclick="showTab('t5')">📡 FM/Scanner</button>
+  <button class="tab-btn" onclick="showTab('t6')">🚗 AVRCP</button>
   <button class="tab-btn" onclick="showTab('t4')">🪲 Debug</button>
 </nav>
 
@@ -213,7 +215,7 @@
   <!-- Lautstärke & Gain -->
   <div class="container">
     <div class="panel">
-      <div class="panel-title">🎚️ Lautstärke &amp; Empfang (Gain)</div>
+      <div class="panel-title">🔊 Lautstärke</div>
       <div class="diag-grid">
         <div class="diag-card">
           <div class="diag-title">Lautstärke</div>
@@ -226,67 +228,7 @@
             <button onclick="refreshVolume()">🔄 Refresh</button>
           </div>
         </div>
-        <div class="diag-card">
-          <div class="diag-title">FM Empfang (Gain)</div>
-          <div class="diag-list">
-            <div class="diag-row"><div class="diag-key">FM Gain</div><div class="diag-value" id="fmGainValue">…</div></div>
-          </div>
-          <div class="diag-actions">
-            <button onclick="sendCmd('fm_gain:-1')">Auto (AGC)</button>
-            <button onclick="sendCmd('fm_gain:10')">10 dB</button>
-            <button onclick="sendCmd('fm_gain:20')">20 dB</button>
-            <button onclick="sendCmd('fm_gain:30')">30 dB</button>
-            <button onclick="sendCmd('fm_gain:40')">40 dB</button>
-            <button onclick="sendCmd('fm_gain:49')">49 dB (max)</button>
-          </div>
-          <p class="help-text">-1 = Auto AGC. Höher = mehr Verstärkung bei schwachem Signal.</p>
-        </div>
-        <div class="diag-card">
-          <div class="diag-title">DAB+ Empfang (Gain)</div>
-          <div class="diag-list">
-            <div class="diag-row"><div class="diag-key">DAB Gain</div><div class="diag-value" id="dabGainValue">…</div></div>
-          </div>
-          <div class="diag-actions">
-            <button onclick="sendCmd('dab_gain:-1')">Auto (AGC)</button>
-            <button onclick="sendCmd('dab_gain:10')">10 dB</button>
-            <button onclick="sendCmd('dab_gain:20')">20 dB</button>
-            <button onclick="sendCmd('dab_gain:30')">30 dB</button>
-            <button onclick="sendCmd('dab_gain:40')">40 dB</button>
-            <button onclick="sendCmd('dab_gain:49')">49 dB (max)</button>
-          </div>
-        </div>
-        <div class="diag-card">
-          <div class="diag-title">📡 PPM Frequenzkorrektur</div>
-          <div class="diag-list">
-            <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value" id="ppmValue">…</div></div>
-          </div>
-          <div class="diag-actions">
-            <button onclick="setPpm(0)">0 (aus)</button>
-            <button onclick="setPpm(-50)">-50</button>
-            <button onclick="setPpm(-25)">-25</button>
-            <button onclick="setPpm(-10)">-10</button>
-            <button onclick="setPpm(10)">+10</button>
-            <button onclick="setPpm(25)">+25</button>
-            <button onclick="setPpm(50)">+50</button>
-            <button onclick="applyPpmPrompt()">Setzen</button>
-            <button onclick="calibratePpm()">🔬 Kalibrieren</button>
-          </div>
-          <pre id="ppmCalJson">–</pre>
-        </div>
-        <div class="diag-card">
-          <div class="diag-title">🔇 Scanner Squelch</div>
-          <div class="diag-list">
-            <div class="diag-row"><div class="diag-key">Schwelle</div><div class="diag-value" id="squelchValue">…</div></div>
-          </div>
-          <div class="diag-actions">
-            <button onclick="sendCmd('squelch:0')">0 (offen)</button>
-            <button onclick="sendCmd('squelch:10')">10 empf.</button>
-            <button onclick="sendCmd('squelch:15')">15</button>
-            <button onclick="sendCmd('squelch:20')">20</button>
-            <button onclick="sendCmd('squelch:25')">25 std.</button>
-            <button onclick="sendCmd('squelch:35')">35</button>
-          </div>
-        </div>
+
       </div>
     </div>
   </div>
@@ -354,9 +296,13 @@
 <!-- ══════════════════════════════════════════════════ -->
 <!-- TAB 3: DAB/FM/RTL-SDR                             -->
 <!-- ══════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 3: DAB+                                        -->
+<!-- ══════════════════════════════════════════════════ -->
 <div class="tab-pane" id="t3">
 
-  <!-- RTL-SDR -->
+  <!-- RTL-SDR Diagnose -->
+
   <div class="container">
     <div class="panel">
       <div class="panel-title">RTL-SDR Diagnose</div>
@@ -384,35 +330,67 @@
     </div>
   </div>
 
-  <!-- AVRCP -->
+  <!-- DAB+ Empfang + PPM -->
   <div class="container">
     <div class="panel">
-      <div class="panel-title">AVRCP / BMW Debug</div>
+      <div class="panel-title">📻 DAB+ Empfang &amp; Kalibrierung</div>
       <div class="diag-grid">
         <div class="diag-card">
-          <div class="diag-title">Status</div>
+          <div class="diag-title">DAB+ Empfang (Gain)</div>
           <div class="diag-list">
-            <div class="diag-row"><div class="diag-key">Service</div><div class="diag-value" id="avrcpService">…</div></div>
-            <div class="diag-row"><div class="diag-key">Debug-JSON</div><div class="diag-value" id="avrcpAge">…</div></div>
-            <div class="diag-row"><div class="diag-key">Letztes Event</div><div class="diag-value" id="avrcpEvent">–</div></div>
-            <div class="diag-row"><div class="diag-key">Kontext</div><div class="diag-value" id="avrcpContext">–</div></div>
-            <div class="diag-row"><div class="diag-key">Trigger</div><div class="diag-value" id="avrcpTrigger">–</div></div>
-            <div class="diag-row"><div class="diag-key">Quelle</div><div class="diag-value" id="avrcpSource">–</div></div>
+            <div class="diag-row"><div class="diag-key">DAB Gain</div><div class="diag-value" id="dabGainValue">…</div></div>
           </div>
           <div class="diag-actions">
-            <button onclick="refreshAvrcp()">🔄 AVRCP Refresh</button>
-            <button onclick="loadLog('avrcp')">AVRCP Log laden</button>
+            <button onclick="sendCmd('dab_gain:-1')">Auto (AGC)</button>
+            <button onclick="sendCmd('dab_gain:10')">10 dB</button>
+            <button onclick="sendCmd('dab_gain:20')">20 dB</button>
+            <button onclick="sendCmd('dab_gain:30')">30 dB</button>
+            <button onclick="sendCmd('dab_gain:40')">40 dB</button>
+            <button onclick="sendCmd('dab_gain:49')">49 dB (max)</button>
           </div>
         </div>
         <div class="diag-card">
-          <div class="diag-title">AVRCP Debug-JSON</div>
-          <pre class="diag-json" id="avrcpJson">{{ vm["avrcp"] | tojson(indent=2) }}</pre>
+          <div class="diag-title">📡 PPM Frequenzkorrektur</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value" id="ppmValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="setPpm(0)">0 (aus)</button>
+            <button onclick="setPpm(-50)">-50</button>
+            <button onclick="setPpm(-25)">-25</button>
+            <button onclick="setPpm(-10)">-10</button>
+            <button onclick="setPpm(10)">+10</button>
+            <button onclick="setPpm(25)">+25</button>
+            <button onclick="setPpm(50)">+50</button>
+            <button onclick="applyPpmPrompt()">Setzen</button>
+            <button onclick="calibratePpm()">🔬 Kalibrieren</button>
+          </div>
+          <pre id="ppmCalJson">–</pre>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- DAB Scan -->
+  <!-- DAB Signalstatus -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📶 DAB Signalstatus</div>
+      <div class="diag-list">
+        <div class="diag-row"><div class="diag-key">Sender</div><div class="diag-value" id="dabStatusName">–</div></div>
+        <div class="diag-row"><div class="diag-key">Kanal / SID</div><div class="diag-value" id="dabStatusCh">–</div></div>
+        <div class="diag-row"><div class="diag-key">Lock-State</div><div class="diag-value" id="dabStatusLock">–</div></div>
+        <div class="diag-row"><div class="diag-key">Sync / SNR</div><div class="diag-value" id="dabStatusSnr">–</div></div>
+        <div class="diag-row"><div class="diag-key">Gain (aktiv)</div><div class="diag-value" id="dabStatusGain">–</div></div>
+        <div class="diag-row"><div class="diag-key">PPM</div><div class="diag-value" id="dabStatusPpm">–</div></div>
+        <div class="diag-row"><div class="diag-key">Letzter Fehler</div><div class="diag-value" id="dabStatusErr">–</div></div>
+      </div>
+      <div class="diag-actions">
+        <button onclick="refreshDabStatus()">🔄 Refresh</button>
+      </div>
+    </div>
+  </div>
+
+<!-- DAB Scan -->
   <div class="container">
     <div class="panel">
       <div class="panel-title">📡 DAB Scan Diagnose</div>
@@ -460,7 +438,53 @@
     </div>
   </div>
 
-  <!-- Spectrum -->
+</div><!-- /t3 -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 5: FM / SCANNER                                -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="t5">
+
+  <!-- FM Empfang + Squelch -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📡 FM/Scanner Empfang</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">FM Empfang (Gain)</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">FM Gain</div><div class="diag-value" id="fmGainValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('fm_gain:-1')">Auto (AGC)</button>
+            <button onclick="sendCmd('fm_gain:10')">10 dB</button>
+            <button onclick="sendCmd('fm_gain:20')">20 dB</button>
+            <button onclick="sendCmd('fm_gain:30')">30 dB</button>
+            <button onclick="sendCmd('fm_gain:40')">40 dB</button>
+            <button onclick="sendCmd('fm_gain:49')">49 dB (max)</button>
+          </div>
+          <p class="help-text">-1 = Auto AGC. Höher = mehr Verstärkung bei schwachem Signal.</p>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">🔇 Scanner Squelch</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Schwelle</div><div class="diag-value" id="squelchValue">…</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="sendCmd('squelch:0')">0 (offen)</button>
+            <button onclick="sendCmd('squelch:10')">10 empf.</button>
+            <button onclick="sendCmd('squelch:15')">15</button>
+            <button onclick="sendCmd('squelch:20')">20</button>
+            <button onclick="sendCmd('squelch:25')">25 std.</button>
+            <button onclick="sendCmd('squelch:35')">35</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FM FastScan + FFT -->
+<!-- Spectrum -->
   <div class="container">
     <div class="panel">
       <div class="panel-title">📊 Spektrum / FM FastScan</div>
@@ -492,7 +516,43 @@
     </div>
   </div>
 
-</div><!-- /t3 -->
+</div><!-- /t5 -->
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 6: AVRCP / BMW                                 -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="t6">
+
+<!-- AVRCP -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">AVRCP / BMW Debug</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Status</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">Service</div><div class="diag-value" id="avrcpService">…</div></div>
+            <div class="diag-row"><div class="diag-key">Debug-JSON</div><div class="diag-value" id="avrcpAge">…</div></div>
+            <div class="diag-row"><div class="diag-key">Letztes Event</div><div class="diag-value" id="avrcpEvent">–</div></div>
+            <div class="diag-row"><div class="diag-key">Kontext</div><div class="diag-value" id="avrcpContext">–</div></div>
+            <div class="diag-row"><div class="diag-key">Trigger</div><div class="diag-value" id="avrcpTrigger">–</div></div>
+            <div class="diag-row"><div class="diag-key">Quelle</div><div class="diag-value" id="avrcpSource">–</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="refreshAvrcp()">🔄 AVRCP Refresh</button>
+            <button onclick="loadLog('avrcp')">AVRCP Log laden</button>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">AVRCP Debug-JSON</div>
+          <pre class="diag-json" id="avrcpJson">{{ vm["avrcp"] | tojson(indent=2) }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /t6 -->
+
 
 <!-- ══════════════════════════════════════════════════ -->
 <!-- TAB 4: LOG & DEBUG                                 -->
@@ -586,9 +646,11 @@ function showTab(id) {
   activeTab = id;
   // Trigger immediate refresh for newly shown tab
   if (id === 't2') { refreshAudio(); refreshVolume(); refreshGain(); refreshKnownBtDevices(); }
-  if (id === 't3') { refreshRtlsdr(); refreshAvrcp(); refreshDabScanDebug();
+  if (id === 't3') { refreshRtlsdr(); refreshDabScanDebug(); refreshDabStatus();
     fetch('/api/rtlsdr').then(r=>r.json()).then(j=>{ if(!j.exists) fetch('/api/rtlsdr/refresh'); }).catch(()=>{});
   }
+  if (id === 't5') { refreshGain(); }
+  if (id === 't6') { refreshAvrcp(); }
   if (id === 't4') { refreshRuntimePanel(); refreshSysRes(); }
 }
 
@@ -1093,6 +1155,26 @@ async function refreshActive() {
 
 // ── Legacy alias ──────────────────────────────────────────────────────────
 async function refreshAll() { return refreshActive(); }
+
+async function refreshDabStatus() {
+  // Liest /tmp/pidrive_dab_play_debug.json für Signalstatus
+  try {
+    const r = await fetch('/api/dab/status'); const j = await r.json();
+    const el = (id) => document.getElementById(id);
+    if (!j.ok || !j.data) {
+      if(el('dabStatusName')) el('dabStatusName').textContent = '– kein DAB aktiv –';
+      return;
+    }
+    const d = j.data;
+    if(el('dabStatusName')) el('dabStatusName').textContent = d.name || '–';
+    if(el('dabStatusCh'))   el('dabStatusCh').textContent   = (d.channel||'–') + ' / ' + (d.service_id||'–');
+    if(el('dabStatusLock')) el('dabStatusLock').textContent = d.sync_ok ? '✓ Sync OK' : ('✗ kein Lock' + (d.last_error_line ? ': ' + d.last_error_line : ''));
+    if(el('dabStatusSnr'))  el('dabStatusSnr').textContent  = d.sync_ok ? '✓' : '– (SyncOnPhase failed)';
+    if(el('dabStatusGain')) el('dabStatusGain').textContent = d.gain === '-1' ? 'Auto (AGC)' : (d.gain + ' dB');
+    if(el('dabStatusPpm'))  el('dabStatusPpm').textContent  = '+' + (d.ppm || 0) + ' ppm';
+    if(el('dabStatusErr'))  el('dabStatusErr').textContent  = d.last_error_line || '–';
+  } catch(e) { console.log('dabStatus:', e); }
+}
 
 async function refreshSysRes() {
   try {

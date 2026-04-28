@@ -1,18 +1,84 @@
 """
-modules/audio.py - Zentraler Audioausgang fuer PiDrive
-PiDrive v0.9.13 - STRICT PulseAudio Only + shared debug state
+modules/audio.py — Zentraler Audio-Pfad für PiDrive
+===========================================================
 
-Neu in v0.9.7:
-- _set_pi_output_klinke() setzt auch ALSA PCM-Volume (numid=1) auf 85%
-- set_default_sink() verschiebt laufende Sink-Inputs (pactl move-sink-input)
-- volume_up/down nutzen echten Sink-Namen statt @DEFAULT_SINK@
-- apply_startup_volume() nutzt echten Sink-Namen
-- select_output_interactive() entfernt (war undefined)
+SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
+────────────────────────────────────
 
-Neu in v0.8.13:
-- _write_audio_state() schreibt letzte Entscheidung in /tmp/pidrive_audio_state.json
-- read_last_decision_file() liest daraus (prozessuebergreifend — fuer WebUI)
-- WebUI liest damit echte Core-Entscheidung, nicht eigenen Modulzustand
+## Wer ruft was auf?
+
+    main_core.py        → get_mpv_args(), set_output(), apply_startup_volume(),
+                          volume_up(), volume_down(), is_radio_source()
+    modules/dab.py      → get_mpv_args(settings, source="dab")
+    modules/fm.py       → get_mpv_args(settings, source="fm")
+    modules/webradio.py → get_mpv_args(settings, source="webradio")
+    modules/bluetooth.py→ get_mpv_args(settings, source="bt_auto_reconnect")
+    webui.py            → read_last_decision_file(), get_sink_volume(),
+                          volume_up(), volume_down()
+
+## Öffentliche API
+
+    get_mpv_args(settings, source) → list
+        Zentrale Routing-Entscheidung. Immer vor mpv/welle-cli-Start aufrufen.
+        Schreibt Entscheidung nach /tmp/pidrive_audio_state.json.
+        Rückgabe: [env_prefix, "--ao=...", "--alsa-device=..."] oder [env, "--ao=pulse"]
+
+        WICHTIG FÜR DAB/FM: Die zurückgegebenen mpv-Args werden von welle-cli
+        ignoriert! Der einzig relevante SIDE-EFFECT ist _set_pi_output_klinke()
+        → amixer setzt Card 1 als physischen Ausgang.
+        welle-cli nutzt immer den ALSA-Default aus /etc/asound.conf.
+
+    set_output(mode, settings)
+        Schaltet Ausgang manuell: klinke / hdmi / bt / all.
+        Ändert: PulseAudio Default-Sink + amixer.
+        NICHT geändert: Laufende welle-cli/mpv-Prozesse. Diese müssen neu gestartet
+        werden damit der neue Ausgang wirkt.
+        → "Klinke"-Button hat KEINEN Live-Effekt auf laufendes welle-cli (DAB/FM).
+
+    apply_startup_volume(settings)
+        Boot: Alle PA-Sinks + amixer Card 1 auf gespeichertem Volume (max 100%).
+
+    volume_up(settings) / volume_down(settings)
+        +5% / -5% auf aktiven PA-Sink + amixer Card 1. Speichert in settings.json.
+
+    is_radio_source(radio_type) → bool
+        True wenn FM | DAB | WEB | SCANNER.
+
+    get_last_decision() / read_last_decision_file() → dict
+        Letzte Routing-Entscheidung prozessübergreifend aus
+        /tmp/pidrive_audio_state.json. Felder: requested, effective, reason, sink, source.
+
+## Audio-Pfade nach Quelle
+
+    Quelle      Ausgabe         Pfad
+    ──────────────────────────────────────────────────────────────
+    DAB         ALSA hw:1,0    welle-cli -p NAME (AlsaProgrammeHandler)
+                               KEIN PulseAudio — OFDM-Timing-sensitiv
+    FM          ALSA hw:1,0    rtl_fm | mpv --ao=alsa --alsa-device=hw:1,0
+                               KEIN PulseAudio — raw PCM Resampling-Problem
+    Scanner     ALSA hw:N,0    rtl_fm | mpv --ao=alsa
+    Webradio    PulseAudio     mpv --ao=pulse PULSE_SERVER=...
+    Spotify     PulseAudio     librespot → PulseAudio
+    BT (A2DP)   PulseAudio     mpv/librespot + PULSE_SINK=bluez_sink.*
+
+    hw:1,0 = Card 1 = bcm2835 Headphones = Klinke (3.5mm)
+    hw:0,0 = Card 0 = bcm2835 HDMI — NIEMALS für PiDrive-Audio verwenden
+
+## State Machine (source_state.py) Rolle
+
+    source_state ist KEIN Regler — nur Zustandsspiegel:
+    - get_mpv_args() setzt set_audio_route() als SIDE-EFFECT
+    - source_state.get_audio_route() zeigt Stand NACH letzter Entscheidung
+    - Um Audio zu wechseln: set_output() oder get_mpv_args() aufrufen,
+      NICHT source_state direkt manipulieren
+
+## Bekannte Einschränkungen
+
+    - "Klinke"-Button während DAB/FM läuft: ändert PulseAudio, aber welle-cli/rtl_fm
+      laufen ALSA-direkt. Wirkung erst nach Stop + Neustart der Quelle.
+    - volume > 100%: wird beim Boot auf 90% korrigiert (settings.json Altlasten).
+    - BT + DAB: funktioniert nur wenn asound.conf default=card 1 korrekt gesetzt
+      und PulseAudio Sink-Input nach BT-Connect verschoben wird.
 """
 
 import os

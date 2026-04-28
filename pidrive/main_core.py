@@ -167,7 +167,7 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         menu_state.key_back()
         if _leaving_node and getattr(_leaving_node, "id", "") == "bt_geraete":
             log.info("MENU bt_geraete: Auto-Scan gestoppt (back)")
-            bg(lambda: bt.stop_scan())
+            bg(lambda: bluetooth.stop_scan())
     elif cmd == "enter":
         node = menu_state.key_enter()
         if node and node.type in ("station", "action", "toggle"):
@@ -175,14 +175,41 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         # v0.9.21: BT-Geräteliste betreten → Scan automatisch starten
         if node and node.type == "folder" and node.id == "bt_geraete":
             log.info("MENU bt_geraete: Auto-Scan gestartet")
-            bg(lambda: bt.scan_devices(S, settings))
+            def _bt_geraete_enter():
+                # v0.9.29: BT einschalten wenn nötig
+                if not S.get("bt_on", False) and not S.get("bt", False):
+                    log.info("MENU bt_geraete: BT war aus — schalte ein")
+                    import subprocess
+                    subprocess.run(
+                        "rfkill unblock bluetooth; hciconfig hci0 up; bluetoothctl power on",
+                        shell=True, capture_output=True, timeout=6
+                    )
+                    S["bt_on"] = True
+                    S["bt_status"] = "getrennt"
+                    S["menu_rev"] = S.get("menu_rev", 0) + 1
+                    import time; time.sleep(1)
+                bluetooth.scan_devices(S, settings)
+            bg(_bt_geraete_enter)
     elif cmd == "right":
         node = menu_state.key_right()
         if node and node.type in ("station", "action", "toggle"):
             _execute_node(node, menu_state, store, S, settings)
         if node and node.type == "folder" and node.id == "bt_geraete":
             log.info("MENU bt_geraete: Auto-Scan gestartet (right)")
-            bg(lambda: bt.scan_devices(S, settings))
+            def _bt_geraete_right():
+                if not S.get("bt_on", False) and not S.get("bt", False):
+                    log.info("MENU bt_geraete (right): BT war aus — schalte ein")
+                    import subprocess
+                    subprocess.run(
+                        "rfkill unblock bluetooth; hciconfig hci0 up; bluetoothctl power on",
+                        shell=True, capture_output=True, timeout=6
+                    )
+                    S["bt_on"] = True
+                    S["bt_status"] = "getrennt"
+                    S["menu_rev"] = S.get("menu_rev", 0) + 1
+                    import time; time.sleep(1)
+                bluetooth.scan_devices(S, settings)
+            bg(_bt_geraete_right)
 
     # ── Direkt-Kategorie ──────────────────────────────────────────────────
     elif cmd.startswith("cat:"):
@@ -215,10 +242,37 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "wifi_scan":
         bg(lambda: wifi.scan_networks(S, settings))
     elif cmd == "bt_scan":
-        bg(lambda: bluetooth.scan_devices(S, settings))
+        def _bt_scan_trigger():
+            if not S.get("bt_on", False) and not S.get("bt", False):
+                log.info("bt_scan: BT war aus — schalte ein")
+                import subprocess
+                subprocess.run(
+                    "rfkill unblock bluetooth; hciconfig hci0 up; bluetoothctl power on",
+                    shell=True, capture_output=True, timeout=6
+                )
+                S["bt_on"] = True
+                S["bt_status"] = "getrennt"
+                S["menu_rev"] = S.get("menu_rev", 0) + 1
+                import time; time.sleep(1)
+            bluetooth.scan_devices(S, settings)
+        bg(_bt_scan_trigger)
     elif cmd.startswith("bt_connect:"):
         mac = cmd.split(":", 1)[1].strip()
         bg(lambda m=mac: bluetooth.connect_device(m, S, settings))
+
+    elif cmd.startswith("bt_forget:"):
+        # v0.9.29: Gerät vergessen — aus BlueZ und known_devices entfernen
+        mac = cmd.split(":", 1)[1].strip()
+        def _bt_forget(m=mac):
+            try:
+                bluetooth._btctl(f"remove {m}", timeout=10)
+                knw = bluetooth._get_known_devices()
+                bluetooth._write_known_devices([d for d in knw if d.get("mac") != m])
+                log.info(f"BT: Gerät vergessen mac={m}")
+                S["menu_rev"] = S.get("menu_rev", 0) + 1
+            except Exception as _e:
+                log.warn(f"BT forget: {_e}")
+        bg(_bt_forget)
     elif cmd == "bt_disconnect":
         bg(lambda: bluetooth.disconnect_current(S, settings))
     elif cmd == "bt_reconnect_last":
