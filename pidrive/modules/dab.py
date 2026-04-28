@@ -502,20 +502,46 @@ def play_station(station, S, settings=None):
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
-        # welle-cli braucht ~3s bis OFDM-Sync + Audio-Start
-        time.sleep(3)
-        _sync_ok = False
-        _last_err = ""
-        try:
-            if os.path.exists("/tmp/pidrive_dab_welle.err"):
+        # v0.9.31: PRIORITÄT 3 — DAB Lock-Wartezustand (5-8s, dann commit)
+        # Phasen: starting → syncing → locked/failed
+        _dab_state = "starting"
+        _sync_ok   = False
+        _last_err  = ""
+        _lock_wait_max = 12   # max 12s auf Lock warten
+
+        for _ws in range(_lock_wait_max):
+            time.sleep(1)
+            if not os.path.exists("/tmp/pidrive_dab_welle.err"):
+                continue
+            try:
                 with open("/tmp/pidrive_dab_welle.err", "r", encoding="utf-8", errors="ignore") as _f:
-                    _err_lines = [ln.strip() for ln in _f.readlines()[-10:] if ln.strip()]
-                for _ln in _err_lines:
-                    log.info("DAB welle-cli: " + _ln[:200])
-                    if "found sync" in _ln.lower() or "superframe sync" in _ln.lower():
-                        _sync_ok = True
+                    _recent = _f.read()[-3000:]
+                lines = [l.strip() for l in _recent.splitlines() if l.strip()]
+                # Lock-Kriterien
+                if any("found sync" in l.lower() or "superframe sync" in l.lower()
+                       or "audio service" in l.lower() for l in lines[-5:]):
+                    _sync_ok   = True
+                    _dab_state = "locked"
+                    log.info(f"DAB Lock: OK nach {_ws+1}s (ch={ch} sid={sid})")
+                    break
+                elif _ws >= 3:
+                    _dab_state = "syncing"
+                for _ln in lines[-3:]:
                     if "failed" in _ln.lower() or "lost" in _ln.lower():
                         _last_err = _ln[:120]
+            except Exception:
+                pass
+
+        if not _sync_ok:
+            _dab_state = "no_lock"
+            log.warn(f"DAB: kein stabiler Lock nach {_lock_wait_max}s (ch={ch} sid={sid}) — continue anyway")
+
+        # Log letzten Stderr
+        try:
+            with open("/tmp/pidrive_dab_welle.err", "r", encoding="utf-8", errors="ignore") as _f:
+                _err_lines = [l.strip() for l in _f.readlines()[-5:] if l.strip()]
+            for _ln in _err_lines:
+                log.info("DAB welle-cli: " + _ln[:200])
         except Exception:
             pass
 
@@ -528,6 +554,7 @@ def play_station(station, S, settings=None):
                 "ppm": str(settings.get("ppm_correction", 0) if settings else 0),
                 "started_ts": time.time(),
                 "sync_ok": _sync_ok,
+                "dab_state": _dab_state,  # v0.9.31: starting|syncing|locked|no_lock
                 "last_error_line": _last_err,
             }
             with open("/tmp/pidrive_dab_play_debug.json", "w") as _dbgf:

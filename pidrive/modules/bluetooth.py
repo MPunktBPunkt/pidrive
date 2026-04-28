@@ -720,7 +720,7 @@ def _connect_device_inner(mac, S, settings):
     if _src_state:
         if _src_state.in_transition():
             log.warn("BT connect: abgebrochen — Quellen-Transition läuft")
-            _src_state.set_bt_state("failed")
+            _src_state.set_bt_state("failed"); _src_state.set_bt_link_state("failed"); _src_state.set_bt_audio_state("no_sink")
             ipc.clear_progress()
             return False
         _src_state.set_bt_state("connecting")
@@ -780,7 +780,7 @@ def _connect_device_inner(mac, S, settings):
                 color="red"
             )
             if _src_state:
-                _src_state.set_bt_state("failed")
+                _src_state.set_bt_state("failed"); _src_state.set_bt_link_state("failed"); _src_state.set_bt_audio_state("no_sink")
             time.sleep(4)
             ipc.clear_progress()
             S["bt"] = False
@@ -886,7 +886,7 @@ def _connect_device_inner(mac, S, settings):
         S["bt"] = False
         S["bt_status"] = "getrennt"
         if _src_state:
-            _src_state.set_bt_state("failed")
+            _src_state.set_bt_state("failed"); _src_state.set_bt_link_state("failed"); _src_state.set_bt_audio_state("no_sink")
         ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
         log.warn(f"BT connect: FAIL mac={mac} name={name}")
         time.sleep(3)
@@ -903,6 +903,8 @@ def _connect_device_inner(mac, S, settings):
 
     if _src_state:
         _src_state.set_bt_state("connected")
+        _src_state.set_bt_link_state("connected")
+        _src_state.set_bt_audio_state("pending")
         _src_state.set_audio_route("bt")
 
     try:
@@ -932,6 +934,8 @@ def _connect_device_inner(mac, S, settings):
     settings["alsa_device"] = "default"
 
     log.info(f"BT connect: STATE mac={mac} sink={S['bt_pa_sink']}")
+    if _src_state:
+        _src_state.set_bt_audio_state("a2dp_ready")
     _set_pulseaudio_sink(S["bt_pa_sink"])
     _set_raspotify_device("default")
 
@@ -1108,6 +1112,8 @@ def start_auto_reconnect(S, settings):
                             S["bt_pa_sink"] = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
                             if _src_state:
                                 _src_state.set_bt_state("connected")
+                                _src_state.set_bt_link_state("connected")
+                                _src_state.set_bt_audio_state("pending")
                                 _src_state.set_audio_route("bt")
                             settings["audio_output"] = "bt"
                             from modules import audio as _aud

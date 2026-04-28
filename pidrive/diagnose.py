@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""diagnose.py - PiDrive System-Diagnose v0.9.14-final
+"""diagnose.py — PiDrive System-Diagnose
 
 Core/Display/Web Diagnose für PiDrive.
 

@@ -22,7 +22,9 @@ STATE = {
     "owner":          "",       # wer die Transition gestartet hat
     "since":          0.0,      # Timestamp Start der Transition
     "audio_route":    "",       # klinke | bt | hdmi | none
-    "bt_state":       "idle",   # BT-Link-State
+    "bt_state":       "idle",      # BT-Link-State (Compat)
+    "bt_link_state":  "idle",      # v0.9.31: Link: idle|connecting|connected|failed
+    "bt_audio_state": "no_sink",   # v0.9.31: Audio: no_sink|pending|a2dp_ready|fallback_klinke
     "boot_phase":     "cold_start",  # cold_start | restore_bt | restore_source | steady
 }
 
@@ -102,6 +104,28 @@ def set_bt_state(bt_state: str):
         _write_state_file()
         if old != bt_state:
             log.info(f"SOURCE bt_state: {old} → {bt_state}")
+
+
+def set_bt_link_state(state: str):
+    """v0.9.31: BT Link-Ebene: idle|connecting|connected|failed"""
+    with _LOCK:
+        STATE["bt_link_state"] = state
+        _write_state_file()
+
+def set_bt_audio_state(state: str):
+    """v0.9.31: BT Audio-Ebene: no_sink|pending|a2dp_ready|fallback_klinke"""
+    with _LOCK:
+        old_a = STATE.get("bt_audio_state", "")
+        STATE["bt_audio_state"] = state
+        if old_a != state:
+            log.info(f"SOURCE bt_audio_state: {old_a} → {state}")
+        _write_state_file()
+
+def get_bt_link_state() -> str:
+    return STATE.get("bt_link_state", "idle")
+
+def get_bt_audio_state() -> str:
+    return STATE.get("bt_audio_state", "no_sink")
 
 
 def set_boot_phase(phase: str):

@@ -952,7 +952,7 @@ mpv findet System-Daemon nicht → ALSA Card 0 (HDMI). Fix: `--ao=alsa hw:1,0`.
 
 | # | Datei | Fix |
 |---|---|---|
-| 1 | `modules/dab.py` | `welle-cli -p "NAME"` → direkte ALSA/PulseAudio-Ausgabe (kein HTTP-Modus) |
+| 1 | `modules/dab.py` | `welle-cli -p "NAME"` → ALSA-direkt (kein PulseAudio, kein HTTP-Modus) |
 | 2 | `modules/bluetooth.py` | BT Scan: `scan on`/`scan off` statt printf-Pipe (findet jetzt neue Geräte) |
 | 3 | `modules/dab.py` | Scan: `url_mp3` nicht mehr befüllen (HTTP-Modus obsolet) |
 
@@ -1433,7 +1433,8 @@ Root-Cause: `pidrive_core.service` ohne `PULSE_SERVER` → mpv als root landet n
 
 **systemd/pidrive_core.service — KRITISCHER FIX:**
 - `Environment=PULSE_SERVER=unix:/var/run/pulse/native` eingetragen
-- Alle Kindprozesse (mpv, rtl_fm|mpv, welle-cli|mpv) nutzen jetzt sicher den System-PulseAudio-Socket
+- Alle PulseAudio-Quellen (Webradio, Spotify, BT) nutzen System-PulseAudio-Socket.
+  DAB/FM/Scanner laufen ALSA-direkt — kein PulseAudio.
 - `After=bluetooth.service` ergänzt
 
 **modules/source_state.py — NEU:**
@@ -2309,7 +2310,7 @@ RTL2838 DVB-T (0bda:2838), Cambridge Silicon Radio BT-Dongle.
 | Quelle | Befehl | Audio-Routing |
 |---|---|---|
 | FM | `rtl_fm ... \| mpv --ao=alsa hw:1,0` | ALSA direkt (kein PulseAudio) |
-| DAB | `welle-cli -p "NAME"` mit PULSE_SERVER/PULSE_SINK | PulseAudio (BT-fähig) |
+| DAB | `welle-cli -p "NAME"` OHNE PULSE_ENV (bewusst!) | ALSA hw:1,0 direkt — NICHT PulseAudio, NICHT BT-routingfähig |
 | Webradio | `mpv --ao=pulse http://url` | PulseAudio (BT-fähig) |
 | Spotify | librespot → PulseAudio | PulseAudio (BT-fähig) |
 

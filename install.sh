@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# PiDrive Install Script v0.9.4
+# PiDrive Install Script
 # Raspberry Pi Car Infotainment
 #
 # Aufruf:
@@ -580,7 +580,16 @@ fi
 # ══════════════════════════════════════════════════════════════
 # DIAGNOSE
 # ══════════════════════════════════════════════════════════════
+# v0.9.31: Diagnose erst nach boot_phase=steady warten (max 25s)
 echo ""
+echo "  → Warte auf boot_phase=steady..."
+_SW=0
+while [ $_SW -lt 25 ]; do
+  _PHASE=$(python3 -c "import json; print(json.load(open('/tmp/pidrive_source_state.json')).get('boot_phase',''))" 2>/dev/null || echo "")
+  [ "$_PHASE" = "steady" ] && { ok "boot_phase=steady — starte Diagnose"; break; }
+  sleep 1; _SW=$((_SW+1))
+done
+[ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 echo -e "${BOLD}${CYAN}Automatische Diagnose...${NC}"
 if [ -f "$INSTALL_DIR/pidrive/diagnose.py" ]; then
     python3 "$INSTALL_DIR/pidrive/diagnose.py" 2>/dev/null || true
