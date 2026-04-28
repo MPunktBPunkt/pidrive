@@ -276,6 +276,8 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     elif cmd == "bt_disconnect":
         bg(lambda: bluetooth.disconnect_current(S, settings))
     elif cmd == "bt_reconnect_last":
+        # v0.9.30: TICKET 1 — Watcher aufwecken
+        bluetooth.wake_auto_reconnect()
         bg(lambda: bluetooth.reconnect_last(S, settings))
     elif cmd == "bt_backup":
         def _do_bt_backup():
@@ -1060,9 +1062,37 @@ def rebuild_tree(menu_state, store, S, settings):
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
-    """Einmalig beim Start: BT reconnect + letzte Station wiederherstellen."""
-    import time
+    """
+    Einmalig beim Start: BT reconnect + letzte Station wiederherstellen.
+    v0.9.30: Phasen — restore_bt_prepare → restore_bt_try_once →
+                       audio_base_ready → restore_source → steady
+    """
+    import time, subprocess as _sp_boot
 
+    # ── TICKET 7: Boot-Readiness — warte auf PulseAudio + BT-Adapter ────────
+    source_state.set_boot_phase("restore_bt_prepare")
+    _ready = False
+    for _attempt in range(12):  # max 12s warten
+        try:
+            _pa_ok = _sp_boot.run(
+                "PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null",
+                shell=True, capture_output=True, timeout=2
+            ).returncode == 0
+            _bt_ok = _sp_boot.run(
+                "hciconfig hci0 2>/dev/null | grep -q UP",
+                shell=True, capture_output=True, timeout=2
+            ).returncode == 0
+            if _pa_ok and _bt_ok:
+                log.info(f"Boot-Readiness: PulseAudio + BT bereit ({_attempt+1}s)")
+                _ready = True
+                break
+        except Exception:
+            pass
+        time.sleep(1)
+    if not _ready:
+        log.warn("Boot-Readiness: Timeout — starte trotzdem (PulseAudio oder BT nicht bereit)")
+
+    # ── Phase BT-Reconnect ────────────────────────────────────────────────────
     source_state.set_boot_phase("restore_bt")
 
     try:
@@ -1085,15 +1115,23 @@ def startup_tasks(S, settings):
     except Exception as _eg:
         log.warn(f"GPIO start: {_eg}")
 
+    # ── TICKET 3: audio_route immer explizit setzen ──────────────────────────
+    source_state.set_boot_phase("audio_base_ready")
     try:
-        from modules.audio import _set_pi_output_klinke
+        from modules.audio import _set_pi_output_klinke, get_mpv_args
         _audio_out = settings.get("audio_output", "auto")
-        if _audio_out not in ("bt", "hdmi"):
+        if S.get("bt") and S.get("bt_pa_sink"):
+            source_state.set_audio_route("bt")
+            log.info("Boot: Audio-Basis = bt (A2DP verbunden)")
+        elif _audio_out == "hdmi":
+            source_state.set_audio_route("hdmi")
+            log.info("Boot: Audio-Basis = hdmi")
+        else:
             _set_pi_output_klinke()
-            log.info("Boot: amixer Klinke aktiviert (audio_output=" + _audio_out + ")")
-            # v0.9.26: audio_route auf klinke setzen wenn kein BT aktiv
-            if not S.get("bt"):
-                source_state.set_audio_route("klinke")
+            source_state.set_audio_route("klinke")
+            log.info("Boot: Audio-Basis = klinke (amixer Card 1 aktiviert)")
+        # Audio-State-Datei einmal explizit schreiben damit WebUI+Diagnose konsistent sind
+        get_mpv_args(settings, source="boot_audio_base")
     except Exception as _ea:
         log.warn("Boot amixer: " + str(_ea))
 
@@ -1160,6 +1198,12 @@ def startup_tasks(S, settings):
         log.warn("Boot-Resume: " + str(_e))
     finally:
         source_state.set_boot_phase("steady")
+        # v0.9.30: TICKET 2 — Watcher erst jetzt starten (nach boot_phase=steady)
+        try:
+            bluetooth.start_auto_reconnect(S, settings)
+            log.info("BT auto-reconnect: Watcher gestartet (boot_phase=steady)")
+        except Exception as _e_w:
+            log.warn(f"BT Watcher Start: {_e_w}")
 
 
 # ── Main ────────────────────────────────────────────────────────────────────
@@ -1208,7 +1252,8 @@ def main():
     store_timer = time.time()
 
     log.info("Core-Loop gestartet")
-    bluetooth.start_auto_reconnect(S, settings)
+    # v0.9.30: TICKET 2 — Watcher startet erst am Ende von startup_tasks()
+    # (nach boot_phase=steady), nicht mehr hier direkt
 
     _ready_written = False
     import threading as _thr

@@ -909,6 +909,20 @@ def api_ppm_calibrate():
         return jsonify({"ok": False, "error": str(e)})
 
 
+@app.route("/api/bt/watcher")
+def api_bt_watcher():
+    """v0.9.30: BT-Watcher-Zustand aus /tmp/pidrive_bt_watcher.json."""
+    wf = "/tmp/pidrive_bt_watcher.json"
+    if not os.path.exists(wf):
+        return jsonify({"ok": True, "data": None, "exists": False})
+    try:
+        with open(wf) as _f:
+            return jsonify({"ok": True, "data": json.load(_f),
+                            "age": file_age(wf), "exists": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
 @app.route("/api/dab/status")
 def api_dab_status():
     """v0.9.29: DAB Signalstatus aus /tmp/pidrive_dab_play_debug.json."""

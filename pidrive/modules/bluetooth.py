@@ -1028,20 +1028,37 @@ def repair_device(mac, S, settings):
 # ──────────────────────────────────────────────────────────────────────────────
 
 _reconnect_thread = None
-_reconnect_stop = False
+_reconnect_stop  = False
+_reconnect_wakeup = None   # v0.9.30: Event zum Aufwecken des Watchers
+
+
+def wake_auto_reconnect():
+    """
+    v0.9.30: TICKET 1 — Watcher aus Schlafmodus wecken.
+    Aufgerufen bei: bt_reconnect_last, bt_scan, bt_connect:<mac>.
+    """
+    global _reconnect_wakeup
+    if _reconnect_wakeup is not None:
+        _reconnect_wakeup.set()
+        log.info("BT auto-reconnect: Watcher aufgeweckt")
+    else:
+        log.warn("BT auto-reconnect: kein Wakeup-Event vorhanden")
 
 
 def start_auto_reconnect(S, settings):
     """
     Hintergrund-Watcher:
-    - bleibt als Fallback erhalten
+    - v0.9.30: Schläft nach erstem Fehlschlag (kein Spam)
+    - Aufwecken via wake_auto_reconnect()
     - reconnect_known_devices() ist die robustere aktive Variante
     """
-    global _reconnect_thread, _reconnect_stop
+    global _reconnect_thread, _reconnect_stop, _reconnect_wakeup
     if _reconnect_thread and _reconnect_thread.is_alive():
         return
 
     _reconnect_stop = False
+    import threading as _thr_wake
+    _reconnect_wakeup = _thr_wake.Event()
     import threading as _th
 
     def _watcher():
@@ -1104,13 +1121,44 @@ def start_auto_reconnect(S, settings):
                 log.warn("BT auto-reconnect Watcher: " + str(e))
                 _fail_streak += 1
 
-            # Backoff: nach jedem Fehler länger warten (explizit loggen)
-            _interval = _INTERVALS[min(_fail_streak, len(_INTERVALS)-1)]
+            # v0.9.30: TICKET 1 — nach Fehlschlag Schlafmodus, kein automatischer Retry
             if not S.get("bt", False) and _fail_streak > 0:
-                log.info(f"BT auto-reconnect: nächster Versuch in {_interval}s (Versuch #{_fail_streak})")
-            time.sleep(_interval if not S.get("bt", False) else 20)
+                log.info("BT auto-reconnect [Watcher]: Fehlschlag → Schlafmodus "
+                         "(bt_reconnect_last oder bt_scan zum Aufwecken)")
+                try:
+                    import json as _jw
+                    _jw.dump({"running": True, "sleeping": True,
+                              "fail_count": _fail_streak, "last_result": "failed",
+                              "next_action": "bt_reconnect_last|bt_scan|reboot",
+                              "ts": time.time()},
+                             open("/tmp/pidrive_bt_watcher.json", "w"))
+                except Exception: pass
+                # Warte bis explizit geweckt
+                while not _reconnect_stop:
+                    time.sleep(30)
+                    if _reconnect_wakeup is not None and _reconnect_wakeup.is_set():
+                        _reconnect_wakeup.clear()
+                        _fail_streak = 0
+                        log.info("BT auto-reconnect [Watcher]: geweckt — versuche erneut")
+                        try:
+                            import json as _jw
+                            _jw.dump({"running": True, "sleeping": False,
+                                      "fail_count": 0, "last_result": "woken",
+                                      "next_action": "connect", "ts": time.time()},
+                                     open("/tmp/pidrive_bt_watcher.json", "w"))
+                        except Exception: pass
+                        break
+            elif S.get("bt", False):
+                time.sleep(20)
 
-        log.info("BT auto-reconnect Watcher: beendet (20min Limit oder Stop-Flag)")
+        log.info("BT auto-reconnect Watcher: beendet")
+        try:
+            import json as _jw
+            _jw.dump({"running": False, "sleeping": False,
+                      "fail_count": 0, "last_result": "stopped",
+                      "next_action": "reboot", "ts": time.time()},
+                     open("/tmp/pidrive_bt_watcher.json", "w"))
+        except Exception: pass
 
     _reconnect_thread = _th.Thread(target=_watcher, daemon=True, name="bt_auto_reconnect")
     _reconnect_thread.start()

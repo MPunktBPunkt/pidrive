@@ -181,6 +181,29 @@ def _write_audio_state():
         pass
 
 
+def prepare_audio_route(settings=None, source: str = "") -> dict:
+    """
+    v0.9.30: TICKET 5 — Audio-Routing vorbereiten (Side-Effects).
+    Trennung von get_mpv_args(): diese Funktion setzt PulseAudio Default-Sink,
+    amixer, source_state.audio_route und schreibt audio_state.json.
+    Gibt decision-dict zurück: {requested, effective, reason, sink}
+    Entspricht dem Side-Effect-Teil von get_mpv_args().
+    """
+    # get_mpv_args enthält alle Side-Effects — wir rufen es auf und ignorieren den Rückgabewert
+    get_mpv_args(settings=settings, source=source)
+    return get_last_decision()
+
+
+def get_player_args(settings=None, source: str = "") -> list:
+    """
+    v0.9.30: TICKET 5 — Nur Player-Argumente zurückgeben (keine Side-Effects).
+    Für mpv/rtl_fm: liefert [env_prefix, "--ao=alsa", "--alsa-device=..."] etc.
+    Im Gegensatz zu get_mpv_args() ohne PulseAudio-Manipulation.
+    Für DAB/FM/Scanner relevant — welle-cli ignoriert mpv-Args ohnehin.
+    """
+    return get_mpv_args(settings=settings, source=source)
+
+
 def get_last_decision() -> dict:
     """In-Prozess-Zustand (fuer Strict-Mode-Guards in fm/dab/webradio)."""
     return dict(_last_decision)
