@@ -526,7 +526,8 @@ def play_station(station, S, settings=None):
             import json as _json_dbg
             _dbg = {
                 "name": name, "channel": ch, "service_id": sid,
-                "gain": _gain, "ppm": _ppm_val,
+                "gain": _gain,
+                "ppm": str(settings.get("ppm_correction", 0) if settings else 0),
                 "started_ts": time.time(),
                 "sync_ok": _sync_ok,
                 "last_error_line": _last_err,

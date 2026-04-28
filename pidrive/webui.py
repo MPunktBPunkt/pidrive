@@ -893,6 +893,22 @@ def api_dab_scan_last():
     })
 
 
+@app.route("/api/ppm_calibrate", methods=["GET","POST"])
+def api_ppm_calibrate():
+    """PPM-Kalibrierung via rtl_test — gibt Frequenzfehler-Schätzung zurück."""
+    import subprocess as _sp2, re as _re2
+    try:
+        r = _sp2.run("timeout 8 rtl_test -t 2>&1 | tail -5",
+                     shell=True, capture_output=True, text=True, timeout=12)
+        out = r.stdout.strip()
+        m = _re2.search(r"([-+]?\d+\.?\d*)\s*ppm", out, _re2.IGNORECASE)
+        return jsonify({"ok": True, "raw": out[:500],
+                        "ppm_found": m.group(0) if m else None,
+                        "hint": "rtl_test Ergebnis — PPM manuell in WebUI setzen"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
 @app.route("/api/dab/status")
 def api_dab_status():
     """v0.9.29: DAB Signalstatus aus /tmp/pidrive_dab_play_debug.json."""

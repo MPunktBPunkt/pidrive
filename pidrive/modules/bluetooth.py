@@ -1068,13 +1068,21 @@ def start_auto_reconnect(S, settings):
                     if _src_state and _src_state.in_transition():
                         time.sleep(5)
                         continue
+                    # v0.9.30: BT-Reconnect während DAB pausieren (BlueZ stört OFDM-Timing)
+                    if S.get("radio_playing") and S.get("radio_type", "").upper() == "DAB":
+                        time.sleep(10)
+                        continue
                     rc, out = _btctl(f"info {mac}", timeout=5)
                     low = out.lower()
                     if rc == 0 and "name:" in low and "connected: no" in low:
                         log.info(f"BT auto-reconnect [Watcher]: Gerät sichtbar, versuche Connect mac={mac}")
                         rc2, out2 = _btctl(f"connect {mac}", timeout=15)
                         low2 = out2.lower()
-                        if any(x in low2 for x in ["successful", "connected: yes"]):
+                        # v0.9.30: rc2==0 + "connection successful" = echter Erfolg.
+                        # "Connected: yes" allein ist KEIN Erfolg — kommt auch bei rc=1
+                        # aus alten BlueZ CHG-Events im Output-Buffer.
+                        _real_success = (rc2 == 0 and "connection successful" in low2)
+                        if _real_success:
                             log.info(f"BT auto-reconnect: ERFOLG mac={mac} name={name}")
                             S["bt"] = True
                             S["bt_device"] = name

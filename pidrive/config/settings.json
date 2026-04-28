@@ -13,7 +13,7 @@
   "dab_gain": -1,
   "scanner_gain": -1,
   "ppm_correction": 49,
-  "scanner_squelch": 0,
+  "scanner_squelch": 10,
   "dab_scan_wait_lock": 40,
   "dab_scan_http_timeout": 4,
   "dab_scan_port": 7981,

@@ -808,7 +808,7 @@ def check_resources():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.29\n{'='*50}")
+    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.30\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
