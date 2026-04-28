@@ -449,15 +449,14 @@ def play_station(station, S, settings=None):
         _mpv_args = " ".join(_mpv_opts)
         _gain     = _get_dab_gain(settings)
 
+        # v0.9.31: DAB läuft welle-cli ALSA-direkt — kein PulseAudio nötig.
+        # PulseAudio-Strict-Check DEAKTIVIERT für DAB (war der Haupt-Bug).
+        # welle-cli -p gibt PCM an hw:default → asound.conf → Card 1 Klinke.
+        # PulseAudio-Status ist für DAB-Wiedergabe irrelevant.
         _adec = _audio.get_last_decision()
         if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
-            S["radio_playing"] = False
-            S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
-            S["radio_name"]    = name
-            S["radio_type"]    = "DAB"
-            S["control_context"] = "radio_dab"
-            log.error(f"DAB strict-mode: Abbruch name={name!r} channel={ch} sid={sid!r} reason={_adec.get('reason','?')}")
-            return
+            log.info(f"DAB: PulseAudio inaktiv — kein Abbruch (welle-cli ALSA-direkt)")
+            # KEIN return — DAB startet trotzdem
 
         import shlex
         _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
@@ -518,11 +517,18 @@ def play_station(station, S, settings=None):
                     _recent = _f.read()[-3000:]
                 lines = [l.strip() for l in _recent.splitlines() if l.strip()]
                 # Lock-Kriterien
-                if any("found sync" in l.lower() or "superframe sync" in l.lower()
-                       or "audio service" in l.lower() for l in lines[-5:]):
+                # v0.9.31: Echte welle-cli Ausgabe: "Found sync ..." / "Superframe sync succeeded"
+                if any("found sync" in l.lower()
+                       or "superframe sync succeeded" in l.lower()
+                       or "pcm name:" in l.lower()        # ALSA-Ausgabe bereit
+                       or "dls:" in l.lower()             # DLS = definitiv Lock
+                       for l in lines[-8:]):
                     _sync_ok   = True
                     _dab_state = "locked"
-                    log.info(f"DAB Lock: OK nach {_ws+1}s (ch={ch} sid={sid})")
+                    _lock_line = next((l for l in reversed(lines[-5:])
+                                       if any(k in l.lower() for k in
+                                              ["found sync","superframe","pcm name","dls:"])), "")
+                    log.info(f"DAB Lock: OK nach {_ws+1}s ch={ch} sid={sid} [{_lock_line[:60]}]")
                     break
                 elif _ws >= 3:
                     _dab_state = "syncing"
@@ -584,15 +590,39 @@ def play_station(station, S, settings=None):
             _last_dls = ""
             # Kurz warten damit welle-cli starten kann
             _tm.sleep(5)
-            # Laufzeit-Loop: DLS aus welle-cli stderr lesen (welle-cli schreibt DLS
-            # nicht standardmäßig in stderr im -p Modus — TODO wenn welle-cli DLS
-            # in stderr-Ausgabe dokumentiert ist)
+            # v0.9.31: DLS aus welle-cli stderr lesen!
+            # welle-cli schreibt "DLS: ARTIST - TITLE" in stderr auch im -p ALSA-Modus.
+            # Das haben wir in der manuellen Konsolen-Ausgabe bestätigt.
+            _stderr_file = "/tmp/pidrive_dab_welle.err"
+            _last_dls = ""
+            _last_pos  = 0
             while S.get("radio_playing") and S.get("radio_name") == _name:
-                _tm.sleep(10)
+                _tm.sleep(5)
                 if not (S.get("radio_playing") and S.get("radio_name") == _name):
                     break
-                # DLS currently not available in ALSA-direct mode (-p without -w)
-                # Placeholder for future stderr-based DLS parsing
+                try:
+                    if not os.path.exists(_stderr_file):
+                        continue
+                    with open(_stderr_file, "r", encoding="utf-8", errors="ignore") as _f:
+                        _f.seek(_last_pos)
+                        _new = _f.read()
+                        _last_pos = _f.tell()
+                    for _line in _new.splitlines():
+                        if _line.startswith("DLS:"):
+                            _dls = _line[4:].strip()
+                            if _dls and _dls != _last_dls:
+                                if " - " in _dls:
+                                    _parts = _dls.split(" - ", 1)
+                                    S["artist"] = _parts[0].strip()
+                                    S["track"]  = _parts[1].strip()
+                                    log.info(f"[DAB DLS] {_name}: {_parts[0].strip()} – {_parts[1].strip()}")
+                                else:
+                                    S["artist"] = ""
+                                    S["track"]  = _dls
+                                    log.info(f"[DAB DLS] {_name}: {_dls[:80]}")
+                                _last_dls = _dls
+                except Exception:
+                    pass
 
         import threading as _thr_dls
         _thr_dls.Thread(target=_dls_poller, daemon=True).start()
