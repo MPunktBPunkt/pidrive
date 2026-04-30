@@ -28,8 +28,8 @@
     | Rev: {{ vm.get('debug',{}).get('rev',0) }}
     | Pfad: {{ (vm.get('path') or ['PiDrive'])|join(' > ') }}
     | Auswahl: {{ vm.get('debug',{}).get('selected_label','...') }}
-    | Status: …
-    | Menü: …
+    | Status: {{ vm.get('debug',{}).get('status_age','…') }}
+    | Menü: {{ vm.get('debug',{}).get('menu_age','…') }}
     {% if vm.get("progress", {}).get("active") %}
       | {{ vm["progress"].get("title","") }} — {{ vm["progress"].get("message","") }}
     {% else %}
@@ -435,6 +435,14 @@ async function sendCmd(cmd) {
   }
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
 function renderMenuTree(vm) {
   const tree = document.getElementById('menuTree');
   if (!tree) return;
@@ -499,8 +507,7 @@ async function refreshState() {
     const statusBar = document.getElementById('statusBar');
     const debugBar = document.getElementById('debugBar');
 
-    if (title) title.textContent =
-      vm.status?.track || vm.status?.radio_name || '–';
+    if (title) title.textContent = vm.status?.track || vm.status?.radio_name || '–';
 
     if (sub) {
       const artist = vm.status?.artist || '';
@@ -547,14 +554,14 @@ async function refreshAudio() {
       const dec = d.decision || {};
       box.innerHTML = `
         <div class="diag-row"><span class="diag-key">Routing-Entscheidung</span><span class="diag-value">${d.fallback_active ? '⚠ Fallback' : 'OK'}</span></div>
-        <div class="diag-row"><span class="diag-key">PulseAudio</span><span class="diag-value">${String(d.pulse_active)}</span></div>
+        <div class="diag-row"><span class="diag-key">PulseAudio</span><span class="diag-value">${escapeHtml(String(d.pulse_active))}</span></div>
         <div class="diag-row"><span class="diag-key">Default Sink</span><span class="diag-value">${escapeHtml(d.default_sink || '–')}</span></div>
         <div class="diag-row"><span class="diag-key">Requested</span><span class="diag-value">${escapeHtml(dec.requested || '–')}</span></div>
         <div class="diag-row"><span class="diag-key">Effective</span><span class="diag-value">${escapeHtml(dec.effective || '–')}</span></div>
         <div class="diag-row"><span class="diag-key">Reason</span><span class="diag-value">${escapeHtml(dec.reason || '–')}</span></div>
         <div class="diag-row"><span class="diag-key">Quelle</span><span class="diag-value">${escapeHtml(dec.source || '–')}</span></div>
         <div class="diag-row"><span class="diag-key">Runtime Sink</span><span class="diag-value">${escapeHtml(dec.sink || '–')}</span></div>
-        <div class="diag-row"><span class="diag-key">Verify</span><span class="diag-value">–</span></div>`;
+        <div class="diag-row"><span class="diag-key">Lautstärke</span><span class="diag-value">${escapeHtml(d.current_volume || '–')}</span></div>`;
     }
 
     if (inBox) inBox.textContent = JSON.stringify(d.sink_inputs || [], null, 2) || '– keine aktiven Inputs –';
@@ -577,10 +584,11 @@ async function refreshVolume() {
 async function refreshGain() {
   try {
     const d = await apiGet('/api/gain');
-    document.getElementById('dabGainNow').textContent = d.dab_gain ?? '–';
-    document.getElementById('fmGainNow').textContent = d.fm_gain ?? '–';
-    document.getElementById('ppmNow').textContent = d.ppm_correction ?? '–';
-    document.getElementById('squelchNow').textContent = d.scanner_squelch ?? '–';
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '–'; };
+    set('dabGainNow', d.dab_gain);
+    set('fmGainNow', d.fm_gain);
+    set('ppmNow', d.ppm_correction);
+    set('squelchNow', d.scanner_squelch);
   } catch (e) {
     console.error('refreshGain', e);
   }
@@ -590,20 +598,19 @@ async function refreshDabStatus() {
   try {
     const r = await apiGet('/api/dab/status');
     const d = r.data || {};
-    document.getElementById('dabName').textContent = d.name || '–';
-    document.getElementById('dabChannelSid').textContent = `${d.channel || '–'} / ${d.service_id || '–'}`;
-    document.getElementById('dabState').textContent = d.dab_state || '–';
-    document.getElementById('dabSync').textContent =
-      `sync_ok=${d.sync_ok ? 'Ja' : 'Nein'} | sync=${d.dab_sync_seen ? 'Ja' : 'Nein'} | superframe=${d.dab_superframe_seen ? 'Ja' : 'Nein'}`;
-    document.getElementById('dabAudioReady').textContent =
-      `audio_ready=${d.dab_audio_ready ? 'Ja' : 'Nein'} | pcm=${d.dab_pcm_seen ? 'Ja' : 'Nein'}`;
-    document.getElementById('dabGainActive').textContent = d.gain || '–';
-    document.getElementById('dabPpmActive').textContent = d.ppm || '–';
-    document.getElementById('dabLastError').textContent = d.last_error_line || '–';
-    document.getElementById('dabDlsRaw').textContent = d.dls_text || '–';
-    document.getElementById('dabArtist').textContent = d.artist || '–';
-    document.getElementById('dabTrack').textContent = d.track || '–';
-    document.getElementById('dabDlsText').textContent = d.dls_text || '–';
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '–'; };
+    set('dabName', d.name || '–');
+    set('dabChannelSid', `${d.channel || '–'} / ${d.service_id || '–'}`);
+    set('dabState', d.dab_state || '–');
+    set('dabSync', `sync_ok=${d.sync_ok ? 'Ja' : 'Nein'} | sync=${d.dab_sync_seen ? 'Ja' : 'Nein'} | superframe=${d.dab_superframe_seen ? 'Ja' : 'Nein'}`);
+    set('dabAudioReady', `audio_ready=${d.dab_audio_ready ? 'Ja' : 'Nein'} | pcm=${d.dab_pcm_seen ? 'Ja' : 'Nein'}`);
+    set('dabGainActive', d.gain || '–');
+    set('dabPpmActive', d.ppm || '–');
+    set('dabLastError', d.last_error_line || d.error || '–');
+    set('dabDlsRaw', d.last_dls_raw || d.dls_raw || '–');
+    set('dabArtist', d.last_dls_artist || d.artist || '–');
+    set('dabTrack', d.last_dls_track || d.track || '–');
+    set('dabDlsText', (d.last_dls_artist && d.last_dls_track) ? `${d.last_dls_artist} - ${d.last_dls_track}` : (d.last_dls_raw || '–'));
   } catch (e) {
     console.error('refreshDabStatus', e);
   }
@@ -612,7 +619,8 @@ async function refreshDabStatus() {
 async function refreshDabScan() {
   try {
     const r = await apiGet('/api/dab/scan/last');
-    document.getElementById('dabScanBox').textContent = JSON.stringify(r.data || {}, null, 2);
+    const box = document.getElementById('dabScanBox');
+    if (box) box.textContent = JSON.stringify(r.data || {}, null, 2);
   } catch (e) {
     console.error('refreshDabScan', e);
   }
@@ -689,13 +697,15 @@ async function refreshAvrcp() {
     const r = await apiGet('/api/avrcp');
     const s = await apiGet('/api/service?name=pidrive_avrcp');
     const d = r.data || {};
-    document.getElementById('avrcpService').textContent = s.ok ? 'OK' : 'Fehler';
-    document.getElementById('avrcpJsonInfo').textContent = r.exists ? `vorhanden (${r.age}s)` : 'fehlt';
-    document.getElementById('avrcpLastEvent').textContent = d.last_event || '–';
-    document.getElementById('avrcpContext').textContent = d.context || '–';
-    document.getElementById('avrcpTrigger').textContent = d.trigger || '–';
-    document.getElementById('avrcpSource').textContent = d.source || '–';
-    document.getElementById('avrcpBox').textContent = JSON.stringify(d, null, 2);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '–'; };
+    set('avrcpService', s.ok ? 'OK' : 'Fehler');
+    set('avrcpJsonInfo', r.exists ? `vorhanden (${r.age}s)` : 'fehlt');
+    set('avrcpLastEvent', d.last_event || '–');
+    set('avrcpContext', d.context || '–');
+    set('avrcpTrigger', d.trigger || '–');
+    set('avrcpSource', d.source || '–');
+    const box = document.getElementById('avrcpBox');
+    if (box) box.textContent = JSON.stringify(d, null, 2);
   } catch (e) {
     console.error('refreshAvrcp', e);
   }
@@ -806,18 +816,10 @@ async function refreshRuntime() {
   }
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
-
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
 
-  const fast = () => {
+  const tick = () => {
     refreshState();
     if (currentTab === 'audio') {
       refreshAudio();
@@ -837,8 +839,8 @@ function startPolling() {
     }
   };
 
-  fast();
-  pollTimer = setInterval(fast, currentTab === 'control' ? 1500 : 5000);
+  tick();
+  pollTimer = setInterval(tick, currentTab === 'control' ? 1500 : 5000);
 }
 
 window.addEventListener('load', async () => {
