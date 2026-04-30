@@ -1,54 +1,96 @@
 """
-modules/dab.py — DAB+ Wiedergabe und Scan via welle-cli (ALSA-Direktmodus)
-Aufrufer: main_core.py
-Abhängig von: modules/audio.py, modules/source_state.py, ipc.py
-Schreibt: /tmp/pidrive_dab_play_debug.json, settings[last_dab_station], dab_stations.json
-Hinweis: welle-cli -p = ALSA-direkt, KEIN PulseAudio (OFDM-Timing-sensitiv)
+modules/dab.py — DAB+ Wiedergabe und Scan via welle-cli (stark verbessert)
+PiDrive v0.9.31+
+
+Ziele:
+- robustere Wiedergabe
+- klare Lock-/Status-/DLS-Zustände
+- DLS sauber in Runtime-State + Debug-JSON spiegeln
+- Session-sicherer Poller
+- bessere Diagnose für "Lock OK, aber kein hörbarer Ton"
 """
 
-
-import subprocess
-try:
-    from modules import rtlsdr as _rtlsdr
-except Exception:
-    _rtlsdr = None
 import os
-import time
+import re
 import json
+import time
+import shlex
+import threading
+import subprocess
 import urllib.request as _ur
 
 import log
 import ipc
 
-C_DAB = (0, 200, 180)
+try:
+    from modules import rtlsdr as _rtlsdr
+except Exception:
+    _rtlsdr = None
+
+try:
+    from modules import source_state as _src_state
+except Exception:
+    _src_state = None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Dateien / Globals
+# ─────────────────────────────────────────────────────────────────────────────
+
+ERR_FILE = "/tmp/pidrive_dab_welle.err"
+PLAY_DEBUG_FILE = "/tmp/pidrive_dab_play_debug.json"
+SCAN_DEBUG_FILE = "/tmp/pidrive_dab_scan_debug.json"
 
 _player_proc = None
 _scan_running = False
-_scan_results = []
 _last_scan_diag = {}
-_SCAN_DEBUG_FILE = "/tmp/pidrive_dab_scan_debug.json"
+
+_dls_thread = None
+_dls_stop_event = threading.Event()
+_dab_session_id = ""
+_dab_session_lock = threading.RLock()
+
+C_DAB = (0, 200, 180)
 
 
-def get_last_scan_diag():
-    return dict(_last_scan_diag)
+# ─────────────────────────────────────────────────────────────────────────────
+# Hilfsfunktionen
+# ─────────────────────────────────────────────────────────────────────────────
 
-
-def _write_scan_diag_file():
+def _write_json_atomic(path, data):
     try:
-        tmp = _SCAN_DEBUG_FILE + ".tmp"
+        tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(_last_scan_diag, f, indent=2, ensure_ascii=False)
-        os.replace(tmp, _SCAN_DEBUG_FILE)
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, path)
     except Exception as e:
-        log.warn("DAB scan diag file write: " + str(e))
+        log.warn(f"DAB write json {path}: {e}")
 
 
-def load_last_scan_diag_file():
+def _read_json(path, default=None):
+    if default is None:
+        default = {}
     try:
-        with open(_SCAN_DEBUG_FILE, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
-        return {}
+        return default
+
+
+def _truncate_file(path):
+    try:
+        with open(path, "w", encoding="utf-8"):
+            pass
+    except Exception:
+        pass
+
+
+def _run(cmd, capture=False, timeout=10):
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        return r.stdout.strip() if capture else (r.returncode == 0)
+    except Exception:
+        return "" if capture else False
 
 
 def _normalize_station(st):
@@ -62,54 +104,128 @@ def _normalize_station(st):
     return out
 
 
-def _run(cmd, capture=False, timeout=10):
-    try:
-        r = subprocess.run(cmd, shell=True, capture_output=True,
-                           text=True, timeout=timeout)
-        return r.stdout.strip() if capture else r.returncode == 0
-    except Exception:
-        return "" if capture else False
+def _new_session_id():
+    return f"dab_{int(time.time() * 1000)}"
 
 
-def _bg(cmd):
-    try:
-        subprocess.Popen(cmd, shell=True,
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+def _set_session(session_id: str):
+    global _dab_session_id
+    with _dab_session_lock:
+        _dab_session_id = session_id
 
 
-def is_rtlsdr_available():
-    out = _run("lsusb 2>/dev/null", capture=True)
-    return any(k in out.lower() for k in ["rtl", "realtek", "2838", "0bda"])
+def _get_session():
+    with _dab_session_lock:
+        return _dab_session_id
 
 
-def is_welle_available():
-    return _run("which welle-cli", capture=True) != ""
+def _clear_session():
+    global _dab_session_id
+    with _dab_session_lock:
+        _dab_session_id = ""
 
 
-def load_stations():
-    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
-    try:
-        data = json.load(open(path, encoding="utf-8"))
-        return data.get("stations", data) if isinstance(data, dict) else data
-    except Exception:
-        return []
+def _write_play_debug(data: dict):
+    old = _read_json(PLAY_DEBUG_FILE, {})
+    merged = dict(old)
+    merged.update(data)
+    merged["ts"] = time.time()
+    _write_json_atomic(PLAY_DEBUG_FILE, merged)
 
 
-def save_stations(stations):
-    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(stations, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        log.error(f"DAB save Fehler: {e}")
+def _reset_runtime_dls_fields(S):
+    S["artist"] = ""
+    S["track"] = ""
+    S["album"] = ""
+    S["dls"] = ""
+    S["dls_raw"] = ""
+    S["radio_text"] = ""
+    S["dls_ts"] = 0
+    S["dab_dls_state"] = "empty"
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+def _set_dab_status_fields(S, **kwargs):
+    for k, v in kwargs.items():
+        S[k] = v
+
+
+def _parse_dls_line(line: str):
+    """
+    Robuster Parser für DLS-Zeilen.
+    Erlaubt:
+    - 'DLS: Foo - Bar'
+    - '[INFO] DLS: Foo - Bar'
+    - '   DLS: Foo - Bar'
+    """
+    if not line:
+        return None
+
+    m = re.search(r"\bDLS:\s*(.+)$", line, re.IGNORECASE)
+    if not m:
+        return None
+
+    raw = m.group(1).strip()
+    if not raw:
+        return None
+
+    artist = ""
+    track = raw
+
+    if " - " in raw:
+        parts = raw.split(" - ", 1)
+        artist = parts[0].strip()
+        track = parts[1].strip()
+
+    return {
+        "raw": raw,
+        "artist": artist,
+        "track": track,
+    }
+
+
+def _parse_welle_status_line(line: str):
+    low = (line or "").strip().lower()
+    if not low:
+        return None
+
+    if "found sync" in low:
+        return ("sync_found", line.strip())
+    if "superframe sync succeeded" in low:
+        return ("superframe_ok", line.strip())
+    if "pcm name:" in low:
+        return ("pcm_ready", line.strip())
+    if "dls:" in low:
+        return ("dls_seen", line.strip())
+
+    if any(x in low for x in [
+        "failed",
+        "lost",
+        "cannot open",
+        "permission denied",
+        "xrun",
+        "alsa",
+        "audio"
+    ]):
+        return ("warn_or_error", line.strip())
+
+    return None
+
+
+def _append_play_debug_line(kind: str, line: str):
+    dbg = _read_json(PLAY_DEBUG_FILE, {})
+    lines = dbg.get("recent_lines", [])
+    lines.append({
+        "ts": round(time.time(), 3),
+        "kind": kind,
+        "line": line[:220]
+    })
+    dbg["recent_lines"] = lines[-40:]
+    _write_json_atomic(PLAY_DEBUG_FILE, dbg)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Gain Mapping
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 _RTL_GAIN_TABLE = [
     0.0, 0.9, 1.4, 2.7, 3.7, 7.7, 8.7, 12.5, 14.4, 15.7,
@@ -119,9 +235,6 @@ _RTL_GAIN_TABLE = [
 
 
 def _get_dab_gain(settings=None):
-    """
-    welle-cli -g erwartet einen Gain-INDEX (0–28), nicht dB [1].
-    """
     try:
         if settings is None:
             from settings import load_settings as _ls
@@ -142,20 +255,175 @@ def _get_dab_gain(settings=None):
         return "-1"
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Scan-Diagnose
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_last_scan_diag():
+    return dict(_last_scan_diag)
+
+
+def _write_scan_diag_file():
+    _write_json_atomic(SCAN_DEBUG_FILE, _last_scan_diag)
+
+
+def load_last_scan_diag_file():
+    return _read_json(SCAN_DEBUG_FILE, {})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Wiedergabe-Status / DLS Poller
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _stop_dls_thread():
+    global _dls_thread
+    _dls_stop_event.set()
+    if _dls_thread and _dls_thread.is_alive():
+        try:
+            _dls_thread.join(timeout=2.0)
+        except Exception:
+            pass
+    _dls_thread = None
+    _dls_stop_event.clear()
+
+
+def _dls_poller(session_id: str, station_name: str, S: dict):
+    """
+    Liest DLS robust aus ERR_FILE.
+    Beendet sich, wenn:
+    - Session wechselt
+    - Stop-Event gesetzt wird
+    - DAB nicht mehr die aktuelle Quelle ist
+    """
+    last_pos = 0
+    last_dls = ""
+    _write_play_debug({
+        "dls_thread_started": True,
+        "dls_session_id": session_id,
+        "dls_station": station_name,
+    })
+
+    # Startoffset: wir lesen ab Dateiende nur neue Zeilen
+    try:
+        if os.path.exists(ERR_FILE):
+            with open(ERR_FILE, "r", encoding="utf-8", errors="ignore") as f:
+                f.seek(0, os.SEEK_END)
+                last_pos = f.tell()
+    except Exception:
+        last_pos = 0
+
+    log.info(f"DAB DLS poller: start session={session_id} station={station_name!r}")
+
+    while not _dls_stop_event.is_set():
+        if _get_session() != session_id:
+            log.info(f"DAB DLS poller: stop (session changed) old={session_id} new={_get_session()}")
+            break
+
+        if not (S.get("radio_playing") and S.get("radio_type") == "DAB" and S.get("radio_name") == station_name):
+            log.info(f"DAB DLS poller: stop (radio state changed) station={station_name!r}")
+            break
+
+        try:
+            if not os.path.exists(ERR_FILE):
+                time.sleep(1.0)
+                continue
+
+            with open(ERR_FILE, "r", encoding="utf-8", errors="ignore") as f:
+                f.seek(last_pos)
+                new_data = f.read()
+                last_pos = f.tell()
+
+            if new_data:
+                for line in new_data.splitlines():
+                    s = line.strip()
+                    if not s:
+                        continue
+
+                    parsed_status = _parse_welle_status_line(s)
+                    if parsed_status:
+                        _append_play_debug_line(parsed_status[0], parsed_status[1])
+
+                    parsed_dls = _parse_dls_line(s)
+                    if parsed_dls:
+                        raw = parsed_dls["raw"]
+                        if raw != last_dls:
+                            S["dls"] = raw
+                            S["dls_raw"] = raw
+                            S["radio_text"] = raw
+                            S["artist"] = parsed_dls["artist"]
+                            S["track"] = parsed_dls["track"]
+                            S["dls_ts"] = int(time.time())
+                            S["dab_dls_state"] = "ok"
+
+                            _write_play_debug({
+                                "last_dls_raw": raw,
+                                "last_dls_artist": S["artist"],
+                                "last_dls_track": S["track"],
+                                "last_dls_ts": time.time(),
+                                "dls_last_pos": last_pos,
+                            })
+
+                            log.info(
+                                f"DAB DLS: session={session_id} "
+                                f"raw={raw!r} artist={S['artist']!r} track={S['track']!r}"
+                            )
+                            last_dls = raw
+
+        except Exception as e:
+            _write_play_debug({
+                "dls_error": str(e),
+                "dls_error_ts": time.time(),
+            })
+            log.warn(f"DAB DLS poller: {e}")
+
+        time.sleep(1.5)
+
+    _write_play_debug({
+        "dls_thread_stopped": True,
+        "dls_thread_stop_ts": time.time(),
+    })
+    log.info(f"DAB DLS poller: end session={session_id}")
+
+
+def _start_dls_thread(session_id: str, station_name: str, S: dict):
+    global _dls_thread
+    _stop_dls_thread()
+    _dls_thread = threading.Thread(
+        target=_dls_poller,
+        args=(session_id, station_name, S),
+        daemon=True,
+        name="dab_dls"
+    )
+    _dls_thread.start()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stations-IO
+# ─────────────────────────────────────────────────────────────────────────────
+
+def load_stations():
+    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
+    try:
+        data = json.load(open(path, encoding="utf-8"))
+        return data.get("stations", data) if isinstance(data, dict) else data
+    except Exception:
+        return []
+
+
+def save_stations(stations):
+    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(stations, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        log.error(f"DAB save Fehler: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Scan
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 def scan_dab_channels(settings=None):
-    """
-    DAB+ Suchlauf via welle-cli Webserver + mux.json.
-
-    Konfigurierbar via settings.json:
-    - dab_scan_wait_lock
-    - dab_scan_http_timeout
-    - dab_scan_port
-    - dab_scan_channels
-    """
     import subprocess as _sp
     import time as _t
 
@@ -186,16 +454,16 @@ def scan_dab_channels(settings=None):
 
     if requested_channels:
         region_list = [ch for ch in requested_channels if ch in CHANNELS_FULL]
-        full_list   = region_list[:]
+        full_list = region_list[:]
         log.info(f"DAB Scan: gezielte Kanäle: {region_list} (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
     else:
         region_list = CHANNELS_REGIONAL
-        full_list   = CHANNELS_FULL
+        full_list = CHANNELS_FULL
         log.info(f"DAB Scan: Standard-Scan (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
 
     gain_idx = _get_dab_gain(settings)
-    found    = []
-    scanned  = []
+    found = []
+    scanned = []
 
     def _lock_state_name(snr, ens_label, ens_id, services, fic_crc, last_fct0):
         if services > 0:
@@ -238,36 +506,35 @@ def scan_dab_channels(settings=None):
         proc = _sp.Popen(cmd, shell=True, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
         _t.sleep(WAIT_LOCK)
 
-        services  = []
-        snr       = 0.0
+        services = []
+        snr = 0.0
         ens_label = ""
-        ens_id    = ""
+        ens_id = ""
         freq_corr = 0
-        fic_crc   = -1
+        fic_crc = -1
         last_fct0 = 0
-        rx_gain   = ""
+        rx_gain = ""
 
         try:
-            url  = f"http://127.0.0.1:{SCAN_PORT}/mux.json"
+            url = f"http://127.0.0.1:{SCAN_PORT}/mux.json"
             resp = _ur.urlopen(url, timeout=WAIT_HTTP)
             data = json.loads(resp.read().decode("utf-8"))
 
-            snr       = float(data.get("demodulator", {}).get("snr", 0) or data.get("demodulator_snr", 0))
+            snr = float(data.get("demodulator", {}).get("snr", 0) or data.get("demodulator_snr", 0))
             ens_label = (data.get("ensemble", {}).get("label", {}).get("label", "") or "")
-            ens_id    = data.get("ensemble", {}).get("id", "")
-            fic_crc   = int(data.get("demodulator", {}).get("fic", {}).get("numcrcerrors", -1))
+            ens_id = data.get("ensemble", {}).get("id", "")
+            fic_crc = int(data.get("demodulator", {}).get("fic", {}).get("numcrcerrors", -1))
             last_fct0 = int(data.get("demodulator", {}).get("time_last_fct0_frame", 0) or 0)
             freq_corr = int(data.get("receiver", {}).get("hardware", {}).get("freqcorr", 0) or 0)
-            rx_gain   = str(data.get("receiver", {}).get("hardware", {}).get("gain", ""))
+            rx_gain = str(data.get("receiver", {}).get("hardware", {}).get("gain", ""))
 
             raw_svcs = data.get("services", [])
             for svc in raw_svcs:
-                # v0.9.14 Fix: label kann ein Dict sein → immer str() casten vor strip()
                 _lbl = svc.get("label", "")
                 if isinstance(_lbl, dict):
                     _lbl = _lbl.get("label", "") or ""
                 name = str(_lbl or "").strip()
-                sid  = str(svc.get("sid", "") or "").strip()
+                sid = str(svc.get("sid", "") or "").strip()
                 url_mp3 = str(svc.get("url_mp3", "") or "").strip()
                 if name:
                     services.append({
@@ -289,18 +556,6 @@ def scan_dab_channels(settings=None):
             snr=snr, ens_label=ens_label, ens_id=ens_id,
             services=len(services), fic_crc=fic_crc, last_fct0=last_fct0
         )
-        log.info(
-            f"DAB Scan: CHANNEL_INFO ch={ch} ensemble={ens_label!r} "
-            f"id={ens_id} services={len(services)} snr={snr:.1f} "
-            f"freqcorr={freq_corr} gain={rx_gain} ficcrc={fic_crc} "
-            f"lastfct0={last_fct0} lock={lock_state}"
-        )
-
-        if int(last_fct0 or 0) == 0:
-            log.warn(f"DAB Scan: NO_FCT0_LOCK ch={ch} lastfct0=0 ensemble={ens_id or '0x0000'}")
-
-        if snr >= 2.0 and len(services) == 0:
-            log.warn(f"DAB Scan: LOCK_KANDIDAT ch={ch} snr={snr:.1f} keine Services — WAIT_LOCK erhöhen?")
 
         _last_scan_diag["channels"][ch] = {
             "ensemble": ens_label,
@@ -317,7 +572,6 @@ def scan_dab_channels(settings=None):
         _write_scan_diag_file()
         return services, ens_label, ens_id, snr
 
-    # Regionalscan
     ipc.write_progress("DAB+ Suchlauf", "Regionale Kanäle...", color="blue")
     for ch in region_list:
         ipc.write_progress("DAB+ Suchlauf", f"Kanal {ch}...", color="blue")
@@ -325,14 +579,14 @@ def scan_dab_channels(settings=None):
         scanned.append(ch)
         for svc in svcs:
             entry = {
-                "name":       svc["name"],
-                "channel":    ch,
-                "ensemble":   ens_label,
+                "name": svc["name"],
+                "channel": ch,
+                "ensemble": ens_label,
                 "service_id": str(svc["service_id"] or "").strip(),
-                "url_mp3":    "",  # v0.9.21: welle-cli -p → kein HTTP mehr
-                "id":         f"dab_{svc['service_id'] or svc['name']}",
-                "favorite":   False,
-                "enabled":    True,
+                "url_mp3": "",
+                "id": f"dab_{svc['service_id'] or svc['name']}",
+                "favorite": False,
+                "enabled": True,
             }
             if not any(
                 (str(e.get("service_id","") or "").strip() == entry["service_id"] and entry["service_id"])
@@ -341,7 +595,6 @@ def scan_dab_channels(settings=None):
             ):
                 found.append(entry)
 
-    # Vollscan wenn nötig
     if len(found) < 3 and not requested_channels:
         log.info("DAB Scan: Regionalscan < 3 Sender — Vollscan...")
         ipc.write_progress("DAB+ Suchlauf", "Vollscan...", color="blue")
@@ -353,14 +606,14 @@ def scan_dab_channels(settings=None):
             scanned.append(ch)
             for svc in svcs:
                 entry = {
-                    "name":       svc["name"],
-                    "channel":    ch,
-                    "ensemble":   ens_label,
+                    "name": svc["name"],
+                    "channel": ch,
+                    "ensemble": ens_label,
                     "service_id": str(svc["service_id"] or "").strip(),
-                    "url_mp3":    "",  # v0.9.21: welle-cli -p → kein HTTP mehr
-                    "id":         f"dab_{svc['service_id'] or svc['name']}",
-                    "favorite":   False,
-                    "enabled":    True,
+                    "url_mp3": "",
+                    "id": f"dab_{svc['service_id'] or svc['name']}",
+                    "favorite": False,
+                    "enabled": True,
                 }
                 if not any(
                     (str(e.get("service_id","") or "").strip() == entry["service_id"] and entry["service_id"])
@@ -370,49 +623,38 @@ def scan_dab_channels(settings=None):
                     found.append(entry)
 
     _last_scan_diag["found"] = len(found)
-    log.info(f"DAB Scan: FERTIG — {len(found)} Sender auf {len(scanned)} Kanälen (WAIT_LOCK={WAIT_LOCK}s PORT={SCAN_PORT})")
     _write_scan_diag_file()
+    log.info(f"DAB Scan: FERTIG — {len(found)} Sender")
     return found
 
 
-def scan_dab_channels_full(progress_cb=None):
-    all_channels = [
-        "5A","5B","5C","5D","6A","6B","6C","6D",
-        "7A","7B","7C","7D","8A","8B","8C","8D",
-        "9A","9B","9C","9D","10A","10B","10C","10D",
-        "11A","11B","11C","11D","12A","12B","12C","12D",
-        "13A","13B","13C","13D","13E","13F",
-    ]
-    return scan_dab_channels(progress_cb=progress_cb, channels=all_channels)
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Playback
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Wiedergabe
+# ─────────────────────────────────────────────────────────────────────────────
 
 def play_station(station, S, settings=None):
     global _player_proc
+
     stop(S)
 
     if settings is not None:
-        # v0.9.27: last_source setzen + vollständige Stationsdaten + save_settings()
         settings["last_source"] = "dab"
         settings["last_dab_station"] = {
-            "name":       station.get("name", ""),
-            "channel":    station.get("channel", ""),
+            "name": station.get("name", ""),
+            "channel": station.get("channel", ""),
             "service_id": station.get("service_id", ""),
-            "ensemble":   station.get("ensemble", ""),
-            "url_mp3":    station.get("url_mp3", ""),
+            "ensemble": station.get("ensemble", ""),
+            "url_mp3": station.get("url_mp3", ""),
         }
         try:
             from settings import save_settings as _save_s
             _save_s(settings)
-        except Exception as _se:
-            log.warn(f"DAB: save_settings failed: {_se}")
+        except Exception as e:
+            log.warn(f"DAB: save_settings failed: {e}")
 
-    ch   = station.get("channel", "")
+    ch = station.get("channel", "")
     name = station.get("name", "")
-    sid  = str(station.get("service_id", "") or "").strip()
+    sid = str(station.get("service_id", "") or "").strip()
 
     if not ch:
         log.error(f"DAB play: kein channel station={station!r}")
@@ -439,206 +681,195 @@ def play_station(station, S, settings=None):
             log.warn(f"DAB: RTL-SDR belegt vor play {name} [{ch}]")
             return
 
+    session_id = _new_session_id()
+    _set_session(session_id)
+    _stop_dls_thread()
+    _truncate_file(ERR_FILE)
+    _reset_runtime_dls_fields(S)
+
+    _set_dab_status_fields(
+        S,
+        dab_session_id=session_id,
+        dab_state="starting",
+        dab_sync_ok=False,
+        dab_last_error="",
+        dab_channel=ch,
+        dab_service_id=sid,
+        dab_ensemble=station.get("ensemble", ""),
+        dab_audio_ready=False,
+        dab_pcm_seen=False,
+        dab_sync_seen=False,
+        dab_superframe_seen=False,
+    )
+
+    _write_play_debug({
+        "session_id": session_id,
+        "name": name,
+        "channel": ch,
+        "service_id": sid,
+        "ensemble": station.get("ensemble", ""),
+        "started_ts": time.time(),
+        "state": "starting",
+        "recent_lines": [],
+        "last_dls_raw": "",
+        "last_dls_artist": "",
+        "last_dls_track": "",
+    })
+
     try:
         from modules import audio as _audio
-        _mpv_raw  = _audio.get_mpv_args(settings, source="dab")
-        # Index 0: env-prefix (leer bei ALSA-Modus) oder "PULSE_SERVER=..." bei BT
-        _mpv_env  = _mpv_raw[0] if _mpv_raw and not _mpv_raw[0].startswith("--") else ""
-        # Leeren ersten Eintrag herausfiltern
-        _mpv_opts = [a for a in (_mpv_raw[1:] if _mpv_env is not None else _mpv_raw) if a]
-        _mpv_args = " ".join(_mpv_opts)
-        _gain     = _get_dab_gain(settings)
-
-        # v0.9.31: DAB läuft welle-cli ALSA-direkt — kein PulseAudio nötig.
-        # PulseAudio-Strict-Check DEAKTIVIERT für DAB (war der Haupt-Bug).
-        # welle-cli -p gibt PCM an hw:default → asound.conf → Card 1 Klinke.
-        # PulseAudio-Status ist für DAB-Wiedergabe irrelevant.
+        _mpv_raw = _audio.get_mpv_args(settings, source="dab")
         _adec = _audio.get_last_decision()
-        if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
-            log.info(f"DAB: PulseAudio inaktiv — kein Abbruch (welle-cli ALSA-direkt)")
-            # KEIN return — DAB startet trotzdem
 
-        import shlex
+        _gain = _get_dab_gain(settings)
         _ppm_val = int(settings.get("ppm_correction", 0)) if settings else 0
-        _name_q  = shlex.quote(name)
+        _name_q = shlex.quote(name)
 
-        # v0.9.22: welle-cli OHNE PulseAudio-Env starten.
-        # PULSE_SERVER/PULSE_SINK verursachen bei RTL2838 einen OFDM-Sync-Fehler.
-        # welle-cli läuft via ALSA → PulseAudio routet automatisch (Klinke oder BT).
-        # Das ist identisch zum manuellen Start der funktioniert:
-        #   welle-cli -c 10A -p "NAME"  (kein PULSE_SERVER, kein PULSE_SINK)
-        # v0.9.26 KORREKTUR: -p und -w sind NICHT kombinierbar (welle-io.md §2)
-        # -p → AlsaProgrammeHandler (ALSA-Audio direkt)
-        # -w → WebRadioInterface (HTTP-Server)
-        # Diese sind zwei separate Betriebspfade — gleichzeitig nicht unterstützt.
-        # DLS-Polling via mux.json entfällt damit im ALSA-Modus.
-        # DLS wird stattdessen aus dem stderr-Log geparst (Abschnitt _dls_from_stderr).
+        if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
+            log.info("DAB: PulseAudio inaktiv — kein Abbruch (ALSA-direkt)")
+
         _welle_cmd = (
             "welle-cli -c " + ch + " -g " + _gain +
             " -p " + _name_q +
             " < /dev/null" +
-            " 2>/tmp/pidrive_dab_welle.err"
+            " 2>" + ERR_FILE
         )
 
-        log.info(f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain}")
-        if _ppm_val != 0:
-            log.info(f"DAB play: PPM konfiguriert: {_ppm_val} ppm")
+        _write_play_debug({
+            "audio_decision": _adec,
+            "welle_cmd": _welle_cmd,
+            "ppm": _ppm_val,
+            "gain": _gain,
+        })
+
+        log.info(f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain} session={session_id}")
 
         if _rtlsdr:
             try:
-                _rtlsdr.start_process(
-                    _welle_cmd, owner="dab_play", shell=True,
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                _player_proc = _rtlsdr.start_process(
+                    _welle_cmd,
+                    owner="dab_play",
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
                 )
-            except Exception as _e:
-                S["radio_playing"] = False
-                S["radio_station"] = "RTL-SDR Lock-Fehler"
-                log.error("DAB: RTL-SDR Lock: " + str(_e))
+            except Exception as e:
+                _set_dab_status_fields(
+                    S,
+                    dab_state="start_failed",
+                    dab_last_error=str(e),
+                    radio_playing=False,
+                )
+                _write_play_debug({
+                    "state": "start_failed",
+                    "error": str(e),
+                })
+                log.error("DAB: RTL-SDR Lock/Start: " + str(e))
                 return
         else:
             _player_proc = subprocess.Popen(
-                _welle_cmd, shell=True,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                _welle_cmd,
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
             )
 
-        # v0.9.31: PRIORITÄT 3 — DAB Lock-Wartezustand (5-8s, dann commit)
-        # Phasen: starting → syncing → locked/failed
-        _dab_state = "starting"
-        _sync_ok   = False
-        _last_err  = ""
-        _lock_wait_max = 12   # max 12s auf Lock warten
+        lock_wait_max = 12
+        sync_ok = False
+        pcm_seen = False
+        sync_seen = False
+        superframe_seen = False
+        last_err = ""
 
-        for _ws in range(_lock_wait_max):
-            time.sleep(1)
-            if not os.path.exists("/tmp/pidrive_dab_welle.err"):
+        for _ in range(lock_wait_max):
+            time.sleep(1.0)
+            if _get_session() != session_id:
+                log.warn(f"DAB play: session changed during lock wait {session_id}")
+                return
+
+            if not os.path.exists(ERR_FILE):
                 continue
+
             try:
-                with open("/tmp/pidrive_dab_welle.err", "r", encoding="utf-8", errors="ignore") as _f:
-                    _recent = _f.read()[-3000:]
-                lines = [l.strip() for l in _recent.splitlines() if l.strip()]
-                # Lock-Kriterien
-                # v0.9.31: Echte welle-cli Ausgabe: "Found sync ..." / "Superframe sync succeeded"
-                if any("found sync" in l.lower()
-                       or "superframe sync succeeded" in l.lower()
-                       or "pcm name:" in l.lower()        # ALSA-Ausgabe bereit
-                       or "dls:" in l.lower()             # DLS = definitiv Lock
-                       for l in lines[-8:]):
-                    _sync_ok   = True
-                    _dab_state = "locked"
-                    _lock_line = next((l for l in reversed(lines[-5:])
-                                       if any(k in l.lower() for k in
-                                              ["found sync","superframe","pcm name","dls:"])), "")
-                    log.info(f"DAB Lock: OK nach {_ws+1}s ch={ch} sid={sid} [{_lock_line[:60]}]")
+                with open(ERR_FILE, "r", encoding="utf-8", errors="ignore") as f:
+                    lines = [ln.strip() for ln in f.readlines()[-25:] if ln.strip()]
+
+                for ln in lines[-8:]:
+                    parsed = _parse_welle_status_line(ln)
+                    if parsed:
+                        _append_play_debug_line(parsed[0], parsed[1])
+
+                    low = ln.lower()
+                    if "found sync" in low:
+                        sync_seen = True
+                    if "superframe sync succeeded" in low:
+                        superframe_seen = True
+                    if "pcm name:" in low:
+                        pcm_seen = True
+                    if any(x in low for x in ["failed", "lost", "cannot open", "permission denied", "xrun"]):
+                        last_err = ln[:180]
+
+                if sync_seen and superframe_seen:
+                    sync_ok = True
+
+                if sync_ok or pcm_seen:
                     break
-                elif _ws >= 3:
-                    _dab_state = "syncing"
-                for _ln in lines[-3:]:
-                    if "failed" in _ln.lower() or "lost" in _ln.lower():
-                        _last_err = _ln[:120]
-            except Exception:
-                pass
 
-        if not _sync_ok:
-            _dab_state = "no_lock"
-            log.warn(f"DAB: kein stabiler Lock nach {_lock_wait_max}s (ch={ch} sid={sid}) — continue anyway")
+            except Exception as e:
+                last_err = str(e)
 
-        # Log letzten Stderr
-        try:
-            with open("/tmp/pidrive_dab_welle.err", "r", encoding="utf-8", errors="ignore") as _f:
-                _err_lines = [l.strip() for l in _f.readlines()[-5:] if l.strip()]
-            for _ln in _err_lines:
-                log.info("DAB welle-cli: " + _ln[:200])
-        except Exception:
-            pass
+        dab_state = "locked" if sync_ok else ("pcm_only" if pcm_seen else "no_lock")
 
-        # v0.9.26: Play-Debug-JSON für Diagnose
-        try:
-            import json as _json_dbg
-            _dbg = {
-                "name": name, "channel": ch, "service_id": sid,
-                "gain": _gain,
-                "ppm": str(settings.get("ppm_correction", 0) if settings else 0),
-                "started_ts": time.time(),
-                "sync_ok": _sync_ok,
-                "dab_state": _dab_state,  # v0.9.31: starting|syncing|locked|no_lock
-                "last_error_line": _last_err,
-            }
-            with open("/tmp/pidrive_dab_play_debug.json", "w") as _dbgf:
-                _json_dbg.dump(_dbg, _dbgf)
-        except Exception:
-            pass
+        _set_dab_status_fields(
+            S,
+            dab_state=dab_state,
+            dab_sync_ok=sync_ok,
+            dab_last_error=last_err,
+            dab_pcm_seen=pcm_seen,
+            dab_sync_seen=sync_seen,
+            dab_superframe_seen=superframe_seen,
+            dab_audio_ready=bool(pcm_seen),
+        )
 
-
+        _write_play_debug({
+            "state": dab_state,
+            "sync_ok": sync_ok,
+            "pcm_seen": pcm_seen,
+            "sync_seen": sync_seen,
+            "superframe_seen": superframe_seen,
+            "last_error_line": last_err,
+            "lock_wait_seconds": lock_wait_max,
+        })
 
         S["radio_playing"] = True
         S["radio_station"] = "DAB: " + name
-        S["radio_name"]    = name
-        S["radio_type"]    = "DAB"
-        S["track"]         = ""
-        S["artist"]        = ""
+        S["radio_name"] = name
+        S["radio_type"] = "DAB"
         S["control_context"] = "radio_dab"
-        log.action("DAB", "Wiedergabe: " + name + " (" + ch + ", sid=" + (sid or "-") + ")")
 
-        # v0.9.15: DLS Metadaten-Polling (Dynamic Label Service = Lied/Artist vom Sender)
-        # welle-cli liefert DLS-Text per mux.json → alle 8s pollen und S[track]/S[artist] setzen
-        def _dls_poller(_name=name, _sid=str(sid or "").strip().lower(), _port=7981):
-            # v0.9.26: DLS via mux.json nicht verfügbar im ALSA-Modus (-p ohne -w)
-            # welle-cli -p und -w sind zwei getrennte Betriebspfade (welle-io.md §2).
-            # DLS wird via stderr-Tail angezeigt sobald welle-cli DLS-Zeilen ausgibt.
-            # Vorerst: Poller als kein-op, nur als Hook für spätere Erweiterung.
-            import time as _tm
-            _last_dls = ""
-            # Kurz warten damit welle-cli starten kann
-            _tm.sleep(5)
-            # v0.9.31: DLS aus welle-cli stderr lesen!
-            # welle-cli schreibt "DLS: ARTIST - TITLE" in stderr auch im -p ALSA-Modus.
-            # Das haben wir in der manuellen Konsolen-Ausgabe bestätigt.
-            _stderr_file = "/tmp/pidrive_dab_welle.err"
-            _last_dls = ""
-            _last_pos  = 0
-            while S.get("radio_playing") and S.get("radio_name") == _name:
-                _tm.sleep(5)
-                if not (S.get("radio_playing") and S.get("radio_name") == _name):
-                    break
-                try:
-                    if not os.path.exists(_stderr_file):
-                        continue
-                    with open(_stderr_file, "r", encoding="utf-8", errors="ignore") as _f:
-                        _f.seek(_last_pos)
-                        _new = _f.read()
-                        _last_pos = _f.tell()
-                    for _line in _new.splitlines():
-                        if _line.startswith("DLS:"):
-                            _dls = _line[4:].strip()
-                            if _dls and _dls != _last_dls:
-                                if " - " in _dls:
-                                    _parts = _dls.split(" - ", 1)
-                                    S["artist"] = _parts[0].strip()
-                                    S["track"]  = _parts[1].strip()
-                                    log.info(f"[DAB DLS] {_name}: {_parts[0].strip()} – {_parts[1].strip()}")
-                                else:
-                                    S["artist"] = ""
-                                    S["track"]  = _dls
-                                    log.info(f"[DAB DLS] {_name}: {_dls[:80]}")
-                                _last_dls = _dls
-                except Exception:
-                    pass
-
-        import threading as _thr_dls
-        _thr_dls.Thread(target=_dls_poller, daemon=True).start()
+        _start_dls_thread(session_id, name, S)
+        log.action("DAB", f"Wiedergabe: {name} ({ch}, sid={sid or '-'}) session={session_id}")
 
     except Exception as e:
         S["radio_playing"] = False
         S["radio_station"] = "DAB Fehler"
+        _set_dab_status_fields(S, dab_state="exception", dab_last_error=str(e))
+        _write_play_debug({
+            "state": "exception",
+            "error": str(e),
+        })
         log.error(f"DAB play Fehler: {e}")
 
 
 def stop(S):
     global _player_proc, _scan_running
+
     log.info("DAB stop: requested")
     _scan_running = False
 
-    # mpv zuerst stoppen (gibt USB frei wenn er via Popen läuft)
+    _stop_dls_thread()
+    _clear_session()
+
     if _player_proc:
         try:
             _player_proc.terminate()
@@ -646,34 +877,33 @@ def stop(S):
         except Exception:
             pass
 
-    # welle-cli via rtlsdr-Lock beenden (gibt RTL-SDR USB frei)
     if _rtlsdr:
         try:
             _rtlsdr.stop_process()
         except Exception:
             pass
 
-    # Sicherheits-pkill synchron — wichtig bei Senderwechsel (v0.9.17)
     import subprocess as _sp
-    _sp.run("pkill -f welle-cli 2>/dev/null",
-            shell=True, timeout=3, capture_output=True)
-    _sp.run("pkill -f 'mpv --no-video --really-quiet --title=pidrive_dab' 2>/dev/null",
-            shell=True, timeout=3, capture_output=True)
+    _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, timeout=3, capture_output=True)
 
     _player_proc = None
-    S["radio_playing"] = False
+
     if S.get("radio_type") == "DAB":
+        S["radio_playing"] = False
         S["radio_station"] = ""
 
-    # RTL-SDR USB braucht ~1s zum Freigeben — sonst usb_claim_interface -6 beim nächsten Start
+    _set_dab_status_fields(
+        S,
+        dab_state="stopped",
+        dab_sync_ok=False,
+        dab_audio_ready=False,
+    )
+
     time.sleep(1.0)
     log.info("DAB stop: done")
 
 
 def play_by_name(name, S, service_id=""):
-    """
-    DAB Station bevorzugt über service_id, sonst über Name.
-    """
     path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
     try:
         data = json.load(open(path, encoding="utf-8"))
@@ -690,9 +920,11 @@ def play_by_name(name, S, service_id=""):
 
         for s in stations:
             if s.get("name", "") == name:
-                log.info(f"DAB play_by_name fallback name={name!r} service_id leer")
+                log.info(f"DAB play_by_name fallback name={name!r}")
                 play_station(_normalize_station(s), S)
                 return
+
+        log.warn(f"DAB play_by_name: Station nicht gefunden name={name!r} sid={service_id!r}")
 
     except Exception as e:
         log.error(f"DAB play_by_name: {e}")
@@ -701,10 +933,10 @@ def play_by_name(name, S, service_id=""):
 def play_next(S, stations):
     if not stations:
         return
-    current = S.get("radio_station", "")
+    current = S.get("radio_name", "") or S.get("radio_station", "")
     idx = 0
     for i, s in enumerate(stations):
-        if s.get("name", "") == current:
+        if s.get("name", "") == current or current.endswith(s.get("name", "")):
             idx = (i + 1) % len(stations)
             break
     play_station(_normalize_station(stations[idx]), S)
@@ -713,10 +945,10 @@ def play_next(S, stations):
 def play_prev(S, stations):
     if not stations:
         return
-    current = S.get("radio_station", "")
+    current = S.get("radio_name", "") or S.get("radio_station", "")
     idx = 0
     for i, s in enumerate(stations):
-        if s.get("name", "") == current:
+        if s.get("name", "") == current or current.endswith(s.get("name", "")):
             idx = (i - 1) % len(stations)
             break
     play_station(_normalize_station(stations[idx]), S)

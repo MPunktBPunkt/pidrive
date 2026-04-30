@@ -1,87 +1,115 @@
 """
-modules/bluetooth.py — Bluetooth-Modul für PiDrive
-===================================================
+modules/bluetooth.py — stark verbesserte Bluetooth-Logik für PiDrive
+====================================================================
 
-SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
-──────────────────────────────────────
+Ziele:
+- robuster Gerätescan
+- klare Trennung zwischen:
+    * discovered / visible_now
+    * known / historical
+    * paired / trusted / connected
+- modularerer Pair-/Connect-Flow
+- vorsichtigerer Einsatz von remove
+- besserer Reconnect mit Frische-/Cooldown-Logik
+- PiDrive-kompatibel zu main_core.py / webui.py / audio.py / source_state.py
 
-## Wer ruft was auf?
+Wichtige Dateien:
+- /tmp/pidrive_bt_known_devices.json   -> bekannte/historische Geräte
+- /tmp/pidrive_bt_devices.json         -> aktueller Scan / live sichtbar
+- /tmp/pidrive_bt_agent.json           -> Agent-Status
+- /tmp/pidrive_bt_watcher.json         -> Watcher-Debug
 
-    main_core.py    → start_agent(), reconnect_known_devices(),
-                      start_auto_reconnect(), connect_device(), disconnect_device()
-    webui.py        → scan_and_store(), connect_device(), get_known_devices(),
-                      backup_known_devices(), restore_known_devices()
+Öffentliche API:
+- bt_toggle(S)
+- scan_devices(S, settings)
+- stop_scan()
+- connect_device(mac, S, settings)
+- disconnect_current(S, settings)
+- repair_device(mac, S, settings)
+- reconnect_last(S, settings)
+- reconnect_known_devices(S, settings)
+- start_auto_reconnect(S, settings)
+- stop_auto_reconnect()
+- wake_auto_reconnect()
+- get_bt_sink()
 
-## Öffentliche API
-
-    start_agent() → bool
-        Startet bluetoothctl-Agent persistent im Hintergrund (einmalig beim Boot).
-
-    reconnect_known_devices(S, settings) → bool
-        Boot-Reconnect: versucht bekannte Geräte einmalig zu verbinden.
-        True = mindestens ein Gerät verbunden. Setzt bt_state = "connected"/"failed".
-
-    start_auto_reconnect(S, settings)
-        Hintergrund-Watcher. Backoff: 12s → 300s, Stop nach 20min.
-        Log-Prefix: "BT auto-reconnect [Watcher]:" (trennt von Boot-Pfad).
-
-    connect_device(mac, name, settings, S) → bool
-        Ablauf: disconnect → trust → pair → connect → PA-Sink setzen.
-        Setzt settings["audio_output"] = "bt".
-
-## Zwei Reconnect-Pfade (bewusst getrennt)
-
-    BOOT:     reconnect_known_devices() — aus /tmp/pidrive_bt_known_devices.json
-    WATCHER:  start_auto_reconnect()   — aus settings["bt_last_mac"]
-    Log unterscheidet: "BT Boot-Reconnect:" vs. "BT auto-reconnect [Watcher]:"
-
-## State Machine
-
-    source_state.bt_state: "idle" | "connecting" | "connected" | "failed"
-    Nur bluetooth.py und main_core.py setzen bt_state.
-    source_state steuert BT nicht — nur Spiegel.
-
-## A2DP-Voraussetzungen
-
-    - Gerät: Classic BR/EDR (public MAC, nicht BLE random MAC)
-    - PulseAudio: module-bluetooth-discover + module-bluetooth-policy geladen
-    - Nach connect: ~2-3s Wartezeit bis PA A2DP-Sink registriert
+Hinweis:
+Diese Version bleibt bewusst bei bluetoothctl als Backend, ist aber
+strenger strukturiert als die bisherige Fassung.
 """
 
-import subprocess
-import time
 import json
-import threading
 import os
-import log
+import re
+import subprocess
+import threading
+import time
+from typing import Optional
+
 import ipc
-
-# Lock verhindert parallele connect_device()-Calls (repair + connect race)
-_bt_connect_lock = threading.Lock()
-
-KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
-AGENT_STATE_FILE = "/tmp/pidrive_bt_agent.json"
-
-_AGENT_PROC = None
-_AGENT_LOCK = threading.Lock()
-
-_RECONNECT_LAST_TRY = {}
-_RECONNECT_COOLDOWN = 45  # Sekunden pro Gerät
+import log
 
 try:
     from modules import source_state as _src_state
 except Exception:
     _src_state = None
 
-C_BT_BLUE = (30, 144, 255)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Dateien / Konstanten
+# ─────────────────────────────────────────────────────────────────────────────
+
+KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
+DISCOVERED_BT_FILE = "/tmp/pidrive_bt_devices.json"
+AGENT_STATE_FILE = "/tmp/pidrive_bt_agent.json"
+WATCHER_STATE_FILE = "/tmp/pidrive_bt_watcher.json"
+
+PAIRING_BACKUP_FILE = "/tmp/pidrive_bt_pairing_debug.json"
+
+PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+
+DEFAULT_SCAN_SECONDS = 22
+DISCOVERY_REFRESH_SECONDS = 2.0
+
+VISIBLE_TTL_SECONDS = 45          # Gerät gilt für UI kurz als "frisch sichtbar"
+RECENT_SEEN_SECONDS = 7 * 24 * 3600
+RECONNECT_COOLDOWN = 45
+RECONNECT_FAIL_SOFT_LIMIT = 3
+
+A2DP_WAIT_SECONDS = 10
+VISIBILITY_WAIT_SECONDS = 20
+PAIR_TIMEOUT_SECONDS = 45
+
+_bt_connect_lock = threading.Lock()
+_scan_lock = threading.Lock()
+
+_scan_proc = None
+_scan_stop_flag = False
+
+_AGENT_PROC = None
+_AGENT_LOCK = threading.Lock()
+
+_reconnect_thread = None
+_reconnect_stop = False
+_reconnect_wakeup = None
+
+_RECONNECT_LAST_TRY = {}
+_RECONNECT_FAILS = {}
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Basis-Helper
+# ─────────────────────────────────────────────────────────────────────────────
 
-def _now():
+def _now() -> int:
     return int(time.time())
+
+
+def _sleep_s(sec: float):
+    try:
+        time.sleep(sec)
+    except Exception:
+        pass
 
 
 def _write_json_atomic(path, data):
@@ -94,24 +122,47 @@ def _write_json_atomic(path, data):
         log.warn(f"BT json write {path}: {e}")
 
 
+def _read_json(path, default=None):
+    if default is None:
+        default = {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
 def _run(cmd, timeout=8):
     try:
-        r = subprocess.run(cmd, shell=True, capture_output=True,
-                           text=True, timeout=timeout)
+        r = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
         return r.stdout.strip()
     except Exception:
         return ""
 
 
 def _btctl(cmd, timeout=12):
-    """Robuster bluetoothctl Wrapper."""
+    """
+    Robuster bluetoothctl-Wrapper mit Logging.
+    """
     try:
         r = subprocess.run(
             f"bluetoothctl {cmd} 2>&1",
-            shell=True, capture_output=True, text=True, timeout=timeout
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout
         )
         out = ((r.stdout or "") + (r.stderr or "")).strip()
-        log.info(f"BT ctl: {cmd} rc={r.returncode} out={out[:180].replace(chr(10), ' | ')}")
+        log.info(
+            f"BT ctl: {cmd} rc={r.returncode} "
+            f"out={out[:220].replace(chr(10), ' | ')}"
+        )
         return r.returncode, out
     except subprocess.TimeoutExpired:
         log.warn(f"BT ctl timeout: {cmd}")
@@ -123,16 +174,115 @@ def _btctl(cmd, timeout=12):
 
 def _bg(cmd):
     try:
-        subprocess.Popen(cmd, shell=True,
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
     except Exception:
         pass
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Agent State
-# ──────────────────────────────────────────────────────────────────────────────
+def _normalize_mac(mac: str) -> str:
+    return (mac or "").strip().upper()
+
+
+def _valid_mac(mac: str) -> bool:
+    return bool(re.match(r"^([0-9A-F]{2}:){5}[0-9A-F]{2}$", _normalize_mac(mac)))
+
+
+def _parse_bool_from_info(info_out: str, key: str) -> bool:
+    low = (info_out or "").lower()
+    return f"{key.lower()}: yes" in low
+
+
+def _extract_name_from_info(info_out: str, fallback: str = "") -> str:
+    name = fallback or ""
+    for line in (info_out or "").splitlines():
+        s = line.strip()
+        if s.lower().startswith("name:"):
+            v = s.split(":", 1)[1].strip()
+            if v:
+                return v
+    return name or fallback
+
+
+def _extract_alias_from_info(info_out: str, fallback: str = "") -> str:
+    alias = fallback or ""
+    for line in (info_out or "").splitlines():
+        s = line.strip()
+        if s.lower().startswith("alias:"):
+            v = s.split(":", 1)[1].strip()
+            if v:
+                return v
+    return alias or fallback
+
+
+def _is_public_or_bredr(info_out: str) -> bool:
+    low = (info_out or "").lower()
+    return (
+        "(public)" in low or
+        "bredr" in low or
+        "br/edr" in low or
+        "class:" in low
+    )
+
+
+def _is_audio_device_info(info_out: str) -> bool:
+    low = (info_out or "").lower()
+    return (
+        "0000110b" in low or
+        "0000110e" in low or
+        "00001108" in low or
+        "0000111e" in low or
+        "audio sink" in low or
+        "headset" in low or
+        "headphone" in low or
+        "handsfree" in low or
+        "a/v remote control" in low or
+        "class:" in low
+    )
+
+
+def _bt_adapter_up() -> bool:
+    out = _run("hciconfig hci0 2>/dev/null", timeout=4)
+    return "UP RUNNING" in out
+
+
+def _ensure_bt_on(S=None) -> bool:
+    """
+    Adapter sicher aktivieren.
+    """
+    try:
+        _bg("rfkill unblock bluetooth")
+        _bg("hciconfig hci0 up")
+        rc, _ = _btctl("power on", timeout=8)
+        _sleep_s(1.0)
+        ok = _bt_adapter_up() or rc == 0
+        if S is not None:
+            S["bt_on"] = bool(ok)
+            if ok and not S.get("bt"):
+                S["bt_status"] = S.get("bt_status") if S.get("bt_status") == "verbunden" else "getrennt"
+        return bool(ok)
+    except Exception as e:
+        log.warn(f"BT ensure on: {e}")
+        return False
+
+
+def _ensure_bt_off():
+    try:
+        _btctl("scan off", timeout=5)
+    except Exception:
+        pass
+    _bg("bluetoothctl power off")
+    _bg("hciconfig hci0 down")
+    _sleep_s(1.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Agent
+# ─────────────────────────────────────────────────────────────────────────────
 
 def _write_agent_state(running=False, ready=False, pid=0, last_error="",
                        started_ts=0, health_ok=False):
@@ -150,11 +300,7 @@ def _write_agent_state(running=False, ready=False, pid=0, last_error="",
 
 
 def read_agent_state():
-    try:
-        with open(AGENT_STATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    return _read_json(AGENT_STATE_FILE, {})
 
 
 def agent_is_alive():
@@ -168,7 +314,6 @@ def agent_is_alive():
 def start_agent_session():
     """
     Persistente bluetoothctl-Agent-Session.
-    Behebt die Architektur-Schwäche aus BTError.md [2].
     """
     global _AGENT_PROC
     with _AGENT_LOCK:
@@ -193,10 +338,12 @@ def start_agent_session():
                 text=True,
                 bufsize=1
             )
+
+            # Agent initialisieren
             _AGENT_PROC.stdin.write("agent NoInputNoOutput\n")
             _AGENT_PROC.stdin.write("default-agent\n")
             _AGENT_PROC.stdin.flush()
-            time.sleep(1.0)
+            _sleep_s(1.0)
 
             _write_agent_state(
                 running=True,
@@ -249,11 +396,6 @@ def stop_agent_session():
 
 
 def agent_healthcheck():
-    """
-    Einfacher Health-Check:
-    - Prozess lebt?
-    - Statusdatei aktualisieren
-    """
     alive = agent_is_alive()
     st = read_agent_state()
 
@@ -280,11 +422,6 @@ def agent_healthcheck():
 
 
 def start_agent_health_thread():
-    """
-    Leichter Health-Check-Thread:
-    - prüft alle 20s, ob Agent noch lebt
-    - startet Agent bei Bedarf neu
-    """
     import threading as _th
 
     def _loop():
@@ -300,32 +437,79 @@ def start_agent_health_thread():
     _th.Thread(target=_loop, daemon=True, name="bt_agent_health").start()
 
 
-def pair_with_agent(mac, timeout=45):
+def _ensure_agent():
+    return start_agent_session()
+
+
+def _drain_agent_stdout(max_lines=80):
+    """
+    Alte Agent-Ausgaben abräumen, damit pair_with_agent()
+    nicht auf stale stdout-Zeilen reinfällt.
+    """
     global _AGENT_PROC
+    if not agent_is_alive():
+        return
+    try:
+        # kein blockierendes Super-I/O, daher vorsichtig
+        drained = 0
+        start = time.time()
+        while drained < max_lines and (time.time() - start) < 0.8:
+            if _AGENT_PROC.stdout is None:
+                break
+            # readline kann blockieren, deshalb nur mit kurzem Poll-Check
+            if _AGENT_PROC.poll() is not None:
+                break
+            try:
+                line = _AGENT_PROC.stdout.readline()
+            except Exception:
+                break
+            if not line:
+                break
+            drained += 1
+        if drained:
+            log.info(f"BT agent: stdout drained lines={drained}")
+    except Exception:
+        pass
+
+
+def pair_with_agent(mac, timeout=PAIR_TIMEOUT_SECONDS):
+    """
+    Pairing über persistente Agent-Session.
+    """
+    global _AGENT_PROC
+
+    mac = _normalize_mac(mac)
+    if not _valid_mac(mac):
+        return False, "invalid_mac"
+
     if not start_agent_session():
         return False, "agent_start_failed"
 
+    _drain_agent_stdout()
+
+    lines = []
     try:
         _AGENT_PROC.stdin.write(f"pair {mac}\n")
         _AGENT_PROC.stdin.flush()
 
         end = time.time() + timeout
-        lines = []
-
         while time.time() < end:
             line = _AGENT_PROC.stdout.readline()
             if not line:
-                time.sleep(0.2)
+                _sleep_s(0.2)
                 continue
 
-            lines.append(line.strip())
-            low = line.lower()
+            s = line.strip()
+            lines.append(s)
+            low = s.lower()
 
-            if ("pairing successful" in low or
+            if (
+                "pairing successful" in low or
                 "device has been paired" in low or
                 "already paired" in low or
                 "already exists" in low or
-                "successful" in low):
+                ("paired" in low and "successful" in low)
+            ):
                 _write_agent_state(
                     running=True,
                     ready=True,
@@ -334,18 +518,36 @@ def pair_with_agent(mac, timeout=45):
                     started_ts=read_agent_state().get("started_ts", _now()),
                     health_ok=True
                 )
-                return True, "\n".join(lines[-25:])
+                _write_json_atomic(PAIRING_BACKUP_FILE, {
+                    "mac": mac,
+                    "ok": True,
+                    "lines": lines[-30:],
+                    "ts": _now(),
+                })
+                return True, "\n".join(lines[-30:])
 
-            if "authenticationfailed" in low or "failed" in low:
+            if (
+                "authenticationfailed" in low or
+                "authentication failed" in low or
+                "failed" in low or
+                "not available" in low or
+                "canceled" in low
+            ):
                 _write_agent_state(
                     running=True,
                     ready=False,
                     pid=_AGENT_PROC.pid,
-                    last_error=line.strip(),
+                    last_error=s,
                     started_ts=read_agent_state().get("started_ts", _now()),
                     health_ok=False
                 )
-                return False, "\n".join(lines[-25:])
+                _write_json_atomic(PAIRING_BACKUP_FILE, {
+                    "mac": mac,
+                    "ok": False,
+                    "lines": lines[-30:],
+                    "ts": _now(),
+                })
+                return False, "\n".join(lines[-30:])
 
         _write_agent_state(
             running=True,
@@ -355,7 +557,14 @@ def pair_with_agent(mac, timeout=45):
             started_ts=read_agent_state().get("started_ts", _now()),
             health_ok=False
         )
-        return False, "\n".join(lines[-25:])
+        _write_json_atomic(PAIRING_BACKUP_FILE, {
+            "mac": mac,
+            "ok": False,
+            "timeout": True,
+            "lines": lines[-30:],
+            "ts": _now(),
+        })
+        return False, "\n".join(lines[-30:])
 
     except Exception as e:
         _write_agent_state(
@@ -369,34 +578,41 @@ def pair_with_agent(mac, timeout=45):
         return False, str(e)
 
 
-def _ensure_agent():
-    return start_agent_session()
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Known devices
-# ──────────────────────────────────────────────────────────────────────────────
-
-def _read_known_devices():
-    try:
-        with open(KNOWN_BT_FILE, "r", encoding="utf-8") as f:
-            return json.load(f).get("devices", [])
-    except Exception:
-        return []
-
+# ─────────────────────────────────────────────────────────────────────────────
+# Known / discovered devices
+# ─────────────────────────────────────────────────────────────────────────────
 
 def _dedupe_devices(devs):
     out = []
     seen = set()
     for d in devs or []:
-        mac = (d.get("mac") or "").upper()
+        mac = _normalize_mac(d.get("mac", ""))
         if not mac or mac in seen:
             continue
         seen.add(mac)
+
         row = dict(d)
         row["mac"] = mac
+        row.setdefault("name", mac)
+        row.setdefault("known", False)
+        row.setdefault("paired", False)
+        row.setdefault("trusted", False)
+        row.setdefault("connected", False)
+        row.setdefault("visible_now", False)
+        row.setdefault("seen_this_scan", False)
+        row.setdefault("audio_candidate", False)
+        row.setdefault("last_seen_ts", 0)
+        row.setdefault("last_connect_ts", 0)
+        row.setdefault("last_failure_ts", 0)
+        row.setdefault("last_failure_reason", "")
+        row.setdefault("failure_count", 0)
+        row.setdefault("source", "")
         out.append(row)
     return out
+
+
+def _read_known_devices():
+    return _read_json(KNOWN_BT_FILE, {}).get("devices", [])
 
 
 def _write_known_devices(devs):
@@ -406,9 +622,20 @@ def _write_known_devices(devs):
     })
 
 
+def _read_discovered_devices():
+    return _read_json(DISCOVERED_BT_FILE, {}).get("devices", [])
+
+
+def _write_discovered_devices(devs):
+    _write_json_atomic(DISCOVERED_BT_FILE, {
+        "devices": _dedupe_devices(devs),
+        "ts": _now()
+    })
+
+
 def _load_bluez_db_devices():
     """
-    Bekannte Geräte direkt aus /var/lib/bluetooth laden [2].
+    Historische bekannte Geräte aus /var/lib/bluetooth.
     """
     base = "/var/lib/bluetooth"
     result = []
@@ -435,14 +662,18 @@ def _load_bluez_db_devices():
                 try:
                     with open(infof, "r", encoding="utf-8", errors="ignore") as f:
                         txt = f.read()
+
                     for ln in txt.splitlines():
                         if ln.startswith("Name="):
                             name = ln.split("=", 1)[1].strip() or mac
                         elif ln.startswith("Trusted="):
                             trusted = ln.split("=", 1)[1].strip().lower() == "true"
-                    paired = ("[LinkKey]" in txt or
-                              "[LongTermKey]" in txt or
-                              "SupportedTechnologies=BR/EDR;" in txt)
+
+                    paired = (
+                        "[LinkKey]" in txt or
+                        "[LongTermKey]" in txt or
+                        "SupportedTechnologies=BR/EDR;" in txt
+                    )
                 except Exception:
                     pass
 
@@ -452,6 +683,10 @@ def _load_bluez_db_devices():
                     "known": True,
                     "paired": paired,
                     "trusted": trusted,
+                    "connected": False,
+                    "visible_now": False,
+                    "seen_this_scan": False,
+                    "audio_candidate": True,
                     "source": "bluez_db",
                 })
     except Exception as e:
@@ -462,17 +697,15 @@ def _load_bluez_db_devices():
 
 def _get_known_devices():
     """
-    Dedup aus:
-    - persistenter known-Datei
-    - BlueZ-DB
-    - bluetoothctl paired-devices
+    Historische / gepaarte Geräte.
+    Wichtig: NICHT gleichbedeutend mit "jetzt sichtbar".
     """
     result = []
     result.extend(_read_known_devices())
     result.extend(_load_bluez_db_devices())
 
     try:
-        rp = _btctl("paired-devices", timeout=8)[1]
+        _, rp = _btctl("paired-devices", timeout=8)
         for ln in rp.splitlines():
             p = ln.strip().split(" ", 2)
             if len(p) >= 2 and p[0] == "Device":
@@ -481,6 +714,11 @@ def _get_known_devices():
                     "name": p[2] if len(p) > 2 else p[1],
                     "known": True,
                     "paired": True,
+                    "trusted": False,
+                    "connected": False,
+                    "visible_now": False,
+                    "seen_this_scan": False,
+                    "audio_candidate": True,
                     "source": "paired_devices",
                 })
     except Exception:
@@ -491,50 +729,294 @@ def _get_known_devices():
     return result
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Scan filters / routing
-# ──────────────────────────────────────────────────────────────────────────────
+def _merge_known_update(mac: str, **fields):
+    mac = _normalize_mac(mac)
+    if not _valid_mac(mac):
+        return
 
-def _is_audio_device_info(info_out: str) -> bool:
+    devs = _get_known_devices()
+    found = False
+    for d in devs:
+        if _normalize_mac(d.get("mac", "")) == mac:
+            d.update(fields)
+            d["mac"] = mac
+            found = True
+            break
+
+    if not found:
+        row = {
+            "mac": mac,
+            "name": fields.get("name", mac),
+            "known": True,
+            "paired": False,
+            "trusted": False,
+            "connected": False,
+            "visible_now": False,
+            "seen_this_scan": False,
+            "audio_candidate": True,
+            "last_seen_ts": 0,
+            "last_connect_ts": 0,
+            "last_failure_ts": 0,
+            "last_failure_reason": "",
+            "failure_count": 0,
+            "source": "merge_known",
+        }
+        row.update(fields)
+        devs.append(row)
+
+    _write_known_devices(devs)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scan / discovery
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _mark_old_discovered_not_visible():
+    devs = _read_discovered_devices()
+    now = _now()
+    for d in devs:
+        last_seen = int(d.get("last_seen_ts", 0) or 0)
+        if not last_seen or (now - last_seen) > VISIBLE_TTL_SECONDS:
+            d["visible_now"] = False
+            d["seen_this_scan"] = False
+    _write_discovered_devices(devs)
+
+
+def _get_info_with_retries(mac, tries=4, delay=1.0):
+    mac = _normalize_mac(mac)
+    last = ""
+    for _ in range(max(1, tries)):
+        rc, out = _btctl(f"info {mac}", timeout=6)
+        last = out or ""
+        low = last.lower()
+        if rc == 0 and "device" in low and "not available" not in low:
+            return last
+        _sleep_s(delay)
+    return last
+
+
+def _device_row_from_info(mac, fallback_name="", known_map=None):
+    known_map = known_map or {}
+    mac = _normalize_mac(mac)
+    info_out = _get_info_with_retries(mac, tries=4, delay=0.8)
     low = (info_out or "").lower()
-    return (
-        "0000110b" in low or
-        "0000110e" in low or
-        "audio sink" in low or
-        "headset" in low or
-        "headphone" in low or
-        "a/v remote control" in low or
-        "class:" in low
-    )
+
+    if not info_out or "not available" in low:
+        return None
+
+    if not _is_public_or_bredr(info_out):
+        return None
+
+    if not _is_audio_device_info(info_out):
+        return None
+
+    name = _extract_name_from_info(info_out, fallback_name or mac)
+    alias = _extract_alias_from_info(info_out, name)
+
+    known_entry = known_map.get(mac, {})
+
+    return {
+        "mac": mac,
+        "name": alias or name or mac,
+        "known": True if known_entry else _parse_bool_from_info(info_out, "paired"),
+        "paired": _parse_bool_from_info(info_out, "paired") or bool(known_entry.get("paired")),
+        "trusted": _parse_bool_from_info(info_out, "trusted") or bool(known_entry.get("trusted")),
+        "connected": _parse_bool_from_info(info_out, "connected"),
+        "audio_candidate": True,
+        "visible_now": True,
+        "seen_this_scan": True,
+        "last_seen_ts": _now(),
+        "source": "scan_live",
+    }
 
 
-def _is_public_or_bredr(info_out: str) -> bool:
-    low = (info_out or "").lower()
-    return "(public)" in low or "bredr" in low or "br/edr" in low or "class:" in low
+def stop_scan():
+    """
+    Stoppt laufenden Discovery-Scan.
+    """
+    global _scan_proc, _scan_stop_flag
+    with _scan_lock:
+        _scan_stop_flag = True
+        try:
+            _btctl("scan off", timeout=5)
+        except Exception:
+            pass
+        if _scan_proc:
+            try:
+                _scan_proc.terminate()
+                _scan_proc.wait(timeout=2)
+            except Exception:
+                pass
+            _scan_proc = None
+        log.info("BT scan: Discovery gestoppt")
 
+
+def scan_devices(S, settings, scan_seconds=DEFAULT_SCAN_SECONDS):
+    """
+    Robusterer Scan:
+    - discovered_devices nur aus dieser Session
+    - known_devices getrennt weiterpflegen
+    - info() mit Retries
+    - visible_now / seen_this_scan / last_seen_ts
+    """
+    global _scan_proc, _scan_stop_flag
+
+    with _scan_lock:
+        _scan_stop_flag = False
+
+    ipc.write_progress("Bluetooth", f"Scanne Geräte ({scan_seconds}s)...", color="blue")
+
+    try:
+        _mark_old_discovered_not_visible()
+
+        known_devices = _get_known_devices()
+        known_map = {d.get("mac", "").upper(): d for d in known_devices}
+
+        if not _ensure_bt_on(S):
+            ipc.write_progress("Bluetooth", "Adapter nicht bereit", color="red")
+            _sleep_s(2)
+            ipc.clear_progress()
+            return []
+
+        _ensure_agent()
+
+        # Discovery sauber starten
+        _btctl("scan off", timeout=5)
+        _sleep_s(0.5)
+        _scan_proc = subprocess.Popen(
+            "bluetoothctl -- scan on 2>/dev/null",
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        log.info(f"BT scan: gestartet ({scan_seconds}s)")
+
+        deadline = time.time() + int(scan_seconds)
+        found = {}
+
+        while time.time() < deadline:
+            if _scan_stop_flag:
+                log.info("BT scan: vorzeitig gestoppt")
+                break
+
+            rc, out = _btctl("devices", timeout=8)
+            if rc == 0:
+                for line in out.splitlines():
+                    p = line.strip().split(" ", 2)
+                    if len(p) >= 2 and p[0] == "Device":
+                        mac = _normalize_mac(p[1])
+                        fallback_name = p[2] if len(p) > 2 else mac
+
+                        # Schon sinnvoll vorhanden? Dann nur last_seen refreshen
+                        if mac in found and found[mac].get("name") not in ("", mac):
+                            found[mac]["last_seen_ts"] = _now()
+                            continue
+
+                        row = _device_row_from_info(mac, fallback_name, known_map)
+                        if row:
+                            found[mac] = row
+
+            # Zwischenspeichern, damit WebUI schon während/nach Scan konsistent ist
+            _write_discovered_devices(list(found.values()))
+            _sleep_s(DISCOVERY_REFRESH_SECONDS)
+
+        try:
+            _btctl("scan off", timeout=6)
+        finally:
+            if _scan_proc:
+                try:
+                    _scan_proc.terminate()
+                    _scan_proc.wait(timeout=2)
+                except Exception:
+                    pass
+                _scan_proc = None
+
+        _sleep_s(1.0)
+
+        devices = sorted(found.values(), key=lambda d: (
+            0 if d.get("connected") else 1,
+            0 if d.get("paired") else 1,
+            (d.get("name") or "").lower(),
+            d.get("mac") or ""
+        ))
+
+        # known separat fortschreiben, aber NICHT die Live-Liste mit stale Geräten mischen
+        merged_known = _dedupe_devices(known_devices + [
+            {
+                "mac": d["mac"],
+                "name": d["name"],
+                "known": True,
+                "paired": d.get("paired", False),
+                "trusted": d.get("trusted", False),
+                "connected": d.get("connected", False),
+                "audio_candidate": True,
+                "visible_now": False,       # known-Datei bleibt historisch
+                "seen_this_scan": False,
+                "last_seen_ts": d.get("last_seen_ts", _now()),
+                "source": "scan_seen",
+            }
+            for d in devices
+        ])
+        _write_known_devices(merged_known)
+        _write_discovered_devices(devices)
+
+        ipc.clear_progress()
+        msg = f"{len(devices)} Gerät(e) gefunden — Geräte > Verbinden"
+        ipc.write_progress("BT Scan fertig", msg, color="green" if devices else "orange")
+        _sleep_s(3)
+        ipc.clear_progress()
+
+        S["menu_rev"] = S.get("menu_rev", 0) + 1
+        return devices
+
+    except Exception as e:
+        log.error("BT scan: " + str(e))
+        try:
+            _btctl("scan off", timeout=5)
+        except Exception:
+            pass
+        ipc.write_progress("BT Scan", "Scan fehlgeschlagen", color="red")
+        _sleep_s(2)
+        ipc.clear_progress()
+        return []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Audio / sink helper
+# ─────────────────────────────────────────────────────────────────────────────
 
 def _set_pulseaudio_sink(sink_name):
-    PA_SOCKET = "PULSE_SERVER=unix:/var/run/pulse/native"
+    if not sink_name:
+        return False
     try:
+        # warten bis Sink sichtbar
         for _ in range(8):
             r = subprocess.run(
-                PA_SOCKET + " pactl list sinks short 2>/dev/null",
-                shell=True, capture_output=True, text=True, timeout=3
+                PA_ENV + " pactl list sinks short 2>/dev/null",
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=3
             )
-            if sink_name in r.stdout:
+            if sink_name in (r.stdout or ""):
                 break
-            time.sleep(1)
+            _sleep_s(1.0)
 
         r = subprocess.run(
-            PA_SOCKET + " pactl set-default-sink " + sink_name,
-            shell=True, capture_output=True, text=True, timeout=5
+            PA_ENV + " pactl set-default-sink " + sink_name,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=5
         )
         if r.returncode == 0:
             log.info("PulseAudio: Default-Sink=" + sink_name)
-        else:
-            log.warn("PulseAudio sink nicht gefunden: " + sink_name)
+            return True
+        log.warn("PulseAudio sink nicht gefunden/setzbar: " + sink_name)
+        return False
     except Exception as e:
         log.error("PulseAudio sink-Fehler: " + str(e))
+        return False
 
 
 def _set_raspotify_device(device, restart=True):
@@ -565,135 +1047,311 @@ def _set_raspotify_device(device, restart=True):
         log.info("Raspotify: LIBRESPOT_DEVICE=" + device)
 
         if restart:
-            subprocess.run(["systemctl", "restart", "raspotify"],
-                           capture_output=True, timeout=10)
+            subprocess.run(
+                ["systemctl", "restart", "raspotify"],
+                capture_output=True,
+                timeout=10
+            )
             log.info("Raspotify: neu gestartet")
 
     except Exception as e:
         log.error("Raspotify Device-Wechsel fehlgeschlagen: " + str(e))
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Public functions
-# ──────────────────────────────────────────────────────────────────────────────
+def get_bt_sink():
+    try:
+        r = subprocess.run(
+            PA_ENV + " pactl list sinks short 2>/dev/null",
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        for line in (r.stdout or "").splitlines():
+            low = line.lower()
+            if "bluez" in low or "a2dp" in low:
+                parts = line.split()
+                if len(parts) >= 2:
+                    return parts[1]
+    except Exception:
+        pass
+    return ""
+
+
+def _expected_pa_sink_for_mac(mac: str) -> str:
+    return "bluez_sink." + _normalize_mac(mac).replace(":", "_") + ".a2dp_sink"
+
+
+def _ensure_a2dp_sink(mac, timeout=A2DP_WAIT_SECONDS):
+    pa_sink = _expected_pa_sink_for_mac(mac)
+    end = time.time() + timeout
+    while time.time() < end:
+        out = _run(PA_ENV + " pactl list sinks short 2>/dev/null", timeout=4)
+        if pa_sink in out:
+            return True, pa_sink
+        _sleep_s(1.0)
+    return False, pa_sink
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Device visibility / bond / pair / connect
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _device_visible_in_recent_scan(mac: str) -> bool:
+    mac = _normalize_mac(mac)
+    now = _now()
+    for d in _read_discovered_devices():
+        if _normalize_mac(d.get("mac", "")) == mac:
+            last_seen = int(d.get("last_seen_ts", 0) or 0)
+            if d.get("visible_now") and last_seen and (now - last_seen) <= VISIBLE_TTL_SECONDS:
+                return True
+    return False
+
+
+def _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS):
+    mac = _normalize_mac(mac)
+
+    rc, out = _btctl(f"info {mac}", timeout=5)
+    low = (out or "").lower()
+    if rc == 0 and "device" in low and "not available" not in low:
+        return True, out
+
+    # kurzer aktiver Discovery-Pfad
+    _btctl("scan on", timeout=5)
+    try:
+        end = time.time() + timeout
+        while time.time() < end:
+            rc, out = _btctl(f"info {mac}", timeout=5)
+            low = (out or "").lower()
+            if rc == 0 and "device" in low and "not available" not in low:
+                return True, out
+            _sleep_s(2.0)
+        return False, out
+    finally:
+        _btctl("scan off", timeout=5)
+
+
+def _ensure_clean_bond_state(mac):
+    """
+    remove NICHT sofort immer verwenden.
+    Nur bei klar inkonsistentem Zustand.
+    """
+    mac = _normalize_mac(mac)
+    _, info = _btctl(f"info {mac}", timeout=6)
+    low = (info or "").lower()
+
+    if "name:" in low and "paired: no" in low:
+        log.warn(f"BT bond: inkonsistent, remove nötig mac={mac}")
+        _btctl(f"disconnect {mac}", timeout=8)
+        _btctl(f"remove {mac}", timeout=10)
+        return True
+
+    return True
+
+
+def _ensure_paired(mac, timeout=PAIR_TIMEOUT_SECONDS):
+    mac = _normalize_mac(mac)
+    _, info = _btctl(f"info {mac}", timeout=6)
+    if _parse_bool_from_info(info, "paired"):
+        return True, info
+
+    ok, out = pair_with_agent(mac, timeout=timeout)
+    if not ok:
+        return False, out
+
+    _, verify = _btctl(f"info {mac}", timeout=6)
+    return _parse_bool_from_info(verify, "paired"), verify
+
+
+def _ensure_trusted(mac):
+    mac = _normalize_mac(mac)
+
+    _, info = _btctl(f"info {mac}", timeout=6)
+    if _parse_bool_from_info(info, "trusted"):
+        return True, info
+
+    rc, out = _btctl(f"trust {mac}", timeout=8)
+    low = (out or "").lower()
+
+    if any(x in low for x in ["trust succeeded", "succeeded", "changing"]):
+        _, verify = _btctl(f"info {mac}", timeout=6)
+        return _parse_bool_from_info(verify, "trusted"), verify
+
+    _, verify = _btctl(f"info {mac}", timeout=6)
+    return _parse_bool_from_info(verify, "trusted"), verify
+
+
+def _ensure_connected(mac, retries=3):
+    mac = _normalize_mac(mac)
+
+    # Schon verbunden?
+    _, info = _btctl(f"info {mac}", timeout=6)
+    if _parse_bool_from_info(info, "connected"):
+        return True, info
+
+    last_out = ""
+    for _ in range(max(1, retries)):
+        rc, out = _btctl(f"connect {mac}", timeout=20)
+        low = (out or "").lower()
+        last_out = out
+
+        if (
+            rc == 0 and (
+                "successful" in low or
+                "connection successful" in low or
+                "already connected" in low
+            )
+        ):
+            _, verify = _btctl(f"info {mac}", timeout=8)
+            if _parse_bool_from_info(verify, "connected"):
+                return True, verify
+
+        _sleep_s(2.0)
+
+    return False, last_out
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Reconnect failure memory
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _mark_reconnect_failure(mac, reason):
+    mac = _normalize_mac(mac)
+    row = _RECONNECT_FAILS.get(mac, {
+        "failure_count": 0,
+        "last_failure_ts": 0,
+        "last_failure_reason": "",
+    })
+    row["failure_count"] = int(row.get("failure_count", 0)) + 1
+    row["last_failure_ts"] = _now()
+    row["last_failure_reason"] = reason or ""
+    _RECONNECT_FAILS[mac] = row
+
+    _merge_known_update(
+        mac,
+        last_failure_ts=row["last_failure_ts"],
+        last_failure_reason=row["last_failure_reason"],
+        failure_count=row["failure_count"],
+    )
+
+
+def _mark_reconnect_success(mac):
+    mac = _normalize_mac(mac)
+    _RECONNECT_FAILS[mac] = {
+        "failure_count": 0,
+        "last_failure_ts": 0,
+        "last_failure_reason": "",
+    }
+    _merge_known_update(
+        mac,
+        last_failure_ts=0,
+        last_failure_reason="",
+        failure_count=0,
+        last_connect_ts=_now(),
+    )
+
+
+def _should_try_reconnect(mac, meta):
+    mac = _normalize_mac(mac)
+    if not mac:
+        return False
+
+    last_try = _RECONNECT_LAST_TRY.get(mac, 0)
+    if (_now() - last_try) < RECONNECT_COOLDOWN:
+        return False
+
+    fail_count = int(meta.get("failure_count", 0) or 0)
+    if fail_count >= RECONNECT_FAIL_SOFT_LIMIT:
+        last_fail = int(meta.get("last_failure_ts", 0) or 0)
+        if last_fail and (_now() - last_fail) < 15 * 60:
+            return False
+
+    return True
+
+
+def _reconnect_candidates(settings):
+    """
+    Priorität:
+    1. bt_last_mac
+    2. frisch gesehene bekannte Geräte
+    3. sehr wenige stale Geräte als Fallback
+    """
+    devs = _get_known_devices()
+    last_mac = _normalize_mac(settings.get("bt_last_mac", "") or "")
+
+    fresh = []
+    stale = []
+
+    for d in devs:
+        mac = _normalize_mac(d.get("mac", ""))
+        if not mac:
+            continue
+        last_seen = int(d.get("last_seen_ts", 0) or 0)
+
+        if last_seen and (_now() - last_seen) < RECENT_SEEN_SECONDS:
+            fresh.append(d)
+        else:
+            stale.append(d)
+
+    fresh = sorted(fresh, key=lambda d: (
+        0 if _normalize_mac(d.get("mac", "")) == last_mac else 1,
+        0 if d.get("paired") else 1,
+        (d.get("name") or "").lower()
+    ))
+
+    stale = sorted(stale, key=lambda d: (
+        0 if _normalize_mac(d.get("mac", "")) == last_mac else 1,
+        0 if d.get("paired") else 1,
+        (d.get("name") or "").lower()
+    ))
+
+    # stale nur sehr konservativ
+    return fresh + stale[:1]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Öffentliche BT-Funktionen
+# ─────────────────────────────────────────────────────────────────────────────
 
 def bt_toggle(S):
-    # v0.9.29: bt_on = Adapter UP (blau), bt = Gerät verbunden (grün)
     if S.get("bt_on", False) or S.get("bt", False):
         log.info("BT toggle: OFF")
-        _bg("bluetoothctl power off; hciconfig hci0 down")
+        stop_scan()
+        _ensure_bt_off()
         S["bt"] = False
         S["bt_on"] = False
         S["bt_device"] = ""
         S["bt_status"] = "aus"
+        if _src_state:
+            _src_state.set_bt_state("idle")
+            _src_state.set_bt_link_state("idle")
+            _src_state.set_bt_audio_state("no_sink")
     else:
         log.info("BT toggle: ON")
-        _bg("rfkill unblock bluetooth; hciconfig hci0 up; bluetoothctl power on")
-        S["bt_on"] = True
-        S["bt_status"] = "getrennt"
+        ok = _ensure_bt_on(S)
+        S["bt_on"] = bool(ok)
+        if ok and not S.get("bt"):
+            S["bt_status"] = "getrennt"
 
     S["ts"] = 0
     S["menu_rev"] = S.get("menu_rev", 0) + 1
 
 
-def scan_devices(S, settings):
-    ipc.write_progress("Bluetooth", "Scanne Geraete (25s)...", color="blue")
-    devices = []
-    known_devices = _get_known_devices()
-    known_map = {d["mac"].upper(): d for d in known_devices}
-
-    try:
-        # v0.9.29: BT einschalten wenn nötig
-        _ensure_bt_on(S)
-        _ensure_agent()
-
-        # v0.9.21: Echtes Scan-on/off via bluetoothctl — findet auch neue (ungepairte) Geräte
-        # Die printf-Pipe-Methode war unzuverlässig und startete keinen echten Discovery-Scan.
-        # Jetzt: scan on → warten → devices → scan off
-        subprocess.run(
-            "bluetoothctl -- scan on 2>/dev/null &",
-            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        log.info("BT scan: Discovery gestartet (25s)")
-        time.sleep(25)
-
-        subprocess.run(
-            "bluetoothctl -- scan off 2>/dev/null",
-            shell=True, capture_output=True, timeout=5
-        )
-        log.info("BT scan: Discovery beendet")
-        time.sleep(1)
-
-        r_paired = subprocess.run("bluetoothctl paired-devices 2>/dev/null",
-                                  shell=True, capture_output=True, text=True, timeout=5)
-        known = {
-            ln.split()[1]
-            for ln in r_paired.stdout.splitlines()
-            if ln.startswith("Device") and len(ln.split()) >= 2
-        }
-
-        r_all = subprocess.run("bluetoothctl devices 2>/dev/null",
-                               shell=True, capture_output=True, text=True, timeout=5)
-
-        for line in r_all.stdout.splitlines():
-            p = line.strip().split(" ", 2)
-            if len(p) >= 2 and p[0] == "Device":
-                mac = p[1]
-                name = p[2] if len(p) > 2 else mac
-                _, info_out = _btctl(f"info {mac}", timeout=6)
-                low = info_out.lower()
-
-                if not _is_public_or_bredr(info_out):
-                    continue
-                if not _is_audio_device_info(info_out):
-                    continue
-
-                known_entry = known_map.get(mac.upper(), {})
-                devices.append({
-                    "mac": mac,
-                    "name": name,
-                    "known": mac in known or mac.upper() in known_map,
-                    "paired": ("paired: yes" in low) or bool(known_entry.get("paired")),
-                    "connected": "connected: yes" in low,
-                    "trusted": "trusted: yes" in low,
-                    "audio_candidate": True,
-                    "source": "scan",
-                })
-
-    except Exception as e:
-        log.error("BT scan: " + str(e))
-        ipc.write_progress("BT Scan", "Scan fehlgeschlagen", color="red")
-        time.sleep(2)
-        ipc.clear_progress()
-        return
-
-    _write_known_devices(_dedupe_devices(known_devices + devices))
-    ipc.write_json("/tmp/pidrive_bt_devices.json", {"devices": devices})
-
-    ipc.clear_progress()
-    msg = f"{len(devices)} Geraet(e) gefunden — Geraete > Verbinden"
-    ipc.write_progress("BT Scan fertig", msg, color="green" if devices else "orange")
-    time.sleep(3)
-    ipc.clear_progress()
-    S["menu_rev"] = S.get("menu_rev", 0) + 1
-
-
-def stop_scan():
-    """Stoppt einen laufenden BT-Scan (v0.9.21)."""
-    try:
-        import subprocess as _sp
-        _sp.run("bluetoothctl -- scan off 2>/dev/null",
-                shell=True, capture_output=True, timeout=5)
-        log.info("BT scan: Discovery gestoppt (Menü verlassen)")
-    except Exception as _e:
-        log.warn(f"BT stop_scan: {_e}")
-
-
 def connect_device(mac, S, settings):
+    mac = _normalize_mac(mac)
+    if not _valid_mac(mac):
+        ipc.write_progress("Bluetooth", "Ungültige MAC", color="red")
+        _sleep_s(2)
+        ipc.clear_progress()
+        return False
+
+    # Watcher ggf. aufwecken
+    wake_auto_reconnect()
+
     if not _bt_connect_lock.acquire(blocking=False):
         log.warn("BT connect: bereits ein Connect läuft — abgebrochen")
         ipc.write_progress("Bluetooth", "Verbindung läuft bereits...", color="orange")
-        time.sleep(2)
+        _sleep_s(2)
         ipc.clear_progress()
         return False
 
@@ -704,15 +1362,19 @@ def connect_device(mac, S, settings):
 
 
 def _connect_device_inner(mac, S, settings):
+    mac = _normalize_mac(mac)
     name = mac
-    try:
-        data = json.load(open("/tmp/pidrive_bt_devices.json"))
-        for d in data.get("devices", []):
-            if d.get("mac") == mac:
+
+    # Name aus live Scan oder known ableiten
+    for d in _read_discovered_devices():
+        if _normalize_mac(d.get("mac", "")) == mac:
+            name = d.get("name", mac)
+            break
+    if name == mac:
+        for d in _get_known_devices():
+            if _normalize_mac(d.get("mac", "")) == mac:
                 name = d.get("name", mac)
                 break
-    except Exception:
-        pass
 
     ipc.write_progress("Bluetooth", f"Verbinde {name[:20]}...", color="blue")
     log.info(f"BT connect: START mac={mac} name={name}")
@@ -720,193 +1382,188 @@ def _connect_device_inner(mac, S, settings):
     if _src_state:
         if _src_state.in_transition():
             log.warn("BT connect: abgebrochen — Quellen-Transition läuft")
-            _src_state.set_bt_state("failed"); _src_state.set_bt_link_state("failed"); _src_state.set_bt_audio_state("no_sink")
+            _src_state.set_bt_state("failed")
+            _src_state.set_bt_link_state("failed")
+            _src_state.set_bt_audio_state("no_sink")
             ipc.clear_progress()
             return False
         _src_state.set_bt_state("connecting")
+        _src_state.set_bt_link_state("connecting")
+        _src_state.set_bt_audio_state("pending")
 
-    # Scanner stoppen vor Connect [2]
+    # Scanner stoppen, falls aktiv
     try:
         from modules import scanner as _scanner
         if S.get("radio_type") == "SCANNER":
             log.info("BT connect: stoppe Scanner vor Connect")
             _scanner.stop(S)
-            time.sleep(0.5)
+            _sleep_s(0.5)
     except Exception as e:
         log.warn("BT connect: scanner stop failed: " + str(e))
 
     S["bt"] = False
+    S["bt_on"] = True
     S["bt_status"] = "verbindet"
     S["menu_rev"] = S.get("menu_rev", 0) + 1
 
-    ok = False
+    if not _ensure_bt_on(S):
+        ipc.write_progress("Bluetooth", "Adapter nicht bereit", color="red")
+        if _src_state:
+            _src_state.set_bt_state("failed")
+            _src_state.set_bt_link_state("failed")
+            _src_state.set_bt_audio_state("no_sink")
+        _sleep_s(2)
+        ipc.clear_progress()
+        S["bt_status"] = "getrennt"
+        return False
 
-    _btctl("power on", timeout=8)
     _ensure_agent()
 
-    rc_info, out_info = _btctl(f"info {mac}", timeout=6)
-    device_known = (rc_info == 0 and "Device" in out_info and "not available" not in out_info)
-
-    if not device_known:
-        log.info(f"BT connect: Gerät {mac} unbekannt — Discovery-Scan (max 20s)")
-        ipc.write_progress("Bluetooth", "Suche Gerät... (bis 20s)", color="blue")
-
-        proc_scan = subprocess.Popen(
-            "printf 'menu scan\ntransport bredr\nback\nscan on\n' | bluetoothctl",
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-
-        for _poll in range(10):  # 20s
-            time.sleep(2)
-            rc_p, out_p = _btctl(f"info {mac}", timeout=5)
-            if rc_p == 0 and "Device" in out_p and "not available" not in out_p:
-                device_known = True
-                log.info(f"BT connect: Gerät {mac} nach {(_poll+1)*2}s gefunden")
-                break
-
-        try:
-            proc_scan.terminate()
-            proc_scan.wait(timeout=2)
-        except Exception:
-            pass
-
-        if not device_known:
-            log.warn(f"BT connect: Gerät {mac} nach 20s Scan nicht gefunden — Abbruch")
-            ipc.write_progress(
-                "Bluetooth",
-                "Nicht gefunden — Pairing-Modus am Kopfhörer aktiv?",
-                color="red"
-            )
-            if _src_state:
-                _src_state.set_bt_state("failed"); _src_state.set_bt_link_state("failed"); _src_state.set_bt_audio_state("no_sink")
-            time.sleep(4)
-            ipc.clear_progress()
-            S["bt"] = False
-            S["bt_status"] = "getrennt"
-            S["menu_rev"] = S.get("menu_rev", 0) + 1
-            return False
-    else:
-        log.info(f"BT connect: Gerät {mac} BlueZ bekannt")
-
-    _btctl(f"disconnect {mac}", timeout=8)
-    time.sleep(1)
-
-    _, info_pre = _btctl(f"info {mac}", timeout=6)
-    if "paired: no" in info_pre.lower() and "name:" in info_pre.lower():
-        log.info(f"BT connect: Paired:no erkannt — remove für Neu-Pairing mac={mac}")
-        ipc.write_progress("Bluetooth", "Kopplung erneuern...", color="blue")
-        _btctl(f"remove {mac}", timeout=10)
-        # v0.9.29: Nach remove kurzen Scan starten damit BlueZ das Gerät wieder sieht
-        # Ohne Re-Scan schlägt trust sofort fehl ("not available")
-        ipc.write_progress("Bluetooth", "Warte auf Gerät...", color="blue")
-        _scan_proc = subprocess.Popen(
-            "printf 'scan on\n' | bluetoothctl",
-            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        for _rw in range(8):   # max 16s warten
-            time.sleep(2)
-            _rc_w, _out_w = _btctl(f"info {mac}", timeout=5)
-            if _rc_w == 0 and "Device" in _out_w and "not available" not in _out_w:
-                log.info(f"BT connect: Gerät nach remove wieder sichtbar ({(_rw+1)*2}s)")
-                break
-        try:
-            _scan_proc.terminate(); _scan_proc.wait(timeout=2)
-        except Exception:
-            pass
-
-    attempts = [
-        ("trust",   f"trust {mac}",   8),
-        ("pair",    None,            45),
-        ("connect", f"connect {mac}", 15),
-        ("connect", f"connect {mac}", 15),
-        ("connect", f"connect {mac}", 20),
-    ]
-
-    for step_name, cmd, to in attempts:
-        if step_name == "pair":
-            ok_pair, out = pair_with_agent(mac, timeout=to)
-            rc = 0 if ok_pair else 1
-        else:
-            rc, out = _btctl(cmd, timeout=to)
-
-        low = out.lower()
-
-        if step_name == "pair":
-            if any(x in low for x in [
-                "successful", "paired: yes", "alreadyexists",
-                "already paired", "device has been paired"
-            ]):
-                log.info(f"BT connect: PAIR ok mac={mac}")
-            elif "authenticationfailed" in low or "authentication failed" in low:
-                log.warn(f"BT connect: AuthenticationFailed — Kopfhörer in Pairing-Modus mac={mac}")
-                ipc.write_progress("Bluetooth", "Pairing-Modus am Kopfhörer nötig!", color="orange")
-                _btctl(f"remove {mac}", timeout=10)
-                time.sleep(1)
-            else:
-                log.warn(f"BT connect: PAIR unsicher mac={mac} out={out[:180]}")
-
-        elif step_name == "trust":
-            if any(x in low for x in ["succeeded", "trust succeeded", "changing"]):
-                log.info(f"BT connect: TRUST ok mac={mac}")
-            else:
-                # v0.9.29: trust kann nach remove temporär fehlschlagen —
-                # kein Abbruch, pair+connect versuchen trotzdem
-                log.warn(f"BT connect: TRUST nicht bestätigt mac={mac} out={out[:60]} — weiter")
-
-        elif step_name == "connect":
-            if any(x in low for x in [
-                "successful", "connection successful",
-                "connected: yes", "already connected"
-            ]):
-                ok = True
-                log.info(f"BT connect: CONNECT ok mac={mac}")
-                break
-            else:
-                log.warn(f"BT connect: CONNECT fehlgeschlagen mac={mac} out={out[:180]}")
-                time.sleep(2)
-
-    if ok:
-        _, info_out = _btctl(f"info {mac}", timeout=8)
-        if "connected: yes" not in info_out.lower():
-            log.warn(f"BT connect: VERIFY failed mac={mac}")
-            ok = False
-        else:
-            for _ in range(8):
-                pa_sink = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
-                out = _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null", timeout=4)
-                if pa_sink in out:
-                    break
-                time.sleep(1)
-            else:
-                log.warn(f"BT connect: A2DP-Sink nicht sichtbar mac={mac}")
-
-    if not ok:
+    visible, info = _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS)
+    if not visible:
+        ipc.write_progress("Bluetooth", "Nicht gefunden — Pairing-Modus aktivieren", color="red")
+        if _src_state:
+            _src_state.set_bt_state("failed")
+            _src_state.set_bt_link_state("failed")
+            _src_state.set_bt_audio_state("no_sink")
+        _mark_reconnect_failure(mac, "not_visible")
+        _sleep_s(4)
+        ipc.clear_progress()
         S["bt"] = False
         S["bt_status"] = "getrennt"
-        if _src_state:
-            _src_state.set_bt_state("failed"); _src_state.set_bt_link_state("failed"); _src_state.set_bt_audio_state("no_sink")
-        ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
-        log.warn(f"BT connect: FAIL mac={mac} name={name}")
-        time.sleep(3)
-        ipc.clear_progress()
         S["menu_rev"] = S.get("menu_rev", 0) + 1
         return False
 
+    # verbundenen Restzustand vor Neuversuch trennen
+    _btctl(f"disconnect {mac}", timeout=8)
+    _sleep_s(1.0)
+
+    # nur bei echtem Inkonsistenzfall remove
+    _ensure_clean_bond_state(mac)
+
+    paired_ok, pair_info = _ensure_paired(mac, timeout=PAIR_TIMEOUT_SECONDS)
+    if not paired_ok:
+        low = (pair_info or "").lower()
+        if "authenticationfailed" in low or "authentication failed" in low:
+            ipc.write_progress("Bluetooth", "Pairing-Modus am Gerät nötig!", color="orange")
+            # remove erst als Eskalation nach Auth-Fehler
+            _btctl(f"remove {mac}", timeout=10)
+        else:
+            ipc.write_progress("Bluetooth", "Pairing fehlgeschlagen", color="red")
+
+        if _src_state:
+            _src_state.set_bt_state("failed")
+            _src_state.set_bt_link_state("failed")
+            _src_state.set_bt_audio_state("no_sink")
+        _mark_reconnect_failure(mac, "pair_failed")
+        _sleep_s(3)
+        ipc.clear_progress()
+        S["bt"] = False
+        S["bt_status"] = "getrennt"
+        S["menu_rev"] = S.get("menu_rev", 0) + 1
+        return False
+
+    trusted_ok, _ = _ensure_trusted(mac)
+    if not trusted_ok:
+        # kein harter Abbruch, nur Warnung
+        log.warn(f"BT connect: trust nicht bestätigt mac={mac}")
+
+    connected_ok, conn_info = _ensure_connected(mac, retries=3)
+    if not connected_ok:
+        ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
+        if _src_state:
+            _src_state.set_bt_state("failed")
+            _src_state.set_bt_link_state("failed")
+            _src_state.set_bt_audio_state("no_sink")
+        _mark_reconnect_failure(mac, "connect_failed")
+        _sleep_s(3)
+        ipc.clear_progress()
+        S["bt"] = False
+        S["bt_status"] = "getrennt"
+        S["menu_rev"] = S.get("menu_rev", 0) + 1
+        return False
+
+    sink_ok, pa_sink = _ensure_a2dp_sink(mac, timeout=A2DP_WAIT_SECONDS)
+    if not sink_ok:
+        log.warn(f"BT connect: Link ok, aber kein A2DP-Sink mac={mac}")
+
+    # Erfolgspfad
     S["bt"] = True
-    S["bt_on"] = True   # v0.9.29: Adapter explizit als aktiv markieren
+    S["bt_on"] = True
     S["bt_device"] = name
     S["bt_status"] = "verbunden"
     S["bt_sink_mac"] = mac
-    S["bt_pa_sink"] = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+    S["bt_pa_sink"] = pa_sink
 
     if _src_state:
         _src_state.set_bt_state("connected")
         _src_state.set_bt_link_state("connected")
-        _src_state.set_bt_audio_state("pending")
-        _src_state.set_audio_route("bt")
+        _src_state.set_bt_audio_state("a2dp_ready" if sink_ok else "no_sink")
+        _src_state.set_audio_route("bt" if sink_ok else "klinke")
 
+    settings["bt_last_mac"] = mac
+    settings["bt_last_name"] = name
+    settings["bt_sink_mac"] = mac
+    settings["bt_pa_sink"] = pa_sink
+
+    # known device Status aktualisieren
+    _merge_known_update(
+        mac,
+        name=name,
+        known=True,
+        paired=True,
+        trusted=bool(trusted_ok),
+        connected=True,
+        last_seen_ts=_now(),
+        last_connect_ts=_now(),
+        failure_count=0,
+        last_failure_ts=0,
+        last_failure_reason="",
+        source="connect_success"
+    )
+    _mark_reconnect_success(mac)
+
+    # discovered device ebenfalls aktualisieren
+    discovered = _read_discovered_devices()
+    updated = False
+    for d in discovered:
+        if _normalize_mac(d.get("mac", "")) == mac:
+            d.update({
+                "name": name,
+                "paired": True,
+                "trusted": bool(trusted_ok),
+                "connected": True,
+                "visible_now": True,
+                "seen_this_scan": True,
+                "last_seen_ts": _now(),
+            })
+            updated = True
+            break
+    if not updated:
+        discovered.append({
+            "mac": mac,
+            "name": name,
+            "known": True,
+            "paired": True,
+            "trusted": bool(trusted_ok),
+            "connected": True,
+            "visible_now": True,
+            "seen_this_scan": True,
+            "audio_candidate": True,
+            "last_seen_ts": _now(),
+            "last_connect_ts": _now(),
+            "source": "connect_success",
+        })
+    _write_discovered_devices(discovered)
+
+    # Nur bei echtem Sink-Erfolg hart auf BT umschalten
+    if sink_ok:
+        settings["audio_output"] = "bt"
+        settings["alsa_device"] = "default"
+        _set_pulseaudio_sink(pa_sink)
+        _set_raspotify_device("default")
+
+    # BT-Backup nach Erfolg
     try:
         from modules import bt_backup as _btbak
         res = _btbak.backup()
@@ -915,62 +1572,44 @@ def _connect_device_inner(mac, S, settings):
     except Exception as _ebb:
         log.warn("BT-Backup nach Connect: " + str(_ebb))
 
-    settings["bt_last_mac"] = mac
-    settings["bt_last_name"] = name
-    settings["bt_sink_mac"] = mac
-    settings["bt_pa_sink"] = S["bt_pa_sink"]
-
-    _write_known_devices(_dedupe_devices(_get_known_devices() + [{
-        "mac": mac,
-        "name": name,
-        "known": True,
-        "paired": True,
-        "trusted": True,
-        "connected": True,
-        "source": "connect_success"
-    }]))
-
-    settings["audio_output"] = "bt"
-    settings["alsa_device"] = "default"
-
-    log.info(f"BT connect: STATE mac={mac} sink={S['bt_pa_sink']}")
-    if _src_state:
-        _src_state.set_bt_audio_state("a2dp_ready")
-    _set_pulseaudio_sink(S["bt_pa_sink"])
-    _set_raspotify_device("default")
-
-    if S.get("radio_playing"):
+    # Laufende Audioquelle ggf. auf BT neu anstoßen
+    if S.get("radio_playing") and sink_ok:
         try:
             now = time.time()
             last = getattr(connect_device, "_last_restart_ts", 0)
             if now - last > 5:
                 connect_device._last_restart_ts = now
-                with open("/tmp/pidrive_cmd", "w") as cf:
+                with open("/tmp/pidrive_cmd", "w", encoding="utf-8") as cf:
                     cf.write("radio_restart_on_bt\n")
                 log.info("BT connect: radio_restart_on_bt ausgelöst")
         except Exception as e:
             log.warn(f"BT connect: radio restart failed: {e}")
 
-    ipc.write_progress("Bluetooth", f"Verbunden: {name[:22]}", color="green")
-    time.sleep(2)
+    ipc.write_progress(
+        "Bluetooth",
+        f"Verbunden: {name[:22]}" if sink_ok else f"Verbunden ohne A2DP: {name[:16]}",
+        color="green" if sink_ok else "orange"
+    )
+    _sleep_s(2)
     ipc.clear_progress()
+
     S["menu_rev"] = S.get("menu_rev", 0) + 1
-    log.info(f"BT connect: DONE mac={mac} name={name}")
+    log.info(f"BT connect: DONE mac={mac} name={name} sink_ok={sink_ok}")
     return True
 
 
 def disconnect_current(S, settings):
-    mac  = settings.get("bt_last_mac", "") or S.get("bt_sink_mac", "")
+    mac = _normalize_mac(settings.get("bt_last_mac", "") or S.get("bt_sink_mac", ""))
     name = S.get("bt_device", "") or settings.get("bt_last_name", "") or mac or "BT-Gerät"
 
     ipc.write_progress("Bluetooth", f"Trenne {name[:20]}...", color="orange")
     log.info(f"BT disconnect: START mac={mac} name={name}")
 
+    ok = True
     if mac:
         rc, out = _btctl(f"disconnect {mac}", timeout=12)
-        ok = any(x in out.lower() for x in ["successful", "not connected"]) or rc == 0
+        ok = any(x in (out or "").lower() for x in ["successful", "not connected"]) or rc == 0
     else:
-        ok = True
         log.warn("BT disconnect: keine MAC, nur Status-Reset")
 
     S["bt"] = False
@@ -981,6 +1620,8 @@ def disconnect_current(S, settings):
 
     if _src_state:
         _src_state.set_bt_state("idle")
+        _src_state.set_bt_link_state("idle")
+        _src_state.set_bt_audio_state("no_sink")
         _src_state.set_audio_route("klinke")
 
     if settings.get("audio_output") == "bt":
@@ -992,34 +1633,36 @@ def disconnect_current(S, settings):
     except Exception as e:
         log.warn(f"BT disconnect: audio fallback: {e}")
 
+    if mac:
+        _merge_known_update(mac, connected=False)
+
     ipc.write_progress("Bluetooth", "Getrennt" if ok else "Getrennt/unbestätigt",
                        color="green" if ok else "orange")
-    time.sleep(2)
+    _sleep_s(2)
     ipc.clear_progress()
+
     S["menu_rev"] = S.get("menu_rev", 0) + 1
     log.info(f"BT disconnect: DONE mac={mac}")
     return True
 
 
 def repair_device(mac, S, settings):
+    mac = _normalize_mac(mac)
     name = mac
-    try:
-        data = json.load(open("/tmp/pidrive_bt_devices.json"))
-        for d in data.get("devices", []):
-            if d.get("mac") == mac:
-                name = d.get("name", mac)
-                break
-    except Exception:
-        pass
+
+    for d in _read_discovered_devices():
+        if _normalize_mac(d.get("mac", "")) == mac:
+            name = d.get("name", mac)
+            break
 
     ipc.write_progress("Bluetooth", f"Neu koppeln: {name[:18]}...", color="blue")
     log.info(f"BT repair: START mac={mac} name={name}")
 
-    _btctl("power on", timeout=8)
+    _ensure_bt_on(S)
     _ensure_agent()
     _btctl(f"disconnect {mac}", timeout=10)
     _btctl(f"remove {mac}", timeout=10)
-    time.sleep(2)
+    _sleep_s(2)
 
     ok = connect_device(mac, S, settings)
     log.info(f"BT repair: {'OK' if ok else 'FAIL'} mac={mac}")
@@ -1027,20 +1670,97 @@ def repair_device(mac, S, settings):
     return ok
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Reconnect
-# ──────────────────────────────────────────────────────────────────────────────
+def reconnect_last(S, settings):
+    mac = _normalize_mac(settings.get("bt_last_mac", ""))
+    name = settings.get("bt_last_name", "") or mac
 
-_reconnect_thread = None
-_reconnect_stop  = False
-_reconnect_wakeup = None   # v0.9.30: Event zum Aufwecken des Watchers
+    if not mac:
+        ipc.write_progress("Bluetooth", "Kein letztes Gerät", color="orange")
+        log.warn("BT reconnect_last: keine bt_last_mac")
+        _sleep_s(2)
+        ipc.clear_progress()
+        return False
+
+    wake_auto_reconnect()
+
+    S["bt_status"] = "verbindet"
+    S["menu_rev"] = S.get("menu_rev", 0) + 1
+    log.info(f"BT reconnect_last: START mac={mac} name={name}")
+    return connect_device(mac, S, settings)
+
+
+def reconnect_known_devices(S, settings):
+    """
+    Einmaliger aktiver Reconnect:
+    - letztes Gerät priorisieren
+    - nur frische/sichtbare Kandidaten bevorzugen
+    - Cooldown/Fails beachten
+    """
+    devs = _reconnect_candidates(settings)
+
+    for d in devs:
+        mac = _normalize_mac(d.get("mac", ""))
+        if not mac:
+            continue
+
+        if not _should_try_reconnect(mac, d):
+            continue
+
+        _RECONNECT_LAST_TRY[mac] = _now()
+
+        # Schon verbunden?
+        rc, out = _btctl(f"info {mac}", timeout=6)
+        low = (out or "").lower()
+        if rc == 0 and "connected: yes" in low:
+            S["bt"] = True
+            S["bt_on"] = True
+            S["bt_device"] = d.get("name", mac)
+            S["bt_status"] = "verbunden"
+            if _src_state:
+                _src_state.set_bt_state("connected")
+                _src_state.set_bt_link_state("connected")
+            _mark_reconnect_success(mac)
+            return True
+
+        # Sichtbarkeit vor Reconnect hart prüfen
+        visible, _ = _ensure_device_visible(mac, timeout=6)
+        if not visible:
+            log.info(f"BT reconnect_known: überspringe nicht sichtbares Gerät {mac}")
+            _mark_reconnect_failure(mac, "not_visible")
+            continue
+
+        log.info(f"BT reconnect_known: versuche {mac} ({d.get('name','')})")
+        if connect_device(mac, S, settings):
+            _mark_reconnect_success(mac)
+            return True
+
+        _mark_reconnect_failure(mac, "connect_failed")
+
+    if _src_state:
+        _src_state.set_bt_state("failed")
+        _src_state.set_bt_link_state("failed")
+        _src_state.set_bt_audio_state("no_sink")
+    return False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Auto reconnect watcher
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _write_watcher_state(running=True, sleeping=False, fail_count=0,
+                         last_result="", next_action="", current_mac=""):
+    _write_json_atomic(WATCHER_STATE_FILE, {
+        "running": running,
+        "sleeping": sleeping,
+        "fail_count": int(fail_count),
+        "last_result": last_result,
+        "next_action": next_action,
+        "current_mac": current_mac,
+        "ts": time.time(),
+    })
 
 
 def wake_auto_reconnect():
-    """
-    v0.9.30: TICKET 1 — Watcher aus Schlafmodus wecken.
-    Aufgerufen bei: bt_reconnect_last, bt_scan, bt_connect:<mac>.
-    """
     global _reconnect_wakeup
     if _reconnect_wakeup is not None:
         _reconnect_wakeup.set()
@@ -1052,121 +1772,151 @@ def wake_auto_reconnect():
 def start_auto_reconnect(S, settings):
     """
     Hintergrund-Watcher:
-    - v0.9.30: Schläft nach erstem Fehlschlag (kein Spam)
-    - Aufwecken via wake_auto_reconnect()
-    - reconnect_known_devices() ist die robustere aktive Variante
+    - versucht letztes Gerät moderat
+    - pausiert bei DAB / Transition
+    - geht nach Fehlschlag in Schlafmodus
     """
     global _reconnect_thread, _reconnect_stop, _reconnect_wakeup
+
     if _reconnect_thread and _reconnect_thread.is_alive():
         return
 
     _reconnect_stop = False
-    import threading as _thr_wake
-    _reconnect_wakeup = _thr_wake.Event()
-    import threading as _th
+    _reconnect_wakeup = threading.Event()
 
     def _watcher():
-        # v0.9.29: Kurz warten, damit Boot-Connect abgeschlossen ist bevor Watcher feuert
-        time.sleep(4)
-        # v0.9.25: Exponential Backoff — kein Spam bei abgeschaltetem Kopfhörer
-        # Intervall-Schema: 12s → 20s → 30s → 60s → 120s → 300s → Stop nach 20min
-        _INTERVALS = [12, 12, 20, 20, 30, 60, 120, 300]
-        _MAX_RUNTIME = 20 * 60  # 20 Minuten, dann aufhören
-        _fail_streak  = 0
-        _start_ts     = time.time()
+        _sleep_s(6)
+        _write_watcher_state(running=True, sleeping=False, fail_count=0,
+                             last_result="started", next_action="observe")
 
-        time.sleep(6)
+        fail_streak = 0
+        start_ts = time.time()
+        max_runtime = 20 * 60
+
         while not _reconnect_stop:
             try:
-                # Nach MAX_RUNTIME aufhören — Benutzer muss manuell reconnecten
-                if time.time() - _start_ts > _MAX_RUNTIME:
+                if time.time() - start_ts > max_runtime:
                     log.info("BT auto-reconnect: aufgehört nach 20min ohne Erfolg")
+                    _write_watcher_state(
+                        running=False,
+                        sleeping=False,
+                        fail_count=fail_streak,
+                        last_result="timeout_stop",
+                        next_action="manual_reconnect"
+                    )
                     break
 
-                mac  = settings.get("bt_last_mac", "")
-                name = settings.get("bt_last_name", "")
-                if mac and not S.get("bt", False):
-                    if _src_state and _src_state.in_transition():
-                        time.sleep(5)
+                mac = _normalize_mac(settings.get("bt_last_mac", ""))
+                name = settings.get("bt_last_name", "") or mac
+
+                if not mac:
+                    _sleep_s(20)
+                    continue
+
+                # Nichts tun wenn schon verbunden
+                if S.get("bt", False):
+                    fail_streak = 0
+                    _write_watcher_state(
+                        running=True,
+                        sleeping=False,
+                        fail_count=0,
+                        last_result="already_connected",
+                        next_action="wait",
+                        current_mac=mac
+                    )
+                    _sleep_s(20)
+                    continue
+
+                # Während Source-Transition nicht connecten
+                if _src_state and _src_state.in_transition():
+                    _sleep_s(5)
+                    continue
+
+                # Während DAB absichtlich pausieren
+                if S.get("radio_playing") and S.get("radio_type", "").upper() == "DAB":
+                    _write_watcher_state(
+                        running=True,
+                        sleeping=False,
+                        fail_count=fail_streak,
+                        last_result="paused_dab",
+                        next_action="wait_dab",
+                        current_mac=mac
+                    )
+                    _sleep_s(10)
+                    continue
+
+                visible, _ = _ensure_device_visible(mac, timeout=6)
+                if visible:
+                    log.info(f"BT auto-reconnect [Watcher]: Gerät sichtbar, versuche Connect mac={mac}")
+                    ok = connect_device(mac, S, settings)
+                    if ok:
+                        log.info(f"BT auto-reconnect: ERFOLG mac={mac} name={name}")
+                        fail_streak = 0
+                        start_ts = time.time()
+                        _write_watcher_state(
+                            running=True,
+                            sleeping=False,
+                            fail_count=0,
+                            last_result="success",
+                            next_action="wait",
+                            current_mac=mac
+                        )
+                        _sleep_s(20)
                         continue
-                    # v0.9.30: BT-Reconnect während DAB pausieren (BlueZ stört OFDM-Timing)
-                    if S.get("radio_playing") and S.get("radio_type", "").upper() == "DAB":
-                        time.sleep(10)
-                        continue
-                    rc, out = _btctl(f"info {mac}", timeout=5)
-                    low = out.lower()
-                    if rc == 0 and "name:" in low and "connected: no" in low:
-                        log.info(f"BT auto-reconnect [Watcher]: Gerät sichtbar, versuche Connect mac={mac}")
-                        rc2, out2 = _btctl(f"connect {mac}", timeout=15)
-                        low2 = out2.lower()
-                        # v0.9.30: rc2==0 + "connection successful" = echter Erfolg.
-                        # "Connected: yes" allein ist KEIN Erfolg — kommt auch bei rc=1
-                        # aus alten BlueZ CHG-Events im Output-Buffer.
-                        _real_success = (rc2 == 0 and "connection successful" in low2)
-                        if _real_success:
-                            log.info(f"BT auto-reconnect: ERFOLG mac={mac} name={name}")
-                            S["bt"] = True
-                            S["bt_device"] = name
-                            S["bt_status"] = "verbunden"
-                            S["bt_sink_mac"] = mac
-                            S["bt_pa_sink"] = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
-                            if _src_state:
-                                _src_state.set_bt_state("connected")
-                                _src_state.set_bt_link_state("connected")
-                                _src_state.set_bt_audio_state("pending")
-                                _src_state.set_audio_route("bt")
-                            settings["audio_output"] = "bt"
-                            from modules import audio as _aud
-                            _aud.get_mpv_args(settings, source="bt_auto_reconnect")
-                            _fail_streak = 0
-                            _start_ts = time.time()  # Timer zurücksetzen nach Erfolg
-                        else:
-                            _fail_streak += 1
-                            log.info(f"BT auto-reconnect: fehlgeschlagen #{_fail_streak} mac={mac} ({out2[:60]})")
+                    else:
+                        fail_streak += 1
+                        _mark_reconnect_failure(mac, "watcher_connect_failed")
+                        log.info(f"BT auto-reconnect: fehlgeschlagen #{fail_streak} mac={mac}")
+                else:
+                    fail_streak += 1
+                    _mark_reconnect_failure(mac, "watcher_not_visible")
+
             except Exception as e:
                 log.warn("BT auto-reconnect Watcher: " + str(e))
-                _fail_streak += 1
+                fail_streak += 1
 
-            # v0.9.30: TICKET 1 — nach Fehlschlag Schlafmodus, kein automatischer Retry
-            if not S.get("bt", False) and _fail_streak > 0:
-                log.info("BT auto-reconnect [Watcher]: Fehlschlag → Schlafmodus "
-                         "(bt_reconnect_last oder bt_scan zum Aufwecken)")
-                try:
-                    import json as _jw
-                    _jw.dump({"running": True, "sleeping": True,
-                              "fail_count": _fail_streak, "last_result": "failed",
-                              "next_action": "bt_reconnect_last|bt_scan|reboot",
-                              "ts": time.time()},
-                             open("/tmp/pidrive_bt_watcher.json", "w"))
-                except Exception: pass
-                # Warte bis explizit geweckt
+            # Schlafmodus nach Fehlschlag
+            if not S.get("bt", False) and fail_streak > 0:
+                log.info("BT auto-reconnect [Watcher]: Fehlschlag → Schlafmodus")
+                _write_watcher_state(
+                    running=True,
+                    sleeping=True,
+                    fail_count=fail_streak,
+                    last_result="failed",
+                    next_action="bt_reconnect_last|bt_scan|reboot",
+                    current_mac=_normalize_mac(settings.get("bt_last_mac", ""))
+                )
+
                 while not _reconnect_stop:
-                    time.sleep(30)
+                    _sleep_s(30)
                     if _reconnect_wakeup is not None and _reconnect_wakeup.is_set():
                         _reconnect_wakeup.clear()
-                        _fail_streak = 0
+                        fail_streak = 0
                         log.info("BT auto-reconnect [Watcher]: geweckt — versuche erneut")
-                        try:
-                            import json as _jw
-                            _jw.dump({"running": True, "sleeping": False,
-                                      "fail_count": 0, "last_result": "woken",
-                                      "next_action": "connect", "ts": time.time()},
-                                     open("/tmp/pidrive_bt_watcher.json", "w"))
-                        except Exception: pass
+                        _write_watcher_state(
+                            running=True,
+                            sleeping=False,
+                            fail_count=0,
+                            last_result="woken",
+                            next_action="connect",
+                            current_mac=_normalize_mac(settings.get("bt_last_mac", ""))
+                        )
                         break
-            elif S.get("bt", False):
-                time.sleep(20)
 
         log.info("BT auto-reconnect Watcher: beendet")
-        try:
-            import json as _jw
-            _jw.dump({"running": False, "sleeping": False,
-                      "fail_count": 0, "last_result": "stopped",
-                      "next_action": "reboot", "ts": time.time()},
-                     open("/tmp/pidrive_bt_watcher.json", "w"))
-        except Exception: pass
+        _write_watcher_state(
+            running=False,
+            sleeping=False,
+            fail_count=0,
+            last_result="stopped",
+            next_action="manual_reconnect"
+        )
 
-    _reconnect_thread = _th.Thread(target=_watcher, daemon=True, name="bt_auto_reconnect")
+    _reconnect_thread = threading.Thread(
+        target=_watcher,
+        daemon=True,
+        name="bt_auto_reconnect"
+    )
     _reconnect_thread.start()
     log.info("BT auto-reconnect: Watcher gestartet")
 
@@ -1176,73 +1926,17 @@ def stop_auto_reconnect():
     _reconnect_stop = True
 
 
-def reconnect_last(S, settings):
-    mac  = settings.get("bt_last_mac", "")
-    name = settings.get("bt_last_name", "") or mac
+# ─────────────────────────────────────────────────────────────────────────────
+# Kompatibilitäts-Aliase
+# ─────────────────────────────────────────────────────────────────────────────
 
-    if not mac:
-        ipc.write_progress("Bluetooth", "Kein letztes Gerät", color="orange")
-        log.warn("BT reconnect_last: keine bt_last_mac")
-        time.sleep(2)
-        ipc.clear_progress()
-        return False
-
-    S["bt_status"] = "verbindet"
-    S["menu_rev"] = S.get("menu_rev", 0) + 1
-    log.info(f"BT reconnect_last: START mac={mac} name={name}")
-    return connect_device(mac, S, settings)
+def start_agent():
+    return start_agent_session()
 
 
-def reconnect_known_devices(S, settings):
-    """
-    Auto-Reconnect mit Priorität + Cooldown:
-    1. letztes Gerät zuerst
-    2. dann übrige bekannte/gepaarte Geräte
-    """
-    devs = _get_known_devices()
-    last_mac = (settings.get("bt_last_mac", "") or "").upper()
-    if last_mac:
-        devs = sorted(devs, key=lambda d: 0 if (d.get("mac", "").upper() == last_mac) else 1)
-
-    for d in devs:
-        mac = (d.get("mac", "") or "").upper()
-        if not mac:
-            continue
-
-        last_try = _RECONNECT_LAST_TRY.get(mac, 0)
-        if (_now() - last_try) < _RECONNECT_COOLDOWN:
-            continue
-        _RECONNECT_LAST_TRY[mac] = _now()
-
-        rc, out = _btctl(f"info {mac}", timeout=6)
-        low = out.lower()
-
-        if "connected: yes" in low:
-            S["bt"] = True
-            S["bt_device"] = d.get("name", mac)
-            S["bt_status"] = "verbunden"
-            if _src_state:
-                _src_state.set_bt_state("connected")
-            return True
-
-        if "paired: yes" in low or d.get("paired") or d.get("known"):
-            log.info(f"BT reconnect_known: versuche {mac} ({d.get('name','')})")
-            if connect_device(mac, S, settings):
-                return True
-    return False
-
-
-def get_bt_sink():
-    """PulseAudio BT-Sink ermitteln."""
-    PA_SOCKET = "PULSE_SERVER=unix:/var/run/pulse/native"
-    try:
-        r = subprocess.run(
-            PA_SOCKET + " pactl list sinks short 2>/dev/null",
-            shell=True, capture_output=True, text=True, timeout=5
-        )
-        for line in r.stdout.splitlines():
-            if "bluez" in line.lower() or "a2dp" in line.lower():
-                return line.split()[0] if line.split() else ""
-    except Exception:
-        pass
-    return ""
+def disconnect_device(S=None, settings=None):
+    if S is None:
+        S = {}
+    if settings is None:
+        settings = {}
+    return disconnect_current(S, settings)

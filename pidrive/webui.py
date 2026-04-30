@@ -21,13 +21,14 @@ CMD_FILE = "/tmp/pidrive_cmd"
 STATUS_FILE = "/tmp/pidrive_status.json"
 MENU_FILE = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
-RTLSDR_FILE  = "/tmp/pidrive_rtlsdr.json"
-AVRCP_FILE   = "/tmp/pidrive_avrcp.json"
-LIST_FILE    = "/tmp/pidrive_list.json"
-LOG_FILE     = "/var/log/pidrive/pidrive.log"
-READY_FILE   = "/tmp/pidrive_ready"
+RTLSDR_FILE = "/tmp/pidrive_rtlsdr.json"
+AVRCP_FILE = "/tmp/pidrive_avrcp.json"
+LIST_FILE = "/tmp/pidrive_list.json"
+LOG_FILE = "/var/log/pidrive/pidrive.log"
+READY_FILE = "/tmp/pidrive_ready"
 KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
 BT_AGENT_FILE = "/tmp/pidrive_bt_agent.json"
+DAB_DEBUG_FILE = "/tmp/pidrive_dab_play_debug.json"
 
 ALLOWED_COMMANDS = {
     "up", "down", "left", "right", "enter", "back",
@@ -134,21 +135,116 @@ def _sink_is_hdmi(name: str) -> bool:
     return False
 
 
+def _first_nonempty(*values):
+    for v in values:
+        if isinstance(v, str):
+            if v.strip():
+                return v.strip()
+        elif v:
+            return v
+    return ""
+
+
+def _compose_dls_text(artist: str, track: str, fallback_text: str = "") -> str:
+    artist = (artist or "").strip()
+    track = (track or "").strip()
+    fallback_text = (fallback_text or "").strip()
+
+    if artist and track:
+        return f"{artist} - {track}"
+    if track:
+        return track
+    if artist:
+        return artist
+    return fallback_text
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Audio Debug
 # ──────────────────────────────────────────────────────────────────────────────
 
+def get_volume_data() -> dict:
+    try:
+        import re as _re
+        import sys as _sys
+        _b = str(BASE_DIR)
+        if _b not in _sys.path:
+            _sys.path.insert(0, _b)
+
+        sinks_out = (safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout", "") or "")
+        sink = ""
+        source_label = ""
+
+        sin_out = (safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null").get("stdout", "") or "")
+        active_sink_ids = set()
+        for ln in sin_out.splitlines():
+            p = ln.split()
+            if len(p) >= 2 and p[0].isdigit():
+                active_sink_ids.add(p[1])
+
+        sink_id_to_name = {}
+        for ln in sinks_out.splitlines():
+            p = ln.split()
+            if len(p) >= 2:
+                sink_id_to_name[p[0]] = p[1]
+
+        for sid in active_sink_ids:
+            sname = sink_id_to_name.get(sid, "")
+            if sname:
+                sink = sname
+                source_label = "active_input"
+                break
+
+        if not sink:
+            for ln in sinks_out.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and "bluez_sink" in parts[1] and "a2dp_sink" in parts[1]:
+                    sink = parts[1]
+                    source_label = "bt_sink"
+                    break
+        if not sink:
+            for ln in sinks_out.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
+                    sink = parts[1]
+                    source_label = "alsa_card1"
+                    break
+        if not sink:
+            for ln in sinks_out.splitlines():
+                parts = ln.split()
+                if len(parts) >= 2 and "alsa_output" in parts[1] and not _sink_is_hdmi(parts[1]):
+                    sink = parts[1]
+                    source_label = "alsa_fallback"
+                    break
+
+        vol = ""
+        if sink:
+            full_out = (safe_run(PA_ENV + " pactl list sinks 2>/dev/null").get("stdout", "") or "")
+            in_target = False
+            for ln in full_out.splitlines():
+                if _re.search(r"name\s*=\s*" + _re.escape(sink), ln):
+                    in_target = True
+                elif ln.strip().startswith("Sink #") or (in_target and _re.search(r"name\s*=\s*\S+", ln) and sink not in ln):
+                    if in_target:
+                        break
+                if in_target:
+                    if ln.strip().startswith("Volume:") and "%" in ln:
+                        m = _re.search(r"(\d+)%", ln)
+                        if m:
+                            vol = m.group(1) + "%"
+                            break
+
+        return {
+            "ok": True,
+            "volume": vol or "–",
+            "sink": sink or "",
+            "source": source_label
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e), "volume": "–"}
+
+
 def get_audio_debug() -> dict:
-    """
-    Vollständiges Audio-Debug-Cockpit.
-    Liefert:
-      - pulse_active
-      - default_sink
-      - sinks
-      - sink_inputs
-      - decision (/tmp/pidrive_audio_state.json)
-      - current_volume
-    """
     data = {
         "pulse_active": False,
         "default_sink": "",
@@ -158,14 +254,12 @@ def get_audio_debug() -> dict:
         "current_volume": "–",
     }
 
-    # Letzte Core-Entscheidung + Fallback-Badge
     try:
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
         from modules.audio import read_last_decision_file
         data["decision"] = read_last_decision_file()
-        # v0.9.26: Fallback-Badge wenn requested≠effective
         dec = data["decision"]
         data["fallback_active"] = bool(
             dec.get("requested") and dec.get("effective") and
@@ -177,10 +271,6 @@ def get_audio_debug() -> dict:
         data["fallback_active"] = False
         data["fallback_reason"] = ""
 
-    # PulseAudio — drei Zustände (v0.9.26 Korrektur):
-    # "active"   : systemctl aktiv UND pactl antwortet
-    # "service"  : systemctl aktiv, aber pactl leer (Socket-Problem)
-    # False      : systemctl nicht aktiv
     try:
         pa_svc = safe_run("systemctl is-active pulseaudio 2>/dev/null")
         pa_svc_ok = (pa_svc.get("stdout", "").strip() in ("active", "activating"))
@@ -193,7 +283,6 @@ def get_audio_debug() -> dict:
     except Exception:
         data["pulse_active"] = False
 
-    # Default-Sink
     try:
         ds = safe_run(PA_ENV + " pactl get-default-sink 2>/dev/null")
         data["default_sink"] = (ds.get("stdout", "") or "").strip()
@@ -206,7 +295,6 @@ def get_audio_debug() -> dict:
     except Exception:
         pass
 
-    # Alle Sinks
     try:
         sinks = safe_run(PA_ENV + " pactl list sinks short 2>/dev/null")
         out = sinks.get("stdout", "") or ""
@@ -231,7 +319,6 @@ def get_audio_debug() -> dict:
     except Exception:
         pass
 
-    # Sink-Inputs kurz — v0.9.26: nur echte Inputs (id muss Zahl sein)
     try:
         sin = safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null")
         out = sin.get("stdout", "") or ""
@@ -240,18 +327,17 @@ def get_audio_debug() -> dict:
                 continue
             parts = line.split()
             if not parts or not parts[0].isdigit():
-                continue  # keine Platzhalterzeile
+                continue
             data["sink_inputs"].append({
-                "id":     parts[0],
+                "id": parts[0],
                 "sink_id": parts[1] if len(parts) > 1 else "",
                 "client": parts[2] if len(parts) > 2 else "",
                 "driver": parts[3] if len(parts) > 3 else "",
-                "raw":    line.strip(),
+                "raw": line.strip(),
             })
     except Exception:
         pass
 
-    # Sink-Input Details
     try:
         detail = safe_run(PA_ENV + " pactl list sink-inputs 2>/dev/null")
         txt = detail.get("stdout", "") or ""
@@ -280,21 +366,19 @@ def get_audio_debug() -> dict:
                     item["media_name"] = s.split('"')[1]
             parsed[sid] = item
 
-        # Sink-ID zu Namen auflösen
         sink_id_map = {s["id"]: s["name"] for s in data["sinks"]}
         for row in data["sink_inputs"]:
             extra = parsed.get(str(row.get("id", "")), {})
             row.update(extra)
             row["app_name"] = extra.get("application_name") or extra.get("media_name") or ""
-            row["binary"]   = extra.get("process_binary", "")
-            row["pid"]      = extra.get("process_id", "")
-            row["sink_name"]= sink_id_map.get(row.get("sink_id", ""), "")
+            row["binary"] = extra.get("process_binary", "")
+            row["pid"] = extra.get("process_id", "")
+            row["sink_name"] = sink_id_map.get(row.get("sink_id", ""), "")
     except Exception:
         pass
 
-    # Robuste Lautstärke
     try:
-        vol = api_volume().json if hasattr(api_volume(), "json") else {}
+        vol = get_volume_data()
         if isinstance(vol, dict):
             data["current_volume"] = vol.get("volume", "–")
     except Exception:
@@ -340,82 +424,163 @@ def get_spectrum_debug():
         return {"error": str(e)}
 
 
+def get_dab_status_debug():
+    dbg = read_json(DAB_DEBUG_FILE, {})
+    st = read_json(STATUS_FILE, {})
+
+    artist = _first_nonempty(
+        dbg.get("artist"),
+        dbg.get("last_dls_artist"),
+        st.get("artist"),
+    )
+
+    track = _first_nonempty(
+        dbg.get("track"),
+        dbg.get("last_dls_track"),
+        st.get("track"),
+    )
+
+    dls_text = _first_nonempty(
+        dbg.get("dls_raw"),
+        dbg.get("dls"),
+        dbg.get("last_dls_raw"),
+        st.get("dls_raw"),
+        st.get("dls"),
+        st.get("radio_text"),
+        _compose_dls_text(artist, track, st.get("track", "")),
+    )
+
+    merged = {
+        "name": _first_nonempty(
+            dbg.get("name"),
+            st.get("radio_name"),
+            st.get("radio_station"),
+        ),
+        "channel": _first_nonempty(dbg.get("channel")),
+        "service_id": _first_nonempty(
+            dbg.get("service_id"),
+            st.get("dab_service_id"),
+        ),
+        "ensemble": _first_nonempty(
+            dbg.get("ensemble"),
+            st.get("dab_ensemble"),
+        ),
+        "gain": _first_nonempty(
+            str(dbg.get("gain", "")) if dbg.get("gain", "") != "" else "",
+        ),
+        "ppm": _first_nonempty(
+            str(dbg.get("ppm", "")) if dbg.get("ppm", "") != "" else "",
+        ),
+        "sync_ok": bool(dbg.get("sync_ok", st.get("dab_sync_ok", False))),
+        "dab_state": _first_nonempty(
+            dbg.get("dab_state"),
+            st.get("dab_state"),
+        ),
+        "last_error_line": _first_nonempty(
+            dbg.get("last_error_line"),
+            st.get("dab_last_error"),
+        ),
+        "artist": artist,
+        "track": track,
+        "dls_text": dls_text,
+        "dls_available": bool(dls_text),
+        "radio_name": st.get("radio_name", ""),
+        "radio_type": st.get("radio_type", ""),
+        "radio_playing": bool(st.get("radio", False)),
+        "dab_pcm_seen": st.get("dab_pcm_seen", False),
+        "dab_sync_seen": st.get("dab_sync_seen", False),
+        "dab_superframe_seen": st.get("dab_superframe_seen", False),
+        "dab_audio_ready": st.get("dab_audio_ready", False),
+        "ts": dbg.get("ts", st.get("ts", 0)),
+        "debug_exists": os.path.exists(DAB_DEBUG_FILE),
+        "debug_age": file_age(DAB_DEBUG_FILE),
+    }
+
+    if isinstance(dbg, dict):
+        for k, v in dbg.items():
+            if k not in merged:
+                merged[k] = v
+
+    return merged
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # View Model
 # ──────────────────────────────────────────────────────────────────────────────
 
 def build_view_model():
-    status    = read_json(STATUS_FILE, {})
-    menu      = read_json(MENU_FILE, {})
-    progress  = read_json(PROGRESS_FILE, {})
-    rtlsdr    = read_json(RTLSDR_FILE, {})
-    avrcp     = read_json(AVRCP_FILE, {})
+    status = read_json(STATUS_FILE, {})
+    menu = read_json(MENU_FILE, {})
+    progress = read_json(PROGRESS_FILE, {})
+    rtlsdr = read_json(RTLSDR_FILE, {})
+    avrcp = read_json(AVRCP_FILE, {})
     list_data = read_json(LIST_FILE, {})
-    bt_known  = read_json(KNOWN_BT_FILE, {"devices": []})
-    bt_agent  = read_json(BT_AGENT_FILE, {})
+    bt_known = read_json(KNOWN_BT_FILE, {"devices": []})
+    bt_agent = read_json(BT_AGENT_FILE, {})
 
-    nodes      = menu.get("nodes", [])
+    nodes = menu.get("nodes", [])
     categories = menu.get("categories", [])
     items_list = menu.get("items", [])
 
-    cursor   = menu.get("cursor", 0)
+    cursor = menu.get("cursor", 0)
     sel_node = nodes[cursor] if nodes and cursor < len(nodes) else {}
 
     debug = {
-        "rev":            menu.get("rev", 0),
-        "path":           menu.get("path", []),
-        "title":          menu.get("title", ""),
-        "cursor":         cursor,
-        "can_back":       menu.get("can_back", False),
+        "rev": menu.get("rev", 0),
+        "path": menu.get("path", []),
+        "title": menu.get("title", ""),
+        "cursor": cursor,
+        "can_back": menu.get("can_back", False),
         "selected_label": sel_node.get("label", "") if isinstance(sel_node, dict) else str(sel_node),
-        "selected_type":  sel_node.get("type", "") if isinstance(sel_node, dict) else "",
-        "node_count":     len(nodes),
-        "core_ready":     os.path.exists(READY_FILE),
-        "status_age":     file_age(STATUS_FILE),
-        "menu_age":       file_age(MENU_FILE),
+        "selected_type": sel_node.get("type", "") if isinstance(sel_node, dict) else "",
+        "node_count": len(nodes),
+        "core_ready": os.path.exists(READY_FILE),
+        "status_age": file_age(STATUS_FILE),
+        "menu_age": file_age(MENU_FILE),
     }
 
     return {
-        "version":         get_version(),
-        "ip":              get_ip(),
-        "status":          status,
-        "menu":            menu,
-        "progress":        progress,
-        "rtlsdr":          rtlsdr,
-        "rtlsdr_age":      file_age(RTLSDR_FILE),
-        "rtlsdr_exists":   os.path.exists(RTLSDR_FILE),
-        "avrcp":           avrcp,
-        "avrcp_age":       file_age(AVRCP_FILE),
-        "avrcp_exists":    os.path.exists(AVRCP_FILE),
-        "audio_debug":     get_audio_debug(),
-        "source_state":    get_source_state_debug(),
-        "dab_scan_debug":  get_dab_scan_debug(),
-        "spectrum_debug":  get_spectrum_debug(),
+        "version": get_version(),
+        "ip": get_ip(),
+        "status": status,
+        "menu": menu,
+        "progress": progress,
+        "rtlsdr": rtlsdr,
+        "rtlsdr_age": file_age(RTLSDR_FILE),
+        "rtlsdr_exists": os.path.exists(RTLSDR_FILE),
+        "avrcp": avrcp,
+        "avrcp_age": file_age(AVRCP_FILE),
+        "avrcp_exists": os.path.exists(AVRCP_FILE),
+        "audio_debug": get_audio_debug(),
+        "source_state": get_source_state_debug(),
+        "dab_scan_debug": get_dab_scan_debug(),
+        "dab_status_debug": get_dab_status_debug(),
+        "spectrum_debug": get_spectrum_debug(),
         "known_bt_devices": bt_known,
-        "bt_agent":        bt_agent,
-        "processes":       status.get("processes", []),  # für renderProcesses
-        "list_data":       list_data,
-        "list_active":     list_data.get("active", False),
-        "list_title":      list_data.get("title", ""),
-        "list_items":      list_data.get("items", []),
-        "list_selected":   list_data.get("selected", 0),
-        "nodes":           nodes,
-        "categories":      categories,
-        "items":           items_list,
-        "path":            menu.get("path", []),
-        "cursor":          cursor,
-        "rev":             menu.get("rev", 0),
-        "can_back":        menu.get("can_back", False),
-        "debug":           debug,
-        "status_age":      file_age(STATUS_FILE),
-        "menu_age":        file_age(MENU_FILE),
-        "progress_age":    file_age(PROGRESS_FILE),
-        "list_age":        file_age(LIST_FILE),
-        "status_exists":   os.path.exists(STATUS_FILE),
-        "menu_exists":     os.path.exists(MENU_FILE),
+        "bt_agent": bt_agent,
+        "processes": status.get("processes", []),
+        "list_data": list_data,
+        "list_active": list_data.get("active", False),
+        "list_title": list_data.get("title", ""),
+        "list_items": list_data.get("items", []),
+        "list_selected": list_data.get("selected", 0),
+        "nodes": nodes,
+        "categories": categories,
+        "items": items_list,
+        "path": menu.get("path", []),
+        "cursor": cursor,
+        "rev": menu.get("rev", 0),
+        "can_back": menu.get("can_back", False),
+        "debug": debug,
+        "status_age": file_age(STATUS_FILE),
+        "menu_age": file_age(MENU_FILE),
+        "progress_age": file_age(PROGRESS_FILE),
+        "list_age": file_age(LIST_FILE),
+        "status_exists": os.path.exists(STATUS_FILE),
+        "menu_exists": os.path.exists(MENU_FILE),
         "progress_exists": os.path.exists(PROGRESS_FILE),
-        "list_exists":     os.path.exists(LIST_FILE),
-        "log_exists":      os.path.exists(LOG_FILE),
+        "list_exists": os.path.exists(LIST_FILE),
+        "log_exists": os.path.exists(LOG_FILE),
     }
 
 
@@ -456,7 +621,7 @@ def api_runtime():
             "scanner_gain": settings.get("scanner_gain", "-"),
             "ppm_correction": settings.get("ppm_correction", "-"),
             "scanner_squelch": settings.get("scanner_squelch", "-"),
-            "squelch": settings.get("scanner_squelch", "-"),   # alias für index.html
+            "squelch": settings.get("scanner_squelch", "-"),
             "last_source": settings.get("last_source", "-"),
             "dab_scan_wait_lock": settings.get("dab_scan_wait_lock", "-"),
             "dab_scan_http_timeout": settings.get("dab_scan_http_timeout", "-"),
@@ -467,6 +632,7 @@ def api_runtime():
         "version": get_version(),
         "source_state": get_source_state_debug(),
         "dab_scan_debug": get_dab_scan_debug(),
+        "dab_status": get_dab_status_debug(),
         "spectrum_debug": get_spectrum_debug(),
         "audio": get_audio_debug(),
         "known_bt_devices": read_json(KNOWN_BT_FILE, {"devices": []}),
@@ -585,17 +751,21 @@ def api_rtlsdr():
 def api_rtlsdr_refresh():
     import subprocess as _sp, sys as _sys
     try:
-        # v0.9.26: BASE_DIR-relativer Pfad statt Hardcode
         _rtl_py = str(BASE_DIR / "modules" / "rtlsdr.py")
-        _r = _sp.run([_sys.executable, _rtl_py, "--json"],
-                     timeout=10, capture_output=True)
+        _sp.run([_sys.executable, _rtl_py, "--json"], timeout=10, capture_output=True)
     except Exception as _e:
-        return jsonify({"ok": False, "error": str(_e),
-                        "data": read_json(RTLSDR_FILE, {}),
-                        "file_exists": os.path.exists(RTLSDR_FILE)})
+        return jsonify({
+            "ok": False,
+            "error": str(_e),
+            "data": read_json(RTLSDR_FILE, {}),
+            "file_exists": os.path.exists(RTLSDR_FILE)
+        })
     data = read_json(RTLSDR_FILE, {})
-    return jsonify({"ok": True, "data": data,
-                    "file_exists": os.path.exists(RTLSDR_FILE)})
+    return jsonify({
+        "ok": True,
+        "data": data,
+        "file_exists": os.path.exists(RTLSDR_FILE)
+    })
 
 
 @app.route("/api/rtlsdr/reset", methods=["POST"])
@@ -611,7 +781,7 @@ def api_rtlsdr_reset():
 def api_dab_diag():
     import subprocess as _sp
     channel = request.args.get("channel", "")
-    port    = request.args.get("port", "7979")
+    port = request.args.get("port", "7979")
 
     if not channel:
         return jsonify({"ok": False, "error": "channel Parameter fehlt (z.B. ?channel=11D)"})
@@ -796,92 +966,7 @@ def api_rtlsdr_calibrate():
 
 @app.route("/api/volume")
 def api_volume():
-    """
-    PulseAudio-Lautstärke (v0.9.15).
-    Parst aus pactl list sinks statt get-sink-volume, da letzteres in --system Mode fehlschlägt.
-    """
-    try:
-        import re as _re
-        import sys as _sys
-        _b = str(BASE_DIR)
-        if _b not in _sys.path:
-            _sys.path.insert(0, _b)
-
-        # v0.9.26: Sink-Hierarchie:
-        # 1. aktiver Sink-Input (was gerade läuft)
-        # 2. BT A2DP Sink wenn verbunden
-        # 3. alsa_output.1.* (Klinke Card 1)
-        # 4. Nicht-HDMI ALSA
-        sinks_out = (safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout","") or "")
-        sink = ""
-        source_label = ""
-
-        # 1. Welcher Sink hat gerade einen Input?
-        sin_out = (safe_run(PA_ENV + " pactl list sink-inputs short 2>/dev/null").get("stdout","") or "")
-        active_sink_ids = set()
-        for ln in sin_out.splitlines():
-            p = ln.split()
-            if len(p) >= 2 and p[0].isdigit():
-                active_sink_ids.add(p[1])
-
-        # Sink-ID → Name mappen
-        sink_id_to_name = {}
-        for ln in sinks_out.splitlines():
-            p = ln.split()
-            if len(p) >= 2:
-                sink_id_to_name[p[0]] = p[1]
-
-        for sid in active_sink_ids:
-            sname = sink_id_to_name.get(sid, "")
-            if sname:
-                sink = sname
-                source_label = "active_input"
-                break
-
-        if not sink:
-            # 2. BT A2DP
-            for ln in sinks_out.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2 and "bluez_sink" in parts[1] and "a2dp_sink" in parts[1]:
-                    sink = parts[1]; source_label = "bt_sink"; break
-        if not sink:
-            # 3. Klinke Card 1
-            for ln in sinks_out.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2 and _re.search(r"alsa_output\.1\.", parts[1]):
-                    sink = parts[1]; source_label = "alsa_card1"; break
-        if not sink:
-            # 4. Nicht-HDMI ALSA
-            for ln in sinks_out.splitlines():
-                parts = ln.split()
-                if len(parts) >= 2 and "alsa_output" in parts[1] and not _sink_is_hdmi(parts[1]):
-                    sink = parts[1]; source_label = "alsa_fallback"; break
-
-        # Volume aus pactl list sinks parsen — v0.9.29: korrektes Format-Matching
-        # pactl list sinks liefert: "	name = <sink_name>" (Tab+Klein)
-        # NICHT "Name: <sink>" (Groß) — das war das Bug
-        vol = ""
-        if sink:
-            full_out = (safe_run(PA_ENV + " pactl list sinks 2>/dev/null").get("stdout","") or "")
-            in_target = False
-            for ln in full_out.splitlines():
-                # Sink-Block erkennen: "name = <sink_name>" (kleingeschrieben, mit Tabs)
-                if _re.search(r"name\s*=\s*" + _re.escape(sink), ln):
-                    in_target = True
-                elif ln.strip().startswith("Sink #") or (in_target and _re.search(r"name\s*=\s*\S+", ln) and sink not in ln):
-                    if in_target:
-                        break  # nächster Sink-Block → aufhören
-                if in_target:
-                    if ln.strip().startswith("Volume:") and "%" in ln:
-                        m = _re.search(r"(\d+)%", ln)
-                        if m:
-                            vol = m.group(1) + "%"
-                            break
-
-        return jsonify({"ok": True, "volume": vol or "–",
-                        "sink": sink or "", "source": source_label})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e), "volume": "–"})
+    return jsonify(get_volume_data())
 
 
 @app.route("/api/dab/scan/last")
@@ -893,49 +978,50 @@ def api_dab_scan_last():
     })
 
 
-@app.route("/api/ppm_calibrate", methods=["GET","POST"])
+@app.route("/api/ppm_calibrate", methods=["GET", "POST"])
 def api_ppm_calibrate():
-    """PPM-Kalibrierung via rtl_test — gibt Frequenzfehler-Schätzung zurück."""
     import subprocess as _sp2, re as _re2
     try:
         r = _sp2.run("timeout 8 rtl_test -t 2>&1 | tail -5",
                      shell=True, capture_output=True, text=True, timeout=12)
         out = r.stdout.strip()
         m = _re2.search(r"([-+]?\d+\.?\d*)\s*ppm", out, _re2.IGNORECASE)
-        return jsonify({"ok": True, "raw": out[:500],
-                        "ppm_found": m.group(0) if m else None,
-                        "hint": "rtl_test Ergebnis — PPM manuell in WebUI setzen"})
+        return jsonify({
+            "ok": True,
+            "raw": out[:500],
+            "ppm_found": m.group(0) if m else None,
+            "hint": "rtl_test Ergebnis — PPM manuell in WebUI setzen"
+        })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 
 
 @app.route("/api/bt/watcher")
 def api_bt_watcher():
-    """v0.9.30: BT-Watcher-Zustand aus /tmp/pidrive_bt_watcher.json."""
     wf = "/tmp/pidrive_bt_watcher.json"
     if not os.path.exists(wf):
         return jsonify({"ok": True, "data": None, "exists": False})
     try:
         with open(wf) as _f:
-            return jsonify({"ok": True, "data": json.load(_f),
-                            "age": file_age(wf), "exists": True})
+            return jsonify({
+                "ok": True,
+                "data": json.load(_f),
+                "age": file_age(wf),
+                "exists": True
+            })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 
 
 @app.route("/api/dab/status")
 def api_dab_status():
-    """v0.9.29: DAB Signalstatus aus /tmp/pidrive_dab_play_debug.json."""
-    debug_file = "/tmp/pidrive_dab_play_debug.json"
-    if not os.path.exists(debug_file):
-        return jsonify({"ok": True, "data": None, "exists": False})
-    try:
-        with open(debug_file) as _f:
-            data = json.load(_f)
-        return jsonify({"ok": True, "data": data,
-                        "age": file_age(debug_file), "exists": True})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e), "exists": True})
+    data = get_dab_status_debug()
+    return jsonify({
+        "ok": True,
+        "data": data if data else None,
+        "age": file_age(DAB_DEBUG_FILE),
+        "exists": os.path.exists(DAB_DEBUG_FILE)
+    })
 
 
 @app.route("/api/spectrum/last")
@@ -950,26 +1036,16 @@ def api_spectrum_last():
 
 @app.route("/api/spectrum/capture", methods=["GET", "POST"])
 def api_spectrum_capture():
-    """
-    v0.9.29: FM-Band-Sweep anstoßen.
-    Parameter (GET oder POST JSON):
-      mode: "fm_sweep" | "single"
-      start_mhz, stop_mhz, step_mhz (für fm_sweep)
-      center_mhz (für single)
-      ppm, gain
-    Läuft synchron — kann 30–120s dauern.
-    Gibt candidates (bestätigt) und candidates_weak zurück.
-    """
     args = request.get_json(silent=True) or request.args
     mode = args.get("mode", "fm_sweep")
-    ppm  = int(args.get("ppm", 49))
+    ppm = int(args.get("ppm", 49))
     gain = int(args.get("gain", -1))
     try:
         from modules import spectrum
         if mode == "fm_sweep":
             start = float(args.get("start_mhz", 87.5))
-            stop  = float(args.get("stop_mhz", 108.0))
-            step  = float(args.get("step_mhz", 1.0))
+            stop = float(args.get("stop_mhz", 108.0))
+            step = float(args.get("step_mhz", 1.0))
             result = spectrum.sweep_fm_band(
                 start_mhz=start, stop_mhz=stop, step_mhz=step,
                 ppm=ppm, gain=gain)
@@ -983,7 +1059,6 @@ def api_spectrum_capture():
 
 @app.route("/api/spectrum/stations")
 def api_spectrum_stations():
-    """v0.9.29: Bestätigte FM-Stationen aus letztem Sweep."""
     try:
         from modules import spectrum
         min_hits = int(request.args.get("min_hits", 2))
@@ -1019,6 +1094,7 @@ def api_debug_summary():
         "version": get_version(),
         "source_state": get_source_state_debug(),
         "dab_scan": get_dab_scan_debug(),
+        "dab_status": get_dab_status_debug(),
         "spectrum": get_spectrum_debug(),
         "audio": get_audio_debug(),
         "known_bt_devices": read_json(KNOWN_BT_FILE, {"devices": []}),
@@ -1028,7 +1104,6 @@ def api_debug_summary():
 
 @app.route("/api/system/resources")
 def api_system_resources():
-    """v0.9.28: Systemressourcen für WebUI Debug-Tab."""
     import subprocess as _sp2
     data = {"ok": True}
     try:
@@ -1037,20 +1112,31 @@ def api_system_resources():
             p = ln.split()
             if len(p) >= 5 and p[0] != "Filesystem":
                 pct_int = int(p[4].rstrip('%')) if p[4].rstrip('%').isdigit() else 0
-                data.update({"disk_used": p[2], "disk_avail": p[3],
-                             "disk_pct": p[4], "disk_warn": pct_int > 80})
-    except Exception: pass
+                data.update({
+                    "disk_used": p[2],
+                    "disk_avail": p[3],
+                    "disk_pct": p[4],
+                    "disk_warn": pct_int > 80
+                })
+    except Exception:
+        pass
     try:
         fr = _sp2.run("free -m 2>/dev/null", shell=True, capture_output=True, text=True).stdout
         for ln in fr.splitlines():
             if ln.startswith("Mem:"):
                 p = ln.split()
-                data.update({"ram_total_mb": p[1], "ram_used_mb": p[2], "ram_free_mb": p[3]})
-    except Exception: pass
+                data.update({
+                    "ram_total_mb": p[1],
+                    "ram_used_mb": p[2],
+                    "ram_free_mb": p[3]
+                })
+    except Exception:
+        pass
     try:
         data["uptime"] = _sp2.run("uptime -p 2>/dev/null", shell=True,
-                                   capture_output=True, text=True).stdout.strip()
-    except Exception: pass
+                                  capture_output=True, text=True).stdout.strip()
+    except Exception:
+        pass
     logs = {}
     for lf in ["pidrive.log", "core.log", "display.log"]:
         lp = f"/var/log/pidrive/{lf}"
@@ -1062,3 +1148,5 @@ def api_system_resources():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
+</source>
+</context>
