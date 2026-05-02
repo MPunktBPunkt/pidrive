@@ -288,8 +288,12 @@ def connect_device(mac, S, settings):
         ipc.clear_progress()
         return False
 
-    # Watcher ggf. aufwecken
-    wake_auto_reconnect()
+    # Watcher aufwecken (lazy import verhindert Circular-Import mit bt_watcher)
+    try:
+        from modules.bt_watcher import wake_auto_reconnect as _wake
+        _wake()
+    except Exception:
+        pass
 
     if not _bt_connect_lock.acquire(blocking=False):
         log.warn("BT connect: bereits ein Connect läuft — abgebrochen")
@@ -628,7 +632,11 @@ def reconnect_last(S, settings):
         ipc.clear_progress()
         return False
 
-    wake_auto_reconnect()
+    try:
+        from modules.bt_watcher import wake_auto_reconnect as _wake
+        _wake()
+    except Exception:
+        pass
 
     S["bt_status"] = "verbindet"
     S["menu_rev"] = S.get("menu_rev", 0) + 1
