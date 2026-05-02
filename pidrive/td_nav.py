@@ -81,6 +81,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
     return True
 
 
+# Entpreller-State für _execute_node (lokal in td_nav)
+_LAST_NODE_EXEC_TS = 0.0
+_LAST_NODE_EXEC_ID = ""
+
+
 def _execute_node(node, menu_state, store, S, settings):
     global _LAST_NODE_EXEC_TS, _LAST_NODE_EXEC_ID
     import threading

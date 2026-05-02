@@ -128,7 +128,9 @@ def safe_run(cmd):
 
 def get_version():
     try:
-        with open(BASE_DIR / "VERSION", "r", encoding="utf-8") as f:
+        # VERSION liegt im gleichen Verzeichnis wie webui_shared.py (pidrive/)
+        _ver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "VERSION")
+        with open(_ver_path, "r", encoding="utf-8") as f:
             return f.read().strip()
     except Exception:
         return "?"
