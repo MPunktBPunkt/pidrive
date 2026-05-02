@@ -37,7 +37,17 @@ except Exception:
 # Dateien / Globals
 # ─────────────────────────────────────────────────────────────────────────────
 
-ERR_FILE = "/tmp/pidrive_dab_welle.err"
+ERR_FILE = "/tmp/pidrive_dab_welle.err"  # legacy / Fallback
+
+
+def _err_file_for_session(session_id: str = "") -> str:
+    """Session-spezifischer Pfad für welle-cli stderr.
+    Verhindert Race-Conditions bei parallelen DAB-Operationen."""
+    if session_id:
+        return f"/tmp/pidrive_dab_{session_id}.err"
+    return ERR_FILE
+
+
 PLAY_DEBUG_FILE = "/tmp/pidrive_dab_play_debug.json"
 SCAN_DEBUG_FILE = "/tmp/pidrive_dab_scan_debug.json"
 
