@@ -155,6 +155,13 @@ def _init_dispatcher():
         sc_end   = _scan_end,
         sc_info  = _scan_info,
     )
+    # Guards auch in td_nav setzen — _execute_node lebt dort und braucht sie
+    import td_nav as _td_nav
+    _td_nav._set_nav_guards(
+        begin_fn = _source_switch_begin,
+        end_fn   = _source_switch_end,
+        info_fn  = _source_switch_info,
+    )
 
 
 def check_trigger(menu_state, store, S, settings):

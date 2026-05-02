@@ -81,6 +81,19 @@ def handle(cmd, menu_state, store, S, settings, bg):
     return True
 
 
+
+# ── Source-Switch Guards (gesetzt von main_core._init_dispatcher) ────────────
+_source_switch_begin = None
+_source_switch_end   = None
+_source_switch_info  = None
+
+def _set_nav_guards(begin_fn, end_fn, info_fn):
+    global _source_switch_begin, _source_switch_end, _source_switch_info
+    _source_switch_begin = begin_fn
+    _source_switch_end   = end_fn
+    _source_switch_info  = info_fn
+
+
 # Entpreller-State für _execute_node (lokal in td_nav)
 _LAST_NODE_EXEC_TS = 0.0
 _LAST_NODE_EXEC_ID = ""
