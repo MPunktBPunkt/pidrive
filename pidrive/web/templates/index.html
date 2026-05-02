@@ -87,6 +87,7 @@
   <button class="tab-btn" onclick="showTab('t2')">🔊 Audio</button>
   <button class="tab-btn" onclick="showTab('t3')">📻 DAB+</button>
   <button class="tab-btn" onclick="showTab('t5')">📡 FM/Scanner</button>
+  <button class="tab-btn" onclick="showTab('t7')">📶 Webradio</button>
   <button class="tab-btn" onclick="showTab('t6')">🚗 AVRCP</button>
   <button class="tab-btn" onclick="showTab('t4')">🪲 Debug</button>
 </nav>
@@ -104,6 +105,9 @@
         {% if vm['status'].get('artist') %}{{ vm['status']['artist'] }} · {% endif %}
         {{ vm['status'].get('radio_type','') or '' }}
         {{ vm['status'].get('radio_name','') or '' }}
+      </div>
+      <div id="nowDls" style="font-size:11px;color:#58a6ff;margin-top:3px;min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        {{ vm['status'].get('dls_text','') or '' }}
       </div>
     </div>
   </div>
@@ -517,6 +521,45 @@
     </div>
   </div>
 
+
+  <!-- Spectrum Peak Scanner (PMR446 / Freenet) -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">🔬 Spectrum Peak Scanner
+        <span id="specScanStatus" style="font-size:11px;margin-left:8px;padding:2px 8px;border-radius:10px;background:#0d2137;color:#8aa5bb">Lade…</span>
+      </div>
+      <p class="help-text" style="margin-bottom:8px">
+        Nutzt FFT-Analyse (RTL-SDR) um aktive PMR446/Freenet-Kanäle zu identifizieren,
+        bevor rtl_fm darauf abstimmt. Cooldown: 5s zwischen Captures.
+      </p>
+      <div class="diag-list">
+        <div class="diag-row">
+          <div class="diag-key">Spectrum-Scan</div>
+          <div class="diag-value" style="display:flex;gap:8px;align-items:center">
+            <span id="specScanLabel" style="font-size:12px;color:#8aa5bb">–</span>
+            <button id="specScanToggleBtn" onclick="toggleSpectrumScan()" style="padding:4px 12px">–</button>
+          </div>
+        </div>
+        <div class="diag-row">
+          <div class="diag-key">Debug-Modus</div>
+          <div class="diag-value" style="display:flex;gap:8px;align-items:center">
+            <span id="specDebugLabel" style="font-size:12px;color:#8aa5bb">–</span>
+            <button onclick="toggleSpectrumDebug()" style="padding:4px 12px" id="specDebugBtn">–</button>
+          </div>
+        </div>
+        <div class="diag-row">
+          <div class="diag-key">Letzte Kandidaten</div>
+          <div class="diag-value" id="specPeakCandidates" style="font-size:11px;color:#58a6ff;max-width:200px">–</div>
+        </div>
+      </div>
+      <div class="diag-actions">
+        <button onclick="loadSpectrumSettings()">🔄 Status laden</button>
+        <button onclick="runSpectrumPeakOnce()">📡 Einmal messen (PMR446)</button>
+      </div>
+      <div id="specPeakResult" style="font-size:11px;margin-top:6px;min-height:16px;color:#8aa5bb"></div>
+    </div>
+  </div>
+
 </div><!-- /t5 -->
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -631,6 +674,71 @@
 
 </div><!-- /t4 -->
 
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TAB 7: WEBRADIO                                    -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="t7">
+
+  <!-- Jetzt laufender Webradio-Sender -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📶 Webradio — aktiver Sender</div>
+      <div class="diag-list">
+        <div class="diag-row"><div class="diag-key">Sender</div><div class="diag-value" id="wrNowName">–</div></div>
+        <div class="diag-row"><div class="diag-key">DLS / Titel</div><div class="diag-value" id="wrNowDls" style="color:#58a6ff">–</div></div>
+        <div class="diag-row"><div class="diag-key">URL</div><div class="diag-value" id="wrNowUrl" style="word-break:break-all;font-size:10px;color:#6b8fa8">–</div></div>
+      </div>
+      <div class="diag-actions">
+        <button onclick="sendCmd('radio_stop')">⏹ Stop</button>
+        <button onclick="refreshWebradioTab()">🔄 Aktualisieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Senderliste -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">
+        Senderliste
+        <span id="wrStationCount" style="font-size:11px;color:#8aa5bb;margin-left:8px"></span>
+      </div>
+      <div id="wrStationList" style="min-height:40px">
+        <div style="color:#8aa5bb;font-size:12px;padding:8px">Lade Sender…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Neuen Sender hinzufügen -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">➕ Sender hinzufügen</div>
+      <div class="diag-list">
+        <div class="diag-row">
+          <div class="diag-key">Name *</div>
+          <div class="diag-value"><input id="wrAddName" type="text" placeholder="z.B. Bayern 3" style="width:180px"></div>
+        </div>
+        <div class="diag-row">
+          <div class="diag-key">Stream-URL *</div>
+          <div class="diag-value"><input id="wrAddUrl" type="url" placeholder="https://..." style="width:220px"></div>
+        </div>
+        <div class="diag-row">
+          <div class="diag-key">Genre</div>
+          <div class="diag-value"><input id="wrAddGenre" type="text" placeholder="Pop, Rock, Info…" style="width:140px"></div>
+        </div>
+      </div>
+      <div class="diag-actions">
+        <button class="primary" onclick="wrAddStation()">💾 Sender speichern</button>
+        <button onclick="wrClearForm()">✕ Abbrechen</button>
+      </div>
+      <div id="wrAddStatus" style="font-size:12px;margin-top:6px;min-height:18px"></div>
+      <p class="help-text">* Pflichtfelder. Stream-URL muss direkt streambar sein (kein HTML).</p>
+    </div>
+  </div>
+
+</div><!-- /t7 -->
+
+
+
 <script>
 let vmLast = {{ vm | tojson }};
 let activeTab = 't1';
@@ -742,8 +850,17 @@ function renderRuntimeInfo(vm) {
   if (el('audioMode'))    el('audioMode').textContent    = (vm.status||{}).audio_effective || 'auto';
   // Now Playing
   const st = vm.status || {};
-  if (el('nowTrack')) el('nowTrack').textContent = st.track || st.radio_name || '–';
-  if (el('nowMeta'))  el('nowMeta').textContent  = [st.artist, st.radio_type, st.radio_name].filter(Boolean).join(' · ') || '–';
+  // v0.10.3: radio_name als Hauptzeile wenn kein Track (Webradio/FM/DAB ohne DLS)
+  const nowTxt = st.track || (st.radio_playing ? st.radio_name : '') || '–';
+  if (el('nowTrack')) el('nowTrack').textContent = nowTxt;
+  const metaParts = [st.artist, st.radio_type, st.radio_name].filter(
+      (v,i,a) => v && !(i > 0 && v === a[0])   // Duplikate raus
+  );
+  if (el('nowMeta'))  el('nowMeta').textContent  = metaParts.join(' · ') || '–';
+  // DLS: für DAB anzeigen (v0.10.1)
+  const dlsTxt = st.dls_text || st.dls_raw || '';
+  if (el('nowDls')) el('nowDls').textContent = dlsTxt;
+  if (el('nowDls')) el('nowDls').style.display = dlsTxt ? 'block' : 'none';
   // Raw JSON
   if (el('statusJsonPre')) el('statusJsonPre').textContent = JSON.stringify(vm.status||{}, null, 2);
   if (el('menuJsonPre'))   el('menuJsonPre').textContent   = JSON.stringify(vm.menu||{}, null, 2);
@@ -1131,7 +1248,8 @@ function renderMenuTree(vm) {
 // ── Core refresh (fast, Tab 1 only) ───────────────────────────────────────
 async function refreshCore() {
   try {
-    const r = await fetch('/api/state');
+    // v0.10.3: /api/core — leichter Endpoint ohne subprocess-Calls (~10ms statt ~150ms)
+    const r = await fetch('/api/core');
     vmLast = await r.json();
     renderMenuTree(vmLast);
     renderRuntimeInfo(vmLast);
@@ -1152,6 +1270,8 @@ async function refreshActive() {
   if (activeTab === 't2') { refreshAudio(); refreshVolume(); }
   if (activeTab === 't3') { refreshRtlsdr(); refreshAvrcp(); }
   if (activeTab === 't4') { refreshRuntimePanel(); }
+  if (activeTab === 't5') { loadSpectrumSettings(); }
+  if (activeTab === 't7') { refreshWebradioTab(); }
 }
 
 // ── Legacy alias ──────────────────────────────────────────────────────────
@@ -1179,7 +1299,7 @@ async function refreshDabStatus() {
     if(el('dabStatusErr'))  el('dabStatusErr').textContent  = d.last_error_line || '–';
     // DLS: live aus Core-Status
     try {
-      const rs = await fetch('/api/status'); const js = await rs.json();
+      const rs = await fetch('/api/state');  const js = await rs.json();
       const st = js.status || {};
       const dls = (st.artist && st.track) ? st.artist+' – '+st.track
                 : (st.track || st.artist || '–');
@@ -1216,12 +1336,256 @@ document.addEventListener('DOMContentLoaded', () => {
   renderKnownBtDevices(vmLast.known_bt_devices || {});
   refreshGain();
   loadDabScanSettings();
+  loadSpectrumSettings();  // v0.10.3
   refreshVolume();
 
   // Tab 1: fast poll 1.5s, other tabs: 5s
   setInterval(refreshCore, 1500);
   setInterval(refreshActive, 5000);
 });
+
+// ── Webradio Tab (t7) ──────────────────────────────────────────────────────
+
+let _wrStations = [];
+
+async function refreshWebradioTab() {
+  try {
+    // Aktiven Sender aus Core-Status
+    const rs = await fetch('/api/state');
+    const vm = await rs.json();
+    const st = vm.status || {};
+    const el = (id) => document.getElementById(id);
+    if (el('wrNowName')) {
+      const isWeb = (st.radio_type || '').toUpperCase().includes('WEB')
+                 || (st.control_context || '').includes('web');
+      el('wrNowName').textContent = isWeb ? (st.radio_name || st.radio_station || '–') : '– kein Webradio aktiv –';
+    }
+    if (el('wrNowDls')) {
+      el('wrNowDls').textContent = st.dls_text || st.track || '–';
+    }
+    // Senderliste laden
+    await loadWebradioStations();
+  } catch(e) { console.warn('refreshWebradioTab', e); }
+}
+
+async function loadWebradioStations() {
+  try {
+    const r = await fetch('/api/webradio/stations');
+    const j = await r.json();
+    _wrStations = j.stations || [];
+    renderWebradioList(_wrStations);
+    const cnt = document.getElementById('wrStationCount');
+    if (cnt) cnt.textContent = `(${_wrStations.length} Sender)`;
+  } catch(e) {
+    const box = document.getElementById('wrStationList');
+    if (box) box.innerHTML = '<div style="color:#f85149;font-size:12px;padding:8px">Fehler beim Laden der Senderliste</div>';
+  }
+}
+
+function renderWebradioList(stations) {
+  const box = document.getElementById('wrStationList');
+  if (!box) return;
+  if (!stations.length) {
+    box.innerHTML = '<div style="color:#8aa5bb;font-size:12px;padding:8px">Keine Sender konfiguriert.</div>';
+    return;
+  }
+
+  // Aktiver Sender
+  const st = vmLast?.status || {};
+  const activeName = (st.radio_name || '').toLowerCase();
+
+  const rows = stations.map(s => {
+    const isActive = s.name.toLowerCase() === activeName && st.radio_type?.toUpperCase().includes('WEB');
+    const rowStyle = isActive ? 'background:#0d2137;border-left:3px solid #58a6ff' : 'border-left:3px solid transparent';
+    const enabledStyle = s.enabled !== false ? '' : 'opacity:0.45';
+    const playBtn = s.enabled !== false
+      ? `<button onclick="wrPlayStation('${s.id}')" style="padding:3px 8px;font-size:11px" ${isActive ? 'disabled' : ''}>▶</button>`
+      : `<button disabled style="padding:3px 8px;font-size:11px;opacity:0.3">▶</button>`;
+    return `<div class="diag-row" style="${rowStyle};${enabledStyle};padding:5px 8px;display:flex;align-items:center;gap:6px">
+      <span style="flex:1;font-size:12px;font-weight:600;color:${isActive?'#58a6ff':'#cdd9e5'}">${escHtml(s.name)}${isActive?' ▶':''}
+        <span style="font-weight:400;color:#6b8fa8;font-size:10px;margin-left:6px">${escHtml(s.genre||'')}</span>
+      </span>
+      <span style="display:flex;gap:4px">
+        ${playBtn}
+        <button onclick="wrToggleStation('${s.id}')" style="padding:3px 8px;font-size:11px" title="${s.enabled!==false?'Deaktivieren':'Aktivieren'}">${s.enabled!==false?'●':'○'}</button>
+        <button onclick="wrDeleteStation('${s.id}', '${escHtml(s.name)}')" style="padding:3px 8px;font-size:11px;color:#f85149">🗑</button>
+      </span>
+    </div>`;
+  }).join('');
+
+  box.innerHTML = rows;
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function wrPlayStation(id) {
+  const r = await sendCmdRaw('webradio_play:' + id);
+  if (r?.ok) {
+    setTimeout(refreshWebradioTab, 1500);
+    setStatusBar('▶ Webradio: ' + (id));
+  }
+}
+
+async function sendCmdRaw(cmd) {
+  try {
+    const r = await fetch('/api/cmd', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({cmd})});
+    return await r.json();
+  } catch(e) { return {ok:false, error:String(e)}; }
+}
+
+async function wrToggleStation(id) {
+  try {
+    const r = await fetch('/api/webradio/toggle', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({id})});
+    const j = await r.json();
+    if (j.ok) await loadWebradioStations();
+    else showWrStatus('Fehler: ' + (j.error||'?'), 'red');
+  } catch(e) { showWrStatus('Netzwerkfehler', 'red'); }
+}
+
+async function wrDeleteStation(id, name) {
+  if (!confirm('Sender "' + name + '" wirklich löschen?')) return;
+  try {
+    const r = await fetch('/api/webradio/delete', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({id})});
+    const j = await r.json();
+    if (j.ok) { await loadWebradioStations(); showWrStatus('Sender gelöscht ✓', 'green'); }
+    else showWrStatus('Fehler: ' + (j.error||'?'), 'red');
+  } catch(e) { showWrStatus('Netzwerkfehler', 'red'); }
+}
+
+async function wrAddStation() {
+  const name  = (document.getElementById('wrAddName')?.value  || '').trim();
+  const url   = (document.getElementById('wrAddUrl')?.value   || '').trim();
+  const genre = (document.getElementById('wrAddGenre')?.value || '').trim();
+  if (!name || !url) { showWrStatus('Name und URL sind Pflichtfelder', 'orange'); return; }
+  if (!url.startsWith('http')) { showWrStatus('URL muss mit http(s):// beginnen', 'orange'); return; }
+  try {
+    const r = await fetch('/api/webradio/add', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, url, genre})});
+    const j = await r.json();
+    if (j.ok) {
+      showWrStatus(`✓ "${name}" gespeichert (${j.station_count} Sender gesamt)`, 'green');
+      wrClearForm();
+      await loadWebradioStations();
+    } else {
+      showWrStatus('Fehler: ' + (j.error||'?'), 'red');
+    }
+  } catch(e) { showWrStatus('Netzwerkfehler', 'red'); }
+}
+
+function wrClearForm() {
+  ['wrAddName','wrAddUrl','wrAddGenre'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  showWrStatus('', '');
+}
+
+function showWrStatus(msg, color) {
+  const el = document.getElementById('wrAddStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color === 'green' ? '#3fb950' : color === 'red' ? '#f85149' : color === 'orange' ? '#d29922' : '#8aa5bb';
+}
+
+
+// ── Spectrum Peak Scanner (Tab 5) ─────────────────────────────────────────
+
+let _specSettings = { scanner_use_spectrum: false, scanner_spectrum_debug: false };
+
+async function loadSpectrumSettings() {
+  try {
+    const r = await fetch('/api/scanner/settings');
+    const j = await r.json();
+    if (!j.ok) return;
+    _specSettings = j.data;
+    renderSpectrumToggle();
+  } catch(e) { console.warn('loadSpectrumSettings', e); }
+}
+
+function renderSpectrumToggle() {
+  const active = _specSettings.scanner_use_spectrum;
+  const debug  = _specSettings.scanner_spectrum_debug;
+  const el = (id) => document.getElementById(id);
+
+  if (el('specScanLabel')) el('specScanLabel').textContent = active ? 'Aktiv ●' : 'Inaktiv ○';
+  if (el('specScanLabel')) el('specScanLabel').style.color = active ? '#3fb950' : '#8aa5bb';
+  if (el('specScanToggleBtn')) el('specScanToggleBtn').textContent = active ? 'Deaktivieren' : 'Aktivieren';
+  if (el('specScanStatus')) {
+    el('specScanStatus').textContent  = active ? 'AKTIV' : 'INAKTIV';
+    el('specScanStatus').style.background = active ? '#0d3a1e' : '#0d2137';
+    el('specScanStatus').style.color      = active ? '#3fb950' : '#8aa5bb';
+  }
+  if (el('specDebugLabel')) el('specDebugLabel').textContent = debug ? 'An ●' : 'Aus ○';
+  if (el('specDebugLabel')) el('specDebugLabel').style.color = debug ? '#d29922' : '#8aa5bb';
+  if (el('specDebugBtn')) el('specDebugBtn').textContent = debug ? 'Aus' : 'An';
+}
+
+async function toggleSpectrumScan() {
+  const newVal = !_specSettings.scanner_use_spectrum;
+  try {
+    const r = await fetch('/api/scanner/settings', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ scanner_use_spectrum: newVal })
+    });
+    const j = await r.json();
+    if (j.ok) { _specSettings.scanner_use_spectrum = newVal; renderSpectrumToggle(); }
+    else alert('Fehler: ' + (j.error || '?'));
+  } catch(e) { alert('Netzwerkfehler'); }
+}
+
+async function toggleSpectrumDebug() {
+  const newVal = !_specSettings.scanner_spectrum_debug;
+  try {
+    const r = await fetch('/api/scanner/settings', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ scanner_spectrum_debug: newVal })
+    });
+    const j = await r.json();
+    if (j.ok) { _specSettings.scanner_spectrum_debug = newVal; renderSpectrumToggle(); }
+  } catch(e) {}
+}
+
+async function runSpectrumPeakOnce() {
+  const el = (id) => document.getElementById(id);
+  if (el('specPeakResult')) {
+    el('specPeakResult').textContent = '⏳ Messe PMR446 (ca. 3–8s)…';
+    el('specPeakResult').style.color = '#d29922';
+  }
+  try {
+    const r = await fetch('/api/spectrum/capture?band=pmr446', {method: 'POST'});
+    const j = await r.json();
+    if (j.ok && j.data) {
+      const d = j.data;
+      const cands = d.active_channels || [];
+      const txt = cands.length
+        ? cands.map(c => `${c} ✓`).join('  ')
+        : 'Keine Aktivität erkannt';
+      if (el('specPeakCandidates')) el('specPeakCandidates').textContent = txt;
+      if (el('specPeakResult')) {
+        el('specPeakResult').textContent = cands.length
+          ? `✓ ${cands.length} aktive Kanäle (${d.watch_seconds?.toFixed(1)}s)`
+          : '○ Keine Aktivität erkannt';
+        el('specPeakResult').style.color = cands.length ? '#3fb950' : '#8aa5bb';
+      }
+    } else {
+      if (el('specPeakResult')) {
+        el('specPeakResult').textContent = 'Fehler: ' + (j.error || 'kein Ergebnis');
+        el('specPeakResult').style.color = '#f85149';
+      }
+    }
+  } catch(e) {
+    if (el('specPeakResult')) {
+      el('specPeakResult').textContent = 'Netzwerkfehler';
+      el('specPeakResult').style.color = '#f85149';
+    }
+  }
+}
+
 </script>
 </body>
 </html>
