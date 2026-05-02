@@ -13,6 +13,12 @@ import time
 import io
 import ipc
 
+try:
+    from modules import source_state as _src_state
+except Exception:
+    _src_state = None
+
+
 _player_proc = None
 SUPPORTED = (".mp3", ".m4a", ".flac", ".ogg", ".wav")
 
@@ -94,6 +100,10 @@ def play_file(filepath, S):
             stderr=subprocess.DEVNULL
         )
         S["library_playing"] = True
+        # v0.10.2: source_state commit
+        if _src_state:
+            try: _src_state.commit_source("library")
+            except Exception: pass
         S["library_track"] = os.path.basename(filepath)
     except FileNotFoundError:
         S["library_playing"] = False
@@ -107,6 +117,10 @@ def stop_playback(S):
         except Exception: pass
         _player_proc = None
     S["library_playing"] = False
+    # v0.10.2: source_state idle
+    if _src_state:
+        try: _src_state.commit_source("idle")
+        except Exception: pass
 
 def show_now_playing(tags, S):
     """Now-Playing via IPC — kein pygame."""

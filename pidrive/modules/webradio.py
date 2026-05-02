@@ -13,7 +13,8 @@ import time
 import ipc
 import log
 
-STATIONS_FILE = os.path.join(os.path.dirname(__file__), "../config/stations.json")
+STATIONS_FILE  = os.path.join(os.path.dirname(__file__), "../config/stations.json")
+SETTINGS_FILE  = os.path.join(os.path.dirname(__file__), "../config/settings.json")
 _player_proc = None
 
 
@@ -43,11 +44,10 @@ def play_station(station, S, settings=None):
     if settings is not None:
         settings["last_web_station"] = station
         try:
-            import json as _jw
-            with open("/home/pi/pidrive/pidrive/config/settings.json", "w") as _fw:
-                _jw.dump(settings, _fw, indent=2)
-        except Exception:
-            pass
+            from settings import save_settings as _save_s
+            _save_s(settings)
+        except Exception as _e:
+            log.warn(f"webradio: save_settings failed: {_e}")
 
     stop(S)
 

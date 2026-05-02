@@ -43,6 +43,7 @@ import os
 import re
 import subprocess
 import threading
+import select
 import time
 from typing import Optional
 
@@ -445,20 +446,26 @@ def _drain_agent_stdout(max_lines=80):
     """
     Alte Agent-Ausgaben abräumen, damit pair_with_agent()
     nicht auf stale stdout-Zeilen reinfällt.
+
+    v0.10.0: select.select() für echtes non-blocking I/O statt
+    blindem readline(), das bei stale stdout dauerhaft blockieren kann.
     """
     global _AGENT_PROC
     if not agent_is_alive():
         return
     try:
-        # kein blockierendes Super-I/O, daher vorsichtig
+        if _AGENT_PROC.stdout is None:
+            return
         drained = 0
         start = time.time()
+        fd = _AGENT_PROC.stdout.fileno()
         while drained < max_lines and (time.time() - start) < 0.8:
-            if _AGENT_PROC.stdout is None:
-                break
-            # readline kann blockieren, deshalb nur mit kurzem Poll-Check
             if _AGENT_PROC.poll() is not None:
                 break
+            # select mit 50 ms Timeout → kein Blockieren
+            ready, _, _ = select.select([fd], [], [], 0.05)
+            if not ready:
+                break  # nichts mehr verfügbar
             try:
                 line = _AGENT_PROC.stdout.readline()
             except Exception:
@@ -467,7 +474,7 @@ def _drain_agent_stdout(max_lines=80):
                 break
             drained += 1
         if drained:
-            log.info(f"BT agent: stdout drained lines={drained}")
+            log.info(f"BT agent: stdout drained lines={drained} (non-blocking)")
     except Exception:
         pass
 

@@ -39,6 +39,25 @@ SPECTRUM_FILE = "/tmp/pidrive_spectrum.json"
 
 
 # ============================================================================
+# v0.10.0: Pi 3B Ressourcen-Guards
+# ============================================================================
+
+_SPECTRUM_MIN_CALL_INTERVAL = 5.0  # Min. Sekunden zwischen watch_*()-Aufrufen
+_spectrum_last_call_ts: float = 0.0
+
+
+def _check_rate_limit() -> bool:
+    """True = Capture erlaubt. Aktualisiert Timestamp. Thread-safe fuer single-core Pi."""
+    global _spectrum_last_call_ts
+    import time as _t
+    now = _t.time()
+    if now - _spectrum_last_call_ts >= _SPECTRUM_MIN_CALL_INTERVAL:
+        _spectrum_last_call_ts = now
+        return True
+    return False
+
+
+# ============================================================================
 # Datenklassen
 # ============================================================================
 
@@ -657,19 +676,32 @@ def _candidate_to_dict(c: Optional[PeakCandidate]) -> Optional[dict]:
 # Einfache Convenience-API für scanner.py / Tests
 # ============================================================================
 
+# v0.10.0: Standard-FFT-Groesse, nicht an PMR-Profil gebunden
+_DEFAULT_FFT_SIZE = 512  # Pi 3B: Kompromiss Aufloesung/CPU
+
+
 def build_default_watcher(ppm: int = 0, gain: int = -1) -> SpectrumWatcher:
+    """Watcher mit neutralen Defaults. Profil-FFT aus BandProfile via watch_channels()."""
     backend = RTLSDRBackend(ppm=ppm, gain=gain)
-    fft = FFTProcessor(fft_size=PMR446_PROFILE.fft_size, smoothing_alpha=0.35)
+    fft = FFTProcessor(fft_size=_DEFAULT_FFT_SIZE, smoothing_alpha=0.35)
     noise = NoiseEstimator(quantile=0.20)
     return SpectrumWatcher(backend, fft, noise)
 
 
 def watch_pmr446(ppm: int = 0, gain: int = -1, debug: bool = False) -> DetectionResult:
+    """v0.10.0: Rate-Limit Guard fuer Pi 3B."""
+    if not _check_rate_limit():
+        return DetectionResult(band=PMR446_PROFILE.name, channels={}, active_channels=[],
+                               strongest_channel=None, watch_seconds=0.0, frames_processed=0)
     watcher = build_default_watcher(ppm=ppm, gain=gain)
     return watcher.watch_channels(PMR446_PROFILE, debug=debug)
 
 
 def watch_freenet(ppm: int = 0, gain: int = -1, debug: bool = False) -> DetectionResult:
+    """v0.10.0: Rate-Limit Guard fuer Pi 3B."""
+    if not _check_rate_limit():
+        return DetectionResult(band=FREENET_PROFILE.name, channels={}, active_channels=[],
+                               strongest_channel=None, watch_seconds=0.0, frames_processed=0)
     watcher = build_default_watcher(ppm=ppm, gain=gain)
     return watcher.watch_channels(FREENET_PROFILE, debug=debug)
 

@@ -684,7 +684,8 @@ def play_station(station, S, settings=None):
     session_id = _new_session_id()
     _set_session(session_id)
     _stop_dls_thread()
-    _truncate_file(ERR_FILE)
+    _sess_err_file = _err_file_for_session(session_id)
+    _truncate_file(_sess_err_file)
     _reset_runtime_dls_fields(S)
 
     _set_dab_status_fields(
@@ -732,7 +733,7 @@ def play_station(station, S, settings=None):
             "welle-cli -c " + ch + " -g " + _gain +
             " -p " + _name_q +
             " < /dev/null" +
-            " 2>" + ERR_FILE
+            " 2>" + _sess_err_file
         )
 
         _write_play_debug({
@@ -891,19 +892,25 @@ def stop(S):
     if S.get("radio_type") == "DAB":
         S["radio_playing"] = False
         S["radio_station"] = ""
+        # v0.10.0: Clear DLS/artist/track fields on stop to avoid stale display
+        S["artist"] = ""
+        S["track"] = ""
+        S["dls_text"] = ""
+        S["radio_name"] = ""
 
     _set_dab_status_fields(
         S,
         dab_state="stopped",
         dab_sync_ok=False,
         dab_audio_ready=False,
+        dab_dls_text="",
     )
 
     time.sleep(1.0)
     log.info("DAB stop: done")
 
 
-def play_by_name(name, S, service_id=""):
+def play_by_name(name, S, settings=None, service_id=""):
     path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
     try:
         data = json.load(open(path, encoding="utf-8"))
@@ -915,13 +922,13 @@ def play_by_name(name, S, service_id=""):
                 sid = str(s.get("service_id", "") or "").strip().lower()
                 if sid and sid == service_id:
                     log.info(f"DAB play_by_name service_id match name={name!r} sid={service_id}")
-                    play_station(_normalize_station(s), S)
+                    play_station(_normalize_station(s), S, settings=settings)
                     return
 
         for s in stations:
             if s.get("name", "") == name:
                 log.info(f"DAB play_by_name fallback name={name!r}")
-                play_station(_normalize_station(s), S)
+                play_station(_normalize_station(s), S, settings=settings)
                 return
 
         log.warn(f"DAB play_by_name: Station nicht gefunden name={name!r} sid={service_id!r}")

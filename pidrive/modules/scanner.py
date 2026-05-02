@@ -284,6 +284,13 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         S["radio_station"] = "RTL-SDR nicht gefunden"
         return
 
+    # v0.10.0: begin_transition für konsistente source_state-Integration
+    if _src_state:
+        try:
+            _src_state.begin_transition("scanner", reason="user_select")
+        except Exception:
+            pass
+
     stop(S)
 
     _ppm = _get_ppm(settings)
@@ -338,7 +345,10 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         S["radio_type"] = "SCANNER"
 
         if _src_state:
-            _src_state.commit_source("scanner")
+            try:
+                _src_state.commit_source("scanner")
+            except Exception:
+                pass
 
         log.action("Scanner", f"{name} @ {freq_mhz} MHz")
 
@@ -372,6 +382,13 @@ def stop(S):
     if S.get("radio_type") == "SCANNER":
         S["radio_playing"] = False
         S["radio_station"] = ""
+
+    # v0.10.0: source_state konsistent zurücksetzen nach Scanner-Stop
+    if _src_state:
+        try:
+            _src_state.end_transition()
+        except Exception:
+            pass
 
     time.sleep(0.2)
     log.info("Scanner stop: done")
@@ -729,32 +746,32 @@ def _play_band_freq(band_id, freq, S, settings=None):
     play_freq(freq, name, BANDS[band_id]["bw"], S, settings=settings)
 
 
-def channel_up(band_id, S):
+def channel_up(band_id, S, settings=None):
     chs = _get_channels(band_id)
     if not chs:
         return
     idx = (_current_ch.get(band_id, -1) + 1) % len(chs)
     _current_ch[band_id] = idx
-    _play_channel(band_id, idx, S)
+    _play_channel(band_id, idx, S, settings=settings)
 
 
-def channel_down(band_id, S):
+def channel_down(band_id, S, settings=None):
     chs = _get_channels(band_id)
     if not chs:
         return
     idx = (_current_ch.get(band_id, 1) - 1) % len(chs)
     _current_ch[band_id] = idx
-    _play_channel(band_id, idx, S)
+    _play_channel(band_id, idx, S, settings=settings)
 
 
-def channel_jump(band_id, delta, S):
+def channel_jump(band_id, delta, S, settings=None):
     chs = _get_channels(band_id)
     if not chs:
         return
     cur = _current_ch.get(band_id, 0)
     idx = (cur + delta) % len(chs)
     _current_ch[band_id] = idx
-    _play_channel(band_id, idx, S)
+    _play_channel(band_id, idx, S, settings=settings)
     log.info(f"Scanner channel_jump band={band_id} delta={delta} idx={idx}")
 
 
