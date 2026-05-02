@@ -29,7 +29,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.9.30           ║
+║        PiDrive Installer v0.10.0           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -580,7 +580,7 @@ fi
 # ══════════════════════════════════════════════════════════════
 # DIAGNOSE
 # ══════════════════════════════════════════════════════════════
-# v0.9.31: Diagnose erst nach boot_phase=steady warten (max 25s)
+# v0.10.0: Diagnose erst nach boot_phase=steady warten (max 25s)
 echo ""
 echo "  → Warte auf boot_phase=steady..."
 _SW=0

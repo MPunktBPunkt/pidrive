@@ -2500,6 +2500,14 @@ Optional: setup_bt_audio.sh in install.sh integrieren oder entfernen
 - [x] Scanner Fast-Scan zweistufig: Fast-Detect + Confirm (v0.8.8)
 - [x] Phase 1 Bugfixes: FM fm_next/prev, systemd Ordering-Cycle, Doppelstart-Entprellung (v0.8.7)
 - [x] Phase 1 Bugfixes: mpris2 _get_prop, AVRCP D-Bus Matching (v0.8.6)
+- [x] Code-Review v0.9.31: 6 kritische/mittlere Bugs behoben (v0.10.0)
+- [x] dab.py: play_by_name() reicht settings durch → Resume-Persistenz repariert (v0.10.0)
+- [x] dab.py: session-spezifische ERR_FILE (_err_file_for_session()) statt global (v0.10.0)
+- [x] dab.py: stop() löscht DLS/artist/track/radio_name Felder konsistent (v0.10.0)
+- [x] scanner.py: source_state.begin_transition()/end_transition() in play_freq/stop (v0.10.0)
+- [x] bluetooth.py: _drain_agent_stdout() → select.select() non-blocking I/O (v0.10.0)
+- [x] spectrum.py: _DEFAULT_FFT_SIZE=512 entkoppelt von PMR446-Profil (v0.10.0)
+- [x] spectrum.py: _check_rate_limit() Pi 3B Ressourcen-Guard (5s Cooldown) (v0.10.0)
 
 
 ---
@@ -2526,4 +2534,37 @@ Optional: setup_bt_audio.sh in install.sh integrieren oder entfernen
 | `setup_bt_audio.sh` | Prüfen ob noch aktuell — PulseAudio-Setup ggf. in install.sh integriert |
 | `pidrive/status.py` | Prüfen ob noch aktiv genutzt oder Dead Code |
 | `pidrive/modules/musik.py` | Prüfen ob noch aktiv genutzt |
+
+
+---
+
+## v0.10.0 – Code-Review Bugfix-Release (2026-05-02)
+
+### Änderungen (Phase A + B aus Code-Review v0.9.31)
+
+#### Kritische Bugfixes
+
+| # | Datei | Befund (Code-Review §9) | Änderung |
+|---|---|---|---|
+| 1 | `dab.py` | `play_by_name()` reichte `settings=None` nicht an `play_station()` weiter → Resume/Persistenz verloren | Signatur `play_by_name(name, S, settings=None, service_id="")` + Weitergabe in beiden Call-Pfaden |
+| 2 | `bluetooth.py` | `_drain_agent_stdout()` verwendete blockierendes `readline()` → Hänger-Risiko | `select.select([fd], [], [], 0.05)` mit 50 ms Timeout, `import select` hinzugefügt |
+| 3 | `scanner.py` | `source_state`-Integration unvollständig: kein `begin_transition()` in `play_freq()`, kein `end_transition()` in `stop()` | Beide Aufrufe mit `try/except`-Guard ergänzt |
+
+#### Mittlere Bugfixes
+
+| # | Datei | Befund | Änderung |
+|---|---|---|---|
+| 4 | `dab.py` | Globale `ERR_FILE` → Race-Condition bei parallelen Ops | `_err_file_for_session(session_id)` → `/tmp/pidrive_dab_<sid>.err` pro Session |
+| 5 | `dab.py` | `stop()` ließ DLS/artist/track-Felder stale | `S["artist"]`, `S["track"]`, `S["dls_text"]`, `S["radio_name"]` auf `""` gesetzt |
+| 6 | `spectrum.py` | `build_default_watcher()` koppelte FFT-Größe hart an `PMR446_PROFILE.fft_size` | `_DEFAULT_FFT_SIZE = 512` (profil-unabhängig), Docstring aktualisiert |
+| 7 | `spectrum.py` | Kein Schutz gegen häufige Captures auf Pi 3B | `_check_rate_limit()` + `_SPECTRUM_MIN_CALL_INTERVAL = 5.0 s` Guard in `watch_pmr446()` + `watch_freenet()` |
+
+#### Nicht umgesetzt (Phase C – späteres Release)
+- webui.py Modul-Split (strukturell, kein Bug)
+- main_core.py Trigger-Modularisierung
+- Hardcodings `/home/pi` bereinigen
+- Gemeinsame Trigger-Konstanten (trigger_schema.py)
+- BT-Watcher Aufteilung in kleinere Funktionen
+
+---
 
