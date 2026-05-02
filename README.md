@@ -2,7 +2,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.10.3-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.10.8-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -163,36 +163,66 @@ pidrive/
 │   ├── pidrive_web.service     # Flask Web UI Port 8080
 │   └── pidrive_avrcp.service   # AVRCP BMW iDrive
 └── pidrive/
-    ├── main_core.py         # Core: Trigger, Menü, Audio, Status-Thread
-    ├── main_display.py      # Display: pygame auf fb1, 20fps
-    ├── ipc.py               # IPC: atomares JSON /tmp/pidrive_*.json
-    ├── menu_model.py        # Menübaum: MenuNode, MenuState, StationStore
-    ├── mpris2.py            # MPRIS2 D-Bus → BMW-Display Metadaten
-    ├── avrcp_trigger.py     # AVRCP 1.5 → File-Trigger
-    ├── webui.py             # Flask Web UI Port 8080
-    ├── status.py            # Status-Cache (Hintergrund-Thread)
-    ├── log.py               # Logging (rotierend, max 512KB)
-    ├── diagnose.py          # Diagnose-Script
+    ├── main_core.py             # Core: Boot, check_trigger(), main loop
+    ├── trigger_dispatcher.py    # Trigger-Dispatcher (aus main_core ausgelagert)
+    ├── td_nav.py                # Sub-Dispatcher: Navigation + Menü-Aktionen
+    ├── td_hardware.py           # Sub-Dispatcher: Audio, WiFi/BT, Gain, PPM
+    ├── td_radio.py              # Sub-Dispatcher: DAB/FM Suchlauf, Webradio
+    ├── td_scanner.py            # Sub-Dispatcher: Scanner-Steuerung
+    ├── td_system.py             # Sub-Dispatcher: System-Kommandos, Bibliothek
+    ├── main_display.py          # Display: pygame auf fb1, 20fps
+    ├── ipc.py                   # IPC: atomares JSON /tmp/pidrive_*.json
+    ├── menu_model.py            # Facade: MenuNode, MenuState, StationStore, build_tree
+    ├── menu_state.py            # MenuNode + MenuState (Navigation)
+    ├── station_store.py         # StationStore (Senderdaten, Favoriten)
+    ├── menu_builder.py          # build_tree() (Menübaum-Konstruktion)
+    ├── mpris2.py                # MPRIS2 D-Bus → BMW-Display Metadaten
+    ├── avrcp_trigger.py         # AVRCP 1.5 → File-Trigger Bridge
+    ├── webui.py                 # Flask Web UI Port 8080 (+ Blueprint-Registrierung)
+    ├── webui_shared.py          # Shared Helpers für alle WebUI-Blueprints
+    ├── status.py                # Status-Cache (Hintergrund-Thread)
+    ├── log.py                   # Logging (rotierend, max 512KB)
+    ├── diagnose.py              # Diagnose-Script (Standalone)
+    ├── web/
+    │   ├── templates/index.html # WebUI Single-Page-App
+    │   ├── static/style.css
+    │   └── api/
+    │       ├── routes_dab.py       # Blueprint: /api/dab/*
+    │       ├── routes_bt.py        # Blueprint: /api/bt/*
+    │       ├── routes_audio.py     # Blueprint: /api/audio, /api/gain, /api/volume
+    │       └── routes_webradio.py  # Blueprint: /api/webradio/*
     ├── modules/
-    │   ├── musik.py         # Spotify Connect
-    │   ├── webradio.py      # Webradio (mpv)
-    │   ├── library.py       # MP3 Bibliothek mit Album-Art
-    │   ├── dab.py           # DAB+ Radio (RTL-SDR + welle.io)
-    │   ├── fm.py            # FM Radio (RTL-SDR + rtl_fm)
-    │   ├── wifi.py          # WiFi Steuerung + Scan
-    │   ├── bluetooth.py     # BT Scan, Connect, Audio-Routing
-    │   ├── audio.py         # Audioausgang (Klinke/HDMI/BT)
-    │   ├── favorites.py     # Favoritenliste (FM/DAB/Webradio)
-    │   ├── scanner.py       # Funkscanner (PMR446/Freenet/LPD433/VHF/UHF)
-    │   ├── system.py        # System-Info, Neustart
-    │   └── update.py        # OTA Update via GitHub
+    │   ├── source_state.py      # Zustandsmaschine (source_current, audio_route, BT)
+    │   ├── audio.py             # Audio-Routing (decide/apply/build_player_args)
+    │   ├── bluetooth.py         # Facade: alle BT-Funktionen
+    │   ├── bt_helpers.py        # BT Basis-Helfer, Konstanten, Adapter-Steuerung
+    │   ├── bt_agent.py          # BT-Agent, Pairing
+    │   ├── bt_devices.py        # Geräte-Datenbank, Scan
+    │   ├── bt_audio.py          # PulseAudio-Sink, A2DP-Management
+    │   ├── bt_connect.py        # Connect/Disconnect, Reconnect-State
+    │   ├── bt_watcher.py        # Auto-Reconnect Watcher
+    │   ├── dab.py               # Facade: alle DAB-Funktionen
+    │   ├── dab_helpers.py       # DAB Hilfsfunktionen, Konstanten, Session
+    │   ├── dab_dls.py           # DLS-Poller (Dynamic Label Segment)
+    │   ├── dab_scan.py          # DAB Suchlauf, Sender-Datenbank
+    │   ├── dab_play.py          # DAB Wiedergabe (welle-cli)
+    │   ├── fm.py                # FM Radio (RTL-SDR + rtl_fm)
+    │   ├── scanner.py           # Funkscanner (PMR446/Freenet/LPD433/VHF/UHF)
+    │   ├── spectrum.py          # RTL-SDR Spektrum-Analyse
+    │   ├── rtlsdr.py            # RTL-SDR USB-Management + Lock
+    │   ├── webradio.py          # Webradio (mpv + PulseAudio)
+    │   ├── musik.py             # Spotify Connect (Raspotify)
+    │   ├── library.py           # MP3 Bibliothek mit Album-Art
+    │   ├── wifi.py              # WiFi Steuerung + Scan
+    │   ├── favorites.py         # Favoritenliste
+    │   ├── system.py            # System-Info, Neustart
+    │   └── update.py            # OTA Update via GitHub
     └── config/
-        ├── stations.json        # Webradio-Stationen
+        ├── settings.json        # Einstellungen (Audio, letzte Station)
         ├── dab_stations.json    # DAB+ Sender (nach Scan)
         ├── fm_stations.json     # FM Sender
-        ├── favorites.json       # Favoritenliste
-        └── settings.json        # Einstellungen (Audio, letzte Station)
-```
+        ├── stations.json        # Webradio-Stationen
+        └── favorites.json       # Favoritenliste
 
 ---
 

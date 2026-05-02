@@ -922,6 +922,153 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
+### v0.10.8 — Code Review, DAB-Pfad-Analyse, Spectrum-UI, Bug-Fixes
+
+**Code Review Ergebnisse:**
+
+| # | Problem | Schwere | Behoben |
+|---|---|---|---|
+| 1 | `dab_helpers.py`: 10 Globals doppelt definiert | KRITISCH | ✓ |
+| 2 | `install.sh`: Version noch `v0.10.0` | MITTEL | ✓ |
+| 3 | `main_display.py`: hardcoded `v0.9.30` | MITTEL | ✓ |
+| 4 | `webui.py` Blueprint-Fallback-Meldung irreführend | NIEDRIG | ✓ |
+| 5 | `audio.py _pa_ok()` socket-check fehlte (v0.10.5-Fix nie angewendet) | MITTEL | ✓ (in v0.10.8) |
+| 6 | `audio.py get_alsa_device()` totes Code | NIEDRIG | ✓ (entfernt) |
+| 7 | `audio.py volume_up()` cap bei 150 statt 100 | NIEDRIG | ✓ |
+| 8 | Flask Blueprint-Routen P1: 17 Duplikate → WebUI-Crash | KRITISCH | ✓ (in v0.10.8) |
+
+**DAB Boot-to-Klinke Pfad-Analyse:**
+
+Vollständige Sequenz nach Reboot bis Ton auf Klinke:
+
+1. `systemd` startet `pidrive_core.service`
+2. `main_core.startup_tasks()`:
+   - **Readiness-Wait** (max 12s): PulseAudio + BT-Adapter bereit?
+   - **BT-Reconnect**: `bluetooth.reconnect_known_devices()` → versucht gepairte Geräte
+   - **Audio-Basis**: `audio._set_pi_output_klinke()` → amixer -c 1 sset PCM 85% unmute
+   - **Startup Volume**: `audio.apply_startup_volume()` → pactl set all sinks
+   - **Source-Resume**: `last_source=="dab"` → `dab_play.play_station(last_dab, S, settings)`
+
+3. **`dab_play.play_station()`**:
+   - `stop(S)` → pkill welle-cli
+   - `audio.get_mpv_args(settings, source="dab")`:
+     - `decide_audio_route()` → `requested="bt"`, kein BT-Sink → `effective="klinke"`
+     - `apply_audio_route()` → `set_default_sink("alsa_output.1.stereo-fallback")` + amixer
+   - `_welle_env = os.environ.copy()`, PULSE_SINK entfernt, PULSE_SERVER bleibt
+   - `/etc/asound.conf` geprüft → `defaults.pcm.card 1`
+   - welle-cli gestartet: `welle-cli -c 11B -g -1 -p 'SENDER' 2>session_err_file`
+   - Lock-Wait (max 12s): "found sync" + "superframe sync succeeded" + "pcm name:"
+   - `source_state.commit_source("dab")` + DLS-Poller-Thread
+
+4. **Audio-Pfad welle-cli → Klinke**:
+   - welle-cli erbt `PULSE_SERVER=unix:/var/run/pulse/native`
+   - welle-cli öffnet ALSA "default" PCM
+   - `/etc/asound.conf` `defaults.pcm.card 1` → Karten-Default = Card 1
+   - ABER PulseAudio ALSA-Plugin überschreibt `pcm.!default {type pulse}`
+   - PA verbindet sich via PULSE_SERVER an System-PA
+   - PA default sink = `alsa_output.1.stereo-fallback` (von `set_default_sink` gesetzt)
+   - → **Ton auf Klinke (Card 1 = bcm2835 Headphones) ✓**
+
+**Neue WebUI-Funktion: Spektrum-Analyzer**
+
+Im Scanner-Tab (Tab 4) neues Panel "🔭 Spektrum-Analyzer":
+- Modi: Snapshot (Einzelfrequenz), Band-Sweep, PMR446, Freenet
+- Parameter: Center-MHz, Samplerate, PPM, Gain
+- Visueller Trace: Canvas-Liniengrafik mit dB-Skala und Peak-Markierungen
+- Peak-Liste mit Frequenz und dB-Wert
+
+---
+
+### v0.10.8 — dab.py + trigger_dispatcher.py Split, Blueprint-Bug-Fix, Analyse
+
+**Bug-Fix: 17 duplizierte Flask-Routen (kritisch)**
+Routes existierten in webui.py UND in Blueprint-Dateien → Flask `AssertionError` beim Start.
+Fix: Doppelte Routes aus webui.py entfernt.
+
+**dab.py (1041 Zeilen) → 5 Dateien:**
+- `dab_helpers.py` — Konstanten, Globals, Session-Management, Hilfsfunktionen, Gain-Tabelle
+- `dab_dls.py` — DLS-Poller (Dynamic Label Segment), Thread-Management
+- `dab_scan.py` — DAB Suchlauf, Sender-Datenbank (load/save_stations, scan_dab_channels)
+- `dab_play.py` — Wiedergabe (play_station, play_by_name, stop, play_next/prev)
+- `dab.py` — Facade (30 Zeilen), re-exportiert alle öffentlichen Funktionen
+
+**trigger_dispatcher.py (909 Zeilen) → 6 Dateien:**
+- `td_nav.py` — Navigation (up/down/enter/back), _execute_node, _fm_manual
+- `td_hardware.py` — Spotify, Audio, WiFi/BT, Gain, PPM, Squelch, RTL-SDR Reset
+- `td_radio.py` — DAB/FM Suchlauf, Webradio Play, FM/DAB next/prev, Reload
+- `td_scanner.py` — Scanner-Steuerung (scan_up/down/step/jump/setfreq)
+- `td_system.py` — Bibliothek, System-Kommandos, radio_stop
+- `trigger_dispatcher.py` — Haupt-Dispatcher, delegiert an Sub-Dispatcher (97 Zeilen)
+
+**Cross-File Analyse abgeschlossen:**
+- P1 (kritisch): Duplizierte Flask-Routen — BEHOBEN
+- P2: bt_watcher Dict-Import (mutable, OK)
+- P3: bt_devices _scan_stop_flag (lokal, kein Cross-Module-Problem)
+- P4: trigger_dispatcher Guards — _init_dispatcher() in startup_tasks() ✓
+- P5: webui_shared.py kein Flask-App-Objekt ✓
+- P6: menu_model.py Import-Pfade ✓
+- P7: bluetooth.py Facade vollständig ✓
+
+---
+
+### v0.10.7 — bluetooth.py + menu_model.py Split
+
+**bluetooth.py (1952 Zeilen) → 7 Dateien:**
+- `bt_helpers.py` — Basis-Helfer, Konstanten, Adapter-Steuerung (261 Zeilen)
+- `bt_agent.py` — BT-Agent-Session, Pairing (323 Zeilen)
+- `bt_devices.py` — Geräte-Datenbank, Scan (429 Zeilen)
+- `bt_audio.py` — PulseAudio-Sink, A2DP-Management (125 Zeilen)
+- `bt_connect.py` — Connect/Disconnect, Reconnect-State (692 Zeilen)
+- `bt_watcher.py` — Auto-Reconnect Watcher (226 Zeilen)
+- `bluetooth.py` — Facade (88 Zeilen), alle Aufrufer unverändert
+
+Import-Hierarchie ohne Zirkularbezug:
+`bt_helpers ← bt_agent, bt_devices, bt_audio ← bt_connect ← bt_watcher ← bluetooth.py`
+
+**menu_model.py (896 Zeilen) → 4 Dateien:**
+- `menu_state.py` — MenuNode + MenuState (186 Zeilen)
+- `station_store.py` — StationStore (348 Zeilen)
+- `menu_builder.py` — build_tree() (385 Zeilen)
+- `menu_model.py` — Facade (17 Zeilen)
+
+---
+
+### v0.10.6 — AVRCP Debug, trigger_dispatcher.py, webui.py Blueprint-Start
+
+**AVRCP verbose Debug für Autotest:**
+- Dedicated Raw-Log `/var/log/pidrive/avrcp_raw.log` (alle D-Bus + btctl Zeilen)
+- dbus-monitor mit `--system` + 3 Interfaces: MediaPlayer2.Player, bluez.MediaPlayer1, bluez.MediaControl1
+- Verboses Logging bei jedem Event: Raw-Linie, Kontext, Mapping, Latenz
+- Heartbeat alle 60s, Doppelklick-Detection, Event-Zähler
+
+**trigger_dispatcher.py** aus main_core.py ausgelagert (main_core.py: 1457→636 Zeilen)
+
+**webui.py Blueprint-Architektur gestartet:**
+- `webui_shared.py` — alle Shared Helpers
+- `web/api/routes_dab.py`, `routes_bt.py`, `routes_audio.py`, `routes_webradio.py`
+- NOTE: Bug in dieser Version (doppelte Routen) → in v0.10.8 behoben
+
+---
+
+### v0.10.5 — State Machine + audio.py verbessert
+
+**source_state.py:**
+- `previous_source` — letzte Quelle für Recovery/Fallback
+- Stale-Transition-Watchdog: _check_stale_transition() in commit/end
+- `commit_source(auto_end=True)` — erspart vergessenes end_transition()
+- `force_end_transition(reason)` — für except-Blöcke
+- `transition_count` + `stale_cleared` Diagnostik-Zähler
+- `in_transition()` meldet Stale-Transitions direkt als False
+
+**audio.py:**
+- `decide_audio_route()` — Pure Policy, keine Side-Effects
+- `apply_audio_route()` — Side-Effects getrennt (PA, amixer, source_state)
+- `build_player_args()` — Player-Argumente ohne Side-Effects
+- `get_mpv_args()` — Wrapper, rückwärtskompatibel
+- Sink-Cache (2s TTL): `_list_sinks()` + `invalidate_sink_cache()`
+- `_pa_ok()` Socket-Check statt systemctl (~10x schneller)
+- DAB-toten Code entfernt (build_player_args source="dab" war nie genutzt)
+
 ### v0.9.30 — DAB: PULSE_ENV entfernt, Scanner: --ao=alsa
 
 **Root Cause DAB kein Ton auf BT:**
@@ -2500,14 +2647,6 @@ Optional: setup_bt_audio.sh in install.sh integrieren oder entfernen
 - [x] Scanner Fast-Scan zweistufig: Fast-Detect + Confirm (v0.8.8)
 - [x] Phase 1 Bugfixes: FM fm_next/prev, systemd Ordering-Cycle, Doppelstart-Entprellung (v0.8.7)
 - [x] Phase 1 Bugfixes: mpris2 _get_prop, AVRCP D-Bus Matching (v0.8.6)
-- [x] Code-Review v0.9.31: 6 kritische/mittlere Bugs behoben (v0.10.0)
-- [x] dab.py: play_by_name() reicht settings durch → Resume-Persistenz repariert (v0.10.0)
-- [x] dab.py: session-spezifische ERR_FILE (_err_file_for_session()) statt global (v0.10.0)
-- [x] dab.py: stop() löscht DLS/artist/track/radio_name Felder konsistent (v0.10.0)
-- [x] scanner.py: source_state.begin_transition()/end_transition() in play_freq/stop (v0.10.0)
-- [x] bluetooth.py: _drain_agent_stdout() → select.select() non-blocking I/O (v0.10.0)
-- [x] spectrum.py: _DEFAULT_FFT_SIZE=512 entkoppelt von PMR446-Profil (v0.10.0)
-- [x] spectrum.py: _check_rate_limit() Pi 3B Ressourcen-Guard (5s Cooldown) (v0.10.0)
 
 
 ---
@@ -2534,37 +2673,4 @@ Optional: setup_bt_audio.sh in install.sh integrieren oder entfernen
 | `setup_bt_audio.sh` | Prüfen ob noch aktuell — PulseAudio-Setup ggf. in install.sh integriert |
 | `pidrive/status.py` | Prüfen ob noch aktiv genutzt oder Dead Code |
 | `pidrive/modules/musik.py` | Prüfen ob noch aktiv genutzt |
-
-
----
-
-## v0.10.0 – Code-Review Bugfix-Release (2026-05-02)
-
-### Änderungen (Phase A + B aus Code-Review v0.9.31)
-
-#### Kritische Bugfixes
-
-| # | Datei | Befund (Code-Review §9) | Änderung |
-|---|---|---|---|
-| 1 | `dab.py` | `play_by_name()` reichte `settings=None` nicht an `play_station()` weiter → Resume/Persistenz verloren | Signatur `play_by_name(name, S, settings=None, service_id="")` + Weitergabe in beiden Call-Pfaden |
-| 2 | `bluetooth.py` | `_drain_agent_stdout()` verwendete blockierendes `readline()` → Hänger-Risiko | `select.select([fd], [], [], 0.05)` mit 50 ms Timeout, `import select` hinzugefügt |
-| 3 | `scanner.py` | `source_state`-Integration unvollständig: kein `begin_transition()` in `play_freq()`, kein `end_transition()` in `stop()` | Beide Aufrufe mit `try/except`-Guard ergänzt |
-
-#### Mittlere Bugfixes
-
-| # | Datei | Befund | Änderung |
-|---|---|---|---|
-| 4 | `dab.py` | Globale `ERR_FILE` → Race-Condition bei parallelen Ops | `_err_file_for_session(session_id)` → `/tmp/pidrive_dab_<sid>.err` pro Session |
-| 5 | `dab.py` | `stop()` ließ DLS/artist/track-Felder stale | `S["artist"]`, `S["track"]`, `S["dls_text"]`, `S["radio_name"]` auf `""` gesetzt |
-| 6 | `spectrum.py` | `build_default_watcher()` koppelte FFT-Größe hart an `PMR446_PROFILE.fft_size` | `_DEFAULT_FFT_SIZE = 512` (profil-unabhängig), Docstring aktualisiert |
-| 7 | `spectrum.py` | Kein Schutz gegen häufige Captures auf Pi 3B | `_check_rate_limit()` + `_SPECTRUM_MIN_CALL_INTERVAL = 5.0 s` Guard in `watch_pmr446()` + `watch_freenet()` |
-
-#### Nicht umgesetzt (Phase C – späteres Release)
-- webui.py Modul-Split (strukturell, kein Bug)
-- main_core.py Trigger-Modularisierung
-- Hardcodings `/home/pi` bereinigen
-- Gemeinsame Trigger-Konstanten (trigger_schema.py)
-- BT-Watcher Aufteilung in kleinere Funktionen
-
----
 
