@@ -1,10 +1,16 @@
 """
-modules/source_state.py — Zustandsspiegel (kein Regler)
+modules/source_state.py — Zustandsspiegel (kein Regler)  v0.10.5
 Aufrufer: alle modules/*, main_core.py, webui.py, ipc.py
 Schreibt: /tmp/pidrive_source_state.json
-Hinweis: source_state steuert NICHT — er spiegelt nur. Audio/BT über audio.py/bluetooth.py ändern.
-"""
 
+v0.10.5 Verbesserungen:
+  - previous_source: Rückkehr nach Fehler möglich
+  - Stale-Transition-Watchdog: räumt hängendes transition=True automatisch auf
+  - commit_source() optional mit auto-end (spart vergessene end_transition()-Aufrufe)
+  - force_end_transition(): für Fehler-Recovery in except-Blöcken
+  - begin_transition() loggt Warnung wenn Aufrufer Rückgabewert ignoriert
+  - Transitions-Zähler für Diagnose
+"""
 
 import os
 import json
@@ -15,23 +21,55 @@ import log
 _LOCK = threading.RLock()
 STATE_FILE = "/tmp/pidrive_source_state.json"
 
+# Timeout bevor eine hängende Transition automatisch abgebrochen wird
+STALE_TIMEOUT_S = 12.0
+
 STATE = {
-    "source_current": "idle",   # aktive Quelle
-    "source_target":  "",       # Ziel-Quelle bei laufender Transition
-    "transition":     False,    # True = Quellenwechsel läuft
-    "owner":          "",       # wer die Transition gestartet hat
-    "since":          0.0,      # Timestamp Start der Transition
-    "audio_route":    "",       # klinke | bt | hdmi | none
-    "bt_state":       "idle",      # BT-Link-State (Compat)
-    "bt_link_state":  "idle",      # v0.9.31: Link: idle|connecting|connected|failed
-    "bt_audio_state": "no_sink",   # v0.9.31: Audio: no_sink|pending|a2dp_ready|fallback_klinke
-    "boot_phase":     "cold_start",  # cold_start | restore_bt | restore_source | steady
+    "source_current":  "idle",
+    "source_previous": "idle",   # v0.10.5: letzte Quelle vor aktuellem Wechsel
+    "source_target":   "",
+    "transition":      False,
+    "owner":           "",
+    "since":           0.0,
+    "audio_route":     "",
+    "bt_state":        "idle",
+    "bt_link_state":   "idle",
+    "bt_audio_state":  "no_sink",
+    "boot_phase":      "cold_start",
+    "transition_count": 0,        # v0.10.5: Gesamtzahl Transitionen (für Diagnose)
+    "stale_cleared":    0,        # v0.10.5: Zähler für automatisch abgeräumte Stale-Transitions
 }
 
 
+# ── Stale-Transition-Watchdog ────────────────────────────────────────────────
+
+def _check_stale_transition() -> bool:
+    """
+    v0.10.5: Räumt hängende Transition auf ohne auf begin_transition() zu warten.
+    Wird von commit_source() und end_transition() aufgerufen.
+    Gibt True zurück wenn eine Stale-Transition aufgeräumt wurde.
+    """
+    if not STATE["transition"]:
+        return False
+    age = time.time() - STATE["since"]
+    if age < STALE_TIMEOUT_S:
+        return False
+    log.warn(
+        f"SOURCE stale-watchdog: transition von owner={STATE['owner']!r} "
+        f"läuft seit {age:.1f}s — automatisch abgeräumt"
+    )
+    STATE["transition"]    = False
+    STATE["owner"]         = ""
+    STATE["source_target"] = ""
+    STATE["since"]         = 0.0
+    STATE["stale_cleared"] = STATE.get("stale_cleared", 0) + 1
+    _write_state_file()
+    return True
+
+
+# ── Datei-I/O ────────────────────────────────────────────────────────────────
 
 def _write_state_file():
-    """Shared-State atomar in /tmp schreiben (prozessübergreifend)."""
     try:
         tmp = STATE_FILE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -42,7 +80,6 @@ def _write_state_file():
 
 
 def load_snapshot_file() -> dict:
-    """Shared-State aus Datei lesen."""
     try:
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -56,48 +93,111 @@ def snapshot() -> dict:
         return dict(STATE)
 
 
-def begin_transition(owner: str, target: str, timeout_s: float = 8.0) -> bool:
+# ── Transition-Protokoll ─────────────────────────────────────────────────────
+
+def begin_transition(owner: str, target: str, timeout_s: float = STALE_TIMEOUT_S) -> bool:
     """
-    Startet eine Quellen-Transition. Gibt False zurück wenn bereits eine läuft.
-    Bei Timeout (hängende Transition) wird die alte überschrieben.
+    Startet eine Quellen-Transition.
+    Gibt False zurück wenn bereits eine AKTIVE (nicht-stale) Transition läuft.
+    Bei Stale (abgelaufener Timeout) wird automatisch überschrieben.
     """
     with _LOCK:
         if STATE["transition"]:
             age = time.time() - STATE["since"]
             if age < timeout_s:
-                log.warn(f"SOURCE begin blocked: owner={owner} active={STATE['owner']} age={age:.1f}s")
+                log.warn(
+                    f"SOURCE begin blocked: owner={owner!r} "
+                    f"active={STATE['owner']!r} age={age:.1f}s — "
+                    f"Aufrufer muss Rückgabewert False beachten!"
+                )
                 return False
-            else:
-                log.warn(f"SOURCE stale transition ({age:.1f}s) — override by {owner}")
+            log.warn(
+                f"SOURCE stale transition ({age:.1f}s) — "
+                f"override: {STATE['owner']!r} → {owner!r}"
+            )
+            STATE["stale_cleared"] = STATE.get("stale_cleared", 0) + 1
 
-        STATE["transition"]     = True
-        STATE["owner"]          = owner
-        STATE["source_target"]  = target
-        STATE["since"]          = time.time()
+        STATE["transition"]      = True
+        STATE["owner"]           = owner
+        STATE["source_target"]   = target
+        STATE["since"]           = time.time()
+        STATE["transition_count"] = STATE.get("transition_count", 0) + 1
         _write_state_file()
-        log.info(f"SOURCE begin: owner={owner} target={target}")
+        log.info(f"SOURCE begin: owner={owner} target={target} "
+                 f"(#{STATE['transition_count']})")
         return True
 
 
-def commit_source(source_name: str):
-    """Setzt die aktuelle Quelle nach erfolgreichem Start."""
+def commit_source(source_name: str, auto_end: bool = False):
+    """
+    Setzt die aktuelle Quelle nach erfolgreichem Start.
+    auto_end=True: schließt die Transition automatisch ab (erspart end_transition()-Aufruf).
+    previous_source wird immer gesichert.
+    """
     with _LOCK:
+        _check_stale_transition()
         old = STATE["source_current"]
+        if old != source_name:
+            STATE["source_previous"] = old
         STATE["source_current"] = source_name
+        if auto_end and STATE["transition"]:
+            duration = time.time() - STATE["since"] if STATE["since"] else 0
+            STATE["source_target"] = ""
+            STATE["transition"]    = False
+            STATE["owner"]         = ""
+            STATE["since"]         = 0.0
+            log.info(f"SOURCE commit+end: {old} → {source_name} dt={duration:.2f}s")
+        else:
+            log.info(f"SOURCE commit: {old} → {source_name}")
         _write_state_file()
-        log.info(f"SOURCE commit: {old} → {source_name}")
 
+
+def end_transition():
+    """Schließt eine Transition ab."""
+    with _LOCK:
+        _check_stale_transition()
+        duration = time.time() - STATE["since"] if STATE["since"] else 0
+        log.info(
+            f"SOURCE end: owner={STATE['owner']} "
+            f"current={STATE['source_current']} dt={duration:.2f}s"
+        )
+        STATE["source_target"] = ""
+        STATE["transition"]    = False
+        STATE["owner"]         = ""
+        STATE["since"]         = 0.0
+        _write_state_file()
+
+
+def force_end_transition(reason: str = "error"):
+    """
+    v0.10.5: Erzwingt Ende der Transition unabhängig vom aktuellen State.
+    Für except-Blöcke und Fehler-Recovery.
+    """
+    with _LOCK:
+        if STATE["transition"]:
+            log.warn(
+                f"SOURCE force_end: reason={reason} "
+                f"owner={STATE['owner']!r} current={STATE['source_current']}"
+            )
+        STATE["source_target"] = ""
+        STATE["transition"]    = False
+        STATE["owner"]         = ""
+        STATE["since"]         = 0.0
+        _write_state_file()
+
+
+# ── Audio-Route ──────────────────────────────────────────────────────────────
 
 def set_audio_route(route: str):
-    """Setzt den aktiven Audio-Ausgabepfad."""
     with _LOCK:
         STATE["audio_route"] = route
         _write_state_file()
         log.info(f"SOURCE audio_route={route}")
 
 
+# ── BT-State ─────────────────────────────────────────────────────────────────
+
 def set_bt_state(bt_state: str):
-    """Setzt den BT-Link-State."""
     with _LOCK:
         old = STATE["bt_state"]
         STATE["bt_state"] = bt_state
@@ -107,55 +207,62 @@ def set_bt_state(bt_state: str):
 
 
 def set_bt_link_state(state: str):
-    """v0.9.31: BT Link-Ebene: idle|connecting|connected|failed"""
     with _LOCK:
+        old = STATE.get("bt_link_state", "")
         STATE["bt_link_state"] = state
+        if old != state:
+            log.info(f"SOURCE bt_state: {old} → {state}")
         _write_state_file()
 
+
 def set_bt_audio_state(state: str):
-    """v0.9.31: BT Audio-Ebene: no_sink|pending|a2dp_ready|fallback_klinke"""
     with _LOCK:
-        old_a = STATE.get("bt_audio_state", "")
+        old = STATE.get("bt_audio_state", "")
         STATE["bt_audio_state"] = state
-        if old_a != state:
-            log.info(f"SOURCE bt_audio_state: {old_a} → {state}")
+        if old != state:
+            log.info(f"SOURCE bt_audio_state: {old} → {state}")
         _write_state_file()
+
 
 def get_bt_link_state() -> str:
     return STATE.get("bt_link_state", "idle")
+
 
 def get_bt_audio_state() -> str:
     return STATE.get("bt_audio_state", "no_sink")
 
 
+# ── Boot-Phase ───────────────────────────────────────────────────────────────
+
 def set_boot_phase(phase: str):
-    """Setzt die Boot-Phase."""
     with _LOCK:
         STATE["boot_phase"] = phase
         _write_state_file()
         log.info(f"SOURCE boot_phase={phase}")
 
 
-def end_transition():
-    """Schließt eine Transition ab."""
-    with _LOCK:
-        duration = time.time() - STATE["since"] if STATE["since"] else 0
-        log.info(f"SOURCE end: owner={STATE['owner']} current={STATE['source_current']} dt={duration:.2f}s")
-        STATE["source_target"] = ""
-        STATE["transition"]    = False
-        STATE["owner"]         = ""
-        STATE["since"]         = 0.0
-        _write_state_file()
-
+# ── Lesezugriffe ─────────────────────────────────────────────────────────────
 
 def current_source() -> str:
     with _LOCK:
         return STATE["source_current"]
 
 
+def previous_source() -> str:
+    """v0.10.5: Letzte Quelle vor dem aktuellen Wechsel."""
+    with _LOCK:
+        return STATE.get("source_previous", "idle")
+
+
 def in_transition() -> bool:
     with _LOCK:
-        return STATE["transition"]
+        # v0.10.5: Stale-Transitions nicht als aktiv melden
+        if not STATE["transition"]:
+            return False
+        age = time.time() - STATE["since"]
+        if age >= STALE_TIMEOUT_S:
+            return False  # Stale → gilt als beendet
+        return True
 
 
 def bt_connected() -> bool:

@@ -94,6 +94,11 @@ except Exception:
     _src_state = None
 
 PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+
+# v0.10.5: Sink-Cache (2s TTL)
+_sink_cache: list = []
+_sink_cache_ts: float = 0.0
+_SINK_CACHE_TTL: float = 2.0
 AUDIO_STATE_FILE = "/tmp/pidrive_audio_state.json"
 
 
@@ -182,27 +187,15 @@ def _write_audio_state():
 
 
 def prepare_audio_route(settings=None, source: str = "") -> dict:
-    """
-    v0.9.30: TICKET 5 — Audio-Routing vorbereiten (Side-Effects).
-    Trennung von get_mpv_args(): diese Funktion setzt PulseAudio Default-Sink,
-    amixer, source_state.audio_route und schreibt audio_state.json.
-    Gibt decision-dict zurück: {requested, effective, reason, sink}
-    Entspricht dem Side-Effect-Teil von get_mpv_args().
-    """
-    # get_mpv_args enthält alle Side-Effects — wir rufen es auf und ignorieren den Rückgabewert
-    get_mpv_args(settings=settings, source=source)
-    return get_last_decision()
-
+    """v0.10.5: decide() + apply() — Rückgabe: Decision-Dict."""
+    d = decide_audio_route(settings=settings, source=source)
+    if d.get("pa_ok", True):
+        apply_audio_route(d)
+    return d
 
 def get_player_args(settings=None, source: str = "") -> list:
-    """
-    v0.9.30: TICKET 5 — Nur Player-Argumente zurückgeben (keine Side-Effects).
-    Für mpv/rtl_fm: liefert [env_prefix, "--ao=alsa", "--alsa-device=..."] etc.
-    Im Gegensatz zu get_mpv_args() ohne PulseAudio-Manipulation.
-    Für DAB/FM/Scanner relevant — welle-cli ignoriert mpv-Args ohnehin.
-    """
+    """Alias für get_mpv_args() — rückwärtskompatibel."""
     return get_mpv_args(settings=settings, source=source)
-
 
 def get_last_decision() -> dict:
     """In-Prozess-Zustand (fuer Strict-Mode-Guards in fm/dab/webradio)."""
@@ -228,17 +221,36 @@ def _run(cmd, timeout=5):
 
 
 def _pa_ok() -> bool:
+    """
+    v0.10.8: Socket-Datei zuerst prüfen (~0.1ms statt ~150ms systemctl subprocess).
+    Falls Socket existiert: PA läuft definitiv. Sonst: systemctl als Fallback.
+    """
+    if os.path.exists("/var/run/pulse/native"):
+        return True
     return _run("systemctl is-active pulseaudio 2>/dev/null", 3) == "active"
 
 
-def _list_sinks() -> list:
+def _list_sinks(force: bool = False) -> list:
+    """v0.10.5: Mit 2s TTL-Cache."""
+    global _sink_cache, _sink_cache_ts
+    import time as _t
+    now = _t.time()
+    if not force and _sink_cache and (now - _sink_cache_ts) < _SINK_CACHE_TTL:
+        return _sink_cache
     out = _run(PA_ENV + " pactl list sinks short 2>/dev/null", 4)
     sinks = []
     for line in out.splitlines():
         parts = line.split()
         if len(parts) >= 2:
             sinks.append({"id": parts[0], "name": parts[1], "raw": line})
+    _sink_cache = sinks; _sink_cache_ts = now
     return sinks
+
+
+def invalidate_sink_cache():
+    """v0.10.5: Cache nach BT-Connect invalidieren."""
+    global _sink_cache_ts
+    _sink_cache_ts = 0.0
 
 
 def get_bt_sink(retry: int = 1) -> str:
@@ -383,11 +395,12 @@ def _remember_decision(requested, effective, reason, sink, source):
     _write_audio_state()
 
 
-def get_mpv_args(settings=None, source: str = "") -> list:
+
+def decide_audio_route(settings=None, source: str = "") -> dict:
     """
-    STRICT zentraler Audio-Pfad — v0.8.13.
-    Immer --ao=pulse. Kein ALSA-Fallback.
-    Schreibt Entscheidung in /tmp/pidrive_audio_state.json.
+    v0.10.8: Pure Policy — keine Side-Effects.
+    Entscheidet requested→effective Audio-Route und gibt ein Decision-Dict zurück.
+    Für Diagnose, Tests und explizite Kontrolle verwendbar.
     """
     if settings is None:
         try:
@@ -397,16 +410,14 @@ def get_mpv_args(settings=None, source: str = "") -> list:
             settings = {}
 
     requested = settings.get("audio_output", "auto")
-    src_tag   = ("source=" + source).ljust(17) if source else "source=-         "
 
     if not _pa_ok():
-        log.error("[AUDIO] " + src_tag + " requested=" + requested +
-                  " effective=none reason=pulseaudio_inactive — strict mode")
-        _remember_decision(requested, "none", "pulseaudio_inactive", "", source)
-        return ["--ao=pulse"]
+        return {
+            "requested": requested, "effective": "none",
+            "reason": "pulseaudio_inactive", "sink": "",
+            "source": source, "pa_ok": False,
+        }
 
-    # v0.9.10: Sicherstellen dass Klinken-Sink vorhanden (card 1)
-    # system.pa hatte bisher nur device_id=0 (HDMI) → Klinke nie als Sink geladen
     if requested in ("klinke", "auto"):
         _ensure_klinke_sink()
 
@@ -414,25 +425,22 @@ def get_mpv_args(settings=None, source: str = "") -> list:
     alsa_sink = get_alsa_sink()
     hdmi_sink = get_hdmi_sink()
 
-    effective = "klinke"
-    reason    = "no_a2dp_sink"
-    sink      = alsa_sink
-
     if requested == "bt":
         if bt_sink:
             effective, reason, sink = "bt",     "bt_requested",               bt_sink
         else:
             effective, reason, sink = "klinke", "bt_requested_no_a2dp_sink",  alsa_sink
+
     elif requested == "hdmi":
         if hdmi_sink:
             effective, reason, sink = "hdmi",   "hdmi_requested",             hdmi_sink
         else:
             effective, reason, sink = "klinke", "hdmi_requested_no_hdmi_sink", alsa_sink
+
     elif requested == "klinke":
         effective, reason, sink = "klinke", "klinke_requested", alsa_sink
+
     else:  # auto
-        # v0.9.21: wenn BT-State "connected" ist aber Sink noch nicht sichtbar,
-        # 3x wiederholen (A2DP-Aushandlung kann ~2s dauern)
         if not bt_sink:
             bt_sink = get_bt_sink(retry=3)
         if bt_sink:
@@ -440,61 +448,77 @@ def get_mpv_args(settings=None, source: str = "") -> list:
         else:
             effective, reason, sink = "klinke", "no_a2dp_sink",         alsa_sink
 
+    if not sink:
+        effective, reason = "none", "no_sink_available"
+
+    return {
+        "requested": requested, "effective": effective,
+        "reason":    reason,    "sink":      sink or "",
+        "source":    source,    "pa_ok":     True,
+    }
+
+
+def apply_audio_route(decision: dict):
+    """
+    v0.10.8: Side-Effects aus decide_audio_route() anwenden.
+    Setzt PA Default-Sink, amixer, source_state — getrennt von der Policy-Logik.
+    """
+    effective = decision.get("effective", "none")
+    sink      = decision.get("sink", "")
+    source    = decision.get("source", "")
+
     if sink:
         set_default_sink(sink)
-    else:
-        effective = "none"
-        reason    = "no_sink_available"
 
-    # v0.8.14: Pi 3B physischen ALSA-Ausgang setzen (amixer numid=3)
-    # Verhindert dass mpv auf HDMI statt Klinke ausgibt
     if effective == "klinke":
         _set_pi_output_klinke()
     elif effective == "hdmi":
         _set_pi_output_hdmi()
 
-    # v0.9.5: audio_route konsistent in source_state spiegeln
     try:
         if _src_state:
-            if effective == "klinke":
-                _src_state.set_audio_route("klinke")
-            elif effective == "bt":
-                _src_state.set_audio_route("bt")
-            elif effective == "hdmi":
-                _src_state.set_audio_route("hdmi")
-            elif effective == "none":
-                _src_state.set_audio_route("none")
+            _src_state.set_audio_route(effective)
     except Exception as _ae:
         log.warn("[AUDIO] source_state route: " + str(_ae))
 
-    log.info("[AUDIO] " + src_tag + " requested=" + requested.ljust(6) +
-             " effective=" + effective.ljust(7) +
-             " reason=" + reason + " sink=" + (sink or "-"))
+    src_tag = ("source=" + source).ljust(17) if source else "source=-         "
+    log.info(
+        "[AUDIO] " + src_tag
+        + " requested=" + decision.get("requested", "?").ljust(6)
+        + " effective=" + effective.ljust(7)
+        + " reason="    + decision.get("reason", "?")
+        + " sink="      + (sink or "-")
+    )
+    _remember_decision(
+        decision.get("requested", ""), effective,
+        decision.get("reason", ""), sink, source,
+    )
 
-    _remember_decision(requested, effective, reason, sink, source)
-    # v0.9.15 Fix: PULSE_SERVER + PULSE_SINK als Shell-Prefix statt --audio-device
-    # --audio-device=pulse/<sink> funktioniert nur auf mpv >= 0.35, Pi hat 0.29.x
-    # PULSE_SERVER nötig damit mpv (läuft als root) den System-Daemon findet
-    # Rückgabe: [env_prefix, --ao=pulse] — der Aufrufer baut daraus den Shell-Befehl
-    # v0.9.18: FM/DAB nutzen --ao=alsa direkt auf hw:1,0 (Klinke)
-    # PulseAudio --system Mode hat Resampling-Probleme mit raw PCM von rtl_fm/welle-cli.
-    # Webradio/Spotify nutzen weiterhin PulseAudio (BT-kompatibel).
-    # Für BT (A2DP) weiterhin PulseAudio.
+
+def build_player_args(decision: dict, source: str = "") -> list:
+    """v0.10.5: Baut mpv-Argumente aus Decision — keine Side-Effects."""
+    effective = decision.get("effective", "none"); sink = decision.get("sink", "")
     if effective == "bt" and sink:
-        pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
-        pulse_env += f" PULSE_SINK={sink}"
-        return [pulse_env, "--ao=pulse"]
-    elif effective in ("klinke", "auto") and source in ("fm", "dab"):
-        # ALSA direkt → card 1 = bcm2835 Headphones (Klinke), kein PulseAudio nötig
+        return ["PULSE_SERVER=unix:/var/run/pulse/native" + f" PULSE_SINK={sink}", "--ao=pulse"]
+    elif effective in ("klinke", "auto") and source in ("fm", "scanner"):
         card = _get_headphone_card()
-        return ["", f"--ao=alsa", f"--alsa-device=hw:{card},0"]
+        return ["", "--ao=alsa", f"--alsa-device=hw:{card},0"]
     else:
-        # Webradio, Spotify etc.: PulseAudio (BT-fähig)
-        pulse_env = "PULSE_SERVER=unix:/var/run/pulse/native"
-        if sink:
-            pulse_env += f" PULSE_SINK={sink}"
-        return [pulse_env, "--ao=pulse"]
+        env = "PULSE_SERVER=unix:/var/run/pulse/native"
+        if sink: env += f" PULSE_SINK={sink}"
+        return [env, "--ao=pulse"]
 
+
+
+def get_mpv_args(settings=None, source: str = "") -> list:
+    """v0.10.5: Wrapper — nutzt decide_audio_route() + apply_audio_route()."""
+    d = decide_audio_route(settings=settings, source=source)
+    if not d.get("pa_ok", True):
+        src_tag = ("source=" + source).ljust(17) if source else "source=-         "
+        log.error("[AUDIO] " + src_tag + " effective=none reason=pulseaudio_inactive")
+        return ["--ao=pulse"]
+    apply_audio_route(d)
+    return build_player_args(d, source)
 
 def set_output(mode: str, settings: dict):
     mode = mode.lower().replace("audio_", "").strip()
@@ -634,7 +658,7 @@ def volume_up(settings=None):
                        shell=True, capture_output=True, timeout=3)
         if settings is not None:
             try:
-                settings["volume"] = min(150, int(settings.get("volume", 90)) + 5)
+                settings["volume"] = min(100, int(settings.get("volume", 90)) + 5)
                 from settings import save_settings
                 save_settings(settings)
             except Exception:
@@ -676,13 +700,3 @@ def volume_down(settings=None):
         ipc.clear_progress()
     except Exception as e:
         log.error("volume_down: " + str(e))
-
-
-def get_alsa_device(settings: dict) -> str:
-    """Veraltet — nur Altkompatibilitaet."""
-    requested = settings.get("audio_output", "auto")
-    if requested in ("bt", "auto"):
-        return "pulse"
-    if requested == "hdmi":
-        return "default"
-    return "default"
