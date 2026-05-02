@@ -16,6 +16,7 @@ from modules.bt_connect import (
     _reconnect_candidates, _should_try_reconnect,
     _mark_reconnect_failure, _mark_reconnect_success,
     _RECONNECT_LAST_TRY, _RECONNECT_FAILS,
+    _ensure_device_visible,
 )
 import threading
 import subprocess
