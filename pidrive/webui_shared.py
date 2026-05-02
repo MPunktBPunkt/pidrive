@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.6
+webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.8
 """
 
+import os
+import sys
+import json
+import time
+import threading
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 CMD_FILE = "/tmp/pidrive_cmd"
 STATUS_FILE = "/tmp/pidrive_status.json"
