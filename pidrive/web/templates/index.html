@@ -375,6 +375,75 @@
     </div>
   </div>
 
+
+  <!-- welle-cli Webinterface (Spektrum + Antennentest) -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">📡 welle-cli Webinterface
+        <span id="welleWebStatus" style="font-size:11px;margin-left:8px;padding:2px 8px;border-radius:10px;background:#0d2137;color:#8aa5bb">Gestoppt</span>
+      </div>
+      <p class="help-text" style="margin-bottom:8px">
+        Startet welle-cli mit HTTP-Server — zeigt Spektrum, SNR, Senderübersicht und Empfangsqualität.
+        Stoppt die laufende Audiowiedergabe. Für Antennenoptimierung und Empfangsdiagnose.
+      </p>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">Kanal auswählen</div>
+          <div class="diag-list">
+            <div class="diag-row">
+              <div class="diag-key">Kanal</div>
+              <div class="diag-value">
+                <select id="welleWebChannel" style="background:#0d2137;color:#cdd9e5;border:1px solid #1e2d3d;padding:4px 8px;border-radius:4px">
+                  <option value="11B">11B (222.064 MHz) — OAS BW</option>
+                  <option value="11D">11D (229.072 MHz)</option>
+                  <option value="10A">10A (210.096 MHz)</option>
+                  <option value="5C">5C (178.352 MHz)</option>
+                  <option value="7D">7D (194.064 MHz)</option>
+                  <option value="8A">8A (195.936 MHz)</option>
+                  <option value="9A">9A (202.928 MHz)</option>
+                  <option value="9C">9C (206.352 MHz)</option>
+                  <option value="10B">10B (211.648 MHz)</option>
+                  <option value="11C">11C (226.064 MHz)</option>
+                  <option value="12A">12A (229.072 MHz)</option>
+                  <option value="12C">12C (234.208 MHz)</option>
+                  <option value="13B">13B (238.208 MHz)</option>
+                  <option value="13C">13C (239.200 MHz)</option>
+                </select>
+              </div>
+            </div>
+            <div class="diag-row">
+              <div class="diag-key">Port</div>
+              <div class="diag-value">
+                <input id="welleWebPort" type="number" value="7979" style="width:70px">
+                <span style="font-size:11px;color:#6b8fa8;margin-left:4px">Standard: 7979</span>
+              </div>
+            </div>
+          </div>
+          <div class="diag-actions">
+            <button class="primary" onclick="welleWebStart()" id="welleWebStartBtn">▶ Webinterface starten</button>
+            <button onclick="welleWebStop()" id="welleWebStopBtn" style="opacity:0.5" disabled>⏹ Stoppen</button>
+            <button onclick="welleWebCheckStatus()" style="padding:4px 8px">🔄</button>
+          </div>
+          <div id="welleWebUrl" style="margin-top:8px;font-size:12px;color:#8aa5bb;min-height:16px">–</div>
+          <p class="help-text" style="margin-top:4px">⚠ Stoppt die laufende Audiowiedergabe für die Diagnose.</p>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Audio-Routing Debug (DAB)</div>
+          <div class="diag-list" id="dabAudioDebugList">
+            <div class="diag-row"><div class="diag-key">PULSE_SERVER</div><div class="diag-value" id="dabDbgPulseServer">–</div></div>
+            <div class="diag-row"><div class="diag-key">PULSE_SINK</div><div class="diag-value" id="dabDbgPulseSink">–</div></div>
+            <div class="diag-row"><div class="diag-key">PA Default Sink</div><div class="diag-value" id="dabDbgPaSink" style="font-size:10px;word-break:break-all">–</div></div>
+            <div class="diag-row"><div class="diag-key">welle-cli Cmd</div><div class="diag-value" id="dabDbgCmd" style="font-size:10px;word-break:break-all;max-width:180px">–</div></div>
+            <div class="diag-row"><div class="diag-key">Session-Err-File</div><div class="diag-value" id="dabDbgErrFile" style="font-size:10px">–</div></div>
+          </div>
+          <div class="diag-actions">
+            <button onclick="refreshDabStatus()">🔄 Debug laden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- DAB Signalstatus -->
   <div class="container">
     <div class="panel">
@@ -483,6 +552,130 @@
             <button onclick="sendCmd('squelch:25')">25 std.</button>
             <button onclick="sendCmd('squelch:35')">35</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ Spektrum-Scanner ══════════════════════════════════════════════════ -->
+  <div class="container">
+    <div class="panel">
+      <div class="panel-title">🔭 Spektrum-Analyzer
+        <span id="specAnalyzerStatus" style="font-size:11px;margin-left:8px;padding:2px 8px;
+          border-radius:10px;background:#0d2137;color:#8aa5bb">Bereit</span>
+      </div>
+      <p class="help-text" style="margin-bottom:10px">
+        RTL-SDR FFT-Snapshot: Einzelmessung oder Band-Sweep mit visuellem Trace.
+      </p>
+
+      <div class="diag-grid">
+        <!-- Parameter -->
+        <div class="diag-card">
+          <div class="diag-title">Parameter</div>
+          <div class="diag-list">
+            <div class="diag-row">
+              <div class="diag-key">Modus</div>
+              <div class="diag-value">
+                <select id="saMode" onchange="saUpdateMode()"
+                  style="background:#0d2137;color:#cdd9e5;border:1px solid #1e2d3d;padding:3px 6px;border-radius:4px">
+                  <option value="snapshot">Snapshot (Einzelfrequenz)</option>
+                  <option value="sweep">Band-Sweep</option>
+                  <option value="pmr446">PMR446 (10 Kanäle)</option>
+                  <option value="freenet">Freenet (3 Kanäle)</option>
+                </select>
+              </div>
+            </div>
+            <!-- Snapshot Felder -->
+            <div id="saSnapshotFields">
+              <div class="diag-row">
+                <div class="diag-key">Center (MHz)</div>
+                <div class="diag-value">
+                  <input id="saCenter" type="number" step="0.1" value="100.0"
+                    style="width:80px">
+                  <span style="font-size:11px;color:#6b8fa8;margin-left:4px">MHz</span>
+                </div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Samplerate</div>
+                <div class="diag-value">
+                  <select id="saSampleRate"
+                    style="background:#0d2137;color:#cdd9e5;border:1px solid #1e2d3d;padding:3px 6px;border-radius:4px">
+                    <option value="2048000">2.048 Msps (Standard)</option>
+                    <option value="1024000">1.024 Msps</option>
+                    <option value="512000">512 ksps (schnell)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- Sweep Felder -->
+            <div id="saSweepFields" style="display:none">
+              <div class="diag-row">
+                <div class="diag-key">Start (MHz)</div>
+                <div class="diag-value"><input id="saSweepStart" type="number" step="0.5" value="87.5" style="width:70px"></div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Stop (MHz)</div>
+                <div class="diag-value"><input id="saSweepStop" type="number" step="0.5" value="108.0" style="width:70px"></div>
+              </div>
+              <div class="diag-row">
+                <div class="diag-key">Schritt (MHz)</div>
+                <div class="diag-value"><input id="saSweepStep" type="number" step="0.5" value="1.0" style="width:70px"></div>
+              </div>
+            </div>
+            <!-- Gemeinsame Parameter -->
+            <div class="diag-row">
+              <div class="diag-key">PPM</div>
+              <div class="diag-value">
+                <input id="saPpm" type="number" value="0" style="width:60px">
+                <button onclick="saLoadPpm()" style="margin-left:4px;padding:2px 6px;font-size:11px">aus Settings</button>
+              </div>
+            </div>
+            <div class="diag-row">
+              <div class="diag-key">Gain (dB)</div>
+              <div class="diag-value">
+                <input id="saGain" type="number" value="-1" style="width:60px">
+                <span style="font-size:10px;color:#6b8fa8;margin-left:4px">−1 = AGC</span>
+              </div>
+            </div>
+          </div>
+          <div class="diag-actions" style="margin-top:10px">
+            <button class="primary" onclick="saRun()" id="saRunBtn">📡 Scan starten</button>
+            <button onclick="saClear()" style="padding:4px 8px">✕ Löschen</button>
+          </div>
+          <div id="saDuration" style="font-size:10px;color:#6b8fa8;margin-top:6px">–</div>
+        </div>
+
+        <!-- Peaks -->
+        <div class="diag-card">
+          <div class="diag-title">Erkannte Peaks</div>
+          <div id="saPeakList" style="font-size:11px;color:#8aa5bb;min-height:60px">
+            Noch kein Scan.
+          </div>
+          <div id="saMetaInfo" style="font-size:10px;color:#4d6a80;margin-top:8px">–</div>
+        </div>
+      </div>
+
+      <!-- Spektrum-Trace Canvas -->
+      <div style="margin-top:12px;position:relative">
+        <canvas id="saCanvas" width="680" height="130"
+          style="width:100%;max-width:680px;height:130px;background:#060e18;
+                 border:1px solid #1e2d3d;border-radius:4px;display:block">
+        </canvas>
+        <!-- Frequenz-Labels unter dem Canvas -->
+        <div id="saFreqLabels" style="display:flex;justify-content:space-between;
+          font-size:10px;color:#4d6a80;margin-top:2px;max-width:680px">
+          <span id="saFreqL">–</span>
+          <span id="saFreqC">–</span>
+          <span id="saFreqR">–</span>
+        </div>
+        <!-- dB-Skala rechts -->
+        <div id="saDbScale" style="position:absolute;right:0;top:0;font-size:9px;
+          color:#4d6a80;display:flex;flex-direction:column;justify-content:space-between;
+          height:130px;padding:2px 0;pointer-events:none">
+          <span id="saDbTop">–</span>
+          <span id="saDbMid">–</span>
+          <span id="saDbBot">–</span>
         </div>
       </div>
     </div>
@@ -1305,6 +1498,21 @@ async function refreshDabStatus() {
                 : (st.track || st.artist || '–');
       if(el('dabStatusDls')) el('dabStatusDls').textContent = dls;
     } catch(e2) {}
+
+    // v0.10.4: Audio-Routing Debug anzeigen
+    if (el('dabDbgPulseServer')) {
+      const psi = d.pulse_server_in_env;
+      el('dabDbgPulseServer').textContent = psi === true ? '✓ vorhanden' : psi === false ? '✗ fehlt' : '–';
+      el('dabDbgPulseServer').style.color  = psi === true ? '#3fb950' : psi === false ? '#f85149' : '#8aa5bb';
+    }
+    if (el('dabDbgPulseSink')) {
+      const psk = d.pulse_sink_in_env;
+      el('dabDbgPulseSink').textContent = psk === true ? '✓ gesetzt (Timing-Risiko!)' : psk === false ? '✓ entfernt' : '–';
+      el('dabDbgPulseSink').style.color  = psk === true ? '#d29922' : '#3fb950';
+    }
+    if (el('dabDbgPaSink'))   el('dabDbgPaSink').textContent  = d.pa_default_sink || '(nicht gesetzt)';
+    if (el('dabDbgCmd'))      el('dabDbgCmd').textContent     = d.welle_cmd        || '–';
+    if (el('dabDbgErrFile'))  el('dabDbgErrFile').textContent = d.sess_err_file    || '–';
   } catch(e) { console.log('dabStatus:', e); }
 }
 
@@ -1584,6 +1792,375 @@ async function runSpectrumPeakOnce() {
       el('specPeakResult').style.color = '#f85149';
     }
   }
+}
+
+
+// ── welle-cli Webinterface (Tab 3) ────────────────────────────────────────
+
+async function welleWebStart() {
+  const channel = document.getElementById('welleWebChannel')?.value || '11B';
+  const port    = document.getElementById('welleWebPort')?.value    || '7979';
+  const btn     = document.getElementById('welleWebStartBtn');
+  const el      = (id) => document.getElementById(id);
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Starte…'; }
+  try {
+    const r = await fetch(`/api/dab/diag?channel=${encodeURIComponent(channel)}&port=${encodeURIComponent(port)}`);
+    const j = await r.json();
+    if (j.ok) {
+      welleWebUpdateUI(true, j.url, j.port);
+      showWelleWebStatus('Läuft', true);
+      // Link direkt anzeigen
+      if (el('welleWebUrl')) {
+        el('welleWebUrl').innerHTML =
+          `🌐 Webinterface: <a href="${j.url}" target="_blank" style="color:#58a6ff">${j.url}</a>` +
+          ` <span style="font-size:10px;color:#6b8fa8">(neuen Tab öffnen)</span>`;
+      }
+    } else {
+      showWelleWebStatus('Fehler: ' + (j.error||'?'), false);
+      if (btn) { btn.disabled = false; btn.textContent = '▶ Webinterface starten'; }
+    }
+  } catch(e) {
+    showWelleWebStatus('Netzwerkfehler', false);
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Webinterface starten'; }
+  }
+}
+
+async function welleWebStop() {
+  try {
+    await fetch('/api/dab/diag/stop');
+    welleWebUpdateUI(false, null, null);
+    showWelleWebStatus('Gestoppt', false);
+    const u = document.getElementById('welleWebUrl');
+    if (u) u.innerHTML = '–';
+  } catch(e) {}
+}
+
+async function welleWebCheckStatus() {
+  try {
+    const r = await fetch('/api/dab/diag/status');
+    const j = await r.json();
+    if (j.running) {
+      welleWebUpdateUI(true, j.url, j.port);
+      showWelleWebStatus('Läuft (Port ' + j.port + ')', true);
+      const u = document.getElementById('welleWebUrl');
+      if (u && j.url)
+        u.innerHTML = `🌐 <a href="${j.url}" target="_blank" style="color:#58a6ff">${j.url}</a>`;
+    } else {
+      welleWebUpdateUI(false, null, null);
+      showWelleWebStatus('Gestoppt', false);
+    }
+  } catch(e) {}
+}
+
+function welleWebUpdateUI(running, url, port) {
+  const startBtn = document.getElementById('welleWebStartBtn');
+  const stopBtn  = document.getElementById('welleWebStopBtn');
+  if (startBtn) { startBtn.disabled = running;  startBtn.textContent = running ? '▶ Läuft' : '▶ Webinterface starten'; }
+  if (stopBtn)  { stopBtn.disabled  = !running; stopBtn.style.opacity = running ? '1' : '0.5'; }
+}
+
+function showWelleWebStatus(msg, active) {
+  const el = document.getElementById('welleWebStatus');
+  if (!el) return;
+  el.textContent  = msg;
+  el.style.background = active ? '#0d3a1e' : '#0d2137';
+  el.style.color      = active ? '#3fb950'  : '#8aa5bb';
+}
+
+
+// ── Spektrum-Analyzer (Tab 4) ──────────────────────────────────────────────
+
+let _saLastResult = null;
+
+function saUpdateMode() {
+  const mode = document.getElementById('saMode')?.value;
+  const snap = document.getElementById('saSnapshotFields');
+  const swp  = document.getElementById('saSweepFields');
+  if (snap) snap.style.display = (mode === 'snapshot') ? '' : 'none';
+  if (swp)  swp.style.display  = (mode === 'sweep')    ? '' : 'none';
+}
+
+async function saLoadPpm() {
+  try {
+    const r = await fetch('/api/runtime'); const j = await r.json();
+    const ppm = j?.settings?.ppm_correction ?? j?.settings?.ppm ?? 0;
+    const el = document.getElementById('saPpm');
+    if (el) { el.value = ppm; }
+  } catch(e) {}
+}
+
+async function saRun() {
+  const mode   = document.getElementById('saMode')?.value    || 'snapshot';
+  const ppm    = parseInt(document.getElementById('saPpm')?.value   || '0');
+  const gain   = parseInt(document.getElementById('saGain')?.value  || '-1');
+  const btn    = document.getElementById('saRunBtn');
+  const status = document.getElementById('specAnalyzerStatus');
+
+  if (btn)    { btn.disabled = true; btn.textContent = '⏳ Scan läuft…'; }
+  if (status) { status.textContent = 'Läuft…'; status.style.color = '#d29922'; }
+  const t0 = Date.now();
+
+  try {
+    let url, body;
+
+    if (mode === 'snapshot') {
+      const center = parseFloat(document.getElementById('saCenter')?.value || '100.0');
+      const sr     = parseInt(document.getElementById('saSampleRate')?.value || '2048000');
+      url  = `/api/spectrum/capture`;
+      body = { mode: 'snapshot', center_mhz: center, ppm, gain,
+               sample_rate_hz: sr };
+
+    } else if (mode === 'sweep') {
+      const start = parseFloat(document.getElementById('saSweepStart')?.value || '87.5');
+      const stop  = parseFloat(document.getElementById('saSweepStop')?.value  || '108.0');
+      const step  = parseFloat(document.getElementById('saSweepStep')?.value  || '1.0');
+      url  = `/api/spectrum/capture`;
+      body = { mode: 'fm_sweep', start_mhz: start, stop_mhz: stop,
+               step_mhz: step, ppm, gain };
+
+    } else {
+      // pmr446 / freenet
+      url  = `/api/spectrum/capture`;
+      body = { band: mode, ppm, gain };
+    }
+
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+
+    const dt = ((Date.now() - t0) / 1000).toFixed(1);
+    if (document.getElementById('saDuration'))
+      document.getElementById('saDuration').textContent = `Dauer: ${dt}s`;
+
+    if (j.ok || j.data) {
+      _saLastResult = j;
+      saRenderTrace(j);
+      saRenderPeaks(j);
+      if (status) { status.textContent = 'OK'; status.style.color = '#3fb950'; }
+    } else {
+      saShowError(j.error || 'Fehler');
+      if (status) { status.textContent = 'Fehler'; status.style.color = '#f85149'; }
+    }
+  } catch(e) {
+    saShowError(String(e));
+    if (status) { status.textContent = 'Fehler'; status.style.color = '#f85149'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📡 Scan starten'; }
+  }
+}
+
+function saShowError(msg) {
+  const pl = document.getElementById('saPeakList');
+  if (pl) pl.innerHTML = `<span style="color:#f85149">Fehler: ${msg}</span>`;
+  const cv = document.getElementById('saCanvas');
+  if (cv) {
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#f85149';
+    ctx.font = '12px monospace';
+    ctx.fillText('Fehler: ' + msg, 10, 70);
+  }
+}
+
+function saClear() {
+  _saLastResult = null;
+  const cv = document.getElementById('saCanvas');
+  if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  const pl = document.getElementById('saPeakList');
+  if (pl) pl.textContent = 'Noch kein Scan.';
+  ['saFreqL','saFreqC','saFreqR','saDbTop','saDbMid','saDbBot','saMetaInfo','saDuration']
+    .forEach(id => { const e = document.getElementById(id); if(e) e.textContent='–'; });
+  const s = document.getElementById('specAnalyzerStatus');
+  if (s) { s.textContent = 'Bereit'; s.style.color = '#8aa5bb'; }
+}
+
+function saRenderTrace(data) {
+  const cv  = document.getElementById('saCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Daten extrahieren
+  let bins = null, centerMhz = 0, srHz = 2048000;
+  const mode = document.getElementById('saMode')?.value || 'snapshot';
+
+  if (data.spectrum_db && Array.isArray(data.spectrum_db)) {
+    bins      = data.spectrum_db;
+    centerMhz = data.center_mhz || 0;
+    srHz      = data.sample_rate_hz || 2048000;
+  } else if (data.data && data.data.sweep_points) {
+    // fm_sweep format: array of {center_mhz, peak_db}
+    const pts = data.data.sweep_points;
+    bins      = pts.map(p => p.peak_db);
+    centerMhz = pts.length > 0 ? (pts[0].center_mhz + pts[pts.length-1].center_mhz) / 2 : 0;
+    const span = pts.length > 1 ? pts[pts.length-1].center_mhz - pts[0].center_mhz : 1;
+    srHz = span * 1e6;
+  } else if (data.data) {
+    // pmr/freenet: no trace, just peaks
+    saRenderPeakBars(data);
+    return;
+  }
+
+  if (!bins || bins.length === 0) { ctx.fillStyle='#4d6a80'; ctx.fillText('Keine Daten', W/2-30, H/2); return; }
+
+  // Stats
+  const maxDb = Math.max(...bins);
+  const minDb = Math.min(...bins);
+  const rangeDb = maxDb - minDb || 1;
+  const PAD = 4;
+
+  // Hintergrund-Raster
+  ctx.strokeStyle = '#0d1f2f';
+  ctx.lineWidth   = 1;
+  for (let db = Math.ceil(minDb / 10) * 10; db <= maxDb; db += 10) {
+    const y = H - PAD - ((db - minDb) / rangeDb) * (H - 2*PAD);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Spektrum-Linie mit Gradient-Fill
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0,   'rgba(0, 200, 180, 0.7)');
+  grad.addColorStop(0.6, 'rgba(0, 120, 110, 0.3)');
+  grad.addColorStop(1,   'rgba(0, 60, 55, 0.05)');
+
+  ctx.beginPath();
+  const step = W / bins.length;
+  bins.forEach((db, i) => {
+    const x = i * step;
+    const y = H - PAD - ((db - minDb) / rangeDb) * (H - 2*PAD);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  // Fill area
+  const lastX = (bins.length - 1) * step;
+  ctx.lineTo(lastX, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Outline
+  ctx.beginPath();
+  bins.forEach((db, i) => {
+    const x = i * step;
+    const y = H - PAD - ((db - minDb) / rangeDb) * (H - 2*PAD);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#00c8b4'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Peaks markieren
+  const peaks = data.peaks || [];
+  peaks.forEach(p => {
+    const freqMhz = p.freq_mhz;
+    const bwMhz   = (srHz / 1e6) / 2;
+    const frac    = (freqMhz - (centerMhz - bwMhz)) / (2 * bwMhz);
+    if (frac < 0 || frac > 1) return;
+    const x = frac * W;
+    const db = bins[Math.round(frac * (bins.length - 1))] || minDb;
+    const y = H - PAD - ((db - minDb) / rangeDb) * (H - 2*PAD);
+    // Marker
+    ctx.beginPath();
+    ctx.arc(x, y - 4, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#f0a030'; ctx.fill();
+    // Label
+    ctx.fillStyle = '#f0a030';
+    ctx.font = '10px monospace';
+    ctx.fillText(freqMhz.toFixed(2), Math.max(2, Math.min(x - 16, W - 50)), Math.max(12, y - 8));
+  });
+
+  // Achsen-Labels
+  const bwMhz = (srHz / 1e6) / 2;
+  const freqL = document.getElementById('saFreqL');
+  const freqC = document.getElementById('saFreqC');
+  const freqR = document.getElementById('saFreqR');
+  if (freqL) freqL.textContent = (centerMhz - bwMhz).toFixed(2) + ' MHz';
+  if (freqC) freqC.textContent = centerMhz.toFixed(2) + ' MHz';
+  if (freqR) freqR.textContent = (centerMhz + bwMhz).toFixed(2) + ' MHz';
+
+  const dbTop = document.getElementById('saDbTop');
+  const dbMid = document.getElementById('saDbMid');
+  const dbBot = document.getElementById('saDbBot');
+  if (dbTop) dbTop.textContent = maxDb.toFixed(0) + ' dB';
+  if (dbMid) dbMid.textContent = ((maxDb + minDb) / 2).toFixed(0) + ' dB';
+  if (dbBot) dbBot.textContent = minDb.toFixed(0) + ' dB';
+
+  // Meta
+  const meta = document.getElementById('saMetaInfo');
+  if (meta) meta.textContent =
+    `${bins.length} Bins · ${(srHz / 1e6).toFixed(3)} MHz Bandbreite · ` +
+    `${((srHz / bins.length) / 1000).toFixed(1)} kHz/Bin`;
+}
+
+function saRenderPeakBars(data) {
+  // Für PMR/Freenet: Balkendiagramm der Kanalaktivität
+  const cv = document.getElementById('saCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cands = data.data?.active_channels || [];
+  if (cands.length === 0) {
+    ctx.fillStyle = '#4d6a80'; ctx.font = '12px monospace';
+    ctx.fillText('Keine aktiven Kanäle gefunden', W/2 - 100, H/2);
+    return;
+  }
+
+  const maxScore = Math.max(...cands.map(c => c.score || c.confidence || 1), 1);
+  const barW = Math.min(50, (W - 20) / cands.length - 4);
+  const totalW = cands.length * (barW + 4);
+  const startX = (W - totalW) / 2;
+
+  cands.forEach((c, i) => {
+    const score = c.score || c.confidence || 0;
+    const x = startX + i * (barW + 4);
+    const barH = Math.max(4, (score / maxScore) * (H - 40));
+    const y = H - 20 - barH;
+    const col = score > 0.6 ? '#f0a030' : score > 0.3 ? '#3fb950' : '#4d6a80';
+    ctx.fillStyle = col;
+    ctx.fillRect(x, y, barW, barH);
+    ctx.fillStyle = '#8aa5bb'; ctx.font = '9px monospace';
+    ctx.fillText(c.channel || c.freq_mhz?.toFixed(2) || '', x, H - 4);
+  });
+
+  const fl = document.getElementById('saFreqL');
+  if (fl) fl.textContent = `${cands.length} Kanal-Treffer`;
+}
+
+function saRenderPeaks(data) {
+  const pl = document.getElementById('saPeakList');
+  if (!pl) return;
+
+  // PMR/Freenet
+  if (data.data?.active_channels !== undefined) {
+    const cands = data.data.active_channels || [];
+    const best  = data.data.best_candidate;
+    if (cands.length === 0) {
+      pl.innerHTML = '<span style="color:#4d6a80">Keine aktiven Kanäle</span>';
+      return;
+    }
+    let html = '';
+    if (best) html += `<div style="color:#f0a030;font-weight:bold">★ Best: ${best.channel} — ${best.freq_mhz?.toFixed(4)} MHz (Score ${best.score?.toFixed(2)})</div>`;
+    cands.slice(0, 8).forEach(c => {
+      html += `<div style="margin:2px 0">📡 ${c.channel || '?'} — ${(c.freq_mhz||0).toFixed(4)} MHz`;
+      if (c.score) html += ` · Score ${c.score.toFixed(2)}`;
+      html += '</div>';
+    });
+    pl.innerHTML = html || '<span style="color:#4d6a80">–</span>';
+    return;
+  }
+
+  // Snapshot / Sweep peaks
+  const peaks = data.peaks || data.data?.peaks || [];
+  if (peaks.length === 0) {
+    pl.innerHTML = '<span style="color:#4d6a80">Keine Peaks über Schwelle</span>';
+    return;
+  }
+  pl.innerHTML = peaks.slice(0, 10).map(p =>
+    `<div style="margin:2px 0">📡 ${p.freq_mhz?.toFixed(3)} MHz — ${p.power_db?.toFixed(1) ?? p.peak_db?.toFixed(1) ?? '?'} dB` +
+    (p.bw_khz ? ` · BW ${p.bw_khz?.toFixed(0)} kHz` : '') + '</div>'
+  ).join('');
 }
 
 </script>
