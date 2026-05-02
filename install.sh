@@ -378,6 +378,17 @@ ASOUNDEOF
   if [ -n "$KLINKE_SINK" ]; then
     PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink "$KLINKE_SINK" 2>/dev/null || true
     ok "PulseAudio: Default Sink = $KLINKE_SINK (Klinke Card 1)"
+
+    # v0.10.3: Default Sink in system.pa persistieren (überlebt Reboots)
+    if [ -f /etc/pulse/system.pa ]; then
+      # Alten set-default-sink Eintrag entfernen, neuen am Ende schreiben
+      grep -v "^set-default-sink" /etc/pulse/system.pa > /tmp/system.pa.new
+      echo "" >> /tmp/system.pa.new
+      echo "# PiDrive: Klinke als Default-Sink (v0.10.3)" >> /tmp/system.pa.new
+      echo "set-default-sink $KLINKE_SINK" >> /tmp/system.pa.new
+      mv /tmp/system.pa.new /etc/pulse/system.pa
+      ok "PulseAudio: Default Sink in system.pa persistiert ($KLINKE_SINK)"
+    fi
   else
     warn "PulseAudio: Klinken-Sink noch nicht sichtbar — beim ersten Abspielen gesetzt"
   fi
