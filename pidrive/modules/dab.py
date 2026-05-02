@@ -736,9 +736,46 @@ def play_station(station, S, settings=None):
             " 2>" + _sess_err_file
         )
 
+        # ── v0.10.3: Saubere ALSA-Umgebung für welle-cli ────────────────────
+        # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
+        #          → wird von welle-cli geerbt
+        #          → PulseAudio ALSA-Plugin (pcm.!default {type pulse})
+        #            fängt ALSA-Calls ab → falscher Sink → kein Ton
+        # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
+        #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
+        _welle_env = dict(os.environ)
+        for _k in ("PULSE_SERVER", "PULSE_SINK", "PULSE_AUDIO", "PULSE_RUNTIME_PATH"):
+            _welle_env.pop(_k, None)
+
+        # /etc/asound.conf prüfen und bei Bedarf korrigieren
+        # (ohne asound.conf → ALSA default = Card 0 = HDMI → kein Ton)
+        try:
+            _hpcard = _audio._get_headphone_card()
+            _asound_ok_line = f"defaults.pcm.card {_hpcard}"
+            _asound_path = "/etc/asound.conf"
+            _asound_exists = os.path.exists(_asound_path)
+            _asound_ok = _asound_ok_line in (
+                open(_asound_path).read() if _asound_exists else ""
+            )
+            if not _asound_ok:
+                _asound_content = (
+                    "# PiDrive: ALSA Default auf Klinke\n"
+                    f"defaults.pcm.card {_hpcard}\n"
+                    f"defaults.ctl.card {_hpcard}\n"
+                    "defaults.pcm.device 0\n"
+                )
+                with open(_asound_path, "w") as _af:
+                    _af.write(_asound_content)
+                log.info(f"DAB: /etc/asound.conf geschrieben → card {_hpcard} (Klinke)")
+            else:
+                log.info(f"DAB: /etc/asound.conf OK (card {_hpcard})")
+        except Exception as _ae:
+            log.warn(f"DAB: asound.conf check/write: {_ae}")
+
         _write_play_debug({
             "audio_decision": _adec,
             "welle_cmd": _welle_cmd,
+            "pulse_server_cleared": "PULSE_SERVER" not in _welle_env,
             "ppm": _ppm_val,
             "gain": _gain,
         })
@@ -752,7 +789,8 @@ def play_station(station, S, settings=None):
                     owner="dab_play",
                     shell=True,
                     stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
+                    stderr=subprocess.DEVNULL,
+                    env=_welle_env,   # ← Saubere Umgebung ohne PULSE_SERVER
                 )
             except Exception as e:
                 _set_dab_status_fields(
@@ -772,7 +810,8 @@ def play_station(station, S, settings=None):
                 _welle_cmd,
                 shell=True,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
+                env=_welle_env,   # ← Saubere Umgebung ohne PULSE_SERVER
             )
 
         lock_wait_max = 12
