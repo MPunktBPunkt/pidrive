@@ -28,6 +28,8 @@ LOG_FILE = "/var/log/pidrive/pidrive.log"
 READY_FILE = "/tmp/pidrive_ready"
 KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
 BT_AGENT_FILE = "/tmp/pidrive_bt_agent.json"
+STATIONS_FILE = os.path.join(BASE_DIR, "pidrive", "config", "stations.json")
+
 DAB_DEBUG_FILE = "/tmp/pidrive_dab_play_debug.json"
 
 ALLOWED_COMMANDS = {
@@ -77,18 +79,28 @@ def file_age(path):
         return None
 
 
-def get_ip():
+# v0.10.3: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
+_ip_cache: tuple = ("", 0.0)
+
+def get_ip() -> str:
+    global _ip_cache
+    import time as _t
+    if _t.time() - _ip_cache[1] < 30.0 and _ip_cache[0]:
+        return _ip_cache[0]
+    ip = "?"
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.5)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
-        return ip
     except Exception:
         try:
-            return socket.gethostbyname(socket.gethostname())
+            ip = socket.gethostbyname(socket.gethostname())
         except Exception:
-            return "?"
+            pass
+    _ip_cache = (ip, _t.time())
+    return ip
 
 
 def safe_run(cmd):
@@ -594,6 +606,52 @@ def index():
     return render_template("index.html", vm=vm)
 
 
+@app.route("/api/core")
+def api_core():
+    """
+    v0.10.3: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
+    Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
+    Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
+    """
+    status = read_json(STATUS_FILE, {})
+    menu   = read_json(MENU_FILE, {})
+    prog   = read_json(PROGRESS_FILE, {})
+    list_d = read_json(LIST_FILE, {})
+    nodes  = menu.get("nodes", [])
+    cursor = menu.get("cursor", 0)
+    sel    = nodes[cursor] if nodes and cursor < len(nodes) else {}
+
+    return jsonify({
+        "status":    status,
+        "path":      menu.get("path", []),
+        "nodes":     nodes,
+        "cursor":    cursor,
+        "rev":       menu.get("rev", 0),
+        "can_back":  menu.get("can_back", False),
+        "categories": menu.get("categories", []),
+        "items":     menu.get("items", []),
+        "progress":  prog,
+        "list_data": list_d,
+        "list_active":   list_d.get("active", False),
+        "list_title":    list_d.get("title", ""),
+        "list_items":    list_d.get("items", []),
+        "list_selected": list_d.get("selected", 0),
+        "debug": {
+            "rev":            menu.get("rev", 0),
+            "path":           menu.get("path", []),
+            "title":          menu.get("title", ""),
+            "cursor":         cursor,
+            "can_back":       menu.get("can_back", False),
+            "selected_label": sel.get("label", "") if isinstance(sel, dict) else str(sel),
+            "selected_type":  sel.get("type", "")  if isinstance(sel, dict) else "",
+            "node_count":     len(nodes),
+            "core_ready":     os.path.exists(READY_FILE),
+            "status_age":     file_age(STATUS_FILE),
+            "menu_age":       file_age(MENU_FILE),
+        },
+    })
+
+
 @app.route("/api/state")
 def api_state():
     return jsonify(build_view_model())
@@ -654,7 +712,8 @@ def api_cmd():
         "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
         "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
         "dab_scan_channels:", "bt_connect:", "wifi_connect:", "bt_repair:",
-        "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:"
+        "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
+        "webradio_play:",
     )
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
@@ -732,7 +791,7 @@ def api_diagnose():
 
 @app.route("/api/grep")
 def api_grep():
-    cmd = r'''grep -R "pidrive_status\|pidrive_menu\|write_json\|json.dump" /home/pi/pidrive/pidrive -n'''
+    cmd = r'''grep -R "pidrive_status\|pidrive_menu\|write_json\|json.dump" '  + str(BASE_DIR / "pidrive") + ' -n'''
     return jsonify(safe_run(cmd))
 
 
@@ -1024,6 +1083,48 @@ def api_dab_status():
     })
 
 
+
+@app.route("/api/scanner/settings", methods=["GET", "POST"])
+def api_scanner_settings():
+    """
+    v0.10.3: Scanner-Einstellungen lesen/schreiben.
+    GET  → aktuelle Werte (inkl. scanner_use_spectrum)
+    POST → Werte speichern, z.B. {"scanner_use_spectrum": true}
+    """
+    try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from settings import load_settings as _ls, save_settings as _ss
+        s = _ls()
+
+        if request.method == "GET":
+            return jsonify({
+                "ok": True,
+                "data": {
+                    "scanner_use_spectrum":   s.get("scanner_use_spectrum", False),
+                    "scanner_spectrum_debug": s.get("scanner_spectrum_debug", False),
+                    "scanner_gain":           s.get("scanner_gain", -1),
+                    "scanner_squelch":        s.get("scanner_squelch", 25),
+                    "ppm_correction":         s.get("ppm_correction", 0),
+                }
+            })
+
+        # POST: update fields
+        body = request.get_json(silent=True) or {}
+        changed = []
+        for key in ("scanner_use_spectrum", "scanner_spectrum_debug",
+                    "scanner_gain", "scanner_squelch"):
+            if key in body:
+                s[key] = body[key]
+                changed.append(key)
+        if changed:
+            _ss(s)
+        return jsonify({"ok": True, "changed": changed, "data": {k: s[k] for k in changed}})
+
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @app.route("/api/spectrum/last")
 def api_spectrum_last():
     return jsonify({
@@ -1036,16 +1137,62 @@ def api_spectrum_last():
 
 @app.route("/api/spectrum/capture", methods=["GET", "POST"])
 def api_spectrum_capture():
-    args = request.get_json(silent=True) or request.args
+    """
+    Spectrum Capture. Unterstützt:
+    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.3)
+    - mode=fm_sweep       → Legacy FM-Band-Sweep
+    - mode=snapshot       → Einzelmessung bei center_mhz
+    """
+    args = request.get_json(silent=True) or {}
+    if not args:
+        args = {k: v for k, v in request.args.items()}
+
+    band = args.get("band", "")
     mode = args.get("mode", "fm_sweep")
-    ppm = int(args.get("ppm", 49))
-    gain = int(args.get("gain", -1))
     try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
         from modules import spectrum
+        from settings import load_settings as _ls
+        s = _ls()
+        ppm  = int(args.get("ppm",  s.get("ppm_correction", 0)))
+        gain = int(args.get("gain", s.get("scanner_gain", -1)))
+        debug = bool(args.get("debug", s.get("scanner_spectrum_debug", False)))
+
+        # v0.10.3: Peak-Identifizierung für PMR446 / Freenet
+        if band in ("pmr446", "freenet"):
+            watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
+            profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
+            result  = watcher.watch_channels(profile, debug=debug)
+            cands   = result.active_channels if result else []
+            best    = None
+            if result and result.best_candidate:
+                c = result.best_candidate
+                best = {
+                    "channel": c.channel_name,
+                    "freq_mhz": round(float(c.freq_hz) / 1e6, 6),
+                    "score": round(float(c.score), 3),
+                    "confidence": round(float(c.confidence), 3),
+                    "note": c.note or "",
+                }
+            return jsonify({
+                "ok": True,
+                "band": band,
+                "data": {
+                    "active_channels": cands,
+                    "found": bool(result and result.found),
+                    "watch_seconds": round(float(result.watch_seconds), 2) if result else 0,
+                    "frames_processed": result.frames_processed if result else 0,
+                    "best_candidate": best,
+                },
+            })
+
+        # Legacy paths
         if mode == "fm_sweep":
             start = float(args.get("start_mhz", 87.5))
-            stop = float(args.get("stop_mhz", 108.0))
-            step = float(args.get("step_mhz", 1.0))
+            stop  = float(args.get("stop_mhz", 108.0))
+            step  = float(args.get("step_mhz", 1.0))
             result = spectrum.sweep_fm_band(
                 start_mhz=start, stop_mhz=stop, step_mhz=step,
                 ppm=ppm, gain=gain)
@@ -1100,6 +1247,113 @@ def api_debug_summary():
         "known_bt_devices": read_json(KNOWN_BT_FILE, {"devices": []}),
         "bt_agent": read_json(BT_AGENT_FILE, {}),
     })
+
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Webradio API
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _load_stations_file():
+    """stations.json lesen. Gibt dict mit 'stations'-Liste zurück."""
+    try:
+        with open(STATIONS_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"version": 1, "stations": []}
+
+
+def _save_stations_file(data: dict):
+    """stations.json atomar schreiben."""
+    import time as _t
+    data["updated_at"] = _t.strftime("%Y-%m-%dT%H:%M:%S")
+    tmp = STATIONS_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, STATIONS_FILE)
+
+
+@app.route("/api/webradio/stations")
+def api_webradio_stations():
+    data = _load_stations_file()
+    return jsonify({"ok": True, "stations": data.get("stations", [])})
+
+
+@app.route("/api/webradio/add", methods=["POST"])
+def api_webradio_add():
+    body = request.get_json(silent=True) or {}
+    name = (body.get("name") or "").strip()
+    url  = (body.get("url")  or "").strip()
+    genre = (body.get("genre") or "").strip()
+    if not name or not url:
+        return jsonify({"ok": False, "error": "name und url sind Pflichtfelder"}), 400
+
+    data = _load_stations_file()
+    stations = data.get("stations", [])
+
+    # ID aus Name ableiten (URL-safe)
+    import re as _re
+    base_id = "web_" + _re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+    sid = base_id
+    existing_ids = {s.get("id") for s in stations}
+    counter = 2
+    while sid in existing_ids:
+        sid = f"{base_id}_{counter}"
+        counter += 1
+
+    stations.append({
+        "id": sid,
+        "name": name,
+        "url": url,
+        "genre": genre or "Sonstige",
+        "favorite": False,
+        "enabled": True,
+    })
+    data["stations"] = stations
+    try:
+        _save_stations_file(data)
+        return jsonify({"ok": True, "id": sid, "station_count": len(stations)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/webradio/delete", methods=["POST"])
+def api_webradio_delete():
+    body = request.get_json(silent=True) or {}
+    sid = (body.get("id") or "").strip()
+    if not sid:
+        return jsonify({"ok": False, "error": "id fehlt"}), 400
+
+    data = _load_stations_file()
+    before = len(data.get("stations", []))
+    data["stations"] = [s for s in data.get("stations", []) if s.get("id") != sid]
+    after = len(data["stations"])
+    if before == after:
+        return jsonify({"ok": False, "error": f"Station nicht gefunden: {sid}"}), 404
+    try:
+        _save_stations_file(data)
+        return jsonify({"ok": True, "removed": sid, "station_count": after})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/webradio/toggle", methods=["POST"])
+def api_webradio_toggle():
+    body = request.get_json(silent=True) or {}
+    sid = (body.get("id") or "").strip()
+    if not sid:
+        return jsonify({"ok": False, "error": "id fehlt"}), 400
+
+    data = _load_stations_file()
+    for s in data.get("stations", []):
+        if s.get("id") == sid:
+            s["enabled"] = not s.get("enabled", True)
+            try:
+                _save_stations_file(data)
+                return jsonify({"ok": True, "id": sid, "enabled": s["enabled"]})
+            except Exception as e:
+                return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({"ok": False, "error": f"Station nicht gefunden: {sid}"}), 404
 
 
 @app.route("/api/system/resources")

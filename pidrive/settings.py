@@ -41,6 +41,8 @@ _DEFAULTS = {
     "scanner_uhf_freq":   400.000,
     "scanner_gain":       -1,            # -1 = Auto AGC
     "scanner_squelch":    25,            # 0=offen 10=empfindlich 25=standard 35=hart
+    "scanner_use_spectrum":   False,     # True = Spectrum Peak für PMR446/Freenet
+    "scanner_spectrum_debug": False,     # True = Spectrum Debug-JSON schreiben
     # RTL-SDR
     "ppm_correction":     0,             # Quarzfehler-Korrektur (gemessener ~52 ppm)
     # Bluetooth

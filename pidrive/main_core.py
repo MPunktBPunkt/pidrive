@@ -215,7 +215,25 @@ def handle_trigger(cmd, menu_state, store, S, settings):
 
     # ── Spotify ───────────────────────────────────────────────────────────
     elif cmd in ("spotify_on", "spotify_off", "spotify_toggle"):
-        bg(lambda: musik.spotify_toggle(S))
+        def _spotify_toggle():
+            was_active = bool(S.get("spotify"))
+            musik.spotify_toggle(S)
+            if was_active:
+                source_state.commit_source("idle")
+                log.info("SOURCE spotify → idle (stop)")
+            else:
+                # v0.10.3: status.py forcieren statt blind 1.5s warten
+                import time as _t
+                for _attempt in range(6):      # max 3s in 0.5s-Schritten
+                    _t.sleep(0.5)
+                    S_module.refresh(force=True)
+                    if S.get("spotify"):
+                        source_state.commit_source("spotify")
+                        log.info(f"SOURCE commit: spotify (attempt={_attempt+1})")
+                        break
+                else:
+                    log.warn("SOURCE spotify: nicht aktiv nach 3s — kein commit")
+        bg(_spotify_toggle)
 
     # ── Audio ─────────────────────────────────────────────────────────────
     elif cmd == "audio_klinke":
@@ -638,6 +656,39 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             time.sleep(1)
             ipc.clear_progress()
 
+    # ── Webradio Play direkt (WebUI) ────────────────────────────────────────
+    elif cmd.startswith("webradio_play:"):
+        # Format: webradio_play:<station_id>
+        # station_id entspricht dem id-Feld in config/stations.json
+        _station_id = cmd.split(":", 1)[1].strip()
+        try:
+            _stations = webradio.load_stations()
+            _match = next((s for s in _stations if s.get("id") == _station_id), None)
+            if _match and _match.get("enabled", True):
+                def _do_webradio_play(m=_match):
+                    source_state.begin_transition("webui", "webradio")
+                    try:
+                        # Alle laufenden Quellen stoppen (kein _stop_all_sources hier im Scope)
+                        for _stopper in (dab.stop, fm.stop, scanner.stop):
+                            try: _stopper(S)
+                            except Exception: pass
+                        S["radio_playing"] = False
+                        S["radio_type"] = ""
+                        webradio.play_station(m, S, settings)
+                        source_state.commit_source("webradio")
+                    except Exception as _e:
+                        log.error(f"WEBRADIO_PLAY inner: {_e}")
+                    finally:
+                        source_state.end_transition()
+                    log.action("WEBRADIO_PLAY", f"id={_station_id} name={m.get('name','?')}")
+                bg(_do_webradio_play)
+            else:
+                log.warn(f"WEBRADIO_PLAY: Station nicht gefunden oder deaktiviert id={_station_id!r}")
+        except Exception as e:
+            log.error(f"WEBRADIO_PLAY: {e}")
+            try: source_state.end_transition()
+            except Exception: pass
+
     # ── FM Next/Prev ────────────────────────────────────────────────────────
     elif cmd == "fm_next":
         bg(lambda: fm.play_next(S, store.fm))
@@ -702,7 +753,14 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             except Exception:
                 delta = 0
             if delta:
-                bg(lambda b=band, d=delta: scanner.channel_jump(b, d, S))
+                # v0.10.2: settings durchreichen + begin_transition wrapper
+                def _scan_jump_fn(b=band, d=delta):
+                    if source_state.begin_transition(f"scan_jump:{b}", "scanner"):
+                        try:
+                            scanner.channel_jump(b, d, S, settings)
+                        finally:
+                            source_state.end_transition()
+                bg(_scan_jump_fn)
 
     elif cmd.startswith("scan_step:"):
         parts = cmd.split(":")
@@ -713,7 +771,14 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             except Exception:
                 delta = 0.0
             if delta:
-                bg(lambda b=band, d=delta: scanner.freq_step(b, d, S, settings))
+                # v0.10.2: begin_transition wrapper
+                def _scan_step_fn(b=band, d=delta):
+                    if source_state.begin_transition(f"scan_step:{b}", "scanner"):
+                        try:
+                            scanner.freq_step(b, d, S, settings)
+                        finally:
+                            source_state.end_transition()
+                bg(_scan_step_fn)
 
     elif cmd.startswith("scan_setfreq:"):
         parts = cmd.split(":")
@@ -724,21 +789,42 @@ def handle_trigger(cmd, menu_state, store, S, settings):
             except Exception:
                 freq = 0.0
             if freq:
-                bg(lambda b=band, f=freq: scanner.set_freq(b, f, S, settings))
+                # v0.10.2: begin_transition wrapper
+                def _scan_setfreq_fn(b=band, f=freq):
+                    if source_state.begin_transition(f"scan_setfreq:{b}", "scanner"):
+                        try:
+                            scanner.set_freq(b, f, S, settings)
+                        finally:
+                            source_state.end_transition()
+                bg(_scan_setfreq_fn)
 
     elif cmd.startswith("scan_inputfreq:"):
         parts = cmd.split(":")
         if len(parts) >= 2:
             band = parts[1]
+            # v0.10.2: begin_transition wrapper
             def _input_and_set(b=band):
                 freq = scanner.freq_input_screen(b, settings)
                 if freq is not None:
-                    scanner.set_freq(b, freq, S, settings)
+                    if source_state.begin_transition(f"scan_inputfreq:{b}", "scanner"):
+                        try:
+                            scanner.set_freq(b, freq, S, settings)
+                        finally:
+                            source_state.end_transition()
             bg(_input_and_set)
 
     # ── Bibliothek ─────────────────────────────────────────────────────────
     elif cmd == "lib_browse":
-        bg(lambda: library.browse_and_play(S, load_settings()))
+        # v0.10.2: source_state tracking + begin_transition
+        def _lib_browse():
+            if source_state.begin_transition("lib_browse", "library"):
+                try:
+                    library.browse_and_play(S, load_settings())
+                    if S.get("library_playing"):
+                        source_state.commit_source("library")
+                finally:
+                    source_state.end_transition()
+        bg(_lib_browse)
 
     elif cmd.startswith("fav_toggle:"):
         payload = cmd[len("fav_toggle:"):]
@@ -857,7 +943,7 @@ def _execute_node(node, menu_state, store, S, settings):
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
                                      if "  " in node.label else node.label.lstrip("★ ").strip())
                     _sid = meta.get("service_id", "")
-                    dab.play_by_name(_name, S, service_id=_sid)
+                    dab.play_by_name(_name, S, settings=settings, service_id=_sid)
                     source_state.commit_source("dab")
 
                 elif src == "webradio":

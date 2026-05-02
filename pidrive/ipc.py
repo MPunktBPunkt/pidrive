@@ -68,6 +68,8 @@ def write_status(S, settings):
         "radio":     S.get("radio_playing", S.get("radio", False)),
         "radio_name":S.get("radio_station", ""),
         "radio_type":S.get("radio_type", ""),
+        "dls_text":  S.get("dls_text", S.get("dls", "")),
+        "dls_raw":   S.get("dls_raw", ""),
         "library":   S.get("library_playing", False),
         "lib_track": S.get("library_track", S.get("lib_track", "")),
         "audio_out": settings.get("audio_output", "auto"),
