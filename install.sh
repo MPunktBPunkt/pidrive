@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.10           ║
+║        PiDrive Installer v0.10.11           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -301,8 +301,8 @@ ok "SSH aktiviert"
 # SCHRITT 9: Berechtigungen
 # ══════════════════════════════════════════════════════════════
 info "9/10 Berechtigungen setzen..."
-usermod -a -G video,input,render,tty "$REAL_USER" 2>/dev/null || true
-ok "Gruppen: video, input, render, tty"
+usermod -a -G video,input,render,tty,systemd-journal "$REAL_USER" 2>/dev/null || true
+ok "Gruppen: video, input, render, tty, systemd-journal"
 
 # chmod tty3 nicht mehr noetig
 
@@ -426,11 +426,26 @@ SYSTEMPA
   usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
   ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-  # v0.10.9: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+  # v0.10.11: PulseAudio System-Service einrichten (Bookworm-kompatibel)
   # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
-  # Schritt 1: User-Session PA deaktivieren
+  # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
   systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
-  systemctl --user stop pulseaudio 2>/dev/null || true
+  # Als pi-User den User-Service stoppen und masken
+  sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+  sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
+  sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
+  # User-PA-Socket system-weit blockieren (verhindert Socket-Aktivierung)
+  mkdir -p /etc/systemd/user
+  cat > /etc/systemd/user/pulseaudio.socket << 'USERSOCKET'
+[Unit]
+Description=Disabled — PiDrive uses system-mode PulseAudio
+[Socket]
+# Socket-Aktivierung deaktiviert: PiDrive nutzt System-PA
+USERSOCKET
+  # Socket als override (nicht mask) damit der Dienst selbst deaktivierbar bleibt
+  # Alle laufenden PA-Prozesse als User beenden
+  pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
+  sleep 1
   # Schritt 2: System-Service Unit schreiben
   cat > /etc/systemd/system/pulseaudio.service << 'PASERVICE'
 [Unit]
