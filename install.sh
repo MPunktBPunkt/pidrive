@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.9           ║
+║        PiDrive Installer v0.10.10           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -389,30 +389,79 @@ ASOUNDEOF
   if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
   amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
 
-  # v0.9.10: system.pa prüfen — fehlende Card 1 (Headphones) ergänzen
-  # setup_bt_audio.sh schreibt system.pa nur mit device_id=0 (HDMI)
-  # → Klinken-Sink fehlt in PulseAudio! Hier sicherstellen dass card 1 geladen wird.
-  if [ -f /etc/pulse/system.pa ]; then
-    if grep -q "module-alsa-card" /etc/pulse/system.pa && ! grep -q "device_id=1" /etc/pulse/system.pa; then
-      sed -i 's/load-module module-alsa-card device_id=0/load-module module-alsa-card device_id=0\nload-module module-alsa-card device_id=1/' /etc/pulse/system.pa
-      ok "system.pa: Card 1 (Headphones/Klinke) ergänzt"
-    elif ! grep -q "module-alsa-card" /etc/pulse/system.pa; then
-      printf '\nload-module module-alsa-card device_id=1\n' >> /etc/pulse/system.pa
-      ok "system.pa: Card 1 (Headphones/Klinke) hinzugefügt"
-    else
-      ok "system.pa: Card 1 bereits vorhanden"
-    fi
-  fi
+  # v0.10.9: system.pa vollständig neu schreiben
+  # Bookworm-PA schreibt kein module-alsa-card in system.pa → komplettes File
+  mkdir -p /etc/pulse
+  cat > /etc/pulse/system.pa << 'SYSTEMPA'
+# PiDrive system.pa — v0.10.9
+# System-weiter PulseAudio Daemon (nicht User-Session)
+.fail
 
-  # v0.9.14: pulse-access Gruppe sicherstellen BEVOR PulseAudio startet
+load-module module-device-restore
+load-module module-stream-restore
+load-module module-card-restore
+
+# ALSA Hardware: Card 0 = HDMI, Card 1 = Headphones/Klinke
+load-module module-alsa-card device_id=0
+load-module module-alsa-card device_id=1
+
+# Bluetooth A2DP
+load-module module-bluetooth-discover
+load-module module-bluetooth-policy
+
+# DBUS
+load-module module-dbus-protocol
+
+# IPC
+load-module module-native-protocol-unix auth-anonymous=1
+
+# Klinke (Card 1) als Default-Sink
+set-default-sink alsa_output.1.stereo-fallback
+SYSTEMPA
+  ok "system.pa: vollständig neu geschrieben (Card 0+1, BT, IPC)"
+
+  # v0.9.14: pulse-access Gruppe
   groupadd -f pulse-access 2>/dev/null || true
   usermod -aG pulse-access root 2>/dev/null || true
-  usermod -aG pulse-access pi   2>/dev/null || true
-  ok "pulse-access Gruppe: root + pi hinzugefügt"
+  usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
+  ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-  # PulseAudio neu starten damit beide Karten geladen werden
+  # v0.10.9: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+  # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
+  # Schritt 1: User-Session PA deaktivieren
+  systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
+  systemctl --user stop pulseaudio 2>/dev/null || true
+  # Schritt 2: System-Service Unit schreiben
+  cat > /etc/systemd/system/pulseaudio.service << 'PASERVICE'
+[Unit]
+Description=PiDrive Sound Service (System Mode)
+After=bluetooth.target dbus.service
+Requires=dbus.service
+Before=pidrive_core.service
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit --log-target=journal
+Restart=on-failure
+RestartSec=5
+LimitRTPRIO=99
+LimitNICE=-19
+ProtectSystem=false
+ProtectHome=false
+PrivateUsers=false
+
+[Install]
+WantedBy=multi-user.target
+PASERVICE
+  systemctl daemon-reload
+  systemctl enable pulseaudio 2>/dev/null || true
   systemctl restart pulseaudio 2>/dev/null || true
   sleep 3
+  if systemctl is-active --quiet pulseaudio; then
+    ok "PulseAudio: System-Service läuft"
+  else
+    warn "PulseAudio System-Service inaktiv — journalctl -u pulseaudio"
+  fi
 
   # v0.9.13: Default Sink auf Klinke (Card 1 = alsa_output.1.*) setzen
   # ACHTUNG: alsa_output.0.* enthält KEIN "hdmi" im Namen!

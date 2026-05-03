@@ -225,7 +225,10 @@ def check_fb(path, name):
 def check_vtcon():
     S("VTCONSOLE STATUS")
     try:
-        cmdline = open("/boot/cmdline.txt").read()
+        _cmdline_path = ("/boot/firmware/cmdline.txt"
+                 if __import__("os").path.exists("/boot/firmware/cmdline.txt")
+                 else "/boot/cmdline.txt")
+        cmdline = open(_cmdline_path).read()
         (ok if "fbcon=nodeconfig" in cmdline else warn)(
             "cmdline.txt: " + ("fbcon=nodeconfig gesetzt" if "fbcon=nodeconfig" in cmdline else "fbcon=nodeconfig fehlt")
         )
@@ -273,7 +276,16 @@ def check_audio():
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
     pa_state = run("systemctl is-active pulseaudio 2>/dev/null")
-    (ok if pa_state == "active" else err)(f"pulseaudio.service: {pa_state}")
+    # v0.10.9: Bookworm kann PA als User-Service laufen (pgrep als Fallback)
+    if pa_state != "active":
+        pa_proc = run("pgrep -c pulseaudio 2>/dev/null") or "0"
+        if pa_proc.strip() != "0":
+            warn(f"pulseaudio.service: {pa_state} (aber Prozess läuft — User-Mode?)")
+            warn("  → FIX: sudo systemctl enable --now pulseaudio (System-Mode)")
+        else:
+            err(f"pulseaudio.service: {pa_state}")
+    else:
+        ok(f"pulseaudio.service: active")
 
     # system.pa
     sys_pa = "/etc/pulse/system.pa"
