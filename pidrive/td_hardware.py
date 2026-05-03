@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_hardware.py — Audio, WiFi/BT, Gain, PPM, RTL-SDR  v0.10.10"""
+"""td_hardware.py — Audio, WiFi/BT, Gain, PPM, RTL-SDR  v0.10.11"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -23,7 +23,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 source_state.commit_source("idle")
                 log.info("SOURCE spotify → idle (stop)")
             else:
-                # v0.10.10: status.py forcieren statt blind 1.5s warten
+                # v0.10.11: status.py forcieren statt blind 1.5s warten
                 import time as _t
                 for _attempt in range(6):      # max 3s in 0.5s-Schritten
                     _t.sleep(0.5)
