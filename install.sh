@@ -12,11 +12,23 @@
 set -e
 
 REPO_URL="https://github.com/MPunktBPunkt/pidrive"
+# Installationsverzeichnis — wird nach REAL_USER-Erkennung gesetzt
+# (Platzhalter; wird nach User-Erkennung weiter unten überschrieben)
 INSTALL_DIR="/home/pi/pidrive"
 SERVICE_DIR="/etc/systemd/system"
 LOG_DIR="/var/log/pidrive"
-REAL_USER=${SUDO_USER:-pi}
+# Echter User — SUDO_USER ist gesetzt wenn via "sudo bash" aufgerufen
+# Fallback: erster User mit UID >= 1000 (nicht root), dann pi
+if [ -n "$SUDO_USER" ] && id "$SUDO_USER" >/dev/null 2>&1; then
+    REAL_USER="$SUDO_USER"
+elif id "pi" >/dev/null 2>&1; then
+    REAL_USER="pi"
+else
+    REAL_USER=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}')
+    [ -z "$REAL_USER" ] && REAL_USER="pi"
+fi
 REAL_HOME=$(eval echo "~$REAL_USER")
+INSTALL_DIR="$REAL_HOME/pidrive"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -29,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.8           ║
+║        PiDrive Installer v0.10.9           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -165,15 +177,36 @@ ok "Log-Verzeichnis: $LOG_DIR"
 # SCHRITT 5: /boot/config.txt
 # ══════════════════════════════════════════════════════════════
 info "5/10 /boot/config.txt konfigurieren..."
-[ ! -f /boot/config.txt.bak ] && cp /boot/config.txt /boot/config.txt.bak
+# Bookworm: /boot/firmware/config.txt  |  Bullseye: /boot/config.txt
+if [ -f /boot/firmware/config.txt ]; then
+    BOOT_DIR="/boot/firmware"
+else
+    BOOT_DIR="/boot"
+fi
+CONFIG_TXT="$BOOT_DIR/config.txt"
+CMDLINE_TXT="$BOOT_DIR/cmdline.txt"
+ok "Boot-Verzeichnis: $BOOT_DIR"
 
-sed -i 's/^camera_auto_detect=1/camera_auto_detect=0/'   /boot/config.txt 2>/dev/null || true
-sed -i 's/^display_auto_detect=1/display_auto_detect=0/' /boot/config.txt 2>/dev/null || true
-grep -q "^camera_auto_detect"  /boot/config.txt || echo "camera_auto_detect=0"  >> /boot/config.txt
-grep -q "^display_auto_detect" /boot/config.txt || echo "display_auto_detect=0" >> /boot/config.txt
-sed -i 's/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/'   /boot/config.txt 2>/dev/null || true
-sed -i 's/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/' /boot/config.txt 2>/dev/null || true
-grep -q "^max_framebuffers=2" /boot/config.txt || echo "max_framebuffers=2" >> /boot/config.txt
+[ ! -f "$CONFIG_TXT.bak" ] && cp "$CONFIG_TXT" "$CONFIG_TXT.bak"
+
+sed -i 's/^camera_auto_detect=1/camera_auto_detect=0/'   "$CONFIG_TXT" 2>/dev/null || true
+sed -i 's/^display_auto_detect=1/display_auto_detect=0/' "$CONFIG_TXT" 2>/dev/null || true
+grep -q "^camera_auto_detect"  "$CONFIG_TXT" || echo "camera_auto_detect=0"  >> "$CONFIG_TXT"
+grep -q "^display_auto_detect" "$CONFIG_TXT" || echo "display_auto_detect=0" >> "$CONFIG_TXT"
+sed -i 's/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/'   "$CONFIG_TXT" 2>/dev/null || true
+sed -i 's/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/' "$CONFIG_TXT" 2>/dev/null || true
+grep -q "^max_framebuffers=2" "$CONFIG_TXT" || echo "max_framebuffers=2" >> "$CONFIG_TXT"
+
+# v0.10.9: fbcon=nodeconfig in cmdline.txt setzen (SPI-Display braucht das)
+# LCD-show setzt es auch, aber erst nach Neustart → direkt hier sicherstellen
+if [ -f "$CMDLINE_TXT" ]; then
+    if ! grep -q "fbcon=nodeconfig" "$CMDLINE_TXT"; then
+        sed -i 's/$/ fbcon=nodeconfig/' "$CMDLINE_TXT"
+        ok "cmdline.txt: fbcon=nodeconfig gesetzt"
+    else
+        ok "cmdline.txt: fbcon=nodeconfig bereits vorhanden"
+    fi
+fi
 ok "/boot/config.txt konfiguriert"
 
 # ══════════════════════════════════════════════════════════════
@@ -289,6 +322,20 @@ EOF
 chmod +x /usr/local/bin/spotify_event.sh
 ok "Spotify onevent Script"
 
+# Raspotify installieren falls nicht vorhanden (Frisch-Install)
+if ! dpkg -l raspotify 2>/dev/null | grep -q "^ii" && [ ! -f /etc/raspotify/conf ]; then
+    info "Raspotify installieren..."
+    # Offizielle Installations-Methode (dtcooper/raspotify)
+    _RASP_DEB="https://github.com/dtcooper/raspotify/releases/latest/download/raspotify_latest_armhf.deb"
+    if curl -sLo /tmp/raspotify.deb "$_RASP_DEB" 2>/dev/null; then
+        dpkg -i /tmp/raspotify.deb 2>/dev/null || apt-get -f install -y -qq 2>/dev/null || true
+        rm -f /tmp/raspotify.deb
+        ok "Raspotify installiert"
+    else
+        warn "Raspotify-Download fehlgeschlagen — Spotify Connect nicht verfügbar"
+        warn "  Manuell: https://github.com/dtcooper/raspotify"
+    fi
+fi
 if [ -f /etc/raspotify/conf ]; then
     sed -i 's/^LIBRESPOT_DISABLE_CREDENTIAL_CACHE=/#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=/' /etc/raspotify/conf
     if grep -q "LIBRESPOT_NAME" /etc/raspotify/conf; then
