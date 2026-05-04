@@ -1,9 +1,9 @@
 """
-modules/source_state.py — Zustandsspiegel (kein Regler)  v0.10.22
+modules/source_state.py — Zustandsspiegel (kein Regler)  v0.10.23
 Aufrufer: alle modules/*, main_core.py, webui.py, ipc.py
 Schreibt: /tmp/pidrive_source_state.json
 
-v0.10.22 Verbesserungen:
+v0.10.23 Verbesserungen:
   - previous_source: Rückkehr nach Fehler möglich
   - Stale-Transition-Watchdog: räumt hängendes transition=True automatisch auf
   - commit_source() optional mit auto-end (spart vergessene end_transition()-Aufrufe)
@@ -26,7 +26,7 @@ STALE_TIMEOUT_S = 12.0
 
 STATE = {
     "source_current":  "idle",
-    "source_previous": "idle",   # v0.10.22: letzte Quelle vor aktuellem Wechsel
+    "source_previous": "idle",   # v0.10.23: letzte Quelle vor aktuellem Wechsel
     "source_target":   "",
     "transition":      False,
     "owner":           "",
@@ -36,8 +36,8 @@ STATE = {
     "bt_link_state":   "idle",
     "bt_audio_state":  "no_sink",
     "boot_phase":      "cold_start",
-    "transition_count": 0,        # v0.10.22: Gesamtzahl Transitionen (für Diagnose)
-    "stale_cleared":    0,        # v0.10.22: Zähler für automatisch abgeräumte Stale-Transitions
+    "transition_count": 0,        # v0.10.23: Gesamtzahl Transitionen (für Diagnose)
+    "stale_cleared":    0,        # v0.10.23: Zähler für automatisch abgeräumte Stale-Transitions
 }
 
 
@@ -45,7 +45,7 @@ STATE = {
 
 def _check_stale_transition() -> bool:
     """
-    v0.10.22: Räumt hängende Transition auf ohne auf begin_transition() zu warten.
+    v0.10.23: Räumt hängende Transition auf ohne auf begin_transition() zu warten.
     Wird von commit_source() und end_transition() aufgerufen.
     Gibt True zurück wenn eine Stale-Transition aufgeräumt wurde.
     """
@@ -170,7 +170,7 @@ def end_transition():
 
 def force_end_transition(reason: str = "error"):
     """
-    v0.10.22: Erzwingt Ende der Transition unabhängig vom aktuellen State.
+    v0.10.23: Erzwingt Ende der Transition unabhängig vom aktuellen State.
     Für except-Blöcke und Fehler-Recovery.
     """
     with _LOCK:
@@ -249,14 +249,14 @@ def current_source() -> str:
 
 
 def previous_source() -> str:
-    """v0.10.22: Letzte Quelle vor dem aktuellen Wechsel."""
+    """v0.10.23: Letzte Quelle vor dem aktuellen Wechsel."""
     with _LOCK:
         return STATE.get("source_previous", "idle")
 
 
 def in_transition() -> bool:
     with _LOCK:
-        # v0.10.22: Stale-Transitions nicht als aktiv melden
+        # v0.10.23: Stale-Transitions nicht als aktiv melden
         if not STATE["transition"]:
             return False
         age = time.time() - STATE["since"]
