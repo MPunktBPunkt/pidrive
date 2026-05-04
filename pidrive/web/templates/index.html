@@ -996,12 +996,30 @@
 
 
 <script>
-let vmLast = {{ vm | tojson }};
+// Global error handler — zeigt JS-Fehler sichtbar im UI
+window.onerror = function(msg, src, line, col, err) {
+  const bar = document.getElementById('statusBar');
+  if (bar) bar.textContent = 'JS-Fehler: ' + msg + ' (Z.' + line + ')';
+  console.error('JS-Fehler:', msg, 'Zeile:', line, err);
+  return false;
+};
+window.onunhandledrejection = function(e) {
+  console.error('Unhandled Promise rejection:', e.reason);
+};
+
+let vmLast = {};
+try {
+  vmLast = {{ vm | tojson }};
+} catch(e) {
+  console.error('vmLast init failed:', e);
+  document.getElementById('statusBar').textContent = 'JS-Fehler beim Start: ' + e;
+}
 let activeTab = 't1';
 const tabPollers = {};
 
 // ── Tab Management ─────────────────────────────────────────────────────────
 function showTab(id) {
+  console.log('[PiDrive] showTab:', id);
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -1032,6 +1050,7 @@ function setStatusBar(txt) {
 
 // ── Send Command ───────────────────────────────────────────────────────────
 async function sendCmd(cmd) {
+  console.log('[PiDrive] sendCmd:', cmd);
   try {
     const r = await fetch('/api/cmd', {
       method: 'POST',
