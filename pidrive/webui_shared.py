@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.23
+webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.24
 """
 
 import os
@@ -78,7 +78,7 @@ def file_age(path):
         return None
 
 
-# v0.10.23: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
+# v0.10.24: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
 _ip_cache: tuple = ("", 0.0)
 
 def get_ip() -> str:
@@ -507,7 +507,7 @@ def get_dab_status_debug():
         "ts": dbg.get("ts", st.get("ts", 0)),
         "debug_exists": os.path.exists(DAB_DEBUG_FILE),
         "debug_age": file_age(DAB_DEBUG_FILE),
-        # v0.10.23: Audio-Routing-Debug aus play_debug.json
+        # v0.10.24: Audio-Routing-Debug aus play_debug.json
         "pulse_server_in_env":    dbg.get("pulse_server_in_env"),
         "pulse_sink_in_env":      dbg.get("pulse_sink_in_env"),
         "pa_default_sink":        dbg.get("pa_default_sink_before_start", ""),
