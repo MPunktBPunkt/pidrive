@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.16           ║
+║        PiDrive Installer v0.10.18           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -375,6 +375,189 @@ if ! dpkg -l raspotify 2>/dev/null | grep -q "^ii" && [ ! -f /etc/raspotify/conf
         warn "  Manuell: https://github.com/dtcooper/raspotify"
     fi
 fi
+# ══════════════════════════════════════════════════════════════
+# Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.18)
+# Läuft IMMER — unabhängig von Raspotify-Installation
+# ══════════════════════════════════════════════════════════════
+# v0.9.9: /etc/asound.conf — ALSA Default auf Klinke (Card 1) setzen
+# KRITISCH: Auf modernem Pi OS (Kernel >=5.x) ist Card 0 = HDMI, Card 1 = Headphones/Klinke
+# Ohne asound.conf geht ALSA default auf HDMI → kein Ton aus der Klinke
+cat > /etc/asound.conf << 'ASOUNDEOF'
+# PiDrive: ALSA Default auf bcm2835 Headphones (Klinke) setzen
+# Card 0 = HDMI, Card 1 = Headphones auf modernem Pi OS
+defaults.pcm.card 1
+defaults.ctl.card 1
+defaults.pcm.device 0
+ASOUNDEOF
+ok "ALSA: /etc/asound.conf geschrieben (default=card 1 Headphones)"
+
+# Klinke via amixer auf der richtigen Karte aktivieren
+# Card-Erkennung: Suche nach 'Headphones' in aplay -l
+KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{print $2}' | tr -d ':')
+if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
+amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
+
+# v0.10.9: system.pa vollständig neu schreiben
+# Bookworm-PA schreibt kein module-alsa-card in system.pa → komplettes File
+mkdir -p /etc/pulse
+cat > /etc/pulse/system.pa << 'SYSTEMPA'
+# PiDrive system.pa — v0.10.9
+# System-weiter PulseAudio Daemon (nicht User-Session)
+.fail
+
+load-module module-device-restore
+load-module module-stream-restore
+load-module module-card-restore
+
+# ALSA Hardware: Card 0 = HDMI, Card 1 = Headphones/Klinke
+load-module module-alsa-card device_id=0
+load-module module-alsa-card device_id=1
+
+# Bluetooth A2DP
+load-module module-bluetooth-discover
+load-module module-bluetooth-policy
+
+# DBUS
+load-module module-dbus-protocol
+
+# IPC
+load-module module-native-protocol-unix auth-anonymous=1
+
+# Klinke (Card 1) als Default-Sink
+set-default-sink alsa_output.1.stereo-fallback
+SYSTEMPA
+ok "system.pa: vollständig neu geschrieben (Card 0+1, BT, IPC)"
+
+# v0.9.14: pulse-access Gruppe
+groupadd -f pulse-access 2>/dev/null || true
+usermod -aG pulse-access root 2>/dev/null || true
+usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
+ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
+
+# v0.10.18: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+# Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
+# Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
+systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
+# Als pi-User den User-Service stoppen und masken
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
+sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
+# User-PA-Socket null-masken: ln -sf /dev/null verhindert Socket-Aktivierung zuverlässig
+mkdir -p /etc/systemd/user
+ln -sf /dev/null /etc/systemd/user/pulseaudio.socket
+ln -sf /dev/null /etc/systemd/user/pulseaudio.service
+ok "User-PA Socket + Service null-maskiert"
+# Alle laufenden PA-Prozesse als User beenden
+pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
+sleep 1
+# Schritt 2: System-Service Unit schreiben
+cat > /etc/systemd/system/pulseaudio.service << 'PASERVICE'
+[Unit]
+Description=PiDrive Sound Service (System Mode)
+After=bluetooth.target dbus.service
+Requires=dbus.service
+Before=pidrive_core.service
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit --log-target=journal
+Restart=on-failure
+RestartSec=5
+LimitRTPRIO=99
+LimitNICE=-19
+ProtectSystem=false
+ProtectHome=false
+PrivateUsers=false
+
+[Install]
+WantedBy=multi-user.target
+PASERVICE
+# Lingering deaktivieren: verhindert user-systemd Session-Autostart
+loginctl disable-linger "$REAL_USER" 2>/dev/null || true
+# Alle PA-Prozesse killen bevor System-PA startet
+pkill -9 pulseaudio 2>/dev/null || true
+sleep 1
+systemctl daemon-reload
+systemctl enable pulseaudio 2>/dev/null || true
+systemctl start pulseaudio 2>/dev/null || true
+sleep 3
+# Sicherstellen dass kein User-PA mehr läuft
+pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
+sleep 1
+# Sinks prüfen (nicht nur ob Service aktiv)
+_pa_sinks=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | wc -l)
+# PA Unit-Datei verifizieren
+if [ -f /etc/systemd/system/pulseaudio.service ]; then
+  ok "PA Unit-Datei: /etc/systemd/system/pulseaudio.service vorhanden ✓"
+else
+  warn "PA Unit-Datei FEHLT — systemctl kann pulseaudio.service nicht finden!"
+  warn "  → Installer-Fehler: PA-Setup wurde nicht korrekt abgeschlossen"
+fi
+if systemctl is-active --quiet pulseaudio && [ "${_pa_sinks:-0}" -gt 0 ]; then
+  ok "PulseAudio: System-Service läuft ($_pa_sinks Sinks vorhanden)"
+  # Socket-Existenz prüfen (pidrive_core.service braucht diesen Pfad)
+  if [ -S /var/run/pulse/native ]; then
+    ok "PulseAudio: Socket /var/run/pulse/native vorhanden ✓"
+  else
+    warn "PulseAudio: Socket /var/run/pulse/native fehlt — Reboot erforderlich"
+  fi
+elif systemctl is-active --quiet pulseaudio; then
+  warn "PulseAudio: Service aktiv aber keine Sinks — Reboot erforderlich"
+  warn "  → Nach Reboot: sudo systemctl status pulseaudio"
+else
+  warn "PulseAudio System-Service inaktiv"
+  warn "  Debug: journalctl -u pulseaudio --no-pager | tail -20"
+fi
+
+# v0.9.13: Default Sink auf Klinke (Card 1 = alsa_output.1.*) setzen
+# ACHTUNG: alsa_output.0.* enthält KEIN "hdmi" im Namen!
+# -v hdmi filtert NOT, weil "0.stereo-fallback" ≠ "hdmi" — Card-Index ist der Indikator.
+KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | awk '$2 ~ /alsa_output\.1\./ {print $2; exit}')
+if [ -z "$KLINKE_SINK" ]; then
+  # Fallback: analog-stereo oder headphone im Namen
+  KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | grep -i 'analog\|headphone' | grep alsa_output | head -1 | awk '{print $2}')
+fi
+if [ -n "$KLINKE_SINK" ]; then
+  PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink "$KLINKE_SINK" 2>/dev/null || true
+  ok "PulseAudio: Default Sink = $KLINKE_SINK (Klinke Card 1)"
+
+  # v0.10.3: Default Sink in system.pa persistieren (überlebt Reboots)
+  if [ -f /etc/pulse/system.pa ]; then
+    # Alten set-default-sink Eintrag entfernen, neuen am Ende schreiben
+    grep -v "^set-default-sink" /etc/pulse/system.pa > /tmp/system.pa.new
+    echo "" >> /tmp/system.pa.new
+    echo "# PiDrive: Klinke als Default-Sink (v0.10.3)" >> /tmp/system.pa.new
+    echo "set-default-sink $KLINKE_SINK" >> /tmp/system.pa.new
+    mv /tmp/system.pa.new /etc/pulse/system.pa
+    ok "PulseAudio: Default Sink in system.pa persistiert ($KLINKE_SINK)"
+  fi
+else
+  warn "PulseAudio: Klinken-Sink noch nicht sichtbar — beim ersten Abspielen gesetzt"
+fi
+
+# __pycache__ loeschen: alte .pyc mit pygame-Import
+find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+find "$INSTALL_DIR/pidrive" -name "*.pyc" -delete 2>/dev/null || true
+ok "Python Cache geloescht (sauberer Start)"
+# Web-Service neu starten
+systemctl reset-failed pidrive_web 2>/dev/null || true
+systemctl restart pidrive_web 2>/dev/null && \
+  ok "pidrive_web.service neu gestartet" || \
+  warn "pidrive_web konnte nicht gestartet werden"
+# AVRCP Service starten
+if [ -f "$SERVICE_DIR/pidrive_avrcp.service" ]; then
+  systemctl restart pidrive_avrcp 2>/dev/null || true
+  ok "pidrive_avrcp.service gestartet"
+fi
+  # Verify: PA unit file tatsächlich geschrieben?
+  if [ -f /etc/systemd/system/pulseaudio.service ]; then
+    ok "PA Unit-Datei: /etc/systemd/system/pulseaudio.service vorhanden ✓"
+  else
+    warn "PA Unit-Datei FEHLT — systemctl kann pulseaudio.service nicht finden!"
+    warn "  → sudo bash ~/pidrive/pidrive_car_only_cleanup.sh && sudo reboot"
+  fi
+
+
 if [ -f /etc/raspotify/conf ]; then
     sed -i 's/^LIBRESPOT_DISABLE_CREDENTIAL_CACHE=/#LIBRESPOT_DISABLE_CREDENTIAL_CACHE=/' /etc/raspotify/conf
     if grep -q "LIBRESPOT_NAME" /etc/raspotify/conf; then
@@ -410,169 +593,6 @@ if [ -f /etc/raspotify/conf ]; then
     fi
     ok "Raspotify konfiguriert (zentral via PulseAudio)"
 
-  # v0.9.9: /etc/asound.conf — ALSA Default auf Klinke (Card 1) setzen
-  # KRITISCH: Auf modernem Pi OS (Kernel >=5.x) ist Card 0 = HDMI, Card 1 = Headphones/Klinke
-  # Ohne asound.conf geht ALSA default auf HDMI → kein Ton aus der Klinke
-  cat > /etc/asound.conf << 'ASOUNDEOF'
-# PiDrive: ALSA Default auf bcm2835 Headphones (Klinke) setzen
-# Card 0 = HDMI, Card 1 = Headphones auf modernem Pi OS
-defaults.pcm.card 1
-defaults.ctl.card 1
-defaults.pcm.device 0
-ASOUNDEOF
-  ok "ALSA: /etc/asound.conf geschrieben (default=card 1 Headphones)"
-
-  # Klinke via amixer auf der richtigen Karte aktivieren
-  # Card-Erkennung: Suche nach 'Headphones' in aplay -l
-  KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{print $2}' | tr -d ':')
-  if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
-  amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
-
-  # v0.10.9: system.pa vollständig neu schreiben
-  # Bookworm-PA schreibt kein module-alsa-card in system.pa → komplettes File
-  mkdir -p /etc/pulse
-  cat > /etc/pulse/system.pa << 'SYSTEMPA'
-# PiDrive system.pa — v0.10.9
-# System-weiter PulseAudio Daemon (nicht User-Session)
-.fail
-
-load-module module-device-restore
-load-module module-stream-restore
-load-module module-card-restore
-
-# ALSA Hardware: Card 0 = HDMI, Card 1 = Headphones/Klinke
-load-module module-alsa-card device_id=0
-load-module module-alsa-card device_id=1
-
-# Bluetooth A2DP
-load-module module-bluetooth-discover
-load-module module-bluetooth-policy
-
-# DBUS
-load-module module-dbus-protocol
-
-# IPC
-load-module module-native-protocol-unix auth-anonymous=1
-
-# Klinke (Card 1) als Default-Sink
-set-default-sink alsa_output.1.stereo-fallback
-SYSTEMPA
-  ok "system.pa: vollständig neu geschrieben (Card 0+1, BT, IPC)"
-
-  # v0.9.14: pulse-access Gruppe
-  groupadd -f pulse-access 2>/dev/null || true
-  usermod -aG pulse-access root 2>/dev/null || true
-  usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
-  ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
-
-  # v0.10.16: PulseAudio System-Service einrichten (Bookworm-kompatibel)
-  # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
-  # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
-  systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
-  # Als pi-User den User-Service stoppen und masken
-  sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
-  sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
-  sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
-  # User-PA-Socket null-masken: ln -sf /dev/null verhindert Socket-Aktivierung zuverlässig
-  mkdir -p /etc/systemd/user
-  ln -sf /dev/null /etc/systemd/user/pulseaudio.socket
-  ln -sf /dev/null /etc/systemd/user/pulseaudio.service
-  ok "User-PA Socket + Service null-maskiert"
-  # Alle laufenden PA-Prozesse als User beenden
-  pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
-  sleep 1
-  # Schritt 2: System-Service Unit schreiben
-  cat > /etc/systemd/system/pulseaudio.service << 'PASERVICE'
-[Unit]
-Description=PiDrive Sound Service (System Mode)
-After=bluetooth.target dbus.service
-Requires=dbus.service
-Before=pidrive_core.service
-
-[Service]
-Type=notify
-ExecStart=/usr/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit --log-target=journal
-Restart=on-failure
-RestartSec=5
-LimitRTPRIO=99
-LimitNICE=-19
-ProtectSystem=false
-ProtectHome=false
-PrivateUsers=false
-
-[Install]
-WantedBy=multi-user.target
-PASERVICE
-  # Lingering deaktivieren: verhindert user-systemd Session-Autostart
-  loginctl disable-linger "$REAL_USER" 2>/dev/null || true
-  # Alle PA-Prozesse killen bevor System-PA startet
-  pkill -9 pulseaudio 2>/dev/null || true
-  sleep 1
-  systemctl daemon-reload
-  systemctl enable pulseaudio 2>/dev/null || true
-  systemctl start pulseaudio 2>/dev/null || true
-  sleep 3
-  # Sicherstellen dass kein User-PA mehr läuft
-  pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
-  sleep 1
-  # Sinks prüfen (nicht nur ob Service aktiv)
-  _pa_sinks=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | wc -l)
-  if systemctl is-active --quiet pulseaudio && [ "${_pa_sinks:-0}" -gt 0 ]; then
-    ok "PulseAudio: System-Service läuft ($_pa_sinks Sinks vorhanden)"
-    # Socket-Existenz prüfen (pidrive_core.service braucht diesen Pfad)
-    if [ -S /var/run/pulse/native ]; then
-      ok "PulseAudio: Socket /var/run/pulse/native vorhanden ✓"
-    else
-      warn "PulseAudio: Socket /var/run/pulse/native fehlt — Reboot erforderlich"
-    fi
-  elif systemctl is-active --quiet pulseaudio; then
-    warn "PulseAudio: Service aktiv aber keine Sinks — Reboot erforderlich"
-    warn "  → Nach Reboot: sudo systemctl status pulseaudio"
-  else
-    warn "PulseAudio System-Service inaktiv"
-    warn "  Debug: journalctl -u pulseaudio --no-pager | tail -20"
-  fi
-
-  # v0.9.13: Default Sink auf Klinke (Card 1 = alsa_output.1.*) setzen
-  # ACHTUNG: alsa_output.0.* enthält KEIN "hdmi" im Namen!
-  # -v hdmi filtert NOT, weil "0.stereo-fallback" ≠ "hdmi" — Card-Index ist der Indikator.
-  KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | awk '$2 ~ /alsa_output\.1\./ {print $2; exit}')
-  if [ -z "$KLINKE_SINK" ]; then
-    # Fallback: analog-stereo oder headphone im Namen
-    KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | grep -i 'analog\|headphone' | grep alsa_output | head -1 | awk '{print $2}')
-  fi
-  if [ -n "$KLINKE_SINK" ]; then
-    PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink "$KLINKE_SINK" 2>/dev/null || true
-    ok "PulseAudio: Default Sink = $KLINKE_SINK (Klinke Card 1)"
-
-    # v0.10.3: Default Sink in system.pa persistieren (überlebt Reboots)
-    if [ -f /etc/pulse/system.pa ]; then
-      # Alten set-default-sink Eintrag entfernen, neuen am Ende schreiben
-      grep -v "^set-default-sink" /etc/pulse/system.pa > /tmp/system.pa.new
-      echo "" >> /tmp/system.pa.new
-      echo "# PiDrive: Klinke als Default-Sink (v0.10.3)" >> /tmp/system.pa.new
-      echo "set-default-sink $KLINKE_SINK" >> /tmp/system.pa.new
-      mv /tmp/system.pa.new /etc/pulse/system.pa
-      ok "PulseAudio: Default Sink in system.pa persistiert ($KLINKE_SINK)"
-    fi
-  else
-    warn "PulseAudio: Klinken-Sink noch nicht sichtbar — beim ersten Abspielen gesetzt"
-  fi
-
-  # __pycache__ loeschen: alte .pyc mit pygame-Import
-  find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-  find "$INSTALL_DIR/pidrive" -name "*.pyc" -delete 2>/dev/null || true
-  ok "Python Cache geloescht (sauberer Start)"
-  # Web-Service neu starten
-  systemctl reset-failed pidrive_web 2>/dev/null || true
-  systemctl restart pidrive_web 2>/dev/null && \
-    ok "pidrive_web.service neu gestartet" || \
-    warn "pidrive_web konnte nicht gestartet werden"
-  # AVRCP Service starten
-  if [ -f "$SERVICE_DIR/pidrive_avrcp.service" ]; then
-    systemctl restart pidrive_avrcp 2>/dev/null || true
-    ok "pidrive_avrcp.service gestartet"
-  fi
 fi
 
 # ── Zeitzone und fake-hwclock ──────────────────────────────────────────────
@@ -798,7 +818,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Car-Only Cleanup (v0.10.16: bei Frisch-Install mit anschliessendem Reboot) ──
+# ── Car-Only Cleanup (v0.10.18: bei Frisch-Install mit anschliessendem Reboot) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
   if [ ! -f "$_CLEANUP_DONE_FILE" ]; then

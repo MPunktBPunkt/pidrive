@@ -922,7 +922,55 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.10.16 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
+### v0.10.18 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
+
+**Root Cause: PulseAudio-Unit wurde nie geschrieben wenn Raspotify schon installiert war**
+
+Das gesamte PA-Setup (asound.conf, system.pa, pulseaudio.service Unit) lag seit mehreren
+Versionen INNERHALB des `if [ -f /etc/raspotify/conf ]; then`-Blocks. Wenn Raspotify bereits
+installiert war (`conf` existierte), aber der Installer das PA-Setup schon einmal durchgeführt
+hatte und die Unit dann manuell oder durch Cleanup entfernt wurde, wurde sie nie neu geschrieben.
+
+Warum nie erkannt? Weil:
+- Der Installer prüfte `systemctl is-active pulseaudio` — aber wenn die Unit fehlt, schlägt das
+  mit "Unit could not be found" fehl, was in einem `|| true` verloren geht
+- Diagnose prüfte bisher nur `systemctl is-active`, nicht ob die Unit-Datei physisch existiert
+- Der Installer-Output zeigte "✓ Raspotify installiert" und ließ keinen Hinweis auf den
+  fehlenden PA-Setup
+
+Fix v0.10.18:
+- PA-Setup (asound.conf, system.pa, PA Unit schreiben, systemctl enable/start) läuft jetzt
+  **IMMER** — in eigenem Abschnitt, unabhängig von Raspotify
+- Installer prüft nach dem Schreiben ob `/etc/systemd/system/pulseaudio.service` tatsächlich
+  existiert und gibt ✓ oder ✗ aus
+- Diagnose hat neuen Abschnitt `BENUTZER / KONTEXT / RECHTE` mit:
+  - Service-User je Dienst (core=root, web=pi, ...)
+  - Socket-Berechtigungen (/var/run/pulse/native, /tmp/pidrive_cmd)
+  - PA Unit-Datei Existenz + --system Flag
+  - User-PA noch aktiv? PipeWire aktiv?
+  - /etc/systemd/user/ null-masking korrekt?
+
+---
+
+### v0.10.18 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
+
+**Umsetzung aus vollständigem Code-Review v0.10.16 (P1 + P2):**
+
+| # | Prio | Datei | Problem | Fix |
+|---|---|---|---|---|
+| 1 | P1 | `bt_devices.py` | `os` nicht importiert → `NameError: name 'os' is not defined` beim BT-Scan | `import os` ergänzt |
+| 2 | P1 | `bt_devices.py` | `paired-devices` ungültiger bluetoothctl-Befehl | → `devices Paired` (wie avrcp_trigger.py) |
+| 3 | P1 | `td_radio.py` | `build_tree` verwendet aber nicht importiert → NameError nach DAB/FM-Scan | `from menu_model import build_tree` ergänzt |
+| 4 | P1 | `td_system.py` | `return False` auch bei erfolgreich behandeltem Command → Dispatcher dachte Befehl sei unbekannt | `return True` am Ende |
+| 5 | P1 | `td_system.py` | `rebuild_tree(...)` nicht definiert → crash bei fav_toggle | Lazy import via `main_core._mc` |
+| 6 | P1 | `trigger_dispatcher.py` | `rebuild` blieb immer False → Menü aktualisierte sich nach nav/scan nicht | rebuild=True für NAV + Scan-Commands |
+| 7 | P1 | `main_core.py` | `LIST_FILE active=True` konnte hängenbleiben → WebUI scheinbar tot | Stale-Reset nach 60s |
+| 8 | P2 | `trigger_dispatcher.py` | `bg()` ohne Exception-Handling → Fehler verschwanden still | Wrapper mit `log.error()` |
+| 9 | P2 | `main_core.py` | PA-Socket fehlt → keine Warnung bis Audio versucht wird | Check bei `boot_phase=steady` |
+
+---
+
+### v0.10.18 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
 
 **Debug-Tab (t4): Checkboxen statt Buttons**
 
@@ -959,7 +1007,7 @@ ein einzelner "▶ Diagnose starten"-Button. Verfügbare Checkboxen:
 
 ---
 
-### v0.10.16 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
+### v0.10.18 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
 
 **Installer: Car-Only Cleanup mit automatischem Exit + Reboot-Hinweis**
 
@@ -967,7 +1015,7 @@ Problem in v0.10.14: Cleanup lief nach der Diagnose am Ende des Installers, aber
 anschliessenden Reboot. PulseAudio System-Mode greift erst nach Reboot — daher immer
 noch User-PA aktiv bei der Diagnose.
 
-Fix v0.10.16: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
+Fix v0.10.18: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
 `→ sudo reboot` und endet mit `exit 0`. Beim nächsten Install (nach Reboot) ist
 `/etc/pidrive_car_cleanup_done` gesetzt → normaler Ablauf ohne Cleanup-Schleife.
 
@@ -985,7 +1033,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 
 ---
 
-### v0.10.16 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+### v0.10.18 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
 
 **Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
 
@@ -1002,7 +1050,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
 User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
 
-Fix v0.10.16:
+Fix v0.10.18:
 - **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
 - **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
 - Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen
