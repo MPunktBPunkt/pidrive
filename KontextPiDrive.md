@@ -922,6 +922,40 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
+### v0.10.14 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+
+**Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
+
+| # | Problem | Datei | Status |
+|---|---|---|---|
+| 1 | `import socket`, `import subprocess` fehlten → Diagnose-Tab komplett kaputt | `webui_shared.py` | ✓ behoben |
+| 2 | `handle_trigger` nicht definiert in `td_nav.py` → System-Menüpunkte (Reboot, Version, Info) crashten | `td_nav.py` | ✓ behoben |
+| 3 | `PULSE_SERVER` in welle-cli Umgebung → DAB lief mit falschem PA-Kontext (anders als manuell) | `dab_play.py` | ✓ behoben |
+| 4 | `diagnose.py` zeigte hardcoded `v0.9.30` statt aktueller Version | `diagnose.py` | ✓ behoben |
+| 5 | `dabfm.py` — dead code (referenziert `Item` das nicht mehr existiert) | `modules/dabfm.py` | ✓ entfernt |
+
+**Installer: Car-Only Cleanup automatisch bei Erstinstallation**
+
+Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
+User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
+
+Fix v0.10.14:
+- **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
+- **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
+- Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen
+
+**DAB-Fix: PULSE_SERVER aus welle-cli Umgebung entfernt**
+
+Seit v0.10.5 behielt `dab_play.py` `PULSE_SERVER` in der welle-cli Umgebung, damit
+ALSA→PA-Plugin→System-PA funktioniert. Wenn aber User-PA statt System-PA läuft, war
+`PULSE_SERVER=unix:/var/run/pulse/native` kontraproduktiv → welle-cli lief in einem anderen
+Kontext als der manuelle Start → instabiler Lock, keine DLS, kein Ton.
+
+Fix: `PULSE_SERVER` wird jetzt **entfernt** — welle-cli läuft ALSA-direkt wie beim manuellen
+Konsolenstart. Audio über `/etc/asound.conf` Card 1 (bcm2835 Headphones).
+
+---
+
 ### v0.10.8 — Code Review, DAB-Pfad-Analyse, Spectrum-UI, Bug-Fixes
 
 **Code Review Ergebnisse:**

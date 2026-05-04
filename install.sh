@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.13           ║
+║        PiDrive Installer v0.10.14           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -465,7 +465,7 @@ SYSTEMPA
   usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
   ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-  # v0.10.13: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+  # v0.10.14: PulseAudio System-Service einrichten (Bookworm-kompatibel)
   # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
   # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
   systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
@@ -798,22 +798,34 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Optionaler Car-Only Cleanup (v0.9.4) ─────────────────────────────────────
+# ── Car-Only Cleanup (v0.10.14: automatisch bei Frisch-Install) ──────────────
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
-  echo ""
-  echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"
-  echo -e "  Deaktiviert unnötige Dienste (cups, ModemManager, snapd, ...)"
-  echo -e "  und bereinigt Desktop-Audio-Stack (PipeWire, User-PulseAudio)."
-  echo -e "  Empfohlen wenn PiDrive das einzige Nutzungsziel des Pi ist."
-  echo ""
-  read -r -t 15 -p "  Car-Only Cleanup jetzt ausführen? [j/N] " CLEANUP_CHOICE || CLEANUP_CHOICE="n"
-  echo ""
-  if [[ "$CLEANUP_CHOICE" =~ ^[jJyY]$ ]]; then
-    echo -e "${CYAN}  Starte Car-Only Cleanup...${NC}"
+  # Frisch-Install erkennen: kein Checkpoint aus früherem Lauf
+  _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
+  if [ ! -f "$_CLEANUP_DONE_FILE" ]; then
+    # Erstinstallation → automatisch ausführen
+    info "Car-Only Cleanup (Erstinstallation — automatisch)..."
+    echo -e "  Deaktiviert unnötige Dienste und User-PulseAudio."
     bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
+    touch "$_CLEANUP_DONE_FILE"
+    ok "Car-Only Cleanup abgeschlossen"
   else
-    echo -e "  Cleanup übersprungen."
-    echo -e "  Manuell ausführen: ${CYAN}sudo bash ~/pidrive/pidrive_car_only_cleanup.sh${NC}"
+    # Folge-Install → optional (15s Timeout)
+    echo ""
+    echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"
+    echo -e "  Deaktiviert unnötige Dienste (cups, ModemManager, snapd, ...)"
+    echo -e "  und bereinigt Desktop-Audio-Stack (PipeWire, User-PulseAudio)."
+    echo ""
+    read -r -t 15 -p "  Car-Only Cleanup erneut ausführen? [j/N] " CLEANUP_CHOICE || CLEANUP_CHOICE="n"
+    echo ""
+    if [[ "$CLEANUP_CHOICE" =~ ^[jJyY]$ ]]; then
+      echo -e "${CYAN}  Starte Car-Only Cleanup...${NC}"
+      bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
+      ok "Car-Only Cleanup abgeschlossen"
+    else
+      echo -e "  Cleanup übersprungen."
+      echo -e "  Manuell: ${CYAN}sudo bash ~/pidrive/pidrive_car_only_cleanup.sh${NC}"
+    fi
   fi
 fi
 
