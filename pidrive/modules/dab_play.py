@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.11"""
+"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.13"""
 
 from modules.dab_helpers import (
     _write_json_atomic, _read_json, _run, _truncate_file, _normalize_station,
@@ -120,14 +120,14 @@ def play_station(station, S, settings=None):
             " 2>" + _sess_err_file
         )
 
-        # ── v0.10.11: Saubere ALSA-Umgebung für welle-cli ────────────────────
+        # ── v0.10.13: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
         #          → wird von welle-cli geerbt
         #          → PulseAudio ALSA-Plugin (pcm.!default {type pulse})
         #            fängt ALSA-Calls ab → falscher Sink → kein Ton
         # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
         #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
-        # ── v0.10.11 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
+        # ── v0.10.13 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
         # PULSE_SERVER BEHALTEN: welle-cli nutzt ALSA default = PA-Plugin → System-PA
         # PA-Default-Sink wurde von get_mpv_args() auf Klinke gesetzt (s.o.)
         # PULSE_SINK ENTFERNEN: verhindert PA-Init-Timing-Konflikt mit RTL-SDR
@@ -162,7 +162,7 @@ def play_station(station, S, settings=None):
         except Exception as _ae:
             log.warn(f"DAB: asound.conf check/write: {_ae}")
 
-        # v0.10.11: Audio-Routing-Debug beim Start
+        # v0.10.13: Audio-Routing-Debug beim Start
         _pa_default = ""
         try:
             import subprocess as _sppa
@@ -233,7 +233,7 @@ def play_station(station, S, settings=None):
                 log.warn(f"DAB play: session changed during lock wait {session_id}")
                 return
 
-            # v0.10.11: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
+            # v0.10.13: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
             if not os.path.exists(_err_path):
                 continue
@@ -346,7 +346,7 @@ def stop(S):
     if S.get("radio_type") == "DAB":
         S["radio_playing"] = False
         S["radio_station"] = ""
-        # v0.10.11: Clear DLS/artist/track fields on stop to avoid stale display
+        # v0.10.13: Clear DLS/artist/track fields on stop to avoid stale display
         S["artist"] = ""
         S["track"] = ""
         S["dls_text"] = ""

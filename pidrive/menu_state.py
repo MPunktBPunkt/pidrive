@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""menu_state.py — MenuNode + MenuState  v0.10.11
+"""menu_state.py — MenuNode + MenuState  v0.10.13
 Ausgelagert aus menu_model.py."""
 
 import os

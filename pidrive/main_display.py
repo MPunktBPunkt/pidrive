@@ -7,7 +7,7 @@ Schreibt: /dev/fb1 (SPI-Display direkt via SDL_FBDEV)
 
 #!/usr/bin/env python3
 """
-main_display.py - PiDrive Display v0.10.11
+main_display.py - PiDrive Display v0.10.13
 
 Nur Anzeige — kein Audio, kein Trigger, keine Kernlogik.
 Liest Status von /tmp/pidrive_status.json (geschrieben von Core).
@@ -345,7 +345,7 @@ def render(screen, fonts, status, menu):
 
 def main():
     log.info("=" * 50)
-    log.info("PiDrive Display v0.10.11 gestartet")
+    log.info("PiDrive Display v0.10.13 gestartet")
     log.info("  SDL_FBDEV=/dev/fb1 (direkt, kein fbcp)")
     log.info("=" * 50)
 

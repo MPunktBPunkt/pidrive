@@ -11,6 +11,7 @@ StartLimitBurst=10
 Type=simple
 User=pi
 Group=pi
+SupplementaryGroups=systemd-journal
 WorkingDirectory=/home/pi/pidrive/pidrive
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/webui.py
 Restart=always

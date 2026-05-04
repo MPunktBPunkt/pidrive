@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.11           ║
+║        PiDrive Installer v0.10.13           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -304,6 +304,45 @@ info "9/10 Berechtigungen setzen..."
 usermod -a -G video,input,render,tty,systemd-journal "$REAL_USER" 2>/dev/null || true
 ok "Gruppen: video, input, render, tty, systemd-journal"
 
+  # ── Berechtigungen prüfen und korrigieren ─────────────────────────────────
+  _perm_ok=0; _perm_fix=0; _perm_err=0
+  _chk() {
+    local p="$1" eo="$2" eg="$3" em="$4" d="$5"
+    [ -e "$p" ] || return 0
+    local co cg cm changed=0
+    co=$(stat -c '%U' "$p" 2>/dev/null)
+    cg=$(stat -c '%G' "$p" 2>/dev/null)
+    cm=$(stat -c '%a' "$p" 2>/dev/null)
+    if [ "$co" != "$eo" ] || [ "$cg" != "$eg" ]; then chown "$eo:$eg" "$p" 2>/dev/null && changed=1; fi
+    if [ "$cm" != "$em" ]; then chmod "$em" "$p" 2>/dev/null && changed=1; fi
+    if [ $changed -eq 1 ]; then
+      warn "  Korrigiert: $p  ($co:$cg/$cm → $eo:$eg/$em)  [$d]"
+      _perm_fix=$((_perm_fix+1))
+    else
+      _perm_ok=$((_perm_ok+1))
+    fi
+  }
+  # Repo + Python-Dateien
+  _chk "$INSTALL_DIR"         "$REAL_USER" "$REAL_USER" "755" "Repo-Dir"
+  _chk "$INSTALL_DIR/pidrive" "$REAL_USER" "$REAL_USER" "755" "App-Dir"
+  _chk "$INSTALL_DIR/install.sh" "$REAL_USER" "$REAL_USER" "755" "Installer"
+  for f in "$INSTALL_DIR"/pidrive/*.py "$INSTALL_DIR"/pidrive/modules/*.py "$INSTALL_DIR"/pidrive/web/api/*.py; do
+    [ -f "$f" ] && _chk "$f" "$REAL_USER" "$REAL_USER" "644" "Python"
+  done
+  # Log-Verzeichnis: root schreibt, pi liest im WebUI
+  _chk "/var/log/pidrive" "root" "$REAL_USER" "775" "Log-Dir"
+  for f in /var/log/pidrive/*.log; do [ -f "$f" ] && _chk "$f" "root" "root" "644" "Log-Datei"; done
+  # System-Konfiguration
+  [ -f /etc/pulse/system.pa ] && _chk /etc/pulse/system.pa root root 644 "system.pa"
+  [ -f /etc/asound.conf ]     && _chk /etc/asound.conf     root root 644 "asound.conf"
+  for f in /etc/systemd/system/pidrive*.service; do [ -f "$f" ] && _chk "$f" root root 644 "systemd"; done
+  [ -f /etc/systemd/system/pulseaudio.service ] && _chk /etc/systemd/system/pulseaudio.service root root 644 "PA Service"
+  # Binaries: nur prüfen, nicht ändern
+  for bin in /usr/bin/rtl_fm /usr/bin/welle-cli /usr/bin/mpv /usr/bin/pactl; do
+    if [ ! -x "$bin" ]; then warn "  Binary fehlt: $bin"; _perm_err=$((_perm_err+1)); else _perm_ok=$((_perm_ok+1)); fi
+  done
+  ok "Berechtigungen: ${_perm_ok} OK | ${_perm_fix} korrigiert | ${_perm_err} Fehler"
+
 # chmod tty3 nicht mehr noetig
 
 # pidrive_ctrl.py entfernt in v0.6.0 — Steuerung via /tmp/pidrive_cmd
@@ -426,7 +465,7 @@ SYSTEMPA
   usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
   ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-  # v0.10.11: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+  # v0.10.13: PulseAudio System-Service einrichten (Bookworm-kompatibel)
   # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
   # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
   systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
@@ -434,15 +473,11 @@ SYSTEMPA
   sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
   sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
   sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
-  # User-PA-Socket system-weit blockieren (verhindert Socket-Aktivierung)
+  # User-PA-Socket null-masken: ln -sf /dev/null verhindert Socket-Aktivierung zuverlässig
   mkdir -p /etc/systemd/user
-  cat > /etc/systemd/user/pulseaudio.socket << 'USERSOCKET'
-[Unit]
-Description=Disabled — PiDrive uses system-mode PulseAudio
-[Socket]
-# Socket-Aktivierung deaktiviert: PiDrive nutzt System-PA
-USERSOCKET
-  # Socket als override (nicht mask) damit der Dienst selbst deaktivierbar bleibt
+  ln -sf /dev/null /etc/systemd/user/pulseaudio.socket
+  ln -sf /dev/null /etc/systemd/user/pulseaudio.service
+  ok "User-PA Socket + Service null-maskiert"
   # Alle laufenden PA-Prozesse als User beenden
   pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
   sleep 1
@@ -468,14 +503,34 @@ PrivateUsers=false
 [Install]
 WantedBy=multi-user.target
 PASERVICE
+  # Lingering deaktivieren: verhindert user-systemd Session-Autostart
+  loginctl disable-linger "$REAL_USER" 2>/dev/null || true
+  # Alle PA-Prozesse killen bevor System-PA startet
+  pkill -9 pulseaudio 2>/dev/null || true
+  sleep 1
   systemctl daemon-reload
   systemctl enable pulseaudio 2>/dev/null || true
-  systemctl restart pulseaudio 2>/dev/null || true
+  systemctl start pulseaudio 2>/dev/null || true
   sleep 3
-  if systemctl is-active --quiet pulseaudio; then
-    ok "PulseAudio: System-Service läuft"
+  # Sicherstellen dass kein User-PA mehr läuft
+  pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
+  sleep 1
+  # Sinks prüfen (nicht nur ob Service aktiv)
+  _pa_sinks=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | wc -l)
+  if systemctl is-active --quiet pulseaudio && [ "${_pa_sinks:-0}" -gt 0 ]; then
+    ok "PulseAudio: System-Service läuft ($_pa_sinks Sinks vorhanden)"
+    # Socket-Existenz prüfen (pidrive_core.service braucht diesen Pfad)
+    if [ -S /var/run/pulse/native ]; then
+      ok "PulseAudio: Socket /var/run/pulse/native vorhanden ✓"
+    else
+      warn "PulseAudio: Socket /var/run/pulse/native fehlt — Reboot erforderlich"
+    fi
+  elif systemctl is-active --quiet pulseaudio; then
+    warn "PulseAudio: Service aktiv aber keine Sinks — Reboot erforderlich"
+    warn "  → Nach Reboot: sudo systemctl status pulseaudio"
   else
-    warn "PulseAudio System-Service inaktiv — journalctl -u pulseaudio"
+    warn "PulseAudio System-Service inaktiv"
+    warn "  Debug: journalctl -u pulseaudio --no-pager | tail -20"
   fi
 
   # v0.9.13: Default Sink auf Klinke (Card 1 = alsa_output.1.*) setzen

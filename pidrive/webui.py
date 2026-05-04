@@ -17,7 +17,7 @@ STATIC_DIR = WEB_DIR / "static"
 
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 
-# ── v0.10.11: Shared helpers aus webui_shared.py ──────────────────────────────
+# ── v0.10.13: Shared helpers aus webui_shared.py ──────────────────────────────
 from webui_shared import *  # noqa: F401,F403
 from webui_shared import (
     CMD_FILE, STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE,
@@ -27,7 +27,7 @@ from webui_shared import (
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
 
-# ── v0.10.11: Blueprints registrieren ─────────────────────────────────────────
+# ── v0.10.13: Blueprints registrieren ─────────────────────────────────────────
 try:
     from web.api.routes_dab      import dab_bp;      app.register_blueprint(dab_bp)
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
@@ -47,7 +47,7 @@ def index():
 @app.route("/api/core")
 def api_core():
     """
-    v0.10.11: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
+    v0.10.13: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
     Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
     Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
     """
@@ -185,7 +185,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/avrcp.log 2>/dev/null")
         return jsonify(r)
     elif target == "app":
-        return jsonify(safe_run(f"tail -n 150 {LOG_FILE}"))
+        return jsonify(safe_run(f"tail -n 150 {LOG_FILE} 2>/dev/null || echo '(log not found)'"))
     else:
         return jsonify({"ok": False, "error": "Ungültiges Log-Target"}), 400
 
@@ -347,7 +347,7 @@ def api_ppm_calibrate():
 @app.route("/api/scanner/settings", methods=["GET", "POST"])
 def api_scanner_settings():
     """
-    v0.10.11: Scanner-Einstellungen lesen/schreiben.
+    v0.10.13: Scanner-Einstellungen lesen/schreiben.
     GET  → aktuelle Werte (inkl. scanner_use_spectrum)
     POST → Werte speichern, z.B. {"scanner_use_spectrum": true}
     """
@@ -399,7 +399,7 @@ def api_spectrum_last():
 def api_spectrum_capture():
     """
     Spectrum Capture. Unterstützt:
-    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.11)
+    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.13)
     - mode=fm_sweep       → Legacy FM-Band-Sweep
     - mode=snapshot       → Einzelmessung bei center_mhz
     """
@@ -420,7 +420,7 @@ def api_spectrum_capture():
         gain = int(args.get("gain", s.get("scanner_gain", -1)))
         debug = bool(args.get("debug", s.get("scanner_spectrum_debug", False)))
 
-        # v0.10.11: Peak-Identifizierung für PMR446 / Freenet
+        # v0.10.13: Peak-Identifizierung für PMR446 / Freenet
         if band in ("pmr446", "freenet"):
             watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
             profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
