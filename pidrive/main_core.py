@@ -139,7 +139,7 @@ def _start_bt_agent_early():
 
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
 
-# ── Trigger-Dispatcher (ausgelagert v0.10.22) ─────────────────────────────────
+# ── Trigger-Dispatcher (ausgelagert v0.10.23) ─────────────────────────────────
 from trigger_dispatcher import (
     handle_trigger, _execute_node, _fm_manual,
     _set_guards, _debounced,
@@ -335,7 +335,7 @@ def rebuild_tree(menu_state, store, S, settings):
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
-    # v0.10.22: Trigger-Dispatcher Guards registrieren
+    # v0.10.23: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
     
     """

@@ -17,7 +17,22 @@ STATIC_DIR = WEB_DIR / "static"
 
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 
-# ── v0.10.22: Shared helpers aus webui_shared.py ──────────────────────────────
+# v0.10.23: Sichererer JSON-Provider — NaN/Infinity → null (kein gültiges JSON-Literal)
+import math as _math
+class _SafeJSONProvider(app.json_provider_class):
+    @staticmethod
+    def _fix(o, d=0):
+        if d > 20: return None
+        if isinstance(o, float): return None if (_math.isnan(o) or _math.isinf(o)) else o
+        if isinstance(o, dict): return {k: _SafeJSONProvider._fix(v, d+1) for k, v in o.items()}
+        if isinstance(o, (list, tuple)): return [_SafeJSONProvider._fix(v, d+1) for v in o]
+        return o
+    def dumps(self, obj, **kw): return super().dumps(self._fix(obj), **kw)
+app.json_provider_class = _SafeJSONProvider
+app.json = _SafeJSONProvider(app)
+
+
+# ── v0.10.23: Shared helpers aus webui_shared.py ──────────────────────────────
 from webui_shared import *  # noqa: F401,F403
 from webui_shared import (
     CMD_FILE, STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE,
@@ -27,7 +42,7 @@ from webui_shared import (
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
 
-# ── v0.10.22: Blueprints registrieren ─────────────────────────────────────────
+# ── v0.10.23: Blueprints registrieren ─────────────────────────────────────────
 try:
     from web.api.routes_dab      import dab_bp;      app.register_blueprint(dab_bp)
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
@@ -39,9 +54,24 @@ except Exception as _bp_err:
 
 
 @app.route("/")
+def _sanitize_floats(obj, _depth=0):
+    """Ersetzt NaN/Infinity durch None — JSON-Spec kennt diese nicht."""
+    if _depth > 20:
+        return None
+    import math
+    if isinstance(obj, float):
+        return None if (math.isnan(obj) or math.isinf(obj)) else obj
+    if isinstance(obj, dict):
+        return {k: _sanitize_floats(v, _depth+1) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_floats(v, _depth+1) for v in obj]
+    return obj
+
+
 def index():
     try:
         vm = build_view_model()
+        vm = _sanitize_floats(vm)  # NaN/Infinity → null (JS-kompatibel)
     except Exception as _e:
         import log as _log_idx
         _log_idx.error(f"build_view_model Fehler: {_e}")
@@ -60,7 +90,7 @@ def index():
 @app.route("/api/core")
 def api_core():
     """
-    v0.10.22: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
+    v0.10.23: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
     Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
     Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
     """
@@ -364,7 +394,7 @@ def api_ppm_calibrate():
 @app.route("/api/scanner/settings", methods=["GET", "POST"])
 def api_scanner_settings():
     """
-    v0.10.22: Scanner-Einstellungen lesen/schreiben.
+    v0.10.23: Scanner-Einstellungen lesen/schreiben.
     GET  → aktuelle Werte (inkl. scanner_use_spectrum)
     POST → Werte speichern, z.B. {"scanner_use_spectrum": true}
     """
@@ -416,7 +446,7 @@ def api_spectrum_last():
 def api_spectrum_capture():
     """
     Spectrum Capture. Unterstützt:
-    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.22)
+    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.23)
     - mode=fm_sweep       → Legacy FM-Band-Sweep
     - mode=snapshot       → Einzelmessung bei center_mhz
     """
@@ -437,7 +467,7 @@ def api_spectrum_capture():
         gain = int(args.get("gain", s.get("scanner_gain", -1)))
         debug = bool(args.get("debug", s.get("scanner_spectrum_debug", False)))
 
-        # v0.10.22: Peak-Identifizierung für PMR446 / Freenet
+        # v0.10.23: Peak-Identifizierung für PMR446 / Freenet
         if band in ("pmr446", "freenet"):
             watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
             profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
