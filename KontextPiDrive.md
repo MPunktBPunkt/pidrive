@@ -922,13 +922,64 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.10.20 — Menü-Fix komplett, Debug-Logging, Display-Guard
+### v0.10.22 — JS-Fehlerdiagnose: globaler Error-Handler + console.log
+
+**Problem noch nicht gelöst — Diagnose-Stufe eingebaut:**
+
+Die Buttons reagieren nicht, Tabs wechseln nicht. Da `WebUI CMD:` nie im Log erscheint
+(obwohl die Buttons `sendCmd()` aufrufen sollten), muss ein JS-Fehler alle Handlers
+lahmlegen. Das ist nach dem ersten `throw` in JS der Fall.
+
+Eingebaute Diagnose-Stufen:
+- `window.onerror` → zeigt JS-Fehler sichtbar in der Statusleiste (nicht nur Konsole)
+- `sendCmd()` → `console.log('[PiDrive] sendCmd:', cmd)` beim Aufruf
+- `showTab()` → `console.log('[PiDrive] showTab:', id)` beim Aufruf
+- `vmLast = {{ vm | tojson }}` → try/catch, Fehler in Statusleiste
+- `build_view_model()` → Exception-Fallback mit leerem vm statt Server-Error
+
+**Nächster Schritt:** Browser-Konsole öffnen (F12 → Console) und PiDrive WebUI
+neu laden. Dort sollten sichtbar sein:
+- Etwaige Syntax/Runtime-Fehler mit Zeilennummer
+- `[PiDrive] showTab: t1` beim Klick auf einen Tab
+- `[PiDrive] sendCmd: down` beim Klick auf ↓
+
+---
+
+### v0.10.22 — sendCmd Timing-Fix: Browser-Navigation funktioniert jetzt
+
+**ROOT CAUSE des Browser-Problems:**
+
+Die Shell-Tests (`echo down > /tmp/pidrive_cmd`) funktionierten schon seit v0.10.19/20
+korrekt — `MENU_NAV down before=0 after=1` war im Log sichtbar. Aber der Browser zeigte
+trotzdem keine Änderung.
+
+Ursache: `sendCmd()` rief `refreshCore()` **synchron direkt nach** dem POST zurück.
+Der Pi-Core-Loop läuft mit 30ms-Intervall, braucht aber durch GPIO-/BT-Checks realistisch
+~50-150ms bis das cmd-File verarbeitet ist. `refreshCore()` fetcht `/api/core` sofort
+nach dem POST-Return (~2ms) → liest noch das alte `menu.json` → zeigt alten Cursor.
+
+Der 1500ms `setInterval` würde zwar den aktualisierten Zustand zeigen, aber erst
+1.5 Sekunden später — was wie "keine Reaktion" wirkt.
+
+Fix: `sendCmd()` feuert `refreshCore` jetzt **zweimal verzögert**:
+- nach 100ms (erster Versuch, meist ausreichend)
+- nach 350ms (Fallback, garantiert nach Core-Verarbeitung)
+
+Kein `refreshCore()` mehr direkt nach POST.
+
+**Zusätzlich:** `git config core.fileMode false` nach `git pull` — verhindert dass git
+Dateiberechtigungen im Repo verwaltet, was die wiederkehrenden 664→644 Korrekturen
+in Schritt 9 reduziert.
+
+---
+
+### v0.10.22 — Menü-Fix komplett, Debug-Logging, Display-Guard
 
 **ZWEITER TEIL DES NAVIGATIONS-FIX:**
 
 Das eigentliche Problem war zweiteilig:
 1. v0.10.19: `trigger_dispatcher.py` gab für nav-Commands `rebuild=False` zurück ✓
-2. v0.10.20: `main_core.py` schrieb `menu.json` nur bei `needs_rebuild=True` — daher
+2. v0.10.22: `main_core.py` schrieb `menu.json` nur bei `needs_rebuild=True` — daher
    war der Cursor-Wechsel trotzdem nie sichtbar
 
 Fix: `ipc.write_menu()` wird jetzt bei **jeder** `menu_state.rev`-Änderung aufgerufen,
@@ -949,7 +1000,7 @@ initialisierbar. `StartLimitBurst=2` begrenzt Neustarts auf 2 pro 120s.
 
 ---
 
-### v0.10.20 — Navigation-Fix (Hauptfehler), DAB-Status, Display-Guard, Sudoers
+### v0.10.22 — Navigation-Fix (Hauptfehler), DAB-Status, Display-Guard, Sudoers
 
 **ROOT CAUSE BEHOBEN: Menünavigation funktionierte nie (seit Dispatcher-Refactoring)**
 
@@ -972,7 +1023,7 @@ das den Stack/Cursor auf Root/0 zurücksetzte. Jede Navigation war damit neutral
 
 ---
 
-### v0.10.20 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
+### v0.10.22 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
 
 **Root Cause: PulseAudio-Unit wurde nie geschrieben wenn Raspotify schon installiert war**
 
@@ -988,7 +1039,7 @@ Warum nie erkannt? Weil:
 - Der Installer-Output zeigte "✓ Raspotify installiert" und ließ keinen Hinweis auf den
   fehlenden PA-Setup
 
-Fix v0.10.20:
+Fix v0.10.22:
 - PA-Setup (asound.conf, system.pa, PA Unit schreiben, systemctl enable/start) läuft jetzt
   **IMMER** — in eigenem Abschnitt, unabhängig von Raspotify
 - Installer prüft nach dem Schreiben ob `/etc/systemd/system/pulseaudio.service` tatsächlich
@@ -1002,7 +1053,7 @@ Fix v0.10.20:
 
 ---
 
-### v0.10.20 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
+### v0.10.22 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
 
 **Umsetzung aus vollständigem Code-Review v0.10.16 (P1 + P2):**
 
@@ -1020,7 +1071,7 @@ Fix v0.10.20:
 
 ---
 
-### v0.10.20 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
+### v0.10.22 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
 
 **Debug-Tab (t4): Checkboxen statt Buttons**
 
@@ -1057,7 +1108,7 @@ ein einzelner "▶ Diagnose starten"-Button. Verfügbare Checkboxen:
 
 ---
 
-### v0.10.20 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
+### v0.10.22 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
 
 **Installer: Car-Only Cleanup mit automatischem Exit + Reboot-Hinweis**
 
@@ -1065,7 +1116,7 @@ Problem in v0.10.14: Cleanup lief nach der Diagnose am Ende des Installers, aber
 anschliessenden Reboot. PulseAudio System-Mode greift erst nach Reboot — daher immer
 noch User-PA aktiv bei der Diagnose.
 
-Fix v0.10.20: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
+Fix v0.10.22: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
 `→ sudo reboot` und endet mit `exit 0`. Beim nächsten Install (nach Reboot) ist
 `/etc/pidrive_car_cleanup_done` gesetzt → normaler Ablauf ohne Cleanup-Schleife.
 
@@ -1083,7 +1134,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 
 ---
 
-### v0.10.20 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+### v0.10.22 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
 
 **Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
 
@@ -1100,7 +1151,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
 User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
 
-Fix v0.10.20:
+Fix v0.10.22:
 - **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
 - **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
 - Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen
