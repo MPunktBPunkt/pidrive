@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.16"""
+"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.18"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 import log, ipc
 from settings import save_settings
+from menu_model import build_tree
 from modules import source_state
 from modules import (
     musik, wifi, bluetooth, audio, system as sys_mod,

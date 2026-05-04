@@ -289,8 +289,16 @@ def check_audio():
     elif is_system_pa:
         ok("pulseaudio: System-Prozess aktiv (systemd noch nicht synchron)")
     else:
-        err("pulseaudio.service: inaktiv")
-        err("  → FIX: sudo systemctl enable --now pulseaudio")
+        # Check if unit file even exists
+        import os as _pa_os
+        unit_file = "/etc/systemd/system/pulseaudio.service"
+        if not _pa_os.path.exists(unit_file):
+            err("pulseaudio.service: Unit-Datei FEHLT komplett!")
+            err(f"  → {unit_file} wurde nie angelegt")
+            err("  → FIX: curl .../install.sh | sudo bash  (neu installieren)")
+        else:
+            err("pulseaudio.service: inaktiv (Unit-Datei vorhanden)")
+            err("  → FIX: sudo systemctl enable --now pulseaudio")
 
     # system.pa
     sys_pa = "/etc/pulse/system.pa"
@@ -764,6 +772,86 @@ def test_sdl():
 
 
 def summary():
+    # ── Benutzer- und Kontext-Test ──────────────────────────────────────────────
+    S("BENUTZER / KONTEXT / RECHTE")
+    
+    # Welcher User läuft welcher Service?
+    ctx_checks = [
+        ("pidrive_core",    "root"),
+        ("pidrive_display", "root"),
+        ("pidrive_web",     "pi"),
+        ("pidrive_avrcp",   "root"),
+    ]
+    for svc, expected_user in ctx_checks:
+        svc_user = run(f"systemctl show {svc}.service -p User 2>/dev/null | cut -d= -f2").strip()
+        if not svc_user:
+            svc_user = run(f"ps -o user= -p $(systemctl show {svc}.service -p MainPID --value 2>/dev/null) 2>/dev/null").strip()
+        if svc_user == expected_user:
+            ok(f"{svc}: User={svc_user} ✓")
+        elif svc_user:
+            warn(f"{svc}: User={svc_user} (erwartet: {expected_user})")
+        else:
+            info(f"{svc}: nicht aktiv")
+    
+    # PulseAudio Socket Permissions
+    import os as _ctx_os
+    for check_path in ["/var/run/pulse", "/var/run/pulse/native", "/tmp/pidrive_cmd"]:
+        if _ctx_os.path.exists(check_path):
+            s = _ctx_os.stat(check_path)
+            import stat as _stat
+            mode = oct(s.st_mode)[-3:]
+            import pwd as _pwd, grp as _grp
+            try: owner = _pwd.getpwuid(s.st_uid).pw_name
+            except: owner = str(s.st_uid)
+            try: group = _grp.getgrgid(s.st_gid).gr_name
+            except: group = str(s.st_gid)
+            ok(f"{check_path}: {owner}:{group} {mode}")
+        else:
+            if check_path in ["/var/run/pulse", "/var/run/pulse/native"]:
+                err(f"{check_path}: FEHLT — PulseAudio nicht aktiv")
+            else:
+                info(f"{check_path}: nicht vorhanden (kein Trigger gesetzt)")
+    
+    # PA Unit File
+    pa_unit = "/etc/systemd/system/pulseaudio.service"
+    if _ctx_os.path.exists(pa_unit):
+        ok(f"PA Unit-Datei: {pa_unit} vorhanden ✓")
+        # Check it has --system flag
+        unit_content = open(pa_unit).read()
+        if "--system" in unit_content:
+            ok("PA Unit: ExecStart mit --system ✓")
+        else:
+            warn("PA Unit: kein --system Flag in ExecStart!")
+    else:
+        err(f"PA Unit-Datei: {pa_unit} FEHLT!")
+        err("  → Installer hat PA-Setup nie korrekt abgeschlossen")
+    
+    # User-PA: läuft noch User-PulseAudio?
+    user_pa = run("pgrep -u pi -a pulseaudio 2>/dev/null || pgrep -u 1000 -a pulseaudio 2>/dev/null")
+    if user_pa.strip():
+        err(f"User-PulseAudio läuft noch: {user_pa.strip()[:80]}")
+        err("  → FIX: sudo bash ~/pidrive/pidrive_car_only_cleanup.sh")
+    else:
+        ok("Kein User-PulseAudio aktiv ✓")
+    
+    # PipeWire check
+    pw = run("pgrep -a pipewire 2>/dev/null")
+    if pw.strip():
+        warn(f"PipeWire läuft: {pw.strip()[:60]}")
+    else:
+        ok("Kein PipeWire aktiv ✓")
+    
+    # /etc/systemd/user masks
+    for mask in ["/etc/systemd/user/pulseaudio.socket", "/etc/systemd/user/pulseaudio.service"]:
+        if _ctx_os.path.islink(mask):
+            target = _ctx_os.readlink(mask)
+            if target == "/dev/null":
+                ok(f"User-PA Maske: {_ctx_os.path.basename(mask)} → /dev/null ✓")
+            else:
+                warn(f"User-PA Maske: {mask} → {target} (kein /dev/null!)")
+        else:
+            warn(f"User-PA Maske fehlt: {mask} — User-PA kann aktiviert werden!")
+    
     S("ZUSAMMENFASSUNG")
     core_ok  = run("systemctl is-active pidrive_core 2>/dev/null") == "active"
     disp_ok  = run("systemctl is-active pidrive_display 2>/dev/null") == "active"

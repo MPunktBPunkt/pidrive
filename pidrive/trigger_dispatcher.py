@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-trigger_dispatcher.py — PiDrive Trigger-Dispatcher  v0.10.16
+trigger_dispatcher.py — PiDrive Trigger-Dispatcher  v0.10.18
 
 Ausgelagert aus main_core.py. handle_trigger() delegiert an:
   td_nav.py       — Navigation, Menü-Aktionen, _execute_node
@@ -77,21 +77,30 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     if _debounced(cmd):
         return False
 
-    def bg(fn):
-        threading.Thread(target=fn, daemon=True).start()
+    def bg(fn, name="bg_trigger"):
+        def _safe_runner():
+            try:
+                fn()
+            except Exception as _e:
+                log.error(f"BG-Thread {name} Fehler: {_e}")
+        threading.Thread(target=_safe_runner, daemon=True, name=name).start()
 
-    if (td_nav.handle(cmd, menu_state, store, S, settings, bg) or
-            td_hardware.handle(cmd, menu_state, store, S, settings, bg) or
-            td_radio.handle(cmd, menu_state, store, S, settings, bg) or
-            td_scanner.handle(cmd, menu_state, store, S, settings, bg) or
-            td_system.handle(cmd, menu_state, store, S, settings, bg)):
-        pass  # handled by sub-dispatcher
-    else:
+    handled = (
+        td_nav.handle(cmd, menu_state, store, S, settings, bg) or
+        td_hardware.handle(cmd, menu_state, store, S, settings, bg) or
+        td_radio.handle(cmd, menu_state, store, S, settings, bg) or
+        td_scanner.handle(cmd, menu_state, store, S, settings, bg) or
+        td_system.handle(cmd, menu_state, store, S, settings, bg)
+    )
+    if not handled:
         log.info(f"TRIGGER unbekannt: {cmd!r}")
         return False
 
     log.trigger_received(cmd)
-    if cmd.startswith("reload_stations:"):
-        log.info(f"STATIONS_RELOAD source={cmd.split(':',1)[1]}")
+    # Rebuild nötig wenn Menüzustand sich geändert haben könnte
+    nav_cmds = {"up", "down", "enter", "back", "left", "right", "cat",
+                "dab_next", "dab_prev", "fm_next", "fm_prev",
+                "dab_scan", "fm_scan", "dab_scan_replace", "lib_browse"}
+    rebuild = cmd in nav_cmds or any(cmd.startswith(p) for p in ("cat:", "reload_stations:"))
     return rebuild
 

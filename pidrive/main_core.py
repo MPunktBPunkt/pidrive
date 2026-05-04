@@ -139,7 +139,7 @@ def _start_bt_agent_early():
 
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
 
-# ── Trigger-Dispatcher (ausgelagert v0.10.16) ─────────────────────────────────
+# ── Trigger-Dispatcher (ausgelagert v0.10.18) ─────────────────────────────────
 from trigger_dispatcher import (
     handle_trigger, _execute_node, _fm_manual,
     _set_guards, _debounced,
@@ -172,10 +172,16 @@ def check_trigger(menu_state, store, S, settings):
     try:
         lst = ipc.read_json(ipc.LIST_FILE, {})
         if lst.get("active"):
-            with open(ipc.CMD_FILE) as f:
-                peek = f.read().strip()
-            if peek in NAV_CMDS:
-                return False
+            # Stale-Check: LIST_FILE älter als 60s → automatisch zurücksetzen
+            lst_ts = lst.get("ts", 0)
+            if lst_ts and (time.time() - lst_ts) > 60:
+                log.warn("LIST_FILE: stale active=true (>60s) — automatisch reset")
+                ipc.write_json(ipc.LIST_FILE, {"active": False})
+            else:
+                with open(ipc.CMD_FILE) as f:
+                    peek = f.read().strip()
+                if peek in NAV_CMDS:
+                    return False
     except Exception:
         pass
 
@@ -328,7 +334,7 @@ def rebuild_tree(menu_state, store, S, settings):
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
-    # v0.10.16: Trigger-Dispatcher Guards registrieren
+    # v0.10.18: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
     
     """
@@ -467,6 +473,10 @@ def startup_tasks(S, settings):
         log.warn("Boot-Resume: " + str(_e))
     finally:
         source_state.set_boot_phase("steady")
+        # PA-Socket-Check beim Übergang zu steady
+        import os as _os_pa
+        if not _os_pa.path.exists("/var/run/pulse/native"):
+            log.warn("PA-Socket /var/run/pulse/native fehlt — Audio läuft ohne PulseAudio")
         # v0.9.30: TICKET 2 — Watcher erst jetzt starten (nach boot_phase=steady)
         try:
             bluetooth.start_auto_reconnect(S, settings)
