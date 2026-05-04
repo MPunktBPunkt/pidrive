@@ -922,7 +922,32 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.10.22 — JS-Fehlerdiagnose: globaler Error-Handler + console.log
+### v0.10.23 — ROOT CAUSE GEFUNDEN: NaN/Infinity bricht gesamtes JavaScript
+
+**Das war der eigentliche Grund warum ALLE Browser-Buttons nicht funktionierten.**
+
+`spectrum.py` und potenziell andere Module können Python `float('nan')` oder
+`float('inf')` zurückgeben (z.B. aus numpy-Berechnungen ohne Signal). Flask's
+`tojson` Filter gibt diese direkt als `NaN` und `Infinity` aus — das sind
+**keine gültigen JSON-Literale** (nur in Python/JS-Kontext, nicht im JSON-Standard).
+
+Resultat: `let vmLast = {{ vm | tojson }};` im `<script>`-Block produziert:
+```javascript
+let vmLast = {"spectrum": {"power_db": [NaN, Infinity, ...]}};
+```
+Der Browser-JS-Parser wirft einen `SyntaxError` beim Parsen dieses Literals.
+Da es **vor** allen Funktionsdefinitionen steht, werden `sendCmd`, `showTab`,
+alle `onclick`-Handler **nie registriert** → keine Taste reagiert.
+
+Fix: Zweistufig
+1. `_sanitize_floats(vm)` in `index()` vor `render_template` — für `{{ vm | tojson }}`
+2. `_SafeJSONProvider` als Flask-JSON-Provider — für alle `jsonify()` API-Antworten
+
+Beide ersetzen `NaN`/`Infinity` durch `null` (JSON-kompatibel).
+
+---
+
+### v0.10.23 — JS-Fehlerdiagnose: globaler Error-Handler + console.log
 
 **Problem noch nicht gelöst — Diagnose-Stufe eingebaut:**
 
@@ -945,7 +970,7 @@ neu laden. Dort sollten sichtbar sein:
 
 ---
 
-### v0.10.22 — sendCmd Timing-Fix: Browser-Navigation funktioniert jetzt
+### v0.10.23 — sendCmd Timing-Fix: Browser-Navigation funktioniert jetzt
 
 **ROOT CAUSE des Browser-Problems:**
 
@@ -973,13 +998,13 @@ in Schritt 9 reduziert.
 
 ---
 
-### v0.10.22 — Menü-Fix komplett, Debug-Logging, Display-Guard
+### v0.10.23 — Menü-Fix komplett, Debug-Logging, Display-Guard
 
 **ZWEITER TEIL DES NAVIGATIONS-FIX:**
 
 Das eigentliche Problem war zweiteilig:
 1. v0.10.19: `trigger_dispatcher.py` gab für nav-Commands `rebuild=False` zurück ✓
-2. v0.10.22: `main_core.py` schrieb `menu.json` nur bei `needs_rebuild=True` — daher
+2. v0.10.23: `main_core.py` schrieb `menu.json` nur bei `needs_rebuild=True` — daher
    war der Cursor-Wechsel trotzdem nie sichtbar
 
 Fix: `ipc.write_menu()` wird jetzt bei **jeder** `menu_state.rev`-Änderung aufgerufen,
@@ -1000,7 +1025,7 @@ initialisierbar. `StartLimitBurst=2` begrenzt Neustarts auf 2 pro 120s.
 
 ---
 
-### v0.10.22 — Navigation-Fix (Hauptfehler), DAB-Status, Display-Guard, Sudoers
+### v0.10.23 — Navigation-Fix (Hauptfehler), DAB-Status, Display-Guard, Sudoers
 
 **ROOT CAUSE BEHOBEN: Menünavigation funktionierte nie (seit Dispatcher-Refactoring)**
 
@@ -1023,7 +1048,7 @@ das den Stack/Cursor auf Root/0 zurücksetzte. Jede Navigation war damit neutral
 
 ---
 
-### v0.10.22 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
+### v0.10.23 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
 
 **Root Cause: PulseAudio-Unit wurde nie geschrieben wenn Raspotify schon installiert war**
 
@@ -1039,7 +1064,7 @@ Warum nie erkannt? Weil:
 - Der Installer-Output zeigte "✓ Raspotify installiert" und ließ keinen Hinweis auf den
   fehlenden PA-Setup
 
-Fix v0.10.22:
+Fix v0.10.23:
 - PA-Setup (asound.conf, system.pa, PA Unit schreiben, systemctl enable/start) läuft jetzt
   **IMMER** — in eigenem Abschnitt, unabhängig von Raspotify
 - Installer prüft nach dem Schreiben ob `/etc/systemd/system/pulseaudio.service` tatsächlich
@@ -1053,7 +1078,7 @@ Fix v0.10.22:
 
 ---
 
-### v0.10.22 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
+### v0.10.23 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
 
 **Umsetzung aus vollständigem Code-Review v0.10.16 (P1 + P2):**
 
@@ -1071,7 +1096,7 @@ Fix v0.10.22:
 
 ---
 
-### v0.10.22 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
+### v0.10.23 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
 
 **Debug-Tab (t4): Checkboxen statt Buttons**
 
@@ -1108,7 +1133,7 @@ ein einzelner "▶ Diagnose starten"-Button. Verfügbare Checkboxen:
 
 ---
 
-### v0.10.22 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
+### v0.10.23 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
 
 **Installer: Car-Only Cleanup mit automatischem Exit + Reboot-Hinweis**
 
@@ -1116,7 +1141,7 @@ Problem in v0.10.14: Cleanup lief nach der Diagnose am Ende des Installers, aber
 anschliessenden Reboot. PulseAudio System-Mode greift erst nach Reboot — daher immer
 noch User-PA aktiv bei der Diagnose.
 
-Fix v0.10.22: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
+Fix v0.10.23: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
 `→ sudo reboot` und endet mit `exit 0`. Beim nächsten Install (nach Reboot) ist
 `/etc/pidrive_car_cleanup_done` gesetzt → normaler Ablauf ohne Cleanup-Schleife.
 
@@ -1134,7 +1159,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 
 ---
 
-### v0.10.22 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+### v0.10.23 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
 
 **Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
 
@@ -1151,7 +1176,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
 User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
 
-Fix v0.10.22:
+Fix v0.10.23:
 - **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
 - **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
 - Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen
