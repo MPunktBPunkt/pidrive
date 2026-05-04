@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_nav.py — Navigation und Menü-Aktionen  v0.10.13"""
+"""td_nav.py — Navigation und Menü-Aktionen  v0.10.14"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -193,10 +193,10 @@ def _execute_node(node, menu_state, store, S, settings):
     log.info(f"MENU_ACTION id={node.id} type={node.type} action={action}")
 
     if node.type == "toggle":
-        handle_trigger(action, menu_state, store, S, settings)
+        __import__("trigger_dispatcher").handle_trigger(action, menu_state, store, S, settings)
         return
 
-    handle_trigger(action, menu_state, store, S, settings)
+    __import__("trigger_dispatcher").handle_trigger(action, menu_state, store, S, settings)
 
 
 

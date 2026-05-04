@@ -820,7 +820,10 @@ def check_resources():
 
 
 def main():
-    print(f"\n{'='*50}\n  PiDrive Diagnose v0.9.30\n{'='*50}")
+    _ver_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "VERSION")
+    try: _diag_ver = open(_ver_file).read().strip()
+    except: _diag_ver = "?"
+    print(f"\n{'='*50}\n  PiDrive Diagnose v{_diag_ver}\n{'='*50}")
     print(f"  Datum:  {run('date')}\n  Kernel: {run('uname -r')}")
     check_services()
     check_ipc()
