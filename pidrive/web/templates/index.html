@@ -1039,8 +1039,10 @@ async function sendCmd(cmd) {
       body: JSON.stringify({cmd})
     });
     const j = await r.json();
-    if (!j.ok) alert('Fehler: ' + (j.error || '?'));
-    refreshCore();
+    if (!j.ok) { alert('Fehler: ' + (j.error || '?')); return; }
+    // Core braucht ~50-150ms um cmd zu verarbeiten → verzögerte Refreshes
+    setTimeout(refreshCore, 100);   // erster Versuch nach 100ms
+    setTimeout(refreshCore, 350);   // zweiter Versuch nach 350ms (Fallback)
   } catch (e) { console.warn('sendCmd', e); }
 }
 
