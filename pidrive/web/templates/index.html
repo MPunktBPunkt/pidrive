@@ -796,25 +796,87 @@
 <!-- ══════════════════════════════════════════════════ -->
 <div class="tab-pane" id="t4">
 
-  <!-- Log -->
+  <!-- Log mit Checkbox-Auswahl -->
   <div class="container">
     <div class="panel">
-      <div class="panel-title">Log</div>
-      <div class="log-buttons" style="flex-wrap:wrap;display:flex;gap:4px;margin-bottom:8px">
-        <button onclick="loadLog('core')">Core Log</button>
-        <button onclick="loadLog('display')">Display Log</button>
-        <button onclick="loadLog('app')">App Log</button>
-        <button onclick="runDiagnose()">Diagnose</button>
-        <button onclick="runGrep()">Grep</button>
-        <button onclick="loadService('core')">Core Status</button>
-        <button onclick="loadService('display')">Display Status</button>
-        <button onclick="loadService('web')">Web Status</button>
-        <button onclick="loadLog('avrcp')">AVRCP Log</button>
-        <button onclick="loadService('avrcp')">AVRCP Status</button>
-        <button onclick="loadAllLogs()">📋 Alle</button>
-        <button id="copyLogBtn" onclick="copyLogToClipboard(event)">⎘ Copy</button>
+      <div class="panel-title">🪲 Diagnose &amp; Log
+        <span id="debugRunStatus" style="font-size:11px;margin-left:8px;padding:2px 8px;border-radius:10px;background:#0d2137;color:#8aa5bb">Bereit</span>
       </div>
-      <pre id="logOutput" style="max-height:400px;overflow-y:auto">Bereit.</pre>
+
+      <!-- Checkbox-Auswahl -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:10px;font-size:12px">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_core" checked> Core Log</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_display"> Display Log</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_app"> App Log</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_avrcp"> AVRCP Log</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_svc_core"> Core Status</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_svc_web"> Web Status</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_diagnose"> Diagnose (py)</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_system"> System (lsusb, Prozesse, Audio)</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_dab_err"> DAB Fehler-Datei</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="dbg_grep"> Grep (Fehler)</label>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
+        <button class="primary" onclick="runSelectedDiag()" id="debugRunBtn">▶ Diagnose starten</button>
+        <button onclick="selectAllDiag(true)" style="padding:3px 8px;font-size:11px">Alle</button>
+        <button onclick="selectAllDiag(false)" style="padding:3px 8px;font-size:11px">Keine</button>
+        <button id="copyLogBtn" onclick="copyLogToClipboard(event)" style="margin-left:auto">⎘ Copy</button>
+      </div>
+      <pre id="logOutput" style="max-height:500px;overflow-y:auto;font-size:11px">Bereit — Checkboxen wählen und ▶ drücken.</pre>
+    </div>
+  </div>
+
+  <!-- System-Diagnose Panel -->
+  <div class="container" id="debugSystemPanel" style="display:none">
+    <div class="panel">
+      <div class="panel-title">🔍 System-Diagnose</div>
+      <div class="diag-grid">
+        <div class="diag-card">
+          <div class="diag-title">USB-Geräte (lsusb)</div>
+          <pre id="debugLsusb" style="font-size:10px;max-height:120px;overflow-y:auto">–</pre>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Relevante Prozesse</div>
+          <pre id="debugProcs" style="font-size:10px;max-height:120px;overflow-y:auto">–</pre>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Audio-Pfad</div>
+          <div class="diag-list" id="debugAudioPath">
+            <div class="diag-row"><div class="diag-key">PA-Mode</div><div class="diag-value" id="dap_mode">–</div></div>
+            <div class="diag-row"><div class="diag-key">Sinks</div><div class="diag-value" id="dap_sinks" style="font-size:10px">–</div></div>
+            <div class="diag-row"><div class="diag-key">Default Sink</div><div class="diag-value" id="dap_default">–</div></div>
+            <div class="diag-row"><div class="diag-key">Aktive Inputs</div><div class="diag-value" id="dap_inputs" style="font-size:10px">–</div></div>
+            <div class="diag-row"><div class="diag-key">asound.conf</div><div class="diag-value" id="dap_asound" style="font-size:10px;word-break:break-all">–</div></div>
+            <div class="diag-row"><div class="diag-key">ALSA Karten</div><div class="diag-value" id="dap_alsa" style="font-size:10px">–</div></div>
+          </div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-title">Parallel-Instanzen</div>
+          <div class="diag-list">
+            <div class="diag-row"><div class="diag-key">main_core.py</div><div class="diag-value" id="dinst_core">–</div></div>
+            <div class="diag-row"><div class="diag-key">welle-cli</div><div class="diag-value" id="dinst_welle">–</div></div>
+            <div class="diag-row"><div class="diag-key">rtl_fm</div><div class="diag-value" id="dinst_rtlfm">–</div></div>
+          </div>
+          <div class="diag-title" style="margin-top:8px">Berechtigungen</div>
+          <pre id="debugPerms" style="font-size:10px;max-height:80px;overflow-y:auto">–</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAB Fehler-Datei Panel -->
+  <div class="container" id="debugDabErrPanel" style="display:none">
+    <div class="panel">
+      <div class="panel-title">📻 DAB welle-cli Stderr
+        <span id="dabErrFileInfo" style="font-size:10px;color:#8aa5bb;margin-left:8px">–</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <button onclick="loadDabErrFile()" style="padding:3px 8px;font-size:11px">🔄 Aktualisieren</button>
+        <button onclick="loadDabErrFile(80,'success')" style="padding:3px 8px;font-size:11px;color:#3fb950">Nur Erfolge</button>
+        <button onclick="loadDabErrFile(200)" style="padding:3px 8px;font-size:11px">Letzte 200 Zeilen</button>
+      </div>
+      <div id="dabErrFileList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:10px;color:#6b8fa8"></div>
+      <div id="dabErrOutput" style="max-height:300px;overflow-y:auto;font-size:10px;font-family:monospace;line-height:1.4">–</div>
     </div>
   </div>
 
@@ -878,7 +940,8 @@
       <div class="panel-title">📶 Webradio — aktiver Sender</div>
       <div class="diag-list">
         <div class="diag-row"><div class="diag-key">Sender</div><div class="diag-value" id="wrNowName">–</div></div>
-        <div class="diag-row"><div class="diag-key">DLS / Titel</div><div class="diag-value" id="wrNowDls" style="color:#58a6ff">–</div></div>
+        <div class="diag-row"><div class="diag-key">Titel / Interpret</div><div class="diag-value" id="wrNowDls" style="color:#58a6ff;font-size:13px;font-weight:600">–</div></div>
+        <div class="diag-row"><div class="diag-key">Stream-Info</div><div class="diag-value" id="wrNowMeta" style="color:#8aa5bb;font-size:11px">–</div></div>
         <div class="diag-row"><div class="diag-key">URL</div><div class="diag-value" id="wrNowUrl" style="word-break:break-all;font-size:10px;color:#6b8fa8">–</div></div>
       </div>
       <div class="diag-actions">
@@ -982,6 +1045,174 @@ async function sendCmd(cmd) {
 }
 
 // ── Log functions ──────────────────────────────────────────────────────────
+
+// ── Debug Tab: Checkbox-basierte Diagnose ─────────────────────────────────
+
+function selectAllDiag(state) {
+  const ids = ['dbg_core','dbg_display','dbg_app','dbg_avrcp',
+               'dbg_svc_core','dbg_svc_web','dbg_diagnose',
+               'dbg_system','dbg_dab_err','dbg_grep'];
+  ids.forEach(id => { const e = document.getElementById(id); if(e) e.checked = state; });
+}
+
+async function runSelectedDiag() {
+  const btn    = document.getElementById('debugRunBtn');
+  const status = document.getElementById('debugRunStatus');
+  const out    = document.getElementById('logOutput');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Läuft…'; }
+  if (status) { status.textContent = 'Läuft…'; status.style.color = '#d29922'; }
+
+  const sep = (t) => `
+
+${'─'.repeat(50)}
+--- ${t} ---
+${'─'.repeat(50)}
+`;
+  let result = `=== PiDrive Diagnose-Snapshot ${new Date().toLocaleString('de')} ===
+`;
+
+  const chk = (id) => document.getElementById(id)?.checked;
+
+  try {
+    const fetches = [];
+    if (chk('dbg_core'))     fetches.push(['Core Log',      fetch('/api/logs?target=core').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_display'))  fetches.push(['Display Log',   fetch('/api/logs?target=display').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_app'))      fetches.push(['App Log',       fetch('/api/logs?target=app').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_avrcp'))    fetches.push(['AVRCP Log',     fetch('/api/logs?target=avrcp').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_svc_core')) fetches.push(['Core Status',   fetch('/api/service?name=core').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_svc_web'))  fetches.push(['Web Status',    fetch('/api/service?name=web').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_grep'))     fetches.push(['Grep (Fehler)', fetch('/api/grep').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+
+    // Slow ones: diagnose and system separately (not in parallel)
+    const results = await Promise.all(fetches.map(([,p]) => p));
+    fetches.forEach(([label], i) => {
+      result += sep(label) + (results[i].stdout || results[i].stderr || '(leer)');
+    });
+
+    if (chk('dbg_diagnose')) {
+      result += sep('Diagnose');
+      out.textContent = result + '
+(Diagnose läuft ~30s…)';
+      const d = await fetch('/api/diagnose').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}));
+      result += d.stdout || d.stderr || '(leer)';
+    }
+
+    if (chk('dbg_system')) {
+      result += sep('System-Diagnose');
+      out.textContent = result + '
+(System läuft…)';
+      await loadDebugSystem();
+      const d = document.getElementById('debugSystemPanel');
+      if(d) d.style.display = '';
+      result += '
+[System-Panel wurde geladen — siehe unten]';
+    } else {
+      const sp = document.getElementById('debugSystemPanel');
+      if(sp) sp.style.display = 'none';
+    }
+
+    if (chk('dbg_dab_err')) {
+      result += sep('DAB Fehler-Datei');
+      out.textContent = result + '
+(DAB Errfile läuft…)';
+      await loadDabErrFile();
+      const d = document.getElementById('debugDabErrPanel');
+      if(d) d.style.display = '';
+      result += '
+[DAB Fehler-Panel wurde geladen — siehe unten]';
+    } else {
+      const dp = document.getElementById('debugDabErrPanel');
+      if(dp) dp.style.display = 'none';
+    }
+
+    out.textContent = result;
+    if (status) { status.textContent = 'Fertig'; status.style.color = '#3fb950'; }
+  } catch(e) {
+    out.textContent = result + '
+
+Fehler: ' + e;
+    if (status) { status.textContent = 'Fehler'; status.style.color = '#f85149'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Diagnose starten'; }
+  }
+}
+
+async function loadDebugSystem() {
+  try {
+    const r = await fetch('/api/diag/system');
+    const j = await r.json();
+    if (!j.ok) return;
+    const d = j.data;
+    const el = (id) => document.getElementById(id);
+    if (el('debugLsusb'))  el('debugLsusb').textContent  = d.lsusb || '–';
+    if (el('debugProcs'))  el('debugProcs').textContent  = d.processes || '–';
+    if (el('dap_mode'))    el('dap_mode').textContent    = d.pa_mode === 'system' ? '✓ System-Mode' : (d.pa_mode === 'user' ? '✗ User-Mode!' : '✗ nicht aktiv');
+    if (el('dap_mode'))    el('dap_mode').style.color    = d.pa_mode === 'system' ? '#3fb950' : '#f85149';
+    if (el('dap_sinks'))   el('dap_sinks').textContent   = d.pa_sinks || '(keine)';
+    if (el('dap_default')) el('dap_default').textContent = d.pa_default_sink || '–';
+    if (el('dap_inputs'))  el('dap_inputs').textContent  = d.pa_inputs || '(keine)';
+    if (el('dap_asound'))  el('dap_asound').textContent  = (d.asound_conf || '–').substring(0, 200);
+    if (el('dap_alsa'))    el('dap_alsa').textContent    = d.alsa_cards || '–';
+    if (el('dinst_core'))  el('dinst_core').textContent  = d.core_instances + (d.core_instances > 1 ? ' ⚠ DOPPELT!' : '');
+    if (el('dinst_welle')) el('dinst_welle').textContent = d.wellechli_instances || '0';
+    if (el('dinst_rtlfm')) el('dinst_rtlfm').textContent = d.rtlfm_instances || '0';
+    if (el('debugPerms'))  el('debugPerms').textContent  = d.permissions || '–';
+    const sp = document.getElementById('debugSystemPanel');
+    if (sp) sp.style.display = '';
+  } catch(e) { console.warn('loadDebugSystem', e); }
+}
+
+async function loadDabErrFile(n=80, filter='') {
+  try {
+    const r = await fetch(`/api/dab/errfile?n=${n}`);
+    const j = await r.json();
+    const outEl = document.getElementById('dabErrOutput');
+    const infoEl = document.getElementById('dabErrFileInfo');
+    const listEl = document.getElementById('dabErrFileList');
+    const panel  = document.getElementById('debugDabErrPanel');
+    if (panel) panel.style.display = '';
+    
+    if (!j.ok) {
+      if (outEl) outEl.textContent = j.error || 'Keine Datei';
+      if (infoEl) infoEl.textContent = '(nicht vorhanden)';
+      return;
+    }
+    
+    if (infoEl) infoEl.textContent = 
+      `${j.file.split('/').pop()} · ${j.total_lines} Zeilen · ${Math.round(j.size/1024)}KB`;
+    
+    // Other files
+    if (listEl && j.all_files && j.all_files.length > 1) {
+      listEl.innerHTML = j.all_files.map(f =>
+        `<span style="cursor:pointer;text-decoration:underline;color:#58a6ff" 
+               onclick="loadDabErrFile(80)">${f.path.split('/').pop()} (${Math.round(f.size/1024)}KB, ${f.age_s}s)</span>`
+      ).join(' · ');
+    }
+    
+    if (!outEl) return;
+    
+    const colorMap = {
+      success: '#3fb950', sync: '#58a6ff', error: '#f85149',
+      dls: '#d29922', pcm: '#a371f7', info: '#8aa5bb', normal: '#cdd9e5'
+    };
+    
+    outEl.innerHTML = j.lines.map(l => {
+      const color = colorMap[l.type] || '#cdd9e5';
+      const esc = l.line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<span style="color:${color}">${esc}</span>`;
+    }).join('
+');
+    
+    // Scroll to bottom
+    outEl.scrollTop = outEl.scrollHeight;
+  } catch(e) {
+    const outEl = document.getElementById('dabErrOutput');
+    if (outEl) outEl.textContent = 'Fehler: ' + e;
+  }
+}
+
+// ── Webradio: Metadaten verbessert ─────────────────────────────────────────
+
 async function loadLog(target) {
   const r = await fetch('/api/logs?target=' + encodeURIComponent(target));
   const j = await r.json();
@@ -1570,6 +1801,10 @@ async function refreshWebradioTab() {
     }
     if (el('wrNowDls')) {
       el('wrNowDls').textContent = st.dls_text || st.track || '–';
+      if(el('wrNowMeta')) {
+        const parts = [st.artist, st.radio_type ? `(${st.radio_type})` : ''].filter(Boolean);
+        el('wrNowMeta').textContent = parts.join(' · ') || '–';
+      }
     }
     // Senderliste laden
     await loadWebradioStations();

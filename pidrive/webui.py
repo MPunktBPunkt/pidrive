@@ -17,7 +17,7 @@ STATIC_DIR = WEB_DIR / "static"
 
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 
-# ── v0.10.15: Shared helpers aus webui_shared.py ──────────────────────────────
+# ── v0.10.16: Shared helpers aus webui_shared.py ──────────────────────────────
 from webui_shared import *  # noqa: F401,F403
 from webui_shared import (
     CMD_FILE, STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE,
@@ -27,7 +27,7 @@ from webui_shared import (
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
 
-# ── v0.10.15: Blueprints registrieren ─────────────────────────────────────────
+# ── v0.10.16: Blueprints registrieren ─────────────────────────────────────────
 try:
     from web.api.routes_dab      import dab_bp;      app.register_blueprint(dab_bp)
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
@@ -47,7 +47,7 @@ def index():
 @app.route("/api/core")
 def api_core():
     """
-    v0.10.15: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
+    v0.10.16: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
     Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
     Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
     """
@@ -347,7 +347,7 @@ def api_ppm_calibrate():
 @app.route("/api/scanner/settings", methods=["GET", "POST"])
 def api_scanner_settings():
     """
-    v0.10.15: Scanner-Einstellungen lesen/schreiben.
+    v0.10.16: Scanner-Einstellungen lesen/schreiben.
     GET  → aktuelle Werte (inkl. scanner_use_spectrum)
     POST → Werte speichern, z.B. {"scanner_use_spectrum": true}
     """
@@ -399,7 +399,7 @@ def api_spectrum_last():
 def api_spectrum_capture():
     """
     Spectrum Capture. Unterstützt:
-    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.15)
+    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.16)
     - mode=fm_sweep       → Legacy FM-Band-Sweep
     - mode=snapshot       → Einzelmessung bei center_mhz
     """
@@ -420,7 +420,7 @@ def api_spectrum_capture():
         gain = int(args.get("gain", s.get("scanner_gain", -1)))
         debug = bool(args.get("debug", s.get("scanner_spectrum_debug", False)))
 
-        # v0.10.15: Peak-Identifizierung für PMR446 / Freenet
+        # v0.10.16: Peak-Identifizierung für PMR446 / Freenet
         if band in ("pmr446", "freenet"):
             watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
             profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
@@ -531,6 +531,138 @@ def _save_stations_file(data: dict):
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     os.replace(tmp, STATIONS_FILE)
+
+
+@app.route("/api/diag/system")
+def api_diag_system():
+    """Diagnose-Daten: lsusb, Prozesse mit User/PID/Rechten, Audio-Pfad, CPU/RAM."""
+    from webui_shared import safe_run
+    import os, json
+    
+    out = {}
+    
+    # lsusb
+    r = safe_run("lsusb 2>/dev/null")
+    out["lsusb"] = r.get("stdout", "").strip()
+    
+    # Relevante Prozesse mit User + PID + Cmdline
+    r = safe_run("ps -eo pid,user,pcpu,pmem,stat,cmd --no-headers 2>/dev/null | "
+                 "grep -E 'python|pulseaudio|welle|rtl_fm|mpv|bluetoothd|raspotify|librespot' | "
+                 "grep -v grep | head -20")
+    out["processes"] = r.get("stdout", "").strip()
+    
+    # CPU + RAM
+    r = safe_run("top -bn1 2>/dev/null | head -5")
+    out["top"] = r.get("stdout", "").strip()
+    
+    # Parallele pidrive-Instanzen
+    r = safe_run("pgrep -c -f 'main_core.py' 2>/dev/null || echo 0")
+    out["core_instances"] = (r.get("stdout","1")).strip()
+    r = safe_run("pgrep -c -f 'welle-cli' 2>/dev/null || echo 0")
+    out["wellechli_instances"] = (r.get("stdout","0")).strip()
+    r = safe_run("pgrep -c -f 'rtl_fm' 2>/dev/null || echo 0")
+    out["rtlfm_instances"] = (r.get("stdout","0")).strip()
+    
+    # PulseAudio System vs User
+    r = safe_run("pgrep -a pulseaudio 2>/dev/null")
+    pa_procs = r.get("stdout","").strip()
+    out["pa_mode"] = "system" if "--system" in pa_procs else ("user" if pa_procs else "none")
+    out["pa_procs"] = pa_procs
+    
+    # Aktueller Audio-Pfad
+    r = safe_run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null")
+    out["pa_sinks"] = r.get("stdout","").strip()
+    r = safe_run("PULSE_SERVER=unix:/var/run/pulse/native pactl get-default-sink 2>/dev/null")
+    out["pa_default_sink"] = r.get("stdout","").strip()
+    r = safe_run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sink-inputs short 2>/dev/null")
+    out["pa_inputs"] = r.get("stdout","").strip()
+    
+    # asound.conf
+    try:
+        out["asound_conf"] = open("/etc/asound.conf").read()
+    except: out["asound_conf"] = "(nicht vorhanden)"
+    
+    # ALSA Karten
+    r = safe_run("aplay -l 2>/dev/null")
+    out["alsa_cards"] = r.get("stdout","").strip()
+    
+    # Berechtigungen wichtiger Dateien
+    r = safe_run("ls -la /var/run/pulse/ 2>/dev/null; ls -la /tmp/pidrive_cmd 2>/dev/null || echo '(kein cmd)'")
+    out["permissions"] = r.get("stdout","").strip()
+    
+    # Kernel + uptime
+    r = safe_run("uname -r; uptime")
+    out["system"] = r.get("stdout","").strip()
+    
+    return jsonify({"ok": True, "data": out})
+
+
+@app.route("/api/dab/errfile")
+def api_dab_errfile():
+    """DAB welle-cli Stderr-Datei lesen (Session-spezifisch oder global)."""
+    import os, glob
+    from webui_shared import read_json
+    
+    session_id = request.args.get("session", "")
+    lines_n = int(request.args.get("n", "80"))
+    
+    # Session-spezifische Datei bevorzugen
+    candidates = []
+    if session_id:
+        sf = f"/tmp/pidrive_dab_{session_id}.err"
+        if os.path.exists(sf):
+            candidates.append(sf)
+    
+    # Alle dab err files, neueste zuerst
+    all_err = sorted(glob.glob("/tmp/pidrive_dab_*.err"), key=os.path.getmtime, reverse=True)
+    for f in all_err:
+        if f not in candidates:
+            candidates.append(f)
+    
+    if not candidates:
+        return jsonify({"ok": False, "error": "Keine DAB Fehler-Datei gefunden", "files": []})
+    
+    target = candidates[0]
+    try:
+        with open(target, errors="replace") as f:
+            content = f.readlines()
+        
+        # Last N lines
+        lines = content[-lines_n:]
+        
+        # Parse line types
+        parsed = []
+        for ln in lines:
+            ln = ln.rstrip()
+            if not ln: continue
+            if "Superframe sync succeeded" in ln:
+                t = "success"
+            elif "Found sync" in ln:
+                t = "sync"
+            elif "Lost" in ln or "failed" in ln or "error" in ln.lower():
+                t = "error"
+            elif "DLS:" in ln or "UTCTime" in ln:
+                t = "dls"
+            elif "PCM" in ln or "pcm" in ln:
+                t = "pcm"
+            elif "Service" in ln or "Ensemble" in ln:
+                t = "info"
+            else:
+                t = "normal"
+            parsed.append({"line": ln, "type": t})
+        
+        return jsonify({
+            "ok": True,
+            "file": target,
+            "size": os.path.getsize(target),
+            "total_lines": len(content),
+            "lines": parsed,
+            "all_files": [{"path": f, "size": os.path.getsize(f),
+                           "age_s": int(__import__("time").time() - os.path.getmtime(f))}
+                          for f in candidates[:5]],
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "file": target})
 
 
 @app.route("/api/system/resources")

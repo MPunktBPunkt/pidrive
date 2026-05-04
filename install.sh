@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.15           ║
+║        PiDrive Installer v0.10.16           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -465,7 +465,7 @@ SYSTEMPA
   usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
   ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-  # v0.10.15: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+  # v0.10.16: PulseAudio System-Service einrichten (Bookworm-kompatibel)
   # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
   # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
   systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
@@ -798,7 +798,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Car-Only Cleanup (v0.10.15: bei Frisch-Install mit anschliessendem Reboot) ──
+# ── Car-Only Cleanup (v0.10.16: bei Frisch-Install mit anschliessendem Reboot) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
   if [ ! -f "$_CLEANUP_DONE_FILE" ]; then

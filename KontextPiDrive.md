@@ -922,7 +922,44 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.10.15 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
+### v0.10.16 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
+
+**Debug-Tab (t4): Checkboxen statt Buttons**
+
+Neues UI: Checkbox-Auswahl welche Komponenten diagnostiziert werden sollen,
+ein einzelner "▶ Diagnose starten"-Button. Verfügbare Checkboxen:
+- Core Log, Display Log, App Log, AVRCP Log
+- Core Status, Web Status  
+- Diagnose (py) — volle Python-Diagnose (~30s)
+- System (lsusb, Prozesse, Audio) — neues System-Diagnose-Panel
+- DAB Fehler-Datei — welle-cli stderr farblich aufbereitet
+- Grep (Fehler)
+
+**Neues System-Diagnose Panel:**
+- lsusb (USB-Geräte inkl. RTL-SDR, BT-Dongle)
+- Relevante Prozesse mit User/PID/CPU/MEM
+- Audio-Pfad: PA-Mode (System/User/none), Sinks, Default Sink, aktive Inputs
+- asound.conf + ALSA-Karten
+- Parallel-Instanzen: main_core.py, welle-cli, rtl_fm (erkennt Doppelinstanzen)
+- Berechtigungen: /var/run/pulse/native, /tmp/pidrive_cmd
+
+**DAB Fehler-Datei Panel:**
+- Liest /tmp/pidrive_dab_<session>.err direkt aus
+- Farbkodiert: Sync-Erfolg (grün), Sync-Verlust (rot), DLS (gelb), PCM (lila)
+- Zeigt alle vorhandenen Session-Dateien
+- Button "Nur Erfolge" filtert auf Superframe-sync-Nachrichten
+
+**Neue WebAPI-Endpunkte:**
+- `/api/diag/system` — lsusb, Prozesse, Audio-Pfad, Parallel-Instanzen, Rechte
+- `/api/dab/errfile?session=<id>&n=<zeilen>` — welle-cli stderr mit Parsing
+
+**Webradio Tab: Metadaten-Anzeige repariert**
+- Zweite Zeile "Stream-Info" zeigt Interpret + Radio-Typ
+- wrNowMeta wird in refreshWebradioTab() befüllt (war bisher nicht gesetzt)
+
+---
+
+### v0.10.16 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
 
 **Installer: Car-Only Cleanup mit automatischem Exit + Reboot-Hinweis**
 
@@ -930,7 +967,7 @@ Problem in v0.10.14: Cleanup lief nach der Diagnose am Ende des Installers, aber
 anschliessenden Reboot. PulseAudio System-Mode greift erst nach Reboot — daher immer
 noch User-PA aktiv bei der Diagnose.
 
-Fix v0.10.15: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
+Fix v0.10.16: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
 `→ sudo reboot` und endet mit `exit 0`. Beim nächsten Install (nach Reboot) ist
 `/etc/pidrive_car_cleanup_done` gesetzt → normaler Ablauf ohne Cleanup-Schleife.
 
@@ -948,7 +985,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 
 ---
 
-### v0.10.15 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+### v0.10.16 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
 
 **Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
 
@@ -965,7 +1002,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
 User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
 
-Fix v0.10.15:
+Fix v0.10.16:
 - **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
 - **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
 - Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen
