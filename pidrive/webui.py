@@ -17,7 +17,7 @@ STATIC_DIR = WEB_DIR / "static"
 
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 
-# ── v0.10.21: Shared helpers aus webui_shared.py ──────────────────────────────
+# ── v0.10.22: Shared helpers aus webui_shared.py ──────────────────────────────
 from webui_shared import *  # noqa: F401,F403
 from webui_shared import (
     CMD_FILE, STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE,
@@ -27,7 +27,7 @@ from webui_shared import (
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
 
-# ── v0.10.21: Blueprints registrieren ─────────────────────────────────────────
+# ── v0.10.22: Blueprints registrieren ─────────────────────────────────────────
 try:
     from web.api.routes_dab      import dab_bp;      app.register_blueprint(dab_bp)
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
@@ -40,14 +40,27 @@ except Exception as _bp_err:
 
 @app.route("/")
 def index():
-    vm = build_view_model()
+    try:
+        vm = build_view_model()
+    except Exception as _e:
+        import log as _log_idx
+        _log_idx.error(f"build_view_model Fehler: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {},
+              "progress": {}, "rtlsdr": {}, "avrcp": {}, "audio_debug": {},
+              "source_state": {}, "dab_scan_debug": {}, "dab_status_debug": {},
+              "spectrum_debug": {}, "known_bt_devices": {}, "bt_agent": {},
+              "processes": [], "list_data": {}, "list_active": False,
+              "list_title": "", "list_items": [], "list_selected": 0,
+              "nodes": [], "categories": [], "items": [],
+              "path": [], "cursor": 0, "rev": 0, "can_back": False,
+              "debug": {"rev": 0, "error": str(_e)}}
     return render_template("index.html", vm=vm)
 
 
 @app.route("/api/core")
 def api_core():
     """
-    v0.10.21: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
+    v0.10.22: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
     Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
     Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
     """
@@ -351,7 +364,7 @@ def api_ppm_calibrate():
 @app.route("/api/scanner/settings", methods=["GET", "POST"])
 def api_scanner_settings():
     """
-    v0.10.21: Scanner-Einstellungen lesen/schreiben.
+    v0.10.22: Scanner-Einstellungen lesen/schreiben.
     GET  → aktuelle Werte (inkl. scanner_use_spectrum)
     POST → Werte speichern, z.B. {"scanner_use_spectrum": true}
     """
@@ -403,7 +416,7 @@ def api_spectrum_last():
 def api_spectrum_capture():
     """
     Spectrum Capture. Unterstützt:
-    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.21)
+    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.22)
     - mode=fm_sweep       → Legacy FM-Band-Sweep
     - mode=snapshot       → Einzelmessung bei center_mhz
     """
@@ -424,7 +437,7 @@ def api_spectrum_capture():
         gain = int(args.get("gain", s.get("scanner_gain", -1)))
         debug = bool(args.get("debug", s.get("scanner_spectrum_debug", False)))
 
-        # v0.10.21: Peak-Identifizierung für PMR446 / Freenet
+        # v0.10.22: Peak-Identifizierung für PMR446 / Freenet
         if band in ("pmr446", "freenet"):
             watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
             profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
