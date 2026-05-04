@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_watcher.py — Auto-Reconnect Watcher  v0.10.16
+"""bt_watcher.py — Auto-Reconnect Watcher  v0.10.18
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -18,6 +18,7 @@ from modules.bt_connect import (
     _RECONNECT_LAST_TRY, _RECONNECT_FAILS,
     _ensure_device_visible,
 )
+import os
 import threading
 import subprocess
 import time

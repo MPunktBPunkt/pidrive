@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_helpers.py — Basis-Helfer und Adapter-Steuerung  v0.10.16
+"""bt_helpers.py — Basis-Helfer und Adapter-Steuerung  v0.10.18
 Ausgelagert aus bluetooth.py."""
 
 import json

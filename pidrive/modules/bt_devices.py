@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.16
+"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.18
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -13,6 +13,7 @@ from modules.bt_helpers import (
     VISIBLE_TTL_SECONDS, RECENT_SEEN_SECONDS,
     _scan_lock,
 )
+import os
 import threading
 import subprocess
 import time
@@ -150,7 +151,7 @@ def _get_known_devices():
     result.extend(_load_bluez_db_devices())
 
     try:
-        _, rp = _btctl("paired-devices", timeout=8)
+        _, rp = _btctl("devices Paired", timeout=8)
         for ln in rp.splitlines():
             p = ln.strip().split(" ", 2)
             if len(p) >= 2 and p[0] == "Device":

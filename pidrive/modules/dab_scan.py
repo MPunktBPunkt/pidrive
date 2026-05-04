@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_scan.py — DAB+ Suchlauf und Sender-Datenbank  v0.10.16"""
+"""dab_scan.py — DAB+ Suchlauf und Sender-Datenbank  v0.10.18"""
 
 from modules.dab_helpers import (
     _write_json_atomic, _read_json, _run, _get_dab_gain,
