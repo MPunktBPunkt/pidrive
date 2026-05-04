@@ -922,7 +922,33 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.10.14 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+### v0.10.15 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
+
+**Installer: Car-Only Cleanup mit automatischem Exit + Reboot-Hinweis**
+
+Problem in v0.10.14: Cleanup lief nach der Diagnose am Ende des Installers, aber ohne
+anschliessenden Reboot. PulseAudio System-Mode greift erst nach Reboot — daher immer
+noch User-PA aktiv bei der Diagnose.
+
+Fix v0.10.15: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
+`→ sudo reboot` und endet mit `exit 0`. Beim nächsten Install (nach Reboot) ist
+`/etc/pidrive_car_cleanup_done` gesetzt → normaler Ablauf ohne Cleanup-Schleife.
+
+**Debug Log-Tab: "Lädt..." hängt nicht mehr**
+
+`loadAllLogs()` wartete per `Promise.all` auf 4 parallele Fetches inkl. `/api/diagnose`.
+`/api/diagnose` ruft `diagnose.py` auf → ~30 Sekunden → ganzer Tab hängt.
+Fix: Diagnose aus `loadAllLogs` entfernt, nur noch Core/Display/App-Log geladen.
+Diagnose läuft weiterhin über eigenen Button.
+
+**Diagnose: PA-Check erkennt System- vs User-Mode**
+
+Verbesserte Erkennung: prüft `pgrep -a pulseaudio` auf `--system` Flag.
+Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
+
+---
+
+### v0.10.15 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
 
 **Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
 
@@ -939,7 +965,7 @@ sudo systemctl restart pidrive_display
 Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
 User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
 
-Fix v0.10.14:
+Fix v0.10.15:
 - **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
 - **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
 - Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen

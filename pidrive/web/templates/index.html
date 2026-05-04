@@ -1008,20 +1008,20 @@ async function runGrep() {
 }
 async function loadAllLogs() {
   const ts = new Date().toLocaleString('de');
-  document.getElementById('logOutput').textContent = `=== PiDrive Log-Snapshot ${ts} ===\n\nLädt...`;
-  const [core, display, app, diag] = await Promise.all([
-    fetch('/api/logs?target=core').then(r => r.json()),
-    fetch('/api/logs?target=display').then(r => r.json()),
-    fetch('/api/logs?target=app').then(r => r.json()),
-    fetch('/api/diagnose').then(r => r.json()),
-  ]);
+  const out = document.getElementById('logOutput');
+  out.textContent = `=== PiDrive Log-Snapshot ${ts} ===\n\nLädt...`;
   const sep = (t) => `\n\n${'─'.repeat(40)}\n--- ${t} ---\n${'─'.repeat(40)}\n`;
-  document.getElementById('logOutput').textContent =
+  // Logs parallel laden (ohne Diagnose — die läuft separat)
+  const [core, display, app] = await Promise.all([
+    fetch('/api/logs?target=core').then(r => r.json()).catch(e => ({stdout:'Fehler: '+e})),
+    fetch('/api/logs?target=display').then(r => r.json()).catch(e => ({stdout:'Fehler: '+e})),
+    fetch('/api/logs?target=app').then(r => r.json()).catch(e => ({stdout:'Fehler: '+e})),
+  ]);
+  out.textContent =
     `=== PiDrive Log-Snapshot ${ts} ===` +
-    sep('Core Log') + (core.stdout||'') +
-    sep('Display Log') + (display.stdout||'') +
-    sep('App Log') + (app.stdout||'') +
-    sep('Diagnose') + (diag.stdout||'');
+    sep('Core Log') + (core.stdout||'(leer)') +
+    sep('Display Log') + (display.stdout||'(leer)') +
+    sep('App Log') + (app.stdout||'(leer)');
 }
 async function copyLogToClipboard(evt) {
   const txt = document.getElementById('logOutput').textContent;

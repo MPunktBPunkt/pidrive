@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.14
+"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.15
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (

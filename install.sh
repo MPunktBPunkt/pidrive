@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.14           ║
+║        PiDrive Installer v0.10.15           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -465,7 +465,7 @@ SYSTEMPA
   usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
   ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-  # v0.10.14: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+  # v0.10.15: PulseAudio System-Service einrichten (Bookworm-kompatibel)
   # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
   # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
   systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
@@ -798,19 +798,23 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Car-Only Cleanup (v0.10.14: automatisch bei Frisch-Install) ──────────────
+# ── Car-Only Cleanup (v0.10.15: bei Frisch-Install mit anschliessendem Reboot) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
-  # Frisch-Install erkennen: kein Checkpoint aus früherem Lauf
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
   if [ ! -f "$_CLEANUP_DONE_FILE" ]; then
-    # Erstinstallation → automatisch ausführen
     info "Car-Only Cleanup (Erstinstallation — automatisch)..."
     echo -e "  Deaktiviert unnötige Dienste und User-PulseAudio."
     bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
     touch "$_CLEANUP_DONE_FILE"
     ok "Car-Only Cleanup abgeschlossen"
+    echo ""
+    warn "Erstinstallation: Reboot erforderlich damit PulseAudio System-Mode greift."
+    echo -e "  ${CYAN}sudo reboot${NC}"
+    echo ""
+    echo -e "${BOLD}Update nach Reboot:${NC}"
+    echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash${NC}"
+    exit 0
   else
-    # Folge-Install → optional (15s Timeout)
     echo ""
     echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"
     echo -e "  Deaktiviert unnötige Dienste (cups, ModemManager, snapd, ...)"

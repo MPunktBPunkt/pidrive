@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modules/dab.py — Public API Facade  v0.10.14
+modules/dab.py — Public API Facade  v0.10.15
 
 Ausgelagert in:
   dab_helpers.py  — Hilfsfunktionen, Konstanten, Gain-Tabelle, Session

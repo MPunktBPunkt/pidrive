@@ -276,16 +276,21 @@ def check_audio():
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
     pa_state = run("systemctl is-active pulseaudio 2>/dev/null")
-    # v0.10.9: Bookworm kann PA als User-Service laufen (pgrep als Fallback)
-    if pa_state != "active":
-        pa_proc = run("pgrep -c pulseaudio 2>/dev/null") or "0"
-        if pa_proc.strip() != "0":
-            warn(f"pulseaudio.service: {pa_state} (aber Prozess läuft — User-Mode?)")
-            warn("  → FIX: sudo systemctl enable --now pulseaudio (System-Mode)")
-        else:
-            err(f"pulseaudio.service: {pa_state}")
+    pa_procs = run("pgrep -a pulseaudio 2>/dev/null") or ""
+    is_system_pa = "--system" in pa_procs
+    is_user_pa   = "--daemonize=no" in pa_procs or ("pulseaudio" in pa_procs and not is_system_pa)
+    if pa_state == "active" and is_system_pa:
+        ok("pulseaudio.service: active (System-Mode ✓)")
+    elif pa_state == "active":
+        warn("pulseaudio.service: active aber evtl. User-Mode")
+    elif is_user_pa:
+        err("pulseaudio.service: NICHT aktiv — User-PA läuft noch!")
+        err("  → FIX: sudo bash ~/pidrive/pidrive_car_only_cleanup.sh && sudo reboot")
+    elif is_system_pa:
+        ok("pulseaudio: System-Prozess aktiv (systemd noch nicht synchron)")
     else:
-        ok(f"pulseaudio.service: active")
+        err("pulseaudio.service: inaktiv")
+        err("  → FIX: sudo systemctl enable --now pulseaudio")
 
     # system.pa
     sys_pa = "/etc/pulse/system.pa"
