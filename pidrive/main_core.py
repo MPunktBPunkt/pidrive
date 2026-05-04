@@ -139,7 +139,7 @@ def _start_bt_agent_early():
 
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
 
-# ── Trigger-Dispatcher (ausgelagert v0.10.19) ─────────────────────────────────
+# ── Trigger-Dispatcher (ausgelagert v0.10.20) ─────────────────────────────────
 from trigger_dispatcher import (
     handle_trigger, _execute_node, _fm_manual,
     _set_guards, _debounced,
@@ -189,6 +189,7 @@ def check_trigger(menu_state, store, S, settings):
         with open(ipc.CMD_FILE) as f:
             cmd = f.read().strip()
         os.remove(ipc.CMD_FILE)
+        log.info(f"CMD_READ: {cmd!r}")
     except Exception:
         return False
 
@@ -334,7 +335,7 @@ def rebuild_tree(menu_state, store, S, settings):
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
-    # v0.10.19: Trigger-Dispatcher Guards registrieren
+    # v0.10.20: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
     
     """
@@ -551,10 +552,13 @@ def main():
             if not needs_rebuild:
                 rebuild_tree(menu_state, store, S, settings)
 
-        if needs_rebuild or (os.path.exists(ipc.CMD_FILE) is False and
-                             menu_state.rev != getattr(main, '_last_rev', -1)):
-            ipc.write_menu(menu_state.export())
-            main._last_rev = menu_state.rev
+        # Menü schreiben wenn: rebuild, oder Navigation (rev geändert), oder CMD verarbeitet
+        _cur_rev = menu_state.rev
+        # Menü schreiben bei rebuild oder jeder Cursor-/Revisions-Änderung
+        if needs_rebuild or _cur_rev != getattr(main, '_last_rev', -1):
+            exported = menu_state.export()
+            ipc.write_menu(exported)
+            main._last_rev = _cur_rev
 
         if time.time() - store_timer > 10:
             if store.reload_if_changed():

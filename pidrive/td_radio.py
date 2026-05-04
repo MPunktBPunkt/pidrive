@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.19"""
+"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.20"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
