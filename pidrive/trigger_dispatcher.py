@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-trigger_dispatcher.py — PiDrive Trigger-Dispatcher  v0.10.18
+trigger_dispatcher.py — PiDrive Trigger-Dispatcher  v0.10.19
 
 Ausgelagert aus main_core.py. handle_trigger() delegiert an:
   td_nav.py       — Navigation, Menü-Aktionen, _execute_node
@@ -97,10 +97,22 @@ def handle_trigger(cmd, menu_state, store, S, settings):
         return False
 
     log.trigger_received(cmd)
-    # Rebuild nötig wenn Menüzustand sich geändert haben könnte
-    nav_cmds = {"up", "down", "enter", "back", "left", "right", "cat",
-                "dab_next", "dab_prev", "fm_next", "fm_prev",
-                "dab_scan", "fm_scan", "dab_scan_replace", "lib_browse"}
-    rebuild = cmd in nav_cmds or any(cmd.startswith(p) for p in ("cat:", "reload_stations:"))
+
+    # Nur echte Menüstruktur-Änderungen brauchen rebuild_tree().
+    # Reine Navigation (up/down/enter/back/left/right) ändert MenuState direkt —
+    # ein sofortiger Rebuild danach setzt den Cursor auf 0 zurück!
+    rebuild_cmds = {
+        "dab_scan", "dab_scan_replace",
+        "fm_scan",
+        "lib_browse",
+        "bt_scan", "wifi_scan",
+    }
+    rebuild = (
+        cmd in rebuild_cmds
+        or cmd.startswith("reload_stations:")
+        or cmd.startswith("dab_scan_channels:")
+        or cmd.startswith("fav_toggle:")
+        or cmd.startswith("cat:")
+    )
     return rebuild
 

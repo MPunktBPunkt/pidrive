@@ -3,6 +3,8 @@ Description=PiDrive Display - Statusanzeige
 # GPT-5.4: kein Requires — Display-Fehler stoppen nicht den Core
 After=multi-user.target
 # KEIN After=pidrive_core — vermeidet Ordering-Cycle
+# Nur starten wenn SPI-Display vorhanden (fb1)
+ConditionPathExists=/sys/class/graphics/fb1
 # max 3 Neustarts in 120s
 StartLimitIntervalSec=120
 StartLimitBurst=3

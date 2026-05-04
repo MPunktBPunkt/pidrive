@@ -922,7 +922,30 @@ sudo systemctl restart pidrive_display
 
 ## Changelog
 
-### v0.10.18 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
+### v0.10.19 — Navigation-Fix (Hauptfehler), DAB-Status, Display-Guard, Sudoers
+
+**ROOT CAUSE BEHOBEN: Menünavigation funktionierte nie (seit Dispatcher-Refactoring)**
+
+Diagnose durch Tests auf dem Pi (v0.10.18):
+- `TRIGGER down` kam im Core an ✓
+- direkt danach: `MENU_REBUILD path=PiDrive cursor=0` → Cursor immer 0
+- `rev` stieg ständig, aber `cursor` blieb immer `item=Jetzt laeuft`
+
+Ursache: `trigger_dispatcher.handle_trigger()` setzte `rebuild=True` für NAV-Commands
+(`up/down/enter/back/left/right`). `main_core.py` rief sofort `rebuild_tree()` auf,
+das den Stack/Cursor auf Root/0 zurücksetzte. Jede Navigation war damit neutralisiert.
+
+| Datei | Fix |
+|---|---|
+| `trigger_dispatcher.py` | rebuild=True nur für Strukturänderungen (scan/fav/reload), NICHT für nav |
+| `menu_state.py` | `MENU_NAV down before=0 after=1 n=5` — Cursor-Logging |
+| `dab_play.py` | no_lock setzt nicht mehr `radio_playing=True` — ehrlicher Status |
+| `pidrive_display.service` | `ConditionPathExists=/sys/class/graphics/fb1` — kein Crash ohne Display |
+| `install.sh` | `/etc/sudoers.d/pidrive` — NOPASSWD für Wartungsbefehle (Bookworm) |
+
+---
+
+### v0.10.19 — Root Cause Fix: PA-Setup ausserhalb Raspotify-Block, Diagnose-Kontext-Tests
 
 **Root Cause: PulseAudio-Unit wurde nie geschrieben wenn Raspotify schon installiert war**
 
@@ -938,7 +961,7 @@ Warum nie erkannt? Weil:
 - Der Installer-Output zeigte "✓ Raspotify installiert" und ließ keinen Hinweis auf den
   fehlenden PA-Setup
 
-Fix v0.10.18:
+Fix v0.10.19:
 - PA-Setup (asound.conf, system.pa, PA Unit schreiben, systemctl enable/start) läuft jetzt
   **IMMER** — in eigenem Abschnitt, unabhängig von Raspotify
 - Installer prüft nach dem Schreiben ob `/etc/systemd/system/pulseaudio.service` tatsächlich
@@ -952,7 +975,7 @@ Fix v0.10.18:
 
 ---
 
-### v0.10.18 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
+### v0.10.19 — Code Review Fixes (P1/P2): BT, Dispatcher, Rebuild, Stale-State
 
 **Umsetzung aus vollständigem Code-Review v0.10.16 (P1 + P2):**
 
@@ -970,7 +993,7 @@ Fix v0.10.18:
 
 ---
 
-### v0.10.18 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
+### v0.10.19 — Debug-Tab Redesign, System-Diagnose, DAB Errfile, Webradio Metadaten
 
 **Debug-Tab (t4): Checkboxen statt Buttons**
 
@@ -1007,7 +1030,7 @@ ein einzelner "▶ Diagnose starten"-Button. Verfügbare Checkboxen:
 
 ---
 
-### v0.10.18 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
+### v0.10.19 — Installer-Reihenfolge Fix, Log-Tab Fix, Diagnose-PA-Check
 
 **Installer: Car-Only Cleanup mit automatischem Exit + Reboot-Hinweis**
 
@@ -1015,7 +1038,7 @@ Problem in v0.10.14: Cleanup lief nach der Diagnose am Ende des Installers, aber
 anschliessenden Reboot. PulseAudio System-Mode greift erst nach Reboot — daher immer
 noch User-PA aktiv bei der Diagnose.
 
-Fix v0.10.18: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
+Fix v0.10.19: Bei Erstinstallation läuft Cleanup am Ende, gibt expliziten Hinweis
 `→ sudo reboot` und endet mit `exit 0`. Beim nächsten Install (nach Reboot) ist
 `/etc/pidrive_car_cleanup_done` gesetzt → normaler Ablauf ohne Cleanup-Schleife.
 
@@ -1033,7 +1056,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 
 ---
 
-### v0.10.18 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
+### v0.10.19 — Code Review Fixes, Installer Car-Only Cleanup, DAB ALSA-Direkt
 
 **Code Review (externer Review v0.10.13) — umgesetzte Fixes:**
 
@@ -1050,7 +1073,7 @@ Zeigt klar ob System-PA oder User-PA läuft und gibt gezielten Fix-Hinweis.
 Bis v0.10.13 wurde der Car-Only Cleanup optional angeboten (15s Prompt). Das Problem:
 User-PulseAudio bleibt aktiv wenn der Cleanup nicht ausgeführt wird → kein Ton in PiDrive.
 
-Fix v0.10.18:
+Fix v0.10.19:
 - **Erstinstallation** (kein `/etc/pidrive_car_cleanup_done`): Cleanup läuft **automatisch**
 - **Folge-Installation**: optionaler Prompt wie bisher (15s Timeout)
 - Checkpoint-Datei `/etc/pidrive_car_cleanup_done` verhindert ungewollte Wiederholungen

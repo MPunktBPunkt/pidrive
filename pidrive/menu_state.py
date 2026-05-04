@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""menu_state.py — MenuNode + MenuState  v0.10.18
+"""menu_state.py — MenuNode + MenuState  v0.10.19
 Ausgelagert aus menu_model.py."""
 
 import os
@@ -91,15 +91,19 @@ class MenuState:
         return None
 
     def key_up(self):
+        before = self._cursors[-1]
         if self._cursors[-1] > 0:
             self._cursors[-1] -= 1
             self.rev += 1
+        log.info(f"MENU_NAV up before={before} after={self._cursors[-1]} n={len(self.current_nodes)} rev={self.rev}")
 
     def key_down(self):
+        before = self._cursors[-1]
         n = len(self.current_nodes)
         if n > 0 and self._cursors[-1] < n - 1:
             self._cursors[-1] += 1
             self.rev += 1
+        log.info(f"MENU_NAV down before={before} after={self._cursors[-1]} n={n} rev={self.rev}")
 
     def key_enter(self):
         node = self.selected
