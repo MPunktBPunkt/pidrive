@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.10.33
+"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.10.35
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (

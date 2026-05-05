@@ -300,6 +300,8 @@ class RTLSDRBackend(SampleBackend):
         if self.gain >= 0:
             cmd += ["-g", str(self.gain)]
 
+        cmd += ["-"]  # Output auf stdout (rtl_sdr braucht Dateiname, "-" = stdout)
+
         cp = subprocess.run(cmd, capture_output=True, timeout=self.timeout_s)
 
         raw = cp.stdout or b""
