@@ -37,5 +37,6 @@
     "ensemble": "OAS BW",
     "url_mp3": ""
   },
-  "last_web_station": null
+  "last_web_station": null,
+  "dab_wait_lock": 60
 }
