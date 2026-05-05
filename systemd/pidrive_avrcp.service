@@ -5,6 +5,7 @@ Wants=bluetooth.target
 # KEIN After=pidrive_core.service — vermeidet systemd Ordering-Cycle beim Shutdown (v0.8.7)
 
 [Service]
+UMask=0000
 Type=simple
 User=root
 WorkingDirectory=/home/pi/pidrive/pidrive

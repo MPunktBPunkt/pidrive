@@ -6,6 +6,7 @@ StartLimitIntervalSec=60
 StartLimitBurst=5
 
 [Service]
+UMask=0000
 Type=simple
 User=root
 WorkingDirectory=/home/pi/pidrive/pidrive

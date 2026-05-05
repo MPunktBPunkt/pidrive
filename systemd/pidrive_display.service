@@ -10,6 +10,7 @@ StartLimitIntervalSec=120
 StartLimitBurst=2
 
 [Service]
+UMask=0000
 Type=simple
 User=root
 

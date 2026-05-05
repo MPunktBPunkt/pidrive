@@ -23,7 +23,7 @@ def write_json(path, data):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False)
         os.replace(tmp, path)
-    except Exception as e:
+    except Exception:
         pass  # write error silently ignored (tmpfs race)
 
 def read_json(path, default=None):
