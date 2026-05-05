@@ -512,6 +512,22 @@
     </div>
   </div>
 
+<div class="container">
+  <div class="panel">
+    <div class="panel-title">📄 DAB Fehler-Log (welle-cli stderr)
+      <span id="dabErrMeta" style="font-size:10px;color:#8aa5bb;margin-left:8px">–</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <button onclick="loadDabErrInline(80)" class="primary">📋 Log laden</button>
+      <button onclick="loadDabErrInline(200)">200 Zeilen</button>
+      <button onclick="loadDabErrInline(80,'success')">Nur Sync ✓</button>
+      <button onclick="document.getElementById('dabErrBox').innerHTML='–';document.getElementById('dabErrMeta').textContent='–'">✕</button>
+    </div>
+    <div id="dabErrFileLinks" style="font-size:10px;color:#6b8fa8;margin-bottom:6px"></div>
+    <div id="dabErrBox" style="max-height:280px;overflow-y:auto;font-size:10px;font-family:monospace;line-height:1.5;background:#0a1520;padding:8px;border-radius:4px">–</div>
+  </div>
+</div>
+
 </div><!-- /t3 -->
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -1181,6 +1197,36 @@ async function loadDebugSystem() {
     const sp = document.getElementById('debugSystemPanel');
     if (sp) sp.style.display = '';
   } catch(e) { console.warn('loadDebugSystem', e); }
+}
+
+async function loadDabErrInline(n=80, filter='') {
+  const box   = document.getElementById('dabErrBox');
+  const meta  = document.getElementById('dabErrMeta');
+  const links = document.getElementById('dabErrFileLinks');
+  if (box) box.innerHTML = '<span style="color:#8aa5bb">Lade…</span>';
+  try {
+    const r = await fetch(`/api/dab/errfile?n=${n}`);
+    const j = await r.json();
+    if (!j.ok) { if (box) box.textContent = j.error || 'Keine Datei'; return; }
+    if (meta) meta.textContent =
+      `${j.file.split('/').pop()} · ${j.total_lines} Z. · ${Math.round(j.size/1024)}KB`;
+    if (links && j.all_files && j.all_files.length > 1)
+      links.innerHTML = 'Sessions: ' + j.all_files.map(f =>
+        `<span style="cursor:pointer;color:#58a6ff;text-decoration:underline"
+               onclick="loadDabErrInline(80)">${f.path.split('/').pop().replace('pidrive_dab_','')}</span>`
+      ).join(' · ');
+    if (!box) return;
+    const cmap = {success:'#3fb950',sync:'#58a6ff',error:'#f85149',
+                  dls:'#d29922',pcm:'#a371f7',info:'#8aa5bb',normal:'#cdd9e5'};
+    let lines = j.lines;
+    if (filter === 'success') lines = lines.filter(l => l.type==='success'||l.type==='sync');
+    box.innerHTML = lines.map(l => {
+      const esc = l.line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<span style="color:${cmap[l.type]||'#cdd9e5'}">${esc}</span>`;
+    }).join('
+') || '<span style="color:#8aa5bb">(leer)</span>';
+    box.scrollTop = box.scrollHeight;
+  } catch(e) { if (box) box.textContent = 'Fehler: ' + e; }
 }
 
 async function loadDabErrFile(n=80, filter='') {
