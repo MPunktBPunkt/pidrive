@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_system.py — Bibliothek und System-Kommandos  v0.10.33"""
+"""td_system.py — Bibliothek und System-Kommandos  v0.10.35"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -16,7 +16,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     """System-Trigger: radio_stop, Bibliothek, Reboot, Update, Favoriten."""
     # ── Bibliothek ─────────────────────────────────────────────────────────
     if cmd == "lib_browse":
-        # v0.10.33: source_state tracking + begin_transition
+        # v0.10.35: source_state tracking + begin_transition
         def _lib_browse():
             if source_state.begin_transition("lib_browse", "library"):
                 try:
