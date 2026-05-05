@@ -1128,36 +1128,31 @@ ${'─'.repeat(50)}
 
     if (chk('dbg_diagnose')) {
       result += sep('Diagnose');
-      out.textContent = result + '
-(Diagnose läuft ~30s…)';
-      const d = await fetch('/api/diagnose').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}));
+      out.textContent = result + '\n(Diagnose läuft~30s)';
+const d = await fetch('/api/diagnose').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}));
       result += d.stdout || d.stderr || '(leer)';
     }
 
     if (chk('dbg_system')) {
       result += sep('System-Diagnose');
-      out.textContent = result + '
-(System läuft…)';
-      await loadDebugSystem();
+      out.textContent = result + '\n(System läuft)';
+await loadDebugSystem();
       const d = document.getElementById('debugSystemPanel');
       if(d) d.style.display = '';
-      result += '
-[System-Panel wurde geladen — siehe unten]';
-    } else {
+      result += '\n[System-Panel geladen]';
+} else {
       const sp = document.getElementById('debugSystemPanel');
       if(sp) sp.style.display = 'none';
     }
 
     if (chk('dbg_dab_err')) {
       result += sep('DAB Fehler-Datei');
-      out.textContent = result + '
-(DAB Errfile läuft…)';
-      await loadDabErrFile();
+      out.textContent = result + '\n(DAB Errfile läuft)';
+await loadDabErrFile();
       const d = document.getElementById('debugDabErrPanel');
       if(d) d.style.display = '';
-      result += '
-[DAB Fehler-Panel wurde geladen — siehe unten]';
-    } else {
+      result += '\n[DAB Fehler-Panel geladen]';
+} else {
       const dp = document.getElementById('debugDabErrPanel');
       if(dp) dp.style.display = 'none';
     }
@@ -1165,10 +1160,8 @@ ${'─'.repeat(50)}
     out.textContent = result;
     if (status) { status.textContent = 'Fertig'; status.style.color = '#3fb950'; }
   } catch(e) {
-    out.textContent = result + '
-
-Fehler: ' + e;
-    if (status) { status.textContent = 'Fehler'; status.style.color = '#f85149'; }
+    out.textContent = result + ' Fehler: ' + e;
+if (status) { status.textContent = 'Fehler'; status.style.color = '#f85149'; }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '▶ Diagnose starten'; }
   }
@@ -1223,9 +1216,8 @@ async function loadDabErrInline(n=80, filter='') {
     box.innerHTML = lines.map(l => {
       const esc = l.line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       return `<span style="color:${cmap[l.type]||'#cdd9e5'}">${esc}</span>`;
-    }).join('
-') || '<span style="color:#8aa5bb">(leer)</span>';
-    box.scrollTop = box.scrollHeight;
+    }).join('\n') || '<span style="color:#8aa5bb">(leer)</span>';
+      box.scrollTop = box.scrollHeight;
   } catch(e) { if (box) box.textContent = 'Fehler: ' + e; }
 }
 
@@ -1267,8 +1259,7 @@ async function loadDabErrFile(n=80, filter='') {
       const color = colorMap[l.type] || '#cdd9e5';
       const esc = l.line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       return `<span style="color:${color}">${esc}</span>`;
-    }).join('
-');
+    }).join('\n');
     
     // Scroll to bottom
     outEl.scrollTop = outEl.scrollHeight;
