@@ -1832,6 +1832,17 @@ async function refreshSysRes() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Selbsttest: sind die kritischen Funktionen registriert?
+  setTimeout(() => {
+    const missing = ['sendCmd','showTab','refreshCore','renderMenuTree'].filter(
+      fn => typeof window[fn] !== 'function'
+    );
+    if (missing.length > 0) {
+      const bar = document.getElementById('statusBar');
+      if (bar) bar.textContent = '⚠ JS-Initialisierungsfehler: ' + missing.join(', ') + ' nicht definiert';
+      bar.style.background = '#5a1a1a';
+    }
+  }, 500);
   renderRuntimeInfo(vmLast);
   setStatusBar(`PiDrive | Rev=${vmLast?.debug?.rev||0} | Pfad=${(vmLast?.path||['PiDrive']).join(' › ')} | Status=…s | Menü=…s`);
   renderRtlsdr(vmLast.rtlsdr || {});
