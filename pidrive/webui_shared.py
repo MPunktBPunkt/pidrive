@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.24
+webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.28
 """
 
 import os
@@ -67,8 +67,20 @@ def read_json(path, default=None):
 
 
 def write_cmd(cmd):
-    with open(CMD_FILE, "w", encoding="utf-8") as f:
-        f.write(cmd.strip() + "\n")
+    # Falls Datei als root:root existiert → erst löschen (pi darf in /tmp löschen
+    # wenn sticky bit und file von anderem user: NEIN — aber pi kann truncate via open() wenn
+    # perms es erlauben. Sicherster Weg: chmod nach write, und vorher per subprocess rm)
+    # Einfachste Lösung: chmod 666 nach jedem Schreiben
+    try:
+        with open(CMD_FILE, "w", encoding="utf-8") as f:
+            f.write(cmd.strip() + "\n")
+        import os as _os
+        _os.chmod(CMD_FILE, 0o666)  # root:root 644 → 666: pi kann überschreiben
+    except PermissionError:
+        # Letzter Ausweg: via subprocess (sudoers erlaubt kein tee, aber wir versuchen es)
+        import subprocess
+        subprocess.run(["tee", CMD_FILE], input=cmd.strip() + "\n",
+                       text=True, capture_output=True)
 
 
 def file_age(path):
@@ -78,7 +90,7 @@ def file_age(path):
         return None
 
 
-# v0.10.24: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
+# v0.10.28: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
 _ip_cache: tuple = ("", 0.0)
 
 def get_ip() -> str:
@@ -507,7 +519,7 @@ def get_dab_status_debug():
         "ts": dbg.get("ts", st.get("ts", 0)),
         "debug_exists": os.path.exists(DAB_DEBUG_FILE),
         "debug_age": file_age(DAB_DEBUG_FILE),
-        # v0.10.24: Audio-Routing-Debug aus play_debug.json
+        # v0.10.28: Audio-Routing-Debug aus play_debug.json
         "pulse_server_in_env":    dbg.get("pulse_server_in_env"),
         "pulse_sink_in_env":      dbg.get("pulse_sink_in_env"),
         "pa_default_sink":        dbg.get("pa_default_sink_before_start", ""),
