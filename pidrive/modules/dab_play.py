@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.35"""
+"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.37"""
 
 from modules.dab_helpers import (
     _write_json_atomic, _read_json, _run, _truncate_file, _normalize_station,
@@ -120,20 +120,20 @@ def play_station(station, S, settings=None):
             " 2>" + _sess_err_file
         )
 
-        # ── v0.10.35: Saubere ALSA-Umgebung für welle-cli ────────────────────
+        # ── v0.10.37: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
         #          → wird von welle-cli geerbt
         #          → PulseAudio ALSA-Plugin (pcm.!default {type pulse})
         #            fängt ALSA-Calls ab → falscher Sink → kein Ton
         # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
         #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
-        # ── v0.10.35 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
+        # ── v0.10.37 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
         # PULSE_SERVER BEHALTEN: welle-cli nutzt ALSA default = PA-Plugin → System-PA
         # PA-Default-Sink wurde von get_mpv_args() auf Klinke gesetzt (s.o.)
         # PULSE_SINK ENTFERNEN: verhindert PA-Init-Timing-Konflikt mit RTL-SDR
         #   (war der echte Sync-Bug aus v0.9.30, nicht PULSE_SERVER selbst)
         _welle_env = dict(os.environ)
-        # v0.10.35: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
+        # v0.10.37: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
         # Ohne PULSE_SERVER kann welle-cli die Hardware nicht öffnen → kein Ton.
         # Mit PULSE_SERVER → welle-cli nutzt PA-Plugin → Default-Sink = Klinke Card 1.
         _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
@@ -164,7 +164,7 @@ def play_station(station, S, settings=None):
         except Exception as _ae:
             log.warn(f"DAB: asound.conf check/write: {_ae}")
 
-        # v0.10.35: Audio-Routing-Debug beim Start
+        # v0.10.37: Audio-Routing-Debug beim Start
         _pa_default = ""
         try:
             import subprocess as _sppa
@@ -235,7 +235,7 @@ def play_station(station, S, settings=None):
                 log.warn(f"DAB play: session changed during lock wait {session_id}")
                 return
 
-            # v0.10.35: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
+            # v0.10.37: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
             if not os.path.exists(_err_path):
                 continue
@@ -356,7 +356,7 @@ def stop(S):
     if S.get("radio_type") == "DAB":
         S["radio_playing"] = False
         S["radio_station"] = ""
-        # v0.10.35: Clear DLS/artist/track fields on stop to avoid stale display
+        # v0.10.37: Clear DLS/artist/track fields on stop to avoid stale display
         S["artist"] = ""
         S["track"] = ""
         S["dls_text"] = ""

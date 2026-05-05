@@ -305,12 +305,15 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         from modules.audio import _get_headphone_card as _ghc2
         _sc = _ghc2()
 
+        _sc_mpv_env    = "PULSE_SERVER=unix:/var/run/pulse/native"
+        _sc_mpv_extra  = ["--ao=pulse"]
+        _sc_mpv_prefix = _sc_mpv_env + " "
         cmd = (
             f"rtl_fm -M fm -f {freq_hz} -s {int(bandwidth_hz)}"
             f"{_ppm_arg}{_gain_arg} -r {sr} - 2>/dev/null | "
-            f"mpv --no-video --really-quiet --title=pidrive_scanner "
+            f"{_sc_mpv_prefix}mpv --no-video --really-quiet --title=pidrive_scanner "
             f"--demuxer=rawaudio --demuxer-rawaudio-rate={sr} "
-            f"--demuxer-rawaudio-channels=1 --ao=alsa --alsa-device=hw:{_sc},0 - 2>/dev/null"
+            f"--demuxer-rawaudio-channels=1 " + " ".join(_sc_mpv_extra) + " - 2>/dev/null"
         )
 
         if _rtlsdr:

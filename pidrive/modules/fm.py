@@ -203,33 +203,10 @@ def play_station(station, S, settings=None):
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
                 return
 
-        # v0.8.12: Zielarchitektur Option B — immer über zentrales PulseAudio
         from modules import audio as _audio
-        _mpv_raw2  = _audio.get_mpv_args(settings, source="fm")
-        # Index 0: env-prefix (leer bei ALSA-Modus) oder "PULSE_SERVER=..." bei BT
-        _mpv_env2  = _mpv_raw2[0] if _mpv_raw2 and not _mpv_raw2[0].startswith("--") else ""
-        _mpv_extra = _mpv_raw2[1:] if _mpv_env2 is not None else _mpv_raw2
-        # Leeren env-prefix herausfiltern
-        if not _mpv_env2:
-            _mpv_extra = [a for a in _mpv_raw2 if a and not a == ""]
+        _mpv_env2  = "PULSE_SERVER=unix:/var/run/pulse/native"
+        _mpv_extra = ["--ao=pulse"]
 
-        # Strict Mode: abbrechen wenn PulseAudio inaktiv
-        _adec = _audio.get_last_decision()
-        if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
-            S["radio_playing"] = False
-            S["radio_station"] = "Audiofehler: PulseAudio inaktiv"
-            S["radio_name"]    = name
-            S["radio_type"]    = "FM"
-            S["control_context"] = "radio_fm"  # Phase 2 state
-            log.error(f"FM strict-mode: Abbruch name={name!r} freq={freq_f} reason={_adec.get('reason','?')}")
-            return
-
-
-        _fm_gain_val = settings.get("fm_gain", -1) if settings else -1
-        _fm_gain_arg = "" if str(_fm_gain_val) == "-1" else f" -g {_fm_gain_val}"
-        _ppm_val     = int(settings.get("ppm_correction", 0)) if settings else 0
-        _ppm_arg     = "" if _ppm_val == 0 else f" -p {_ppm_val}"
-        # v0.9.15: PULSE_SERVER vor mpv — ohne env findet mpv den System-Daemon nicht
         cmd = (
             "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + _ppm_arg + " -A fast - 2>/dev/null | "
             + (_mpv_env2 + " " if _mpv_env2 else "") +
