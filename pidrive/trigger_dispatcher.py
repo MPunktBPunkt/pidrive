@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-trigger_dispatcher.py — PiDrive Trigger-Dispatcher  v0.10.31
+trigger_dispatcher.py — PiDrive Trigger-Dispatcher  v0.10.32
 
 Ausgelagert aus main_core.py. handle_trigger() delegiert an:
   td_nav.py       — Navigation, Menü-Aktionen, _execute_node

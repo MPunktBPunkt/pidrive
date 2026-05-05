@@ -1843,20 +1843,25 @@ document.addEventListener('DOMContentLoaded', () => {
       bar.style.background = '#5a1a1a';
     }
   }, 500);
-  renderRuntimeInfo(vmLast);
-  setStatusBar(`PiDrive | Rev=${vmLast?.debug?.rev||0} | Pfad=${(vmLast?.path||['PiDrive']).join(' › ')} | Status=…s | Menü=…s`);
-  renderRtlsdr(vmLast.rtlsdr || {});
-  renderAvrcp(vmLast.avrcp || {}, vmLast.avrcp_age);
-  renderAudio(vmLast.audio_debug || {});
-  renderDabScanTable(vmLast.dab_scan_debug || {});
-  renderSpectrumCandidates(vmLast.spectrum_debug || {});
-  renderKnownBtDevices(vmLast.known_bt_devices || {});
-  refreshGain();
-  loadDabScanSettings();
-  loadSpectrumSettings();  // v0.10.3
-  refreshVolume();
+  try {
+    renderRuntimeInfo(vmLast);
+  } catch(e) { console.warn('renderRuntimeInfo', e); }
+  try {
+    setStatusBar(`PiDrive | Rev=${vmLast?.debug?.rev||0} | Pfad=${(vmLast?.path||['PiDrive']).join(' › ')} | Status=…s | Menü=…s`);
+  } catch(e) {}
+  try { renderRtlsdr(vmLast.rtlsdr || {}); } catch(e) { console.warn('renderRtlsdr', e); }
+  try { renderAvrcp(vmLast.avrcp || {}, vmLast.avrcp_age); } catch(e) { console.warn('renderAvrcp', e); }
+  try { renderAudio(vmLast.audio_debug || {}); } catch(e) { console.warn('renderAudio', e); }
+  try { renderDabScanTable(vmLast.dab_scan_debug || {}); } catch(e) { console.warn('renderDabScanTable', e); }
+  try { renderSpectrumCandidates(vmLast.spectrum_debug || {}); } catch(e) { console.warn('renderSpectrumCandidates', e); }
+  try { renderKnownBtDevices(vmLast.known_bt_devices || {}); } catch(e) { console.warn('renderKnownBtDevices', e); }
+  try { refreshGain(); } catch(e) {}
+  try { loadDabScanSettings(); } catch(e) {}
+  try { loadSpectrumSettings(); } catch(e) {}
+  try { refreshVolume(); } catch(e) {}
 
-  // Tab 1: fast poll 1.5s, other tabs: 5s
+  // Tab 1: fast poll 1.5s, andere Tabs: 5s
+  // KRITISCH: setInterval muss IMMER erreicht werden
   setInterval(refreshCore, 1500);
   setInterval(refreshActive, 5000);
 });

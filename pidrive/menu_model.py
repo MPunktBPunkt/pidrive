@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-menu_model.py — Public API Facade  v0.10.31
+menu_model.py — Public API Facade  v0.10.32
 
 Ausgelagert in:
   menu_state.py    — MenuNode, MenuState

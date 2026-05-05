@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_agent.py — BT-Agent, Pairing  v0.10.31
+"""bt_agent.py — BT-Agent, Pairing  v0.10.32
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -182,7 +182,7 @@ def _drain_agent_stdout(max_lines=80):
     Alte Agent-Ausgaben abräumen, damit pair_with_agent()
     nicht auf stale stdout-Zeilen reinfällt.
 
-    v0.10.31: select.select() für echtes non-blocking I/O statt
+    v0.10.32: select.select() für echtes non-blocking I/O statt
     blindem readline(), das bei stale stdout dauerhaft blockieren kann.
     """
     global _AGENT_PROC
