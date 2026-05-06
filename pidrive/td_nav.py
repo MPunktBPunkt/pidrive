@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_nav.py — Navigation und Menü-Aktionen  v0.10.42"""
+"""td_nav.py — Navigation und Menü-Aktionen  v0.10.43"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -171,12 +171,16 @@ def _execute_node(node, menu_state, store, S, settings):
                                      if "  " in node.label else node.label.lstrip("★ ").strip())
                     _sid = meta.get("service_id", "")
                     _ok = dab.play_by_name(_name, S, settings=settings, service_id=_sid)
-                    # commit auch bei no_lock (False) — welle-cli läuft, Quelle ist ausgewählt
-                    # aber NICHT bei Exception (None/raise)
-                    if _ok is not None:
+                    # commit_source("dab") NUR bei echtem Lock/PCM (True)
+                    # False = no_lock (welle-cli läuft, aber kein Audio-Lock) → kein Commit
+                    # None  = Exception → kein Commit
+                    if _ok is True:
                         source_state.commit_source("dab")
+                    elif _ok is False:
+                        log.warn(f"DAB no_lock — kein commit_source, source_current bleibt idle name={_name!r}")
+                        S["dab_playback_state"] = "no_lock"
                     else:
-                        log.warn(f"DAB play_by_name Exception — kein commit_source dab name={_name!r}")
+                        log.warn(f"DAB Exception — kein commit_source name={_name!r}")
 
                 elif src == "webradio":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()

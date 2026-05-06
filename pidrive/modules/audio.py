@@ -95,7 +95,7 @@ except Exception:
 
 PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
 
-# v0.10.42: Sink-Cache (2s TTL)
+# v0.10.43: Sink-Cache (2s TTL)
 _sink_cache: list = []
 _sink_cache_ts: float = 0.0
 _SINK_CACHE_TTL: float = 2.0
@@ -189,7 +189,7 @@ def _write_audio_state():
 
 
 def prepare_audio_route(settings=None, source: str = "") -> dict:
-    """v0.10.42: decide() + apply() — Rückgabe: Decision-Dict."""
+    """v0.10.43: decide() + apply() — Rückgabe: Decision-Dict."""
     d = decide_audio_route(settings=settings, source=source)
     if d.get("pa_ok", True):
         apply_audio_route(d)
@@ -224,7 +224,7 @@ def _run(cmd, timeout=5):
 
 def _pa_ok() -> bool:
     """
-    v0.10.42: Socket-Datei zuerst prüfen (~0.1ms statt ~150ms systemctl subprocess).
+    v0.10.43: Socket-Datei zuerst prüfen (~0.1ms statt ~150ms systemctl subprocess).
     Falls Socket existiert: PA läuft definitiv. Sonst: systemctl als Fallback.
     """
     if os.path.exists("/var/run/pulse/native"):
@@ -233,7 +233,7 @@ def _pa_ok() -> bool:
 
 
 def _list_sinks(force: bool = False) -> list:
-    """v0.10.42: Mit 2s TTL-Cache."""
+    """v0.10.43: Mit 2s TTL-Cache."""
     global _sink_cache, _sink_cache_ts
     import time as _t
     now = _t.time()
@@ -250,7 +250,7 @@ def _list_sinks(force: bool = False) -> list:
 
 
 def invalidate_sink_cache():
-    """v0.10.42: Cache nach BT-Connect invalidieren."""
+    """v0.10.43: Cache nach BT-Connect invalidieren."""
     global _sink_cache_ts
     _sink_cache_ts = 0.0
 
@@ -400,7 +400,7 @@ def _remember_decision(requested, effective, reason, sink, source):
 
 def decide_audio_route(settings=None, source: str = "") -> dict:
     """
-    v0.10.42: Pure Policy — keine Side-Effects.
+    v0.10.43: Pure Policy — keine Side-Effects.
     Entscheidet requested→effective Audio-Route und gibt ein Decision-Dict zurück.
     Für Diagnose, Tests und explizite Kontrolle verwendbar.
     """
@@ -462,7 +462,7 @@ def decide_audio_route(settings=None, source: str = "") -> dict:
 
 def apply_audio_route(decision: dict):
     """
-    v0.10.42: Side-Effects aus decide_audio_route() anwenden.
+    v0.10.43: Side-Effects aus decide_audio_route() anwenden.
     Setzt PA Default-Sink, amixer, source_state — getrennt von der Policy-Logik.
     """
     effective = decision.get("effective", "none")
@@ -498,12 +498,12 @@ def apply_audio_route(decision: dict):
 
 
 def build_player_args(decision: dict, source: str = "") -> list:
-    """v0.10.42: Baut mpv-Argumente aus Decision — keine Side-Effects."""
+    """v0.10.43: Baut mpv-Argumente aus Decision — keine Side-Effects."""
     effective = decision.get("effective", "none"); sink = decision.get("sink", "")
     if effective == "bt" and sink:
         return ["PULSE_SERVER=unix:/var/run/pulse/native" + f" PULSE_SINK={sink}", "--ao=pulse"]
     elif effective in ("klinke", "auto") and source in ("fm", "scanner"):
-        # v0.10.42: PA System-Mode ist aktiv → PA hält ALSA-Card exklusiv.
+        # v0.10.43: PA System-Mode ist aktiv → PA hält ALSA-Card exklusiv.
         # mpv muss durch PA routen, nicht ALSA-direkt (sonst: Device busy → kein Ton).
         # Fallback auf ALSA-direkt nur wenn PA-Socket nicht existiert.
         import os as _os
@@ -522,7 +522,7 @@ def build_player_args(decision: dict, source: str = "") -> list:
 
 
 def get_mpv_args(settings=None, source: str = "") -> list:
-    """v0.10.42: Wrapper — nutzt decide_audio_route() + apply_audio_route()."""
+    """v0.10.43: Wrapper — nutzt decide_audio_route() + apply_audio_route()."""
     d = decide_audio_route(settings=settings, source=source)
     if not d.get("pa_ok", True):
         src_tag = ("source=" + source).ljust(17) if source else "source=-         "

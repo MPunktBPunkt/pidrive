@@ -92,7 +92,12 @@ def play_station(station, S, settings=None):
         S["album"]         = ""
         S["radio_playing"] = True
         S["radio_type"]    = "WEB"
-        S["metadata_unavailable"] = True   # initial — wird auf False gesetzt wenn mpv stabil läuft
+        # metadata_unavailable Kette:
+        #   webradio.py   → S["metadata_unavailable"] = True/False
+        #   mpv_meta.py   → S["metadata_unavailable"] = False bei Socket-Verbindung
+        #   ipc.py        → exportiert als status.json "metadata_unavailable"
+        #   renderRuntimeInfo (index.html) → el('metaStatus').textContent
+        S["metadata_unavailable"] = True   # initial — False wenn mpv stabil + Socket OK
         S["control_context"] = "radio_web"  # Phase 2 state
         S["radio_station"] = name
         S["radio_name"]    = name
@@ -109,14 +114,27 @@ def play_station(station, S, settings=None):
             pass
 
         log.info(f"[WEB] mpv gestartet PID={_player_proc.pid} socket={sock}")
-        # Zombie-Check: mpv darf nicht sofort sterben (z.B. Stream-URL ungültig)
+        # Zombie-Check: kurzes Warten, dann ob mpv noch lebt
+        # 2s statt 0.5s — Stream-Buffering + Connect kann länger dauern
         import time as _t
-        _t.sleep(0.5)
+        _t.sleep(2.0)
         if _player_proc.poll() is not None:
             S["radio_playing"] = False
             S["metadata_unavailable"] = True
-            log.error(f"[WEB] mpv beendet sich sofort (rc={_player_proc.returncode}) — URL ungültig? {url[:60]!r}")
+            log.error(f"[WEB] mpv crashed nach 2s (rc={_player_proc.returncode}) — URL ungültig? {url[:80]!r}")
             return False
+        # Hintergrund-Monitor: prüft mpv alle 10s auf Lebenzeichen
+        import threading as _thr
+        def _mpv_watchdog(proc, state, station_name):
+            for _ in range(18):   # 18 × 10s = 3min max
+                _t.sleep(10.0)
+                if proc.poll() is not None:
+                    if state.get("radio_type") == "WEB" and state.get("radio_name") == station_name:
+                        state["radio_playing"] = False
+                        state["metadata_unavailable"] = True
+                        log.warn(f"[WEB] mpv PID={proc.pid} beendet — stream abgebrochen name={station_name!r}")
+                    break
+        _thr.Thread(target=_mpv_watchdog, args=(_player_proc, S, name), daemon=True).start()
         S["metadata_unavailable"] = False
         mpv_meta.start(name, S, sock)
         log.action("WEB", f"Wiedergabe: {name}")

@@ -63,7 +63,7 @@ def setup(component="core", level=logging.DEBUG):
         fh.setFormatter(fmt)
         _logger.addHandler(fh)
 
-    # v0.10.42: nur WARNING+ auf stderr → journald, INFO geht in Datei-Logs
+    # v0.10.43: nur WARNING+ auf stderr → journald, INFO geht in Datei-Logs
     # Verhindert Doppel-Persistenz INFO-Zeilen (Datei + Journal)
     sh = logging.StreamHandler(sys.stderr)
     sh.setFormatter(fmt)
