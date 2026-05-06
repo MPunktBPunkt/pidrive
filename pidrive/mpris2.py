@@ -220,7 +220,7 @@ def start_mpris2():
 
     try:
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        # v0.10.45: SystemBus für root-Systemdienste (SessionBus braucht X11/Display)
+        # v0.10.46: SystemBus für root-Systemdienste (SessionBus braucht X11/Display)
         # Fallback auf SessionBus für Desktop-Umgebungen
         try:
             bus = dbus.SystemBus()

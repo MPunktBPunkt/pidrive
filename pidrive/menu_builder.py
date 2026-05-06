@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""menu_builder.py — build_tree()  v0.10.45
+"""menu_builder.py — build_tree()  v0.10.46
 Ausgelagert aus menu_model.py."""
 
 import os

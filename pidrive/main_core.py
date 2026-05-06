@@ -139,7 +139,7 @@ def _start_bt_agent_early():
 
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
 
-# ── Trigger-Dispatcher (ausgelagert v0.10.45) ─────────────────────────────────
+# ── Trigger-Dispatcher (ausgelagert v0.10.46) ─────────────────────────────────
 from trigger_dispatcher import (
     handle_trigger, _execute_node, _fm_manual,
     _set_guards, _debounced,
@@ -335,7 +335,7 @@ def rebuild_tree(menu_state, store, S, settings):
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
-    # v0.10.45: Trigger-Dispatcher Guards registrieren
+    # v0.10.46: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
     
     """
@@ -621,7 +621,7 @@ def main():
 
         main._bt_was_connected = bt_now
 
-        # v0.10.45: status.json 2 Hz (war 10 Hz), menu.json change-only
+        # v0.10.46: status.json 2 Hz (war 10 Hz), menu.json change-only
         _now = time.time()
         if _now - ipc_timer > 0.5:       # 2 Hz statt 10 Hz
             ipc.write_status(S, settings)
