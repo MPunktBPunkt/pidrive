@@ -92,6 +92,7 @@ def play_station(station, S, settings=None):
         S["album"]         = ""
         S["radio_playing"] = True
         S["radio_type"]    = "WEB"
+        S["metadata_unavailable"] = True   # initial — wird auf False gesetzt wenn mpv stabil läuft
         S["control_context"] = "radio_web"  # Phase 2 state
         S["radio_station"] = name
         S["radio_name"]    = name
@@ -107,6 +108,16 @@ def play_station(station, S, settings=None):
         except Exception:
             pass
 
+        log.info(f"[WEB] mpv gestartet PID={_player_proc.pid} socket={sock}")
+        # Zombie-Check: mpv darf nicht sofort sterben (z.B. Stream-URL ungültig)
+        import time as _t
+        _t.sleep(0.5)
+        if _player_proc.poll() is not None:
+            S["radio_playing"] = False
+            S["metadata_unavailable"] = True
+            log.error(f"[WEB] mpv beendet sich sofort (rc={_player_proc.returncode}) — URL ungültig? {url[:60]!r}")
+            return False
+        S["metadata_unavailable"] = False
         mpv_meta.start(name, S, sock)
         log.action("WEB", f"Wiedergabe: {name}")
 

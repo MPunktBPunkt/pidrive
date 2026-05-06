@@ -220,7 +220,12 @@ def start_mpris2():
 
     try:
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        bus  = dbus.SessionBus()
+        # v0.10.42: SystemBus für root-Systemdienste (SessionBus braucht X11/Display)
+        # Fallback auf SessionBus für Desktop-Umgebungen
+        try:
+            bus = dbus.SystemBus()
+        except Exception:
+            bus = dbus.SessionBus()
         name = dbus.service.BusName(SERVICE_NAME, bus)
 
         _player = PiDrivePlayer(bus, _write_trigger)

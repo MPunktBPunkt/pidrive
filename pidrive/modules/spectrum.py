@@ -284,13 +284,12 @@ class RTLSDRBackend(SampleBackend):
         if _rtlsdr:
             usb = _rtlsdr.detect_usb()
             if not usb.get("present"):
-                raise RuntimeError("RTL-SDR nicht erkannt")
-            # Kurz warten falls gerade ein Prozess beendet wird (welle-cli/rtl_fm)
+                raise RuntimeError("RTL-SDR nicht erkannt (USB)")
+            # Robustes Warten auf Freigabe statt nur is_busy()-Check
             if _rtlsdr.is_busy():
-                import time as _time
-                _time.sleep(1.5)
-                if _rtlsdr.is_busy():
-                    raise RuntimeError("RTL-SDR belegt")
+                freed = _rtlsdr.wait_until_free(timeout=4.0, interval=0.2)
+                if not freed:
+                    raise RuntimeError("RTL-SDR belegt (Timeout 4s)")
 
         cmd = [
             "rtl_sdr",
@@ -306,12 +305,21 @@ class RTLSDRBackend(SampleBackend):
 
         cmd += ["-"]  # Output auf stdout (rtl_sdr braucht Dateiname, "-" = stdout)
 
-        cp = subprocess.run(cmd, capture_output=True, timeout=self.timeout_s)
+        try:
+            cp = subprocess.run(cmd, capture_output=True, timeout=self.timeout_s)
+        except FileNotFoundError:
+            raise RuntimeError("rtl_sdr Binary nicht gefunden — bitte: sudo apt install rtl-sdr")
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f"rtl_sdr Timeout ({self.timeout_s}s) — Device hängt?")
 
         raw = cp.stdout or b""
         if not raw:
             err = (cp.stderr or b"").decode("utf-8", "ignore")[:240]
-            raise RuntimeError(f"keine IQ-Daten ({err})")
+            if cp.returncode == 1 and ("busy" in err.lower() or "failed to open" in err.lower()):
+                raise RuntimeError(f"RTL-SDR Device busy: {err[:120]}")
+            elif cp.returncode == 127 or not raw:
+                raise RuntimeError(f"rtl_sdr keine Daten (rc={cp.returncode}): {err[:120]}")
+            raise RuntimeError(f"keine IQ-Daten ({err[:120]})")
 
         return raw
 
@@ -694,26 +702,40 @@ def build_default_watcher(ppm: int = 0, gain: int = -1) -> SpectrumWatcher:
     return SpectrumWatcher(backend, fft, noise)
 
 
-def watch_pmr446(ppm: int = 0, gain: int = -1, debug: bool = False) -> DetectionResult:
-    """v0.10.0: Rate-Limit Guard fuer Pi 3B."""
+def watch_pmr446(ppm: int = 0, gain: int = -1, debug: bool = False,
+                 settings: dict = None) -> DetectionResult:
+    """v0.10.0: Rate-Limit Guard fuer Pi 3B. settings['spectrum_watch_seconds'] konfigurierbar."""
     if not _check_rate_limit():
         return DetectionResult(
                 found=False, best_candidate=None, candidates=[],
                 frames_processed=0, watch_started_ts=0.0, watch_ended_ts=0.0,
                 note="rate_limited", debug={"band": PMR446_PROFILE.name})
     watcher = build_default_watcher(ppm=ppm, gain=gain)
-    return watcher.watch_channels(PMR446_PROFILE, debug=debug)
+    profile = PMR446_PROFILE
+    if settings is not None:
+        ws = settings.get("spectrum_watch_seconds")
+        if ws and float(ws) > 0:
+            import copy
+            profile = copy.replace(profile, watch_seconds=float(ws))
+    return watcher.watch_channels(profile, debug=debug)
 
 
-def watch_freenet(ppm: int = 0, gain: int = -1, debug: bool = False) -> DetectionResult:
-    """v0.10.0: Rate-Limit Guard fuer Pi 3B."""
+def watch_freenet(ppm: int = 0, gain: int = -1, debug: bool = False,
+                  settings: dict = None) -> DetectionResult:
+    """v0.10.0: Rate-Limit Guard fuer Pi 3B. settings['spectrum_watch_seconds'] konfigurierbar."""
     if not _check_rate_limit():
         return DetectionResult(
                 found=False, best_candidate=None, candidates=[],
                 frames_processed=0, watch_started_ts=0.0, watch_ended_ts=0.0,
                 note="rate_limited", debug={"band": FREENET_PROFILE.name})
     watcher = build_default_watcher(ppm=ppm, gain=gain)
-    return watcher.watch_channels(FREENET_PROFILE, debug=debug)
+    profile = FREENET_PROFILE
+    if settings is not None:
+        ws = settings.get("spectrum_watch_seconds")
+        if ws and float(ws) > 0:
+            import copy
+            profile = copy.replace(profile, watch_seconds=float(ws))
+    return watcher.watch_channels(profile, debug=debug)
 
 
 # ============================================================================

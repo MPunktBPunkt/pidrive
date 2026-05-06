@@ -636,7 +636,7 @@ def check_rtlsdr():
     if not found:
         warn("→ Stick abziehen und neu einstecken, dann RTL-SDR Reset im WebUI")
 
-    for tool in ["rtl_fm", "rtl_test", "welle-cli"]:
+    for tool in ["rtl_fm", "rtl_test", "rtl_sdr", "welle-cli"]:
         p = run(f"which {tool} 2>/dev/null")
         (ok if p else err)(f"{tool}: {p if p else 'FEHLT'}")
 

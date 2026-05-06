@@ -42,20 +42,23 @@ def _listener_loop(sock_path: str, station_name: str, S: dict, stop: threading.E
     """Verbindet auf mpv-Socket, beobachtet Metadaten, schreibt in S."""
     import log
 
-    # Kurz warten bis mpv Socket angelegt hat
-    for _ in range(50):
+    # Auf mpv IPC-Socket warten (bis 15s — Pi 3 kann langsam starten)
+    for _i in range(150):
         if stop.is_set():
             return
         if os.path.exists(sock_path):
             break
         time.sleep(0.1)
     else:
-        log.warn("[MPV_META] Socket nicht gefunden: " + sock_path)
+        log.warn(f"[MPV_META] Socket nicht gefunden nach 15s: {sock_path} — Metadaten nicht verfügbar")
+        S["metadata_unavailable"] = True
         return
 
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(3.0)
+        # Socket vorhanden → Metadaten-Pfad aktiv
+        S["metadata_unavailable"] = False
         s.connect(sock_path)
         s.settimeout(None)
     except OSError as e:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.40"""
+"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.42"""
 
 from modules.dab_helpers import (
     _write_json_atomic, _read_json, _run, _truncate_file, _normalize_station,
@@ -120,20 +120,20 @@ def play_station(station, S, settings=None):
             " 2>" + _sess_err_file
         )
 
-        # ── v0.10.40: Saubere ALSA-Umgebung für welle-cli ────────────────────
+        # ── v0.10.42: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
         #          → wird von welle-cli geerbt
         #          → PulseAudio ALSA-Plugin (pcm.!default {type pulse})
         #            fängt ALSA-Calls ab → falscher Sink → kein Ton
         # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
         #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
-        # ── v0.10.40 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
+        # ── v0.10.42 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
         # PULSE_SERVER BEHALTEN: welle-cli nutzt ALSA default = PA-Plugin → System-PA
         # PA-Default-Sink wurde von get_mpv_args() auf Klinke gesetzt (s.o.)
         # PULSE_SINK ENTFERNEN: verhindert PA-Init-Timing-Konflikt mit RTL-SDR
         #   (war der echte Sync-Bug aus v0.9.30, nicht PULSE_SERVER selbst)
         _welle_env = dict(os.environ)
-        # v0.10.40: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
+        # v0.10.42: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
         # Ohne PULSE_SERVER kann welle-cli die Hardware nicht öffnen → kein Ton.
         # Mit PULSE_SERVER → welle-cli nutzt PA-Plugin → Default-Sink = Klinke Card 1.
         _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
@@ -164,7 +164,7 @@ def play_station(station, S, settings=None):
         except Exception as _ae:
             log.warn(f"DAB: asound.conf check/write: {_ae}")
 
-        # v0.10.40: Audio-Routing-Debug beim Start
+        # v0.10.42: Audio-Routing-Debug beim Start
         _pa_default = ""
         try:
             import subprocess as _sppa
@@ -235,7 +235,7 @@ def play_station(station, S, settings=None):
                 log.warn(f"DAB play: session changed during lock wait {session_id}")
                 return
 
-            # v0.10.40: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
+            # v0.10.42: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
             if not os.path.exists(_err_path):
                 continue
@@ -302,6 +302,7 @@ def play_station(station, S, settings=None):
         # Nur als "läuft" markieren wenn tatsächlich Sync oder PCM vorhanden
         if sync_ok or pcm_seen:
             S["radio_playing"] = True
+            _radio_started = True  # echter Playback-Lock
             if not pcm_seen:
                 log.warn("DAB: no_lock aber sync vorhanden — Audio möglicherweise instabil")
         else:
@@ -309,6 +310,7 @@ def play_station(station, S, settings=None):
             S["radio_playing"] = False
             log.warn(f"DAB: no_lock — radio_playing=False, welle-cli läuft weiter (session={session_id})")
         S["dab_playback_state"] = "no_lock"
+        _radio_started = False  # kein echter Playback-Lock
         S["radio_station"] = "DAB: " + name
         S["radio_name"] = name
         S["radio_type"] = "DAB"
@@ -316,6 +318,7 @@ def play_station(station, S, settings=None):
 
         _start_dls_thread(session_id, name, S)
         log.action("DAB", f"Wiedergabe: {name} ({ch}, sid={sid or '-'}) session={session_id}")
+        return _radio_started   # True = Lock+PCM, False = no_lock (welle-cli läuft noch)
 
     except Exception as e:
         S["radio_playing"] = False
@@ -326,6 +329,7 @@ def play_station(station, S, settings=None):
             "error": str(e),
         })
         log.error(f"DAB play Fehler: {e}")
+        return False
 
 
 def stop(S):
@@ -358,7 +362,7 @@ def stop(S):
     if S.get("radio_type") == "DAB":
         S["radio_playing"] = False
         S["radio_station"] = ""
-        # v0.10.40: Clear DLS/artist/track fields on stop to avoid stale display
+        # v0.10.42: Clear DLS/artist/track fields on stop to avoid stale display
         S["artist"] = ""
         S["track"] = ""
         S["dls_text"] = ""
@@ -388,19 +392,19 @@ def play_by_name(name, S, settings=None, service_id=""):
                 sid = str(s.get("service_id", "") or "").strip().lower()
                 if sid and sid == service_id:
                     log.info(f"DAB play_by_name service_id match name={name!r} sid={service_id}")
-                    play_station(_normalize_station(s), S, settings=settings)
-                    return
+                    return play_station(_normalize_station(s), S, settings=settings)
 
         for s in stations:
             if s.get("name", "") == name:
                 log.info(f"DAB play_by_name fallback name={name!r}")
-                play_station(_normalize_station(s), S, settings=settings)
-                return
+                return play_station(_normalize_station(s), S, settings=settings)
 
         log.warn(f"DAB play_by_name: Station nicht gefunden name={name!r} sid={service_id!r}")
+        return False
 
     except Exception as e:
         log.error(f"DAB play_by_name: {e}")
+        return False
 
 
 def play_next(S, stations):

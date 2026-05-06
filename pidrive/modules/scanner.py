@@ -399,7 +399,7 @@ def stop(S):
 
 # ── Fast/Confirm Detection ───────────────────────────────────────────────────
 
-def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=None, settings=None):
+def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.40, squelch=None, settings=None):
     freq_hz = int(float(freq_mhz) * 1e6)
     if squelch is None:
         squelch = max(5, _get_squelch(settings) // 2)
@@ -429,7 +429,7 @@ def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.22, squelch=None, se
         return False
 
 
-def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=0.65, squelch=None, settings=None):
+def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=1.20, squelch=None, settings=None):
     freq_hz = int(float(freq_mhz) * 1e6)
     if squelch is None:
         squelch = _get_squelch(settings)

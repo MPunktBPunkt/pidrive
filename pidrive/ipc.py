@@ -80,6 +80,7 @@ def write_status(S, settings):
         # Mögliche Werte: idle | menu | radio_fm | radio_dab | radio_web | scanner | spotify | library
         "control_context":      S.get("control_context", "idle"),
         "dab_playback_state":   S.get("dab_playback_state", "idle"),
+        "metadata_unavailable": S.get("metadata_unavailable", False),
         "ts":        int(time.time()),
     })
 

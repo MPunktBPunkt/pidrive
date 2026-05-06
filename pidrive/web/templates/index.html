@@ -109,6 +109,7 @@
       <div id="nowDls" style="font-size:11px;color:#58a6ff;margin-top:3px;min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
         {{ vm['status'].get('dls_text','') or '' }}
       </div>
+      <div id="metaStatus" style="font-size:10px;color:#f85149;display:none"></div>
     </div>
   </div>
 
@@ -1341,6 +1342,11 @@ function renderRuntimeInfo(vm) {
   if (el('nowMeta'))  el('nowMeta').textContent  = metaParts.join(' · ') || '–';
   // DLS: für DAB anzeigen (v0.10.1)
   const dlsTxt = st.dls_text || st.dls_raw || '';
+  // metadata_unavailable: Hinweis wenn Metadaten-Pfad inaktiv
+  if (el('metaStatus')) {
+    el('metaStatus').textContent = st.metadata_unavailable ? '(Metadaten nicht verfügbar)' : '';
+    el('metaStatus').style.display = st.metadata_unavailable ? 'block' : 'none';
+  }
   if (el('nowDls')) el('nowDls').textContent = dlsTxt;
   if (el('nowDls')) el('nowDls').style.display = dlsTxt ? 'block' : 'none';
   // Raw JSON

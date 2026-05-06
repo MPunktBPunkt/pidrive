@@ -38,5 +38,6 @@
     "url_mp3": ""
   },
   "last_web_station": null,
-  "dab_wait_lock": 60
+  "dab_wait_lock": 60,
+  "spectrum_watch_seconds": 2.5
 }
