@@ -285,8 +285,12 @@ class RTLSDRBackend(SampleBackend):
             usb = _rtlsdr.detect_usb()
             if not usb.get("present"):
                 raise RuntimeError("RTL-SDR nicht erkannt")
+            # Kurz warten falls gerade ein Prozess beendet wird (welle-cli/rtl_fm)
             if _rtlsdr.is_busy():
-                raise RuntimeError("RTL-SDR belegt")
+                import time as _time
+                _time.sleep(1.5)
+                if _rtlsdr.is_busy():
+                    raise RuntimeError("RTL-SDR belegt")
 
         cmd = [
             "rtl_sdr",

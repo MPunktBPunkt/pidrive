@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.37
+webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.38
 """
 
 import os
@@ -78,7 +78,7 @@ def file_age(path):
         return None
 
 
-# v0.10.37: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
+# v0.10.38: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
 _ip_cache: tuple = ("", 0.0)
 
 def get_ip() -> str:
@@ -235,7 +235,7 @@ def get_volume_data() -> dict:
             full_out = (safe_run(PA_ENV + " pactl list sinks 2>/dev/null").get("stdout", "") or "")
             in_target = False
             for ln in full_out.splitlines():
-                if _re.search(r"name\s*=\s*" + _re.escape(sink), ln):
+                if _re.search(r"Name:\s*" + _re.escape(sink), ln, _re.IGNORECASE):
                     in_target = True
                 elif ln.strip().startswith("Sink #") or (in_target and _re.search(r"name\s*=\s*\S+", ln) and sink not in ln):
                     if in_target:
@@ -507,7 +507,7 @@ def get_dab_status_debug():
         "ts": dbg.get("ts", st.get("ts", 0)),
         "debug_exists": os.path.exists(DAB_DEBUG_FILE),
         "debug_age": file_age(DAB_DEBUG_FILE),
-        # v0.10.37: Audio-Routing-Debug aus play_debug.json
+        # v0.10.38: Audio-Routing-Debug aus play_debug.json
         "pulse_server_in_env":    dbg.get("pulse_server_in_env"),
         "pulse_sink_in_env":      dbg.get("pulse_sink_in_env"),
         "pa_default_sink":        dbg.get("pa_default_sink_before_start", ""),
@@ -521,6 +521,16 @@ def get_dab_status_debug():
                 merged[k] = v
 
     return merged
+
+
+
+def _load_stations_file():
+    """stations.json lesen. Gibt dict mit 'stations'-Liste zurück."""
+    try:
+        with open(STATIONS_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"version": 1, "stations": []}
 
 
 # ──────────────────────────────────────────────────────────────────────────────

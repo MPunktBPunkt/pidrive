@@ -1395,6 +1395,9 @@ async function refreshAvrcp() {
 
 async function refreshRtlsdr() {
   try {
+    // Erst passive Diagnose anstoßen (kein Device-Zugriff), dann Ergebnis laden
+    await fetch('/api/rtlsdr/refresh');
+    await new Promise(r => setTimeout(r, 1200));  // warte auf Diagnose
     const r = await fetch('/api/rtlsdr'); const j = await r.json();
     renderRtlsdr(j.data || {}, j.exists);
   } catch(e) {}
