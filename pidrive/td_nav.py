@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_nav.py — Navigation und Menü-Aktionen  v0.10.39"""
+"""td_nav.py — Navigation und Menü-Aktionen  v0.10.40"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -160,8 +160,11 @@ def _execute_node(node, menu_state, store, S, settings):
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
                                      if "  " in node.label else node.label.lstrip("★ ").strip())
                     _freq = meta.get("freq", "")
-                    fm.play_station({"name": _name, "freq": _freq}, S, settings)
-                    source_state.commit_source("fm")
+                    _ok = fm.play_station({"name": _name, "freq": _freq}, S, settings)
+                    if _ok is not False:  # None (alte API) oder True = Erfolg
+                        source_state.commit_source("fm")
+                    else:
+                        log.warn(f"FM play_station scheiterte — kein commit_source fm name={_name!r}")
 
                 elif src == "dab":
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()

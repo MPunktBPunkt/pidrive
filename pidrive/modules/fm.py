@@ -136,7 +136,7 @@ def play_station(station, S, settings=None):
 
     if not freq:
         log.error(f"FM play: keine Frequenz station={station!r}")
-        return
+        return False
 
     # v0.9.5: Low-Risk Start-Guard — gleiche Station läuft bereits
     try:
@@ -145,7 +145,7 @@ def play_station(station, S, settings=None):
                 and S.get("radio_name") == name
                 and str(freq) in S.get("radio_station", "")):
             log.info(f"FM play: bereits aktiv — kein Neustart name={name!r} freq={freq}")
-            return
+            return True
     except Exception:
         pass
 
@@ -153,7 +153,7 @@ def play_station(station, S, settings=None):
         freq_f = float(freq)
     except Exception:
         log.error(f"FM play: ungültige Frequenz: {freq!r}")
-        return
+        return False
 
     # Doppelstart-Entprellung: gleicher Sender innerhalb 2s ignorieren
     now     = time.time()
@@ -163,7 +163,7 @@ def play_station(station, S, settings=None):
             and cur_key == _last_station_key
             and (now - _last_start_ts) < 2.0):
         log.info(f"FM play: entprellt (Doppelstart) name={name!r} freq={freq_f}")
-        return
+        return False
 
     stop(S)
 
@@ -182,7 +182,7 @@ def play_station(station, S, settings=None):
                 S["radio_playing"] = False
                 S["radio_station"] = "RTL-SDR nicht gefunden"
                 log.error("FM: kein RTL-SDR")
-                return
+                return False
 
             # Warten auf echte Freigabe nach stop() — verhindert Race beim Senderwechsel
             if not _rtlsdr.wait_until_free(timeout=2.5, interval=0.05):
@@ -201,7 +201,7 @@ def play_station(station, S, settings=None):
                 S["radio_playing"] = False
                 S["radio_station"] = "RTL-SDR belegt"
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
-                return
+                return False
 
         from modules import audio as _audio
         _mpv_env2  = "PULSE_SERVER=unix:/var/run/pulse/native"
@@ -248,6 +248,7 @@ def play_station(station, S, settings=None):
         # v0.9.26: RDS-Hook — aktuell No-Op (rtl_fm liefert kein RDS)
         update_rds_metadata(name, S)
         log.action("FM", f"Wiedergabe: {name} ({freq_f:.1f} MHz)")
+        return True
 
     except Exception as e:
         log.error(f"FM play Fehler: {e}")
