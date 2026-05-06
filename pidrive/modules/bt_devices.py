@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.44
+"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.45
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -13,6 +13,7 @@ from modules.bt_helpers import (
     VISIBLE_TTL_SECONDS, RECENT_SEEN_SECONDS,
     _scan_lock,
 )
+from modules.bt_agent import _ensure_agent   # fehlender Import — NameError bei bt_scan
 import os
 import threading
 import subprocess
