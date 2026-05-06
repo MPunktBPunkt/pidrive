@@ -139,7 +139,7 @@ def _start_bt_agent_early():
 
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
 
-# ── Trigger-Dispatcher (ausgelagert v0.10.38) ─────────────────────────────────
+# ── Trigger-Dispatcher (ausgelagert v0.10.39) ─────────────────────────────────
 from trigger_dispatcher import (
     handle_trigger, _execute_node, _fm_manual,
     _set_guards, _debounced,
@@ -335,7 +335,7 @@ def rebuild_tree(menu_state, store, S, settings):
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
 def startup_tasks(S, settings):
-    # v0.10.38: Trigger-Dispatcher Guards registrieren
+    # v0.10.39: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
     
     """
@@ -536,6 +536,7 @@ def main():
     # (nach boot_phase=steady), nicht mehr hier direkt
 
     _ready_written = False
+    _last_menu_rev  = -1   # für change-only menu.json Schreibung
     import threading as _thr
     _thr.Thread(target=startup_tasks, args=(S_module.S, settings), daemon=True).start()
 
@@ -620,18 +621,23 @@ def main():
 
         main._bt_was_connected = bt_now
 
-        if time.time() - ipc_timer > 0.1:
+        # v0.10.39: status.json 2 Hz (war 10 Hz), menu.json change-only
+        _now = time.time()
+        if _now - ipc_timer > 0.5:       # 2 Hz statt 10 Hz
             ipc.write_status(S, settings)
+            ipc_timer = _now
+
+        # menu.json nur bei Änderung schreiben (rev-basiert)
+        _cur_rev = menu_state.rev
+        if _cur_rev != _last_menu_rev:
             exported = menu_state.export()
             ipc.write_menu(exported)
-
+            _last_menu_rev = _cur_rev
             if _mpris2:
                 try:
                     _mpris2.update(S, exported)
                 except Exception:
                     pass
-
-            ipc_timer = time.time()
             if not _ready_written:
                 try:
                     open(ipc.READY_FILE, "w").write("1")

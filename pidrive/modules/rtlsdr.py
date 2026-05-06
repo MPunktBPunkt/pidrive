@@ -727,9 +727,9 @@ def usb_reset() -> dict:
         else "RTL-SDR NICHT erkannt — Stick ggf. abziehen und neu einstecken"
     )
 
-    # Diagnose neu schreiben
+    # Diagnose neu schreiben (diagnose() schreibt DEBUG_FILE selbst via _atomic_json)
     try:
-        _write_diag_json(diagnose())
+        diagnose()
     except Exception:
         pass
 

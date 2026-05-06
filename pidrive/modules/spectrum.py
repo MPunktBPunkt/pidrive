@@ -697,8 +697,10 @@ def build_default_watcher(ppm: int = 0, gain: int = -1) -> SpectrumWatcher:
 def watch_pmr446(ppm: int = 0, gain: int = -1, debug: bool = False) -> DetectionResult:
     """v0.10.0: Rate-Limit Guard fuer Pi 3B."""
     if not _check_rate_limit():
-        return DetectionResult(band=PMR446_PROFILE.name, channels={}, active_channels=[],
-                               strongest_channel=None, watch_seconds=0.0, frames_processed=0)
+        return DetectionResult(
+                found=False, best_candidate=None, candidates=[],
+                frames_processed=0, watch_started_ts=0.0, watch_ended_ts=0.0,
+                note="rate_limited", debug={"band": PMR446_PROFILE.name})
     watcher = build_default_watcher(ppm=ppm, gain=gain)
     return watcher.watch_channels(PMR446_PROFILE, debug=debug)
 
@@ -706,8 +708,10 @@ def watch_pmr446(ppm: int = 0, gain: int = -1, debug: bool = False) -> Detection
 def watch_freenet(ppm: int = 0, gain: int = -1, debug: bool = False) -> DetectionResult:
     """v0.10.0: Rate-Limit Guard fuer Pi 3B."""
     if not _check_rate_limit():
-        return DetectionResult(band=FREENET_PROFILE.name, channels={}, active_channels=[],
-                               strongest_channel=None, watch_seconds=0.0, frames_processed=0)
+        return DetectionResult(
+                found=False, best_candidate=None, candidates=[],
+                frames_processed=0, watch_started_ts=0.0, watch_ended_ts=0.0,
+                note="rate_limited", debug={"band": FREENET_PROFILE.name})
     watcher = build_default_watcher(ppm=ppm, gain=gain)
     return watcher.watch_channels(FREENET_PROFILE, debug=debug)
 

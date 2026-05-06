@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modules/bluetooth.py — Public API Facade  v0.10.38
+modules/bluetooth.py — Public API Facade  v0.10.39
 
 Ausgelagert in:
   bt_helpers.py   — Basis-Helfer, Konstanten, Adapter-Steuerung

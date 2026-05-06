@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-avrcp_trigger.py — PiDrive AVRCP → File-Trigger Bridge  v0.10.38
+avrcp_trigger.py — PiDrive AVRCP → File-Trigger Bridge  v0.10.39
 
 BMW / AVRCP 1.5:
   - BMW NBT EVO verbindet sich als AVRCP Controller
   - Drehsteller / Lenkradtasten → D-Bus-Signale
   - Dieser Prozess: D-Bus → /tmp/pidrive_cmd
 
-v0.10.38 Debug-Erweiterungen:
+v0.10.39 Debug-Erweiterungen:
   - Verboses Logging jedes Events: Raw-Linie, Kontext, Mapping, Latenz
   - Dedicated AVRCP-Raw-Logdatei für Autotest-Analyse
   - Nativer dbus-Python-Listener für PropertiesChanged (BlueZ MediaPlayer1)
@@ -36,7 +36,7 @@ CMD_FILE     = "/tmp/pidrive_cmd"
 AVRCP_FILE   = "/tmp/pidrive_avrcp.json"
 READY_FILE   = "/tmp/pidrive_ready"
 
-# v0.10.38: Dedicated AVRCP-Log für Autotest
+# v0.10.39: Dedicated AVRCP-Log für Autotest
 AVRCP_RAW_LOG = "/var/log/pidrive/avrcp_raw.log"
 
 DOUBLE_TAP_SEC = 1.2
@@ -55,7 +55,7 @@ _lock             = threading.Lock()
 
 def _raw_log(line: str):
     """
-    v0.10.38: Jeden D-Bus/bluetoothctl-Rohdaten-Eintrag in AVRCP_RAW_LOG schreiben.
+    v0.10.39: Jeden D-Bus/bluetoothctl-Rohdaten-Eintrag in AVRCP_RAW_LOG schreiben.
     Für Autotest-Analyse: tail -f /var/log/pidrive/avrcp_raw.log
     """
     try:
@@ -239,7 +239,7 @@ def map_event(event: str, ctx: dict) -> str | None:
 
 def handle_avrcp(event: str, source: str = "unknown", raw_line: str = ""):
     """
-    v0.10.38: Verarbeit ein AVRCP-Event mit vollständigem Verbose-Logging.
+    v0.10.39: Verarbeit ein AVRCP-Event mit vollständigem Verbose-Logging.
     raw_line: die originale D-Bus / bluetoothctl Zeile (für Diagnose)
     """
     global _last_enter_time, _last_event_ts, _last_event_name
@@ -347,7 +347,7 @@ def parse_bluetoothctl_line(line: str) -> str | None:
 
 def monitor_bluetoothctl():
     """
-    v0.10.38: bluetoothctl monitor mit vollständigem Raw-Logging.
+    v0.10.39: bluetoothctl monitor mit vollständigem Raw-Logging.
     Jede Zeile → Raw-Log, nur gematchte → handle_avrcp.
     """
     log.info("AVRCP: bluetoothctl monitor gestartet")
@@ -366,10 +366,10 @@ def monitor_bluetoothctl():
                 if not raw:
                     continue
 
-                # v0.10.38: Heartbeat alle 60s
+                # v0.10.39: Heartbeat alle 60s
                 now = time.time()
                 if now - heartbeat_ts > 60:
-                    log.info(f"AVRCP heartbeat: bluetoothctl-thread läuft, events={_event_count}")
+                    log.debug(f"AVRCP heartbeat: bluetoothctl-thread läuft, events={_event_count}")
                     heartbeat_ts = now
 
                 # Alle AVRCP/Player-Zeilen im Raw-Log
@@ -421,7 +421,7 @@ _BMW_PATTERNS = [
 
 def _parse_dbus_line(line: str) -> tuple[str | None, str]:
     """
-    v0.10.38: D-Bus Zeile auf AVRCP-Events parsen.
+    v0.10.39: D-Bus Zeile auf AVRCP-Events parsen.
     Gibt (event_name_oder_None, erkannter_typ) zurück.
     Erkennt sowohl Methoden-Aufrufe als auch Property-Changes.
     """
@@ -462,7 +462,7 @@ def _parse_dbus_line(line: str) -> tuple[str | None, str]:
 
 def monitor_dbus():
     """
-    v0.10.38: dbus-monitor mit vollständigem Raw-Logging und erweiterter Erkennung.
+    v0.10.39: dbus-monitor mit vollständigem Raw-Logging und erweiterter Erkennung.
     Loggt ALLE relevanten D-Bus-Zeilen, nicht nur gematchte.
     """
     log.info("AVRCP: dbus-monitor gestartet (interface=org.mpris.MediaPlayer2.Player)")
@@ -562,7 +562,7 @@ def auto_connect_bmw():
 
 def main():
     log.setup("core")
-    _sep("PiDrive AVRCP v0.10.38 gestartet")
+    _sep("PiDrive AVRCP v0.10.39 gestartet")
     log.info("AVRCP   Kontextbasiertes Mapping aktiv")
     log.info("AVRCP   Kontexte: menu / radio / scanner / list_overlay")
     log.info("AVRCP   Raw-Log:  " + AVRCP_RAW_LOG)
@@ -572,7 +572,7 @@ def main():
     # Raw-Log initialisieren
     try:
         os.makedirs(os.path.dirname(AVRCP_RAW_LOG), exist_ok=True)
-        _raw_log(f"=== AVRCP v0.10.38 Start {time.strftime('%Y-%m-%d %H:%M:%S')} ===")
+        _raw_log(f"=== AVRCP v0.10.39 Start {time.strftime('%Y-%m-%d %H:%M:%S')} ===")
     except Exception:
         pass
 

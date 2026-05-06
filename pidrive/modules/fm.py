@@ -207,6 +207,12 @@ def play_station(station, S, settings=None):
         _mpv_env2  = "PULSE_SERVER=unix:/var/run/pulse/native"
         _mpv_extra = ["--ao=pulse"]
 
+        # Gain und PPM aus Settings aufbauen
+        _gain_val  = int(settings.get("fm_gain", -1) if settings else -1)
+        _fm_gain_arg = f" -g {_gain_val}" if _gain_val >= 0 else ""   # -1 = AGC
+        _ppm_val   = int(settings.get("ppm", 0) if settings else 0)
+        _ppm_arg   = f" -p {_ppm_val}" if _ppm_val else ""
+
         cmd = (
             "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + _ppm_arg + " -A fast - 2>/dev/null | "
             + (_mpv_env2 + " " if _mpv_env2 else "") +
@@ -245,6 +251,7 @@ def play_station(station, S, settings=None):
 
     except Exception as e:
         log.error(f"FM play Fehler: {e}")
+        raise  # re-raise → td_nav überspringt commit_source("fm")
 
 
 def stop(S):
