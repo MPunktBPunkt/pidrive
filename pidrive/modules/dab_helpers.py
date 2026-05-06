@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_helpers.py — DAB+ Hilfsfunktionen und Gain-Tabelle  v0.10.45"""
+"""dab_helpers.py — DAB+ Hilfsfunktionen und Gain-Tabelle  v0.10.46"""
 
 import os, re, json, time, shlex, threading, subprocess, urllib.request as _ur
 import sys as _sys

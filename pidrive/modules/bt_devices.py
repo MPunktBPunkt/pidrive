@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.45
+"""bt_devices.py — Geräte-Datenbank und Scan  v0.10.46
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -242,6 +242,53 @@ def _get_info_with_retries(mac, tries=4, delay=1.0):
     return last
 
 
+def _device_row_from_info_relaxed(mac, fallback_name="", known_map=None):
+    """Wie _device_row_from_info, aber ohne _is_public_or_bredr-Filter.
+    Für Geräte die via BLE-Discovery gefunden wurden (random MACs, Pairing-Modus).
+    """
+    known_map = known_map or {}
+    mac = _normalize_mac(mac)
+    info_out = _get_info_with_retries(mac, tries=3, delay=0.5)
+    low = (info_out or "").lower()
+
+    if not info_out or "not available" in low:
+        # Gerät noch nicht im BlueZ-Cache — trotzdem als Kandidat aufnehmen
+        known_entry = known_map.get(mac, {})
+        return {
+            "mac": mac,
+            "name": fallback_name or mac,
+            "known": bool(known_entry),
+            "paired": bool(known_entry.get("paired")),
+            "trusted": bool(known_entry.get("trusted")),
+            "connected": False,
+            "audio_candidate": True,   # Kandidat — pairing klärt ob Audio möglich
+            "visible_now": True,
+            "seen_this_scan": True,
+            "last_seen_ts": _now(),
+            "source": "ble_discovered",
+            "ble_random_mac": True,
+        }
+
+    name = _extract_name_from_info(info_out, fallback_name or mac)
+    alias = _extract_alias_from_info(info_out, name)
+    known_entry = known_map.get(mac, {})
+
+    return {
+        "mac": mac,
+        "name": alias or name or mac,
+        "known": True if known_entry else _parse_bool_from_info(info_out, "paired"),
+        "paired": _parse_bool_from_info(info_out, "paired") or bool(known_entry.get("paired")),
+        "trusted": _parse_bool_from_info(info_out, "trusted"),
+        "connected": _parse_bool_from_info(info_out, "connected"),
+        "audio_candidate": _is_audio_device_info(info_out) or True,
+        "visible_now": True,
+        "seen_this_scan": True,
+        "last_seen_ts": _now(),
+        "source": "ble_discovered",
+        "ble_random_mac": not _is_public_or_bredr(info_out),
+    }
+
+
 def _device_row_from_info(mac, fallback_name="", known_map=None):
     known_map = known_map or {}
     mac = _normalize_mac(mac)
@@ -330,13 +377,37 @@ def scan_devices(S, settings, scan_seconds=DEFAULT_SCAN_SECONDS):
         # Discovery sauber starten
         _btctl("scan off", timeout=5)
         _sleep_s(0.5)
+        # Interaktiver Modus: Session bleibt offen → Discovery läuft durch
+        # "bluetoothctl -- scan on" beendet sich sofort und stoppt Discovery
         _scan_proc = subprocess.Popen(
-            "bluetoothctl -- scan on 2>/dev/null",
+            f"(echo 'scan on'; sleep {int(scan_seconds) + 5}) | bluetoothctl 2>/dev/null",
             shell=True,
-            stdout=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL
         )
         log.info(f"BT scan: gestartet ({scan_seconds}s)")
+
+        # Stdout-Reader: extrahiert [NEW] Device MAC Name direkt aus Scan-Output
+        _scan_new_macs = []
+        def _read_scan_stdout(proc):
+            try:
+                for raw_line in proc.stdout:
+                    line = raw_line.decode("utf-8", "ignore").strip()
+                    # ANSI entfernen
+                    line = re.sub(r"\x1b\[[0-9;]*m|\[\d+;\d+m|\[\dm", "", line)
+                    if "[NEW] Device" in line or "NEW Device" in line:
+                        parts = line.split()
+                        for i, p in enumerate(parts):
+                            if "Device" in p and i + 1 < len(parts):
+                                mac = _normalize_mac(parts[i + 1])
+                                if mac and mac not in _scan_new_macs:
+                                    _scan_new_macs.append(mac)
+                                    log.info(f"BT scan: neues Gerät entdeckt {mac}")
+                                break
+            except Exception:
+                pass
+        _stdout_thread = threading.Thread(target=_read_scan_stdout, args=(_scan_proc,), daemon=True)
+        _stdout_thread.start()
 
         deadline = time.time() + int(scan_seconds)
         found = {}
@@ -362,6 +433,13 @@ def scan_devices(S, settings, scan_seconds=DEFAULT_SCAN_SECONDS):
                         row = _device_row_from_info(mac, fallback_name, known_map)
                         if row:
                             found[mac] = row
+
+            # MACs aus Scan-Stdout ebenfalls prüfen (direkte Discovery-Events)
+            for _new_mac in list(_scan_new_macs):
+                if _new_mac not in found:
+                    _new_row = _device_row_from_info_relaxed(_new_mac, _new_mac, known_map)
+                    if _new_row:
+                        found[_new_mac] = _new_row
 
             # Zwischenspeichern, damit WebUI schon während/nach Scan konsistent ist
             _write_discovered_devices(list(found.values()))
