@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_nav.py — Navigation und Menü-Aktionen  v0.10.43"""
+"""td_nav.py — Navigation und Menü-Aktionen  v0.10.44"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -186,8 +186,11 @@ def _execute_node(node, menu_state, store, S, settings):
                     _name = meta.get("name", node.label.split("  ")[0].lstrip("★ ").strip()
                                      if "  " in node.label else node.label.lstrip("★ ").strip())
                     _url = meta.get("url", "")
-                    webradio.play_station({"name": _name, "url": _url}, S, settings)
-                    source_state.commit_source("webradio")
+                    _ok = webradio.play_station({"name": _name, "url": _url}, S, settings)
+                    if _ok is not False:  # True oder None (alte API) = Erfolg
+                        source_state.commit_source("webradio")
+                    else:
+                        log.warn(f"Webradio play_station fehlgeschlagen — kein commit_source name={_name!r}")
 
             except Exception as e:
                 log.error(f"PLAY_STATION switch error: {e}")

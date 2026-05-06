@@ -55,7 +55,7 @@ def play_station(station, S, settings=None):
     name = station.get("name", "?")
     if not url:
         log.error("webradio: keine URL fuer " + name)
-        return
+        return False
 
     try:
         from modules import audio as _audio
@@ -138,9 +138,11 @@ def play_station(station, S, settings=None):
         S["metadata_unavailable"] = False
         mpv_meta.start(name, S, sock)
         log.action("WEB", f"Wiedergabe: {name}")
+        return True
 
     except FileNotFoundError:
         S["radio_playing"] = False
+        return False
         S["radio_station"] = "mpv fehlt!"
     except Exception as e:
         log.error("webradio.play_station: " + str(e))

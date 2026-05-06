@@ -220,13 +220,21 @@ def start_mpris2():
 
     try:
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        # v0.10.43: SystemBus für root-Systemdienste (SessionBus braucht X11/Display)
+        # v0.10.44: SystemBus für root-Systemdienste (SessionBus braucht X11/Display)
         # Fallback auf SessionBus für Desktop-Umgebungen
         try:
             bus = dbus.SystemBus()
-        except Exception:
+        except Exception as _be:
+            log.warn(f"MPRIS2: SystemBus nicht verfügbar ({_be}) — SessionBus-Fallback")
             bus = dbus.SessionBus()
-        name = dbus.service.BusName(SERVICE_NAME, bus)
+        try:
+            name = dbus.service.BusName(SERVICE_NAME, bus)
+        except Exception as _ne:
+            # AccessDenied: D-Bus Policy fehlt → /etc/dbus-1/system.d/pidrive-mpris2.conf
+            if "AccessDenied" in str(_ne) or "not allowed to own" in str(_ne):
+                log.warn(f"MPRIS2: Service-Name nicht erlaubt (D-Bus Policy fehlt?) — {_ne}")
+                log.warn("MPRIS2: Installiere /etc/dbus-1/system.d/pidrive-mpris2.conf und führe 'systemctl reload dbus' aus")
+            raise
 
         _player = PiDrivePlayer(bus, _write_trigger)
         _loop   = GLib.MainLoop()

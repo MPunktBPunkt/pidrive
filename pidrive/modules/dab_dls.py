@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.43"""
+"""dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.44"""
 
 from modules.dab_helpers import (
     _dls_thread, _dls_stop_event, ERR_FILE, _err_file_for_session,
@@ -54,8 +54,11 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
             log.info(f"DAB DLS poller: stop (session changed) old={session_id} new={_get_session()}")
             break
 
-        if not (S.get("radio_playing") and S.get("radio_type") == "DAB" and S.get("radio_name") == station_name):
-            log.info(f"DAB DLS poller: stop (radio state changed) station={station_name!r}")
+        # Nur session-basiert stoppen — radio_playing flackert bei instabilem Empfang
+        # und würde DLS-Übernahme trotz aktiver welle-cli-Sitzung unterbrechen
+        if S.get("radio_type") not in ("DAB", "") and S.get("radio_type") is not None:
+            # Andere Quelle aktiv (FM/Web/Spotify) → stoppen
+            log.info(f"DAB DLS poller: stop (andere Quelle aktiv: {S.get('radio_type')!r})")
             break
 
         try:
@@ -82,6 +85,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
                     if parsed_dls:
                         raw = parsed_dls["raw"]
                         if raw != last_dls:
+                            S["dls_text"] = raw          # direkt für WebUI/ipc
                             S["dls"] = raw
                             S["dls_raw"] = raw
                             S["radio_text"] = raw
