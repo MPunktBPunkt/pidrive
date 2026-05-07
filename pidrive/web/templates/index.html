@@ -1785,8 +1785,10 @@ async function refreshDabStatus() {
     if(el('dabStatusName')) el('dabStatusName').textContent = d.name || '–';
     if(el('dabStatusCh'))   el('dabStatusCh').textContent   = (d.channel||'–') + ' / ' + (d.service_id||'–');
     const lockStr = d.sync_ok
-      ? ('✓ Locked' + (d.dab_state ? ' ['+d.dab_state+']' : ''))
-      : ('✗ ' + (d.dab_state||'kein Lock') + (d.last_error_line ? ': '+d.last_error_line : ''));
+      ? ('✓ Locked ['+d.dab_state+']')
+      : d.dab_partial_sync
+        ? ('📡 Partieller Sync ['+d.dab_state+']' + (d.last_error_line ? ': '+d.last_error_line : ''))
+      : ('✗ '+(d.dab_state||'kein Lock')+(d.last_error_line ? ': '+d.last_error_line : ''));
     if(el('dabStatusLock')) el('dabStatusLock').textContent = lockStr;
     if(el('dabStatusSnr'))  el('dabStatusSnr').textContent  = d.sync_ok ? '✓ Superframe sync' : 'SyncOnPhase failed (normal < 5s)';
     if(el('dabStatusGain')) el('dabStatusGain').textContent = d.gain === '-1' || d.gain === -1 ? 'Auto (AGC)' : (d.gain + ' dB');
