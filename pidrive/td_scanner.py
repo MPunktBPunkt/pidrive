@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_scanner.py — Scanner-Steuerung  v0.10.46"""
+"""td_scanner.py — Scanner-Steuerung  v0.10.47"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -63,7 +63,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 delta = 0
             if delta:
-                # v0.10.46: settings durchreichen + begin_transition wrapper
+                # v0.10.47: settings durchreichen + begin_transition wrapper
                 def _scan_jump_fn(b=band, d=delta):
                     if source_state.begin_transition(f"scan_jump:{b}", "scanner"):
                         try:
@@ -81,7 +81,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 delta = 0.0
             if delta:
-                # v0.10.46: begin_transition wrapper
+                # v0.10.47: begin_transition wrapper
                 def _scan_step_fn(b=band, d=delta):
                     if source_state.begin_transition(f"scan_step:{b}", "scanner"):
                         try:
@@ -99,7 +99,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 freq = 0.0
             if freq:
-                # v0.10.46: begin_transition wrapper
+                # v0.10.47: begin_transition wrapper
                 def _scan_setfreq_fn(b=band, f=freq):
                     if source_state.begin_transition(f"scan_setfreq:{b}", "scanner"):
                         try:
@@ -112,7 +112,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
         parts = cmd.split(":")
         if len(parts) >= 2:
             band = parts[1]
-            # v0.10.46: begin_transition wrapper
+            # v0.10.47: begin_transition wrapper
             def _input_and_set(b=band):
                 freq = scanner.freq_input_screen(b, settings)
                 if freq is not None:

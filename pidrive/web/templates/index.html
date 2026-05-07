@@ -1117,8 +1117,8 @@ ${'─'.repeat(50)}
     if (chk('dbg_display'))  fetches.push(['Display Log',   fetch('/api/logs?target=display').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
     if (chk('dbg_app'))      fetches.push(['App Log',       fetch('/api/logs?target=app').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
     if (chk('dbg_avrcp'))    fetches.push(['AVRCP Log',     fetch('/api/logs?target=avrcp').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
-    if (chk('dbg_svc_core')) fetches.push(['Core Status',   fetch('/api/service?name=core').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
-    if (chk('dbg_svc_web'))  fetches.push(['Web Status',    fetch('/api/service?name=web').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_svc_core')) fetches.push(['Core Status',   fetch('/api/service?name=pidrive_core').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
+    if (chk('dbg_svc_web'))  fetches.push(['Web Status',    fetch('/api/service?name=pidrive_web').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
     if (chk('dbg_grep'))     fetches.push(['Grep (Fehler)', fetch('/api/grep').then(r=>r.json()).catch(e=>({stdout:'Fehler: '+e}))]);
 
     // Slow ones: diagnose and system separately (not in parallel)
@@ -1410,7 +1410,7 @@ async function refreshRtlsdr() {
 }
 
 async function resetRtlsdr() {
-  await fetch('/api/rtlsdr_reset', {method:'POST'});
+  await fetch('/api/rtlsdr/reset', {method:'POST'});
   setTimeout(refreshRtlsdr, 2000);
 }
 
@@ -1490,7 +1490,7 @@ function renderAudio(data) {
 
 async function refreshAudio() {
   try {
-    const r = await fetch('/api/audio_debug'); const j = await r.json();
+    const r = await fetch('/api/audio'); const j = await r.json();
     renderAudio(j.data || {});
   } catch(e) {}
 }
@@ -1531,7 +1531,7 @@ async function connectKnownBtDevice(mac) { sendCmd('bt_connect:' + mac); }
 
 async function refreshKnownBtDevices() {
   try {
-    const r = await fetch('/api/bt_known_devices'); const j = await r.json();
+    const r = await fetch('/api/bt/known'); const j = await r.json();
     renderKnownBtDevices(j.data || {});
   } catch(e) {}
 }
@@ -1609,14 +1609,14 @@ async function refreshRuntimePanel() {
 
 async function refreshDabScanDebug() {
   try {
-    const r = await fetch('/api/dab_scan_debug'); const j = await r.json();
+    const r = await fetch('/api/dab/scan/last'); const j = await r.json();
     renderDabScanTable(j.data || {});
   } catch(e) {}
 }
 
 async function refreshSpectrumDebug() {
   try {
-    const r = await fetch('/api/spectrum_debug'); const j = await r.json();
+    const r = await fetch('/api/spectrum/last'); const j = await r.json();
     renderSpectrumCandidates(j.data || {});
   } catch(e) {}
 }
@@ -1628,7 +1628,7 @@ async function saveDabScanSettings() {
     dab_scan_port: parseInt(document.getElementById('dabScanPort').value)||7981,
     dab_channels: document.getElementById('dabChannels').value || '11D,10A,11B'
   };
-  await fetch('/api/dab/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  await fetch('/api/dab/scan/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
 }
 
 async function loadDabScanSettings() {
@@ -1649,7 +1649,7 @@ async function captureSpectrum() {
   const c = document.getElementById('specCenter').value;
   const p = document.getElementById('specPpm').value;
   const g = document.getElementById('specGain').value;
-  await fetch(`/api/spectrum?center=${c}&ppm=${p}&gain=${g}`,{method:'POST'});
+  await fetch(`/api/spectrum/capture?center=${c}&ppm=${p}&gain=${g}`,{method:'POST'});
   setTimeout(refreshSpectrumDebug, 35000);
 }
 async function captureSweep() {
@@ -2087,7 +2087,7 @@ async function runSpectrumPeakOnce() {
     const j = await r.json();
     if (j.ok && j.data) {
       const d = j.data;
-      const cands = d.active_channels || [];
+      const cands = d.candidates || [];
       const txt = cands.length
         ? cands.map(c => `${c} ✓`).join('  ')
         : 'Keine Aktivität erkannt';
@@ -2418,7 +2418,7 @@ function saRenderPeakBars(data) {
   const W = cv.width, H = cv.height;
   ctx.clearRect(0, 0, W, H);
 
-  const cands = data.data?.active_channels || [];
+  const cands = data.data?.candidates || [];
   if (cands.length === 0) {
     ctx.fillStyle = '#4d6a80'; ctx.font = '12px monospace';
     ctx.fillText('Keine aktiven Kanäle gefunden', W/2 - 100, H/2);
@@ -2451,8 +2451,8 @@ function saRenderPeaks(data) {
   if (!pl) return;
 
   // PMR/Freenet
-  if (data.data?.active_channels !== undefined) {
-    const cands = data.data.active_channels || [];
+  if (data.data?.candidates !== undefined) {
+    const cands = data.data.candidates || [];
     const best  = data.data.best_candidate;
     if (cands.length === 0) {
       pl.innerHTML = '<span style="color:#4d6a80">Keine aktiven Kanäle</span>';

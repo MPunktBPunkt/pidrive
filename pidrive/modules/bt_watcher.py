@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_watcher.py — Auto-Reconnect Watcher  v0.10.46
+"""bt_watcher.py — Auto-Reconnect Watcher  v0.10.47
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -9,6 +9,13 @@ from modules.bt_helpers import (
     _is_audio_device_info,
     WATCHER_STATE_FILE, RECONNECT_COOLDOWN, RECONNECT_FAIL_SOFT_LIMIT,
 )
+
+try:
+    from modules.bt_agent import start_agent_session as _start_agent_session
+    from modules.bt_connect import disconnect_current as _disconnect_current
+except Exception:
+    _start_agent_session = None
+    _disconnect_current = None
 from modules.bt_devices import _get_known_devices
 from modules.bt_audio import get_bt_sink
 from modules.bt_connect import (
@@ -218,7 +225,9 @@ def stop_auto_reconnect():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def start_agent():
-    return start_agent_session()
+    """Legacy-Alias — nutzt bt_agent.start_agent_session()"""
+    if _start_agent_session:
+        return _start_agent_session()
 
 
 def disconnect_device(S=None, settings=None):
@@ -226,4 +235,5 @@ def disconnect_device(S=None, settings=None):
         S = {}
     if settings is None:
         settings = {}
-    return disconnect_current(S, settings)
+    if _disconnect_current:
+        return _disconnect_current(S, settings)

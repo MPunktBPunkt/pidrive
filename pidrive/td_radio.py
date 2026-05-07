@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.46"""
+"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.47"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -22,7 +22,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 log.warn("SCAN_BLOCKED source=dab running=" + info.get("source","?"))
                 ipc.write_progress("DAB+ Suchlauf",
                     "Schon aktiv: " + info.get("source","?").upper(), color="orange")
-                time.sleep(2)
+                _time_mod.sleep(2)
                 ipc.clear_progress()
                 return
 
@@ -36,7 +36,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     store.save_dab(results)
                     log.info(f"SCAN_DONE source=dab count={count}")
                     ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
-                    time.sleep(2)
+                    _time_mod.sleep(2)
                     new_root = build_tree(store, S, settings)
                     menu_state.root = new_root
                     menu_state.clamp_cursors()
@@ -44,12 +44,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 else:
                     log.warn("SCAN_DONE source=dab count=0 — bestehende Liste bleibt")
                     ipc.write_progress("DAB+ Suchlauf", "0 Sender — Liste bleibt erhalten", color="orange")
-                    time.sleep(2)
+                    _time_mod.sleep(2)
             except Exception as e:
                 log.error(f"SCAN_FAIL source=dab error={e}")
                 ipc.write_progress("DAB+ Fehler", str(e)[:48], color="red")
                 source_state.commit_source("idle")
-                time.sleep(3)
+                _time_mod.sleep(3)
             finally:
                 if not S.get("radio_playing"):
                     S["control_context"] = "idle"
@@ -68,13 +68,13 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 owner = f"scan:dab:custom:{','.join(channels)}"
                 if not _scan_begin("dab"):
                     ipc.write_progress("DAB+ Suchlauf", "Schon aktiv", color="orange")
-                    time.sleep(2)
+                    _time_mod.sleep(2)
                     ipc.clear_progress()
                     return
 
                 if not source_state.begin_transition(owner, "dab"):
                     ipc.write_progress("DAB+ Suchlauf", "Blockiert", color="orange")
-                    time.sleep(2)
+                    _time_mod.sleep(2)
                     ipc.clear_progress()
                     _scan_end()
                     return
@@ -97,11 +97,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     else:
                         source_state.commit_source("idle")
                         ipc.write_progress("DAB+ Suchlauf", "0 Sender — Liste bleibt", color="orange")
-                    time.sleep(2)
+                    _time_mod.sleep(2)
                 except Exception as e:
                     log.error(f"SCAN_FAIL dab custom: {e}")
                     source_state.commit_source("idle")
-                    time.sleep(3)
+                    _time_mod.sleep(3)
                 finally:
                     if not S.get("radio_playing"):
                         S["control_context"] = "idle"
@@ -119,7 +119,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 log.warn("SCAN_BLOCKED source=fm running=" + info.get("source","?"))
                 ipc.write_progress("FM Suchlauf",
                     "Schon aktiv: " + info.get("source","?").upper(), color="orange")
-                time.sleep(2)
+                _time_mod.sleep(2)
                 ipc.clear_progress()
                 return
 
@@ -136,7 +136,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 else:
                     log.warn("SCAN_DONE source=fm count=0 — bestehende Liste bleibt")
                     ipc.write_progress("FM Suchlauf", "Kein Sender — Liste bleibt erhalten", color="orange")
-                time.sleep(2)
+                _time_mod.sleep(2)
 
                 if count > 0:
                     new_root = build_tree(store, S, settings)
@@ -146,7 +146,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception as e:
                 log.error(f"SCAN_FAIL source=fm error={e}")
                 ipc.write_progress("FM Fehler", str(e)[:48], color="red")
-                time.sleep(3)
+                _time_mod.sleep(3)
             finally:
                 _scan_end()
                 ipc.clear_progress()
@@ -163,7 +163,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 "Blockiert: Scan läuft (" + _si.get("source","?").upper() + ")",
                 color="orange"
             )
-            time.sleep(2)
+            _time_mod.sleep(2)
             ipc.clear_progress()
         else:
             source = cmd.split(":", 1)[1]
@@ -171,7 +171,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             rebuild = True
             log.info(f"STATIONS_RELOAD source={source}")
             ipc.write_progress("Senderliste", f"{source} neu geladen", color="green")
-            time.sleep(1)
+            _time_mod.sleep(1)
             ipc.clear_progress()
 
     # ── Webradio Play direkt (WebUI) ────────────────────────────────────────
