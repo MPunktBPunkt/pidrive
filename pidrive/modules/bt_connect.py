@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_connect.py — Connect/Disconnect-Logik und Reconnect-State  v0.10.48
+"""bt_connect.py — Connect/Disconnect-Logik und Reconnect-State  v0.10.49
 Ausgelagert aus bluetooth.py."""
 
 from modules.bt_helpers import (
@@ -447,7 +447,7 @@ def _connect_device_inner(mac, S, settings):
         _src_state.set_bt_state("connected")
         _src_state.set_bt_link_state("connected")
         _src_state.set_bt_audio_state("a2dp_ready" if sink_ok else "no_sink")
-        # v0.10.48: PA-Sink-Cache nach BT-Connect invalidieren
+        # v0.10.49: PA-Sink-Cache nach BT-Connect invalidieren
         try:
             from modules import audio as _aud_bt; _aud_bt.invalidate_sink_cache()
         except Exception: pass

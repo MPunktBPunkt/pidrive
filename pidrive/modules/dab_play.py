@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.48"""
+"""dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.49"""
 
 from modules.dab_helpers import (
     _write_json_atomic, _read_json, _run, _truncate_file, _normalize_station,
@@ -122,20 +122,20 @@ def play_station(station, S, settings=None):
             " 2>" + _sess_err_file
         )
 
-        # ── v0.10.48: Saubere ALSA-Umgebung für welle-cli ────────────────────
+        # ── v0.10.49: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
         #          → wird von welle-cli geerbt
         #          → PulseAudio ALSA-Plugin (pcm.!default {type pulse})
         #            fängt ALSA-Calls ab → falscher Sink → kein Ton
         # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
         #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
-        # ── v0.10.48 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
+        # ── v0.10.49 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
         # PULSE_SERVER BEHALTEN: welle-cli nutzt ALSA default = PA-Plugin → System-PA
         # PA-Default-Sink wurde von get_mpv_args() auf Klinke gesetzt (s.o.)
         # PULSE_SINK ENTFERNEN: verhindert PA-Init-Timing-Konflikt mit RTL-SDR
         #   (war der echte Sync-Bug aus v0.9.30, nicht PULSE_SERVER selbst)
         _welle_env = dict(os.environ)
-        # v0.10.48: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
+        # v0.10.49: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
         # Ohne PULSE_SERVER kann welle-cli die Hardware nicht öffnen → kein Ton.
         # Mit PULSE_SERVER → welle-cli nutzt PA-Plugin → Default-Sink = Klinke Card 1.
         _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
@@ -166,7 +166,7 @@ def play_station(station, S, settings=None):
         except Exception as _ae:
             log.warn(f"DAB: asound.conf check/write: {_ae}")
 
-        # v0.10.48: Audio-Routing-Debug beim Start
+        # v0.10.49: Audio-Routing-Debug beim Start
         _pa_default = ""
         try:
             import subprocess as _sppa
@@ -224,7 +224,7 @@ def play_station(station, S, settings=None):
                 env=_welle_env,   # ← ohne PULSE_SINK (Timing-Fix), mit PULSE_SERVER
             )
 
-        lock_wait_max = 12
+        lock_wait_max = int(settings.get("dab_wait_lock", 20)) if settings else 20
         sync_ok = False
         pcm_seen = False
         sync_seen = False
@@ -237,7 +237,7 @@ def play_station(station, S, settings=None):
                 log.warn(f"DAB play: session changed during lock wait {session_id}")
                 return
 
-            # v0.10.48: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
+            # v0.10.49: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
             if not os.path.exists(_err_path):
                 continue
@@ -278,7 +278,12 @@ def play_station(station, S, settings=None):
             except Exception as e:
                 last_err = str(e)
 
-        dab_state = "locked" if sync_ok else ("pcm_only" if pcm_seen else "no_lock")
+        dab_state = ("locked" if sync_ok
+                     else "pcm_only" if pcm_seen
+                     else "partial_sync" if sync_seen  # Signal da, kein stabiler Superframe
+                     else "no_lock")
+        S["dab_sync_seen"]    = sync_seen
+        S["dab_partial_sync"] = sync_seen and not sync_ok
         _err_short = last_err[:60] if last_err else "OK"
         log.info(f"DAB lock-wait done: state={dab_state} sync={sync_ok} pcm={pcm_seen} err={_err_short!r}")
         _set_dab_status_fields(
@@ -302,12 +307,19 @@ def play_station(station, S, settings=None):
             "lock_wait_seconds": lock_wait_max,
         })
 
-        # Nur als "läuft" markieren wenn tatsächlich Sync oder PCM vorhanden
+        # radio_playing=True bei: sync_ok, pcm_seen, oder sync_seen (instabiler aber echter Empfang)
+        # Manueller Test beweist: sync_seen allein reicht für PCM+DLS trotz Lost-coarse-sync-Phasen
         if sync_ok or pcm_seen:
             S["radio_playing"] = True
-            _radio_started = True  # echter Playback-Lock
+            _radio_started = True  # voller Lock oder PCM bestätigt
             if not pcm_seen:
-                log.warn("DAB: no_lock aber sync vorhanden — Audio möglicherweise instabil")
+                log.info("DAB: sync_ok aber kein PCM — Audio möglicherweise instabil")
+        elif sync_seen:
+            # Partieller Sync: Signal erkannt, aber noch kein stabiler Superframe
+            # welle-cli kann trotzdem Audio/DLS liefern (instabil aber funktional)
+            S["radio_playing"] = True
+            _radio_started = True  # partieller Lock — besser als false-negative
+            log.info("DAB: partieller Sync (sync_seen, kein Superframe) — playing=True für instabilen Betrieb")
         else:
             # no_lock: DAB läuft noch (welle-cli), aber Status ehrlich halten
             S["radio_playing"] = False
@@ -372,7 +384,7 @@ def stop(S):
     if S.get("radio_type") == "DAB":
         S["radio_playing"] = False
         S["radio_station"] = ""
-        # v0.10.48: Clear DLS/artist/track fields on stop to avoid stale display
+        # v0.10.49: Clear DLS/artist/track fields on stop to avoid stale display
         S["artist"] = ""
         S["track"] = ""
         S["dls_text"] = ""

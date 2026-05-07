@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.48"""
+"""dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.49"""
 
 from modules.dab_helpers import (
     _dls_thread, _dls_stop_event, ERR_FILE, _err_file_for_session,
