@@ -81,6 +81,8 @@ def write_status(S, settings):
         "control_context":      S.get("control_context", "idle"),
         "dab_playback_state":   S.get("dab_playback_state", "idle"),
         "dab_sync_ok":          S.get("dab_sync_ok", False),
+        "dab_sync_seen":        S.get("dab_sync_seen", False),
+        "dab_partial_sync":     S.get("dab_partial_sync", False),
         "dab_audio_ready":      S.get("dab_audio_ready", False),
         "dab_pcm_seen":         S.get("dab_pcm_seen", False),
         "dab_superframe_seen":  S.get("dab_superframe_seen", False),

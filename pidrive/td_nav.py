@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_nav.py — Navigation und Menü-Aktionen  v0.10.48"""
+"""td_nav.py — Navigation und Menü-Aktionen  v0.10.49"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -171,14 +171,16 @@ def _execute_node(node, menu_state, store, S, settings):
                                      if "  " in node.label else node.label.lstrip("★ ").strip())
                     _sid = meta.get("service_id", "")
                     _ok = dab.play_by_name(_name, S, settings=settings, service_id=_sid)
-                    # commit_source("dab") NUR bei echtem Lock/PCM (True)
-                    # False = no_lock (welle-cli läuft, aber kein Audio-Lock) → kein Commit
+                    # commit_source("dab") wenn welle-cli gestartet ist (True ODER False)
+                    # True  = Lock+PCM — radio_playing=True
+                    # False = no_lock  — welle-cli läuft, kein Lock, radio_playing=False
+                    #   → commit trotzdem: source_current="dab" + dab_playback_state="no_lock"
+                    #   manueller Test beweist: instabiles Signal ist echtes DAB (v0.10.49)
                     # None  = Exception → kein Commit
-                    if _ok is True:
+                    if _ok is not None:
                         source_state.commit_source("dab")
-                    elif _ok is False:
-                        log.warn(f"DAB no_lock — kein commit_source, source_current bleibt idle name={_name!r}")
-                        S["dab_playback_state"] = "no_lock"
+                        if _ok is False:
+                            log.info(f"DAB no_lock — committed source=dab, welle-cli läuft weiter name={_name!r}")
                     else:
                         log.warn(f"DAB Exception — kein commit_source name={_name!r}")
 
