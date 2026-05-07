@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.47           ║
+║        PiDrive Installer v0.10.48           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -173,7 +173,7 @@ mkdir -p "$LOG_DIR"
 chown "$REAL_USER:$REAL_USER" "$LOG_DIR"
 ok "Log-Verzeichnis: $LOG_DIR"
 
-  # v0.10.47: tmpfiles.d — IPC-Dateien 0666 damit webui (pi) CMD_FILE schreiben kann
+  # v0.10.48: tmpfiles.d — IPC-Dateien 0666 damit webui (pi) CMD_FILE schreiben kann
   cat > /etc/tmpfiles.d/pidrive.conf << 'TMPEOF'
 # PiDrive IPC: world-writable damit webui (pi) CMD_FILE schreiben kann
 f /tmp/pidrive_cmd          0666 root root -
@@ -319,7 +319,7 @@ ok "Dienste aktiviert (pidrive_core, pidrive_display, rfkill-unblock)"
 systemctl enable ssh 2>/dev/null && systemctl start ssh 2>/dev/null || true
 ok "SSH aktiviert"
 
-# v0.10.47: sudoers für PiDrive — NOPASSWD für spezifische Wartungsbefehle
+# v0.10.48: sudoers für PiDrive — NOPASSWD für spezifische Wartungsbefehle
 # Pi OS Bookworm fragt bei jedem sudo nach Passwort (kein Session-Timeout mehr)
 cat > /etc/sudoers.d/pidrive << 'SUDOEOF'
 # PiDrive: ausgewählte Befehle ohne Passwort für Benutzer pi
@@ -416,7 +416,7 @@ if ! dpkg -l raspotify 2>/dev/null | grep -q "^ii" && [ ! -f /etc/raspotify/conf
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.47)
+# Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.48)
 # Läuft IMMER — unabhängig von Raspotify-Installation
 # ══════════════════════════════════════════════════════════════
 # v0.9.9: /etc/asound.conf — ALSA Default auf Klinke (Card 1) setzen
@@ -474,7 +474,7 @@ usermod -aG pulse-access root 2>/dev/null || true
 usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
 ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-# v0.10.47: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+# v0.10.48: PulseAudio System-Service einrichten (Bookworm-kompatibel)
 # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
 # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
 systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
@@ -865,7 +865,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Car-Only Cleanup (v0.10.47: bei Frisch-Install mit anschliessendem Reboot) ──
+# ── Car-Only Cleanup (v0.10.48: bei Frisch-Install mit anschliessendem Reboot) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
   if [ ! -f "$_CLEANUP_DONE_FILE" ]; then

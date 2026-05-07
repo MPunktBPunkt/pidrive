@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""station_store.py — StationStore  v0.10.47
+"""station_store.py — StationStore  v0.10.48
 Ausgelagert aus menu_model.py."""
 
 import os

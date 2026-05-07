@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.47"""
+"""dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.48"""
 
 from modules.dab_helpers import (
     _dls_thread, _dls_stop_event, ERR_FILE, _err_file_for_session,
@@ -33,9 +33,13 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
     """
     last_pos = 0
     last_dls = ""
+    dls_lines_seen = 0      # Zähler für empfangene DLS-Zeilen
+    dls_stop_reason = "running"
     _write_play_debug({
         "dls_thread_started": True,
         "dls_session_id": session_id,
+        "dls_lines_seen": 0,
+        "dls_stop_reason": "running",
         "dls_station": station_name,
     })
 
@@ -53,6 +57,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
     while not _dls_stop_event.is_set():
         if _get_session() != session_id:
             log.info(f"DAB DLS poller: stop (session changed) old={session_id} new={_get_session()}")
+            dls_stop_reason = "session_changed"
             break
 
         # Nur session-basiert stoppen — radio_playing flackert bei instabilem Empfang
@@ -60,6 +65,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
         if S.get("radio_type") not in ("DAB", "") and S.get("radio_type") is not None:
             # Andere Quelle aktiv (FM/Web/Spotify) → stoppen
             log.info(f"DAB DLS poller: stop (andere Quelle aktiv: {S.get('radio_type')!r})")
+            dls_stop_reason = "other_source_active"
             break
 
         try:
@@ -87,6 +93,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
                         raw = parsed_dls["raw"]
                         if raw != last_dls:
                             S["dls_text"] = raw          # direkt für WebUI/ipc
+                            dls_lines_seen += 1
                             S["dls"] = raw
                             S["dls_raw"] = raw
                             S["radio_text"] = raw
@@ -122,7 +129,12 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
         "dls_thread_stopped": True,
         "dls_thread_stop_ts": time.time(),
     })
-    log.info(f"DAB DLS poller: end session={session_id}")
+    _write_play_debug({
+        "dls_thread_stopped": True,
+        "dls_lines_seen": dls_lines_seen,
+        "dls_stop_reason": dls_stop_reason,
+    })
+    log.info(f"DAB DLS poller: end session={session_id} lines_seen={dls_lines_seen} reason={dls_stop_reason}")
 
 
 def _start_dls_thread(session_id: str, station_name: str, S: dict):

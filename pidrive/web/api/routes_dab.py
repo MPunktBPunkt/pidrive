@@ -145,7 +145,19 @@ def api_dab_scan_last():
 
 @dab_bp.route("/api/dab/status")
 def api_dab_status():
-    data = get_dab_status_debug()
+    data = get_dab_status_debug() or {}
+    # S-Felder (radio_playing, attempting, last_error) aus Status-JSON ergänzen
+    try:
+        import json as _json
+        _st = _json.loads(open("/tmp/pidrive_status.json").read())
+        data["radio"]           = _st.get("radio", False)
+        data["dab_attempting"]  = _st.get("dab_attempting", False)
+        data["dab_last_error"]  = _st.get("dab_last_error", "")
+        data["dab_sync_ok"]     = _st.get("dab_sync_ok", False)
+        data["dab_audio_ready"] = _st.get("dab_audio_ready", False)
+        data["dab_pcm_seen"]    = _st.get("dab_pcm_seen", False)
+    except Exception:
+        pass
     return jsonify({
         "ok": True,
         "data": data if data else None,
