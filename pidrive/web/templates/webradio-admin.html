@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — Webradio Verwaltung{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-title">📶 Webradio-Sender</div>
+  <div id="stationList" style="font-size:13px">Lade…</div>
+</div>
+<div class="card">
+  <div class="card-title">➕ Sender hinzufügen</div>
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:400px">
+    <input id="addName" placeholder="Name" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:7px">
+    <input id="addUrl" placeholder="Stream-URL" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:7px">
+    <button class="btn primary" onclick="addStation()">Hinzufügen</button>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function loadStations() {
+  try{const r=await fetch('/api/webradio/stations');const j=await r.json();
+    const stations=j.stations||j||[];
+    const el=document.getElementById('stationList');
+    if(!stations.length){el.innerHTML='<span style="color:var(--muted)">Keine Sender</span>';return;}
+    el.innerHTML=stations.map(s=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+      <span style="flex:1"><b>${s.name}</b><br><span style="color:var(--muted);font-size:11px">${(s.url||'').substring(0,50)}</span></span>
+      <button class="btn" onclick="sendCmd('play_web:${s.name}')">▶ Play</button>
+      <button class="btn" onclick="sendCmd('webradio_toggle:${s.id||s.name}')">Toggle</button>
+    </div>`).join('');}catch(e){}
+}
+async function addStation() {
+  const name=document.getElementById('addName').value;
+  const url=document.getElementById('addUrl').value;
+  if(!name||!url){showToast('Name und URL nötig');return;}
+  try{await fetch('/api/webradio/add',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name,url})});showToast('Sender hinzugefügt');loadStations();}catch(e){}
+}
+loadStations();
+</script>{% endblock %}

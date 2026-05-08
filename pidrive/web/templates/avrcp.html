@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — AVRCP Debug{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-title">🚗 AVRCP Status (BMW iDrive)</div>
+  <div id="avrcpBlock" style="font-size:13px">Lade…</div>
+  <button class="btn" onclick="loadAvrcp()" style="margin-top:8px">Aktualisieren</button>
+</div>
+<div class="card">
+  <div class="card-title">📋 AVRCP Log</div>
+  <pre id="avrcpLog" style="background:#050d1a;padding:10px;font-size:11px;max-height:300px;overflow-y:auto;white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
+  <button class="btn" onclick="loadAvrcpLog()" style="margin-top:8px">Log laden</button>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function loadAvrcp() {
+  try{const r=await fetch('/api/avrcp');const j=await r.json();
+    document.getElementById('avrcpBlock').innerHTML='<pre style="font-size:11px">'+JSON.stringify(j,null,2)+'</pre>';}catch(e){}
+}
+async function loadAvrcpLog() {
+  try{const r=await fetch('/api/logs?target=avrcp');const j=await r.json();
+    document.getElementById('avrcpLog').textContent=(j.lines||j.log||[]).join('\n');}catch(e){}
+}
+loadAvrcp();
+</script>{% endblock %}

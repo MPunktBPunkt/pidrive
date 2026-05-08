@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}PiDrive{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+/* ── Basis-Layout ─────────────────────────────────────────────────────── */
+.app { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+/* ── Topbar ───────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 10px 14px; margin-bottom: 0;
+}
+.brand { font-size: 22px; font-weight: bold; color: #8ce7ff; }
+
+/* ── Schnellstatus ─────────────────────────────────────────────────────── */
+.quick-status {
+  background: #0a1a30; border: 1px solid var(--line-soft);
+  border-top: none; padding: 6px 14px; font-size: 12px;
+  font-family: monospace; color: var(--muted);
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 12px;
+}
+.qs-item { display: flex; gap: 4px; }
+.qs-label { color: #4ea3ff; }
+.qs-val   { color: var(--text); }
+
+/* ── Navigation ────────────────────────────────────────────────────────── */
+.main-nav {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.main-nav a {
+  display: inline-block; padding: 7px 14px;
+  background: var(--panel); border: 1px solid var(--line-soft);
+  color: var(--muted); text-decoration: none; font-size: 14px;
+  border-radius: 4px; transition: all 0.15s;
+}
+.main-nav a:hover  { background: var(--panel2); color: var(--text); }
+.main-nav a.active { background: var(--panel2); color: var(--active2);
+                     border-color: var(--active); }
+.main-nav a.admin-link { font-size: 12px; color: #4a6a8a; }
+
+/* ── Karten ─────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--panel); border: 1px solid var(--line-soft);
+  padding: 14px; margin-bottom: 12px;
+}
+.card-title {
+  font-size: 13px; font-weight: bold; color: var(--active2);
+  margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* ── Aktionskacheln ─────────────────────────────────────────────────────── */
+.nav-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px; margin-bottom: 12px;
+}
+.nav-card {
+  background: var(--panel); border: 1px solid var(--line-soft);
+  padding: 16px 12px; text-align: center; text-decoration: none;
+  color: var(--text); transition: all 0.15s; cursor: pointer;
+}
+.nav-card:hover { background: var(--panel2); border-color: var(--active); }
+.nav-card .nc-icon { font-size: 26px; margin-bottom: 6px; display: block; }
+.nav-card .nc-label { font-size: 13px; color: var(--muted); }
+.nav-card .nc-sub   { font-size: 11px; color: #4a6a8a; margin-top: 3px; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  padding: 7px 16px; border: 1px solid var(--line);
+  background: var(--panel2); color: var(--text);
+  cursor: pointer; font-size: 13px; transition: all 0.1s;
+}
+.btn:hover  { background: #1e3d6e; border-color: var(--active); }
+.btn.primary { background: var(--active); color: #fff; border-color: var(--active); }
+.btn.danger  { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Toast ─────────────────────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--panel2); border: 1px solid var(--active);
+  color: var(--text); padding: 10px 18px; font-size: 13px;
+  z-index: 999; display: none;
+}
+#toast.show { display: block; }
+
+/* ── Page-Content ─────────────────────────────────────────────────────── */
+.page-content { padding-bottom: 24px; }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="brand">🚗 PiDrive</span>
+    <div class="flags">
+      <span id="bTopWifi" class="flag off">WiFi</span>
+      <span id="bTopBt"   class="flag off">BT</span>
+      <span id="bTopSpot" class="flag off">Spot</span>
+    </div>
+    <div id="topDebug" style="font-size:11px;color:var(--muted);font-family:monospace"></div>
+  </div>
+
+  <!-- Schnellstatus -->
+  <div class="quick-status" id="quickStatus">
+    <div class="qs-item"><span class="qs-label">Quelle:</span><span class="qs-val" id="qsSource">–</span></div>
+    <div class="qs-item"><span class="qs-label">Titel:</span><span class="qs-val" id="qsTitle">–</span></div>
+    <div class="qs-item"><span class="qs-label">Vol:</span><span class="qs-val" id="qsVol">–</span></div>
+    <div class="qs-item"><span class="qs-label">Audio:</span><span class="qs-val" id="qsAudio">–</span></div>
+    <div class="qs-item"><span class="qs-label">BT:</span><span class="qs-val" id="qsBt">–</span></div>
+    <div class="qs-item" id="dabStatusChip" style="display:none">
+      <span class="qs-label">DAB:</span><span class="qs-val" id="qsDabState">–</span>
+    </div>
+    <span id="metaStatusBar" style="color:var(--yellow);display:none"></span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="main-nav">
+    <a href="/" id="navHome">🏠 Alltag</a>
+    <a href="/bluetooth" id="navBt">🔵 Bluetooth</a>
+    <a href="/audio" id="navAudio">🔊 Audio</a>
+    <a href="/rf-tools" id="navRf">📡 RF/DAB</a>
+    <a href="/diagnostics" id="navDiag" class="admin-link">🪲 Diagnose</a>
+    <a href="/avrcp" id="navAvrcp" class="admin-link">🚗 AVRCP</a>
+    <a href="/webradio-admin" id="navWrAdmin" class="admin-link">📶 Webradio</a>
+  </nav>
+
+  <!-- Seiteninhalt -->
+  <div class="page-content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Basis-JS: Core-Polling + Schnellstatus + Toast -->
+<script>
+// ── Hilfsfunktionen ──────────────────────────────────────────────────────
+const el = (id) => document.getElementById(id);
+function setText(id, v) { const e = el(id); if (e) e.textContent = v; }
+
+function showToast(msg, ms=2000) {
+  const t = el('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'show';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.className = ''; }, ms);
+}
+
+async function sendCmd(cmd) {
+  try {
+    const r = await fetch('/api/cmd', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({cmd})
+    });
+    const j = await r.json();
+    if (!j.ok) showToast('Fehler: ' + (j.error||cmd));
+    return j;
+  } catch(e) { showToast('Verbindung unterbrochen'); }
+}
+
+// ── Core-Polling (Topbar + Schnellstatus) ────────────────────────────────
+async function refreshBase() {
+  try {
+    const r = await fetch('/api/core'); const j = await r.json();
+    const vm = j.vm || {}; const st = vm.status || {};
+    const ss = vm.source_state || {};
+
+    // Topbar Flags
+    const btEl = el('bTopBt'), wlEl = el('bTopWifi'), spEl = el('bTopSpot');
+    if (btEl) {
+      btEl.className = 'flag ' + (st.bt ? (st.bt_device ? 'bt-connected' : 'bt-on') : 'off');
+    }
+    if (wlEl) wlEl.className = 'flag ' + (st.wifi ? 'on' : 'off');
+    if (spEl) spEl.className = 'flag ' + (st.spotify ? 'on' : 'off');
+
+    // Debug-Bar oben rechts
+    const dbEl = el('topDebug');
+    if (dbEl) {
+      const rev = vm.menu_rev || '–';
+      const path = (vm.menu_path||[]).join(' › ') || '–';
+      const svc_age = j.age ? j.age.toFixed(1)+'s' : '–';
+      dbEl.textContent = `v${st.version||'–'} | Rev=${rev} | ${path} | ${svc_age}`;
+    }
+
+    // Schnellstatus
+    const src  = ss.source_current || '–';
+    const title = st.track || st.radio_name || '–';
+    setText('qsSource', src);
+    setText('qsTitle',  title.substring(0,35));
+    setText('qsVol',    (st.volume || '–') + '%');
+    setText('qsAudio',  st.audio_effective || '–');
+    const btInfo = st.bt ? (st.bt_device||'verbunden') : 'aus';
+    setText('qsBt', btInfo);
+
+    // DAB-Chip
+    const dabState = st.dab_playback_state || '';
+    const dabEl = el('dabStatusChip');
+    if (dabEl) {
+      const showDab = ['no_lock','partial_sync','starting','locked','pcm_only'].includes(dabState);
+      dabEl.style.display = showDab ? '' : 'none';
+      const stateMap = {
+        'no_lock': '⚠ kein Lock', 'partial_sync': '📡 Partiell',
+        'starting': '⏳ suche…', 'locked': '🔒 Lock', 'pcm_only': '🔊 PCM'
+      };
+      setText('qsDabState', stateMap[dabState] || dabState);
+    }
+
+    // metadata_unavailable
+    const msb = el('metaStatusBar');
+    if (msb) {
+      msb.textContent = st.metadata_unavailable ? '(Metadaten nicht verfügbar)' : '';
+      msb.style.display = st.metadata_unavailable ? '' : 'none';
+    }
+
+    // Nav: active Seite hervorheben
+    const path_here = window.location.pathname;
+    document.querySelectorAll('.main-nav a').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === path_here);
+    });
+
+    // Seiten-spezifischer Hook
+    if (typeof onBaseRefresh === 'function') onBaseRefresh(j, st, ss);
+  } catch(e) { /* Core offline — kein Crash */ }
+}
+
+// Core-Poll alle 1.2s
+setInterval(refreshBase, 1200);
+refreshBase();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

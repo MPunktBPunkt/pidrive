@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — Bluetooth{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-title">🔵 Bluetooth-Status</div>
+  <div id="btStatusBlock" style="font-size:13px;color:var(--muted)">Lade…</div>
+  <div class="btn-row" style="margin-top:10px">
+    <button class="btn primary" onclick="sendCmd('bt_scan')">Geräte scannen</button>
+    <button class="btn" onclick="sendCmd('bt_reconnect_last')">Reconnect</button>
+    <button class="btn" onclick="sendCmd('bt_on')">BT an</button>
+    <button class="btn" onclick="sendCmd('bt_off')">BT aus</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">📋 Bekannte Geräte</div>
+  <div id="btKnownList" style="font-size:13px">Lade…</div>
+</div>
+<div class="card">
+  <div class="card-title">🔍 Gefundene Geräte (Scan)</div>
+  <div id="btDiscList" style="font-size:13px">–</div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn" onclick="loadBtDisc()">Aktualisieren</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">🔐 Pairing Keys</div>
+  <div class="btn-row">
+    <button class="btn" onclick="sendCmd('bt_backup')">Backup</button>
+    <button class="btn" onclick="sendCmd('bt_restore')">Restore</button>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function loadBtKnown() {
+  try {
+    const r=await fetch('/api/bt/known'); const j=await r.json();
+    const devs=j.devices||j||[];
+    const el=document.getElementById('btKnownList');
+    if(!el) return;
+    if(!devs.length){el.innerHTML='<span style="color:var(--muted)">Keine bekannten Geräte</span>';return;}
+    el.innerHTML=devs.map(d=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+      <span style="color:${d.connected?'var(--green)':'var(--muted)'}">●</span>
+      <span style="flex:1"><b>${d.name||d.mac}</b><br><span style="color:var(--muted);font-size:11px">${d.mac}</span></span>
+      <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')">Verbinden</button>
+    </div>`).join('');
+  } catch(e){console.log(e);}
+}
+async function loadBtDisc() {
+  try {
+    const r=await fetch('/api/bt/known'); const j=await r.json();
+    const devs=j.devices||[];
+    const el=document.getElementById('btDiscList');
+    if(!el) return;
+    if(!devs.length){el.innerHTML='<span style="color:var(--muted)">Keine Geräte gefunden — Scan starten</span>';return;}
+    el.innerHTML=devs.map(d=>`<div style="padding:5px 0;border-bottom:1px solid var(--line-soft)">
+      <b>${d.name||d.mac}</b> <span style="color:var(--muted);font-size:11px">${d.mac}</span>
+      ${d.ble_random_mac?'<span style="color:var(--yellow);font-size:10px"> BLE</span>':''}
+      <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')" style="float:right">Verbinden</button>
+    </div>`).join('');
+  } catch(e){}
+}
+async function refreshBtStatus(j, st, ss) {
+  const el=document.getElementById('btStatusBlock');
+  if(!el) return;
+  el.innerHTML=`<b>Status:</b> ${st.bt?'Verbunden':'Getrennt'}${st.bt_device?' — '+st.bt_device:''}<br>
+    <b>Adapter:</b> ${st.bt_on?'AN':'AUS'} | <b>Quelle:</b> ${ss.source_current||'–'}`;
+}
+function onBaseRefresh(j, st, ss) { refreshBtStatus(j,st,ss); }
+loadBtKnown();
+loadBtDisc();
+</script>{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — Diagnose{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-title">📋 Logs</div>
+  <div class="btn-row" style="margin-bottom:8px">
+    <button class="btn" onclick="loadLog('core')">Core Log</button>
+    <button class="btn" onclick="loadLog('display')">Display Log</button>
+    <button class="btn" onclick="loadLog('app')">App Log</button>
+    <button class="btn" onclick="loadLog('avrcp')">AVRCP Log</button>
+  </div>
+  <pre id="logPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:400px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">Log wird geladen…</pre>
+</div>
+<div class="card">
+  <div class="card-title">🔍 Grep (Fehler)</div>
+  <div class="btn-row" style="margin-bottom:8px">
+    <button class="btn" onclick="loadGrep()">Fehler suchen</button>
+  </div>
+  <pre id="grepPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:200px;overflow-y:auto;color:var(--red);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
+</div>
+<div class="card">
+  <div class="card-title">💾 Systemressourcen</div>
+  <div id="sysRes" style="font-size:13px">Lade…</div>
+  <button class="btn" onclick="loadSysRes()" style="margin-top:8px">Aktualisieren</button>
+</div>
+<div class="card">
+  <div class="card-title">🔧 Diagnose</div>
+  <button class="btn primary" onclick="runDiag()">Diagnose starten</button>
+  <pre id="diagPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:400px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft);margin-top:8px;display:none">–</pre>
+</div>
+<div class="card">
+  <div class="card-title">📊 Source State</div>
+  <pre id="sourceStatePre" style="background:#050d1a;padding:10px;font-size:11px;max-height:200px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
+  <button class="btn" onclick="loadSourceState()" style="margin-top:8px">Aktualisieren</button>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function loadLog(target) {
+  const pre=document.getElementById('logPre');
+  if(!pre) return;
+  pre.textContent='Lade…';
+  try {
+    const r=await fetch('/api/logs?target='+target); const j=await r.json();
+    pre.textContent=(j.lines||j.log||[]).join('\n') || j.text || JSON.stringify(j,null,2);
+  } catch(e){pre.textContent='Fehler: '+e;}
+}
+async function loadGrep() {
+  const pre=document.getElementById('grepPre');
+  if(!pre) return;
+  try{const r=await fetch('/api/grep');const j=await r.json();pre.textContent=j.output||j.text||JSON.stringify(j);}catch(e){pre.textContent='Fehler: '+e;}
+}
+async function loadSysRes() {
+  try{const r=await fetch('/api/system/resources');const j=await r.json();
+    const d=j.data||j;
+    document.getElementById('sysRes').innerHTML=`
+      <b>RAM:</b> ${d.ram_used_mb||'–'} MB / ${d.ram_total_mb||'–'} MB<br>
+      <b>Speicher:</b> ${d.disk_used||'–'} / ${d.disk_total||'–'} (${d.disk_pct||'–'})<br>
+      <b>Uptime:</b> ${d.uptime||'–'}<br>
+      <b>Throttled:</b> <span style="color:${d.throttled&&d.throttled!='0x0'?'var(--yellow)':'var(--green)'}">${d.throttled||'OK'}</span>`;
+  }catch(e){}
+}
+async function runDiag() {
+  const pre=document.getElementById('diagPre');
+  if(!pre) return;
+  pre.style.display='block'; pre.textContent='Läuft…';
+  try{const r=await fetch('/api/diagnose');const j=await r.json();
+    pre.textContent=j.output||JSON.stringify(j,null,2);}catch(e){pre.textContent='Fehler: '+e;}
+}
+async function loadSourceState() {
+  try{const r=await fetch('/api/state');const j=await r.json();
+    document.getElementById('sourceStatePre').textContent=JSON.stringify(j,null,2);}catch(e){}
+}
+loadLog('core'); loadSysRes(); loadSourceState();
+</script>{% endblock %}

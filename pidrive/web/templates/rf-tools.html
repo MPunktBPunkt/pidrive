@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — RF / DAB Tools{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-title">📻 DAB+ Status</div>
+  <div id="dabStatusBlock" style="font-size:13px">Lade…</div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn" onclick="loadDabStatus()">Aktualisieren</button>
+    <button class="btn" onclick="sendCmd('dab_scan')">DAB Scan</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">📡 RTL-SDR Diagnose</div>
+  <div id="rtlsdrBlock" style="font-size:13px">Lade…</div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn" onclick="loadRtlsdr()">Status lesen</button>
+    <button class="btn" onclick="resetRtlsdr()">Reset</button>
+    <button class="btn" onclick="refreshRtlsdr()">Refresh</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">🔭 Spektrum-Snapshot</div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+    <input id="specCenter" placeholder="Mitte MHz" style="width:90px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="446.1">
+    <input id="specPpm" placeholder="PPM" style="width:60px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="49">
+    <input id="specGain" placeholder="Gain" style="width:60px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="-1">
+    <button class="btn primary" onclick="captureSpectrum()">📡 Snapshot</button>
+    <button class="btn" onclick="loadSpectrumLast()">Letztes</button>
+  </div>
+  <pre id="specPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:250px;overflow:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
+</div>
+<div class="card">
+  <div class="card-title">🎛 PPM Kalibrierung</div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input id="ppmVal" type="number" value="{{ vm['settings'].get('ppm',49) }}" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px">
+    <button class="btn" onclick="sendCmd('ppm:'+document.getElementById('ppmVal').value)">PPM setzen</button>
+    <button class="btn" onclick="sendCmd('/api/ppm_calibrate')">Auto-Kalibrieren</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">📊 DAB Scan Diagnose</div>
+  <div id="dabScanBlock" style="font-size:13px">–</div>
+  <button class="btn" onclick="loadDabScan()" style="margin-top:8px">Laden</button>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function loadDabStatus() {
+  try{const r=await fetch('/api/dab/status');const j=await r.json();
+    const d=j.data||{};
+    document.getElementById('dabStatusBlock').innerHTML=`
+      <b>Sender:</b> ${d.name||'–'} | <b>Kanal:</b> ${d.channel||'–'}<br>
+      <b>State:</b> ${d.dab_state||d.state||'–'} | <b>PCM:</b> ${d.dab_pcm_seen?'✓':'✗'} | <b>Sync:</b> ${d.sync_ok?'✓':'✗'}<br>
+      ${d.dab_attempting?'<span style="color:var(--yellow)">⏳ welle-cli läuft, kein stabiler Lock</span>':''}<br>
+      <b>DLS:</b> ${d.last_dls_raw||d.dls_text||'–'} | Lines: ${d.dls_lines_seen??'–'}<br>
+      <b>Fehler:</b> <span style="color:var(--red)">${d.last_error_line||d.dab_last_error||'–'}</span>`;
+  }catch(e){document.getElementById('dabStatusBlock').textContent='Fehler: '+e;}
+}
+async function loadRtlsdr() {
+  try{const r=await fetch('/api/rtlsdr');const j=await r.json();
+    document.getElementById('rtlsdrBlock').innerHTML=`<b>OK:</b> ${j.ok} | <b>USB ID:</b> ${j.usb_id||'–'}<br><pre style="font-size:10px">${JSON.stringify(j.data||{},null,2)}</pre>`;}catch(e){}
+}
+async function resetRtlsdr(){await sendCmd('rtlsdr_reset');showToast('Reset gesendet');}
+async function refreshRtlsdr(){try{await fetch('/api/rtlsdr/refresh');loadRtlsdr();}catch(e){}}
+async function captureSpectrum() {
+  const c=document.getElementById('specCenter').value;
+  const p=document.getElementById('specPpm').value;
+  const g=document.getElementById('specGain').value;
+  document.getElementById('specPre').textContent='Erfasse…';
+  try{await fetch(`/api/spectrum/capture?center=${c}&ppm=${p}&gain=${g}`,{method:'POST'});
+    setTimeout(loadSpectrumLast, 8000);}catch(e){}
+}
+async function loadSpectrumLast() {
+  try{const r=await fetch('/api/spectrum/last');const j=await r.json();
+    document.getElementById('specPre').textContent=JSON.stringify(j,null,2);}catch(e){}
+}
+async function loadDabScan() {
+  try{const r=await fetch('/api/dab/scan/last');const j=await r.json();
+    document.getElementById('dabScanBlock').innerHTML='<pre style="font-size:11px;white-space:pre-wrap">'+JSON.stringify(j,null,2)+'</pre>';}catch(e){}
+}
+loadDabStatus(); loadRtlsdr();
+</script>{% endblock %}

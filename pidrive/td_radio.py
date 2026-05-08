@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.49"""
+"""td_radio.py — DAB/FM Suchlauf, Webradio, Sendersteuerung  v0.10.50"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -208,6 +208,87 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception: pass
 
     # ── FM Next/Prev ────────────────────────────────────────────────────────
+
+    # ── pidrivectl High-Level Play-Trigger ─────────────────────────────────
+    elif cmd.startswith("play_dab:"):
+        # Format: play_dab:<name_or_service_id>
+        _query = cmd.split(":", 1)[1].strip()
+        try:
+            _sid = _query if _query.startswith("0x") else ""
+            dab.play_by_name(_query, S, settings=settings, service_id=_sid)
+            source_state.commit_source("dab")
+            log.info(f"CLI play_dab: {_query!r}")
+        except Exception as e:
+            log.error(f"CLI play_dab Fehler: {e}")
+
+    elif cmd.startswith("play_fm:"):
+        # Format: play_fm:<name_or_freq>
+        _query = cmd.split(":", 1)[1].strip()
+        try:
+            from station_store import StationStore as _SS
+            _store = _SS()
+            _match = next((s for s in _store.fm if
+                           _query.lower() in (s.get("name","")).lower()
+                           or _query == str(s.get("freq","")))
+                          , None)
+            if _match:
+                fm.play_station({"name": _match["name"], "freq": _match["freq"]}, S, settings)
+                source_state.commit_source("fm")
+                log.info(f"CLI play_fm: {_match['name']}")
+            else:
+                log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
+        except Exception as e:
+            log.error(f"CLI play_fm Fehler: {e}")
+
+    elif cmd.startswith("play_web:"):
+        # Format: play_web:<name_or_id>
+        _query = cmd.split(":", 1)[1].strip()
+        try:
+            _stations = webradio.load_stations()
+            _match = next((s for s in _stations if
+                           _query.lower() in (s.get("name","")).lower()
+                           or _query == str(s.get("id","")))
+                          , None)
+            if _match:
+                webradio.play_station(_match, S, settings)
+                source_state.commit_source("webradio")
+                log.info(f"CLI play_web: {_match['name']}")
+            else:
+                log.warn(f"CLI play_web: Sender nicht gefunden: {_query!r}")
+        except Exception as e:
+            log.error(f"CLI play_web Fehler: {e}")
+
+    elif cmd.startswith("favorites_play:"):
+        # Format: favorites_play:<index_or_name>
+        _query = cmd.split(":", 1)[1].strip()
+        try:
+            from modules import favorites as _fav
+            _favs = _fav.load_favorites()
+            if _query.isdigit():
+                _item = _favs[int(_query) - 1] if 0 < int(_query) <= len(_favs) else None
+            else:
+                _item = next((f for f in _favs if _query.lower() in f.get("name","").lower()), None)
+            if _item:
+                _src = _item.get("source","")
+                if _src == "dab":
+                    dab.play_by_name(_item["name"], S, settings=settings)
+                    source_state.commit_source("dab")
+                elif _src == "fm":
+                    fm.play_station({"name": _item["name"], "freq": _item.get("freq","")}, S, settings)
+                    source_state.commit_source("fm")
+                elif _src in ("webradio","web"):
+                    _stations = webradio.load_stations()
+                    _st = next((s for s in _stations if s.get("name") == _item["name"]), None)
+                    if _st:
+                        webradio.play_station(_st, S, settings)
+                        source_state.commit_source("webradio")
+                log.info(f"CLI favorites_play: {_item['name']}")
+            else:
+                log.warn(f"CLI favorites_play: Favorit nicht gefunden: {_query!r}")
+        except Exception as e:
+            log.error(f"CLI favorites_play Fehler: {e}")
+
+
     elif cmd == "fm_next":
         bg(lambda: fm.play_next(S, store.fm))
     elif cmd == "fm_prev":
