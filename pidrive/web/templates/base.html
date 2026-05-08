@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}PiDrive{% endblock %}</title>
+<!-- Modulare CSS-Dateien (v0.10.52+) -->
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/cards.css">
+<!-- Fallback: monolithisches style.css für nicht migrierte Stile -->
 <link rel="stylesheet" href="/static/style.css">
 <style>
 /* ── Basis-Layout ─────────────────────────────────────────────────────── */
@@ -94,6 +99,7 @@
 .page-content { padding-bottom: 24px; }
 </style>
 {% block extra_head %}{% endblock %}
+<script src="/static/js/api-core.js"></script>
 </head>
 <body>
 <div class="app">

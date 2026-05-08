@@ -14,7 +14,8 @@
   </div>
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+{% block extra_js %}
+<script src="/static/js/page-webradio-admin.js"></script><script>
 async function loadStations() {
   try{const r=await fetch('/api/webradio/stations');const j=await r.json();
     const stations=j.stations||j||[];

@@ -30,7 +30,8 @@
   </div>
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+{% block extra_js %}
+<script src="/static/js/page-bluetooth.js"></script><script>
 async function loadBtKnown() {
   try {
     const r=await fetch('/api/bt/known'); const j=await r.json();

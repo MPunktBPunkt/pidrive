@@ -25,7 +25,8 @@
   <button class="btn" onclick="loadAudioDebug()" style="margin-top:8px">Aktualisieren</button>
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+{% block extra_js %}
+<script src="/static/js/page-audio.js"></script><script>
 function onBaseRefresh(j, st) {
   const e=(id)=>document.getElementById(id);
   if(e('volBlock')) e('volBlock').textContent=(st.volume??'–')+'%';

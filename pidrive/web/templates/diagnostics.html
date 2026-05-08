@@ -34,7 +34,8 @@
   <button class="btn" onclick="loadSourceState()" style="margin-top:8px">Aktualisieren</button>
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+{% block extra_js %}
+<script src="/static/js/page-diagnostics.js"></script><script>
 async function loadLog(target) {
   const pre=document.getElementById('logPre');
   if(!pre) return;

@@ -43,7 +43,8 @@
   <button class="btn" onclick="loadDabScan()" style="margin-top:8px">Laden</button>
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+{% block extra_js %}
+<script src="/static/js/page-rf-tools.js"></script><script>
 async function loadDabStatus() {
   try{const r=await fetch('/api/dab/status');const j=await r.json();
     const d=j.data||{};

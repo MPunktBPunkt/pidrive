@@ -12,7 +12,8 @@
   <button class="btn" onclick="loadAvrcpLog()" style="margin-top:8px">Log laden</button>
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+{% block extra_js %}
+<script src="/static/js/page-avrcp.js"></script><script>
 async function loadAvrcp() {
   try{const r=await fetch('/api/avrcp');const j=await r.json();
     document.getElementById('avrcpBlock').innerHTML='<pre style="font-size:11px">'+JSON.stringify(j,null,2)+'</pre>';}catch(e){}
