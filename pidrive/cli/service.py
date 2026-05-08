@@ -5,7 +5,8 @@ import os
 import subprocess
 import sys
 
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+# cli/service.py liegt unter pidrive/cli/ — Config ist unter pidrive/config/
+BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pidrive/
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
 
 from cli.adapters import (
