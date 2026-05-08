@@ -14,7 +14,7 @@ BASE_DIR_API = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR_API)
 
 from flask import Blueprint, jsonify, request
-from webui_shared import *  # noqa: F401,F403
+from web.shared import *  # noqa: F401,F403
 
 audio_bp = Blueprint("audio_bp", __name__)
 

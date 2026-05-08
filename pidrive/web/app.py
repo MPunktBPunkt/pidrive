@@ -22,9 +22,9 @@ STATIC_DIR = WEB_DIR / "static"
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 
 
-# ── v0.10.51: Shared helpers aus webui_shared.py ──────────────────────────────
-from webui_shared import *  # noqa: F401,F403
-from webui_shared import (
+# ── v0.10.52: Shared helpers aus webui_shared.py ──────────────────────────────
+from web.shared import *  # noqa: F401,F403
+from web.shared import (
     CMD_FILE, STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE,
     AVRCP_FILE, LIST_FILE, LOG_FILE, READY_FILE, KNOWN_BT_FILE,
     BT_AGENT_FILE, DAB_DEBUG_FILE, ALLOWED_COMMANDS, PA_ENV,
@@ -32,7 +32,7 @@ from webui_shared import (
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
 
-# ── v0.10.51: Blueprints registrieren ─────────────────────────────────────────
+# ── v0.10.52: Blueprints registrieren ─────────────────────────────────────────
 try:
     from web.api.routes_dab      import dab_bp;      app.register_blueprint(dab_bp)
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
@@ -75,7 +75,7 @@ def _sanitize_floats(obj, _depth=0):
 
 
 
-# ── Unterseiten (v0.10.51) ──────────────────────────────────────────────
+# ── Unterseiten (v0.10.52) ──────────────────────────────────────────────
 @app.route("/bluetooth")
 def page_bluetooth():
     vm = build_view_model(); vm = _sanitize_floats(vm)
@@ -153,7 +153,7 @@ def api_ping():
 @app.route("/api/core")
 def api_core():
     """
-    v0.10.51: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
+    v0.10.52: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
     Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
     Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
     """
@@ -461,7 +461,7 @@ def api_ppm_calibrate():
 @app.route("/api/scanner/settings", methods=["GET", "POST"])
 def api_scanner_settings():
     """
-    v0.10.51: Scanner-Einstellungen lesen/schreiben.
+    v0.10.52: Scanner-Einstellungen lesen/schreiben.
     GET  → aktuelle Werte (inkl. scanner_use_spectrum)
     POST → Werte speichern, z.B. {"scanner_use_spectrum": true}
     """
@@ -513,7 +513,7 @@ def api_spectrum_last():
 def api_spectrum_capture():
     """
     Spectrum Capture. Unterstützt:
-    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.51)
+    - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.52)
     - mode=fm_sweep       → Legacy FM-Band-Sweep
     - mode=snapshot       → Einzelmessung bei center_mhz
     """
@@ -534,7 +534,7 @@ def api_spectrum_capture():
         gain = int(args.get("gain", s.get("scanner_gain", -1)))
         debug = bool(args.get("debug", s.get("scanner_spectrum_debug", False)))
 
-        # v0.10.51: Peak-Identifizierung für PMR446 / Freenet
+        # v0.10.52: Peak-Identifizierung für PMR446 / Freenet
         if band in ("pmr446", "freenet"):
             watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
             profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
@@ -652,7 +652,7 @@ def _save_stations_file(data: dict):
 @app.route("/api/diag/system")
 def api_diag_system():
     """Diagnose-Daten: lsusb, Prozesse mit User/PID/Rechten, Audio-Pfad, CPU/RAM."""
-    from webui_shared import safe_run
+    from web.shared import safe_run
     import os, json
     
     out = {}
@@ -718,7 +718,7 @@ def api_diag_system():
 def api_dab_errfile():
     """DAB welle-cli Stderr-Datei lesen (Session-spezifisch oder global)."""
     import os, glob
-    from webui_shared import read_json
+    from web.shared import read_json
     
     session_id = request.args.get("session", "")
     lines_n = int(request.args.get("n", "80"))
