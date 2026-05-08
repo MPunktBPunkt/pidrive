@@ -1,7 +1,12 @@
 """web/shared/system.py — Shell-Calls, Version, IP, safe_run"""
 import json
 import os
+import socket
 import subprocess
+
+_ip_cache: tuple = ("", 0.0)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def get_ip() -> str:
