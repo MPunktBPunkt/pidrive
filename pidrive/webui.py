@@ -1,3 +1,8 @@
+"""
+DEPRECATED SHIM — Rückwärtskompatibilität  v0.10.52
+Echte Implementierung: pidrive/web/app.py
+Nur für alte Imports. Geplante Entfernung: v0.11.x
+"""
 """webui.py — Shim für Rückwärtskompatibilität.
 Echte Implementierung in web/app.py
 Systemd-Service und alte Imports weiterhin gültig.

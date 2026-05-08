@@ -1,3 +1,8 @@
+"""
+DEPRECATED SHIM — Rückwärtskompatibilität  v0.10.52
+Echte Implementierung: pidrive/web/shared.py
+Nur für alte Imports. Geplante Entfernung: v0.11.x
+"""
 """webui_shared.py — Shim für Rückwärtskompatibilität.
 Echte Implementierung in web/shared.py
 """
