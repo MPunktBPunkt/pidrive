@@ -35,3 +35,10 @@ const PiDriveAPI = {
     return r.json();
   }
 };
+
+// Generischer JSON-Fetch mit Error-Handling
+PiDriveAPI.fetchJson = async function(url, opts={}) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(\`HTTP \${r.status}: \${url}\`);
+  return r.json();
+};
