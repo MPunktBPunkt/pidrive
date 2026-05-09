@@ -2,6 +2,10 @@
 import json
 import os
 import subprocess
+from web.shared.constants import (
+    PA_ENV, STATUS_FILE, BASE_DIR
+)
+
 
 
 def _sink_is_hdmi(name: str) -> bool:
@@ -25,11 +29,6 @@ def _first_nonempty(*values):
 def get_volume_data() -> dict:
     try:
         import re as _re
-        import sys as _sys
-        _b = str(BASE_DIR)
-        if _b not in _sys.path:
-            _sys.path.insert(0, _b)
-
         sinks_out = (safe_run(PA_ENV + " pactl list sinks short 2>/dev/null").get("stdout", "") or "")
         sink = ""
         source_label = ""
@@ -113,9 +112,6 @@ def get_audio_debug() -> dict:
     }
 
     try:
-        _base = str(BASE_DIR)
-        if _base not in sys.path:
-            sys.path.insert(0, _base)
         from modules.audio import read_last_decision_file
         data["decision"] = read_last_decision_file()
         dec = data["decision"]
@@ -251,9 +247,6 @@ def get_audio_debug() -> dict:
 
 def get_source_state_debug():
     try:
-        _base = str(BASE_DIR)
-        if _base not in sys.path:
-            sys.path.insert(0, _base)
         from modules import source_state
         return source_state.load_snapshot_file() or source_state.snapshot()
     except Exception as e:

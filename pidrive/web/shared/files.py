@@ -2,8 +2,10 @@
 import json
 import os
 import time
+from web.shared.constants import (
+    CMD_FILE
+)
 
-from web.shared.system import CMD_FILE
 
 def read_json(path, default=None):
     if default is None:

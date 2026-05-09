@@ -3,12 +3,13 @@ import json
 import os
 import socket
 import subprocess
+from web.shared.constants import (
+    BASE_DIR
+)
 
-CMD_FILE = "/tmp/pidrive_cmd"
 
 _ip_cache: tuple = ("", 0.0)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def get_ip() -> str:
