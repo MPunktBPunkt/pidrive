@@ -4,7 +4,7 @@ Für neue Importe empfohlen: from web.shared.files import read_json etc.
 Für Rückwärtskompatibilität: from web.shared import * weiterhin unterstützt.
 """
 # Originaler Inhalt (funktionale Implementierungen) — 
-# werden schrittweise in web/shared/*.py verschoben 
+# werden schrittweise in web/shared/*.py verschoben
 
 """web/shared.py — Gemeinsame Konstanten und Hilfsfunktionen.
 Früher: pidrive/webui_shared.py
@@ -12,7 +12,7 @@ Früher: pidrive/webui_shared.py
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.53
+webui_shared.py — Shared helpers für PiDrive WebUI Blueprints  v0.10.54
 """
 
 import os
@@ -90,7 +90,7 @@ def file_age(path):
         return None
 
 
-# v0.10.53: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
+# v0.10.54: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
 _ip_cache: tuple = ("", 0.0)
 
 def get_ip() -> str:
@@ -519,7 +519,7 @@ def get_dab_status_debug():
         "ts": dbg.get("ts", st.get("ts", 0)),
         "debug_exists": os.path.exists(DAB_DEBUG_FILE),
         "debug_age": file_age(DAB_DEBUG_FILE),
-        # v0.10.53: Audio-Routing-Debug aus play_debug.json
+        # v0.10.54: Audio-Routing-Debug aus play_debug.json
         "pulse_server_in_env":    dbg.get("pulse_server_in_env"),
         "pulse_sink_in_env":      dbg.get("pulse_sink_in_env"),
         "pa_default_sink":        dbg.get("pa_default_sink_before_start", ""),
