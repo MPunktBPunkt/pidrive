@@ -1,5 +1,5 @@
 """
-DEPRECATED SHIM — Rückwärtskompatibilität  v0.10.54
+DEPRECATED SHIM — Rückwärtskompatibilität  v0.10.55
 Echte Implementierung: pidrive/web/shared.py
 Nur für alte Imports. Geplante Entfernung: v0.11.x
 """

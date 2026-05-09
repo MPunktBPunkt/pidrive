@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""td_nav.py — Navigation und Menü-Aktionen  v0.10.54"""
+"""td_nav.py — Navigation und Menü-Aktionen  v0.10.55"""
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -175,7 +175,7 @@ def _execute_node(node, menu_state, store, S, settings):
                     # True  = Lock+PCM — radio_playing=True
                     # False = no_lock  — welle-cli läuft, kein Lock, radio_playing=False
                     #   → commit trotzdem: source_current="dab" + dab_playback_state="no_lock"
-                    #   manueller Test beweist: instabiles Signal ist echtes DAB (v0.10.54)
+                    #   manueller Test beweist: instabiles Signal ist echtes DAB (v0.10.55)
                     # None  = Exception → kein Commit
                     if _ok is not None:
                         source_state.commit_source("dab")
