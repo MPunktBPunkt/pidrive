@@ -11,3 +11,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from web.app import *  # noqa: F401,F403
 from web.app import app  # noqa: F401
+
+# Entry-Point: systemd startet webui.py direkt → Flask hier starten
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=False)
