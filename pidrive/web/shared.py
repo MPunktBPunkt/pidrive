@@ -4,7 +4,7 @@ Für neue Importe empfohlen: from web.shared.files import read_json etc.
 Für Rückwärtskompatibilität: from web.shared import * weiterhin unterstützt.
 """
 # Originaler Inhalt (funktionale Implementierungen) — 
-# werden schrittweise in web/shared/*.py verschoben
+# werden schrittweise in web/shared/*.py verschoben 
 
 """web/shared.py — Gemeinsame Konstanten und Hilfsfunktionen.
 Früher: pidrive/webui_shared.py
