@@ -3,6 +3,8 @@ import json
 import os
 import time
 
+from web.shared.system import CMD_FILE
+
 def read_json(path, default=None):
     if default is None:
         default = {}
