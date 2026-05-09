@@ -8,7 +8,7 @@ Für Rückwärtskompatibilität re-exportiert web/shared.py alles aus web/shared
 """
 # Alle Symbole für "from web.shared import *" verfügbar machen:
 from web.shared.files import read_json, write_cmd, file_age  # noqa: F401
-from web.shared.system import get_ip, safe_run, get_version  # noqa: F401
+from web.shared.system import get_ip, safe_run, get_version, CMD_FILE  # noqa: F401
 from web.shared.audio import (  # noqa: F401
     get_volume_data, get_audio_debug, get_source_state_debug
 )
