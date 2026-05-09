@@ -4,6 +4,8 @@ import os
 import socket
 import subprocess
 
+CMD_FILE = "/tmp/pidrive_cmd"
+
 _ip_cache: tuple = ("", 0.0)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
