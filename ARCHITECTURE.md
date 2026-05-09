@@ -204,4 +204,4 @@ pidrivectl debug state         # Status-JSONs anzeigen
 
 ---
 
-*Zuletzt aktualisiert: v0.10.53+*
+*Zuletzt aktualisiert: v0.10.54+*

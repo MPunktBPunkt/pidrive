@@ -41,7 +41,7 @@ err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 echo -e "${BOLD}${BLUE}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.53           ║
+║        PiDrive Installer v0.10.54           ║
 ║   github.com/MPunktBPunkt/pidrive         ║
 ╚═══════════════════════════════════════════╝
 EOF
@@ -173,7 +173,7 @@ mkdir -p "$LOG_DIR"
 chown "$REAL_USER:$REAL_USER" "$LOG_DIR"
 ok "Log-Verzeichnis: $LOG_DIR"
 
-  # v0.10.53: tmpfiles.d — IPC-Dateien 0666 damit webui (pi) CMD_FILE schreiben kann
+  # v0.10.54: tmpfiles.d — IPC-Dateien 0666 damit webui (pi) CMD_FILE schreiben kann
   cat > /etc/tmpfiles.d/pidrive.conf << 'TMPEOF'
 # PiDrive IPC: world-writable damit webui (pi) CMD_FILE schreiben kann
 f /tmp/pidrive_cmd          0666 root root -
@@ -259,16 +259,21 @@ fi
 
 # ── pidrivectl CLI ──────────────────────────────────────────────────────────
 info "pidrivectl CLI installieren"
-chmod +x "$INSTALL_DIR/pidrive/cli.py"
-if [ -f /usr/local/bin/pidrivectl ]; then
-    rm /usr/local/bin/pidrivectl
-fi
-ln -sf "$INSTALL_DIR/pidrive/cli/cli.py" /usr/local/bin/pidrivectl
-echo "  ✓ pidrivectl → /usr/local/bin/pidrivectl"
-if pidrivectl --help >/dev/null 2>&1; then
-    echo "  ✓ pidrivectl aufrufbar"
+# CLI-Einstiegspunkt ausführbar machen (vor Permission-Fixer geschützt)
+chmod +x "$INSTALL_DIR/pidrive/cli/cli.py"
+# Wrapper-Script: sudo-fähig, kein PATH-Problem, kein Shebang-Problem
+cat > /usr/local/bin/pidrivectl << 'WRAPPER'
+#!/bin/bash
+exec python3 /home/pi/pidrive/pidrive/cli/cli.py "$@"
+WRAPPER
+chmod +x /usr/local/bin/pidrivectl
+# Auch in /usr/bin damit sudo es findet
+ln -sf /usr/local/bin/pidrivectl /usr/bin/pidrivectl 2>/dev/null || true
+echo "  ✓ pidrivectl → /usr/local/bin/pidrivectl + /usr/bin/pidrivectl"
+if python3 "$INSTALL_DIR/pidrive/cli/cli.py" --help >/dev/null 2>&1; then
+    echo "  ✓ pidrivectl aufrufbar (python3 OK)"
 else
-    echo "  ⚠ pidrivectl konnte nicht ausgeführt werden (python3 fehlend?)"
+    echo "  ⚠ pidrivectl Test fehlgeschlagen — CLI-Pfad prüfen"
 fi
 
 # SCHRITT 8: Systemdienste einrichten
@@ -334,7 +339,7 @@ ok "Dienste aktiviert (pidrive_core, pidrive_display, rfkill-unblock)"
 systemctl enable ssh 2>/dev/null && systemctl start ssh 2>/dev/null || true
 ok "SSH aktiviert"
 
-# v0.10.53: sudoers für PiDrive — NOPASSWD für spezifische Wartungsbefehle
+# v0.10.54: sudoers für PiDrive — NOPASSWD für spezifische Wartungsbefehle
 # Pi OS Bookworm fragt bei jedem sudo nach Passwort (kein Session-Timeout mehr)
 cat > /etc/sudoers.d/pidrive << 'SUDOEOF'
 # PiDrive: ausgewählte Befehle ohne Passwort für Benutzer pi
@@ -431,7 +436,7 @@ if ! dpkg -l raspotify 2>/dev/null | grep -q "^ii" && [ ! -f /etc/raspotify/conf
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.53)
+# Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.54)
 # Läuft IMMER — unabhängig von Raspotify-Installation
 # ══════════════════════════════════════════════════════════════
 # v0.9.9: /etc/asound.conf — ALSA Default auf Klinke (Card 1) setzen
@@ -489,7 +494,7 @@ usermod -aG pulse-access root 2>/dev/null || true
 usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
 ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 
-# v0.10.53: PulseAudio System-Service einrichten (Bookworm-kompatibel)
+# v0.10.54: PulseAudio System-Service einrichten (Bookworm-kompatibel)
 # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
 # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
 systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
@@ -600,6 +605,16 @@ systemctl reset-failed pidrive_web 2>/dev/null || true
 systemctl restart pidrive_web 2>/dev/null && \
   ok "pidrive_web.service neu gestartet" || \
   warn "pidrive_web konnte nicht gestartet werden"
+# WebUI-URL anzeigen
+_PI_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+if [ -n "$_PI_IP" ]; then
+    echo ""
+    echo "  ┌─────────────────────────────────────┐"
+    printf "  │  🌐  WebUI: http://%-17s│\n" "${_PI_IP}:8080"
+    echo "  │  CLI:       pidrivectl status        │"
+    echo "  └─────────────────────────────────────┘"
+    echo ""
+fi
 # AVRCP Service starten
 if [ -f "$SERVICE_DIR/pidrive_avrcp.service" ]; then
   systemctl restart pidrive_avrcp 2>/dev/null || true
@@ -745,7 +760,7 @@ fi
 # Import-Smoke-Test: prueft den echten Startpfad von main_core
 if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import main_core"
   python3 -c "import webui"
-  # Neue Zielpfade (v0.10.53+)
+  # Neue Zielpfade (v0.10.54+)
   python3 -c "import cli.cli" 2>/dev/null && echo "  ✓ cli.cli" || echo "  ⚠ cli.cli nicht importierbar"
   python3 -c "import cli.service" 2>/dev/null && echo "  ✓ cli.service" || echo "  ⚠ cli.service"
   python3 -c "from web.app import app" 2>/dev/null && echo "  ✓ web.app" || echo "  ⚠ web.app"
@@ -887,7 +902,7 @@ echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
-# ── Car-Only Cleanup (v0.10.53: bei Frisch-Install mit anschliessendem Reboot) ──
+# ── Car-Only Cleanup (v0.10.54: bei Frisch-Install mit anschliessendem Reboot) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
   if [ ! -f "$_CLEANUP_DONE_FILE" ]; then
