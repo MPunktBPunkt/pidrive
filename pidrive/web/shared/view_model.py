@@ -120,7 +120,7 @@ def get_dab_status_debug():
         "ts": dbg.get("ts", st.get("ts", 0)),
         "debug_exists": os.path.exists(DAB_DEBUG_FILE),
         "debug_age": file_age(DAB_DEBUG_FILE),
-        # v0.10.53: Audio-Routing-Debug aus play_debug.json
+        # v0.10.54: Audio-Routing-Debug aus play_debug.json
         "pulse_server_in_env":    dbg.get("pulse_server_in_env"),
         "pulse_sink_in_env":      dbg.get("pulse_sink_in_env"),
         "pa_default_sink":        dbg.get("pa_default_sink_before_start", ""),
