@@ -27,5 +27,5 @@ def file_age(path):
         return None
 
 
-# v0.10.54: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
+# v0.10.55: IP-Cache (30s TTL) — verhindert Socket-Open bei jedem Request
 _ip_cache: tuple = ("", 0.0)

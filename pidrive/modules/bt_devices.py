@@ -1,5 +1,5 @@
 """
-DEPRECATED SHIM — Rückwärtskompatibilität  v0.10.54
+DEPRECATED SHIM — Rückwärtskompatibilität  v0.10.55
 Echte Implementierung: pidrive/modules/bluetooth/bt_devices.py
 Nur für alte Imports. Geplante Entfernung: v0.11.x
 """
