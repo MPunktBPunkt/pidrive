@@ -32,7 +32,7 @@ PiDrive verwandelt einen Raspberry Pi in ein vollwertiges Car-Infotainment-Syste
 
 ## Changelog
 
-### v0.10.62 (2026-05-02)
+### v0.10.66 (2026-05-02)
 - Bugfix-Release basierend auf Code-Review v0.9.31
 - Kritische Fixes: DAB Resume, BT non-blocking I/O, Scanner source_state
 - Mittlere Fixes: DAB session ERR-Files, DLS cleanup, Spectrum Pi 3B Guards

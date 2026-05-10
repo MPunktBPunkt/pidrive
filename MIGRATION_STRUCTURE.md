@@ -1,6 +1,6 @@
 # PiDrive — Migrationsstatus Verzeichnisstruktur
 
-## Aktueller Stand: v0.10.55 (Übergangsphase)
+## Aktueller Stand: v0.10.66 (Übergangsphase)
 
 Die Zielstruktur ist dokumentiert in `ARCHITECTURE.md`.
 Dieser Plan zeigt den Migrationsstatus jeder Datei.
@@ -50,8 +50,8 @@ Dieser Plan zeigt den Migrationsstatus jeder Datei.
 | `ipc.py` | `core/ipc.py` | Hoch |
 | `settings.py` | `core/settings.py` | Hoch |
 | `log.py` | `core/log.py` | Hoch |
-| `menu_*.py` | `menu/*.py` | Mittel |
-| `trigger_dispatcher.py` | `trigger/trigger_dispatcher.py` | Mittel |
+| `menu_*.py` | `menu/*.py` | 🔄 Shim |
+| `trigger_dispatcher.py` | `trigger/trigger_dispatcher.py` | 🔄 Shim |
 | `td_*.py` | `trigger/td_*.py` | Mittel |
 | `avrcp_trigger.py` | `integration/avrcp_trigger.py` | Mittel |
 | `mpris2.py` | `integration/mpris2.py` | Mittel |
