@@ -46,6 +46,8 @@ def print_status(d: dict):
     out(_c("Verbindungen", BOLD))
     bt_info = d.get("bt_device","") or ("verbunden" if d.get("bt") else "getrennt")
     out(f"  Bluetooth:    {bt_info}")
+    sp = "aktiv ✓" if d.get("spotify") else "inaktiv"
+    out(f"  Spotify:      {sp}")
     wifi_info = (d.get("wifi_ssid") or "–") if d.get("wifi") else "aus"
     out(f"  WiFi:         {wifi_info}")
 
@@ -89,13 +91,20 @@ def print_bt_list(devices: list, title: str):
     if not devices:
         out(f"{title}: (leer)")
         return
-    out(_c(f"{title} — {len(devices)} Gerät(e):", BOLD))
-    for d in devices:
-        mac   = d.get("mac","?")
-        name  = d.get("name","?")
-        conn  = "✓" if d.get("connected") else " "
-        trust = "★" if d.get("trusted") else " "
-        out(f"  {conn}{trust}  {name:<25}  {_c(mac, DIM)}")
+    # Trenne echte Audio-Geräte von BLE-Rauschen
+    audio = [d for d in devices if not d.get("ble_random_mac") and not d.get("random_mac")]
+    ble   = [d for d in devices if d.get("ble_random_mac") or d.get("random_mac")]
+    show  = audio if audio else devices  # Fallback: alles zeigen
+    out(_c(f"{title} — {len(show)} Gerät(e):", BOLD))
+    for d in show:
+        mac    = d.get("mac","?")
+        name   = d.get("name","?") or mac
+        paired = "✓P" if d.get("paired") else "  "
+        conn   = "✓" if d.get("connected") else " "
+        trust  = "★" if d.get("trusted") else " "
+        out(f"  {conn}{trust}{paired}  {name:<25}  {_c(mac, DIM)}")
+    if ble:
+        out(f"  {_c(f'(+ {len(ble)} BLE-Geräte ohne Audio ausgeblendet)', DIM)}")
 
 def print_resources(r: dict):
     out(_c("Systemressourcen:", BOLD))

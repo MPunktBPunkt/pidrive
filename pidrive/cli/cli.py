@@ -86,6 +86,59 @@ def main():
     parser = argparse.ArgumentParser(
         prog="pidrivectl",
         description="PiDrive Kommandozeilenwerkzeug",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Beispiele:
+  pidrivectl status              Systemstatus (Quelle, Titel, Vol, BT, WiFi)
+  pidrivectl now                 Was laeuft gerade?
+  pidrivectl quick               Kompakte Einzeilen-Uebersicht
+
+  pidrivectl play dab "ROCK FM"  DAB+-Sender starten (Name oder Nummer)
+  pidrivectl play dab 27         DAB+-Sender #27 aus der Liste
+  pidrivectl play web "Bayern 1" Webradio starten
+  pidrivectl play spotify        Spotify Connect aktivieren
+  pidrivectl stop                Wiedergabe stoppen
+
+  pidrivectl station list dab    DAB-Senderliste (★ = Favorit)
+  pidrivectl station list fm     FM-Senderliste
+  pidrivectl station list web    Webradio-Liste
+  pidrivectl favorites list      Favoritenliste (alle Quellen)
+  pidrivectl favorites add       Aktuellen Sender zu Favoriten
+
+  pidrivectl bt scan             Bluetooth-Scan (live, 22s)
+  pidrivectl bt pair <mac>       Gerät pairen (vorher in Pairing-Modus!)
+  pidrivectl bt connect <mac>    Mit gepaairtem Gerät verbinden
+  pidrivectl bt known            Bekannte Geräte (gepairt/gesehen)
+
+  pidrivectl volume up           Lauter (zeigt neue %)
+  pidrivectl volume down         Leiser
+  pidrivectl volume 70           Direkt auf 70%% setzen
+  pidrivectl volume set 70       Lautstaerke direkt setzen
+
+  pidrivectl audio route klinke  Audio-Ausgang: klinke | bt | hdmi
+  pidrivectl audio status        Aktuellen Ausgang anzeigen
+
+  pidrivectl dab status          DAB+ Empfangsstatus (Lock, PCM, Fehler)
+  pidrivectl dab scan            DAB+ Sendersuchlauf starten
+
+  pidrivectl ppm                 Aktuellen PPM-Offset anzeigen
+  pidrivectl ppm set 49          PPM-Offset setzen (RTL-SDR Kalibrierung)
+  pidrivectl ppm calibrate       Automatische PPM-Kalibrierung
+
+  pidrivectl system              System-Info + Spotify-Status
+  pidrivectl system resources    RAM, Speicher, Uptime, Throttling
+  pidrivectl system diagnose     Vollstaendige Systemdiagnose
+
+  pidrivectl log                 Core-Log (letzte 40 Eintraege)
+  pidrivectl log display         Display-Log
+  pidrivectl log avrcp           AVRCP/BMW-Log
+
+  pidrivectl version             Version anzeigen
+  pidrivectl debug               Status/Source/Menu als JSON
+
+Flags (vor dem Befehl angeben):
+  --json     Maschinenlesbare Ausgabe fuer Scripting
+  --api      Web-API statt IPC nutzen (wenn WebUI laeuft)
+""",
         add_help=True,
     )
     parser.add_argument("--json",    action="store_true", help="JSON-Ausgabe")
@@ -94,15 +147,16 @@ def main():
     sub = parser.add_subparsers(dest="cmd", title="Befehle")
 
     # ── status / now / quick ──────────────────────────────────────────────
-    sub.add_parser("status", help="Systemstatus")
-    sub.add_parser("now",    help="Aktuelle Wiedergabe")
-    sub.add_parser("quick",  help="Schnellübersicht")
-    sub.add_parser("stop",   help="Wiedergabe stoppen")
+    sub.add_parser("status", help="Quelle, Titel, Vol, BT, WiFi")
+    sub.add_parser("now",    help="Was laeuft gerade? (Titel + DLS)")
+    sub.add_parser("quick",  help="Kompakte Einzeile: Quelle, Titel, Vol, BT")
+    sub.add_parser("stop",   help="Radio + Spotify stoppen")
 
     # ── play ──────────────────────────────────────────────────────────────
     p_play = sub.add_parser("play", help="Sender/Quelle starten")
-    p_play.add_argument("source", choices=["dab","fm","web"], help="Quelle")
-    p_play.add_argument("name", help="Sendername oder Frequenz")
+    p_play.add_argument("source", choices=["dab","fm","web","spotify"], help="Quelle")
+    p_play.add_argument("name", nargs="?", default=None,
+                        help="Sendername oder Frequenz (nicht fuer spotify)")
 
     # ── station ───────────────────────────────────────────────────────────
     p_station = sub.add_parser("station", help="Senderverwaltung")
@@ -129,6 +183,8 @@ def main():
     bt_sub.add_parser("known")
     p_btc = bt_sub.add_parser("connect")
     p_btc.add_argument("query", help="MAC-Adresse oder Name")
+    p_btp = bt_sub.add_parser("pair", help="Pairen + verbinden (Gerät muss im Pairing-Modus sein)")
+    p_btp.add_argument("query", help="MAC-Adresse oder Name")
     bt_sub.add_parser("disconnect")
     bt_sub.add_parser("reconnect")
     bt_sub.add_parser("on")
@@ -143,6 +199,14 @@ def main():
     vol_sub.add_parser("down")
     p_vs = vol_sub.add_parser("set")
     p_vs.add_argument("level", type=int, help="0-100")
+
+    # ── ppm ───────────────────────────────────────────────────────────────
+    p_ppm = sub.add_parser("ppm", help="PPM-Offset fuer RTL-SDR (DAB/FM Kalibrierung)")
+    ppm_sub = p_ppm.add_subparsers(dest="ppm_cmd")
+    ppm_sub.add_parser("status", help="Aktuellen PPM-Wert anzeigen")
+    p_ppm_set = ppm_sub.add_parser("set", help="PPM-Offset setzen")
+    p_ppm_set.add_argument("value", type=int, help="PPM-Wert (typ. 40-55)")
+    ppm_sub.add_parser("calibrate", help="Automatische Kalibrierung starten")
 
     # ── audio ─────────────────────────────────────────────────────────────
     p_audio = sub.add_parser("audio", help="Audio-Ausgang")
@@ -225,15 +289,26 @@ def main():
     # stop
     if args.cmd == "stop":
         svc.require_online()
-        r = svc.send("radio_stop")
-        if use_json: fmt.print_json(r)
-        else: fmt.out("Radio gestoppt.")
+        svc.send("radio_stop")
+        svc.send("spotify_off")
+        if use_json: fmt.print_json({"ok": True})
+        else: fmt.out("Gestoppt.")
         sys.exit(EXIT_OK)
 
     # play
     if args.cmd == "play":
         svc.require_online()
+
+        # Spotify: kein Name noetig, einfach toggle/on
+        if args.source == "spotify":
+            r = svc.send("spotify_on")
+            if use_json: fmt.print_json(r)
+            else: fmt.out("Spotify Connect aktiviert — Sender aus Spotify-App waehlen")
+            sys.exit(EXIT_OK)
+
         name = args.name
+        if not name:
+            _exit_err(f"Name/Sender fuer {args.source} erforderlich", EXIT_ERROR)
 
         # Nummer aus Senderliste akzeptieren (z.B. pidrivectl play dab 27)
         if name.isdigit():
@@ -398,10 +473,22 @@ def main():
         elif args.bt_cmd == "connect":
             dev = svc.bt_resolve(args.query)
             if not dev:
-                _exit_err(f"BT-Gerät nicht gefunden: {args.query!r}", EXIT_NOTFOUND)
-            r = svc.send(f"bt_connect:{dev['mac']}")
+                _exit_err("BT-Geraet nicht gefunden: " + repr(args.query), EXIT_NOTFOUND)
+            if not dev.get("paired"):
+                fmt.out(fmt.YELLOW + "  Hinweis: Geraet ist nicht gepairt — zuerst 'bt pair' noetig" + fmt.RESET)
+            r = svc.send("bt_connect:" + dev["mac"])
             if use_json: fmt.print_json(r)
-            else: fmt.out(f"Verbinde mit {dev.get('name', dev['mac'])}…")
+            else: fmt.out("Verbinde mit " + dev.get("name", dev["mac"]) + "…")
+        elif args.bt_cmd == "pair":
+            dev = svc.bt_resolve(args.query)
+            mac = dev["mac"] if dev else args.query.strip()
+            if use_json: fmt.print_json({"ok": True, "mac": mac, "action": "bt_repair"})
+            else:
+                fmt.out("Pairing mit " + mac + "…")
+                fmt.out("  1. Geraet in Pairing-Modus bringen")
+                fmt.out("  2. Pairing laeuft (dauert bis 30s)…")
+            r = svc.send("bt_repair:" + mac)
+            if not use_json: fmt.out("  Pairing-Kommando gesendet — Status: pidrivectl bt status")
         elif args.bt_cmd == "status":
             d = svc.get_status()
             if use_json:
@@ -456,6 +543,31 @@ def main():
             sys.exit(EXIT_OK)
         if use_json: fmt.print_json(r)
         else: fmt.out(f"Lautstärke: {args.vol_cmd}")
+        sys.exit(EXIT_OK)
+
+    # ppm
+    if args.cmd == "ppm":
+        if not args.ppm_cmd or args.ppm_cmd == "status":
+            # PPM aus settings.json lesen
+            import json as _jsppm, os as _osppm
+            try:
+                _sp = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "settings.json")
+                _s = json.load(open(_sp))
+                ppm_val = _s.get("ppm", "?")
+                if use_json: fmt.print_json({"ppm": ppm_val})
+                else: fmt.out("PPM-Offset: " + str(ppm_val) + "  (DAB/FM RTL-SDR Kalibrierung)")
+            except Exception as e:
+                fmt.out("PPM: " + str(e))
+        elif args.ppm_cmd == "set":
+            svc.require_online()
+            r = svc.send("ppm:" + str(args.value))
+            if use_json: fmt.print_json(r)
+            else: fmt.out("PPM gesetzt auf " + str(args.value))
+        elif args.ppm_cmd == "calibrate":
+            svc.require_online()
+            r = svc.send("ppm_calibrate")
+            if use_json: fmt.print_json(r)
+            else: fmt.out("PPM-Kalibrierung gestartet — pruefe in ~60s: pidrivectl ppm")
         sys.exit(EXIT_OK)
 
     # audio

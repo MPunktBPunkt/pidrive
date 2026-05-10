@@ -74,9 +74,12 @@ class PiDriveService:
     def get_now(self) -> dict:
         s = self.ipc.read_json(STATUS_FILE, {})
         src = ""
-        if s.get("spotify"):        src = "Spotify"
-        elif s.get("radio"):        src = s.get("radio_type", "Radio")
-        elif s.get("library"):      src = "Bibliothek"
+        # source_current ist autoritativ — spotify=True heisst nur Raspotify läuft
+        _cur = ss.get("source_current", "")
+        if _cur == "spotify":         src = "Spotify Connect"
+        elif _cur in ("dab","fm","webradio"): src = s.get("radio_type", _cur.upper())
+        elif _cur == "library":       src = "Bibliothek"
+        elif s.get("radio") and not _cur: src = s.get("radio_type", "Radio")
         title  = (s.get("track") or s.get("radio_name") or
                   s.get("lib_track") or s.get("lib_artist") or "")
         artist = s.get("artist", "")
@@ -133,10 +136,38 @@ class PiDriveService:
         return data.get("stations", data) if isinstance(data, dict) else data
 
     def list_favorites(self) -> list:
-        path = os.path.join(CONFIG_DIR, "favorites.json")
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data.get("favorites", data) if isinstance(data, dict) else data
+        """Gibt Favoriten aus favorites.json PLUS starred Eintraege aus Stationslisten."""
+        import json as _json
+        favs = []
+        # Quelle 1: favorites.json (explizit hinzugefügt)
+        try:
+            with open(os.path.join(CONFIG_DIR, "favorites.json"), encoding="utf-8") as f:
+                data = _json.load(f)
+            favs = data.get("favorites", []) if isinstance(data, dict) else data
+        except Exception:
+            pass
+        # Quelle 2: favorite=True in Stationslisten (★ Markierungen)
+        known_names = {f.get("name","").lower() for f in favs}
+        for src_file, src_label in [
+            ("dab_stations.json", "dab"),
+            ("fm_stations.json",  "fm"),
+            ("stations.json",     "webradio"),
+        ]:
+            try:
+                with open(os.path.join(CONFIG_DIR, src_file), encoding="utf-8") as f:
+                    raw = _json.load(f)
+                stations = raw.get("stations", raw) if isinstance(raw, dict) else raw
+                for s in stations:
+                    if s.get("favorite") and s.get("name","").lower() not in known_names:
+                        favs.append({
+                            "name":   s["name"],
+                            "source": src_label,
+                            "from_station_list": True,
+                        })
+                        known_names.add(s.get("name","").lower())
+            except Exception:
+                pass
+        return favs
 
     def play(self, source: str, query: str) -> dict:
         """Spielt einen Sender anhand Name/Query auf der gegebenen Quelle."""
