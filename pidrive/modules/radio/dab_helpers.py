@@ -204,7 +204,6 @@ def _parse_welle_status_line(line: str):
 
     return None
 
-
 def _append_play_debug_line(kind: str, line: str):
     dbg = _read_json(PLAY_DEBUG_FILE, {})
     lines = dbg.get("recent_lines", [])
@@ -245,5 +244,16 @@ def _get_dab_gain(settings=None):
     except Exception:
         return "-1"
 
-
+def _parse_signal_line(line):
+    """Extrahiert SNR/RSSI/Freq-Offset aus welle-cli stderr-Zeilen."""
+    import re as _re
+    result = {}
+    low = (line or "").lower()
+    m = _re.search(r'snr[=: ]+([0-9.]+)', low)
+    if m: result['snr_db'] = float(m.group(1))
+    m = _re.search(r'(?:rssi|signal)[=: ]+(-?[0-9.]+)', low)
+    if m: result['rssi_dbm'] = float(m.group(1))
+    m = _re.search(r'coarsecorrector[=: ]+(-?[0-9]+)', low)
+    if m: result['freq_offset'] = int(m.group(1))
+    return result if result else None
 

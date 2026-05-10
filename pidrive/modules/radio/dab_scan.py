@@ -36,7 +36,7 @@ def load_last_scan_diag_file():
 
 
 def load_stations():
-    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
+    path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
     try:
         data = json.load(open(path, encoding="utf-8"))
         return data.get("stations", data) if isinstance(data, dict) else data
@@ -45,7 +45,7 @@ def load_stations():
 
 
 def save_stations(stations):
-    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
+    path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
     try:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(stations, f, indent=2, ensure_ascii=False)

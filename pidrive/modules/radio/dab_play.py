@@ -403,7 +403,7 @@ def stop(S):
 
 
 def play_by_name(name, S, settings=None, service_id=""):
-    path = os.path.join(os.path.dirname(__file__), "../config/dab_stations.json")
+    path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
     try:
         data = json.load(open(path, encoding="utf-8"))
         stations = data.get("stations", data) if isinstance(data, dict) else data
