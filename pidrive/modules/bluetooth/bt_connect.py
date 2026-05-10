@@ -12,6 +12,7 @@ from modules.bluetooth.bt_helpers import (
     RECONNECT_COOLDOWN, RECONNECT_FAIL_SOFT_LIMIT, VISIBILITY_WAIT_SECONDS,
     PAIR_TIMEOUT_SECONDS, A2DP_WAIT_SECONDS,
     _bt_connect_lock,
+    RECENT_SEEN_SECONDS,
 )
 from modules.bluetooth.bt_agent import (
     _ensure_agent, pair_with_agent,

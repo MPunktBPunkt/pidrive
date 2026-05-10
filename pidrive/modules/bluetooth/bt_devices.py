@@ -2,6 +2,7 @@
 """bt_devices.py — Geräte-Datenbank und Scan  v0.10.55
 Ausgelagert aus bluetooth.py."""
 
+from modules.bluetooth.bt_helpers import RECENT_SEEN_SECONDS  # noqa
 from modules.bluetooth.bt_helpers import (
     _btctl, _run, _bg, _normalize_mac, _valid_mac,
     _write_json_atomic, _read_json, _now, _sleep_s,
