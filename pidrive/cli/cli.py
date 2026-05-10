@@ -185,6 +185,9 @@ def main():
     dbg_sub.add_parser("source-state")
 
     # ──────────────────────────────────────────────────────────────────────
+    # Shortcut: pidrivectl volume 50  ->  pidrivectl volume set 50
+    if len(sys.argv) >= 3 and sys.argv[1] == "volume" and sys.argv[2].isdigit():
+        sys.argv.insert(2, "set")
     args = parser.parse_args()
     svc  = PiDriveService(use_http=args.api)
     use_json = args.json
@@ -274,14 +277,24 @@ def main():
                                          on_status=_on_status, on_log_line=_on_log)
             icon = STATE_ICONS.get(result, "?")
             if result == "locked":
-                fmt.out(""); fmt.out(icon + " Lock erreicht — DAB laeuft")
+                fmt.out("")
+                fmt.out(icon + " Lock — DAB laeuft stabil")
+            elif result == "partial_sync":
+                fmt.out("")
+                fmt.out(icon + " Partieller Lock — laeuft (schwacher Empfang, Audio aktiv)")
+                fmt.out("  Tipp: Im Auto mit Antenne deutlich besser")
             elif result == "no_lock":
-                fmt.out(""); fmt.out(icon + " Kein Lock nach 30s (Empfang pruefen)")
+                fmt.out("")
+                fmt.out(icon + " Kein Lock — Signal zu schwach")
+                fmt.out("  Tipp: pidrivectl dab status fuer aktuellen Empfangszustand")
             elif result == "timeout":
-                fmt.out(""); fmt.out("Timeout — kein Status erhalten")
+                d = svc.get_status()
+                last = d.get("dab_play_state", d.get("dab_playback_state", "?"))
+                fmt.out("")
+                fmt.out("Timeout — letzter Zustand: " + last)
             else:
                 d = svc.get_status()
-                d = svc.get_status(); fmt.out(icon + " Status: " + d.get("dab_playback_state", "?"))
+                fmt.out(icon + " Status: " + d.get("dab_playback_state", "?"))
         else:
             try:
                 r = svc.play(args.source, name)

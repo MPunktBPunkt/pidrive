@@ -276,7 +276,7 @@ class PiDriveService:
 
         return found
 
-    def watch_dab_play(self, station_name, timeout=30, on_status=None, on_log_line=None):
+    def watch_dab_play(self, station_name, timeout=55, on_status=None, on_log_line=None):
         """DAB-Station starten und live Status verfolgen.
         Gibt 'locked', 'no_lock', 'partial_sync' oder 'timeout' zurueck.
         """
@@ -324,6 +324,8 @@ class PiDriveService:
                     })
                 if state in ("locked", "pcm_only"):
                     return "locked"
+                if state == "partial_sync" and elapsed > 25:
+                    return "partial_sync"  # laeuft mit instabilem Empfang
                 if state == "no_lock" and elapsed > 12:
                     return "no_lock"
 

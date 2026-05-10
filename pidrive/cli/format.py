@@ -35,8 +35,9 @@ def print_status(d: dict):
     if d.get("artist"): out(f"  Artist:       {d['artist']}")
     if d.get("dls"):    out(f"  DLS:          {d['dls']}")
     dab_ps = d.get("dab_play_state","")
-    if dab_ps and dab_ps not in ("idle","locked"):
-        out(f"  DAB-Status:   {dab_ps}")
+    # DAB-Status nur zeigen wenn Quelle gerade DAB ist
+    if d.get("source","") == "dab" and dab_ps and dab_ps != "locked":
+        out("  DAB-Status:   " + dab_ps)
     out()
     out(_c("Audio", BOLD))
     out(f"  Ausgang:      {d.get('audio_eff', '–')}")
