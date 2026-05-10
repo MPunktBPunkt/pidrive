@@ -423,8 +423,19 @@ def main():
             else: fmt.out(f"Lautstärke: {d.get('volume','–')}%  Ausgang: {d.get('audio_eff','–')}")
             sys.exit(EXIT_OK)
         svc.require_online()
-        if args.vol_cmd == "up":    r = svc.send("vol_up")
-        elif args.vol_cmd == "down": r = svc.send("vol_down")
+        import time as _time_vol
+        if args.vol_cmd == "up":
+            svc.send("vol_up"); _time_vol.sleep(0.4)
+            vol = svc.get_volume()
+            if use_json: fmt.print_json({"ok": True, "volume": vol})
+            else: fmt.out("Lautstaerke: " + (str(vol) + "%" if vol is not None else "gesendet"))
+            sys.exit(EXIT_OK)
+        elif args.vol_cmd == "down":
+            svc.send("vol_down"); _time_vol.sleep(0.4)
+            vol = svc.get_volume()
+            if use_json: fmt.print_json({"ok": True, "volume": vol})
+            else: fmt.out("Lautstaerke: " + (str(vol) + "%" if vol is not None else "gesendet"))
+            sys.exit(EXIT_OK)
         elif args.vol_cmd == "set":
             lvl = max(0, min(100, args.level))
             import subprocess as _sp

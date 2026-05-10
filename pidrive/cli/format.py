@@ -41,7 +41,7 @@ def print_status(d: dict):
     out()
     out(_c("Audio", BOLD))
     out(f"  Ausgang:      {d.get('audio_eff', '–')}")
-    out(f"  Lautstärke:   {d.get('volume', '–')}")
+    vol = d.get("volume"); out("  Lautstaerke:  " + (str(vol) + "%" if vol is not None else "–"))
     out()
     out(_c("Verbindungen", BOLD))
     bt_info = d.get("bt_device","") or ("verbunden" if d.get("bt") else "getrennt")

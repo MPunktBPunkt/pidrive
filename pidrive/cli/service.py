@@ -47,9 +47,11 @@ class PiDriveService:
     def get_status(self) -> dict:
         s  = self.ipc.read_json(STATUS_FILE, {})
         ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
+        vol = self.get_volume()
         return {
             "online":        self.ipc.core_online(),
             "source":        ss.get("source_current", "idle"),
+            "volume":        vol,
             "radio":         s.get("radio", False),
             "radio_name":    s.get("radio_name", ""),
             "radio_type":    s.get("radio_type", ""),
@@ -88,14 +90,29 @@ class PiDriveService:
             "playing":            bool(s.get("radio") or s.get("spotify") or s.get("library")),
         }
 
+    def get_volume(self) -> int | None:
+        """Liest aktuelle PA-Lautstaerke via pactl (Prozent, 0-100)."""
+        import subprocess, re as _re
+        try:
+            r = subprocess.run(
+                ['pactl', '--server', '/var/run/pulse/native',
+                 'get-sink-volume', '@DEFAULT_SINK@'],
+                capture_output=True, text=True, timeout=2
+            )
+            m = _re.search(r'(\d+)%', r.stdout)
+            return int(m.group(1)) if m else None
+        except Exception:
+            return None
+
     def get_quick(self) -> dict:
         s  = self.ipc.read_json(STATUS_FILE, {})
         ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
         now = self.get_now()
+        vol = self.get_volume()
         return {
             "source":    ss.get("source_current", "–"),
             "title":     now["title"] or "–",
-            "volume":    s.get("volume", "–"),
+            "volume":    (str(vol) + "%") if vol is not None else "–",
             "audio":     s.get("audio_effective", "–"),
             "bt":        f"{'verbunden' if s.get('bt') else 'getrennt'} {s.get('bt_device','')}".strip(),
             "wifi":      f"{'an' if s.get('wifi') else 'aus'} {s.get('wifi_ssid','')}".strip(),
