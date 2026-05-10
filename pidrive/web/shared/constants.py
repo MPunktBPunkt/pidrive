@@ -3,16 +3,11 @@ Single Source of Truth für alle /tmp/pidrive_*.json Pfade.
 Wird von web/shared/__init__.py re-exportiert.
 """
 import os as _os
+from pathlib import Path as _Path
 
 # ── Base-Directory ──────────────────────────────────────────────────────
 # web/shared/constants.py liegt unter pidrive/web/shared/ → 3 Ebenen hoch
-BASE_DIR = _os.path.dirname(
-    _os.path.dirname(
-        _os.path.dirname(
-            _os.path.abspath(__file__)
-        )
-    )
-)  # → pidrive/
+BASE_DIR = _Path(__file__).resolve().parent.parent.parent  # → pidrive/
 
 # ── IPC-Dateipfade ──────────────────────────────────────────────────────
 CMD_FILE      = "/tmp/pidrive_cmd"
@@ -51,5 +46,5 @@ ALLOWED_COMMANDS = {
     "reboot", "shutdown", "sys_info", "sys_version", "update",
     "rtlsdr_reset",
     "bt_backup", "bt_restore",
-    "favorites_add_current", "favorites_remove",
+    "favorites_add_current", "favorites_add", "favorites_remove",
 }

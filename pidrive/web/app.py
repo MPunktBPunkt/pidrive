@@ -239,7 +239,14 @@ def api_core():
 
 @app.route("/api/state")
 def api_state():
-    return jsonify(build_view_model())
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+        return jsonify(vm)
+    except Exception as e:
+        import log as _log
+        _log.error(f"api_state: {e}")
+        return jsonify({"error": str(e), "ok": False}), 500
 
 
 @app.route("/api/runtime")

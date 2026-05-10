@@ -276,72 +276,85 @@ class PiDriveService:
 
         return found
 
-    def watch_dab_play(self, station_name: str, timeout: int = 30,
-                        on_status=None, on_log_line=None):
+    def watch_dab_play(self, station_name, timeout=30, on_status=None, on_log_line=None):
         """DAB-Station starten und live Status verfolgen.
-        on_status(state_dict) bei jeder Statusänderung.
-        on_log_line(line) für jede neue Zeile im DAB-Errlog.
-        Gibt finalen Status zurück: 'locked'|'no_lock'|'partial_sync'|'timeout'
+        Gibt 'locked', 'no_lock', 'partial_sync' oder 'timeout' zurueck.
         """
-        import time, os, glob
-        self.send(f"play_dab:{station_name}")
-        time.sleep(0.8)
+        import time, glob
+        # Zustand VOR dem Start merken um ihn zu ignorieren
+        pre = self.ipc.read_json("/tmp/pidrive_status.json", {})
+        initial_state = pre.get("dab_playback_state", "")
+        initial_ts    = pre.get("ts", 0)
 
-        start    = time.time()
+        self.send("play_dab:" + station_name)
+        time.sleep(1.5)  # Core braucht Zeit um neuen Versuch zu starten
+
+        start      = time.time()
         last_state = ""
-        log_pos  = 0   # Leseposition im Errlog
+        best_state = ""
+        log_pos    = 0
+        RANK = {"locked": 4, "pcm_only": 3, "partial_sync": 2, "no_lock": 1, "starting": 0}
 
         while True:
             elapsed = time.time() - start
             if elapsed > timeout:
-                return "timeout"
+                return "no_lock" if best_state in ("no_lock", "partial_sync") else "timeout"
 
-            # Status-JSON lesen
-            s = self.ipc.read_json("/tmp/pidrive_status.json", {})
+            s     = self.ipc.read_json("/tmp/pidrive_status.json", {})
             state = s.get("dab_playback_state", "")
+            cur_ts = s.get("ts", 0)
+
+            # Initialen Zustand ignorieren solange ts unveraendert
+            if state == initial_state and cur_ts == initial_ts and elapsed < 5:
+                time.sleep(0.5)
+                continue
+
             if state and state != last_state:
                 last_state = state
+                if RANK.get(state, -1) > RANK.get(best_state, -1):
+                    best_state = state
                 if on_status:
                     on_status({
-                        "state":       state,
-                        "sync_ok":     s.get("dab_sync_ok", False),
-                        "pcm":         s.get("dab_pcm_seen", False),
-                        "sync_seen":   s.get("dab_sync_seen", False),
-                        "attempting":  s.get("dab_attempting", False),
-                        "last_error":  s.get("dab_last_error", ""),
-                        "elapsed":     int(elapsed),
+                        "state":      state,
+                        "sync_ok":    s.get("dab_sync_ok", False),
+                        "pcm":        s.get("dab_pcm_seen", False),
+                        "attempting": s.get("dab_attempting", False),
+                        "last_error": s.get("dab_last_error", ""),
+                        "elapsed":    int(elapsed),
                     })
                 if state in ("locked", "pcm_only"):
                     return "locked"
-                if state == "no_lock" and elapsed > 15:
+                if state == "no_lock" and elapsed > 12:
                     return "no_lock"
 
-            # DAB Errlog tail
+            # DAB Errlog tail — nur relevante Zeilen
             try:
-                # Neueste Errlog-Datei finden
-                pattern = "/tmp/pidrive_dab_*.err"
-                errlogs = sorted(glob.glob(pattern))
+                errlogs = sorted(glob.glob("/tmp/pidrive_dab_*.err"))
                 if errlogs:
-                    errlog = errlogs[-1]
-                    with open(errlog) as f:
-                        f.seek(0, 2)  # initial ans Ende
+                    with open(errlogs[-1]) as f:
                         if log_pos == 0:
+                            f.seek(0, 2)
                             log_pos = max(0, f.tell() - 500)
                         f.seek(log_pos)
                         new = f.read()
                         if new:
-                            log_pos += len(new.encode())
+                            log_pos += len(new.encode("utf-8", errors="replace"))
                             for line in new.splitlines():
                                 line = line.strip()
-                                if line and on_log_line:
+                                if not line:
+                                    continue
+                                low = line.lower()
+                                # Rauschige Zeilen ausblenden
+                                if any(x in low for x in [
+                                    "synconphase", "synconendnull", "syncondnull",
+                                    "lost coarse", "lost fine",
+                                ]):
+                                    continue
+                                if on_log_line:
                                     on_log_line(line)
             except Exception:
                 pass
-
-            time.sleep(1.5)
-
-
-    # ── Debug ──────────────────────────────────────────────────────────────
+            time.sleep(1.2)
 
     def debug_state(self) -> dict:
         s  = self.ipc.read_json(STATUS_FILE, {})

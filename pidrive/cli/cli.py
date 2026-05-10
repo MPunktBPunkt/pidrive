@@ -116,7 +116,9 @@ def main():
     fav_sub.add_parser("list")
     p_fp = fav_sub.add_parser("play")
     p_fp.add_argument("query", help="Nummer oder Name")
-    fav_sub.add_parser("add")   # add current
+    p_fa = fav_sub.add_parser("add", help="Sender zu Favoriten hinzufuegen")
+    p_fa.add_argument("name", nargs="?", default=None,
+                      help="Sendername (leer = aktueller Sender)")
 
     # ── bt ────────────────────────────────────────────────────────────────
     p_bt = sub.add_parser("bt", help="Bluetooth")
@@ -134,11 +136,13 @@ def main():
 
     # ── volume ────────────────────────────────────────────────────────────
     p_vol = sub.add_parser("volume", help="Lautstärke")
+    p_vol.add_argument("vol_arg", nargs="?", default=None,
+                       help="up|down|set|0-100 Zahl")
     vol_sub = p_vol.add_subparsers(dest="vol_cmd")
     vol_sub.add_parser("up")
     vol_sub.add_parser("down")
     p_vs = vol_sub.add_parser("set")
-    p_vs.add_argument("level", type=int, help="0–100")
+    p_vs.add_argument("level", type=int, help="0-100")
 
     # ── audio ─────────────────────────────────────────────────────────────
     p_audio = sub.add_parser("audio", help="Audio-Ausgang")
@@ -154,6 +158,7 @@ def main():
     dab_sub.add_parser("scan")
     dab_sub.add_parser("next")
     dab_sub.add_parser("prev")
+    dab_sub.add_parser("stop")   # Alias fuer radio_stop
 
     # ── system ────────────────────────────────────────────────────────────
     p_sys = sub.add_parser("system", help="System")
@@ -316,9 +321,14 @@ def main():
                 _exit_err(str(e))
         elif args.fav_cmd == "add":
             svc.require_online()
-            r = svc.send("favorites_add_current")
-            if use_json: fmt.print_json(r)
-            else: fmt.out("Aktueller Sender zu Favoriten hinzugefügt.")
+            if hasattr(args, "name") and args.name:
+                r = svc.send("favorites_add:" + args.name)
+                if use_json: fmt.print_json(r)
+                else: fmt.out("Favorit hinzugefuegt: " + args.name)
+            else:
+                r = svc.send("favorites_add_current")
+                if use_json: fmt.print_json(r)
+                else: fmt.out("Aktueller Sender zu Favoriten hinzugefuegt.")
         sys.exit(EXIT_OK)
 
     # bt
@@ -390,6 +400,10 @@ def main():
 
     # volume
     if args.cmd == "volume":
+        # Direkte Zahl: pidrivectl volume 50
+        if not args.vol_cmd and hasattr(args, "vol_arg") and args.vol_arg and args.vol_arg.isdigit():
+            args.vol_cmd = "set"
+            args.level   = int(args.vol_arg)
         if not args.vol_cmd:
             d = svc.get_status()
             if use_json: fmt.print_json({"volume": d.get("volume"), "audio_out": d.get("audio_eff")})
@@ -400,9 +414,21 @@ def main():
         elif args.vol_cmd == "down": r = svc.send("vol_down")
         elif args.vol_cmd == "set":
             lvl = max(0, min(100, args.level))
-            # Volume set via mehrfache steps ist Näherung; besser direkt:
-            r = svc.send(f"vol_up")  # TODO: vol_set:<n> wenn Core unterstützt
-            fmt.out(f"Lautstärke gesetzt auf {lvl}% (Näherung via up/down)")
+            import subprocess as _sp
+            # PulseAudio direkt setzen (genauer als up/down)
+            pct = str(lvl) + "%"
+            r2 = _sp.run(
+                ["pactl", "--server", "/var/run/pulse/native",
+                 "set-sink-volume", "@DEFAULT_SINK@", pct],
+                capture_output=True
+            )
+            if r2.returncode == 0:
+                if use_json: fmt.print_json({"ok": True, "volume": lvl})
+                else: fmt.out("Lautstaerke: " + pct)
+            else:
+                # Fallback: Trigger senden (up/down naehert sich an)
+                svc.send("vol_up" if lvl > 50 else "vol_down")
+                if not use_json: fmt.out("Lautstaerke ca. " + pct + " (Naeherung)")
             sys.exit(EXIT_OK)
         if use_json: fmt.print_json(r)
         else: fmt.out(f"Lautstärke: {args.vol_cmd}")
@@ -448,6 +474,10 @@ def main():
             svc.require_online()
             svc.send("dab_prev")
             fmt.out("DAB: vorheriger Sender.")
+        elif args.dab_cmd == "stop":
+            svc.require_online()
+            svc.send("radio_stop")
+            fmt.out("DAB gestoppt.")
         sys.exit(EXIT_OK)
 
     # system
