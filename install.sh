@@ -1,4 +1,6 @@
 #!/bin/bash
+PIDRIVE_VERSION="0.10.60"
+
 # ============================================================
 # PiDrive Install Script
 # Raspberry Pi Car Infotainment
@@ -39,13 +41,11 @@ warn() { echo -e "${YELLOW}  ⚠ ${1}${NC}"; }
 err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 
 echo -e "${BOLD}${BLUE}"
-cat << 'EOF'
-╔═══════════════════════════════════════════╗
-║        PiDrive Installer v0.10.55           ║
-║   github.com/MPunktBPunkt/pidrive         ║
-╚═══════════════════════════════════════════╝
-EOF
-echo -e "${NC}"
+echo "╔═══════════════════════════════════════════╗"
+printf "║  %-42s║\n" "PiDrive Installer v${PIDRIVE_VERSION}"
+echo "║   github.com/MPunktBPunkt/pidrive         ║"
+echo "╚═══════════════════════════════════════════╝"
+echo -e "${NC}" 
 
 if [ "$EUID" -ne 0 ]; then
     err "Bitte als root ausfuehren: sudo bash install.sh"
