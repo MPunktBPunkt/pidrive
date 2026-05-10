@@ -141,7 +141,7 @@ def start_auto_reconnect(S, settings):
 
                 visible, _ = _ensure_device_visible(mac, timeout=6)
                 if visible:
-                    log.info(f"BT auto-reconnect [Watcher]: Gerät sichtbar, versuche Connect mac={mac}")
+                    log.info(f"BT auto-reconnect [Watcher]: versuche Connect mac={mac} name={name}")
                     ok = connect_device(mac, S, settings)
                     if ok:
                         log.info(f"BT auto-reconnect: ERFOLG mac={mac} name={name}")
@@ -160,7 +160,9 @@ def start_auto_reconnect(S, settings):
                     else:
                         fail_streak += 1
                         _mark_reconnect_failure(mac, "watcher_connect_failed")
-                        log.info(f"BT auto-reconnect: fehlgeschlagen #{fail_streak} mac={mac}")
+                        log.info(f"BT auto-reconnect: fehlgeschlagen #{fail_streak} mac={mac} (nicht gepairt?)")
+                        if fail_streak >= 3:
+                            log.info("BT auto-reconnect: 3 Fehlschlage — Hinweis: Geraet muss zuerst gepairt werden")
                 else:
                     fail_streak += 1
                     _mark_reconnect_failure(mac, "watcher_not_visible")
