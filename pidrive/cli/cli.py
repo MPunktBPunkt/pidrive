@@ -225,12 +225,65 @@ def main():
     # play
     if args.cmd == "play":
         svc.require_online()
-        try:
-            r = svc.play(args.source, args.name)
-            if use_json: fmt.print_json(r)
-            else: fmt.out(f"Starte {args.source.upper()}: {args.name}")
-        except LookupError as e:
-            _exit_err(str(e), EXIT_NOTFOUND)
+        name = args.name
+
+        # Nummer aus Senderliste akzeptieren (z.B. pidrivectl play dab 27)
+        if name.isdigit():
+            try:
+                stations = svc.list_stations(args.source)
+                idx = int(name) - 1
+                if 0 <= idx < len(stations):
+                    name = stations[idx].get("name", name)
+                    if not use_json:
+                        fmt.out(f"  #{args.name} → {name}")
+                else:
+                    _exit_err(f"Nummer {name} ungültig (1-{len(stations)})", EXIT_NOTFOUND)
+            except Exception as e:
+                _exit_err(str(e))
+
+        # DAB: live Feedback während Lock-Phase
+        if args.source == "dab" and not use_json:
+            fmt.out(f"Starte DAB: {name}")
+            fmt.out(f"{fmt.DIM}  (warte auf Lock — bis 30s){fmt.RESET}")
+            STATE_ICONS = {
+                "starting":     "⏳", "partial_sync": "📡",
+                "locked":       "🔒", "pcm_only":     "🔊",
+                "no_lock":      "⚠ ", "timeout":      "✗ "
+            }
+            log_lines = []
+            def _on_status(d):
+                icon = STATE_ICONS.get(d["state"], "")
+                line = f"  {icon} [{d['elapsed']:2d}s] {d['state']}"
+                if d.get("sync_ok"): line += " • sync ✓"
+                if d.get("pcm"):     line += " • PCM ✓"
+                if d.get("last_error"): line += f" • {d['last_error'][:40]}"
+                fmt.out(line)
+            def _on_log(line):
+                # Nur relevante welle-cli Zeilen
+                low = line.lower()
+                if any(k in low for k in ["sync", "pcm", "dls", "lock", "error", "superframe"]):
+                    if len(log_lines) < 8:  # max 8 Logzeilen
+                        log_lines.append(line)
+                        fmt.out("  " + fmt.DIM + "  " + line[:80] + fmt.RESET)
+            result = svc.watch_dab_play(name, timeout=30,
+                                         on_status=_on_status, on_log_line=_on_log)
+            icon = STATE_ICONS.get(result, "?")
+            if result == "locked":
+                fmt.out(""); fmt.out(icon + " Lock erreicht — DAB laeuft")
+            elif result == "no_lock":
+                fmt.out(""); fmt.out(icon + " Kein Lock nach 30s (Empfang pruefen)")
+            elif result == "timeout":
+                fmt.out(""); fmt.out("Timeout — kein Status erhalten")
+            else:
+                d = svc.get_status()
+                d = svc.get_status(); fmt.out(icon + " Status: " + d.get("dab_playback_state", "?"))
+        else:
+            try:
+                r = svc.play(args.source, name)
+                if use_json: fmt.print_json(r)
+                else: fmt.out(f"Starte {args.source.upper()}: {name}")
+            except LookupError as e:
+                _exit_err(str(e), EXIT_NOTFOUND)
         sys.exit(EXIT_OK)
 
     # station
@@ -281,10 +334,33 @@ def main():
 
         svc.require_online()
         bt_trigger_map = {
-            "scan": "bt_scan", "on": "bt_on", "off": "bt_off",
+            "on": "bt_on", "off": "bt_off",
             "disconnect": "bt_disconnect", "reconnect": "bt_reconnect_last",
         }
-        if args.bt_cmd in bt_trigger_map:
+        if args.bt_cmd == "scan":
+            if use_json:
+                r = svc.send("bt_scan")
+                fmt.print_json(r)
+            else:
+                fmt.out("BT-Scan gestartet (22s)…")
+                found = []
+                seen = set()
+                def _new_dev(d):
+                    mac  = d.get("mac","?")
+                    name = d.get("name","") or mac
+                    ble  = " (BLE)" if d.get("ble_random_mac") else ""
+                    fmt.out(f"  + {name:<26} {fmt.DIM}{mac}{ble}{fmt.RESET}")
+                def _tick(elapsed, total):
+                    bar = "█" * (elapsed * 20 // total) + "░" * (20 - elapsed * 20 // total)
+                    print(f"  [{bar}] {elapsed}/{total}s", end="\r", flush=True)
+                found = svc.watch_bt_scan(scan_seconds=22,
+                                           on_device=_new_dev, on_tick=_tick)
+                print()  # Zeilenumbruch nach Fortschrittsbalken
+                if found:
+                    fmt.out(f"\n✓ {len(found)} Gerät(e) gefunden.")
+                else:
+                    fmt.out("\n  Keine Geräte gefunden.")
+        elif args.bt_cmd in bt_trigger_map:
             r = svc.send(bt_trigger_map[args.bt_cmd])
             if use_json: fmt.print_json(r)
             else: fmt.out(f"BT: {args.bt_cmd} gesendet.")
@@ -379,13 +455,21 @@ def main():
         if not args.sys_cmd or args.sys_cmd == "info":
             v = svc.get_version()
             d = svc.get_status()
+            sp = svc.raspotify_status()
             if use_json:
                 fmt.print_json({"version": v, "online": d["online"],
-                                 "ip": d.get("wifi_ssid","")})
+                                 "ip": d.get("wifi_ssid",""),
+                                 "raspotify": sp})
             else:
                 fmt.out(f"PiDrive v{v}")
                 fmt.out(f"Core: {'online' if d['online'] else 'OFFLINE'}")
                 if d.get("wifi_ssid"): fmt.out(f"WiFi: {d['wifi_ssid']}")
+                sp_state = "aktiv ✓" if sp["active"] else ("inaktiv – Anmeldung nötig" if sp["enabled"] else "deaktiviert")
+                fmt.out(f"Spotify: {sp_state}")
+                if not sp["active"]:
+                    import cli.format as _f
+                    fmt.out(f"{_f.DIM}  → sudo systemctl enable --now raspotify{_f.RESET}")
+                    fmt.out(f"{_f.DIM}  → OAuth: {sp['oauth_cmd'][:60]}...{_f.RESET}")
         elif args.sys_cmd == "resources":
             r = svc.system_resources()
             if use_json: fmt.print_json(r)

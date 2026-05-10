@@ -162,6 +162,13 @@ def _init_dispatcher():
         end_fn   = _source_switch_end,
         info_fn  = _source_switch_info,
     )
+    # Guards auch in td_radio setzen — _scan_begin lebt dort
+    import td_radio as _td_radio
+    _td_radio._set_radio_guards(
+        begin_fn = _scan_begin,
+        end_fn   = _scan_end,
+        info_fn  = _scan_info,
+    )
 
 
 def check_trigger(menu_state, store, S, settings):

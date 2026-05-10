@@ -13,6 +13,20 @@ from modules import (
 )
 
 
+# ── Scan-Guards (werden von main_core.py per _set_radio_guards() gesetzt) ────
+_scan_begin = lambda source: True   # Platzhalter bis main_core Guards setzt
+_scan_end   = lambda: None
+_scan_info  = lambda: {}
+
+
+def _set_radio_guards(begin_fn, end_fn, info_fn):
+    """Guards von main_core.py empfangen — same pattern wie td_nav._set_nav_guards()"""
+    global _scan_begin, _scan_end, _scan_info
+    _scan_begin = begin_fn
+    _scan_end   = end_fn
+    _scan_info  = info_fn
+
+
 def handle(cmd, menu_state, store, S, settings, bg):
     # ── DAB Suchlauf ───────────────────────────────────────────────────────
     if cmd == "dab_scan":

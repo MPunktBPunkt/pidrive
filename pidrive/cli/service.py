@@ -197,6 +197,24 @@ class PiDriveService:
             "throttled": _sh("vcgencmd get_throttled 2>/dev/null | cut -d= -f2"),
         }
 
+    def raspotify_status(self) -> dict:
+        """Raspotify-Status und Anleitung zur Aktivierung."""
+        import subprocess as _sp
+        r = _sp.run(['systemctl', 'is-active', 'raspotify'],
+                    capture_output=True, text=True)
+        active = r.stdout.strip() == 'active'
+        r2 = _sp.run(['systemctl', 'is-enabled', 'raspotify'],
+                     capture_output=True, text=True)
+        enabled = r2.stdout.strip() == 'enabled'
+        return {
+            'active':  active,
+            'enabled': enabled,
+            'enable_cmd':  'sudo systemctl enable --now raspotify',
+            'oauth_cmd':   ('sudo systemctl stop raspotify && '
+                            '/usr/bin/librespot --name PiDrive --enable-oauth '
+                            '--system-cache /var/cache/raspotify'),
+        }
+
     def get_version(self) -> str:
         vf = os.path.join(BASE_DIR, "VERSION")
         try:
@@ -217,6 +235,111 @@ class PiDriveService:
             )
         except Exception as e:
             return f"Log nicht verfügbar: {e}"
+
+
+    # ── Live-Watch Methoden ────────────────────────────────────────────────
+
+    def watch_bt_scan(self, scan_seconds: int = 22, on_device=None, on_tick=None):
+        """BT-Scan starten und live Geräte zurückgeben.
+        on_device(device_dict) wird aufgerufen wenn neues Gerät erscheint.
+        on_tick(elapsed, total) wird aufgerufen jede Sekunde.
+        Gibt am Ende alle gefundenen Geräte zurück.
+        """
+        import time
+        self.send("bt_scan")
+        time.sleep(1.0)   # kurz warten bis Core den Scan startet
+
+        seen_macs = set()
+        found = []
+        start = time.time()
+
+        while True:
+            elapsed = time.time() - start
+            if elapsed > scan_seconds + 3:
+                break
+
+            # Entdeckte Geräte aus IPC-Datei lesen
+            devs = self.ipc.read_json("/tmp/pidrive_bt_devices.json",
+                                       {}).get("devices", [])
+            for d in devs:
+                mac = d.get("mac", "")
+                if mac and mac not in seen_macs:
+                    seen_macs.add(mac)
+                    found.append(d)
+                    if on_device:
+                        on_device(d)
+
+            if on_tick:
+                on_tick(int(elapsed), scan_seconds)
+
+            time.sleep(1.5)
+
+        return found
+
+    def watch_dab_play(self, station_name: str, timeout: int = 30,
+                        on_status=None, on_log_line=None):
+        """DAB-Station starten und live Status verfolgen.
+        on_status(state_dict) bei jeder Statusänderung.
+        on_log_line(line) für jede neue Zeile im DAB-Errlog.
+        Gibt finalen Status zurück: 'locked'|'no_lock'|'partial_sync'|'timeout'
+        """
+        import time, os, glob
+        self.send(f"play_dab:{station_name}")
+        time.sleep(0.8)
+
+        start    = time.time()
+        last_state = ""
+        log_pos  = 0   # Leseposition im Errlog
+
+        while True:
+            elapsed = time.time() - start
+            if elapsed > timeout:
+                return "timeout"
+
+            # Status-JSON lesen
+            s = self.ipc.read_json("/tmp/pidrive_status.json", {})
+            state = s.get("dab_playback_state", "")
+            if state and state != last_state:
+                last_state = state
+                if on_status:
+                    on_status({
+                        "state":       state,
+                        "sync_ok":     s.get("dab_sync_ok", False),
+                        "pcm":         s.get("dab_pcm_seen", False),
+                        "sync_seen":   s.get("dab_sync_seen", False),
+                        "attempting":  s.get("dab_attempting", False),
+                        "last_error":  s.get("dab_last_error", ""),
+                        "elapsed":     int(elapsed),
+                    })
+                if state in ("locked", "pcm_only"):
+                    return "locked"
+                if state == "no_lock" and elapsed > 15:
+                    return "no_lock"
+
+            # DAB Errlog tail
+            try:
+                # Neueste Errlog-Datei finden
+                pattern = "/tmp/pidrive_dab_*.err"
+                errlogs = sorted(glob.glob(pattern))
+                if errlogs:
+                    errlog = errlogs[-1]
+                    with open(errlog) as f:
+                        f.seek(0, 2)  # initial ans Ende
+                        if log_pos == 0:
+                            log_pos = max(0, f.tell() - 500)
+                        f.seek(log_pos)
+                        new = f.read()
+                        if new:
+                            log_pos += len(new.encode())
+                            for line in new.splitlines():
+                                line = line.strip()
+                                if line and on_log_line:
+                                    on_log_line(line)
+            except Exception:
+                pass
+
+            time.sleep(1.5)
+
 
     # ── Debug ──────────────────────────────────────────────────────────────
 

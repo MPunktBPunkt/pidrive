@@ -19,7 +19,12 @@ WEB_DIR = BASE_DIR / "web"
 TEMPLATE_DIR = WEB_DIR / "templates"
 STATIC_DIR = WEB_DIR / "static"
 
-app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(os.path.dirname(__file__), "templates"),
+    static_folder=os.path.join(os.path.dirname(__file__), "static"),
+    static_url_path="/static",
+)
 
 
 # ── v0.10.55: Shared helpers aus webui_shared.py ──────────────────────────────
@@ -78,32 +83,68 @@ def _sanitize_floats(obj, _depth=0):
 # ── Unterseiten (v0.10.55) ──────────────────────────────────────────────
 @app.route("/bluetooth")
 def page_bluetooth():
-    vm = build_view_model(); vm = _sanitize_floats(vm)
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model bluetooth.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("bluetooth.html", vm=vm)
 
 @app.route("/audio")
 def page_audio():
-    vm = build_view_model(); vm = _sanitize_floats(vm)
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model audio.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("audio.html", vm=vm)
 
 @app.route("/rf-tools")
 def page_rf_tools():
-    vm = build_view_model(); vm = _sanitize_floats(vm)
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model rf-tools.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("rf-tools.html", vm=vm)
 
 @app.route("/diagnostics")
 def page_diagnostics():
-    vm = build_view_model(); vm = _sanitize_floats(vm)
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model diagnostics.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("diagnostics.html", vm=vm)
 
 @app.route("/avrcp")
 def page_avrcp():
-    vm = build_view_model(); vm = _sanitize_floats(vm)
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model avrcp.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("avrcp.html", vm=vm)
 
 @app.route("/webradio-admin")
 def page_webradio_admin():
-    vm = build_view_model(); vm = _sanitize_floats(vm)
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model webradio-admin.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("webradio-admin.html", vm=vm)
 
 
