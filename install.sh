@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.60"
+PIDRIVE_VERSION="0.10.62"
 
 # ============================================================
 # PiDrive Install Script
@@ -424,19 +424,23 @@ EOF
 chmod +x /usr/local/bin/spotify_event.sh
 ok "Spotify onevent Script"
 
-# Raspotify installieren falls nicht vorhanden (Frisch-Install)
-if ! dpkg -l raspotify 2>/dev/null | grep -q "^ii" && [ ! -f /etc/raspotify/conf ]; then
+# Raspotify installieren (Frisch-Install oder fehlerhafter Vorversuch)
+if ! command -v librespot &>/dev/null && ! dpkg -l raspotify 2>/dev/null | grep -q "^ii"; then
     info "Raspotify installieren..."
-    # Offizielle Installations-Methode (dtcooper/raspotify)
-    _RASP_DEB="https://github.com/dtcooper/raspotify/releases/latest/download/raspotify_latest_armhf.deb"
-    if curl -sLo /tmp/raspotify.deb "$_RASP_DEB" 2>/dev/null; then
-        dpkg -i /tmp/raspotify.deb 2>/dev/null || apt-get -f install -y -qq 2>/dev/null || true
-        rm -f /tmp/raspotify.deb
-        ok "Raspotify installiert"
+    # Offizielles Install-Script (architektur-unabhaengig, armhf + arm64)
+    if curl -sL https://dtcooper.github.io/raspotify/install.sh | sh 2>/dev/null; then
+        if command -v librespot &>/dev/null || dpkg -l raspotify 2>/dev/null | grep -q "^ii"; then
+            ok "Raspotify installiert"
+        else
+            warn "Raspotify-Install-Script lief, aber librespot nicht gefunden"
+            warn "  Manuell: curl -sL https://dtcooper.github.io/raspotify/install.sh | sh"
+        fi
     else
-        warn "Raspotify-Download fehlgeschlagen — Spotify Connect nicht verfügbar"
-        warn "  Manuell: https://github.com/dtcooper/raspotify"
+        warn "Raspotify-Installation fehlgeschlagen"
+        warn "  Manuell: curl -sL https://dtcooper.github.io/raspotify/install.sh | sh"
     fi
+else
+    ok "Raspotify bereits installiert"
 fi
 # ══════════════════════════════════════════════════════════════
 # Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.55)
