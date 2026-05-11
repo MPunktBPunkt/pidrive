@@ -239,10 +239,13 @@ Flags (vor dem Befehl angeben):
                        choices=["core","app","display","avrcp"])
 
     # ── debug ─────────────────────────────────────────────────────────────
-    p_dbg = sub.add_parser("debug", help="Debug-Informationen")
+    p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
     dbg_sub = p_dbg.add_subparsers(dest="dbg_cmd")
     dbg_sub.add_parser("state")
     dbg_sub.add_parser("dab")
+    dbg_sub.add_parser("avrcp", help="Letzte AVRCP-Events (Ringbuffer)")
+    p_inject = dbg_sub.add_parser("inject", help="Trigger direkt injizieren")
+    p_inject.add_argument("trigger", help="z.B. nav_down, enter, back, vol_up")
     dbg_sub.add_parser("bt")
     dbg_sub.add_parser("audio")
     dbg_sub.add_parser("menu")
@@ -708,6 +711,33 @@ Flags (vor dem Befehl angeben):
 
     # debug
     if args.cmd == "debug":
+        if args.dbg_cmd == "inject":
+            svc.require_online()
+            svc.send(args.trigger)
+            if use_json: fmt.print_json({"ok": True, "trigger": args.trigger})
+            else: fmt.out("Trigger injiziert: " + args.trigger)
+            sys.exit(EXIT_OK)
+        if args.dbg_cmd == "avrcp":
+            import json as _j
+            try:
+                with open("/tmp/pidrive_avrcp_events.json") as _f:
+                    data = _j.load(_f)
+                events = data.get("events", [])
+                total  = data.get("total", 0)
+                if use_json:
+                    fmt.print_json(data)
+                else:
+                    fmt.out("AVRCP Ringbuffer — letzte " + str(len(events)) + "/" + str(total) + " Events:")
+                    for ev in events[-20:]:
+                        import datetime as _dt
+                        ts = _dt.datetime.fromtimestamp(ev["ts"]).strftime("%H:%M:%S.%f")[:11]
+                        mapped = ev.get("trigger","") or fmt.DIM + "(ignoriert)" + fmt.RESET
+                        ctx = ev.get("context","?")
+                        fmt.out("  [" + ts + "] #" + str(ev["id"]).rjust(3) + " " +
+                                ev["event"].ljust(14) + " ctx=" + ctx.ljust(10) + " -> " + mapped)
+            except FileNotFoundError:
+                fmt.out("Noch keine AVRCP-Events (kein Bluetooth verbunden?)")
+            sys.exit(EXIT_OK)
         if not args.dbg_cmd:
             fmt.print_json(svc.debug_state())
             sys.exit(EXIT_OK)

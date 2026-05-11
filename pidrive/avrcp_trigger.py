@@ -39,6 +39,34 @@ READY_FILE   = "/tmp/pidrive_ready"
 # v0.10.55: Dedicated AVRCP-Log für Autotest
 AVRCP_RAW_LOG = "/var/log/pidrive/avrcp_raw.log"
 
+
+# Ringbuffer der letzten AVRCP-Events (P0.8 — Gold im Feldtest)
+_AVRCP_RINGBUF: list = []
+_RINGBUF_MAX = 30
+_AVRCP_EVENTS_FILE = "/tmp/pidrive_avrcp_events.json"
+
+def _push_ringbuf(event_id, event, trigger, context, source, elapsed_ms):
+    global _AVRCP_RINGBUF
+    import time as _t
+    entry = {
+        "id":      event_id,
+        "ts":      round(_t.time(), 3),
+        "event":   event,
+        "trigger": trigger or "",
+        "context": context,
+        "source":  source,
+        "ms":      elapsed_ms,
+    }
+    _AVRCP_RINGBUF.append(entry)
+    if len(_AVRCP_RINGBUF) > _RINGBUF_MAX:
+        _AVRCP_RINGBUF = _AVRCP_RINGBUF[-_RINGBUF_MAX:]
+    try:
+        import json as _j
+        with open(_AVRCP_EVENTS_FILE, "w") as _f:
+            _j.dump({"events": _AVRCP_RINGBUF, "total": _event_count}, _f)
+    except Exception:
+        pass
+
 DOUBLE_TAP_SEC = 1.2
 
 _last_enter_time  = 0.0
@@ -308,6 +336,8 @@ def handle_avrcp(event: str, source: str = "unknown", raw_line: str = ""):
         log.info(f"AVRCP    Mapping: {event!r} → {context_name} → (ignoriert)  [{dt_ctx_ms}ms]")
         log.info(f"AVRCP    HINWEIS: Kein Mapping für diesen Event/Kontext")
 
+    _push_ringbuf(_event_count, event, trigger, context_name, source,
+                  int((time.time() - t0) * 1000))
     _write_debug_full(event, trigger or "", context_name, source, ctx, t0)
 
 
@@ -614,4 +644,28 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys
+    if len(_sys.argv) >= 3 and _sys.argv[1] == "--simulate":
+        # Offline-Test: python3 avrcp_trigger.py --simulate NEXT
+        _event = _sys.argv[2].lower()
+        print(f"[simulate] event={_event!r}")
+        # Dummy-Status laden
+        try:
+            import json as _jj
+            _ctx = {
+                "context": "menu", "band": "",
+                "status": {"radio_type": "", "source_current": "idle"},
+                "menu": {"path": ["PiDrive"]},
+                "list": {"active": False},
+            }
+            _trigger = map_event(_event, _ctx)
+            print(f"[simulate] context=menu → trigger={_trigger!r}")
+            if _trigger:
+                print(f"[simulate] wuerde CMD_FILE schreiben: {_trigger}")
+            else:
+                print(f"[simulate] KEIN Mapping — unbekannter Event")
+        except Exception as _e:
+            print(f"[simulate] Fehler: {_e}")
+        _sys.exit(0)
+    
     main()
