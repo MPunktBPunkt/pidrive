@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.66
+# PiDrive — Kontext & Projektdokumentation v0.10.70
 
 ## Projektbeschreibung
 
@@ -28,7 +28,7 @@ curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh 
 
 ---
 
-## Aktueller Stand (v0.10.66)
+## Aktueller Stand (v0.10.70)
 
 ### Services
 
@@ -53,7 +53,7 @@ curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh 
 
 ---
 
-## Verzeichnisstruktur (v0.10.66)
+## Verzeichnisstruktur (v0.10.70)
 
 ```
 pidrive/
