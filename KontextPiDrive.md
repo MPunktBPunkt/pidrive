@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.71
+# PiDrive — Kontext & Projektdokumentation v0.10.72
 
 ## Projektbeschreibung
 
@@ -23,7 +23,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Aktueller Stand (v0.10.71)
+## Aktueller Stand (v0.10.72)
 
 ### Services
 
@@ -48,7 +48,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Verzeichnisstruktur (v0.10.71)
+## Verzeichnisstruktur (v0.10.72)
 
 ```
 pidrive/
@@ -90,7 +90,7 @@ pidrive/
 
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.71)
+## pidrivectl Kommandoreferenz (v0.10.72)
 
 ```bash
 # Basis
@@ -110,6 +110,8 @@ pidrivectl stop                # Stoppen
 pidrivectl station list dab|fm|web
 pidrivectl favorites list      # Merged: favorites.json + ★
 pidrivectl favorites add       # Aktuellen Sender hinzufügen
+pidrivectl favorites remove 1  # Favorit entfernen (Nummer oder Name)
+pidrivectl favorites play 1    # Favorit abspielen
 
 # Bluetooth
 pidrivectl bt scan             # Live-Scan (22s, Fortschrittsbalken)
@@ -125,7 +127,9 @@ pidrivectl audio route klinke  # Audio-Ausgang
 pidrivectl audio status
 
 # DAB+
-pidrivectl dab status          # Lock/PCM/Sync/Fehler
+pidrivectl dab status          # Snapshot: Lock/PCM/Sync/Fehler
+pidrivectl dab live            # Live-Monitor (Empfang, Lock, PCM, DLS)
+pidrivectl dab live --changes  # Nur Zustandsänderungen (ideal im Auto)
 pidrivectl dab scan            # Sendersuchlauf
 
 # PPM-Kalibrierung
