@@ -79,7 +79,13 @@ def start_agent_session():
             _AGENT_PROC.stdin.write("agent NoInputNoOutput\n")
             _AGENT_PROC.stdin.write("default-agent\n")
             _AGENT_PROC.stdin.flush()
-            _sleep_s(1.0)
+            _sleep_s(0.5)
+            # Pi discoverable + pairable machen (BMW muss Pi finden können)
+            _AGENT_PROC.stdin.write("discoverable on\n")
+            _AGENT_PROC.stdin.write("pairable on\n")
+            _AGENT_PROC.stdin.flush()
+            _sleep_s(0.5)
+            log.info("BT Agent: discoverable=on pairable=on")
 
             _write_agent_state(
                 running=True,
