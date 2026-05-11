@@ -136,3 +136,69 @@ def print_dab_status(data: dict):
     err_line = d.get("last_error_line") or d.get("dab_last_error","")
     if err_line:
         out(_c(f"  Fehler:        {err_line}", YELLOW))
+
+
+def _yn(v):
+    return (GREEN + "ja" + RESET) if v else (DIM + "nein" + RESET)
+
+def _state_color(state):
+    if state in ("playing", "pcm_seen", "audio_ready"): return GREEN + state + RESET
+    if state in ("partial_sync",): return YELLOW + state + RESET
+    if state in ("no_lock", "failed", "error"): return RED + state + RESET
+    return state or "?"
+
+def format_dab_live_block(snap: dict) -> str:
+    """Kompakter Refresh-Block für pidrivectl dab live."""
+    import datetime as _dt
+    ts   = _dt.datetime.fromtimestamp(snap["ts"]).strftime("%H:%M:%S")
+    src  = snap.get("source_current", "?")
+    name = snap.get("radio_name", "?") or "?"
+    ch   = snap.get("channel", "") or "–"
+    sid  = snap.get("service_id", "") or "–"
+    st   = _state_color(snap.get("dab_playback_state", "?"))
+    err  = snap.get("last_error", "") or "–"
+    dls  = snap.get("dls_text", "") or "–"
+    art  = snap.get("artist", "") or ""
+    trk  = snap.get("track", "") or ""
+    ef   = snap.get("sess_err_file", "") or "–"
+    warns = snap.get("warnings", [])
+
+    lines = [
+        BOLD + "DAB LIVE" + RESET + "  [" + ts + "]  Quelle: " + src,
+        "  Sender:      " + BOLD + name + RESET,
+        "  Kanal:       " + ch + "  SID: " + sid,
+        "  State:       " + st,
+        "  Attempting:  " + _yn(snap.get("dab_attempting")),
+        "  Sync OK:     " + _yn(snap.get("dab_sync_ok")) +
+            ("  (partial)" if snap.get("dab_partial_sync") else ""),
+        "  Superframe:  " + _yn(snap.get("dab_superframe_seen")),
+        "  PCM:         " + _yn(snap.get("dab_pcm_seen")),
+        "  Audio ready: " + _yn(snap.get("dab_audio_ready")),
+        "  Radio spielt:" + _yn(snap.get("radio_playing")),
+        "  Audio-Ausgang:" + (snap.get("audio_route") or "?"),
+        "  DLS:         " + dls[:60],
+    ]
+    if art or trk:
+        lines.append("  Titel:       " + " – ".join(filter(None, [art, trk]))[:60])
+    lines.append("  Letzter Fehler: " + err[:70])
+    lines.append("  Errfile:     " + ef)
+    if warns:
+        for w in warns:
+            lines.append("  " + YELLOW + "⚠  " + w + RESET)
+    return "\n".join(lines)
+
+
+def format_dab_change_line(snap: dict, diff: dict) -> str:
+    """Eine Zeile für --changes Modus."""
+    import datetime as _dt
+    ts = _dt.datetime.fromtimestamp(snap["ts"]).strftime("%H:%M:%S")
+    parts = []
+    for k, v in sorted(diff.items()):
+        if isinstance(v, bool): parts.append(k + "=" + ("ja" if v else "nein"))
+        elif v == "" or v is None: parts.append(k + "=–")
+        else: parts.append(k + "=" + repr(str(v)[:40]))
+    warn_str = ""
+    for w in snap.get("warnings", []):
+        warn_str += "  " + YELLOW + "⚠ " + w + RESET
+    return ts + "  " + "  ".join(parts) + warn_str
+

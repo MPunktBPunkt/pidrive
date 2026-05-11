@@ -171,6 +171,8 @@ Flags (vor dem Befehl angeben):
     p_fp = fav_sub.add_parser("play")
     p_fp.add_argument("query", help="Nummer oder Name")
     p_fa = fav_sub.add_parser("add", help="Sender zu Favoriten hinzufuegen")
+    p_fr = fav_sub.add_parser("remove", help="Favorit entfernen")
+    p_fr.add_argument("name", help="Name oder Nummer")
     p_fa.add_argument("name", nargs="?", default=None,
                       help="Sendername (leer = aktueller Sender)")
 
@@ -223,6 +225,11 @@ Flags (vor dem Befehl angeben):
     dab_sub.add_parser("next")
     dab_sub.add_parser("prev")
     dab_sub.add_parser("stop")   # Alias fuer radio_stop
+
+    p_dab_live = dab_sub.add_parser("live", help="Live-Monitor")
+    p_dab_live.add_argument("--once", action="store_true")
+    p_dab_live.add_argument("--changes", action="store_true")
+    p_dab_live.add_argument("--interval", type=float, default=1.0)
 
     # ── system ────────────────────────────────────────────────────────────
     p_sys = sub.add_parser("system", help="System")
@@ -420,6 +427,28 @@ Flags (vor dem Befehl angeben):
                 r = svc.send("favorites_add_current")
                 if use_json: fmt.print_json(r)
                 else: fmt.out("Aktueller Sender zu Favoriten hinzugefuegt.")
+        elif args.fav_cmd == "remove":
+            import json as _jf, os as _of
+            _cfg = "/home/pi/pidrive/pidrive/config/favorites.json"
+            try:
+                with open(_cfg) as _ff: _fd = _jf.load(_ff)
+            except Exception: _fd = {"version":1,"favorites":[]}
+            _fl = _fd.get("favorites", [])
+            _n = args.name
+            if _n.isdigit():
+                _i = int(_n) - 1
+                if 0 <= _i < len(_fl): _rm = _fl.pop(_i)
+                else: _exit_err("Nummer " + _n + " nicht gefunden", EXIT_NOTFOUND)
+            else:
+                _new = [x for x in _fl if x.get("name","").lower() != _n.lower()]
+                if len(_new) == len(_fl): _exit_err("Nicht gefunden: " + _n, EXIT_NOTFOUND)
+                _rm = {"name": _n}; _fl = _new
+            _fd["favorites"] = _fl
+            try:
+                with open(_cfg,"w") as _ff: _jf.dump(_fd, _ff, indent=2)
+            except Exception as _e: _exit_err(str(_e), EXIT_ERROR)
+            if use_json: fmt.print_json({"ok":True,"removed":_rm.get("name","?")})
+            else: fmt.out("Favorit entfernt: " + _rm.get("name","?"))
         sys.exit(EXIT_OK)
 
     # bt
@@ -595,13 +624,15 @@ Flags (vor dem Befehl angeben):
     if args.cmd == "ppm":
         if not args.ppm_cmd or args.ppm_cmd == "status":
             # PPM aus settings.json lesen
-            import json as _jsppm, os as _osppm
+            import json as _jsppm
             try:
-                _sp = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "settings.json")
-                _s = json.load(open(_sp))
-                ppm_val = _s.get("ppm", "?")
+                _sp = __file__.replace("cli/cli.py","config/settings.json").replace("cli\\cli.py","config\\settings.json")
+                import os as _osp
+                _sp = _osp.path.join(_osp.path.dirname(_osp.path.dirname(_osp.path.abspath(__file__))), "config", "settings.json")
+                _s = _jsppm.load(open(_sp))
+                ppm_val = _s.get("ppm") or _s.get("ppm_correction", 0)
                 if use_json: fmt.print_json({"ppm": ppm_val})
-                else: fmt.out("PPM-Offset: " + str(ppm_val) + "  (DAB/FM RTL-SDR Kalibrierung)")
+                else: fmt.out("PPM-Offset: " + str(ppm_val) + "  (RTL-SDR DAB/FM)")
             except Exception as e:
                 fmt.out("PPM: " + str(e))
         elif args.ppm_cmd == "set":
@@ -664,6 +695,28 @@ Flags (vor dem Befehl angeben):
             svc.require_online()
             svc.send("radio_stop")
             fmt.out("DAB gestoppt.")
+        elif args.dab_cmd == "live":
+            if not svc.ipc.core_online():
+                fmt.err("Core offline"); sys.exit(EXIT_OFFLINE)
+            once = getattr(args,"once",False); changes = getattr(args,"changes",False)
+            interval = getattr(args,"interval",1.0)
+            import os as _os
+            try:
+                if once:
+                    snap = svc.get_dab_live_snapshot()
+                    if use_json: fmt.print_json(snap)
+                    else: fmt.out(fmt.format_dab_live_block(snap))
+                elif changes:
+                    fmt.out("DAB Live --changes | Ctrl+C zum Beenden")
+                    for snap, diff in svc.iter_dab_live(interval=interval, changes=True):
+                        if diff: fmt.out(fmt.format_dab_change_line(snap, diff))
+                else:
+                    for snap, _ in svc.iter_dab_live(interval=interval, changes=False):
+                        if _os.isatty(1): print("\033[2J\033[H", end="", flush=True)
+                        fmt.out(fmt.format_dab_live_block(snap))
+                        if not _os.isatty(1): break
+            except KeyboardInterrupt:
+                fmt.out("\nMonitor beendet.")
         sys.exit(EXIT_OK)
 
     # system

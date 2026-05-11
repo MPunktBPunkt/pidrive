@@ -307,6 +307,88 @@ class PiDriveService:
                 if state == "connected": return "connected"
             time.sleep(1.5)
 
+
+    # ── DAB Live Monitor ──────────────────────────────────────────────────
+
+    def get_dab_live_snapshot(self) -> dict:
+        """Aggregiert Status, Source-State und DAB-Debug zu einem Live-Snapshot."""
+        import time as _t
+        s  = self.ipc.read_json(STATUS_FILE, {})
+        ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
+        dd = self.ipc.read_json(DAB_DEBUG_FILE, {})
+
+        snap = {
+            "ts":                 _t.time(),
+            "online":             self.ipc.core_online(),
+            # Quelle + Transition
+            "source_current":     ss.get("source_current", s.get("source_current", "?")),
+            "transition":         ss.get("transition", False),
+            "audio_route":        ss.get("audio_route", s.get("audio_out", "?")),
+            # Wiedergabe
+            "radio_playing":      bool(s.get("radio")),
+            "radio_name":         s.get("radio_name", "") or dd.get("station", ""),
+            "channel":            dd.get("channel", ""),
+            "service_id":         dd.get("service_id", ""),
+            "ensemble":           dd.get("ensemble", ""),
+            # DAB Empfangsstatus (aus status.json primär)
+            "dab_playback_state": s.get("dab_playback_state", dd.get("state", "?")),
+            "dab_attempting":     bool(s.get("dab_attempting")),
+            "dab_sync_ok":        bool(s.get("dab_sync_ok")),
+            "dab_sync_seen":      bool(s.get("dab_sync_seen") or dd.get("sync_seen")),
+            "dab_partial_sync":   bool(s.get("dab_partial_sync")),
+            "dab_pcm_seen":       bool(s.get("dab_pcm_seen") or dd.get("pcm_seen")),
+            "dab_audio_ready":    bool(s.get("dab_audio_ready")),
+            "dab_superframe_seen":bool(s.get("dab_superframe_seen") or dd.get("superframe_seen")),
+            # Fehler + DLS
+            "last_error":         s.get("dab_last_error", "") or dd.get("last_error_line", ""),
+            "dls_text":           s.get("dls_text", "") or dd.get("last_dls_raw", ""),
+            "artist":             s.get("artist", "") or dd.get("last_dls_artist", ""),
+            "track":              s.get("track", "") or dd.get("last_dls_track", ""),
+            # Session (aus debug)
+            "session_id":         dd.get("session_id", ""),
+            "sess_err_file":      dd.get("sess_err_file", ""),
+            # Warnungen
+            "warnings":           [],
+        }
+
+        # Warnregeln: Zustandswidersprüche sichtbar machen
+        if snap["dab_pcm_seen"] and not snap["radio_playing"]:
+            snap["warnings"].append("PCM gesehen aber radio_playing=nein")
+        if snap["dab_sync_seen"] and snap["dab_playback_state"] == "no_lock":
+            snap["warnings"].append("Sync gesehen aber State=no_lock")
+        if snap["dab_audio_ready"] and not snap["dab_sync_ok"]:
+            snap["warnings"].append("audio_ready ohne stabilen Sync")
+        if snap["source_current"] != "dab" and snap["session_id"]:
+            snap["warnings"].append("DAB-Session aktiv aber source_current!='dab'")
+        return snap
+
+    # Felder die Change-Detection auslösen
+    _DAB_LIVE_CHANGE_KEYS = [
+        "session_id", "source_current", "radio_name", "channel",
+        "dab_playback_state", "dab_attempting", "dab_sync_ok",
+        "dab_sync_seen", "dab_pcm_seen", "dab_audio_ready",
+        "dab_superframe_seen", "radio_playing", "last_error", "dls_text",
+    ]
+
+    def iter_dab_live(self, interval=1.0, changes=False, once=False):
+        """Generator: liefert Snapshots. Bei changes=True nur bei Änderung."""
+        import time as _t
+        prev = None
+        while True:
+            snap = self.get_dab_live_snapshot()
+            if once:
+                yield snap, True
+                return
+            if changes and prev is not None:
+                diff = {k: snap[k] for k in self._DAB_LIVE_CHANGE_KEYS
+                        if snap.get(k) != prev.get(k)}
+                if diff:
+                    yield snap, diff
+            else:
+                yield snap, None
+            prev = snap
+            _t.sleep(interval)
+
     # ── Live-Watch Methoden ────────────────────────────────────────────────
 
     def watch_bt_scan(self, scan_seconds: int = 22, on_device=None, on_tick=None):
