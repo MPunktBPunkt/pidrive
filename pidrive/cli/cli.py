@@ -474,27 +474,70 @@ Flags (vor dem Befehl angeben):
             dev = svc.bt_resolve(args.query)
             if not dev:
                 _exit_err("BT-Geraet nicht gefunden: " + repr(args.query), EXIT_NOTFOUND)
+            mac  = dev["mac"]
+            name = dev.get("name") or mac
             if not dev.get("paired"):
-                fmt.out(fmt.YELLOW + "  Hinweis: Geraet ist nicht gepairt — zuerst 'bt pair' noetig" + fmt.RESET)
-            r = svc.send("bt_connect:" + dev["mac"])
-            if use_json: fmt.print_json(r)
-            else: fmt.out("Verbinde mit " + dev.get("name", dev["mac"]) + "…")
+                fmt.out(fmt.YELLOW + "  Hinweis: Nicht gepairt — zuerst 'pidrivectl bt pair " + mac + "'" + fmt.RESET)
+                sys.exit(EXIT_ERROR)
+            if use_json:
+                r = svc.send("bt_connect:" + mac)
+                fmt.print_json(r)
+            else:
+                fmt.out("Verbinde mit " + name + " (" + mac + ")…")
+                STATE = {"connected": "✓ Verbunden", "failed": "✗ Fehlgeschlagen", "timeout": "✗ Timeout"}
+                def _on_bt(d):
+                    fmt.out("  [" + str(d["elapsed"]).rjust(2) + "s] " + d["state"])
+                result = svc.watch_bt_connect(mac, name, timeout=20, on_status=_on_bt)
+                fmt.out("")
+                if result == "connected":
+                    fmt.out(fmt.GREEN + "✓ " + name + " verbunden" + fmt.RESET)
+                elif result == "failed":
+                    fmt.out(fmt.RED + "✗ Verbindung fehlgeschlagen — Geraet erreichbar?" + fmt.RESET)
+                else:
+                    fmt.out("✗ Timeout — kein Verbindungsaufbau nach 20s")
         elif args.bt_cmd == "pair":
             dev = svc.bt_resolve(args.query)
-            mac = dev["mac"] if dev else args.query.strip()
-            if use_json: fmt.print_json({"ok": True, "mac": mac, "action": "bt_repair"})
+            mac  = dev["mac"] if dev else args.query.strip()
+            name = dev.get("name","") if dev else mac
+            if use_json:
+                svc.send("bt_repair:" + mac)
+                fmt.print_json({"ok": True, "mac": mac, "action": "bt_repair"})
             else:
-                fmt.out("Pairing mit " + mac + "…")
-                fmt.out("  1. Geraet in Pairing-Modus bringen")
-                fmt.out("  2. Pairing laeuft (dauert bis 30s)…")
-            r = svc.send("bt_repair:" + mac)
-            if not use_json: fmt.out("  Pairing-Kommando gesendet — Status: pidrivectl bt status")
+                fmt.out("Pairing mit " + (name + " (" + mac + ")" if name and name != mac else mac))
+                fmt.out("  → Geraet jetzt in Pairing-Modus bringen!")
+                fmt.out("  → Warte auf Pairing-Abschluss (bis 30s)…")
+                import time as _t_pair
+                svc.send("bt_repair:" + mac)
+                _t_pair.sleep(2)
+                # Prüfe nach 5, 15, 25 Sekunden ob Gerät gepairt wurde
+                for _wait in [5, 10, 8]:
+                    _t_pair.sleep(_wait)
+                    _d = svc.get_status()
+                    # Prüfe BlueZ-Datenbank via bt_known
+                    _devs = svc.ipc.read_json("/tmp/pidrive_bt_known_devices.json", {}).get("devices", [])
+                    _paired = [x for x in _devs if x.get("mac","").upper() == mac.upper() and x.get("paired")]
+                    if _paired:
+                        fmt.out(fmt.GREEN + "✓ Gepairt: " + (_paired[0].get("name") or mac) + fmt.RESET)
+                        fmt.out("  Jetzt verbinden: pidrivectl bt connect " + mac)
+                        break
+                else:
+                    fmt.out("  Pairing-Status unbekannt — pruefe: pidrivectl bt known")
+                    fmt.out("  Tipp: Geraet wirklich in Pairing-Modus?")
         elif args.bt_cmd == "status":
             d = svc.get_status()
             if use_json:
                 fmt.print_json({"bt": d["bt"], "device": d["bt_device"], "status": d["bt_status"]})
             else:
-                fmt.out(f"Bluetooth: {'verbunden' if d['bt'] else 'getrennt'}")
+                connected = d.get("bt", False)
+                device    = d.get("bt_device", "") or "–"
+                state_str = d.get("bt_status", "getrennt")
+                if connected:
+                    fmt.out(fmt.GREEN + "✓ Verbunden: " + device + fmt.RESET)
+                else:
+                    fmt.out("Bluetooth: " + state_str)
+                    agent = svc.ipc.read_json("/tmp/pidrive_bt_agent.json", {})
+                    if agent.get("ready"):
+                        fmt.out("  Agent: bereit (kann Geraete pairen)")
                 if d.get("bt_device"): fmt.out(f"  Gerät: {d['bt_device']}")
         sys.exit(EXIT_OK)
 
@@ -582,7 +625,11 @@ Flags (vor dem Befehl angeben):
             trig = {"klinke": "audio_klinke","bt":"audio_bt","hdmi":"audio_hdmi","auto":"audio_all"}[args.mode]
             r = svc.send(trig)
             if use_json: fmt.print_json(r)
-            else: fmt.out(f"Audio-Route: {args.mode}")
+            else:
+                import time as _t_ar; _t_ar.sleep(0.3)
+                d2 = svc.get_status()
+                new_out = d2.get("audio_effective", args.mode)
+                fmt.out("Audio-Ausgang: " + fmt.GREEN + new_out + " ✓" + fmt.RESET)
         elif args.audio_cmd == "status":
             d = svc.get_status()
             if use_json: fmt.print_json({"audio_out": d["audio_out"], "effective": d["audio_eff"]})

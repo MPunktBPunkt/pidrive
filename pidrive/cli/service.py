@@ -72,7 +72,8 @@ class PiDriveService:
         }
 
     def get_now(self) -> dict:
-        s = self.ipc.read_json(STATUS_FILE, {})
+        s  = self.ipc.read_json(STATUS_FILE, {})
+        ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
         src = ""
         # source_current ist autoritativ — spotify=True heisst nur Raspotify läuft
         _cur = ss.get("source_current", "")
@@ -284,6 +285,27 @@ class PiDriveService:
         except Exception as e:
             return f"Log nicht verfügbar: {e}"
 
+
+
+    def watch_bt_connect(self, mac, name="?", timeout=20, on_status=None):
+        """BT-Connect senden und auf Verbindung warten.
+        Gibt 'connected', 'failed' oder 'timeout' zurueck.
+        """
+        import time
+        self.send("bt_connect:" + mac)
+        start = time.time()
+        last = ""
+        while True:
+            elapsed = time.time() - start
+            if elapsed > timeout:
+                return "timeout"
+            d = self.ipc.read_json("/tmp/pidrive_status.json", {})
+            state = "connected" if d.get("bt") and d.get("bt_device","").replace("-",":").upper() == mac.upper() else                     "connecting" if d.get("bt_on") else "failed"
+            if state != last:
+                last = state
+                if on_status: on_status({"state": state, "elapsed": int(elapsed), "mac": mac})
+                if state == "connected": return "connected"
+            time.sleep(1.5)
 
     # ── Live-Watch Methoden ────────────────────────────────────────────────
 

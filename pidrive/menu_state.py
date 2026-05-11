@@ -1,5 +1,5 @@
 """
-DEPRECATED SHIM — Rückwärtskompatibilität v0.10.66
+DEPRECATED SHIM — Rückwärtskompatibilität v0.10.70
 Echte Implementierung: pidrive/menu/menu_state.py
 Geplant: v0.11.x
 """
