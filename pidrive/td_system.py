@@ -1,5 +1,5 @@
 """
-DEPRECATED SHIM — Rückwärtskompatibilität v0.10.75
+DEPRECATED SHIM — Rückwärtskompatibilität v0.10.76
 Echte Implementierung: pidrive/trigger/td_system.py
 """
 from trigger.td_system import *  # noqa: F401,F403
