@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.77
+# PiDrive — Kontext & Projektdokumentation v0.10.78
 
 ## Projektbeschreibung
 
@@ -28,7 +28,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Aktueller Stand (v0.10.77)
+## Aktueller Stand (v0.10.78)
 
 ### Services
 
@@ -53,7 +53,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Verzeichnisstruktur (v0.10.77)
+## Verzeichnisstruktur (v0.10.78)
 
 ```
 pidrive/
@@ -85,7 +85,7 @@ pidrive/
 
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.77)
+## pidrivectl Kommandoreferenz (v0.10.78)
 
 ```bash
 # Basis
@@ -169,7 +169,7 @@ trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_syst
 
 ---
 
-## Installer-Plattform-Logik (v0.10.77)
+## Installer-Plattform-Logik (v0.10.78)
 
 | Feature | Bedingung | Debian Container |
 |---|---|---|
@@ -186,6 +186,10 @@ trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_syst
 | RTL-SDR udev-Regel | immer | ✓ |
 | pidrivectl Wrapper | $REAL_HOME | ✓ |
 | sudoers | $REAL_USER | ✓ |
+| `run_as_real_user()` | sudo → runuser → su → direkt | ✓ |
+| system.pa | dynamisch (IS_PI / IS_CONTAINER) | ✓ |
+| udev RTL-SDR | nicht in Container | ✓ |
+| asound.conf | nicht in Container | ✓ |
 | ALSA Card | dynamisch erkannt | ✓ |
 | pidrive-Gruppe | angelegt | ✓ |
 | /tmp/pidrive_cmd | 0660 root:pidrive | ✓ |
