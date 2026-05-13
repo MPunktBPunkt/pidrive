@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.78
+# PiDrive — Kontext & Projektdokumentation v0.10.79
 
 ## Projektbeschreibung
 
@@ -28,7 +28,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Aktueller Stand (v0.10.78)
+## Aktueller Stand (v0.10.79)
 
 ### Services
 
@@ -53,7 +53,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Verzeichnisstruktur (v0.10.78)
+## Verzeichnisstruktur (v0.10.79)
 
 ```
 pidrive/
@@ -85,7 +85,7 @@ pidrive/
 
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.78)
+## pidrivectl Kommandoreferenz (v0.10.79)
 
 ```bash
 # Basis
@@ -169,7 +169,7 @@ trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_syst
 
 ---
 
-## Installer-Plattform-Logik (v0.10.78)
+## Installer-Plattform-Logik (v0.10.79)
 
 | Feature | Bedingung | Debian Container |
 |---|---|---|
