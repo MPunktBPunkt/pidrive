@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.75"
+PIDRIVE_VERSION="0.10.76"
 
 # ============================================================
 # PiDrive Install Script
@@ -209,10 +209,12 @@ ok "Log-Verzeichnis: $LOG_DIR"
   # v0.10.55: tmpfiles.d — IPC-Dateien 0666 damit webui (pi) CMD_FILE schreiben kann
   cat > /etc/tmpfiles.d/pidrive.conf << 'TMPEOF'
 # PiDrive IPC: world-writable damit webui (pi) CMD_FILE schreiben kann
-f /tmp/pidrive_cmd          0666 root root -
-f /tmp/pidrive_status.json  0666 root root -
-f /tmp/pidrive_menu.json    0666 root root -
-f /tmp/pidrive_list.json    0666 root root -
+# Trigger: nur pidrive-Gruppe darf schreiben (nicht world-write)
+f /tmp/pidrive_cmd          0660 root pidrive -
+# Status/Menu: world-readable für Diagnose
+f /tmp/pidrive_status.json  0664 root pidrive -
+f /tmp/pidrive_menu.json    0664 root pidrive -
+f /tmp/pidrive_list.json    0664 root pidrive -
 TMPEOF
   # Sofort anwenden auf bestehende Dateien
   chmod 666 /tmp/pidrive_cmd 2>/dev/null || true
@@ -346,7 +348,9 @@ sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_display.service"
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive_web.service" "$SERVICE_DIR/pidrive_web.service"
-    sed -i "s|/home/pi/|$REAL_HOME/|g" "$SERVICE_DIR/pidrive_web.service"
+    sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_web.service"
+    sed -i "s|PIDRIVE_REAL_USER|${REAL_USER}|g" "$SERVICE_DIR/pidrive_web.service"
+    ok "pidrive_web.service: User=${REAL_USER}"
 fi
 
 # AVRCP Service
@@ -405,6 +409,9 @@ ok "sudoers: NOPASSWD für pidrive-Wartungsbefehle"
 # SCHRITT 9: Berechtigungen
 # ══════════════════════════════════════════════════════════════
 info "9/10 Berechtigungen setzen..."
+# pidrive-Gruppe anlegen (IPC-Schreibrecht + Bedienung)
+groupadd -f pidrive 2>/dev/null || true
+usermod -a -G pidrive "$REAL_USER" 2>/dev/null || true
 usermod -a -G video,input,render,tty,systemd-journal "$REAL_USER" 2>/dev/null || true
 ok "Gruppen: video, input, render, tty, systemd-journal"
 
@@ -747,6 +754,21 @@ fake-hwclock save 2>/dev/null && ok "fake-hwclock: aktuelle Zeit gespeichert" ||
 # ── RTL-SDR Check ─────────────────────────────────────────────────────────
 
 # DVB-T Treiber blacklisten (blockiert sonst RTL-SDR für rtl_fm/welle-cli)
+# udev-Regel fuer RTL-SDR (Zugriff fuer plugdev-Gruppe)
+UDEV_RTL="/etc/udev/rules.d/10-rtlsdr.rules"
+if [ ! -f "$UDEV_RTL" ]; then
+    cat > "$UDEV_RTL" << 'UDEVEOF'
+# PiDrive: RTL-SDR Zugriff fuer Gruppe plugdev
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", GROUP="plugdev", MODE="0664"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2832", GROUP="plugdev", MODE="0664"
+UDEVEOF
+    udevadm control --reload-rules 2>/dev/null || true
+    ok "udev: RTL-SDR Regel angelegt (plugdev-Gruppe)"
+else
+    ok "udev: RTL-SDR Regel bereits vorhanden"
+fi
+usermod -a -G plugdev "$REAL_USER" 2>/dev/null || true
+
 info "RTL-SDR: DVB-T Treiber blacklisten..."
 BLACKLIST=/etc/modprobe.d/rtl-sdr-blacklist.conf
 if [ ! -f "$BLACKLIST" ] || ! grep -q "dvb_usb_rtl28xxu" "$BLACKLIST" 2>/dev/null; then

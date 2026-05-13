@@ -141,8 +141,8 @@ ok "RTL-SDR State bereinigt"
 # 6) Python-Cache bereinigen
 # ------------------------------------------------------------------
 info "Python-Cache entfernen..."
-find /home/pi/pidrive -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-find /home/pi/pidrive -name "*.pyc" -delete 2>/dev/null || true
+find $INSTALL_DIR -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+find $INSTALL_DIR -name "*.pyc" -delete 2>/dev/null || true
 ok "Python-Cache bereinigt"
 
 # ------------------------------------------------------------------

@@ -54,7 +54,7 @@ PA="PULSE_SERVER=unix:/var/run/pulse/native"
   python3 -c "
 import json, sys
 try:
-    s = json.load(open('/home/pi/pidrive/pidrive/config/settings.json'))
+    s = json.load(open('$INSTALL_DIR/pidrive/config/settings.json'))
     keys = ['audio_output','volume','fm_gain','dab_gain','scanner_gain','ppm_correction','scanner_squelch','last_source','bt_last_name']
     for k in keys:
         print(f'  {k}: {s.get(k, \"(nicht gesetzt)\")}')

@@ -10,8 +10,8 @@ StartLimitBurst=10
 [Service]
 UMask=0000
 Type=simple
-User=pi
-Group=pi
+User=PIDRIVE_REAL_USER
+Group=PIDRIVE_REAL_USER
 SupplementaryGroups=systemd-journal
 WorkingDirectory=/home/pi/pidrive/pidrive
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/webui.py
