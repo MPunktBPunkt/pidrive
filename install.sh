@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.72"
+PIDRIVE_VERSION="0.10.75"
 
 # ============================================================
 # PiDrive Install Script
@@ -31,6 +31,26 @@ else
 fi
 REAL_HOME=$(eval echo "~$REAL_USER")
 INSTALL_DIR="$REAL_HOME/pidrive"
+
+# ── Platform Detection ────────────────────────────────────────────────────
+ARCH=$(uname -m)
+IS_ARM=false
+[[ "$ARCH" == arm* ]] || [[ "$ARCH" == aarch64 ]] && IS_ARM=true
+
+IS_PI=false
+grep -qi "Raspberry Pi" /proc/cpuinfo 2>/dev/null && IS_PI=true
+
+IS_CONTAINER=false
+systemd-detect-virt --container -q 2>/dev/null && IS_CONTAINER=true
+
+HAS_DISPLAY=false
+[ -e /sys/class/graphics/fb1 ] && HAS_DISPLAY=true
+
+HAS_BT=false
+command -v bluetoothctl &>/dev/null && bluetoothctl list 2>/dev/null | grep -q Controller && HAS_BT=true
+
+HAS_SDR=false
+lsusb 2>/dev/null | grep -qi "0bda:2838\|0bda:2832\|RTL2832\|RTL2838" && HAS_SDR=true
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -84,7 +104,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     python3-pygame python3-pip git mpv \
     avahi-daemon avahi-utils rfkill \
     bluez pulseaudio pulseaudio-module-bluetooth \
-    wpasupplicant dhcpcd5 rtl-sdr sox \
+    wpasupplicant rtl-sdr sox \
     python3-flask \
     python3-bluez \
     python3-dbus \
@@ -93,6 +113,9 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
 
 apt-get install -y -qq welle.io 2>/dev/null || \
     warn "welle.io nicht verfuegbar — DAB+ spaeter installierbar"
+if $IS_PI; then
+    apt-get install -y -q dhcpcd5 2>/dev/null || true
+fi
 ok "System-Pakete installiert"
 
 # pip3 Kompatibilität: --break-system-packages nur ab pip 22 (Python 3.10+)
@@ -104,10 +127,20 @@ _pip_install() {
     true
 }
 _pip_install mutagen
-_pip_install RPi.GPIO
+# RPi.GPIO nur auf ARM (nicht auf x86_64/Thin-Client)
+if [[ "$(uname -m)" == arm* ]] || [[ "$(uname -m)" == aarch64 ]]; then
+    _pip_install RPi.GPIO
+    GPIO_INSTALLED=true
+else
+    GPIO_INSTALLED=false
+fi
 # v0.9.4: numpy für spectrum.py Prototyp
 apt-get install -y python3-numpy -q 2>/dev/null || _pip_install numpy
-ok "Python-Pakete installiert (mutagen, RPi.GPIO, numpy)"
+if [ "$GPIO_INSTALLED" = "true" ]; then
+    ok "Python-Pakete installiert (mutagen, RPi.GPIO, numpy)"
+else
+    ok "Python-Pakete installiert (mutagen, numpy) — RPi.GPIO uebersprungen (kein ARM)"
+fi
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 3: Repository klonen / aktualisieren
@@ -191,6 +224,9 @@ TMPEOF
 # SCHRITT 5: /boot/config.txt
 # ══════════════════════════════════════════════════════════════
 info "5/10 /boot/config.txt konfigurieren..."
+if ! $IS_PI; then
+    ok "/boot/config.txt: uebersprungen (kein Raspberry Pi)"
+else
 # Bookworm: /boot/firmware/config.txt  |  Bullseye: /boot/config.txt
 if [ -f /boot/firmware/config.txt ]; then
     BOOT_DIR="/boot/firmware"
@@ -211,17 +247,19 @@ sed -i 's/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/'   "$CONFIG_TXT" 2>/dev
 sed -i 's/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/' "$CONFIG_TXT" 2>/dev/null || true
 grep -q "^max_framebuffers=2" "$CONFIG_TXT" || echo "max_framebuffers=2" >> "$CONFIG_TXT"
 
-# v0.10.9: fbcon=nodeconfig in cmdline.txt setzen (SPI-Display braucht das)
-# LCD-show setzt es auch, aber erst nach Neustart → direkt hier sicherstellen
-if [ -f "$CMDLINE_TXT" ]; then
-    if ! grep -q "fbcon=nodeconfig" "$CMDLINE_TXT"; then
+# fbcon=nodeconfig: nur wenn SPI-Display (fb1) vorhanden oder bereits konfiguriert
+if [ -e /sys/class/graphics/fb1 ] || grep -q "fbcon=nodeconfig" "$CMDLINE_TXT" 2>/dev/null; then
+    if [ -f "$CMDLINE_TXT" ] && ! grep -q "fbcon=nodeconfig" "$CMDLINE_TXT"; then
         sed -i 's/$/ fbcon=nodeconfig/' "$CMDLINE_TXT"
-        ok "cmdline.txt: fbcon=nodeconfig gesetzt"
+        ok "cmdline.txt: fbcon=nodeconfig gesetzt (fb1-Display erkannt)"
     else
         ok "cmdline.txt: fbcon=nodeconfig bereits vorhanden"
     fi
+else
+    ok "cmdline.txt: kein SPI-Display erkannt — fbcon-Konfiguration uebersprungen"
 fi
 ok "/boot/config.txt konfiguriert"
+fi  # IS_PI boot config
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 6: rc.local (Boot-Vorbereitung)
@@ -230,16 +268,18 @@ info "6/10 rc.local konfigurieren..."
 RC="/etc/rc.local"
 # v0.6.0: minimal rc.local - kein fbcp, kein chvt, kein tty3
 # Immer neu schreiben fuer saubere Migration
-cat > "$RC" << 'RCEOF'
+cat > "$RC" << 'RC_HEREDOC_END'
 #!/bin/sh -e
-# rc.local - PiDrive v0.6.0
-# vtcon1 unbinden: fbcon gibt fb1 frei fuer pygame direkt
+# rc.local - PiDrive
+# vtcon1 unbind: nur wenn SPI-Display (fb1) vorhanden
+if [ -e /sys/class/graphics/fb1 ]; then
 echo 0 > /sys/class/vtconsole/vtcon1/bind 2>/dev/null || true
 echo 0 > /sys/class/graphics/fbcon/cursor_blink 2>/dev/null || true
+fi
 exit 0
-RCEOF
+RC_HEREDOC_END
 chmod +x "$RC"
-ok "rc.local: vtcon1 unbind (kein fbcp, kein chvt, kein tty3)"
+ok "rc.local: konfiguriert (vtcon1 unbind nur wenn fb1 vorhanden)"
 
 info "7/10 System-Konfiguration..."
 # tty3 udev-Regel nicht mehr noetig (kein TIOCSCTTY in v0.6.0)
@@ -265,10 +305,10 @@ chmod +x "$INSTALL_DIR/pidrive/cli/cli.py"
 # Alten Symlink ZUERST entfernen (sonst überschreibt cat > die Zieldatei)
 rm -f /usr/local/bin/pidrivectl /usr/bin/pidrivectl
 # Wrapper als echte Datei anlegen (kein Symlink, kein .py)
-cat > /usr/local/bin/pidrivectl << 'WRAPPER'
+cat > /usr/local/bin/pidrivectl << WRAPPER_END
 #!/bin/bash
-exec python3 /home/pi/pidrive/pidrive/cli/cli.py "$@"
-WRAPPER
+exec python3 ${REAL_HOME}/pidrive/pidrive/cli/cli.py "$@"
+WRAPPER_END
 chmod +x /usr/local/bin/pidrivectl
 # Auch in /usr/bin damit sudo es findet
 ln -sf /usr/local/bin/pidrivectl /usr/bin/pidrivectl 2>/dev/null || true
@@ -334,7 +374,7 @@ EOF
 
 systemctl daemon-reload
 systemctl enable pidrive_core pidrive_display rfkill-unblock 2>/dev/null || true
-ok "Dienste aktiviert (pidrive_core, pidrive_display, rfkill-unblock)"
+ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 [ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
 [ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
 
@@ -344,18 +384,19 @@ ok "SSH aktiviert"
 
 # v0.10.55: sudoers für PiDrive — NOPASSWD für spezifische Wartungsbefehle
 # Pi OS Bookworm fragt bei jedem sudo nach Passwort (kein Session-Timeout mehr)
-cat > /etc/sudoers.d/pidrive << 'SUDOEOF'
-# PiDrive: ausgewählte Befehle ohne Passwort für Benutzer pi
-pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
-pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_display
-pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
-pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pulseaudio
-pi ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_core
-pi ALL=(ALL) NOPASSWD: /bin/systemctl status pulseaudio
-pi ALL=(ALL) NOPASSWD: /bin/journalctl
-pi ALL=(ALL) NOPASSWD: /sbin/reboot
-pi ALL=(ALL) NOPASSWD: /sbin/poweroff
-pi ALL=(ALL) NOPASSWD: /sbin/shutdown
+# Sudoers dynamisch mit REAL_USER
+cat > /etc/sudoers.d/pidrive << SUDOEOF
+# PiDrive: ausgewaehlte Befehle ohne Passwort fuer Benutzer ${REAL_USER}
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_display
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pulseaudio
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_core
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pulseaudio
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/journalctl
+${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/reboot
+${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/poweroff
+${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/shutdown
 SUDOEOF
 chmod 440 /etc/sudoers.d/pidrive
 ok "sudoers: NOPASSWD für pidrive-Wartungsbefehle"
@@ -425,38 +466,54 @@ chmod +x /usr/local/bin/spotify_event.sh
 ok "Spotify onevent Script"
 
 # Raspotify installieren (Frisch-Install oder fehlerhafter Vorversuch)
+# Spotify Connect: Raspotify (ARM) oder librespot direkt (x86)
 if ! command -v librespot &>/dev/null && ! dpkg -l raspotify 2>/dev/null | grep -q "^ii"; then
-    info "Raspotify installieren..."
-    # Offizielles Install-Script (architektur-unabhaengig, armhf + arm64)
-    if curl -sL https://dtcooper.github.io/raspotify/install.sh | sh 2>/dev/null; then
-        if command -v librespot &>/dev/null || dpkg -l raspotify 2>/dev/null | grep -q "^ii"; then
-            ok "Raspotify installiert"
+    if $IS_ARM; then
+        info "Raspotify installieren (ARM)..."
+        if curl -sL https://dtcooper.github.io/raspotify/install.sh | sh 2>/dev/null; then
+            command -v librespot &>/dev/null && ok "Raspotify/librespot installiert" ||                 warn "Raspotify-Script lief — librespot nicht gefunden (manuell pruefen)"
         else
-            warn "Raspotify-Install-Script lief, aber librespot nicht gefunden"
-            warn "  Manuell: curl -sL https://dtcooper.github.io/raspotify/install.sh | sh"
+            warn "Raspotify-Installation fehlgeschlagen"
         fi
     else
-        warn "Raspotify-Installation fehlgeschlagen"
-        warn "  Manuell: curl -sL https://dtcooper.github.io/raspotify/install.sh | sh"
+        info "librespot installieren (x86)..."
+        # librespot direkt aus Debian-Repo (verfuegbar ab Bullseye)
+        if apt-get install -y librespot -q 2>/dev/null && command -v librespot &>/dev/null; then
+            ok "librespot installiert (Spotify Connect)"
+        else
+            warn "librespot nicht in Repo — Spotify Connect nicht verfuegbar"
+            warn "  Manuell: https://github.com/librespot-org/librespot"
+        fi
     fi
 else
-    ok "Raspotify bereits installiert"
+    ok "librespot/Raspotify bereits installiert"
 fi
 # ══════════════════════════════════════════════════════════════
 # Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.55)
 # Läuft IMMER — unabhängig von Raspotify-Installation
 # ══════════════════════════════════════════════════════════════
-# v0.9.9: /etc/asound.conf — ALSA Default auf Klinke (Card 1) setzen
-# KRITISCH: Auf modernem Pi OS (Kernel >=5.x) ist Card 0 = HDMI, Card 1 = Headphones/Klinke
-# Ohne asound.conf geht ALSA default auf HDMI → kein Ton aus der Klinke
-cat > /etc/asound.conf << 'ASOUNDEOF'
-# PiDrive: ALSA Default auf bcm2835 Headphones (Klinke) setzen
-# Card 0 = HDMI, Card 1 = Headphones auf modernem Pi OS
-defaults.pcm.card 1
-defaults.ctl.card 1
+# ALSA-Karten dynamisch erkennen (Pi: Card 0=HDMI, Card 1=Klinke; andere: variabel)
+ALSA_HEADPHONE_CARD=""
+ALSA_HDMI_CARD=""
+while IFS= read -r line; do
+    [[ "$line" =~ ^card\ ([0-9]+).*[Hh]eadphone ]] && ALSA_HEADPHONE_CARD="${BASH_REMATCH[1]}"
+    [[ "$line" =~ ^card\ ([0-9]+).*[Hh][Dd][Mm][Ii] ]] && ALSA_HDMI_CARD="${BASH_REMATCH[1]}"
+done < <(aplay -l 2>/dev/null)
+# Fallback: Pi-Standard
+[ -z "$ALSA_HEADPHONE_CARD" ] && $IS_PI && ALSA_HEADPHONE_CARD=1
+[ -z "$ALSA_HEADPHONE_CARD" ] && ALSA_HEADPHONE_CARD=0  # Fallback: erste Karte
+
+if [ -n "$ALSA_HEADPHONE_CARD" ]; then
+    cat > /etc/asound.conf << ASOUNDEOF
+# PiDrive: ALSA Default auf Klinken-Ausgang (Card ${ALSA_HEADPHONE_CARD})
+defaults.pcm.card ${ALSA_HEADPHONE_CARD}
+defaults.ctl.card ${ALSA_HEADPHONE_CARD}
 defaults.pcm.device 0
 ASOUNDEOF
-ok "ALSA: /etc/asound.conf geschrieben (default=card 1 Headphones)"
+    ok "ALSA: /etc/asound.conf geschrieben (Card ${ALSA_HEADPHONE_CARD} = Klinke)"
+else
+    ok "ALSA: kein Headphone-Ausgang erkannt — /etc/asound.conf uebersprungen"
+fi
 
 # Klinke via amixer auf der richtigen Karte aktivieren
 # Card-Erkennung: Suche nach 'Headphones' in aplay -l
@@ -734,7 +791,12 @@ else
     ok "Kein blockierender DVB-Treiber"
 fi
 # Unterspannung
-_throttled=$(vcgencmd get_throttled 2>/dev/null || echo "n/a")
+# vcgencmd nur auf Pi verfuegbar
+if $IS_PI; then
+    _throttled=$(vcgencmd get_throttled 2>/dev/null || echo "n/a")
+else
+    _throttled="n/a (kein Pi)"
+fi
 info "Stromversorgung: $_throttled"
 if echo "$_throttled" | grep -qE "0x[0-9a-f]*[1-9][0-9a-f]*"; then
     warn "Unterspannung erkannt ($_throttled) — 5V/3A Netzteil empfohlen"
@@ -972,4 +1034,5 @@ MaxRetentionSec=7day
 JEOF
 systemctl restart systemd-journald 2>/dev/null || true
 echo "  ✓ Journald: max 50M, 7 Tage Retention"
+
 

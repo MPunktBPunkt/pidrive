@@ -7,7 +7,7 @@
 
 Raspberry Pi Car Infotainment — Spotify Connect, Webradio, DAB+, FM, MP3 für BMW iDrive und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.10.72-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.10.55-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.x-green.svg)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-3B%2F4-red.svg)](https://www.raspberrypi.org/)
@@ -32,7 +32,7 @@ PiDrive verwandelt einen Raspberry Pi in ein vollwertiges Car-Infotainment-Syste
 
 ## Changelog
 
-### v0.10.72 (2026-05-02)
+### v0.10.75 (2026-05-02)
 - Bugfix-Release basierend auf Code-Review v0.9.31
 - Kritische Fixes: DAB Resume, BT non-blocking I/O, Scanner source_state
 - Mittlere Fixes: DAB session ERR-Files, DLS cleanup, Spectrum Pi 3B Guards

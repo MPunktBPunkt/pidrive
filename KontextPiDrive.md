@@ -1,8 +1,8 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.72
+# PiDrive — Kontext & Projektdokumentation v0.10.75
 
 ## Projektbeschreibung
 
-**PiDrive** ist ein Raspberry Pi 3B-basiertes Car-Infotainment-System für BMW 118d 2017 (NBT EVO).
+**PiDrive** ist ein Raspberry Pi-basiertes Car-Infotainment-System für BMW 118d 2017 (NBT EVO).
 Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `pidrivectl` CLI.
 
 **GitHub:** https://github.com/MPunktBPunkt/pidrive
@@ -14,16 +14,21 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 | Komponente | Details |
 |---|---|
-| Raspberry Pi | Pi 3 Model B Rev 1.2 |
-| Display | Joy-IT RB-TFT3.5, 480×320, SPI, fb1 |
+| Raspberry Pi | **Pi 4** (aktiv) / Pi 3B (Legacy) |
+| Display | — (TFT-Display entfernt aus Standardbetrieb) |
 | RTL-SDR | RTL2838 DVB-T (ID 0bda:2838, Rafael Micro R820T) |
 | Bluetooth | Cambridge Silicon Radio Dongle |
-| Audio | 3.5mm Klinke (hw:1,0) → BMW AUX-IN |
+| Audio | 3.5mm Klinke → BMW AUX-IN |
 | BMW | BMW 118d 2017, NBT EVO |
+
+**Zielplattformen:**
+- **Primär:** Raspberry Pi 4 (arm64, 2–4 GB RAM)
+- **Legacy:** Raspberry Pi 3B (armv7l)
+- **Geplant:** x86_64 Thin Client (Debian 12 headless)
 
 ---
 
-## Aktueller Stand (v0.10.72)
+## Aktueller Stand (v0.10.75)
 
 ### Services
 
@@ -32,7 +37,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 | `pidrive_core` | Hauptprozess | ✓ aktiv |
 | `pidrive_web` | Flask WebUI Port 8080 | ✓ aktiv |
 | `pidrive_avrcp` | BMW iDrive AVRCP | ✓ aktiv |
-| `pidrive_display` | TFT-Display | ⚠ optional |
+| `pidrive_display` | TFT-Display | ✗ deaktiviert (kein TFT mehr) |
 
 **WebUI:** http://192.168.178.93:8080
 
@@ -40,57 +45,47 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 | Quelle | Status |
 |---|---|
-| DAB+ | ✓ (instabiler Innenraum-Empfang, im Auto OK) |
+| DAB+ | ✓ (instabiler Innenraum-Empfang, im Auto besser) |
 | FM | ✓ |
 | Webradio | ✓ |
 | Bluetooth A2DP | ✓ (Pairing nötig) |
-| Spotify Connect | ✓ Raspotify installiert, OAuth-Setup nötig |
+| Spotify Connect | ✓ Raspotify, OAuth-Setup nötig |
 
 ---
 
-## Verzeichnisstruktur (v0.10.72)
+## Verzeichnisstruktur (v0.10.75)
 
 ```
 pidrive/
-├── main_core.py / main_display.py          ← systemd-Einstiegspunkte (Blocker für core/ Move)
-├── ipc.py / status.py / settings.py
-├── log.py / diagnose.py
+├── main_core.py / main_display.py      ← systemd-Einstieg (Blocker core/ Move)
+├── ipc.py / status.py / settings.py / log.py / diagnose.py
 ├── avrcp_trigger.py / mpris2.py / mpv_meta.py
-├── trigger_dispatcher.py / td_*.py         ← Root-Shims → trigger/
-├── menu_model.py / menu_state.py / ...     ← Root-Shims → menu/
+├── trigger_dispatcher.py / td_*.py     ← Root-Shims → trigger/
+├── menu_model.py / menu_state.py / ... ← Root-Shims → menu/
 │
-├── cli/                    ← UMGEBAUT ✓ (pidrivectl)
-├── web/                    ← UMGEBAUT ✓ (Flask WebUI)
-│   ├── app.py / shared/ / api/ / templates/ / static/
+├── cli/                ← UMGEBAUT ✓
+├── web/                ← UMGEBAUT ✓
 ├── modules/
-│   ├── bluetooth/          ← UMGEBAUT ✓
-│   ├── radio/              ← UMGEBAUT ✓
-│   └── bt_*.py / dab_*.py  ← DEPRECATED SHIM
-├── menu/                   ← UMGEBAUT ✓ (Phase 3a)
-│   ├── menu_model.py / menu_state.py / menu_builder.py / station_store.py
-├── trigger/                ← UMGEBAUT ✓ (Phase 3b)
-│   ├── trigger_dispatcher.py / td_nav.py / td_hardware.py
-│   ├── td_radio.py / td_scanner.py / td_system.py
+│   ├── bluetooth/      ← UMGEBAUT ✓
+│   ├── radio/          ← UMGEBAUT ✓
+│   └── bt_*.py ...     ← DEPRECATED SHIM (→ v0.11)
+├── menu/               ← UMGEBAUT ✓ (Phase 3a)
+├── trigger/            ← UMGEBAUT ✓ (Phase 3b)
 │
 ├── config/
 │   ├── settings.json / dab_stations.json / fm_stations.json
 │   ├── stations.json / favorites.json
 │
-├── tools/                  ← NEU (Feldtest-Hilfsmittel)
-│   ├── inject_trigger.sh   ← Trigger direkt senden
-│   └── watch_avrcp.sh      ← AVRCP Live-Monitor
+├── tools/              ← Feldtest-Tools
+│   ├── inject_trigger.sh
+│   └── watch_avrcp.sh
 │
 └── VERSION
 ```
 
-### Shim-Status (23+ Shims → Abbau in v0.11)
-- Root-Shims für menu/ und trigger/ vorhanden
-- `webui.py`, `cli.py`, `modules/bt_*.py` etc. → DEPRECATED
-- Abbau erst wenn systemd-Services umgestellt
-
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.72)
+## pidrivectl Kommandoreferenz (v0.10.75)
 
 ```bash
 # Basis
@@ -104,44 +99,42 @@ pidrivectl play dab "ROCK FM"  # DAB+ (Name oder Nummer)
 pidrivectl play dab 27         # DAB+ per Listennummer
 pidrivectl play web "Bayern 1" # Webradio
 pidrivectl play spotify        # Spotify Connect
-pidrivectl stop                # Stoppen
+pidrivectl stop
 
 # Sender
 pidrivectl station list dab|fm|web
-pidrivectl favorites list      # Merged: favorites.json + ★
+pidrivectl favorites list
 pidrivectl favorites add       # Aktuellen Sender hinzufügen
-pidrivectl favorites remove 1  # Favorit entfernen (Nummer oder Name)
+pidrivectl favorites remove 1  # Favorit entfernen
 pidrivectl favorites play 1    # Favorit abspielen
 
 # Bluetooth
-pidrivectl bt scan             # Live-Scan (22s, Fortschrittsbalken)
+pidrivectl bt scan             # Live-Scan (22s)
 pidrivectl bt pair <mac>       # Pairen (Gerät in Pairing-Modus!)
 pidrivectl bt connect <mac>    # Verbinden (Live-Feedback)
 pidrivectl bt known            # Bekannte Geräte (paired/BLE-gefiltert)
-pidrivectl bt status           # Verbindungsstatus
+pidrivectl bt status
 
 # Audio + Volume
 pidrivectl volume up           # Lauter (zeigt neue %)
 pidrivectl volume 70           # Direkt setzen
-pidrivectl audio route klinke  # Audio-Ausgang
-pidrivectl audio status
+pidrivectl audio route klinke  # Ausgang setzen
+pidrivectl audio status        # requested/effective/reason/sink
 
 # DAB+
-pidrivectl dab status          # Snapshot: Lock/PCM/Sync/Fehler
+pidrivectl dab status          # Snapshot: Lock/PCM/Sync
 pidrivectl dab live            # Live-Monitor (Empfang, Lock, PCM, DLS)
 pidrivectl dab live --changes  # Nur Zustandsänderungen (ideal im Auto)
-pidrivectl dab scan            # Sendersuchlauf
+pidrivectl dab live --once     # Einzel-Snapshot
+pidrivectl dab scan
 
 # PPM-Kalibrierung
 pidrivectl ppm                 # Aktuellen Wert zeigen
 pidrivectl ppm set 49          # RTL-SDR PPM setzen
 
 # System
-pidrivectl system              # Info + Spotify-Status
-pidrivectl system resources    # RAM, Disk, Uptime
+pidrivectl system / system resources
 pidrivectl log [core|display|avrcp]
-
-# Debug (Feldtest)
 pidrivectl debug avrcp         # Letzte AVRCP-Events (Ringbuffer)
 pidrivectl debug inject down   # Trigger direkt injizieren
 ```
@@ -151,77 +144,54 @@ pidrivectl debug inject down   # Trigger direkt injizieren
 ## BMW iDrive / AVRCP Steuerarchitektur
 
 ```
-BMW iDrive Drehen/Drücken/Zurück
+BMW iDrive (Drehen/Drücken/Zurück)
         ↓ Bluetooth AVRCP
-avrcp_trigger.py (Adapter)
+avrcp_trigger.py
   - empfängt AVRCP Events
   - mappt auf PiDrive-Trigger
-  - schreibt in /tmp/pidrive_cmd
   - Ringbuffer: /tmp/pidrive_avrcp_events.json
+  - Simulate: python3 avrcp_trigger.py --simulate next
+        ↓ /tmp/pidrive_cmd
+main_core.py (Polling 100ms)
         ↓
-main_core.py (Polling alle 100ms)
-        ↓
-trigger_dispatcher.py
-        ↓
-td_nav.py / td_radio.py / td_hardware.py etc.
-        ↓
-Menü-Navigation / Sender-Start / Audio
+trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_system
 ```
 
-### AVRCP Button-Mapping (context-basiert)
+### AVRCP Button-Mapping
 
-| BMW-Taste | Kontext: Menü | Kontext: Radio DAB | Kontext: Scanner |
+| BMW-Taste | Menü | Radio DAB | Scanner |
 |---|---|---|---|
 | Drehen rechts (Next) | nav_down | dab_next | scan_up |
 | Drehen links (Prev) | nav_up | dab_prev | scan_down |
 | Drücken (Play) | enter | radio_stop | scan_next |
 | Zurück (Stop) | back | back | back |
-| VolumeUp/Down | vol_up / vol_down | vol_up / vol_down | vol_up / vol_down |
-
-### Offline-Test Tools
-
-```bash
-# AVRCP-Event simulieren:
-python3 pidrive/avrcp_trigger.py --simulate next
-python3 pidrive/avrcp_trigger.py --simulate play_pause
-
-# Trigger direkt injizieren:
-./tools/inject_trigger.sh nav_down
-./tools/inject_trigger.sh enter
-
-# Live-Monitor im Auto:
-./tools/watch_avrcp.sh
-```
+| VolumeUp/Down | vol_up/down | vol_up/down | vol_up/down |
 
 ---
 
-## v0.11 Readiness (Review-Ergebnis)
+## Installer-Plattform-Logik (v0.10.75)
 
-### Bewertung nach Review
+| Feature | Bedingung |
+|---|---|
+| RPi.GPIO | nur auf ARM (arm*/aarch64) |
+| fbcon=nodeconfig | nur wenn `/sys/class/graphics/fb1` vorhanden |
+| vtcon1 unbind (rc.local) | nur wenn fb1 vorhanden |
+| pidrive_display Service | deaktiviert (kein TFT im Standardbetrieb) |
+| pidrivectl Wrapper | dynamisch mit `$REAL_HOME` |
+| sudoers | dynamisch mit `$REAL_USER` |
 
-| Bereich | Reifegrad | Bereit für Move? |
-|---|---|---|
-| `menu/` | hoch | ✓ bereit |
-| `trigger/` | mittel-hoch | fast bereit (Imports modernisieren) |
-| `integration/` (avrcp, mpris2) | mittel | mit Vorlauf bereit |
-| `core/` (main_core.py etc.) | mittel-niedrig | noch zu fragil |
+---
 
-### Größte Blocker für v0.11
+## v0.11 Readiness
 
-1. **systemd startet Root-Dateien direkt** — `main_core.py`, `webui.py`, `avrcp_trigger.py`
-2. **sys.path-basierte Root-Annahmen** — in main_core, trigger/, integration/
-3. **Installer + Diagnose** erwarten Root-Pfade in Smoke-Tests
-4. **main_core.py als Zentralknoten** — importiert alles, schwer isoliert verschiebbar
+| Bereich | Reifegrad |
+|---|---|
+| `menu/` | ✓ bereit |
+| `trigger/` | ~ fast bereit (Imports modernisieren) |
+| `integration/` | machbar mit Vorlauf |
+| `core/` | ✗ noch fragil (systemd, sys.path) |
 
-### Empfohlene Migrationsreihenfolge (v0.11)
-
-```
-Phase 3a: menu/     ← bereits physisch done, Imports modernisieren
-Phase 3b: trigger/  ← physisch done, interne Imports bereinigen
-Phase 3c: integration/ (avrcp_trigger, mpris2, mpv_meta)
-Phase 3d: core/ Hilfsdateien (ipc, settings, log, status, diagnose)
-Phase 3e: main_core.py / main_display.py (systemd erst dann umstellen)
-```
+Empfohlene Reihenfolge: integration/ → trigger/ (Imports) → core/ Hilfsdateien → main_core.py
 
 ---
 
@@ -229,11 +199,13 @@ Phase 3e: main_core.py / main_display.py (systemd erst dann umstellen)
 
 | Thema | Status |
 |---|---|
-| Display-Treiber | ⚠ TFT-Treiber fehlt (LCD-show) |
-| Raspotify OAuth | ⚠ Einmalige Browser-Anmeldung nötig |
 | BT Pairing BMW | ⚠ Erster Cartest ausstehend |
-| Webradio Antenne Bayern URL | ⚠ mpv-Fehler |
-| v0.11 Phase 3c-e | ⏳ Geplant |
+| Raspotify OAuth | ⚠ Einmalige Browser-Anmeldung |
+| play fm | ⚠ Fragile Implementierung, zurückgestellt |
+| radio next/prev | ⏳ Mittelfristig |
+| stop --wait | ⏳ Mittelfristig |
+| Pi 4 Cartest | ⏳ Nächster Schritt |
+| x86_64 Thin Client | ⏳ Geplant (Debian 12) |
 
 ---
 
@@ -241,9 +213,19 @@ Phase 3e: main_core.py / main_display.py (systemd erst dann umstellen)
 
 | Meldung | Bedeutung |
 |---|---|
-| `fbcon not available` | TFT nicht angesteckt |
+| `fbcon not available` | Kein TFT (erwartet, Display deaktiviert) |
 | `DAB: partial_sync` | Innenraum-Empfang, im Auto besser |
 | `bt_state=failed` | Kein BT-Gerät in Reichweite |
 | `throttled=0x20002` | 5V/3A Netzteil empfohlen |
 | `Raspotify: nicht aktiv` | OAuth-Setup nötig |
 | `usb_claim_interface error -6` | RTL-SDR bereits belegt |
+
+---
+
+## Arbeitsweise mit Claude
+
+1. Reviews per externem AI → Maßnahmen ableiten
+2. Claude auditiert Dateien aus Arbeitsverzeichnis
+3. Python-Patches via str.replace mit assert-Prüfung
+4. Syntax-Check mit py_compile + bash -n
+5. Version bump + ZIP → GitHub-Upload → Pi-Update per SSH
