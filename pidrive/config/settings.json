@@ -39,5 +39,7 @@
   },
   "last_web_station": null,
   "dab_wait_lock": 20,
-  "spectrum_watch_seconds": 2.5
+  "spectrum_watch_seconds": 2.5,
+  "audio_sink_name": "",
+  "audio_card_index": -1
 }

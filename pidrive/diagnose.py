@@ -706,7 +706,7 @@ def check_processes():
 def check_source_state():
     S("SOURCE STATE (Quellen-Zustandsmaschine)")
     try:
-        sys.path.insert(0, "/home/pi/pidrive/pidrive")
+        sys.path.insert(0, "" + os.path.expanduser("~")  + "//pidrive/pidrive")
         try:
             from modules.source_state import load_snapshot_file, snapshot
             st = load_snapshot_file() or snapshot()

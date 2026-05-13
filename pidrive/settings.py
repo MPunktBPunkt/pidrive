@@ -25,6 +25,8 @@ _DEFAULTS = {
     # Audio
     "music_path":         os.path.expanduser("~/Musik"),
     "audio_output":       "auto",        # auto | klinke | bt | hdmi
+    "audio_sink_name":    "",            # Leer = automatisch erkennen
+    "audio_card_index":   -1,            # -1 = automatisch
     "volume":             90,
     # FM
     "fm_freq":            "98.5",
