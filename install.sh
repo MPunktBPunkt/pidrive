@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.76"
+PIDRIVE_VERSION="0.10.77"
 
 # ============================================================
 # PiDrive Install Script
@@ -19,18 +19,43 @@ REPO_URL="https://github.com/MPunktBPunkt/pidrive"
 INSTALL_DIR="/home/pi/pidrive"
 SERVICE_DIR="/etc/systemd/system"
 LOG_DIR="/var/log/pidrive"
-# Echter User — SUDO_USER ist gesetzt wenn via "sudo bash" aufgerufen
-# Fallback: erster User mit UID >= 1000 (nicht root), dann pi
+# ── Benutzer- und Pfad-Erkennung ─────────────────────────────────────────
+# Priorität: SUDO_USER → erster User ≥1000 → root-Fallback (kein pi-Phantom)
 if [ -n "$SUDO_USER" ] && id "$SUDO_USER" >/dev/null 2>&1; then
     REAL_USER="$SUDO_USER"
-elif id "pi" >/dev/null 2>&1; then
-    REAL_USER="pi"
 else
     REAL_USER=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}')
-    [ -z "$REAL_USER" ] && REAL_USER="pi"
 fi
-REAL_HOME=$(eval echo "~$REAL_USER")
-INSTALL_DIR="$REAL_HOME/pidrive"
+# Kein brauchbarer Nicht-root-User → bewusst root nehmen (kein pi-Phantom)
+if [ -z "$REAL_USER" ]; then
+    REAL_USER="root"
+    REAL_HOME="/root"
+    INSTALL_DIR="/opt/pidrive"
+else
+    REAL_HOME=$(eval echo "~$REAL_USER")
+    # Validierung: Home muss existieren oder anlegt werden können
+    if [ ! -d "$REAL_HOME" ]; then
+        mkdir -p "$REAL_HOME" 2>/dev/null || REAL_HOME="/root"
+    fi
+    INSTALL_DIR="$REAL_HOME/pidrive"
+fi
+
+# ── run_as_real_user(): sudo-unabhängiger User-Context-Wrapper ────────────
+# Wird für git clone/pull und Musik-Verzeichnis benutzt.
+# Reihenfolge: sudo → runuser → su → direkt (wenn REAL_USER==root)
+run_as_real_user() {
+    if [ "$REAL_USER" = "root" ] || [ "$EUID" -ne 0 ]; then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo -u "$REAL_USER" "$@"
+    elif command -v runuser >/dev/null 2>&1; then
+        runuser -u "$REAL_USER" -- "$@"
+    elif command -v su >/dev/null 2>&1; then
+        su - "$REAL_USER" -c "$(printf '%q ' "$@")"
+    else
+        "$@"  # Letzer Fallback: direkt
+    fi
+}
 
 # ── Platform Detection ────────────────────────────────────────────────────
 ARCH=$(uname -m)
@@ -156,10 +181,10 @@ if [ -d "$INSTALL_DIR/.git" ]; then
         cp "$_SETTINGS_FILE" "$_SETTINGS_BAK"
         # git stash: legt lokale Änderungen beiseite damit git pull nicht abbricht
         cd "$INSTALL_DIR"
-        sudo -u "$REAL_USER" git stash 2>/dev/null || true
+        run_as_real_user git stash 2>/dev/null || true
         info "settings.json gesichert (git stash)"
     fi
-    sudo -u "$REAL_USER" git pull
+    run_as_real_user git pull
     # settings.json: Backup wiederherstellen (überschreibt Repo-Default)
     if [ -f "$_SETTINGS_BAK" ]; then
         cp "$_SETTINGS_BAK" "$_SETTINGS_FILE"
@@ -186,7 +211,7 @@ except Exception as e:
   ok "Repository aktualisiert"
 else
     info "Klone $REPO_URL nach $INSTALL_DIR..."
-    sudo -u "$REAL_USER" git clone "$REPO_URL" "$INSTALL_DIR"
+    run_as_real_user git clone "$REPO_URL" "$INSTALL_DIR"
     ok "Repository geklont"
 fi
 
@@ -199,7 +224,7 @@ ok "PiDrive Version: $VER"
 # ══════════════════════════════════════════════════════════════
 info "4/10 Verzeichnisse anlegen..."
 MUSIK_DIR="$REAL_HOME/Musik"
-[ ! -d "$MUSIK_DIR" ] && sudo -u "$REAL_USER" mkdir -p "$MUSIK_DIR"
+[ ! -d "$MUSIK_DIR" ] && run_as_real_user mkdir -p "$MUSIK_DIR"
 ok "Musik-Verzeichnis: $MUSIK_DIR"
 
 mkdir -p "$LOG_DIR"
@@ -528,36 +553,51 @@ KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{prin
 if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
 amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
 
-# v0.10.9: system.pa vollständig neu schreiben
-# Bookworm-PA schreibt kein module-alsa-card in system.pa → komplettes File
+# system.pa: plattformadaptiv schreiben
 mkdir -p /etc/pulse
-cat > /etc/pulse/system.pa << 'SYSTEMPA'
-# PiDrive system.pa — v0.10.9
-# System-weiter PulseAudio Daemon (nicht User-Session)
+if $IS_CONTAINER; then
+    ok "system.pa: Container-Modus — PA-Systemkonfig uebersprungen"
+else
+    # Ermittle verfuegbare ALSA-Karten dynamisch
+    PA_CARD_LINES=""
+    PA_DEFAULT_SINK=""
+    while IFS= read -r card_line; do
+        CARD_NUM=$(echo "$card_line" | grep -oP "(?<=card )\d+" || echo "")
+        [ -n "$CARD_NUM" ] && PA_CARD_LINES="${PA_CARD_LINES}load-module module-alsa-card device_id=${CARD_NUM}
+"
+    done < <(aplay -l 2>/dev/null | grep "^card " || echo "card 0:")
+    # Fallback wenn keine Karten erkannt
+    [ -z "$PA_CARD_LINES" ] && PA_CARD_LINES="load-module module-alsa-sink
+"
+
+    # Default Sink: auf Pi Klinke (Card 1), sonst auto
+    if $IS_PI && [ -n "$ALSA_HEADPHONE_CARD" ]; then
+        PA_DEFAULT_SINK="set-default-sink alsa_output.${ALSA_HEADPHONE_CARD}.stereo-fallback"
+    fi
+
+    cat > /etc/pulse/system.pa << SYSTEMPA_END
+# PiDrive system.pa — $(date +%Y-%m-%d)
+# Plattform: ${ARCH}$(${IS_PI} && echo " (Pi)")$(${IS_CONTAINER} && echo " (Container)")
 .fail
 
 load-module module-device-restore
 load-module module-stream-restore
 load-module module-card-restore
 
-# ALSA Hardware: Card 0 = HDMI, Card 1 = Headphones/Klinke
-load-module module-alsa-card device_id=0
-load-module module-alsa-card device_id=1
-
+# ALSA Hardware (automatisch erkannt)
+$(echo -e "$PA_CARD_LINES")
 # Bluetooth A2DP
 load-module module-bluetooth-discover
 load-module module-bluetooth-policy
 
-# DBUS
+# D-Bus + IPC
 load-module module-dbus-protocol
-
-# IPC
 load-module module-native-protocol-unix auth-anonymous=1
 
-# Klinke (Card 1) als Default-Sink
-set-default-sink alsa_output.1.stereo-fallback
-SYSTEMPA
-ok "system.pa: vollständig neu geschrieben (Card 0+1, BT, IPC)"
+$([ -n "$PA_DEFAULT_SINK" ] && echo "$PA_DEFAULT_SINK")
+SYSTEMPA_END
+    ok "system.pa: geschrieben (${ARCH}$(${IS_PI} && echo ", Pi-Klinke" || echo ", generisch"))"
+fi
 
 # v0.9.14: pulse-access Gruppe
 groupadd -f pulse-access 2>/dev/null || true
@@ -569,8 +609,20 @@ ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
 # Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
 # Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
 systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
-# Als pi-User den User-Service stoppen und masken
-sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+# User-PA stoppen/maskieren (nur auf echtem Host mit User-Session)
+if ! $IS_CONTAINER && [ "$REAL_USER" != "root" ]; then
+    UID_VAL=$(id -u "$REAL_USER" 2>/dev/null || echo 1000)
+    XDG_RT="/run/user/${UID_VAL}"
+    if command -v runuser >/dev/null 2>&1; then
+        runuser -u "$REAL_USER" -- env XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+        runuser -u "$REAL_USER" -- env XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.socket 2>/dev/null || true
+        runuser -u "$REAL_USER" -- env XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.service 2>/dev/null || true
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
+        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.socket 2>/dev/null || true
+        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.service 2>/dev/null || true
+    fi
+fi
 sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
 sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
 # User-PA-Socket null-masken: ln -sf /dev/null verhindert Socket-Aktivierung zuverlässig

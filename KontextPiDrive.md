@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.76
+# PiDrive — Kontext & Projektdokumentation v0.10.77
 
 ## Projektbeschreibung
 
@@ -28,7 +28,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Aktueller Stand (v0.10.76)
+## Aktueller Stand (v0.10.77)
 
 ### Services
 
@@ -53,7 +53,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Verzeichnisstruktur (v0.10.76)
+## Verzeichnisstruktur (v0.10.77)
 
 ```
 pidrive/
@@ -85,7 +85,7 @@ pidrive/
 
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.76)
+## pidrivectl Kommandoreferenz (v0.10.77)
 
 ```bash
 # Basis
@@ -169,18 +169,27 @@ trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_syst
 
 ---
 
-## Installer-Plattform-Logik (v0.10.76)
+## Installer-Plattform-Logik (v0.10.77)
 
-| Feature | Bedingung |
-|---|---|
-| RPi.GPIO | nur auf ARM (arm*/aarch64) |
-| fbcon=nodeconfig | nur wenn `/sys/class/graphics/fb1` vorhanden |
-| vtcon1 unbind (rc.local) | nur wenn fb1 vorhanden |
-| pidrive_display Service | deaktiviert (kein TFT im Standardbetrieb) |
-| pidrivectl Wrapper | dynamisch mit `$REAL_HOME` |
-| sudoers | dynamisch mit `$REAL_USER` |
+| Feature | Bedingung | Debian Container |
+|---|---|---|
+| RPi.GPIO | nur ARM (arm*/aarch64) | ⏭ |
+| fbcon=nodeconfig | nur wenn fb1 vorhanden | ⏭ |
+| vtcon1 unbind (rc.local) | nur wenn fb1 | ⏭ |
+| pidrive_display | deaktiviert | ⏭ |
+| /boot/config.txt | nur IS_PI | ⏭ |
+| fake-hwclock | nur IS_PI | ⏭ |
+| dhcpcd5 | nur IS_PI | ⏭ |
+| vcgencmd | nur IS_PI | `n/a` |
+| Raspotify | nur ARM | ⏭ librespot direkt |
+| librespot | x86: apt install | ✓ |
+| RTL-SDR udev-Regel | immer | ✓ |
+| pidrivectl Wrapper | $REAL_HOME | ✓ |
+| sudoers | $REAL_USER | ✓ |
+| ALSA Card | dynamisch erkannt | ✓ |
+| pidrive-Gruppe | angelegt | ✓ |
+| /tmp/pidrive_cmd | 0660 root:pidrive | ✓ |
 
----
 
 ## v0.11 Readiness
 
