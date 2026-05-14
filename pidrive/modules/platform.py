@@ -1,5 +1,5 @@
 """
-modules/platform.py — Hardware-Capability-Detection  v0.10.84
+modules/platform.py — Hardware-Capability-Detection  v0.10.85
 ==============================================================
 Einmalig beim Start ausgewertet. Alle Subsysteme prüfen
 nur noch CAPS statt /proc/cpuinfo oder importierte Hardware.
@@ -68,11 +68,21 @@ def _pa_running() -> bool:
     return _path_exists("/var/run/pulse/native")
 
 def _bt_available() -> bool:
-    """Bluetooth-Adapter vorhanden (hci0 oder anderer)."""
+    """Echter Bluetooth-Adapter vorhanden (nicht nur binary installiert)."""
+    # /sys/class/bluetooth/ hat Einträge wenn echter Adapter vorhanden
+    if os.path.isdir("/sys/class/bluetooth"):
+        try:
+            entries = [e for e in os.listdir("/sys/class/bluetooth")
+                       if e.startswith("hci")]
+            if entries:
+                return True
+        except Exception:
+            pass
+    # Fallback: hciconfig Output
     try:
         r = subprocess.run("hciconfig 2>/dev/null", shell=True,
-                           capture_output=True, text=True, timeout=3)
-        return "hci" in r.stdout.lower()
+                           capture_output=True, text=True, timeout=2)
+        return "hci0" in r.stdout or "hci1" in r.stdout
     except Exception:
         return False
 
