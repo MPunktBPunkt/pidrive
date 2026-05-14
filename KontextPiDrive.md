@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.79
+# PiDrive — Kontext & Projektdokumentation v0.10.84
 
 ## Projektbeschreibung
 
@@ -28,7 +28,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Aktueller Stand (v0.10.79)
+## Aktueller Stand (v0.10.84)
 
 ### Services
 
@@ -53,7 +53,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Verzeichnisstruktur (v0.10.79)
+## Verzeichnisstruktur (v0.10.84)
 
 ```
 pidrive/
@@ -85,7 +85,7 @@ pidrive/
 
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.79)
+## pidrivectl Kommandoreferenz (v0.10.84)
 
 ```bash
 # Basis
@@ -141,6 +141,24 @@ pidrivectl debug inject down   # Trigger direkt injizieren
 
 ---
 
+## modules/platform.py — CAPS-System (v0.10.84)
+
+```python
+from modules.platform import CAPS
+
+CAPS["is_pi"]       # True auf Raspberry Pi
+CAPS["is_container"]# True in LXC/Docker
+CAPS["rtlsdr"]      # rtl_fm oder rtl_sdr vorhanden
+CAPS["dab"]         # welle-cli vorhanden
+CAPS["bluetooth"]   # hci-Adapter vorhanden
+CAPS["alsa_card"]   # int (Kartenindex) oder None
+CAPS["alsa_device"] # "hw:1,0" oder None
+CAPS["pulseaudio"]  # PA-Socket /var/run/pulse/native
+CAPS["spotify"]     # librespot oder raspotify
+CAPS["display"]     # immer False (TFT entfernt)
+CAPS["gpio"]        # immer False (GPIO entfernt)
+```
+
 ## BMW iDrive / AVRCP Steuerarchitektur
 
 ```
@@ -169,13 +187,11 @@ trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_syst
 
 ---
 
-## Installer-Plattform-Logik (v0.10.79)
+## Installer-Plattform-Logik (v0.10.84)
 
 | Feature | Bedingung | Debian Container |
 |---|---|---|
-| RPi.GPIO | nur ARM (arm*/aarch64) | ⏭ |
-| fbcon=nodeconfig | nur wenn fb1 vorhanden | ⏭ |
-| vtcon1 unbind (rc.local) | nur wenn fb1 | ⏭ |
+| | | vtcon1 unbind (rc.local) | nur wenn fb1 | ⏭ |
 | pidrive_display | deaktiviert | ⏭ |
 | /boot/config.txt | nur IS_PI | ⏭ |
 | fake-hwclock | nur IS_PI | ⏭ |

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.79"
+PIDRIVE_VERSION="0.10.84"
 
 # ============================================================
 # PiDrive Install Script
@@ -112,7 +112,7 @@ fi
 # SCHRITT 1: Service stoppen (falls aktiv)
 # ══════════════════════════════════════════════════════════════
 info "1/10 Laufenden Service stoppen..."
-for SVC in pidrive_core pidrive_display pidrive; do
+for SVC in pidrive_core pidrive; do  # display entfernt
     if systemctl is-active --quiet $SVC 2>/dev/null; then
         systemctl stop $SVC 2>/dev/null || true
         ok "$SVC gestoppt"
@@ -378,10 +378,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# Display Service
-cp "$INSTALL_DIR/systemd/pidrive_display.service" "$SERVICE_DIR/pidrive_display.service"
-sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_display.service"
-sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_display.service"
+# pidrive_display.service: entfernt v0.10.84
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -417,7 +414,7 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable pidrive_core pidrive_display rfkill-unblock 2>/dev/null || true
+systemctl enable pidrive_core rfkill-unblock 2>/dev/null || true
 ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 [ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
 [ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
@@ -435,7 +432,6 @@ if command -v sudo >/dev/null 2>&1; then
     cat > /etc/sudoers.d/pidrive << SUDOEOF
 # PiDrive: ausgewaehlte Befehle ohne Passwort fuer Benutzer ${REAL_USER}
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
-${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_display
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pulseaudio
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_core
@@ -568,11 +564,18 @@ else
     ok "ALSA: kein Headphone-Ausgang erkannt — /etc/asound.conf uebersprungen"
 fi
 
-# Klinke via amixer auf der richtigen Karte aktivieren
-# Card-Erkennung: Suche nach 'Headphones' in aplay -l
-KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{print $2}' | tr -d ':')
-if [ -z "$KLINKE_CARD" ]; then KLINKE_CARD=1; fi
-amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
+# Klinke via amixer aktivieren (nur wenn Hardware vorhanden)
+if ! $IS_CONTAINER && command -v amixer >/dev/null 2>&1; then
+    KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{print $2}' | tr -d ':')
+    [ -z "$KLINKE_CARD" ] && $IS_PI && KLINKE_CARD=1
+    if [ -n "$KLINKE_CARD" ]; then
+        amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null \
+            && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" \
+            || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
+    fi
+else
+    ok "Pi Audio: amixer uebersprungen (Container oder amixer nicht verfuegbar)"
+fi
 
 # system.pa: plattformadaptiv schreiben
 mkdir -p /etc/pulse
@@ -1034,15 +1037,6 @@ if systemctl start pidrive_core 2>/dev/null; then
         else
             warn "IPC: /tmp/pidrive_status.json fehlt — Core schreibt noch nicht"
         fi
-        # Display Service starten (optional)
-        systemctl start pidrive_display 2>/dev/null || true
-        sleep 3
-        if systemctl is-active --quiet pidrive_display; then
-            ok "pidrive_display.service laeuft!"
-        else
-            warn "pidrive_display.service inaktiv (optional)"
-            warn "  Teste fb1 direkt: sudo python3 -c \"import pygame; ..."
-        fi
     else
         warn "pidrive_core.service nicht aktiv — pruefe Log unten"
     fi
@@ -1081,16 +1075,12 @@ echo -e "  ${CYAN}tail -20 $LOG_DIR/pidrive.log${NC}"
 echo -e "  ${CYAN}journalctl -u pidrive_core -f${NC}"
 echo ""
 echo -e "${BOLD}Naechste Schritte:${NC}"
-echo -e "  1. ${YELLOW}Display-Treiber (falls noch nicht):${NC}"
-echo -e "     git clone https://github.com/goodtft/LCD-show ~/LCD-show"
-echo -e "     cd ~/LCD-show && sudo ./LCD35-show"
-echo ""
-echo -e "  2. ${YELLOW}Spotify OAuth (einmalig):${NC}"
+echo -e "  1. ${YELLOW}Spotify OAuth (einmalig, falls Raspotify/librespot installiert):${NC}"
 echo -e "     sudo systemctl stop raspotify"
 echo -e "     /usr/bin/librespot --name PiDrive --enable-oauth \\"
 echo -e "       --system-cache /var/cache/raspotify"
 echo ""
-echo -e "  3. ${YELLOW}Nach Display-Treiber: neu starten:${NC}"
+echo -e "  2. ${YELLOW}Reboot (nach Erstinstallation empfohlen):${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
 echo ""
 
