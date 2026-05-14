@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.84"
+PIDRIVE_VERSION="0.10.85"
 
 # ============================================================
 # PiDrive Install Script
@@ -345,7 +345,7 @@ rm -f /usr/local/bin/pidrivectl /usr/bin/pidrivectl
 # Wrapper als echte Datei anlegen (kein Symlink, kein .py)
 cat > /usr/local/bin/pidrivectl << WRAPPER_END
 #!/bin/bash
-exec python3 ${INSTALL_DIR}/pidrive/cli/cli.py "$@"
+exec python3 ${INSTALL_DIR}/pidrive/cli/cli.py "\$@"
 WRAPPER_END
 chmod +x /usr/local/bin/pidrivectl
 # Auch in /usr/bin damit sudo es findet
@@ -378,7 +378,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.10.84
+# pidrive_display.service: entfernt v0.10.85
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -1080,8 +1080,11 @@ echo -e "     sudo systemctl stop raspotify"
 echo -e "     /usr/bin/librespot --name PiDrive --enable-oauth \\"
 echo -e "       --system-cache /var/cache/raspotify"
 echo ""
-echo -e "  2. ${YELLOW}Reboot (nach Erstinstallation empfohlen):${NC}"
+echo -e "  2. ${YELLOW}Reboot (nach Erstinstallation — wichtig fuer RTL-SDR!):${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
+echo ""
+echo -e "     RTL-SDR-Hinweis: DVB-T Treiber wird erst nach Reboot deaktiviert."
+echo -e "     Alternativ ohne Reboot: ${CYAN}sudo modprobe -r dvb_usb_rtl28xxu rtl2832${NC}"
 echo ""
 
 # ── Car-Only Cleanup (v0.10.55: bei Frisch-Install mit anschliessendem Reboot) ──
