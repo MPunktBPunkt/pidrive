@@ -6,7 +6,7 @@ Features:
   - Getrennte Logs: core.log und display.log (GPT-5.4)
   - Gemeinsames pidrive.log als Fallback
   - Rotierende Logdatei (max 512 KB, 2 Backups)
-  - journalctl -u pidrive_core -f  /  journalctl -u pidrive_display -f
+  - journalctl -u pidrive_core -f  /  
 """
 
 import logging
@@ -80,7 +80,7 @@ def setup(component="core", level=logging.DEBUG):
     _logger.info(f"PiDrive {component.upper()} gestartet")
     _logger.info(f"  TTY:     {tty}")
     if component == "display":
-        _logger.info(f"  FB:      {os.environ.get('SDL_FBDEV', '-')}")
+        _logger.info(f"  Display: deaktiviert")
         _logger.info(f"  Driver:  {os.environ.get('SDL_VIDEODRIVER', '-')}")
     _logger.info(f"  User:    {os.environ.get('USER', os.environ.get('LOGNAME', 'root'))}")
     _logger.info("=" * 50)

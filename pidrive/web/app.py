@@ -335,7 +335,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = safe_run("journalctl -u pidrive_display -n 150 --no-pager 2>/dev/null")
+        r = ""  # display entfernt v0.10.84
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)
@@ -653,7 +653,7 @@ def api_avrcp():
 @app.route("/api/service")
 def api_service():
     name = request.args.get("name", "pidrive_core")
-    if name not in ("pidrive_core", "pidrive_display", "pidrive_web", "pidrive_avrcp"):
+    if name not in ("pidrive_core", "pidrive_web", "pidrive_avrcp"):
         return jsonify({"ok": False, "error": "Ungültiger Service"}), 400
     return jsonify(safe_run(f"systemctl status {name} --no-pager"))
 

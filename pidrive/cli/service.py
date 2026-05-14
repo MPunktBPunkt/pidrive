@@ -273,7 +273,7 @@ class PiDriveService:
 
     def log(self, target: str = "core", lines: int = 40) -> str:
         svc_map = {
-            "core": "pidrive_core", "display": "pidrive_display",
+            "core": "pidrive_core",
             "app": "pidrive_core", "avrcp": "pidrive_avrcp",
         }
         svc = svc_map.get(target, target)

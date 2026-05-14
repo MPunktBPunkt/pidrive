@@ -22,9 +22,9 @@ from menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import source_state
 from modules import (
     musik, wifi, bluetooth, audio, system as sys_mod,
-    gpio_buttons as _gpio_buttons,
     webradio, dab, fm, library, scanner, update, favorites
 )
+from modules.platform import CAPS
 
 logger = log.setup("core")
 
@@ -127,6 +127,9 @@ def _debounced(cmd: str) -> bool:
 # ── BT-Agent früh starten ────────────────────────────────────────────────────
 
 def _start_bt_agent_early():
+    if not CAPS.get("bluetooth") and not CAPS.get("bluetoothctl"):
+        log.info("BT Agent: kein Bluetooth-Adapter — uebersprungen")
+        return False
     try:
         if bluetooth.start_agent_session():
             log.info("BT agent startup: OK")
@@ -217,12 +220,10 @@ def system_check():
     log.info("--- Core System-Check ---")
     VERSION = open(os.path.join(BASE_DIR, "VERSION")).read().strip()
     log.info(f"  PiDrive Core v{VERSION}")
+    from modules.platform import describe as _caps_describe
+    CAPS_DESC = _caps_describe()
+    log.info("  " + CAPS_DESC)
 
-    for path, label in [("/dev/fb1", "SPI Display"), ("/dev/fb0", "HDMI Framebuffer")]:
-        if os.path.exists(path):
-            log.info(f"  ✓ {label}: {path}")
-        else:
-            log.warn(f"  ✗ {label}: {path} nicht gefunden")
 
     log.info("  USB-Geraete:")
     try:
@@ -389,14 +390,8 @@ def startup_tasks(S, settings):
         source_state.set_bt_state("failed")
         log.warn("BT Boot-Reconnect: " + str(_e))
 
-    try:
-        _gpio_active = _gpio_buttons.start()
-        if _gpio_active:
-            log.info("GPIO: Tasten aktiv (Key1=up, Key2=enter, Key3=back)")
-        else:
-            log.info("GPIO: nicht verfügbar (kein RPi.GPIO oder kein Raspberry Pi)")
-    except Exception as _eg:
-        log.warn(f"GPIO start: {_eg}")
+    # GPIO entfernt — Steuerung ausschliesslich via AVRCP/WebUI/CLI
+    # (gpio_buttons.py nicht mehr geladen)
 
     # ── TICKET 3: audio_route immer explizit setzen ──────────────────────────
     source_state.set_boot_phase("audio_base_ready")
@@ -487,8 +482,11 @@ def startup_tasks(S, settings):
             log.warn("PA-Socket /var/run/pulse/native fehlt — Audio läuft ohne PulseAudio")
         # v0.9.30: TICKET 2 — Watcher erst jetzt starten (nach boot_phase=steady)
         try:
-            bluetooth.start_auto_reconnect(S, settings)
-            log.info("BT auto-reconnect: Watcher gestartet (boot_phase=steady)")
+            if CAPS.get("bluetooth") or CAPS.get("bluetoothctl"):
+                bluetooth.start_auto_reconnect(S, settings)
+                log.info("BT auto-reconnect: Watcher gestartet (boot_phase=steady)")
+            else:
+                log.info("BT auto-reconnect: kein BT-Adapter — uebersprungen")
         except Exception as _e_w:
             log.warn(f"BT Watcher Start: {_e_w}")
 
@@ -515,7 +513,13 @@ def main():
 
     system_check()
 
-    _mpris2_player = _mpris2.start_mpris2() if _mpris2 else None
+    # MPRIS2 nur starten wenn BT vorhanden (BMW AVRCP Kommunikation)
+    _mpris2_player = None
+    if _mpris2 and CAPS.get("bluetooth"):
+        _mpris2_player = _mpris2.start_mpris2()
+        log.info("MPRIS2: gestartet (BT verfuegbar)")
+    elif _mpris2:
+        log.info("MPRIS2: uebersprungen (kein BT-Adapter)")
 
     settings = load_settings()
     try:

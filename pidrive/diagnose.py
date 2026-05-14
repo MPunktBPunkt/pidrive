@@ -15,6 +15,29 @@ import time
 VT_ACTIVATE = 0x5606
 
 
+
+def _is_container():
+    """Prüft ob wir in einem LXC/Docker-Container laufen."""
+    import subprocess as _sp
+    if os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv"):
+        return True
+    try:
+        r = _sp.run(["systemd-detect-virt","--container","-q"],
+                    capture_output=True, timeout=2)
+        return r.returncode == 0
+    except Exception:
+        return False
+
+def _is_pi():
+    """Prüft ob wir auf einem Raspberry Pi laufen."""
+    try:
+        return "raspberry pi" in open("/proc/cpuinfo").read().lower()
+    except Exception:
+        return False
+
+_CONTAINER = _is_container()
+_IS_PI     = _is_pi()
+
 def run(cmd):
     try:
         return subprocess.check_output(
@@ -122,9 +145,7 @@ def check_services():
         except Exception:
             pass
 
-    disp_st = run("systemctl is-active pidrive_display 2>/dev/null")
-    (ok if disp_st == "active" else warn)(f"pidrive_display.service: {disp_st} (optional)")
-    disp_pid = run("systemctl show pidrive_display --property=MainPID --value 2>/dev/null")
+    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.10.84)")
     if disp_pid and disp_pid != "0":
         nfo(f"Display PID: {disp_pid}")
         try:
@@ -173,67 +194,16 @@ def check_ipc():
 
 def check_display_env():
     S("DISPLAY SERVICE KONFIGURATION")
-    cfg = run("systemctl show pidrive_display -p Environment 2>/dev/null")
-    if "SDL_FBDEV=/dev/fb1" in cfg:
-        ok("SDL_FBDEV=/dev/fb1 (direkt auf SPI-Display)")
-    else:
-        err("SDL_FBDEV=/dev/fb1 fehlt im Display-Service!")
-    if "FBCON_KEEP_TTY=1" in cfg:
-        ok("SDL_VIDEO_FBCON_KEEP_TTY=1")
-    else:
-        warn("SDL_VIDEO_FBCON_KEEP_TTY=1 fehlt (set_mode() koennte haengen)")
-
-
-def check_fbcp():
-    S("FBCP (seit v0.6.0 dauerhaft entfernt)")
-    r = run("pgrep -a fbcp")
-    if r:
-        warn(f"fbcp läuft noch: {r}")
-        warn("  Korrekt: kein fbcp mehr (fb1 direkt)")
-    else:
-        ok("fbcp läuft nicht (korrekt fuer v0.6.0)")
-
-
-def check_fb(path, name):
-    S(f"FRAMEBUFFER {name} ({path})")
-    if not os.path.exists(path):
-        err(f"{path} fehlt")
-        return
-    try:
-        fb_num = path.replace("/dev/fb", "")
-        bpp_f  = f"/sys/class/graphics/fb{fb_num}/bits_per_pixel"
-        vsz_f  = f"/sys/class/graphics/fb{fb_num}/virtual_size"
-        bpp    = open(bpp_f).read().strip() if os.path.exists(bpp_f) else "?"
-        vsz    = open(vsz_f).read().strip() if os.path.exists(vsz_f) else "?"
-        ok(f"Groesse: {vsz}, {bpp} bpp")
-        if path == "/dev/fb1" and bpp == "16":
-            ok("fb1: 16bpp RGB565 — korrekt fuer direktes Rendering")
-        elif path == "/dev/fb1" and bpp != "16":
-            warn(f"fb1: {bpp}bpp — set_mode(..., 0, 16) noetig")
-
-        raw   = open(path, "rb").read(min(4000, os.path.getsize(path)))
-        total = len(raw)
-        nz    = sum(1 for b in raw if b != 0)
-        pct   = nz * 100 // total if total else 0
-        (ok if pct > 5 else warn)(
-            f"Inhalt: {pct}% non-zero {'(Bild vorhanden)' if pct > 5 else '(schwarz/leer)'}"
-        )
-    except Exception as e:
-        err(f"Fehler: {e}")
+    nfo("TFT-Display + GPIO dauerhaft entfernt v0.10.84")
+    nfo("Steuerung via WebUI (Port 8080) / pidrivectl / AVRCP")
 
 
 def check_vtcon():
     S("VTCONSOLE STATUS")
-    try:
-        _cmdline_path = ("/boot/firmware/cmdline.txt"
-                 if __import__("os").path.exists("/boot/firmware/cmdline.txt")
-                 else "/boot/cmdline.txt")
-        cmdline = open(_cmdline_path).read()
-        (ok if "fbcon=nodeconfig" in cmdline else warn)(
-            "cmdline.txt: " + ("fbcon=nodeconfig gesetzt" if "fbcon=nodeconfig" in cmdline else "fbcon=nodeconfig fehlt")
-        )
-    except Exception:
-        pass
+    if not __import__("os").path.isdir("/sys/class/vtconsole"):
+        nfo("vtconsole: nicht vorhanden (kein Pi oder kein Display)")
+        return
+    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.10.84)
 
     for i in (0, 1):
         try:
@@ -243,7 +213,7 @@ def check_vtcon():
                 nfo(f"vtcon0/bind={val} ({name}) — Text-VT-Layer (normal)")
             else:
                 (ok if val == "0" else warn)(
-                    f"vtcon1/bind={val} ({name}) {'← OK' if val == '0' else '← fbcon noch aktiv'}"
+                    f"vtcon1/bind={val} ({name})"
                 )
         except Exception as e:
             nfo(f"vtcon{i}: {e}")
@@ -334,9 +304,18 @@ def check_audio():
     if has_hdmi:
         nfo("ALSA: bcm2835 HDMI vorhanden (Card 0)")
 
-    # amixer
+    # amixer: Karte dynamisch ermitteln statt Card 1 hardcoded
+    _aplay_out = run("aplay -l 2>/dev/null")
+    _headphone_card = None
+    if _aplay_out:
+        import re as _re
+        for _ln in _aplay_out.splitlines():
+            _m = _re.search(r"card (\d+).*[Hh]eadphone", _ln)
+            if _m: _headphone_card = int(_m.group(1)); break
+    if _headphone_card is None and _IS_PI:
+        _headphone_card = 1  # Pi-Fallback
+
     amix_c0 = run("amixer -c 0 controls 2>/dev/null")
-    amix_c1 = run("amixer -c 1 controls 2>/dev/null")
     if amix_c0:
         has_route_c0 = "PCM Playback Route" in amix_c0 or "Route" in amix_c0
         has_pcm_c0   = "PCM Playback Volume" in amix_c0 or "Master" in amix_c0
@@ -344,20 +323,26 @@ def check_audio():
             nfo("amixer Card 0: PCM Playback Route vorhanden (alter Kernel)")
         elif has_pcm_c0:
             nfo("amixer Card 0: Master/PCM Volume — kein Route-Switch (neuer Kernel, HDMI)")
-    if amix_c1:
-        has_pcm_c1 = "PCM Playback Volume" in amix_c1
-        if has_pcm_c1:
-            vol_c1 = run("amixer -c 1 sget 'PCM' 2>/dev/null")
-            if "on" in vol_c1.lower():
-                ok("amixer Card 1 (Klinke): PCM Playback = on (nicht gemutet) ✓")
-            elif "off" in vol_c1.lower():
-                err("amixer Card 1 (Klinke): PCM Playback GEMUTET — FIX: amixer -c 1 sset 'PCM' 85% unmute")
+
+    if _headphone_card is not None:
+        amix_c1 = run(f"amixer -c {_headphone_card} controls 2>/dev/null")
+        if amix_c1:
+            has_pcm_c1 = "PCM Playback Volume" in amix_c1
+            if has_pcm_c1:
+                vol_c1 = run(f"amixer -c {_headphone_card} sget 'PCM' 2>/dev/null")
+                if "on" in vol_c1.lower():
+                    ok(f"amixer Card {_headphone_card} (Klinke): PCM Playback = on ✓")
+                elif "off" in vol_c1.lower():
+                    err(f"amixer Card {_headphone_card} (Klinke): GEMUTET — FIX: amixer -c {_headphone_card} sset 'PCM' unmute")
+                else:
+                    nfo(f"amixer Card {_headphone_card}: {vol_c1[:60]}")
             else:
-                nfo(f"amixer Card 1: {vol_c1[:60]}")
+                warn(f"amixer Card {_headphone_card}: kein PCM Playback Volume Control")
         else:
-            warn("amixer Card 1: kein PCM Playback Volume Control")
-    else:
-        warn("amixer Card 1 nicht erreichbar — Card 1 existiert als ALSA-Gerät?")
+            warn(f"amixer Card {_headphone_card} nicht erreichbar — ALSA-Gerät vorhanden?")
+    elif _CONTAINER:
+        nfo("amixer: Container-Modus — kein ALSA-Hardware erwartet")
+
 
     # Sinks
     sinks = run(PA + "pactl list sinks short 2>/dev/null")
@@ -493,7 +478,10 @@ def check_bluetooth():
             if "LMP Version" in ln or "HCI Version" in ln:
                 nfo(f"  Controller: {ln.strip()}")
     else:
-        err("hci0 nicht gefunden — BT-Dongle fehlt oder Treiber-Problem")
+        if _CONTAINER:
+            warn("hci0 nicht gefunden (Container — USB-Passthrough für BT nötig)")
+        else:
+            err("hci0 nicht gefunden — BT-Dongle fehlt oder Treiber-Problem")
 
     btmgmt = run("btmgmt info 2>/dev/null")
     if btmgmt:
@@ -757,18 +745,8 @@ def check_source_state():
 
 
 def test_sdl():
-    S("SDL DISPLAY TEST (fb1)")
-    try:
-        import pygame
-        os.environ["SDL_VIDEODRIVER"] = "fbcon"
-        os.environ["SDL_FBDEV"] = "/dev/fb1"
-        os.environ["SDL_AUDIODRIVER"] = "dummy"
-        os.environ["SDL_VIDEO_FBCON_KEEP_TTY"] = "1"
-        pygame.display.init()
-        ok(f"pygame.display.init() OK — Treiber: {pygame.display.get_driver()}")
-        pygame.display.quit()
-    except Exception as e:
-        err(f"pygame auf fb1 FEHLER: {e}")
+    S("SDL DISPLAY TEST")
+    nfo("pygame/SDL: TFT-Display entfernt v0.10.83 — Display-Test nicht verfuegbar")
 
 
 def summary():
@@ -778,8 +756,7 @@ def summary():
     # Welcher User läuft welcher Service?
     ctx_checks = [
         ("pidrive_core",    "root"),
-        ("pidrive_display", "root"),
-        ("pidrive_web",     "pi"),
+                ("pidrive_web",     "pi"),
         ("pidrive_avrcp",   "root"),
     ]
     for svc, expected_user in ctx_checks:
@@ -854,29 +831,26 @@ def summary():
     
     S("ZUSAMMENFASSUNG")
     core_ok  = run("systemctl is-active pidrive_core 2>/dev/null") == "active"
-    disp_ok  = run("systemctl is-active pidrive_display 2>/dev/null") == "active"
+    disp_ok = False  # display entfernt == "active"
     ipc_ok   = os.path.exists("/tmp/pidrive_status.json")
-    fbcp_off = not bool(run("pgrep fbcp"))
-    fb1_ok   = os.path.exists("/dev/fb1")
+    fbcp_off = True  # fbcp entfernt
+    fb1_ok   = False  # TFT entfernt
 
     checks = [
         (core_ok,  "pidrive_core.service laeuft"),
         (ipc_ok,   "/tmp/pidrive_status.json vorhanden"),
-        (fb1_ok,   "/dev/fb1 vorhanden (SPI-Display)"),
-        (fbcp_off, "fbcp nicht aktiv (v0.6.0: nicht noetig)"),
-    ]
+        (True,     "TFT-Display: dauerhaft deaktiviert"),
+        ]
     all_core_ok = True
     for r, l in checks:
         (ok if r else err)(l)
         if not r:
             all_core_ok = False
 
-    (ok if disp_ok else warn)(f"pidrive_display.service {'laeuft' if disp_ok else 'inaktiv (optional)'}")
+    nfo("pidrive_display.service: dauerhaft deaktiviert")
 
     if all_core_ok:
         print("\n  ✓ Core laeuft korrekt")
-        if not disp_ok:
-            print("  ⚠ Display inaktiv — teste fb1 direkt")
     else:
         print("\n  ✗ Probleme vorhanden — siehe Details oben")
 
@@ -921,9 +895,6 @@ def main():
     check_services()
     check_ipc()
     check_display_env()
-    check_fbcp()
-    check_fb("/dev/fb0", "fb0 (HDMI intern)")
-    check_fb("/dev/fb1", "fb1 (SPI Display)")
     check_vtcon()
     check_log()
     check_audio()

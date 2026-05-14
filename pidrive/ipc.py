@@ -14,7 +14,7 @@ MENU_FILE     = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 LIST_FILE     = "/tmp/pidrive_list.json"
 READY_FILE    = "/tmp/pidrive_ready"
-DEBUG_FILE    = "/tmp/pidrive_display_debug.json"
+# DEBUG_FILE: entfernt v0.10.84 (Display deaktiviert)
 
 
 def write_json(path, data):

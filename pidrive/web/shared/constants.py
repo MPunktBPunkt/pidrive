@@ -27,7 +27,7 @@ DAB_DEBUG_FILE= "/tmp/pidrive_dab_play_debug.json"
 STATIONS_FILE = _os.path.join(BASE_DIR, "config", "stations.json")
 
 # ── PulseAudio ──────────────────────────────────────────────────────────
-PA_ENV = "PULSE_SERVER=unix:/var/run/pulse/native"
+PA_ENV = "PULSE_SERVER=unix:" + __import__("os").environ.get("PULSE_SOCKET", "/var/run/pulse/native")
 
 # ── Erlaubte Trigger-Kommandos ──────────────────────────────────────────
 ALLOWED_COMMANDS = {

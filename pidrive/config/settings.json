@@ -5,7 +5,7 @@
   "spotify_enabled": true,
   "webradio_enabled": true,
   "dabfm_enabled": true,
-  "music_path": "/home/pi/Musik",
+  "music_path": "",
   "audio_output": "auto",
   "volume": 90,
   "fm_freq": "98.5",

@@ -429,7 +429,7 @@ Flags (vor dem Befehl angeben):
                 else: fmt.out("Aktueller Sender zu Favoriten hinzugefuegt.")
         elif args.fav_cmd == "remove":
             import json as _jf, os as _of
-            _cfg = "/home/pi/pidrive/pidrive/config/favorites.json"
+            _cfg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "favorites.json")
             try:
                 with open(_cfg) as _ff: _fd = _jf.load(_ff)
             except Exception: _fd = {"version":1,"favorites":[]}
