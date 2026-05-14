@@ -52,16 +52,16 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
 
     Quelle      Ausgabe         Pfad
     ──────────────────────────────────────────────────────────────
-    DAB         ALSA hw:1,0    welle-cli -p NAME (AlsaProgrammeHandler)
+    DAB         ALSA hw:{_get_headphone_card()},0    welle-cli -p NAME (AlsaProgrammeHandler)
                                KEIN PulseAudio — OFDM-Timing-sensitiv
-    FM          ALSA hw:1,0    rtl_fm | mpv --ao=alsa --alsa-device=hw:1,0
+    FM          ALSA hw:{_get_headphone_card()},0    rtl_fm | mpv --ao=alsa --alsa-device=hw:{_get_headphone_card()},0
                                KEIN PulseAudio — raw PCM Resampling-Problem
     Scanner     ALSA hw:N,0    rtl_fm | mpv --ao=alsa
     Webradio    PulseAudio     mpv --ao=pulse PULSE_SERVER=...
     Spotify     PulseAudio     librespot → PulseAudio
     BT (A2DP)   PulseAudio     mpv/librespot + PULSE_SINK=bluez_sink.*
 
-    hw:1,0 = Card 1 = bcm2835 Headphones = Klinke (3.5mm)
+    # hw:X,0 = Klinken-Karte (dynamisch per _get_headphone_card())
     hw:0,0 = Card 0 = bcm2835 HDMI — NIEMALS für PiDrive-Audio verwenden
 
 ## State Machine (source_state.py) Rolle
@@ -80,6 +80,11 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
     - BT + DAB: funktioniert nur wenn asound.conf default=card 1 korrekt gesetzt
       und PulseAudio Sink-Input nach BT-Connect verschoben wird.
 """
+
+try:
+    from modules.platform import CAPS as _CAPS
+except ImportError:
+    _CAPS = None
 
 import os
 import json
@@ -129,7 +134,15 @@ def _get_headphone_card() -> int:
                         pass
     except Exception:
         pass
-    return 1  # Standardannahme: Card 1 = Headphones auf modernem Pi OS
+    # Fallback über CAPS wenn verfügbar, sonst /proc/cpuinfo
+    if _CAPS and _CAPS.get("alsa_card") is not None:
+        return _CAPS["alsa_card"]
+    try:
+        if 'raspberry pi' in open('/proc/cpuinfo').read().lower():
+            return 1
+    except Exception:
+        pass
+    return 0
 
 
 def _set_pi_output_klinke():
@@ -615,9 +628,10 @@ def apply_startup_volume(settings=None):
                         shell=True, capture_output=True, timeout=3)
                 n += 1
         # amixer Card 1 für FM/Scanner
-        _sp.run(f"amixer -c 1 sset PCM {vol}% 2>/dev/null",
+        _card = _get_headphone_card()
+        _sp.run(f"amixer -c {_card} sset PCM {vol}% 2>/dev/null",
                 shell=True, capture_output=True, timeout=3)
-        log.info(f"[AUDIO] startup volume → {vol}% auf {n} PA-Sinks + amixer Card 1")
+        log.info(f"[AUDIO] startup volume → {vol}% auf {n} PA-Sinks + amixer Card {_card}")
     except Exception as e:
         log.error("[AUDIO] apply_startup_volume: " + str(e))
 
@@ -680,7 +694,8 @@ def volume_up(settings=None):
                 pass
         try:
             _v = min(100, int(settings.get("volume", 90)) if settings else 90)
-            subprocess.run(f"amixer -c 1 sset PCM {_v}% 2>/dev/null",
+            _card_up = _get_headphone_card()
+            subprocess.run(f"amixer -c {_card_up} sset PCM {_v}% 2>/dev/null",
                            shell=True, capture_output=True, timeout=2)
         except Exception:
             pass
@@ -710,7 +725,8 @@ def volume_down(settings=None):
                 pass
         try:
             _v = max(0, int(settings.get("volume", 90)) if settings else 90)
-            subprocess.run(f"amixer -c 1 sset PCM {_v}% 2>/dev/null",
+            _card_dn = _get_headphone_card()
+            subprocess.run(f"amixer -c {_card_dn} sset PCM {_v}% 2>/dev/null",
                            shell=True, capture_output=True, timeout=2)
         except Exception:
             pass

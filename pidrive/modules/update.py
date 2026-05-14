@@ -93,7 +93,7 @@ def do_update():
                        color="green")
     time.sleep(3)
 
-    subprocess.Popen("sleep 2 && systemctl restart pidrive_core pidrive_display",
+    subprocess.Popen("sleep 2 && systemctl restart pidrive_core ",
                      shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ipc.clear_progress()
     return True

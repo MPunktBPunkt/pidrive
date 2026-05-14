@@ -13,6 +13,11 @@ from modules.radio.dab_helpers import (
 )
 from modules.radio.dab_dls import _stop_dls_thread, _start_dls_thread
 from modules.radio.dab_scan import load_stations, is_scan_running
+try:
+    from modules.platform import CAPS as _CAPS
+except ImportError:
+    _CAPS = {}
+
 import os, re, json, time, shlex, threading, subprocess
 import log, ipc
 

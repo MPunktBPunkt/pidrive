@@ -11,6 +11,11 @@ Ausgelagert in:
 Backward-kompatibel: alle öffentlichen Funktionen bleiben erreichbar.
 """
 
+try:
+    from modules.platform import CAPS as _CAPS
+except ImportError:
+    _CAPS = {}
+
 from modules.radio.dab_helpers import C_DAB, ERR_FILE, PLAY_DEBUG_FILE, SCAN_DEBUG_FILE
 from modules.radio.dab_scan import (
     load_stations, save_stations,

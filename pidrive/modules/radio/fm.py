@@ -7,6 +7,11 @@ Hinweis: kein RDS — rtl_fm liefert nur Audio-PCM an PiDrive
 """
 
 
+try:
+    from modules.platform import CAPS as _CAPS
+except ImportError:
+    _CAPS = None
+
 import subprocess
 try:
     from modules import rtlsdr as _rtlsdr
@@ -265,7 +270,7 @@ def stop(S):
         log.warn(f"FM stop: rtlsdr.stop_process: {e}")
     _bg("pkill -f pidrive_fm 2>/dev/null")
     _bg("pkill -f rtl_fm 2>/dev/null")
-    _bg("pkill -f welle-cli 2>/dev/null")   # welle-cli hält ALSA hw:1,0 belegt
+    _bg("pkill -f welle-cli 2>/dev/null")   # welle-cli haelt ALSA-Karte belegt
     _bg("pkill -f aplay 2>/dev/null")
     _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_fm' 2>/dev/null")
     if _player_proc:
