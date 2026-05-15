@@ -1,5 +1,5 @@
 """
-modules/platform.py — Hardware-Capability-Detection  v0.10.85
+modules/platform.py — Hardware-Capability-Detection  v0.10.88
 ==============================================================
 Einmalig beim Start ausgewertet. Alle Subsysteme prüfen
 nur noch CAPS statt /proc/cpuinfo oder importierte Hardware.
@@ -68,27 +68,54 @@ def _pa_running() -> bool:
     return _path_exists("/var/run/pulse/native")
 
 def _bt_available() -> bool:
-    """Echter Bluetooth-Adapter vorhanden (nicht nur binary installiert)."""
-    # /sys/class/bluetooth/ hat Einträge wenn echter Adapter vorhanden
+    """Bluetooth-Adapter vorhanden (mit Socket-Zugriff-Test fuer LXC)."""
+    # Schritt 1: Adapter im sys-Filesystem vorhanden?
+    has_adapter = False
     if os.path.isdir("/sys/class/bluetooth"):
         try:
             entries = [e for e in os.listdir("/sys/class/bluetooth")
                        if e.startswith("hci")]
-            if entries:
-                return True
+            has_adapter = bool(entries)
         except Exception:
             pass
-    # Fallback: hciconfig Output
+    if not has_adapter:
+        return False
+
+    # Schritt 2: Tatsaechlichen Socket-Zugriff pruefen (LXC kann Adapter sehen
+    # aber AF_BLUETOOTH Socket sperren)
     try:
-        r = subprocess.run("hciconfig 2>/dev/null", shell=True,
-                           capture_output=True, text=True, timeout=2)
-        return "hci0" in r.stdout or "hci1" in r.stdout
-    except Exception:
+        import socket
+        s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_RAW,
+                          socket.BTPROTO_HCI)
+        s.close()
+        return True  # Socket-Zugriff OK
+    except (OSError, AttributeError):
+        # Socket gesperrt (LXC-Restriktion) — Adapter vorhanden aber nicht nutzbar
         return False
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CAPS — einmalig beim Import ausgewertet
 # ─────────────────────────────────────────────────────────────────────────────
+
+def bt_socket_restricted() -> bool:
+    """True wenn BT-Adapter sichtbar aber Socket-Zugriff gesperrt (typisch LXC)."""
+    if not os.path.isdir("/sys/class/bluetooth"):
+        return False
+    try:
+        entries = [e for e in os.listdir("/sys/class/bluetooth") if e.startswith("hci")]
+        if not entries:
+            return False
+    except Exception:
+        return False
+    # Adapter da, aber Socket-Check
+    try:
+        import socket
+        s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_RAW, socket.BTPROTO_HCI)
+        s.close()
+        return False  # Kein Problem
+    except (OSError, AttributeError):
+        return True  # Adapter da, Socket gesperrt → LXC-Restriktion
+
 
 CAPS: dict = {
     # Plattform
@@ -106,6 +133,7 @@ CAPS: dict = {
     "dab":             _cmd_exists("welle-cli"),
     # Bluetooth
     "bluetooth":       _bt_available(),
+    "bt_lxc_restricted": bt_socket_restricted(),  # hci sichtbar aber Socket gesperrt
     "bluetoothctl":    _cmd_exists("bluetoothctl"),
     # Spotify
     "spotify":         _cmd_exists("librespot") or _cmd_exists("raspotify"),

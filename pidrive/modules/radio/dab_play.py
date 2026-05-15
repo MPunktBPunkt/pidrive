@@ -21,6 +21,18 @@ except ImportError:
 import os, re, json, time, shlex, threading, subprocess
 import log, ipc
 
+# Fatale Fehler — RTL-SDR nicht verfügbar, sofort abbrechen
+_DAB_FATAL_PATTERNS = [
+    "no valid device found",
+    "opening rtl-sdr failed",
+    "usb_open error",
+    "rtlsdr_open() failed",
+    "error: no supported",
+    "could not load soapysdr",
+    "device is busy",
+]
+
+
 def play_station(station, S, settings=None):
     global _player_proc
 
@@ -273,6 +285,18 @@ def play_station(station, S, settings=None):
                         if ln[:180] != last_err:
                             last_err = ln[:180]
                             log.warn(f"DAB stderr: {ln[:100]}")
+
+                    # Fataler Fehler — RTL-SDR nicht erreichbar → sofort abbrechen
+                    if any(p in low for p in _DAB_FATAL_PATTERNS):
+                        log.error(f"DAB FATAL: RTL-SDR nicht verfuegbar ({ln[:80]}) — stoppe")
+                        try:
+                            import subprocess as _sp
+                            _sp.run(f"pkill -f 'welle-cli.*{ch}' 2>/dev/null", shell=True, timeout=2)
+                        except Exception:
+                            pass
+                        _set_dab_status_fields(S, dab_state="device_error",
+                                               dab_last_error=ln[:100], radio_playing=False)
+                        return
 
                 if sync_seen and superframe_seen:
                     sync_ok = True

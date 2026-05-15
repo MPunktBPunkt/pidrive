@@ -463,8 +463,18 @@ def decide_audio_route(settings=None, source: str = "") -> dict:
         else:
             effective, reason, sink = "klinke", "no_a2dp_sink",         alsa_sink
 
+    # Null-Sink (Container/Entwicklung) → virtueller Audio-Ausgang
     if not sink:
-        effective, reason = "none", "no_sink_available"
+        import subprocess as _pctl
+        try:
+            _r = _pctl.run("pactl --server unix:/var/run/pulse/native list sinks short 2>/dev/null",
+                           shell=True, capture_output=True, text=True, timeout=2)
+            if "null" in _r.stdout.lower() or "pidrive_null" in _r.stdout.lower():
+                effective, reason, sink = "virtual", "null_sink_container", "pidrive_null"
+            else:
+                effective, reason = "none", "no_sink_available"
+        except Exception:
+            effective, reason = "none", "no_sink_available"
 
     return {
         "requested": requested, "effective": effective,
