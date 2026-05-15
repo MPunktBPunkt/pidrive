@@ -40,7 +40,9 @@ def print_status(d: dict):
         out("  DAB-Status:   " + dab_ps)
     out()
     out(_c("Audio", BOLD))
-    out(f"  Ausgang:      {d.get('audio_eff', '–')}")
+    _audio = d.get("audio_eff", "–")
+    if _audio == "virtual": _audio = "virtuell (Container)"
+    out(f"  Ausgang:      {_audio}")
     vol = d.get("volume"); out("  Lautstaerke:  " + (str(vol) + "%" if vol is not None else "–"))
     out()
     out(_c("Verbindungen", BOLD))

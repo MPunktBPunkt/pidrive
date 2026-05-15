@@ -335,7 +335,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.10.85
+        r = ""  # display entfernt v0.10.88
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)

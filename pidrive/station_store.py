@@ -1,5 +1,5 @@
 """
-DEPRECATED SHIM — Rückwärtskompatibilität v0.10.85
+DEPRECATED SHIM — Rückwärtskompatibilität v0.10.88
 Echte Implementierung: pidrive/menu/station_store.py
 Geplant: v0.11.x
 """

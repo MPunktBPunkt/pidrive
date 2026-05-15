@@ -468,6 +468,15 @@ Flags (vor dem Befehl angeben):
             "disconnect": "bt_disconnect", "reconnect": "bt_reconnect_last",
         }
         if args.bt_cmd == "scan":
+            # LXC-Hinweis wenn BT-Socket gesperrt
+            try:
+                from modules.platform import CAPS as _C, bt_socket_restricted as _bsr
+                if _bsr():
+                    fmt.out(fmt.YELLOW + "  ⚠  BT-Adapter sichtbar aber AF_BLUETOOTH Socket gesperrt (LXC)" + fmt.RESET)
+                    fmt.out("     Proxmox LXC fuer BT freischalten:")
+                    fmt.out("     lxc.cgroup2.devices.allow: c 166:0 rwm")
+                    fmt.out("     lxc.mount.entry: /dev/bluetooth dev/bluetooth none bind,create=dir")
+            except Exception: pass
             if use_json:
                 r = svc.send("bt_scan")
                 fmt.print_json(r)
@@ -681,8 +690,54 @@ Flags (vor dem Befehl angeben):
         elif args.dab_cmd == "scan":
             svc.require_online()
             r = svc.send("dab_scan")
-            if use_json: fmt.print_json(r)
-            else: fmt.out("DAB-Sendersuchlauf gestartet.")
+            if use_json:
+                fmt.print_json(r); sys.exit(EXIT_OK)
+            fmt.out("DAB-Sendersuchlauf gestartet (ca. 2-3 Minuten)…")
+            fmt.out("  Ctrl+C: Monitor beenden (Scan laeuft weiter im Hintergrund)")
+            import time as _ts, json as _js
+            _prev_found = 0; _prev_chs = set(); _start_ts = _ts.time()
+            try:
+                while True:
+                    _ts.sleep(2)
+                    _elapsed = int(_ts.time() - _start_ts)
+                    # Aktuellem Kanal aus Progress
+                    try:
+                        _pg = _js.load(open("/tmp/pidrive_progress.json"))
+                        if _pg.get("active") and _pg.get("message"):
+                            print(f"\r  [{_elapsed:>3}s] " + _pg.get("message","")[:45], end="", flush=True)
+                    except Exception: pass
+                    # Scan-Debug für Zwischenergebnisse
+                    try:
+                        _dg = _js.load(open("/tmp/pidrive_dab_scan_debug.json"))
+                        _fd = _dg.get("found", 0)
+                        if _fd != _prev_found:
+                            print("")
+                            fmt.out(f"  → {_fd} Sender bisher gefunden")
+                            for _ch, _cd in _dg.get("channels", {}).items():
+                                if _ch not in _prev_chs:
+                                    _sts = _cd.get("stations", [])
+                                    for _st in _sts[:4]:
+                                        fmt.out(f"    {_ch}: " + _st.get("name","?"))
+                                    if len(_sts) > 4: fmt.out(f"    ... +{len(_sts)-4} weitere")
+                                    _prev_chs.add(_ch)
+                            _prev_found = _fd
+                    except Exception: pass
+                    # Scan fertig?
+                    try:
+                        _p2 = _js.load(open("/tmp/pidrive_progress.json"))
+                        if not _p2.get("active", True) and _elapsed > 10:
+                            print(""); fmt.out(f"\n✓ Scan fertig ({_elapsed}s)")
+                            try:
+                                _cfgp = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "dab_stations.json")
+                                _cfg = _js.load(open(_cfgp))
+                                _all = _cfg.get("stations", _cfg) if isinstance(_cfg, dict) else _cfg
+                                fmt.out(f"  {len(_all)} Sender in Datenbank gespeichert")
+                            except Exception: pass
+                            break
+                    except Exception: pass
+                    if _elapsed > 300: print(""); fmt.out("  Timeout"); break
+            except KeyboardInterrupt:
+                print(""); fmt.out("  Monitor beendet (Scan laeuft weiter)")
         elif args.dab_cmd == "next":
             svc.require_online()
             svc.send("dab_next")

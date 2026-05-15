@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 """td_hardware.py — Audio, WiFi/BT, Gain, PPM, RTL-SDR  v0.10.55"""
+try:
+    from modules.platform import CAPS as _CAPS
+except ImportError:
+    _CAPS = {}
+
 import os, sys, time as _time_mod, threading
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -59,12 +64,18 @@ def handle(cmd, menu_state, store, S, settings, bg):
         bg(lambda: wifi.scan_networks(S, settings))
     elif cmd == "bt_scan":
         def _bt_scan_trigger():
+            # Kein BT-Adapter vorhanden → rfkill/hciconfig würden nur hängen
+            if not _CAPS.get("bluetooth", False) and not _CAPS.get("bluetoothctl", False):
+                log.info("bt_scan: kein BT-Adapter erkannt (CAPS) — scan uebersprungen")
+                return
             if not S.get("bt_on", False) and not S.get("bt", False):
                 log.info("bt_scan: BT war aus — schalte ein")
                 import subprocess
                 subprocess.run(
-                    "rfkill unblock bluetooth; hciconfig hci0 up; bluetoothctl power on",
-                    shell=True, capture_output=True, timeout=6
+                    "rfkill unblock bluetooth 2>/dev/null; "
+                    "hciconfig hci0 up 2>/dev/null; "
+                    "bluetoothctl power on 2>/dev/null",
+                    shell=True, capture_output=True, timeout=4
                 )
                 S["bt_on"] = True
                 S["bt_status"] = "getrennt"
