@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.10.85"
+PIDRIVE_VERSION="0.10.88"
 
 # ============================================================
 # PiDrive Install Script
@@ -23,6 +23,10 @@ LOG_DIR="/var/log/pidrive"
 # Priorität: SUDO_USER → erster User ≥1000 → root-Fallback (kein pi-Phantom)
 if [ -n "$SUDO_USER" ] && id "$SUDO_USER" >/dev/null 2>&1; then
     REAL_USER="$SUDO_USER"
+elif id "pidrive" >/dev/null 2>&1; then
+    REAL_USER="pidrive"  # Dedizierter pidrive-Systemuser
+elif id "pi" >/dev/null 2>&1; then
+    REAL_USER="pi"       # Legacy Raspberry Pi
 else
     REAL_USER=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}')
 fi
@@ -182,6 +186,9 @@ fi
 # SCHRITT 3: Repository klonen / aktualisieren
 # ══════════════════════════════════════════════════════════════
 info "3/10 Repository von GitHub..."
+# Diagnose: Zeige INSTALL_DIR und Status
+info "  INSTALL_DIR: $INSTALL_DIR"
+info "  REAL_USER:   $REAL_USER"
 if [ -d "$INSTALL_DIR/.git" ]; then
     info "Update von GitHub..."
     cd "$INSTALL_DIR"
@@ -192,10 +199,18 @@ if [ -d "$INSTALL_DIR/.git" ]; then
         cp "$_SETTINGS_FILE" "$_SETTINGS_BAK"
         # git stash: legt lokale Änderungen beiseite damit git pull nicht abbricht
         cd "$INSTALL_DIR"
-        run_as_real_user git stash 2>/dev/null || true
+        run_as_real_user git -C "$INSTALL_DIR" stash 2>/dev/null || true
         info "settings.json gesichert (git stash)"
     fi
-    run_as_real_user git pull
+    set +e  # git pull darf nicht den Installer abbrechen
+    run_as_real_user git -C "$INSTALL_DIR" pull
+    _git_rc=$?
+    set -e
+    if [ $_git_rc -ne 0 ]; then
+        warn "git pull fehlgeschlagen (rc=$_git_rc) — versuche Reset und erneuten Pull"
+        run_as_real_user git -C "$INSTALL_DIR" fetch origin main 2>/dev/null || true
+        run_as_real_user git -C "$INSTALL_DIR" reset --hard origin/main 2>/dev/null || true
+    fi
     # settings.json: Backup wiederherstellen (überschreibt Repo-Default)
     if [ -f "$_SETTINGS_BAK" ]; then
         cp "$_SETTINGS_BAK" "$_SETTINGS_FILE"
@@ -222,7 +237,15 @@ except Exception as e:
   ok "Repository aktualisiert"
 else
     info "Klone $REPO_URL nach $INSTALL_DIR..."
+    set +e
     run_as_real_user git clone "$REPO_URL" "$INSTALL_DIR"
+    _clone_rc=$?
+    set -e
+    if [ $_clone_rc -ne 0 ]; then
+        err "git clone fehlgeschlagen — Netzwerk/DNS pruefen"
+        err "  $REPO_URL nach $INSTALL_DIR"
+        exit 1
+    fi
     ok "Repository geklont"
 fi
 
@@ -378,7 +401,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.10.85
+# pidrive_display.service: entfernt v0.10.88
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -937,7 +960,7 @@ else
     for f in $SHELL_IN_PY; do
         warn "  Stelle wieder her: $f"
         rel="${f#$INSTALL_DIR/}"
-        cd "$INSTALL_DIR" && git checkout HEAD -- "$rel" 2>/dev/null &&             ok "  Restored: $rel" || err "  Konnte nicht wiederhergestellt werden: $rel"
+        git -C "$INSTALL_DIR" checkout HEAD -- "$rel" 2>/dev/null &&             ok "  Restored: $rel" || err "  Konnte nicht wiederhergestellt werden: $rel"
     done
 fi
 

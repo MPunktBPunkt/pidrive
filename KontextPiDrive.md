@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.10.85
+# PiDrive — Kontext & Projektdokumentation v0.10.88
 
 ## Projektbeschreibung
 
@@ -28,7 +28,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Aktueller Stand (v0.10.85)
+## Aktueller Stand (v0.10.88)
 
 ### Services
 
@@ -53,7 +53,7 @@ Emuliert einen iPod gegenüber dem BMW iDrive via AVRCP. WebUI auf Port 8080 + `
 
 ---
 
-## Verzeichnisstruktur (v0.10.85)
+## Verzeichnisstruktur (v0.10.88)
 
 ```
 pidrive/
@@ -85,7 +85,7 @@ pidrive/
 
 ---
 
-## pidrivectl Kommandoreferenz (v0.10.85)
+## pidrivectl Kommandoreferenz (v0.10.88)
 
 ```bash
 # Basis
@@ -141,7 +141,7 @@ pidrivectl debug inject down   # Trigger direkt injizieren
 
 ---
 
-## modules/platform.py — CAPS-System (v0.10.85)
+## modules/platform.py — CAPS-System (v0.10.88)
 
 ```python
 from modules.platform import CAPS
@@ -187,7 +187,7 @@ trigger_dispatcher.py → td_nav / td_radio / td_hardware / td_scanner / td_syst
 
 ---
 
-## Installer-Plattform-Logik (v0.10.85)
+## Installer-Plattform-Logik (v0.10.88)
 
 | Feature | Bedingung | Debian Container |
 |---|---|---|
