@@ -58,7 +58,6 @@ class PiDriveService:
             "track":         s.get("track", ""),
             "artist":        s.get("artist", ""),
             "dls":           s.get("dls_text", ""),
-            "volume":        s.get("volume", "–"),
             "audio_out":     s.get("audio_out", "–"),
             "audio_eff":     s.get("audio_effective", "–"),
             "bt":            s.get("bt", False),

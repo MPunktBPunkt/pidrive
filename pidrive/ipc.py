@@ -14,7 +14,7 @@ MENU_FILE     = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 LIST_FILE     = "/tmp/pidrive_list.json"
 READY_FILE    = "/tmp/pidrive_ready"
-# DEBUG_FILE: entfernt v0.10.96 (Display deaktiviert)
+# DEBUG_FILE: entfernt v0.10.97 (Display deaktiviert)
 
 
 def write_json(path, data):
@@ -74,6 +74,7 @@ def write_status(S, settings):
         "lib_track": S.get("library_track", S.get("lib_track", "")),
         "audio_out": settings.get("audio_output", "auto"),
         "audio_effective": _get_audio_effective() or settings.get("audio_output","auto"),
+        "volume":  settings.get("volume", None),
         "audio_reason":    _get_audio_reason(),
         "ip":        S.get("ip", ""),
         # Phase 2: zentraler control_context (v0.8.17)

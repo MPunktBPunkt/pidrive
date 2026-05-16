@@ -72,29 +72,35 @@ def play_station(station, S, settings=None):
         import os as _os
         _mpv_env_dict = _os.environ.copy()
         _mpv_env_dict["PULSE_SERVER"]  = "unix:/var/run/pulse/native"
-        _mpv_env_dict["XDG_RUNTIME_DIR"] = "/tmp"   # User-PA-Socket verhindern
+        _mpv_env_dict["XDG_RUNTIME_DIR"] = "/tmp"
 
-        # Aktiven BT-Sink direkt adressieren (PULSE_SINK überschreibt Default)
+        # Aktiven Sink ermitteln — warte bis zu 5s falls BT noch verbindet
+        _target_sink = ""
         try:
-            _bt_sink = _audio.get_bt_sink()
-            if _bt_sink:
-                _mpv_env_dict["PULSE_SINK"] = _bt_sink
-                log.info(f"[WEB] mpv PULSE_SINK={_bt_sink}")
-        except Exception:
-            pass
+            for _attempt in range(5):
+                _bt_sink = _audio.get_bt_sink()
+                if _bt_sink:
+                    _target_sink = _bt_sink
+                    break
+                _alsa = _audio.get_alsa_sink()
+                if _alsa:
+                    _target_sink = _alsa
+                    break
+                import time as _tw; _tw.sleep(1)
+            if _target_sink:
+                _mpv_env_dict["PULSE_SINK"] = _target_sink
+                log.info(f"[WEB] mpv PULSE_SINK={_target_sink}")
+            else:
+                log.warn("[WEB] Kein PA-Sink verfügbar — mpv startet ohne Sink-Override")
+        except Exception as _se:
+            log.warn(f"[WEB] Sink-Ermittlung: {_se}")
 
         mpv_args = ["--ao=pulse"]
 
-        # stderr in Datei — bei Crash auswertbar
-        _err_path = "/tmp/pidrive_mpv_err.log"
-        try:
-            _err_fh = open(_err_path, "w")
-        except Exception:
-            _err_fh = subprocess.DEVNULL
 
         # Shell-Wrapper: env-Prefix statt env=dict → zuverlässiger bei PA-System-Mode
-        _bt_sink_for_cmd = _mpv_env_dict.get("PULSE_SINK", "")
-        _pa_sink_arg = f"--pulse-sink={_bt_sink_for_cmd}" if _bt_sink_for_cmd else ""
+        _bt_sink_for_cmd = _target_sink
+        _pa_sink_arg = f"--audio-device=pulse/{_bt_sink_for_cmd}" if _bt_sink_for_cmd else ""
         _mpv_shell_cmd = (
             f"PULSE_SERVER=unix:/var/run/pulse/native "
             f"XDG_RUNTIME_DIR=/tmp "
@@ -110,7 +116,7 @@ def play_station(station, S, settings=None):
             _mpv_shell_cmd,
             shell=True,
             stdout=subprocess.DEVNULL,
-            stderr=_err_fh,
+            stderr=subprocess.PIPE,
         )
 
         S["track"]         = ""
@@ -147,13 +153,10 @@ def play_station(station, S, settings=None):
             rc = _player_proc.returncode
             S["radio_playing"] = False
             S["metadata_unavailable"] = True
-            # mpv stderr lesen für echte Fehlerursache
+            # mpv stderr lesen
             _mpv_err = ""
             try:
-                if _err_fh not in (subprocess.DEVNULL, None):
-                    _err_fh.flush(); _err_fh.close()
-                with open("/tmp/pidrive_mpv_err.log") as _ef:
-                    _mpv_err = _ef.read().strip()[-300:]
+                _mpv_err = (_player_proc.stderr.read() or b"").decode("utf-8","replace").strip()[-300:]
             except Exception:
                 pass
             if rc == -15:
