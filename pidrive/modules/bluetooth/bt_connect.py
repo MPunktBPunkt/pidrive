@@ -25,7 +25,7 @@ from modules.bluetooth.bt_devices import (
     _read_discovered_devices, _write_discovered_devices,
 )
 from modules.bluetooth.bt_audio import (
-    _ensure_a2dp_sink, _set_pulseaudio_sink,
+    _ensure_a2dp_sink, _set_pulseaudio_sink, bt_audio_autoroute,
     _set_raspotify_device, get_bt_sink,
 )
 import threading
@@ -435,6 +435,13 @@ def _connect_device_inner(mac, S, settings):
     sink_ok, pa_sink = _ensure_a2dp_sink(mac, timeout=A2DP_WAIT_SECONDS)
     if not sink_ok:
         log.warn(f"BT connect: Link ok, aber kein A2DP-Sink mac={mac}")
+    else:
+        # A2DP-Sink aktiv → als Default setzen + alle Streams verschieben
+        _set_pulseaudio_sink(pa_sink)
+        settings["audio_output"] = "bt"
+        try:
+            from settings import save_settings as _ss_bt; _ss_bt(settings)
+        except Exception: pass
 
     # Erfolgspfad
     S["bt"] = True

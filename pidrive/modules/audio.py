@@ -270,9 +270,8 @@ def invalidate_sink_cache():
 
 def get_bt_sink(retry: int = 1) -> str:
     """
-    Gibt den BT A2DP Sink zurück (v0.9.21).
-    retry=3: wartet bis zu 3x1s auf A2DP-Aushandlung nach BT-Connect.
-    PulseAudio registriert A2DP-Sink erst ~1-2s nach bluetoothctl connect.
+    Gibt den BT A2DP Sink zurück.
+    Falls kein Sink vorhanden: versucht module-bluetooth-discover nachzuladen.
     """
     import time as _t
     for attempt in range(max(1, retry)):
@@ -281,6 +280,18 @@ def get_bt_sink(retry: int = 1) -> str:
                 return s["name"]
         if attempt < retry - 1:
             _t.sleep(1)
+
+    # Kein A2DP-Sink gefunden — versuche BT-Module nachzuladen
+    try:
+        _pa = PA_ENV + " pactl load-module module-bluetooth-discover 2>/dev/null"
+        subprocess.run(_pa, shell=True, capture_output=True, timeout=3)
+        _t.sleep(1)
+        for s in _list_sinks():
+            if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
+                log.info("[AUDIO] A2DP-Sink nach module-bluetooth-discover gefunden")
+                return s["name"]
+    except Exception:
+        pass
     return ""
 
 

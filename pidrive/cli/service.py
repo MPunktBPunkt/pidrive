@@ -95,18 +95,40 @@ class PiDriveService:
         }
 
     def get_volume(self) -> int | None:
-        """Liest aktuelle PA-Lautstaerke via pactl (Prozent, 0-100)."""
+        """Liest Lautstärke: erst settings.json (aktuell nach vol_up/down), dann PA-Fallback."""
+        # settings["volume"] wird von audio.volume_up/down sofort aktualisiert
+        try:
+            import json as _j, os as _os
+            _cfg = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                                 "config", "settings.json")
+            _vol = _j.load(open(_cfg)).get("volume")
+            if _vol is not None:
+                return int(_vol)
+        except Exception:
+            pass
+        # Fallback: aktuellen PA-Sink direkt abfragen (nicht @DEFAULT_SINK@)
         import subprocess, re as _re
         try:
+            # Finde aktiven Sink aus status.json
+            _status = self.get_status()
+            _route = _status.get("audio_effective", "") or _status.get("audio_out", "")
+            # Versuche PA direkt (aktiver Sink aus pactl)
             r = subprocess.run(
-                ['pactl', '--server', '/var/run/pulse/native',
-                 'get-sink-volume', '@DEFAULT_SINK@'],
-                capture_output=True, text=True, timeout=2
+                "PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null",
+                shell=True, capture_output=True, text=True, timeout=2
             )
-            m = _re.search(r'(\d+)%', r.stdout)
-            return int(m.group(1)) if m else None
+            # nimm ersten non-null Sink
+            for line in r.stdout.splitlines():
+                if "null" not in line.lower() and "pidrive_null" not in line.lower():
+                    sink_name = line.split()[1] if len(line.split()) > 1 else "@DEFAULT_SINK@"
+                    rv = subprocess.run(
+                        f"PULSE_SERVER=unix:/var/run/pulse/native pactl get-sink-volume {sink_name}",
+                        shell=True, capture_output=True, text=True, timeout=2)
+                    m = _re.search(r'(\d+)%', rv.stdout)
+                    return int(m.group(1)) if m else None
         except Exception:
-            return None
+            pass
+        return None
 
     def get_quick(self) -> dict:
         s  = self.ipc.read_json(STATUS_FILE, {})

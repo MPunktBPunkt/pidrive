@@ -706,41 +706,179 @@ Flags (vor dem Befehl angeben):
                 new_out = d2.get("audio_effective", args.mode)
                 fmt.out("Audio-Ausgang: " + fmt.GREEN + new_out + " ✓" + fmt.RESET)
         elif args.audio_cmd == "test":
-            # Testton: 440 Hz Sinuston für 3 Sekunden über aktiven Audio-Ausgang
-            import subprocess as _sp, time as _tt
-            fmt.out("Audio-Test: 440 Hz Testton (3s)…")
-            # Aktuellen Ausgang anzeigen
-            try:
-                _d = svc.get_status()
-                _out = _d.get("audio_effective") or _d.get("audio_out","?")
-                fmt.out(f"  Ausgang: {_out}")
-            except Exception: pass
-            # sox wenn verfügbar, sonst python
-            _cmd = None
-            if _sp.run("which sox 2>/dev/null", shell=True, capture_output=True).returncode == 0:
-                _cmd = ("sox -n -t pulseaudio --server unix:/var/run/pulse/native "
-                        "default synth 3 sine 440 vol 0.5 2>/dev/null")
-            elif _sp.run("which speaker-test 2>/dev/null", shell=True, capture_output=True).returncode == 0:
-                _cmd = "timeout 3 speaker-test -t sine -f 440 -l 1 2>/dev/null"
+            # Vollständige Audio-Diagnose
+            import subprocess as _sp, os as _os
+            G = fmt.GREEN; R = fmt.RED if hasattr(fmt,'RED') else "\033[31m"
+            Y = "\033[33m"; RESET = fmt.RESET
+            OK  = G + "  ✔" + RESET
+            NOK = R + "  ✖" + RESET
+            WRN = Y + "  ⚠" + RESET
+
+            def _run(cmd, timeout=4):
+                try:
+                    r = _sp.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+                    return (r.stdout + r.stderr).strip(), r.returncode == 0
+                except Exception as _e:
+                    return str(_e), False
+
+            fmt.out("\n" + "─"*48)
+            fmt.out("  PiDrive Audio-Diagnose")
+            fmt.out("─"*48)
+
+            # ── A) ALSA ──────────────────────────────────────────────────────
+            fmt.out("\n=== A) ALSA ===")
+            aplay_out, aplay_ok = _run("aplay -l 2>/dev/null")
+            if aplay_ok and aplay_out:
+                cards = [l for l in aplay_out.splitlines() if "card" in l.lower()]
+                fmt.out(OK + f" {len(cards)} ALSA-Gerät(e) gefunden")
+                for c in cards:
+                    fmt.out(f"     {c.strip()}")
             else:
-                # Python-Fallback: kurzer Testton via pacat
-                _cmd = ("python3 -c \"import struct,math,subprocess,sys;"
-                        "s=[struct.pack('<h',int(32767*math.sin(2*math.pi*440*i/44100)))"
-                        " for i in range(44100*3)];"
-                        "p=subprocess.Popen(['pacat','--server','unix:/var/run/pulse/native',"
-                        "'--format=s16le','--rate=44100','--channels=1'],"
-                        "stdin=subprocess.PIPE);"
-                        "[p.stdin.write(x) for x in s]; p.stdin.close(); p.wait()\"")
-            try:
-                r = _sp.run(_cmd, shell=True, timeout=5)
-                if r.returncode == 0:
-                    fmt.out(fmt.GREEN + "✓ Testton abgespielt" + fmt.RESET)
+                fmt.out(NOK + " Keine ALSA-Geräte (aplay -l leer)")
+
+            # ── B) PulseAudio ────────────────────────────────────────────────
+            fmt.out("\n=== B) PulseAudio ===")
+            PA_CMD = "PULSE_SERVER=unix:/var/run/pulse/native"
+            pa_info, pa_ok = _run(f"{PA_CMD} pactl info 2>/dev/null")
+            if pa_ok:
+                fmt.out(OK + " PulseAudio läuft")
+                for line in pa_info.splitlines():
+                    if "Default Sink:" in line or "Server Version:" in line:
+                        fmt.out(f"     {line.strip()}")
+            else:
+                fmt.out(NOK + " PulseAudio nicht erreichbar")
+                fmt.out(WRN + " Tipp: systemctl status pulseaudio")
+
+            sinks_out, _ = _run(f"{PA_CMD} pactl list sinks short 2>/dev/null")
+            sinks = [l for l in sinks_out.splitlines() if l.strip()]
+            if sinks:
+                fmt.out(OK + f" {len(sinks)} PA-Sink(s) vorhanden")
+                for s in sinks:
+                    parts = s.split()
+                    name = parts[1] if len(parts) > 1 else s
+                    state = parts[4] if len(parts) > 4 else ""
+                    if "null" in name.lower():
+                        fmt.out(WRN + f" {name}  [{state}]  (virtuell)")
+                    elif "bluez" in name.lower():
+                        fmt.out(OK + f" {name}  [{state}]  ← BT")
+                    else:
+                        fmt.out(f"     {name}  [{state}]")
+            else:
+                fmt.out(NOK + " Keine PA-Sinks vorhanden")
+                fmt.out(WRN + " → systemctl restart pulseaudio")
+                fmt.out(WRN + " → Bei BT: pactl load-module module-bluetooth-discover")
+
+            # PA-Module für BT
+            mods_out, _ = _run(f"{PA_CMD} pactl list modules short 2>/dev/null")
+            for mod in ("module-bluetooth-discover", "module-bluetooth-policy"):
+                if mod in mods_out:
+                    fmt.out(OK + f" {mod} geladen")
                 else:
-                    fmt.out("⚠ Kein Audio-Gerät oder PulseAudio nicht bereit")
-                    fmt.out("  pidrivectl audio status  für Ausgangs-Details")
-            except Exception as _e:
-                fmt.out(f"Fehler: {_e}")
+                    fmt.out(NOK + f" {mod} NICHT geladen")
+                    fmt.out(f"     → {PA_CMD} pactl load-module {mod}")
+
+            # ── C) Bluetooth ─────────────────────────────────────────────────
+            fmt.out("\n=== C) Bluetooth ===")
+            hci, _ = _run("hciconfig 2>/dev/null")
+            if "UP RUNNING" in hci:
+                fmt.out(OK + " hci0 aktiv (UP RUNNING)")
+            else:
+                fmt.out(NOK + " kein HCI-Adapter aktiv")
+
+            conn_out, _ = _run("bluetoothctl devices Connected 2>/dev/null")
+            if conn_out.strip():
+                for line in conn_out.strip().splitlines():
+                    parts = line.split()
+                    mac  = parts[1] if len(parts) > 1 else "?"
+                    name = " ".join(parts[2:]) if len(parts) > 2 else mac
+                    fmt.out(OK + f" Verbunden: {name}  [{mac}]")
+                    # BT-Profil prüfen
+                    cards_out, _ = _run(f"{PA_CMD} pactl list cards 2>/dev/null")
+                    bt_card = "bluez_card." + mac.replace(":", "_")
+                    if bt_card in cards_out:
+                        # Aktives Profil extrahieren
+                        in_card = False
+                        for cl in cards_out.splitlines():
+                            if bt_card in cl: in_card = True
+                            if in_card and "Active Profile:" in cl:
+                                prof = cl.split(":", 1)[1].strip()
+                                if "a2dp" in prof.lower():
+                                    fmt.out(OK + f"   A2DP-Profil aktiv: {prof}")
+                                else:
+                                    fmt.out(NOK + f"   Profil: {prof}  (kein A2DP!)")
+                                    fmt.out(f"     → {PA_CMD} pactl set-card-profile {bt_card} a2dp-sink")
+                                break
+                    # A2DP-Sink suchen
+                    expected_sink = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
+                    if expected_sink in sinks_out:
+                        fmt.out(OK + f"   A2DP-Sink: {expected_sink}")
+                    else:
+                        fmt.out(NOK + f"   Kein A2DP-Sink in PA")
+                        fmt.out(f"     → Erwartet: {expected_sink}")
+            else:
+                bt_paired, _ = _run("bluetoothctl devices Paired 2>/dev/null")
+                if bt_paired.strip():
+                    fmt.out(WRN + " BT-Geräte gepairt, aber keins verbunden")
+                    fmt.out("     → bluetoothctl connect <MAC>")
+                else:
+                    fmt.out(WRN + " Keine BT-Geräte verbunden oder gepairt")
+
+            # ── D) Wiedergabe-Test ───────────────────────────────────────────
+            fmt.out("\n=== D) Wiedergabe ===")
+            pacat_ok = _sp.run("which pacat 2>/dev/null", shell=True,
+                                capture_output=True).returncode == 0
+
+            if sinks and any("null" not in s.split()[1].lower() for s in sinks if s.split()):
+                if pacat_ok:
+                    fmt.out("  Teste PA-Ausgabe (440 Hz, 2s) …")
+                    _tone = ("python3 -c \"import struct,math,subprocess;"
+                             "s=b''.join(struct.pack(chr(60)+chr(104),int(32767*math.sin(6.2832*440*i/44100)))"
+                             " for i in range(44100*2));"
+                             "p=subprocess.Popen(['pacat','--server=unix:/var/run/pulse/native',"
+                             "'--format=s16le','--rate=44100','--channels=1'],stdin=subprocess.PIPE);"
+                             "p.stdin.write(s);p.stdin.close();p.wait()\"")
+                    _, tone_ok = _run(_tone, timeout=6)
+                    if tone_ok:
+                        fmt.out(OK + " PA-Ton abgespielt")
+                    else:
+                        fmt.out(NOK + " PA-Ton fehlgeschlagen (kein Sink oder BT nicht A2DP)")
+                else:
+                    fmt.out(WRN + " pacat nicht verfügbar — apt install pulseaudio-utils")
+            else:
+                fmt.out(WRN + " Kein realer PA-Sink — Wiedergabe übersprungen")
+                fmt.out("     → systemctl restart pulseaudio")
+
+            # ── E) mpv Audio-Routing ─────────────────────────────────────────
+            fmt.out("\n=== E) mpv ===")
+            mpv_devs, mpv_ok = _run("mpv --audio-device=help 2>&1 | head -20")
+            if mpv_ok:
+                fmt.out(OK + " mpv vorhanden")
+                if "pulse" in mpv_devs.lower() or "pipewire" in mpv_devs.lower():
+                    fmt.out(OK + " mpv hat PulseAudio-Backend")
+                else:
+                    fmt.out(WRN + " mpv hat kein PA-Backend erkannt")
+            else:
+                fmt.out(NOK + " mpv nicht gefunden")
+
+            # ── Zusammenfassung ──────────────────────────────────────────────
+            fmt.out("\n=== Empfehlungen ===")
+            recs = []
+            if not pa_ok:
+                recs.append("systemctl restart pulseaudio")
+            if not sinks:
+                recs.append("systemctl restart pulseaudio  (keine Sinks)")
+            if "module-bluetooth-discover" not in mods_out:
+                recs.append(f"{PA_CMD} pactl load-module module-bluetooth-discover")
+            if not conn_out.strip() and aplay_ok:
+                recs.append("BT verbinden: pidrivectl bt connect <MAC>")
+            if recs:
+                for r in recs:
+                    fmt.out(WRN + f" {r}")
+            else:
+                fmt.out(OK + " Keine Probleme erkannt")
+            fmt.out("─"*48 + "\n")
             sys.exit(EXIT_OK)
+
 
         elif args.audio_cmd == "status":
             d = svc.get_status()

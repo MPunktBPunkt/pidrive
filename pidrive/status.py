@@ -83,15 +83,14 @@ def _do_refresh():
             last_mac = settings.get("bt_last_mac", "").strip()
             last_name = settings.get("bt_last_name", "").strip()
 
+            # Schritt 1: last_mac aus Settings prüfen
             if last_mac:
-                info = _run(f"bluetoothctl info {last_mac} 2>/dev/null", timeout=4)
-                low  = info.lower()
-
-                if "connected: yes" in low:
+                info = _run(f"bluetoothctl info {last_mac} 2>/dev/null", timeout=5)
+                if "connected: yes" in info.lower():
                     new["bt"] = True
                     new["bt_device"] = last_name or last_mac
                     new["bt_status"] = "verbunden"
-                elif "paired: yes" in low or "trusted: yes" in low:
+                elif "paired: yes" in info.lower() or "trusted: yes" in info.lower():
                     new["bt"] = False
                     new["bt_device"] = last_name or last_mac
                     new["bt_status"] = "getrennt"
@@ -99,6 +98,43 @@ def _do_refresh():
                     new["bt"] = False
                     new["bt_device"] = last_name or ""
                     new["bt_status"] = "getrennt"
+
+            # Schritt 2: Fallback — alle verbundenen Geräte prüfen (z.B. nach manuellem bluetoothctl connect)
+            if not new["bt"]:
+                try:
+                    # "bluetoothctl devices Connected" (BlueZ 5.60+)
+                    conn_out = _run("bluetoothctl devices Connected 2>/dev/null", timeout=4)
+                    if not conn_out:
+                        # Fallback: alle Paired-Geräte durchgehen
+                        paired = _run("bluetoothctl devices Paired 2>/dev/null", timeout=4)
+                        for line in paired.splitlines():
+                            parts = line.split()
+                            if len(parts) >= 2 and ":" in parts[1]:
+                                mac = parts[1]
+                                info = _run(f"bluetoothctl info {mac} 2>/dev/null", timeout=3)
+                                if "connected: yes" in info.lower():
+                                    name = " ".join(parts[2:]) if len(parts) > 2 else mac
+                                    conn_out = f"Device {mac} {name}"
+                                    break
+                    if conn_out and conn_out.strip():
+                        parts = conn_out.strip().split()
+                        if len(parts) >= 2:
+                            found_mac  = parts[1] if ":" in parts[1] else (parts[2] if len(parts) > 2 else "")
+                            found_name = " ".join(parts[2:]) if len(parts) > 2 else found_mac
+                            if found_mac:
+                                new["bt"]        = True
+                                new["bt_device"] = found_name or found_mac
+                                new["bt_status"] = "verbunden"
+                                # MAC für nächstes Mal speichern
+                                if not last_mac and found_mac:
+                                    try:
+                                        settings["bt_last_mac"]  = found_mac
+                                        settings["bt_last_name"] = found_name
+                                        from settings import save_settings as _ss
+                                        _ss(settings)
+                                    except Exception: pass
+                except Exception:
+                    pass
 
         # Spotify
         sp = _run("systemctl is-active raspotify 2>/dev/null", timeout=2)
