@@ -98,25 +98,30 @@ def play_station(station, S, settings=None):
         mpv_args = ["--ao=pulse"]
 
 
-        # Shell-Wrapper: env-Prefix statt env=dict → zuverlässiger bei PA-System-Mode
+        # Popen(list) + explizitem env — IPC-Socket wird zuverlässig erstellt
         _bt_sink_for_cmd = _target_sink
-        _pa_sink_arg = f"--audio-device=pulse/{_bt_sink_for_cmd}" if _bt_sink_for_cmd else ""
-        _mpv_shell_cmd = (
-            f"PULSE_SERVER=unix:/var/run/pulse/native "
-            f"XDG_RUNTIME_DIR=/tmp "
-            + (f"PULSE_SINK={_bt_sink_for_cmd} " if _bt_sink_for_cmd else "")
-            + f"mpv --no-video --no-terminal --title=pidrive_radio "
-            + (f"{_pa_sink_arg} " if _pa_sink_arg else "")
-            + f"--input-ipc-server={sock} "
-            + "--ao=pulse "
-            + f'"{url}"'
-        )
-        log.info(f"[WEB] mpv cmd: {_mpv_shell_cmd[:120]}")
+        _pa_device_arg = (f"--audio-device=pulse/{_bt_sink_for_cmd}"
+                          if _bt_sink_for_cmd else "")
+        _mpv_cmd = [
+            "mpv", "--no-video", "--no-terminal",
+            "--title=pidrive_radio",
+            f"--input-ipc-server={sock}",
+            "--ao=pulse",
+        ]
+        if _pa_device_arg:
+            _mpv_cmd.append(_pa_device_arg)
+        _mpv_cmd.append(url)
+        _mpv_env = _mpv_env_dict.copy()
+        _mpv_env["PULSE_SERVER"]    = "unix:/var/run/pulse/native"
+        _mpv_env["XDG_RUNTIME_DIR"] = "/tmp"
+        if _bt_sink_for_cmd:
+            _mpv_env["PULSE_SINK"] = _bt_sink_for_cmd
+        log.info(f"[WEB] mpv: url={url[:60]!r} sink={_bt_sink_for_cmd or chr(40)+chr(41)}")
         _player_proc = subprocess.Popen(
-            _mpv_shell_cmd,
-            shell=True,
+            _mpv_cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
+            env=_mpv_env,
         )
 
         S["track"]         = ""

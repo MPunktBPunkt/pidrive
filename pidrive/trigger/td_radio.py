@@ -240,25 +240,29 @@ def handle(cmd, menu_state, store, S, settings, bg):
             log.error(f"CLI play_dab Fehler: {e}")
 
     elif cmd.startswith("play_fm:"):
-        # Format: play_fm:<name_or_freq>
         _query = cmd.split(":", 1)[1].strip()
         try:
-            from menu.station_store import StationStore as _SS
+            import json as _fj
             _cfg_dir = os.path.join(os.path.dirname(os.path.dirname(
                 os.path.abspath(__file__))), "config")
-            _store = _SS(_cfg_dir)
-            _match = next((s for s in _store.fm if
-                           _query.lower() in (s.get("name","")).lower()
-                           or _query == str(s.get("freq","") or str(s.get("freq_mhz",""))))
-                          , None)
+            _fm_path = os.path.join(_cfg_dir, "fm_stations.json")
+            _fm_data = _fj.load(open(_fm_path))
+            _fm_all  = _fm_data.get("stations", []) if isinstance(_fm_data, dict) else _fm_data
+            _match = next((s for s in _fm_all if
+                           _query.lower() in s.get("name","").lower()
+                           or _query == str(s.get("freq",""))
+                           or _query == str(s.get("freq_mhz",""))), None)
+            if not _match and _query.replace(".","").isdigit():
+                _match = {"name": f"FM {_query}", "freq_mhz": float(_query)}
             if _match:
                 try: webradio.stop(S)
                 except Exception: pass
                 try: dab.stop(S)
                 except Exception: pass
-                fm.play_station({"name": _match["name"], "freq": str(_match.get("freq") or _match.get("freq_mhz",""))}, S, settings)
+                _freq = str(_match.get("freq") or _match.get("freq_mhz",""))
+                fm.play_station({"name": _match["name"], "freq": _freq}, S, settings)
                 source_state.commit_source("fm")
-                log.info(f"CLI play_fm: {_match['name']}")
+                log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
             else:
                 log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
         except Exception as e:
