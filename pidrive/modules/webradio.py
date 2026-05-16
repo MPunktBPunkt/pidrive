@@ -61,9 +61,6 @@ def play_station(station, S, settings=None):
         from modules import audio as _audio
         import mpv_meta
 
-        _mpv_env3 = "PULSE_SERVER=unix:/var/run/pulse/native"
-        mpv_args  = ["--ao=pulse"]
-
         mpv_meta.stop()
         sock = mpv_meta.MPV_SOCKET
         try:
@@ -71,20 +68,49 @@ def play_station(station, S, settings=None):
         except FileNotFoundError:
             pass
 
-        # v0.9.15: env für mpv damit PulseAudio System-Daemon gefunden wird
+        # PA-Umgebung: System-Daemon + expliziter Sink
         import os as _os
         _mpv_env_dict = _os.environ.copy()
-        if _mpv_env3:
-            for _kv in _mpv_env3.split():
-                if "=" in _kv:
-                    _k, _v = _kv.split("=", 1)
-                    _mpv_env_dict[_k] = _v
+        _mpv_env_dict["PULSE_SERVER"]  = "unix:/var/run/pulse/native"
+        _mpv_env_dict["XDG_RUNTIME_DIR"] = "/tmp"   # User-PA-Socket verhindern
+
+        # Aktiven BT-Sink direkt adressieren (PULSE_SINK überschreibt Default)
+        try:
+            _bt_sink = _audio.get_bt_sink()
+            if _bt_sink:
+                _mpv_env_dict["PULSE_SINK"] = _bt_sink
+                log.info(f"[WEB] mpv PULSE_SINK={_bt_sink}")
+        except Exception:
+            pass
+
+        mpv_args = ["--ao=pulse"]
+
+        # stderr in Datei — bei Crash auswertbar
+        _err_path = "/tmp/pidrive_mpv_err.log"
+        try:
+            _err_fh = open(_err_path, "w")
+        except Exception:
+            _err_fh = subprocess.DEVNULL
+
+        # Shell-Wrapper: env-Prefix statt env=dict → zuverlässiger bei PA-System-Mode
+        _bt_sink_for_cmd = _mpv_env_dict.get("PULSE_SINK", "")
+        _pa_sink_arg = f"--pulse-sink={_bt_sink_for_cmd}" if _bt_sink_for_cmd else ""
+        _mpv_shell_cmd = (
+            f"PULSE_SERVER=unix:/var/run/pulse/native "
+            f"XDG_RUNTIME_DIR=/tmp "
+            + (f"PULSE_SINK={_bt_sink_for_cmd} " if _bt_sink_for_cmd else "")
+            + f"mpv --no-video --really-quiet --title=pidrive_radio "
+            + (f"{_pa_sink_arg} " if _pa_sink_arg else "")
+            + f"--input-ipc-server={sock} "
+            + "--ao=pulse "
+            + f'"{url}"'
+        )
+        log.info(f"[WEB] mpv cmd: {_mpv_shell_cmd[:120]}")
         _player_proc = subprocess.Popen(
-            ["mpv", "--no-video", "--really-quiet",
-             "--title=pidrive_radio",
-             "--input-ipc-server=" + sock] + mpv_args + [url],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            env=_mpv_env_dict
+            _mpv_shell_cmd,
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=_err_fh,
         )
 
         S["track"]         = ""
@@ -121,13 +147,24 @@ def play_station(station, S, settings=None):
             rc = _player_proc.returncode
             S["radio_playing"] = False
             S["metadata_unavailable"] = True
-            if rc == -15:  # SIGTERM = meist Audio-Problem, nicht URL
-                log.error(f"[WEB] mpv beendet nach 5s (SIGTERM rc=-15)"
-                          f" — Audio-Ausgang pruefen (PA-Sink vorhanden?)")
-                log.error(f"  URL: {url[:80]!r}")
-                log.error(f"  Tipp: pidrivectl audio status / pidrivectl audio route klinke")
+            # mpv stderr lesen für echte Fehlerursache
+            _mpv_err = ""
+            try:
+                if _err_fh not in (subprocess.DEVNULL, None):
+                    _err_fh.flush(); _err_fh.close()
+                with open("/tmp/pidrive_mpv_err.log") as _ef:
+                    _mpv_err = _ef.read().strip()[-300:]
+            except Exception:
+                pass
+            if rc == -15:
+                log.error(f"[WEB] mpv SIGTERM nach 5s — PA-Verbindung prüfen")
             else:
-                log.error(f"[WEB] mpv crashed nach 5s (rc={rc}) — URL pruefen: {url[:80]!r}")
+                log.error(f"[WEB] mpv rc={rc} nach 5s")
+            log.error(f"  URL: {url[:80]!r}")
+            if _mpv_err:
+                log.error(f"  mpv stderr: {_mpv_err[:200]}")
+            else:
+                log.error(f"  (kein mpv stderr — PA erreichbar? pidrivectl audio test)")
             return False
         # Hintergrund-Monitor: prüft mpv alle 10s auf Lebenzeichen
         import threading as _thr

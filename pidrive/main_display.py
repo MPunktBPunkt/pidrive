@@ -1,5 +1,5 @@
 """
-main_display.py — ENTFERNT v0.10.95
+main_display.py — ENTFERNT v0.10.96
 TFT-Display-Unterstützung ist nicht mehr Teil von PiDrive.
 Das pidrive_display.service ist dauerhaft deaktiviert.
 """
