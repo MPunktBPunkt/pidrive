@@ -20,6 +20,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
             source_state.begin_transition(f"scan_up:{b}", "scanner")
             try:
                 scanner.channel_up(b, S)
+                S["scanner_band"] = b if "b" in dir() else band
+                source_state.commit_source("scanner")
             finally:
                 source_state.end_transition()
         bg(_scan_up)
@@ -30,6 +32,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
             source_state.begin_transition(f"scan_down:{b}", "scanner")
             try:
                 scanner.channel_down(b, S)
+                S["scanner_band"] = b if "b" in dir() else band
+                source_state.commit_source("scanner")
             finally:
                 source_state.end_transition()
         bg(_scan_down)
@@ -40,6 +44,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if source_state.begin_transition(f"scan_next:{b}", "scanner"):
                 try:
                     scanner.scan_next(b, S, settings)
+                    S["scanner_band"] = b if "b" in dir() else band
+                    source_state.commit_source("scanner")
                 finally:
                     source_state.end_transition()
         bg(_scan_next)
@@ -50,6 +56,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if source_state.begin_transition(f"scan_prev:{b}", "scanner"):
                 try:
                     scanner.scan_prev(b, S, settings)
+                    S["scanner_band"] = b if "b" in dir() else band
+                    source_state.commit_source("scanner")
                 finally:
                     source_state.end_transition()
         bg(_scan_prev)
@@ -68,6 +76,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     if source_state.begin_transition(f"scan_jump:{b}", "scanner"):
                         try:
                             scanner.channel_jump(b, d, S, settings)
+                            S["scanner_band"] = b if "b" in dir() else band
+                            source_state.commit_source("scanner")
                         finally:
                             source_state.end_transition()
                 bg(_scan_jump_fn)
@@ -86,6 +96,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     if source_state.begin_transition(f"scan_step:{b}", "scanner"):
                         try:
                             scanner.freq_step(b, d, S, settings)
+                            S["scanner_band"] = b if "b" in dir() else band
+                            source_state.commit_source("scanner")
                         finally:
                             source_state.end_transition()
                 bg(_scan_step_fn)
@@ -104,9 +116,29 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     if source_state.begin_transition(f"scan_setfreq:{b}", "scanner"):
                         try:
                             scanner.set_freq(b, f, S, settings)
+                            S["scanner_band"] = b if "b" in dir() else band
+                            source_state.commit_source("scanner")
                         finally:
                             source_state.end_transition()
                 bg(_scan_setfreq_fn)
+
+    elif cmd.startswith("scan_setch:"):
+        parts = cmd.split(":")
+        if len(parts) >= 3:
+            band = parts[1]
+            try:
+                ch_num = int(parts[2])
+            except Exception:
+                ch_num = 1
+            def _scan_setch_fn(b=band, c=ch_num):
+                if source_state.begin_transition(f"scan_setch:{b}", "scanner"):
+                    try:
+                        scanner.set_channel(b, c, S, settings)
+                        S["scanner_band"] = b
+                        source_state.commit_source("scanner")
+                    finally:
+                        source_state.end_transition()
+            bg(_scan_setch_fn)
 
     elif cmd.startswith("scan_inputfreq:"):
         parts = cmd.split(":")
@@ -119,6 +151,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     if source_state.begin_transition(f"scan_inputfreq:{b}", "scanner"):
                         try:
                             scanner.set_freq(b, freq, S, settings)
+                            S["scanner_band"] = b if "b" in dir() else band
+                            source_state.commit_source("scanner")
                         finally:
                             source_state.end_transition()
             bg(_input_and_set)

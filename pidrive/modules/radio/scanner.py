@@ -749,6 +749,18 @@ def _play_band_freq(band_id, freq, S, settings=None):
     play_freq(freq, name, BANDS[band_id]["bw"], S, settings=settings)
 
 
+def set_channel(band_id: str, ch_num: int, S: dict, settings=None):
+    """Direkt zu Kanal ch_num springen (1-basiert)."""
+    chs = _get_channels(band_id)
+    if not chs:
+        log.warn(f"Scanner: set_channel — kein Kanal-Band: {band_id}")
+        return
+    idx = max(0, min(ch_num - 1, len(chs) - 1))
+    _current_ch[band_id] = idx
+    _play_channel(band_id, idx, S, settings=settings)
+    log.info(f"Scanner set_channel band={band_id} ch={ch_num} idx={idx}")
+
+
 def channel_up(band_id, S, settings=None):
     chs = _get_channels(band_id)
     if not chs:

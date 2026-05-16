@@ -264,20 +264,17 @@ Flags (vor dem Befehl angeben):
 
 
     # ── scanner ──────────────────────────────────────────────────────────────
-    p_sc = sub.add_parser("scanner", help="Funk-Scanner (PMR/Freenet/VHF/UHF/FM)")
-    sc_sub = p_sc.add_subparsers(dest="sc_cmd")
-    p_sc_start = sc_sub.add_parser("start", help="Scan starten")
-    p_sc_start.add_argument("band",
-                            choices=["pmr446","freenet","lpd433","vhf","uhf","cb","fm"],
-                            help="Band/Kanal-Liste")
-    sc_sub.add_parser("stop",   help="Scan stoppen")
-    sc_sub.add_parser("next",   help="Nächster aktiver Kanal")
-    sc_sub.add_parser("prev",   help="Vorheriger aktiver Kanal")
-    sc_sub.add_parser("status", help="Aktueller Kanal / Frequenz")
-    p_sc_freq = sc_sub.add_parser("freq", help="Frequenz direkt einstellen (MHz)")
-    p_sc_freq.add_argument("band",
-                           choices=["pmr446","freenet","lpd433","vhf","uhf","cb","fm"])
-    p_sc_freq.add_argument("mhz", type=float, help="Frequenz in MHz")
+    BANDS_ALL = ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]
+    p_sc = sub.add_parser("scanner",
+        help="Funk-Scanner  Beispiele: scanner pmr446 ch 3 | scanner uhf freq 430.0")
+    p_sc.add_argument("band", nargs="?",
+                      choices=BANDS_ALL + ["stop","status","next","prev"],
+                      help="Band oder Aktion (stop/status)")
+    p_sc.add_argument("sub_cmd", nargs="?",
+                      choices=["ch","freq","next","prev","stop","scan"],
+                      help="ch <N> | freq <MHz> | next | prev | scan")
+    p_sc.add_argument("value", nargs="?",
+                      help="Kanal-Nr (ch) oder Frequenz MHz (freq)")
 
     p_avrcp = sub.add_parser("avrcp", help="AVRCP-Monitor (BMW iDrive Tasten)")
     p_avrcp.add_argument("avrcp_cmd", nargs="?", default="monitor",
@@ -1243,72 +1240,92 @@ Flags (vor dem Befehl angeben):
 
     # ── scanner ────────────────────────────────────────────────────────────────
     if args.cmd == "scanner":
-        cmd = args.sc_cmd or "status"
-
         BAND_LABELS = {
-            "pmr446": "PMR446 (446 MHz, 16 Kanäle)",
-            "freenet": "Freenet (149 MHz, 6 Kanäle)",
-            "lpd433": "LPD433 (433 MHz, 69 Kanäle)",
-            "vhf":    "VHF (144–146 MHz Bereich)",
-            "uhf":    "UHF (430–440 MHz Bereich)",
-            "cb":     "CB Funk (26–27 MHz, 40 Kanäle)",
-            "fm":     "UKW/FM (87.5–108 MHz)",
+            "pmr446": "PMR446  16 Kanäle   (446.00625–446.19375 MHz)",
+            "freenet": "Freenet  6 Kanäle   (149.0125–149.1125 MHz)",
+            "lpd433": "LPD433  69 Kanäle  (433.075–433.775 MHz)",
+            "vhf":    "VHF     Bereich    (144–146 MHz)",
+            "uhf":    "UHF     Bereich    (430–440 MHz)",
+            "cb":     "CB      40 Kanäle  (26.965–27.405 MHz)",
+            "fm":     "FM/UKW  Bereich    (87.5–108 MHz)",
         }
 
-        if cmd == "start":
-            band = args.band
-            svc.require_online()
-            svc.send(f"scan_next:{band}")
-            fmt.out(f"✓ Scanner gestartet: {BAND_LABELS.get(band, band)}")
-            fmt.out("  pidrivectl scanner next   → nächster Kanal")
-            fmt.out("  pidrivectl scanner stop   → stoppen")
-            sys.exit(EXIT_OK)
+        band_arg = args.band or "status"
+        sub_cmd  = args.sub_cmd
+        value    = args.value
 
-        elif cmd == "stop":
-            svc.require_online()
-            svc.send("radio_stop")
-            fmt.out("✓ Scanner gestoppt")
-            sys.exit(EXIT_OK)
+        # Alias: "stop" / "status" als erstes Argument
+        if band_arg in ("stop", "status", "next", "prev"):
+            sub_cmd  = band_arg
+            band_arg = None
 
-        elif cmd == "next":
-            svc.require_online()
-            d = svc.get_status()
-            band = d.get("scanner_band","pmr446")
-            svc.send(f"scan_next:{band}")
-            fmt.out(f"→ Nächster Kanal (Band: {band})")
-            sys.exit(EXIT_OK)
-
-        elif cmd == "prev":
-            svc.require_online()
-            d = svc.get_status()
-            band = d.get("scanner_band","pmr446")
-            svc.send(f"scan_prev:{band}")
-            fmt.out(f"← Vorheriger Kanal (Band: {band})")
-            sys.exit(EXIT_OK)
-
-        elif cmd == "freq":
-            svc.require_online()
-            svc.send(f"scan_setfreq:{args.band}:{args.mhz}")
-            fmt.out(f"✓ Frequenz: {args.mhz} MHz ({args.band})")
-            sys.exit(EXIT_OK)
-
-        elif cmd == "status":
-            d = svc.get_status()
-            src = d.get("source","idle")
-            if src == "scanner":
-                band = d.get("scanner_band","?")
-                ch   = d.get("scanner_channel","")
-                freq = d.get("scanner_freq","")
-                fmt.out(f"Scanner aktiv — Band: {band}")
-                if ch:   fmt.out(f"  Kanal:    {ch}")
-                if freq: fmt.out(f"  Frequenz: {freq} MHz")
-                fmt.out(f"  Audio:    {d.get('audio_eff','–')}")
+        if sub_cmd == "stop" or band_arg is None and sub_cmd is None:
+            if sub_cmd == "stop":
+                svc.require_online()
+                svc.send("radio_stop")
+                fmt.out("✓ Scanner gestoppt")
             else:
-                fmt.out("Scanner: inaktiv")
-                fmt.out("Verfügbare Bänder:")
-                for bid, label in BAND_LABELS.items():
-                    fmt.out(f"  {bid:<8} {label}")
-                fmt.out("\nStarten: pidrivectl scanner start pmr446")
+                d = svc.get_status()
+                _src  = d.get("source","idle")
+                _band = d.get("scanner_band","")
+                _stat = d.get("radio_station","")
+                if _src == "scanner" or _band:
+                    fmt.out(f"Scanner aktiv — Band: {_band or '?'}")
+                    fmt.out(f"  Sender:   {_stat or '–'}")
+                    fmt.out(f"  Audio:    {d.get('audio_eff', d.get('audio_output','–'))}")
+                    fmt.out("  pidrivectl scanner BAND next | prev | stop")
+                else:
+                    fmt.out("Scanner: inaktiv")
+                    fmt.out("")
+                    fmt.out("Verwendung:")
+                    fmt.out("  pidrivectl scanner BAND ch N      → direkt auf Kanal N")
+                    fmt.out("  pidrivectl scanner BAND freq F    → direkt auf F MHz")
+                    fmt.out("  pidrivectl scanner BAND scan      → Scan starten")
+                    fmt.out("  pidrivectl scanner BAND next/prev → nächster/vorheriger Kanal")
+                    fmt.out("  pidrivectl scanner stop           → stoppen")
+                    fmt.out("")
+                    fmt.out("Bänder:")
+                    for bid, label in BAND_LABELS.items():
+                        fmt.out(f"  {bid:<8} {label}")
+            sys.exit(EXIT_OK)
+
+        band = band_arg
+        svc.require_online()
+
+        if sub_cmd == "ch":
+            # pidrivectl scanner pmr446 ch 3
+            try:
+                ch_num = int(value) if value else 1
+            except ValueError:
+                fmt.err(f"Ungültige Kanal-Nr: {value!r}")
+                sys.exit(EXIT_ERR)
+            svc.send(f"scan_setch:{band}:{ch_num}")
+            fmt.out(f"✓ {band.upper()} Kanal {ch_num}")
+
+        elif sub_cmd == "freq":
+            # pidrivectl scanner uhf freq 430.0
+            try:
+                mhz = float(value) if value else 0.0
+                if not mhz:
+                    raise ValueError
+            except ValueError:
+                fmt.err(f"Ungültige Frequenz: {value!r} (Eingabe in MHz, z.B. 430.0)")
+                sys.exit(EXIT_ERR)
+            svc.send(f"scan_setfreq:{band}:{mhz}")
+            fmt.out(f"✓ {band.upper()} {mhz} MHz")
+
+        elif sub_cmd in ("next", "scan", None):
+            svc.send(f"scan_next:{band}")
+            fmt.out(f"→ {band.upper()} Scan / nächster Kanal")
+
+        elif sub_cmd == "prev":
+            svc.send(f"scan_prev:{band}")
+            fmt.out(f"← {band.upper()} vorheriger Kanal")
+
+        else:
+            fmt.err(f"Unbekannter Befehl: {sub_cmd!r}")
+            fmt.out("Verwendung: pidrivectl scanner BAND ch N | freq F | scan | next | prev")
+            sys.exit(EXIT_ERR)
         sys.exit(EXIT_OK)
 
     parser.print_help()
