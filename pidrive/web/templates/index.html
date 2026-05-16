@@ -1,93 +1,579 @@
 {% extends "base.html" %}
-{% block title %}PiDrive — Alltag{% endblock %}
-{% block content %}
+{% block title %}PiDrive{% endblock %}
+{% block extra_head %}
 <style>
-.now-card { background:var(--panel); border:1px solid var(--line-soft); padding:16px; margin-bottom:12px; }
-.now-source-chip { display:inline-block; background:#0d2a50; border:1px solid var(--line); color:var(--active2); font-size:11px; padding:2px 8px; margin-bottom:6px; text-transform:uppercase; }
-.now-title { font-size:18px; font-weight:bold; color:var(--text); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.now-meta  { font-size:13px; color:var(--muted); margin-bottom:3px; }
-.now-dls   { font-size:12px; color:#58a6ff; min-height:16px; }
-.now-status { font-size:12px; color:var(--yellow); margin-top:4px; display:none; }
-.now-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
-.now-actions .btn { flex:1; min-width:55px; text-align:center; padding:9px; }
-.fav-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
-.fav-btn { background:var(--panel); border:1px solid var(--line-soft); padding:10px; cursor:pointer; color:var(--text); font-size:13px; width:100%; text-align:left; transition:all .15s; }
-.fav-btn:hover { background:var(--panel2); border-color:var(--active); }
-.fav-btn .fb-src { font-size:10px; color:var(--muted); display:block; margin-bottom:2px; }
-.fav-btn .fb-name { font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; }
-.source-tile { background:var(--panel); border:1px solid var(--line-soft); padding:14px 8px; text-align:center; cursor:pointer; text-decoration:none; color:var(--text); font-size:13px; transition:all .15s; display:block; }
-.source-tile:hover { background:var(--panel2); border-color:var(--active); }
-.source-tile.playing { border-color:var(--green); color:var(--green); }
-.source-tile .st-icon { font-size:22px; display:block; margin-bottom:4px; }
-.inline-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
-.inline-card { flex:1; min-width:140px; background:var(--panel); border:1px solid var(--line-soft); padding:12px; }
-.inline-card .ic-title { font-size:11px; color:var(--active2); text-transform:uppercase; margin-bottom:6px; }
-.inline-card .ic-val { font-size:16px; font-weight:bold; color:var(--text); }
-.inline-card .ic-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+/* ── Now-Playing Card ─────────────────────────────────────────────── */
+.player-card {
+  background: linear-gradient(135deg, #0a1628 0%, #0d2040 100%);
+  border: 1px solid #1e3d6e;
+  border-radius: 2px;
+  padding: 18px 16px 14px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.player-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #1a6eb5, #58a6ff, #1a6eb5);
+  animation: scanline 3s linear infinite;
+}
+@keyframes scanline { 0%,100% { opacity:.4 } 50% { opacity:1 } }
+
+.player-source {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #0d2a50; border: 1px solid #1e3d6e;
+  color: #58a6ff; font-size: 10px; padding: 2px 8px;
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+}
+.player-source .src-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #58a6ff; animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.player-title {
+  font-size: 20px; font-weight: 700; color: #e8f0ff;
+  line-height: 1.2; margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-meta {
+  font-size: 13px; color: #6a8fb5; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-dls {
+  font-size: 12px; color: #4a9eff; min-height: 16px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-dab-state {
+  display: none; font-size: 11px; color: #f0a500; margin-top: 4px;
+}
+
+/* ── Volume Section ─────────────────────────────────────────────────── */
+.vol-section {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid #1a3050;
+}
+.vol-btn {
+  flex: 0 0 36px; height: 36px;
+  background: #0d2040; border: 1px solid #1e3d6e;
+  color: #58a6ff; font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .12s; user-select: none;
+}
+.vol-btn:active { background: #1e3d6e; transform: scale(.95); }
+.vol-slider-wrap { flex: 1; position: relative; }
+input[type="range"].vol-slider {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 4px; background: #1a3050; outline: none; cursor: pointer;
+}
+input[type="range"].vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: #58a6ff;
+  border: 2px solid #0a1628; cursor: pointer;
+}
+input[type="range"].vol-slider::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #58a6ff; border: 2px solid #0a1628; cursor: pointer;
+}
+.vol-pct {
+  font-size: 12px; color: #58a6ff; font-variant-numeric: tabular-nums;
+  min-width: 32px; text-align: right;
+}
+.vol-audio-route {
+  font-size: 10px; color: #3a6090; text-align: right; margin-top: 2px;
+}
+
+/* ── Transport Controls ──────────────────────────────────────────────── */
+.transport {
+  display: flex; gap: 8px; margin-top: 12px; align-items: center;
+}
+.tbtn {
+  flex: 1; padding: 10px 6px;
+  background: #0d2040; border: 1px solid #1e3d6e;
+  color: #8ab8e0; font-size: 18px; cursor: pointer;
+  text-align: center; transition: all .12s; user-select: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.tbtn:active { background: #1e3d6e; transform: scale(.96); }
+.tbtn.stop { color: #e06040; border-color: #5a2818; }
+.tbtn.stop:active { background: #3a180a; }
+.tbtn.mute-btn { flex: 0 0 44px; font-size: 15px; }
+
+/* ── Source Grid ─────────────────────────────────────────────────────── */
+.source-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px; margin-bottom: 10px;
+}
+.src-tile {
+  background: #0a1628; border: 1px solid #1a3050;
+  padding: 12px 6px 10px; text-align: center; cursor: pointer;
+  text-decoration: none; display: block;
+  transition: all .15s; position: relative; overflow: hidden;
+}
+.src-tile:hover, .src-tile:active { background: #0d2040; border-color: #1e4a7e; }
+.src-tile.active { border-color: #58a6ff; background: #0d2246; }
+.src-tile.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: #58a6ff;
+}
+.src-icon { font-size: 20px; display: block; margin-bottom: 3px; }
+.src-label { font-size: 10px; color: #5a7a9a; text-transform: uppercase; letter-spacing: .5px; }
+.src-tile.active .src-label { color: #58a6ff; }
+
+/* ── Station List ─────────────────────────────────────────────────────── */
+.station-section {
+  background: #080f1e; border: 1px solid #1a2e4a;
+  margin-bottom: 10px; display: none;
+}
+.station-section.visible { display: block; }
+.station-header {
+  padding: 8px 12px; font-size: 11px; color: #3a6090;
+  text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px solid #1a2e4a;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.station-list { max-height: 200px; overflow-y: auto; }
+.station-item {
+  padding: 9px 12px; font-size: 13px; color: #8ab8e0;
+  cursor: pointer; border-bottom: 1px solid #0d1e30;
+  display: flex; align-items: center; gap: 8px; transition: background .1s;
+}
+.station-item:last-child { border-bottom: none; }
+.station-item:hover { background: #0d2040; }
+.station-item.playing { color: #58a6ff; background: #0a1c38; }
+.station-item.playing::before {
+  content: '▶'; font-size: 9px; color: #58a6ff; flex-shrink: 0;
+}
+.station-ch { font-size: 10px; color: #3a5070; margin-left: auto; }
+
+/* ── Quick Cards (BT + DAB Status) ──────────────────────────────────────── */
+.info-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+}
+.info-tile {
+  background: #080f1e; border: 1px solid #1a2e4a;
+  padding: 10px 12px;
+}
+.info-tile .it-label { font-size: 10px; color: #3a6090; text-transform: uppercase; margin-bottom: 4px; }
+.info-tile .it-val { font-size: 13px; color: #8ab8e0; font-weight: bold; }
+.info-tile .it-sub { font-size: 11px; color: #3a5070; margin-top: 2px; }
+.info-tile .it-btn { margin-top: 6px; font-size: 11px; padding: 4px 8px; }
+
+/* ── Favorites ───────────────────────────────────────────────────────── */
+.fav-section { margin-bottom: 10px; }
+.fav-header {
+  font-size: 11px; color: #3a6090; text-transform: uppercase;
+  letter-spacing: 1px; padding: 8px 0 6px;
+}
+.fav-list { display: flex; flex-direction: column; gap: 4px; }
+.fav-item {
+  background: #080f1e; border: 1px solid #1a2e4a;
+  padding: 9px 12px; cursor: pointer; display: flex;
+  align-items: center; gap: 8px; transition: background .1s;
+}
+.fav-item:hover { background: #0d2040; }
+.fav-src-badge {
+  font-size: 9px; color: #3a6090; background: #0d1e30;
+  padding: 1px 5px; text-transform: uppercase; letter-spacing: .5px;
+  flex-shrink: 0;
+}
+.fav-name { font-size: 13px; color: #8ab8e0; flex: 1; }
+.fav-play-btn { font-size: 14px; color: #3a6090; }
 </style>
+{% endblock %}
 
-<div class="now-card">
-  <div><span class="now-source-chip" id="nowSource">–</span></div>
-  <div class="now-title" id="nowTrack">{{ vm['status'].get('track','') or vm['status'].get('radio_name','') or '–' }}</div>
-  <div class="now-meta" id="nowMeta">{{ vm['status'].get('artist','') }}</div>
-  <div class="now-dls" id="nowDls"></div>
-  <div class="now-status" id="metaStatus"></div>
-  <div class="now-actions">
-    <button class="btn" onclick="sendCmd('radio_stop')">⏹ Stop</button>
-    <button class="btn" onclick="sendCmd('fm_prev')">‹</button>
-    <button class="btn" onclick="sendCmd('fm_next')">›</button>
-    <button class="btn" onclick="sendCmd('vol_down')">🔉</button>
-    <button class="btn" onclick="sendCmd('vol_up')">🔊</button>
+{% block content %}
+<!-- ── PLAYER CARD ─────────────────────────────────────────────────── -->
+<div class="player-card">
+  <div class="player-source">
+    <span class="src-dot" id="pSrcDot"></span>
+    <span id="pSource">IDLE</span>
+  </div>
+  <div class="player-title" id="pTitle">–</div>
+  <div class="player-meta" id="pMeta"></div>
+  <div class="player-dls" id="pDls"></div>
+  <div class="player-dab-state" id="pDabState"></div>
+
+  <!-- Volume -->
+  <div class="vol-section">
+    <button class="vol-btn" onclick="sendCmd('vol_down')" title="Leiser">−</button>
+    <div class="vol-slider-wrap">
+      <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="75"
+             oninput="onVolSliderInput(this.value)"
+             onchange="onVolSliderCommit(this.value)">
+    </div>
+    <span class="vol-pct" id="volPct">–%</span>
+    <button class="vol-btn" onclick="sendCmd('vol_up')" title="Lauter">+</button>
+  </div>
+  <div class="vol-audio-route" id="volRoute">Ausgang: –</div>
+
+  <!-- Transport -->
+  <div class="transport">
+    <button class="tbtn" onclick="sendCmd('prev_station')" title="Zurück">⏮</button>
+    <button class="tbtn" onclick="sendCmd('next_station')" title="Weiter">⏭</button>
+    <button class="tbtn stop" onclick="sendCmd('radio_stop')" title="Stop">⏹</button>
+    <button class="tbtn mute-btn" id="muteBtn" onclick="toggleMute()" title="Stumm">🔊</button>
   </div>
 </div>
 
-<div class="card">
-  <div class="card-title">⭐ Favoriten</div>
-  <div class="fav-grid" id="favGrid"><div style="color:var(--muted);font-size:12px">Lade…</div></div>
-</div>
-
-<div class="card">
-  <div class="card-title">📻 Medien</div>
-  <div class="media-grid">
-    <a class="source-tile" id="tileDAB" href="/rf-tools"><span class="st-icon">📻</span>DAB+</a>
-    <a class="source-tile" id="tileFM" href="#"><span class="st-icon">📡</span>FM</a>
-    <a class="source-tile" id="tileWeb" href="/webradio-admin"><span class="st-icon">📶</span>Webradio</a>
-    <a class="source-tile" id="tileSpot" onclick="sendCmd('spotify_toggle');return false" href="#"><span class="st-icon">🎵</span>Spotify</a>
-    <a class="source-tile" href="#" onclick="sendCmd('radio_stop');return false"><span class="st-icon">⏹</span>Stop</a>
+<!-- ── SOURCE TILES ─────────────────────────────────────────────────── -->
+<div class="source-grid">
+  <div class="src-tile" id="tileDAB" onclick="activateSource('dab')">
+    <span class="src-icon">📻</span>
+    <span class="src-label">DAB+</span>
+  </div>
+  <div class="src-tile" id="tileFM" onclick="showFMInput()">
+    <span class="src-icon">📡</span>
+    <span class="src-label">FM</span>
+  </div>
+  <div class="src-tile" id="tileWeb" onclick="activateSource('web')">
+    <span class="src-icon">🌐</span>
+    <span class="src-label">Web</span>
+  </div>
+  <div class="src-tile" id="tileSpot" onclick="sendCmd('spotify_toggle')">
+    <span class="src-icon">🎵</span>
+    <span class="src-label">Spotify</span>
   </div>
 </div>
 
-<div class="inline-row">
-  <div class="inline-card">
-    <div class="ic-title">🔵 Bluetooth</div>
-    <div class="ic-val" id="btCardVal">–</div>
-    <div class="ic-sub" id="btCardDev"></div>
-    <div class="btn-row" style="margin-top:8px">
-      <button class="btn" onclick="sendCmd('bt_scan')">Scannen</button>
-      <button class="btn" onclick="sendCmd('bt_reconnect_last')">Reconnect</button>
-      <a class="btn" href="/bluetooth">Verwalten</a>
+<!-- ── STATION LIST (DAB) ─────────────────────────────────────────────── -->
+<div class="station-section" id="dabStationSec">
+  <div class="station-header">
+    <span>📻 DAB+ Sender</span>
+    <button class="btn" style="font-size:10px;padding:2px 8px" onclick="hideStations()">✕</button>
+  </div>
+  <div class="station-list" id="dabStationList"></div>
+</div>
+
+<!-- ── STATION LIST (WEB) ─────────────────────────────────────────────── -->
+<div class="station-section" id="webStationSec">
+  <div class="station-header">
+    <span>🌐 Webradio</span>
+    <button class="btn" style="font-size:10px;padding:2px 8px" onclick="hideStations()">✕</button>
+  </div>
+  <div class="station-list" id="webStationList"></div>
+</div>
+
+<!-- ── FM INPUT ───────────────────────────────────────────────────────── -->
+<div class="station-section" id="fmInputSec">
+  <div class="station-header">
+    <span>📡 FM Frequenz</span>
+    <button class="btn" style="font-size:10px;padding:2px 8px" onclick="hideStations()">✕</button>
+  </div>
+  <div style="padding:12px;display:flex;gap:8px;align-items:center">
+    <input id="fmFreqInput" type="number" step="0.1" min="87.5" max="108.0"
+           placeholder="104.4"
+           style="flex:1;background:#0a1628;border:1px solid #1e3d6e;color:#e8f0ff;
+                  padding:8px;font-size:16px;outline:none">
+    <button class="btn primary" onclick="playFM()" style="white-space:nowrap">▶ Play</button>
+  </div>
+  <div class="station-list" id="fmStationList"></div>
+</div>
+
+<!-- ── INFO ROW (BT + DAB Status) ──────────────────────────────────── -->
+<div class="info-row">
+  <div class="info-tile">
+    <div class="it-label">🔵 Bluetooth</div>
+    <div class="it-val" id="btTileVal">–</div>
+    <div class="it-sub" id="btTileDev"></div>
+    <div style="display:flex;gap:4px;margin-top:6px">
+      <button class="btn it-btn" onclick="sendCmd('bt_scan')">Scan</button>
+      <button class="btn it-btn" onclick="sendCmd('bt_reconnect_last')">↩ Reconnect</button>
     </div>
   </div>
-  <div class="inline-card">
-    <div class="ic-title">🔊 Lautstärke</div>
-    <div class="ic-val" id="volCardVal">–</div>
-    <div class="ic-sub" id="volCardAudio"></div>
-    <div class="btn-row" style="margin-top:8px">
-      <button class="btn" style="flex:1" onclick="sendCmd('vol_down')">－</button>
-      <button class="btn" style="flex:1" onclick="sendCmd('vol_up')">＋</button>
+  <div class="info-tile">
+    <div class="it-label">📡 DAB Status</div>
+    <div class="it-val" id="dabTileState">–</div>
+    <div class="it-sub" id="dabTileSub"></div>
+    <div style="display:flex;gap:4px;margin-top:6px">
+      <button class="btn it-btn" onclick="sendCmd('dab_scan')">Scan</button>
+      <a class="btn it-btn" href="/rf-tools">Details</a>
     </div>
   </div>
 </div>
 
-<div class="nav-cards">
-  <a class="nav-card" href="/audio"><span class="nc-icon">🔊</span><span class="nc-label">Audio</span><span class="nc-sub" id="navAudioSub">Routing</span></a>
-  <a class="nav-card" href="/rf-tools"><span class="nc-icon">📡</span><span class="nc-label">RF/DAB</span><span class="nc-sub">Kalibrierung</span></a>
-  <a class="nav-card" href="/diagnostics"><span class="nc-icon">🪲</span><span class="nc-label">Diagnose</span><span class="nc-sub">Logs</span></a>
+<!-- ── FAVORITES ─────────────────────────────────────────────────────── -->
+<div class="fav-section">
+  <div class="fav-header">★ Favoriten</div>
+  <div class="fav-list" id="favList">
+    <div style="color:#3a5070;font-size:12px;padding:8px">Lade…</div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/page-index.js"></script>
-<!-- Logik ausgelagert in /static/js/page-index.js -->
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let _currentSource = 'idle';
+let _currentStation = '';
+let _isMuted = false;
+let _lastVol = 75;
+let _volDragging = false;
+let _dabStations = [];
+let _webStations = [];
+let _fmStations = [];
+let _stationsLoaded = false;
+
+// ── Volume Slider ──────────────────────────────────────────────────────────
+function onVolSliderInput(v) {
+  _volDragging = true;
+  document.getElementById('volPct').textContent = v + '%';
+}
+function onVolSliderCommit(v) {
+  _volDragging = false;
+  sendCmd('vol_set:' + v);
+}
+
+// ── Mute ───────────────────────────────────────────────────────────────────
+function toggleMute() {
+  _isMuted = !_isMuted;
+  sendCmd(_isMuted ? 'vol_set:0' : 'vol_set:' + _lastVol);
+  document.getElementById('muteBtn').textContent = _isMuted ? '🔇' : '🔊';
+}
+
+// ── Source Activation ──────────────────────────────────────────────────────
+function activateSource(src) {
+  hideStations();
+  if (src === 'dab') {
+    loadDABStations();
+    document.getElementById('dabStationSec').classList.add('visible');
+  } else if (src === 'web') {
+    loadWebStations();
+    document.getElementById('webStationSec').classList.add('visible');
+  }
+}
+
+function showFMInput() {
+  hideStations();
+  loadFMStations();
+  document.getElementById('fmInputSec').classList.add('visible');
+}
+
+function hideStations() {
+  ['dabStationSec','webStationSec','fmInputSec'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+}
+
+function playFM() {
+  const freq = document.getElementById('fmFreqInput').value;
+  if (freq) {
+    sendCmd('play_fm:' + freq);
+    hideStations();
+    showToast('FM: ' + freq + ' MHz');
+  }
+}
+
+// ── Station Lists ─────────────────────────────────────────────────────────
+async function loadDABStations() {
+  if (_dabStations.length) { renderDABStations(); return; }
+  try {
+    const r = await fetch('/api/state'); const j = await r.json();
+    _dabStations = j.dab_stations || [];
+    renderDABStations();
+  } catch(e) {}
+}
+
+function renderDABStations() {
+  const el = document.getElementById('dabStationList');
+  if (!_dabStations.length) {
+    el.innerHTML = '<div style="padding:10px;color:#3a5070;font-size:12px">Keine DAB-Sender — Scan starten</div>';
+    return;
+  }
+  el.innerHTML = _dabStations.map((s,i) => {
+    const playing = s.name === _currentStation;
+    return `<div class="station-item${playing?' playing':''}" onclick="playDAB(${JSON.stringify(s.name)})">
+      <span>${s.name}</span>
+      <span class="station-ch">${s.channel||''}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadWebStations() {
+  if (_webStations.length) { renderWebStations(); return; }
+  try {
+    const r = await fetch('/api/state'); const j = await r.json();
+    _webStations = j.web_stations || [];
+    renderWebStations();
+  } catch(e) {}
+}
+
+function renderWebStations() {
+  const el = document.getElementById('webStationList');
+  if (!_webStations.length) {
+    el.innerHTML = '<div style="padding:10px;color:#3a5070;font-size:12px">Keine Sender konfiguriert</div>';
+    return;
+  }
+  el.innerHTML = _webStations.map((s,i) => {
+    const playing = s.name === _currentStation;
+    return `<div class="station-item${playing?' playing':''}" onclick="playWeb(${JSON.stringify(s.name)})">
+      <span>${s.name}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadFMStations() {
+  try {
+    const r = await fetch('/api/state'); const j = await r.json();
+    _fmStations = j.fm_stations || [];
+    const el = document.getElementById('fmStationList');
+    if (_fmStations.length) {
+      el.innerHTML = _fmStations.map(s =>
+        `<div class="station-item" onclick="document.getElementById('fmFreqInput').value='${s.freq||s.name}'">${s.name}${s.freq?' — '+s.freq:''}</div>`
+      ).join('');
+    }
+  } catch(e) {}
+}
+
+function playDAB(name) {
+  sendCmd('play_dab:' + name);
+  hideStations();
+  showToast('DAB: ' + name);
+}
+
+function playWeb(name) {
+  sendCmd('play_web:' + name);
+  hideStations();
+  showToast('Web: ' + name);
+}
+
+// ── Favorites ────────────────────────────────────────────────────────────
+async function loadFavorites() {
+  try {
+    const r = await fetch('/api/state'); const j = await r.json();
+    const favs = j.favorites || [];
+    const el = document.getElementById('favList');
+    if (!favs.length) {
+      el.innerHTML = '<div style="color:#3a5070;font-size:12px;padding:4px">Keine Favoriten gespeichert</div>';
+      return;
+    }
+    el.innerHTML = favs.map(f => `
+      <div class="fav-item" onclick="playFav(${JSON.stringify(f)})">
+        <span class="fav-src-badge">${f.source||'?'}</span>
+        <span class="fav-name">${f.name||'–'}</span>
+        <span class="fav-play-btn">▶</span>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('favList').innerHTML =
+      '<div style="color:#3a5070;font-size:12px;padding:4px">Nicht verfügbar</div>';
+  }
+}
+
+function playFav(f) {
+  const src = (f.source||'').toLowerCase();
+  if (src === 'dab') sendCmd('play_dab:' + f.name);
+  else if (src === 'webradio' || src === 'web') sendCmd('play_web:' + f.name);
+  else if (src === 'fm') sendCmd('play_fm:' + (f.freq||f.name));
+  showToast('▶ ' + f.name);
+}
+
+// ── Source-Tile active state ───────────────────────────────────────────────
+const SRC_TILE_MAP = {
+  dab:      'tileDAB',
+  fm:       'tileFM',
+  webradio: 'tileWeb',
+  spotify:  'tileSpot',
+};
+function updateSourceTiles(src) {
+  ['tileDAB','tileFM','tileWeb','tileSpot'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.classList.remove('active');
+  });
+  const activeId = SRC_TILE_MAP[src];
+  if (activeId) {
+    const e = document.getElementById(activeId);
+    if (e) e.classList.add('active');
+  }
+}
+
+// ── Base Refresh Hook ──────────────────────────────────────────────────────
+function onBaseRefresh(j, st, ss) {
+  const src = ss.source_current || 'idle';
+  _currentSource = src;
+  _currentStation = st.radio_name || st.track || '';
+
+  // Source chip
+  const srcMap = {
+    idle:'IDLE', dab:'DAB+', fm:'FM', webradio:'WEB',
+    spotify:'SPOTIFY', library:'MUSIK'
+  };
+  document.getElementById('pSource').textContent = srcMap[src] || src.toUpperCase();
+  document.getElementById('pSrcDot').style.background =
+    src === 'idle' ? '#3a5070' : '#58a6ff';
+
+  // Title / Meta / DLS
+  const title = st.track || st.radio_name || (src === 'idle' ? 'Kein Sender' : '…');
+  document.getElementById('pTitle').textContent = title;
+  document.getElementById('pMeta').textContent = st.artist || '';
+  document.getElementById('pDls').textContent = st.dls_text || '';
+
+  // DAB State indicator
+  const dabState = st.dab_playback_state || '';
+  const dabEl = document.getElementById('pDabState');
+  if (src === 'dab' && dabState && dabState !== 'playing') {
+    const stateLabel = {
+      'no_lock':'⚠ Kein Lock — schwaches Signal',
+      'partial_sync':'📡 Partieller Sync',
+      'starting':'⏳ Verbinde…',
+      'locked':'🔒 Lock OK',
+      'device_error':'⚠ RTL-SDR nicht verfügbar — Reboot?'
+    };
+    dabEl.textContent = stateLabel[dabState] || dabState;
+    dabEl.style.display = '';
+  } else {
+    dabEl.style.display = 'none';
+  }
+
+  // Volume
+  const vol = st.volume;
+  if (vol != null && !_volDragging) {
+    _lastVol = vol;
+    document.getElementById('volSlider').value = vol;
+    document.getElementById('volPct').textContent = vol + '%';
+  }
+
+  // Audio route
+  const route = st.audio_effective || st.audio_out || '–';
+  document.getElementById('volRoute').textContent = 'Ausgang: ' + route;
+
+  // BT tile
+  const btVal = st.bt ? (st.bt_device || 'verbunden') : (st.bt_on ? 'bereit' : 'aus');
+  const btEl = document.getElementById('btTileVal');
+  if (btEl) {
+    btEl.textContent = btVal;
+    btEl.style.color = st.bt ? '#58a6ff' : '#3a5070';
+  }
+  const btDevEl = document.getElementById('btTileDev');
+  if (btDevEl) btDevEl.textContent = st.bt_status || '';
+
+  // DAB tile
+  const dabStateMap = {
+    'no_lock':'Kein Lock', 'partial_sync':'Partiell', 'playing':'Lock ✓',
+    'idle':'Inaktiv', 'device_error':'Gerätefehler', 'starting':'Suche…'
+  };
+  const dabTileEl = document.getElementById('dabTileState');
+  if (dabTileEl) dabTileEl.textContent = dabStateMap[dabState] || dabState || '–';
+  const dabSubEl = document.getElementById('dabTileSub');
+  if (dabSubEl && st.dab_last_error) dabSubEl.textContent = st.dab_last_error.substring(0,40);
+
+  // Source tiles
+  updateSourceTiles(src);
+
+  // Transport: prev/next semantics by source
+  const hasPrevNext = ['dab','fm','webradio'].includes(src);
+  document.querySelectorAll('.tbtn').forEach(b => { b.style.opacity = '1'; });
+  if (!hasPrevNext) {
+    const prevBtn = document.querySelector('.transport .tbtn:nth-child(1)');
+    const nextBtn = document.querySelector('.transport .tbtn:nth-child(2)');
+    if (prevBtn) prevBtn.style.opacity = '.35';
+    if (nextBtn) nextBtn.style.opacity = '.35';
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+loadFavorites();
+</script>
 {% endblock %}

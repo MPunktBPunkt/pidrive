@@ -240,7 +240,9 @@ def handle(cmd, menu_state, store, S, settings, bg):
         _query = cmd.split(":", 1)[1].strip()
         try:
             from menu.station_store import StationStore as _SS
-            _store = _SS()
+            _cfg_dir = os.path.join(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))), "config")
+            _store = _SS(_cfg_dir)
             _match = next((s for s in _store.fm if
                            _query.lower() in (s.get("name","")).lower()
                            or _query == str(s.get("freq","")))

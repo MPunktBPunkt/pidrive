@@ -135,6 +135,11 @@ def main():
   pidrivectl version             Version anzeigen
   pidrivectl debug               Status/Source/Menu als JSON
 
+  pidrivectl avrcp               Live-Monitor BMW iDrive AVRCP Tasten
+  pidrivectl avrcp status        Letztes AVRCP-Event
+  pidrivectl avrcp events        AVRCP Ringbuffer (letzte 20)
+  pidrivectl avrcp inject next   Trigger simulieren (Testen ohne BMW)
+
 Flags (vor dem Befehl angeben):
   --json     Maschinenlesbare Ausgabe fuer Scripting
   --api      Web-API statt IPC nutzen (wenn WebUI laeuft)
@@ -194,8 +199,7 @@ Flags (vor dem Befehl angeben):
 
     # ── volume ────────────────────────────────────────────────────────────
     p_vol = sub.add_parser("volume", help="Lautstärke")
-    p_vol.add_argument("vol_arg", nargs="?", default=None,
-                       help="up|down|set|0-100 Zahl")
+    # vol_arg wird per sys.argv pre-processing gehandhabt (Konflikt mit subparsers)
     vol_sub = p_vol.add_subparsers(dest="vol_cmd")
     vol_sub.add_parser("up")
     vol_sub.add_parser("down")
@@ -216,6 +220,7 @@ Flags (vor dem Befehl angeben):
     p_route = audio_sub.add_parser("route")
     p_route.add_argument("mode", choices=["klinke","bt","hdmi","auto"])
     audio_sub.add_parser("status")
+    audio_sub.add_parser("test", help="Testton abspielen (3s)")
 
     # ── dab ───────────────────────────────────────────────────────────────
     p_dab = sub.add_parser("dab", help="DAB+")
@@ -247,6 +252,15 @@ Flags (vor dem Befehl angeben):
 
     # ── debug ─────────────────────────────────────────────────────────────
     p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
+
+    # ── avrcp ───────────────────────────────────────────────────────────────
+    p_avrcp = sub.add_parser("avrcp", help="AVRCP-Monitor (BMW iDrive Tasten)")
+    p_avrcp.add_argument("avrcp_cmd", nargs="?", default="monitor",
+                         choices=["monitor","status","events","inject"],
+                         help="monitor|status|events|inject")
+    p_avrcp.add_argument("avrcp_arg", nargs="?", default=None,
+                         help="Trigger fuer inject (z.B. next, prev, play)")
+
     dbg_sub = p_dbg.add_subparsers(dest="dbg_cmd")
     dbg_sub.add_parser("state")
     dbg_sub.add_parser("dab")
@@ -259,9 +273,13 @@ Flags (vor dem Befehl angeben):
     dbg_sub.add_parser("source-state")
 
     # ──────────────────────────────────────────────────────────────────────
-    # Shortcut: pidrivectl volume 50  ->  pidrivectl volume set 50
-    if len(sys.argv) >= 3 and sys.argv[1] == "volume" and sys.argv[2].isdigit():
-        sys.argv.insert(2, "set")
+    # Normalize: "volume 50" → "volume set 50", "volume set 50" unverändert
+    if len(sys.argv) >= 3 and sys.argv[1] == "volume":
+        # "volume set N" → vol_arg würde "set" schlucken → fix: remove vol_arg ambiguity
+        if sys.argv[2] == "set" and len(sys.argv) >= 4 and sys.argv[3].isdigit():
+            pass  # OK: subparser bekommt "set", level="95" korrekt wenn vol_arg entfernt
+        elif sys.argv[2].isdigit():
+            sys.argv.insert(2, "set")  # "volume 50" → "volume set 50"
     args = parser.parse_args()
     svc  = PiDriveService(use_http=args.api)
     use_json = args.json
@@ -566,6 +584,21 @@ Flags (vor dem Befehl angeben):
                     fmt.out("  Tipp: Geraet wirklich in Pairing-Modus?")
         elif args.bt_cmd == "status":
             d = svc.get_status()
+            # Fallback: wenn IPC "getrennt" sagt, direkt BlueZ prüfen
+            if not d.get("bt") and not use_json:
+                try:
+                    import subprocess as _sp
+                    _r = _sp.run("bluetoothctl info 2>/dev/null | grep -E 'Connected|Name|Paired'",
+                                 shell=True, capture_output=True, text=True, timeout=3)
+                    if "Connected: yes" in _r.stdout:
+                        _name = next((l.split("Name:")[1].strip() for l in _r.stdout.splitlines()
+                                      if "Name:" in l), "")
+                        fmt.out(fmt.GREEN + "Bluetooth: verbunden (BlueZ)" + fmt.RESET)
+                        if _name:
+                            fmt.out(f"  Gerät: {_name}")
+                        fmt.out("  (PiDrive-Sync erfolgt bei nächster Statusaktualisierung)")
+                        sys.exit(EXIT_OK)
+                except Exception: pass
             if use_json:
                 fmt.print_json({"bt": d["bt"], "device": d["bt_device"], "status": d["bt_status"]})
             else:
@@ -585,9 +618,8 @@ Flags (vor dem Befehl angeben):
     # volume
     if args.cmd == "volume":
         # Direkte Zahl: pidrivectl volume 50
-        if not args.vol_cmd and hasattr(args, "vol_arg") and args.vol_arg and args.vol_arg.isdigit():
-            args.vol_cmd = "set"
-            args.level   = int(args.vol_arg)
+        # vol_arg wurde via sys.argv zu "set N" umgewandelt
+        pass  # vol_cmd kommt direkt vom subparser
         if not args.vol_cmd:
             d = svc.get_status()
             if use_json: fmt.print_json({"volume": d.get("volume"), "audio_out": d.get("audio_eff")})
@@ -673,6 +705,43 @@ Flags (vor dem Befehl angeben):
                 d2 = svc.get_status()
                 new_out = d2.get("audio_effective", args.mode)
                 fmt.out("Audio-Ausgang: " + fmt.GREEN + new_out + " ✓" + fmt.RESET)
+        elif args.audio_cmd == "test":
+            # Testton: 440 Hz Sinuston für 3 Sekunden über aktiven Audio-Ausgang
+            import subprocess as _sp, time as _tt
+            fmt.out("Audio-Test: 440 Hz Testton (3s)…")
+            # Aktuellen Ausgang anzeigen
+            try:
+                _d = svc.get_status()
+                _out = _d.get("audio_effective") or _d.get("audio_out","?")
+                fmt.out(f"  Ausgang: {_out}")
+            except Exception: pass
+            # sox wenn verfügbar, sonst python
+            _cmd = None
+            if _sp.run("which sox 2>/dev/null", shell=True, capture_output=True).returncode == 0:
+                _cmd = ("sox -n -t pulseaudio --server unix:/var/run/pulse/native "
+                        "default synth 3 sine 440 vol 0.5 2>/dev/null")
+            elif _sp.run("which speaker-test 2>/dev/null", shell=True, capture_output=True).returncode == 0:
+                _cmd = "timeout 3 speaker-test -t sine -f 440 -l 1 2>/dev/null"
+            else:
+                # Python-Fallback: kurzer Testton via pacat
+                _cmd = ("python3 -c \"import struct,math,subprocess,sys;"
+                        "s=[struct.pack('<h',int(32767*math.sin(2*math.pi*440*i/44100)))"
+                        " for i in range(44100*3)];"
+                        "p=subprocess.Popen(['pacat','--server','unix:/var/run/pulse/native',"
+                        "'--format=s16le','--rate=44100','--channels=1'],"
+                        "stdin=subprocess.PIPE);"
+                        "[p.stdin.write(x) for x in s]; p.stdin.close(); p.wait()\"")
+            try:
+                r = _sp.run(_cmd, shell=True, timeout=5)
+                if r.returncode == 0:
+                    fmt.out(fmt.GREEN + "✓ Testton abgespielt" + fmt.RESET)
+                else:
+                    fmt.out("⚠ Kein Audio-Gerät oder PulseAudio nicht bereit")
+                    fmt.out("  pidrivectl audio status  für Ausgangs-Details")
+            except Exception as _e:
+                fmt.out(f"Fehler: {_e}")
+            sys.exit(EXIT_OK)
+
         elif args.audio_cmd == "status":
             d = svc.get_status()
             if use_json: fmt.print_json({"audio_out": d["audio_out"], "effective": d["audio_eff"]})
@@ -878,6 +947,83 @@ Flags (vor dem Befehl angeben):
             if not d: _exit_err("Source-State nicht gefunden", EXIT_NOTFOUND)
             fmt.print_json(d)
         sys.exit(EXIT_OK)
+
+    # ── avrcp ─────────────────────────────────────────────────────────────────
+    if args.cmd == "avrcp":
+        import json as _aj, time as _at
+        AVRCP_EVENTS = "/tmp/pidrive_avrcp_events.json"
+        AVRCP_STATUS = "/tmp/pidrive_avrcp_status.json"
+
+        def _load_events():
+            try: return _aj.load(open(AVRCP_EVENTS))
+            except Exception: return {"events": [], "total": 0}
+
+        def _fmt_ev(ev):
+            ts  = ev.get("ts_human") or _at.strftime("%H:%M:%S", _at.localtime(ev.get("ts",0)))
+            evn = ev.get("event","?")
+            trg = ev.get("trigger","")
+            ctx = ev.get("context","")
+            arrow = f" → {trg}" if trg else ""
+            return f"  [{ts}] {evn:<16}{arrow:<20}  ctx={ctx}"
+
+        cmd = args.avrcp_cmd or "monitor"
+
+        if cmd == "monitor":
+            svc.require_online()
+            fmt.out("AVRCP-Monitor — BMW iDrive Tasten  (Ctrl+C beendet)")
+            fmt.out("=" * 52)
+            data = _load_events()
+            recent = data.get("events", [])[-5:]
+            if recent:
+                fmt.out("Zuletzt:")
+                for ev in recent: fmt.out(_fmt_ev(ev))
+                fmt.out("")
+            last_id = recent[-1].get("id",-1) if recent else -1
+            fmt.out("Warte auf Events…")
+            try:
+                while True:
+                    _at.sleep(0.3)
+                    evs = _load_events().get("events",[])
+                    for ev in [e for e in evs if e.get("id",-1) > last_id]:
+                        line = _fmt_ev(ev)
+                        col  = fmt.GREEN if ev.get("trigger") else ""
+                        fmt.out((col+line+fmt.RESET) if col else line)
+                        last_id = ev.get("id", last_id)
+            except KeyboardInterrupt:
+                fmt.out("\nMonitor beendet.")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "status":
+            try:
+                st = _aj.load(open(AVRCP_STATUS))
+                fmt.out(f"AVRCP [{st.get('ts_human','?')}]")
+                fmt.out(f"  Event:    {st.get('last_event','–')}")
+                fmt.out(f"  Trigger:  {st.get('trigger','–')}")
+                fmt.out(f"  Kontext:  {st.get('context','–')}")
+            except Exception:
+                fmt.out("Kein AVRCP-Status (noch kein Event eingegangen)")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "events":
+            data = _load_events()
+            events = data.get("events",[])
+            if use_json: fmt.print_json(data); sys.exit(EXIT_OK)
+            fmt.out(f"AVRCP Ringbuffer — {len(events)} Events (gesamt: {data.get('total',0)})")
+            for ev in events[-20:]: fmt.out(_fmt_ev(ev))
+            if not events: fmt.out("  (keine Events)")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "inject":
+            arg = args.avrcp_arg or "next"
+            VALID = ["next","prev","play","stop","up","down","enter","back",
+                     "vol_up","vol_down","nav_up","nav_down","dab_next","dab_prev"]
+            if arg not in VALID:
+                fmt.out(f"Unbekannt: {arg!r}  Gültig: {chr(44).join(VALID)}")
+                sys.exit(1)
+            svc.require_online()
+            svc.send(arg)
+            fmt.out(f"✓ Injiziert: {arg}")
+            sys.exit(EXIT_OK)
 
     parser.print_help()
     sys.exit(EXIT_OK)

@@ -242,6 +242,21 @@ def api_state():
     try:
         vm = build_view_model()
         vm = _sanitize_floats(vm)
+        # Senderlisten für WebUI Player
+        import json as _j, os as _os
+        _cfg = os.path.join(BASE_DIR, "config")
+        def _load(fname, key="stations"):
+            try: return _j.load(open(os.path.join(_cfg, fname))).get(key, [])
+            except Exception: return []
+        vm["dab_stations"] = _load("dab_stations.json", "stations")
+        vm["web_stations"] = _load("stations.json", "stations")
+        vm["fm_stations"]  = _load("fm_stations.json", "stations")
+        # Favoriten
+        try:
+            _favpath = os.path.join(_cfg, "favorites.json")
+            _fav = _j.load(open(_favpath))
+            vm["favorites"] = _fav.get("favorites", _fav) if isinstance(_fav, dict) else _fav
+        except Exception: vm["favorites"] = []
         return jsonify(vm)
     except Exception as e:
         import log as _log
@@ -335,7 +350,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.10.88
+        r = ""  # display entfernt v0.10.94
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)

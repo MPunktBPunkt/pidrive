@@ -21,7 +21,7 @@
     {
       "id": "web_antenne_bayern",
       "name": "Antenne Bayern",
-      "url": "https://stream.antenne.de/antenne/stream/mp3",
+      "url": "https://stream.antenne.de/antenne",
       "genre": "Pop",
       "favorite": false,
       "enabled": true
@@ -53,7 +53,7 @@
     {
       "id": "web_radio_bob",
       "name": "Radio Bob",
-      "url": "https://streams.radiobob.de/bob-national/mp3-128/mediaplayer",
+      "url": "https://streams.radiobob.de/bob-national/mp3-128",
       "genre": "Rock",
       "favorite": false,
       "enabled": true

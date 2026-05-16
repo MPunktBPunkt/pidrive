@@ -278,12 +278,25 @@ class PiDriveService:
         }
         svc = svc_map.get(target, target)
         try:
-            return subprocess.check_output(
-                f"journalctl -u {svc} -n {lines} --no-pager 2>/dev/null",
+            out = subprocess.check_output(
+                f"journalctl -u {svc} -n {lines} --no-pager 2>&1",
                 shell=True, text=True
             )
+            if "-- No entries --" in out or not out.strip():
+                import os as _os, grp as _grp
+                try:
+                    _gids = [g.gr_gid for g in _grp.getgrall()
+                             if _os.environ.get("USER","") in g.gr_mem]
+                    _gnames = [g.gr_name for g in _grp.getgrall() if g.gr_gid in _gids]
+                    if "systemd-journal" not in _gnames:
+                        return ("-- Keine Log-Eintraege --\n"
+                                "Tipp: pidrive-User ist nicht in systemd-journal Gruppe\n"
+                                "  Fix: sudo usermod -a -G systemd-journal $USER && su - $USER\n"
+                                "  Oder: su root && journalctl -u " + svc + " -n " + str(lines))
+                except Exception: pass
+            return out
         except Exception as e:
-            return f"Log nicht verfügbar: {e}"
+            return f"Log nicht verfuegbar: {e}"
 
 
 

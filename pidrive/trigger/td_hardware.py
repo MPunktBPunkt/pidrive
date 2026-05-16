@@ -32,7 +32,9 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 import time as _t
                 for _attempt in range(6):      # max 3s in 0.5s-Schritten
                     _t.sleep(0.5)
-                    S_module.refresh(force=True)
+                    try:
+                        import status as _sm; _sm.refresh(force=True)
+                    except Exception: pass
                     if S.get("spotify"):
                         source_state.commit_source("spotify")
                         log.info(f"SOURCE commit: spotify (attempt={_attempt+1})")
