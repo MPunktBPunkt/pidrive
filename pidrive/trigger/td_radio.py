@@ -229,6 +229,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
         _query = cmd.split(":", 1)[1].strip()
         try:
             _sid = _query if _query.startswith("0x") else ""
+            try: webradio.stop(S)
+            except Exception: pass
+            try: fm.stop(S)
+            except Exception: pass
             dab.play_by_name(_query, S, settings=settings, service_id=_sid)
             source_state.commit_source("dab")
             log.info(f"CLI play_dab: {_query!r}")
@@ -245,10 +249,14 @@ def handle(cmd, menu_state, store, S, settings, bg):
             _store = _SS(_cfg_dir)
             _match = next((s for s in _store.fm if
                            _query.lower() in (s.get("name","")).lower()
-                           or _query == str(s.get("freq","")))
+                           or _query == str(s.get("freq","") or str(s.get("freq_mhz",""))))
                           , None)
             if _match:
-                fm.play_station({"name": _match["name"], "freq": _match["freq"]}, S, settings)
+                try: webradio.stop(S)
+                except Exception: pass
+                try: dab.stop(S)
+                except Exception: pass
+                fm.play_station({"name": _match["name"], "freq": str(_match.get("freq") or _match.get("freq_mhz",""))}, S, settings)
                 source_state.commit_source("fm")
                 log.info(f"CLI play_fm: {_match['name']}")
             else:
@@ -266,6 +274,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
                            or _query == str(s.get("id","")))
                           , None)
             if _match:
+                try: dab.stop(S)
+                except Exception: pass
+                try: fm.stop(S)
+                except Exception: pass
                 webradio.play_station(_match, S, settings)
                 source_state.commit_source("webradio")
                 log.info(f"CLI play_web: {_match['name']}")
