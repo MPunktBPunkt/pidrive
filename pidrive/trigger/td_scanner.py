@@ -157,6 +157,25 @@ def handle(cmd, menu_state, store, S, settings, bg):
                             source_state.end_transition()
             bg(_input_and_set)
 
+    elif cmd.startswith("set_scanner_squelch:"):
+        try:
+            sq = int(cmd.split(":", 1)[1])
+            settings["scanner_squelch"] = sq
+            save_settings(settings)
+            S["scanner_squelch"] = sq
+            log.info(f"Scanner Squelch gesetzt: {sq}")
+        except Exception as e:
+            log.error(f"set_scanner_squelch Fehler: {e}")
+
+    elif cmd.startswith("set_ppm:"):
+        try:
+            ppm = int(cmd.split(":", 1)[1])
+            settings["ppm_correction"] = ppm
+            save_settings(settings)
+            log.info(f"PPM-Korrektur gesetzt: {ppm}")
+        except Exception as e:
+            log.error(f"set_ppm Fehler: {e}")
+
     else:
         return False
     return True

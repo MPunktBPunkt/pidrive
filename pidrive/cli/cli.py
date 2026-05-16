@@ -271,10 +271,10 @@ Flags (vor dem Befehl angeben):
                       choices=BANDS_ALL + ["stop","status","next","prev"],
                       help="Band oder Aktion (stop/status)")
     p_sc.add_argument("sub_cmd", nargs="?",
-                      choices=["ch","freq","next","prev","stop","scan"],
-                      help="ch <N> | freq <MHz> | next | prev | scan")
+                      choices=["ch","freq","next","prev","stop","scan","squelch","ppm"],
+                      help="ch <N> | freq <MHz> | next | prev | scan | squelch <0-100> | ppm <wert>")
     p_sc.add_argument("value", nargs="?",
-                      help="Kanal-Nr (ch) oder Frequenz MHz (freq)")
+                      help="Kanal-Nr, Frequenz MHz, Squelch (0=off, 25=normal), oder PPM")
 
     p_avrcp = sub.add_parser("avrcp", help="AVRCP-Monitor (BMW iDrive Tasten)")
     p_avrcp.add_argument("avrcp_cmd", nargs="?", default="monitor",
@@ -1322,9 +1322,36 @@ Flags (vor dem Befehl angeben):
             svc.send(f"scan_prev:{band}")
             fmt.out(f"← {band.upper()} vorheriger Kanal")
 
+        elif sub_cmd == "squelch":
+            try:
+                sq = int(value) if value is not None else None
+                if sq is None:
+                    raise ValueError
+            except ValueError:
+                fmt.err(f"Squelch: Zahl 0–100 erwartet (0 = kein Squelch, 25 = normal)")
+                sys.exit(EXIT_ERR)
+            svc.require_online()
+            svc.send(f"set_scanner_squelch:{sq}")
+            fmt.out(f"✓ Scanner Squelch: {sq}  (0=aus, 25=normal, 50=streng)")
+
+        elif sub_cmd == "ppm":
+            try:
+                ppm = int(value) if value is not None else None
+                if ppm is None:
+                    raise ValueError
+            except ValueError:
+                fmt.err("PPM: Ganzzahl erwartet (z.B. 0, 49, -20)")
+                sys.exit(EXIT_ERR)
+            svc.require_online()
+            svc.send(f"set_ppm:{ppm}")
+            fmt.out(f"✓ PPM-Korrektur: {ppm}  (Fujitsu: 49, Pi: 0 oder messen)")
+
         else:
             fmt.err(f"Unbekannter Befehl: {sub_cmd!r}")
             fmt.out("Verwendung: pidrivectl scanner BAND ch N | freq F | scan | next | prev")
+            fmt.out("            pidrivectl scanner squelch 0   (0=aus, kein Squelch)")
+            fmt.out("            pidrivectl scanner squelch 25  (normal)")
+            fmt.out("            pidrivectl scanner ppm 49      (PPM-Korrektur für Fujitsu)")
             sys.exit(EXIT_ERR)
         sys.exit(EXIT_OK)
 

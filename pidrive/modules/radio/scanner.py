@@ -159,6 +159,15 @@ BANDS = {
         "bw": 10000,
         "label": "CB-Funk",
     },
+    "fm": {
+        "band": {
+            "min": 87.5, "max": 108.0, "start": 87.5,
+            "step_fine": 0.1, "step_coarse": 1.0, "step": 0.1,
+            "label": "FM/UKW (87.5-108 MHz)", "short": "FM",
+        },
+        "bw": 200000,
+        "label": "FM/UKW",
+    },
 }
 
 _current_ch: dict = {}

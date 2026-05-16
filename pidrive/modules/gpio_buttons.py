@@ -1,5 +1,5 @@
 """
-gpio_buttons.py — ENTFERNT v0.11.5
+gpio_buttons.py — ENTFERNT v0.11.6
 GPIO-Steuerung ist nicht mehr Teil von PiDrive.
 Steuerung ausschliesslich via AVRCP (BMW iDrive) / WebUI / CLI.
 """
