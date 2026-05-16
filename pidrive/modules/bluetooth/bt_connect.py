@@ -613,10 +613,47 @@ def repair_device(mac, S, settings):
 
     _ensure_bt_on(S)
     _ensure_agent()
-    _btctl(f"disconnect {mac}", timeout=10)
-    _btctl(f"remove {mac}", timeout=10)
-    _sleep_s(2)
 
+    # Schritt 1: Alten Bond entfernen (behebt "BT bond: inkonsistent")
+    _btctl(f"disconnect {mac}", timeout=6)
+    _btctl(f"remove {mac}", timeout=6)
+    log.info(f"BT repair: alter Bond entfernt mac={mac}")
+    _sleep_s(1)
+
+    # Schritt 2: Scan starten und warten bis Gerät sichtbar
+    ipc.write_progress("Bluetooth", f"Suche {name[:16]}... (Pairing-Modus!)", color="blue")
+    log.info(f"BT repair: Scan — warte auf Gerät (Pairing-Modus noetig!)")
+    _btctl("scan on", timeout=3)
+    _device_visible = False
+    for _attempt in range(15):  # max 15s warten
+        _sleep_s(1)
+        _, _info = _btctl(f"info {mac}", timeout=4)
+        if _info and mac.upper() in (_info or "").upper():
+            _device_visible = True
+            log.info(f"BT repair: Gerät sichtbar nach {_attempt+1}s")
+            break
+        # Scan-Cache aus discovered_devices prüfen
+        for d in _read_discovered_devices():
+            if _normalize_mac(d.get("mac", "")) == mac:
+                _device_visible = True
+                name = d.get("name", name)
+                break
+        if _device_visible:
+            break
+        ipc.write_progress("Bluetooth",
+            f"Warte auf {name[:14]}... ({_attempt+1}/15s)", color="blue")
+
+    if not _device_visible:
+        log.warn(f"BT repair: Gerät nicht sichtbar — Pairing-Modus aktiv?")
+        ipc.write_progress("Bluetooth", f"Gerät nicht gefunden — Pairing-Modus?", color="red")
+        _btctl("scan off", timeout=3)
+        _sleep_s(2)
+        ipc.clear_progress()
+        S["menu_rev"] = S.get("menu_rev", 0) + 1
+        return False
+
+    # Schritt 3: Pair + Connect
+    _btctl("scan off", timeout=3)
     ok = connect_device(mac, S, settings)
     log.info(f"BT repair: {'OK' if ok else 'FAIL'} mac={mac}")
     S["menu_rev"] = S.get("menu_rev", 0) + 1

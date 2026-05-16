@@ -114,14 +114,20 @@ def play_station(station, S, settings=None):
             pass
 
         log.info(f"[WEB] mpv gestartet PID={_player_proc.pid} socket={sock}")
-        # Zombie-Check: kurzes Warten, dann ob mpv noch lebt
-        # 2s statt 0.5s — Stream-Buffering + Connect kann länger dauern
+        # Zombie-Check: 5s warten (URL-Redirect + Buffer-Init + PA-Connect)
         import time as _t
-        _t.sleep(2.0)
+        _t.sleep(5.0)
         if _player_proc.poll() is not None:
+            rc = _player_proc.returncode
             S["radio_playing"] = False
             S["metadata_unavailable"] = True
-            log.error(f"[WEB] mpv crashed nach 2s (rc={_player_proc.returncode}) — URL ungültig? {url[:80]!r}")
+            if rc == -15:  # SIGTERM = meist Audio-Problem, nicht URL
+                log.error(f"[WEB] mpv beendet nach 5s (SIGTERM rc=-15)"
+                          f" — Audio-Ausgang pruefen (PA-Sink vorhanden?)")
+                log.error(f"  URL: {url[:80]!r}")
+                log.error(f"  Tipp: pidrivectl audio status / pidrivectl audio route klinke")
+            else:
+                log.error(f"[WEB] mpv crashed nach 5s (rc={rc}) — URL pruefen: {url[:80]!r}")
             return False
         # Hintergrund-Monitor: prüft mpv alle 10s auf Lebenzeichen
         import threading as _thr
