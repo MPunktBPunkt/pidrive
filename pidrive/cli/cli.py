@@ -254,6 +254,14 @@ Flags (vor dem Befehl angeben):
     p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
 
     # ── avrcp ───────────────────────────────────────────────────────────────
+
+    # ── playlist ─────────────────────────────────────────────────────────────
+    p_pl = sub.add_parser("playlist", help="Gespielte Titel (History)")
+    p_pl.add_argument("pl_filter", nargs="?", default="today",
+                      help="today|all|last|YYYY-MM-DD")
+    p_pl.add_argument("--limit", type=int, default=50,
+                      help="Max Einträge (default 50)")
+
     p_avrcp = sub.add_parser("avrcp", help="AVRCP-Monitor (BMW iDrive Tasten)")
     p_avrcp.add_argument("avrcp_cmd", nargs="?", default="monitor",
                          choices=["monitor","status","events","inject"],
@@ -1162,6 +1170,59 @@ Flags (vor dem Befehl angeben):
             svc.send(arg)
             fmt.out(f"✓ Injiziert: {arg}")
             sys.exit(EXIT_OK)
+
+    # ── playlist ──────────────────────────────────────────────────────────────
+    if args.cmd == "playlist":
+        import json as _pj, os as _po, time as _pt
+        _hist_path = _po.path.join(
+            _po.path.dirname(_po.path.abspath(__file__)),
+            "..", "config", "play_history.json"
+        )
+        try:
+            with open(_hist_path) as _f: history = _pj.load(_f)
+            if not isinstance(history, list): history = []
+        except Exception:
+            history = []
+
+        filt = args.pl_filter or "today"
+        today = _pt.strftime("%Y-%m-%d")
+
+        if filt == "today":
+            entries = [e for e in history if e.get("date") == today]
+            label = f"Heute ({today})"
+        elif filt == "all":
+            entries = history
+            label = "Alle gespielten Titel"
+        elif filt == "last":
+            entries = history[-args.limit:]
+            label = f"Letzte {args.limit} Titel"
+        else:
+            entries = [e for e in history if e.get("date") == filt]
+            label = f"Datum {filt}"
+
+        entries = entries[-args.limit:]
+
+        if use_json:
+            fmt.print_json({"filter": filt, "count": len(entries), "entries": entries})
+        else:
+            fmt.out(f"\n  {label} — {len(entries)} Titel")
+            fmt.out("  " + "─" * 44)
+            if not entries:
+                fmt.out("  (keine Einträge)")
+            else:
+                prev_date = ""
+                for e in reversed(entries):
+                    d = e.get("date","")
+                    if d != prev_date and filt in ("all","last"):
+                        fmt.out(f"\n  {d}")
+                        prev_date = d
+                    t = e.get("ts_human","")[-8:]   # HH:MM:SS
+                    station = e.get("station","")
+                    raw = e.get("raw") or f"{e.get('artist','')} - {e.get('track','')}".strip(" -")
+                    src_tag = e.get("source","web")[:3].upper()
+                    fmt.out(f"  [{t}] [{src_tag}] {station:<16} {raw}")
+            fmt.out("")
+        sys.exit(EXIT_OK)
 
     parser.print_help()
     sys.exit(EXIT_OK)

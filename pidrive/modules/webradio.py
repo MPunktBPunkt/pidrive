@@ -105,7 +105,7 @@ def play_station(station, S, settings=None):
             f"PULSE_SERVER=unix:/var/run/pulse/native "
             f"XDG_RUNTIME_DIR=/tmp "
             + (f"PULSE_SINK={_bt_sink_for_cmd} " if _bt_sink_for_cmd else "")
-            + f"mpv --no-video --really-quiet --title=pidrive_radio "
+            + f"mpv --no-video --no-terminal --title=pidrive_radio "
             + (f"{_pa_sink_arg} " if _pa_sink_arg else "")
             + f"--input-ipc-server={sock} "
             + "--ao=pulse "

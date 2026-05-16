@@ -23,6 +23,38 @@ _listener_thread = None
 _stop_event      = threading.Event()
 
 
+
+import json as _json_hist
+
+PLAY_HISTORY_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "config", "play_history.json"
+)
+_HISTORY_MAX = 2000
+
+def _write_play_history(station, artist, track, raw, source="webradio"):
+    """Gespielten Titel in play_history.json anhängen."""
+    import time as _t3
+    entry = {
+        "ts":       int(_t3.time()),
+        "ts_human": _t3.strftime("%Y-%m-%d %H:%M:%S", _t3.localtime()),
+        "date":     _t3.strftime("%Y-%m-%d", _t3.localtime()),
+        "source":   (source or "webradio").lower(),
+        "station":  station or "",
+        "artist":   artist or "",
+        "track":    track or "",
+        "raw":      raw or "",
+    }
+    try:
+        try:
+            with open(PLAY_HISTORY_FILE) as _fh: history = _json_hist.load(_fh)
+            if not isinstance(history, list): history = []
+        except Exception: history = []
+        history.append(entry)
+        if len(history) > _HISTORY_MAX: history = history[-_HISTORY_MAX:]
+        with open(PLAY_HISTORY_FILE, "w") as _fh:
+            _json_hist.dump(history, _fh, ensure_ascii=False, separators=(",",":"))
+    except Exception: pass
+
 def _parse_stream_title(raw: str) -> dict:
     """ICY-Titelstring in artist/track aufteilen.
     "Foo Fighters - Everlong" → {"artist": "Foo Fighters", "track": "Everlong"}
@@ -115,6 +147,17 @@ def _listener_loop(sock_path: str, station_name: str, S: dict, stop: threading.E
                 if icy:
                     log.info(f"[MPV_META] Stream-Titel: {icy!r} "
                              f"→ artist={parsed['artist']!r} track={parsed['track']!r}")
+                    # Play-History bei Titelwechsel
+                    if parsed["track"] and parsed["track"] != S.get("_last_hist_track",""):
+                        S["_last_hist_track"] = parsed["track"]
+                        try:
+                            _write_play_history(
+                                station=station_name, artist=parsed["artist"],
+                                track=parsed["track"], raw=icy,
+                                source=S.get("radio_type","webradio"),
+                            )
+                        except Exception as _he:
+                            pass
 
             elif name == "media-title" and isinstance(data, str):
                 # Fallback wenn metadata leer bleibt
