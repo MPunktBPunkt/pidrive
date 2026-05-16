@@ -262,6 +262,23 @@ Flags (vor dem Befehl angeben):
     p_pl.add_argument("--limit", type=int, default=50,
                       help="Max Einträge (default 50)")
 
+
+    # ── scanner ──────────────────────────────────────────────────────────────
+    p_sc = sub.add_parser("scanner", help="Funk-Scanner (PMR/Freenet/VHF/UHF/FM)")
+    sc_sub = p_sc.add_subparsers(dest="sc_cmd")
+    p_sc_start = sc_sub.add_parser("start", help="Scan starten")
+    p_sc_start.add_argument("band",
+                            choices=["pmr446","freenet","lpd433","vhf","uhf","cb","fm"],
+                            help="Band/Kanal-Liste")
+    sc_sub.add_parser("stop",   help="Scan stoppen")
+    sc_sub.add_parser("next",   help="Nächster aktiver Kanal")
+    sc_sub.add_parser("prev",   help="Vorheriger aktiver Kanal")
+    sc_sub.add_parser("status", help="Aktueller Kanal / Frequenz")
+    p_sc_freq = sc_sub.add_parser("freq", help="Frequenz direkt einstellen (MHz)")
+    p_sc_freq.add_argument("band",
+                           choices=["pmr446","freenet","lpd433","vhf","uhf","cb","fm"])
+    p_sc_freq.add_argument("mhz", type=float, help="Frequenz in MHz")
+
     p_avrcp = sub.add_parser("avrcp", help="AVRCP-Monitor (BMW iDrive Tasten)")
     p_avrcp.add_argument("avrcp_cmd", nargs="?", default="monitor",
                          choices=["monitor","status","events","inject"],
@@ -1222,6 +1239,76 @@ Flags (vor dem Befehl angeben):
                     src_tag = e.get("source","web")[:3].upper()
                     fmt.out(f"  [{t}] [{src_tag}] {station:<16} {raw}")
             fmt.out("")
+        sys.exit(EXIT_OK)
+
+    # ── scanner ────────────────────────────────────────────────────────────────
+    if args.cmd == "scanner":
+        cmd = args.sc_cmd or "status"
+
+        BAND_LABELS = {
+            "pmr446": "PMR446 (446 MHz, 16 Kanäle)",
+            "freenet": "Freenet (149 MHz, 6 Kanäle)",
+            "lpd433": "LPD433 (433 MHz, 69 Kanäle)",
+            "vhf":    "VHF (144–146 MHz Bereich)",
+            "uhf":    "UHF (430–440 MHz Bereich)",
+            "cb":     "CB Funk (26–27 MHz, 40 Kanäle)",
+            "fm":     "UKW/FM (87.5–108 MHz)",
+        }
+
+        if cmd == "start":
+            band = args.band
+            svc.require_online()
+            svc.send(f"scan_next:{band}")
+            fmt.out(f"✓ Scanner gestartet: {BAND_LABELS.get(band, band)}")
+            fmt.out("  pidrivectl scanner next   → nächster Kanal")
+            fmt.out("  pidrivectl scanner stop   → stoppen")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "stop":
+            svc.require_online()
+            svc.send("radio_stop")
+            fmt.out("✓ Scanner gestoppt")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "next":
+            svc.require_online()
+            d = svc.get_status()
+            band = d.get("scanner_band","pmr446")
+            svc.send(f"scan_next:{band}")
+            fmt.out(f"→ Nächster Kanal (Band: {band})")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "prev":
+            svc.require_online()
+            d = svc.get_status()
+            band = d.get("scanner_band","pmr446")
+            svc.send(f"scan_prev:{band}")
+            fmt.out(f"← Vorheriger Kanal (Band: {band})")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "freq":
+            svc.require_online()
+            svc.send(f"scan_setfreq:{args.band}:{args.mhz}")
+            fmt.out(f"✓ Frequenz: {args.mhz} MHz ({args.band})")
+            sys.exit(EXIT_OK)
+
+        elif cmd == "status":
+            d = svc.get_status()
+            src = d.get("source","idle")
+            if src == "scanner":
+                band = d.get("scanner_band","?")
+                ch   = d.get("scanner_channel","")
+                freq = d.get("scanner_freq","")
+                fmt.out(f"Scanner aktiv — Band: {band}")
+                if ch:   fmt.out(f"  Kanal:    {ch}")
+                if freq: fmt.out(f"  Frequenz: {freq} MHz")
+                fmt.out(f"  Audio:    {d.get('audio_eff','–')}")
+            else:
+                fmt.out("Scanner: inaktiv")
+                fmt.out("Verfügbare Bänder:")
+                for bid, label in BAND_LABELS.items():
+                    fmt.out(f"  {bid:<8} {label}")
+                fmt.out("\nStarten: pidrivectl scanner start pmr446")
         sys.exit(EXIT_OK)
 
     parser.print_help()
