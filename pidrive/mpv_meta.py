@@ -175,12 +175,8 @@ def start(station_name: str, S: dict, sock_path: str = MPV_SOCKET):
     """Metadaten-Listener als Daemon-Thread starten."""
     global _listener_thread, _stop_event
     stop()  # alten Thread beenden
-
-    # Socket bereinigen
-    try:
-        os.unlink(sock_path)
-    except FileNotFoundError:
-        pass
+    # KEIN os.unlink hier! mpv hat den Socket bereits erstellt.
+    # Das Löschen passiert in webradio.py VOR mpv-Start.
 
     _stop_event = threading.Event()
     _listener_thread = threading.Thread(
