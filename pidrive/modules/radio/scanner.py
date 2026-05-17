@@ -314,15 +314,22 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         from modules.audio import _get_headphone_card as _ghc2
         _sc = _ghc2()
 
-        _sc_mpv_env    = "PULSE_SERVER=unix:/var/run/pulse/native"
-        _sc_mpv_extra  = ["--ao=pulse"]
+        # BT-Sink ermitteln (wie FM-Radio)
+        _bt_sink = ""
+        try:
+            from modules.bluetooth.bt_audio import get_bt_sink as _gbs_sc
+            _bt_sink = _gbs_sc() or ""
+        except Exception:
+            pass
+        _device_arg = f"--audio-device=pulse/{_bt_sink}" if _bt_sink else ""
+        _sc_mpv_env    = "PULSE_SERVER=unix:/var/run/pulse/native XDG_RUNTIME_DIR=/tmp"
         _sc_mpv_prefix = _sc_mpv_env + " "
         cmd = (
             f"rtl_fm -M fm -f {freq_hz} -s {int(bandwidth_hz)}"
             f"{_ppm_arg}{_gain_arg} -r {sr} - 2>/dev/null | "
-            f"{_sc_mpv_prefix}mpv --no-video --really-quiet --title=pidrive_scanner "
+            f"{_sc_mpv_prefix}mpv --no-video --no-terminal --title=pidrive_scanner "
             f"--demuxer=rawaudio --demuxer-rawaudio-rate={sr} "
-            f"--demuxer-rawaudio-channels=1 " + " ".join(_sc_mpv_extra) + " - 2>/dev/null"
+            f"--demuxer-rawaudio-channels=1 --ao=pulse {_device_arg} - 2>/dev/null"
         )
 
         if _rtlsdr:

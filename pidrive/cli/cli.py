@@ -435,7 +435,7 @@ Flags (vor dem Befehl angeben):
                     fmt.out(f"  ✓ Stream läuft — {name}          ")
                 else:
                     # Prüfe ob BT verbunden
-                    _bt = _d.get("bt_connected", False)
+                    _bt = _d.get("bt", False) or _d.get("bt_connected", False)
                     if not _bt:
                         fmt.out(f"  ⚠ Kein BT-Sink — Kopfhörer verbinden!   ")
                         fmt.out("    pidrivectl bt status")
