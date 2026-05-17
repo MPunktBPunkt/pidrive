@@ -268,11 +268,10 @@ Flags (vor dem Befehl angeben):
     p_sc = sub.add_parser("scanner",
         help="Funk-Scanner  Beispiele: scanner pmr446 ch 3 | scanner uhf freq 430.0")
     p_sc.add_argument("band", nargs="?",
-                      choices=BANDS_ALL + ["stop","status","next","prev"],
-                      help="Band oder Aktion (stop/status)")
+                      choices=BANDS_ALL + ["stop","status","next","prev","squelch","ppm"],
+                      help="Band oder Aktion (stop/status/squelch/ppm)")
     p_sc.add_argument("sub_cmd", nargs="?",
-                      choices=["ch","freq","next","prev","stop","scan","squelch","ppm"],
-                      help="ch <N> | freq <MHz> | next | prev | scan | squelch <0-100> | ppm <wert>")
+                      help="ch N | freq MHz | scan | next | prev | stop | squelch N | ppm N")
     p_sc.add_argument("value", nargs="?",
                       help="Kanal-Nr, Frequenz MHz, Squelch (0=off, 25=normal), oder PPM")
 
@@ -420,6 +419,31 @@ Flags (vor dem Befehl angeben):
             else:
                 d = svc.get_status()
                 fmt.out(icon + " Status: " + d.get("dab_playback_state", "?"))
+        elif args.source == "web" and not use_json:
+            try:
+                r = svc.play(args.source, name)
+                fmt.out(f"Starte WEB: {name}")
+                # 6s warten (mpv Zombie-Check dauert 5s) dann Status prüfen
+                import time as _t
+                for _i in range(6):
+                    _t.sleep(1)
+                    fmt.out(f"  {fmt.DIM}[{_i+1}s]...{fmt.RESET}", end="\r")
+                _d = svc.get_status()
+                _src = _d.get("source","")
+                _play = _d.get("radio_playing", False)
+                if _src == "webradio" and _play:
+                    fmt.out(f"  ✓ Stream läuft — {name}          ")
+                else:
+                    # Prüfe ob BT verbunden
+                    _bt = _d.get("bt_connected", False)
+                    if not _bt:
+                        fmt.out(f"  ⚠ Kein BT-Sink — Kopfhörer verbinden!   ")
+                        fmt.out("    pidrivectl bt status")
+                    else:
+                        fmt.out(f"  ⚠ Stream nicht gestartet (rc=2 oder kein PA-Sink)   ")
+                        fmt.out("    pidrivectl audio test")
+            except LookupError as e:
+                _exit_err(str(e), EXIT_NOTFOUND)
         else:
             try:
                 r = svc.play(args.source, name)
@@ -1254,9 +1278,12 @@ Flags (vor dem Befehl angeben):
         sub_cmd  = args.sub_cmd
         value    = args.value
 
-        # Alias: "stop" / "status" als erstes Argument
-        if band_arg in ("stop", "status", "next", "prev"):
+        # Alias: "stop" / "status" / "squelch" / "ppm" als erstes Argument
+        if band_arg in ("stop", "status", "next", "prev", "squelch", "ppm"):
             sub_cmd  = band_arg
+            # value ist jetzt das zweite positional-Argument (sub_cmd-Position)
+            if sub_cmd in ("squelch", "ppm") and value is None:
+                value = args.sub_cmd  # sub_cmd enthält den Zahlenwert
             band_arg = None
 
         if sub_cmd == "stop" or band_arg is None and sub_cmd is None:

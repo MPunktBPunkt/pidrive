@@ -65,6 +65,46 @@
       "genre": "Pop/Dance",
       "favorite": false,
       "enabled": true
+    },
+    {
+      "id": "web_rock_antenne",
+      "name": "Rock Antenne",
+      "url": "https://stream.rockantenne.de/rockantenne/stream/mp3",
+      "genre": "Rock",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "web_rock_fm",
+      "name": "Rock FM",
+      "url": "https://liveradio.swr.de/sw282p3/rockfm/play.mp3",
+      "genre": "Rock",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "web_rock_antenne_heavy",
+      "name": "Rock Antenne Heavy",
+      "url": "https://stream.rockantenne.de/heavy/stream/mp3",
+      "genre": "Heavy Metal",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_rock_antenne_classic",
+      "name": "Rock Antenne Classic Rock",
+      "url": "https://stream.rockantenne.de/classic-rock/stream/mp3",
+      "genre": "Classic Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_radio_21",
+      "name": "Radio 21",
+      "url": "https://stream.radio21.de/radio21/mp3-192/stream",
+      "genre": "Rock",
+      "favorite": false,
+      "enabled": true
     }
   ]
 }
