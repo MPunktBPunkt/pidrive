@@ -1,5 +1,5 @@
 """
-DEPRECATED SHIM — Rückwärtskompatibilität v0.11.7
+DEPRECATED SHIM — Rückwärtskompatibilität v0.11.8
 Echte Implementierung: pidrive/trigger/td_radio.py
 """
 from trigger.td_radio import *  # noqa: F401,F403

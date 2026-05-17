@@ -427,7 +427,7 @@ Flags (vor dem Befehl angeben):
                 import time as _t
                 for _i in range(6):
                     _t.sleep(1)
-                    fmt.out(f"  {fmt.DIM}[{_i+1}s]...{fmt.RESET}", end="\r")
+                    print(f"  [{_i+1}s]...", end="\r", flush=True)
                 _d = svc.get_status()
                 _src = _d.get("source","")
                 _play = _d.get("radio_playing", False)
@@ -1280,13 +1280,14 @@ Flags (vor dem Befehl angeben):
 
         # Alias: "stop" / "status" / "squelch" / "ppm" als erstes Argument
         if band_arg in ("stop", "status", "next", "prev", "squelch", "ppm"):
+            # sub_cmd enthält ggf. Zahlenwert (z.B. "0" bei scanner squelch 0)
+            _raw_sub = args.sub_cmd
             sub_cmd  = band_arg
-            # value ist jetzt das zweite positional-Argument (sub_cmd-Position)
             if sub_cmd in ("squelch", "ppm") and value is None:
-                value = args.sub_cmd  # sub_cmd enthält den Zahlenwert
+                value = _raw_sub  # z.B. "0" oder "49"
             band_arg = None
 
-        if sub_cmd == "stop" or band_arg is None and sub_cmd is None:
+        if sub_cmd in ("stop", "status", None) and band_arg is None:
             if sub_cmd == "stop":
                 svc.require_online()
                 svc.send("radio_stop")
@@ -1325,7 +1326,7 @@ Flags (vor dem Befehl angeben):
                 ch_num = int(value) if value else 1
             except ValueError:
                 fmt.err(f"Ungültige Kanal-Nr: {value!r}")
-                sys.exit(EXIT_ERR)
+                sys.exit(EXIT_ERROR)
             svc.send(f"scan_setch:{band}:{ch_num}")
             fmt.out(f"✓ {band.upper()} Kanal {ch_num}")
 
@@ -1337,7 +1338,7 @@ Flags (vor dem Befehl angeben):
                     raise ValueError
             except ValueError:
                 fmt.err(f"Ungültige Frequenz: {value!r} (Eingabe in MHz, z.B. 430.0)")
-                sys.exit(EXIT_ERR)
+                sys.exit(EXIT_ERROR)
             svc.send(f"scan_setfreq:{band}:{mhz}")
             fmt.out(f"✓ {band.upper()} {mhz} MHz")
 
@@ -1356,7 +1357,7 @@ Flags (vor dem Befehl angeben):
                     raise ValueError
             except ValueError:
                 fmt.err(f"Squelch: Zahl 0–100 erwartet (0 = kein Squelch, 25 = normal)")
-                sys.exit(EXIT_ERR)
+                sys.exit(EXIT_ERROR)
             svc.require_online()
             svc.send(f"set_scanner_squelch:{sq}")
             fmt.out(f"✓ Scanner Squelch: {sq}  (0=aus, 25=normal, 50=streng)")
@@ -1368,7 +1369,7 @@ Flags (vor dem Befehl angeben):
                     raise ValueError
             except ValueError:
                 fmt.err("PPM: Ganzzahl erwartet (z.B. 0, 49, -20)")
-                sys.exit(EXIT_ERR)
+                sys.exit(EXIT_ERROR)
             svc.require_online()
             svc.send(f"set_ppm:{ppm}")
             fmt.out(f"✓ PPM-Korrektur: {ppm}  (Fujitsu: 49, Pi: 0 oder messen)")
@@ -1379,7 +1380,7 @@ Flags (vor dem Befehl angeben):
             fmt.out("            pidrivectl scanner squelch 0   (0=aus, kein Squelch)")
             fmt.out("            pidrivectl scanner squelch 25  (normal)")
             fmt.out("            pidrivectl scanner ppm 49      (PPM-Korrektur für Fujitsu)")
-            sys.exit(EXIT_ERR)
+            sys.exit(EXIT_ERROR)
         sys.exit(EXIT_OK)
 
     parser.print_help()
