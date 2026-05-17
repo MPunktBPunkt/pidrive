@@ -324,11 +324,27 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         _device_arg = f"--audio-device=pulse/{_bt_sink}" if _bt_sink else ""
         _sc_mpv_env    = "PULSE_SERVER=unix:/var/run/pulse/native XDG_RUNTIME_DIR=/tmp"
         _sc_mpv_prefix = _sc_mpv_env + " "
+        # Squelch aus Settings
+        _sq = _get_squelch(settings)
+        _sq_arg = f" -l {_sq}" if _sq and _sq > 0 else ""
+
+        # FM-Broadcast (wbfm): andere Parameter als Schmalband-FM
+        if bandwidth_hz >= 150000:
+            # Wideband FM — wie fm.py: -M wbfm, fixed rates
+            _rtl_sr = 250000
+            _out_sr = 32000
+            _modulation = "wbfm"
+        else:
+            # Schmalband FM (PMR, VHF etc.)
+            _rtl_sr = max(200000, int(bandwidth_hz) * 4)
+            _out_sr = 32000
+            _modulation = "fm"
+
         cmd = (
-            f"rtl_fm -M fm -f {freq_hz} -s {int(bandwidth_hz)}"
-            f"{_ppm_arg}{_gain_arg} -r {sr} - 2>/dev/null | "
+            f"rtl_fm -M {_modulation} -f {freq_hz} -s {_rtl_sr}"
+            f"{_ppm_arg}{_gain_arg}{_sq_arg} -r {_out_sr} -A fast - 2>/dev/null | "
             f"{_sc_mpv_prefix}mpv --no-video --no-terminal --title=pidrive_scanner "
-            f"--demuxer=rawaudio --demuxer-rawaudio-rate={sr} "
+            f"--demuxer=rawaudio --demuxer-rawaudio-rate={_out_sr} "
             f"--demuxer-rawaudio-channels=1 --ao=pulse {_device_arg} - 2>/dev/null"
         )
 
