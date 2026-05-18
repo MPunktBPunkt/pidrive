@@ -58,8 +58,21 @@ class PiDrivePlayer(dbus.service.Object):
         self._lock          = threading.Lock()
 
     def update_metadata(self, title: str, artist: str, album: str,
-                        track_nr: int = 1, total: int = 1):
-        """Neue Metadaten setzen und ans BMW-Display senden."""
+                        track_nr: int = 1, total: int = 1,
+                        genre: str = ""):
+        """Neue Metadaten setzen und ans BMW-Display senden.
+        Rate-Limiting: max 1 PropertiesChanged pro 300ms (BMW-Stabilität).
+        """
+        import time as _time
+        _now = _time.monotonic()
+        # Track-ID hat gewechselt → immer sofort senden (TrackChanged Event)
+        _track_changed = (track_nr != self._last_trackid)
+        # Rate-Limit: max alle 300ms — verhindert Notification-Overflow im BMW
+        if not _track_changed and (_now - self._last_emit) < 0.3:
+            return
+        self._last_emit    = _now
+        self._last_trackid = track_nr
+
         with self._lock:
             self._metadata = dbus.Dictionary({
                 "mpris:trackid":  dbus.ObjectPath(
@@ -70,7 +83,22 @@ class PiDrivePlayer(dbus.service.Object):
                                              signature="s"),
                 "xesam:album":    dbus.String(album[:64]),
                 "xesam:trackNumber": dbus.Int32(track_nr),
+                "xesam:genre":    dbus.Array([dbus.String(genre[:32])],
+                                             signature="s"),
+                "xesam:url":      dbus.String(""),
             }, signature="sv")
+
+        # Bei Track-Wechsel: kurz "Stopped" → dann neue Metadaten
+        # Das hilft BMW das TrackChanged-Event korrekt zu verarbeiten
+        if _track_changed:
+            try:
+                self.PropertiesChanged(
+                    PLAYER_IFACE,
+                    {"PlaybackStatus": dbus.String("Stopped")},
+                    []
+                )
+            except Exception:
+                pass
 
         # PropertiesChanged Signal → BMW-Display aktualisiert sich
         try:
@@ -268,12 +296,14 @@ def update(status: dict, menu: dict):
     title  = "PiDrive"
     artist = ""
     album  = "PiDrive"
+    genre  = ""
 
     # ── Spotify ──────────────────────────────────────────────────────────────
     if status.get("spotify"):
         title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
         artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
         album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
+        genre  = "Streaming"
 
     # ── Radio ────────────────────────────────────────────────────────────────
     elif status.get("radio_playing", status.get("radio", False)):
@@ -281,49 +311,57 @@ def update(status: dict, menu: dict):
         radio_name = status.get("radio_name", "") or station
 
         if radio_type == "FM":
+            # BMW zeigt: Titel = Sendername, Artist = Frequenz
             title  = radio_name or "FM Radio"
-            # Frequenz aus station extrahieren wenn vorhanden, z.B. "Bayern 3 (95.8 MHz)"
-            artist = "FM Radio"
-            if "(" in station and "mhz" in station.lower():
-                try:
-                    artist = station.split("(")[-1].replace(")", "").strip()
-                except Exception:
-                    pass
-            album  = "FM Radio"
+            artist = station if station != radio_name else "FM Radio"
+            album  = "UKW / FM"
+            genre  = "FM Radio"
 
         elif radio_type == "DAB":
             title  = radio_name or station or "DAB+"
-            artist = "DAB+"
-            album  = "PiDrive DAB+"
+            artist = station if station != radio_name else "DAB+"
+            album  = "DAB+"
+            genre  = "DAB+ Radio"
 
         elif radio_type == "WEB":
-            title  = status.get("track", "") or radio_name or "Webradio"
-            artist = status.get("artist", "") or radio_name or "Webradio"
-            album  = radio_name or "PiDrive Webradio"
+            # Icy-Titel wenn verfügbar: "Interpret - Titel"
+            icy = status.get("track", "") or ""
+            if " - " in icy:
+                parts  = icy.split(" - ", 1)
+                title  = parts[1].strip() or radio_name
+                artist = parts[0].strip() or radio_name
+            else:
+                title  = icy or radio_name or "Webradio"
+                artist = radio_name or "Webradio"
+            album  = radio_name or "Webradio"
+            genre  = "Webradio"
 
         elif radio_type == "SCANNER":
             rs = station or "Scanner"
             title  = radio_name or rs
-            freq_txt = ""
+            # Frequenz als Artist — gut lesbar auf BMW-Display
             if "(" in rs and "mhz" in rs.lower():
                 try:
-                    freq_txt = rs.split("(")[-1].replace(")", "").strip()
+                    artist = rs.split("(")[-1].replace(")", "").strip()
                 except Exception:
-                    pass
-            artist = freq_txt or "Scanner"
-            rs_l   = rs.lower()
-            if "cb" in rs_l:        album = "Scanner / CB-Funk"
-            elif "pmr" in rs_l:     album = "Scanner / PMR446"
-            elif "freenet" in rs_l: album = "Scanner / Freenet"
-            elif "lpd" in rs_l:     album = "Scanner / LPD433"
-            elif "vhf" in rs_l:     album = "Scanner / VHF"
-            elif "uhf" in rs_l:     album = "Scanner / UHF"
-            else:                   album = "Scanner"
+                    artist = "Scanner"
+            else:
+                artist = rs
+            rs_l = rs.lower()
+            if "cb" in rs_l:        album = "CB-Funk"; genre = "CB"
+            elif "pmr" in rs_l:     album = "PMR446";  genre = "PMR"
+            elif "freenet" in rs_l: album = "Freenet"; genre = "Freenet"
+            elif "lpd" in rs_l:     album = "LPD433";  genre = "LPD"
+            elif "vhf" in rs_l:     album = "VHF";     genre = "VHF"
+            elif "uhf" in rs_l:     album = "UHF";     genre = "UHF"
+            elif "fm" in rs_l:      album = "FM";      genre = "FM"
+            else:                   album = "Scanner"; genre = "Scanner"
 
         else:
             title  = station or "Radio"
             artist = "Radio"
             album  = "PiDrive Radio"
+            genre  = "Radio"
 
     # ── Bibliothek ───────────────────────────────────────────────────────────
     elif status.get("library_playing", False):
@@ -348,4 +386,4 @@ def update(status: dict, menu: dict):
         playing = False
 
     _player.set_status(playing)
-    _player.update_metadata(title, artist, album)
+    _player.update_metadata(title, artist, album, genre=genre)

@@ -145,7 +145,7 @@ def check_services():
         except Exception:
             pass
 
-    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.10)")
+    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.12)")
     if disp_pid and disp_pid != "0":
         nfo(f"Display PID: {disp_pid}")
         try:
@@ -194,7 +194,7 @@ def check_ipc():
 
 def check_display_env():
     S("DISPLAY SERVICE KONFIGURATION")
-    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.10")
+    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.12")
     nfo("Steuerung via WebUI (Port 8080) / pidrivectl / AVRCP")
 
 
@@ -203,7 +203,7 @@ def check_vtcon():
     if not __import__("os").path.isdir("/sys/class/vtconsole"):
         nfo("vtconsole: nicht vorhanden (kein Pi oder kein Display)")
         return
-    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.10)
+    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.12)
 
     for i in (0, 1):
         try:

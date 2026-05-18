@@ -132,7 +132,7 @@ def get_context() -> dict:
         path = menu.get("path", [])
         if path:
             low_path = " / ".join(str(x).lower() for x in path)
-            for cand in ("pmr446", "freenet", "lpd433", "cb", "vhf", "uhf"):
+            for cand in ("pmr446", "freenet", "lpd433", "cb", "vhf", "uhf", "fm"):
                 if cand in low_path:
                     band = cand
                     break
@@ -145,6 +145,7 @@ def get_context() -> dict:
                 ("cb",      ["cb-funk", "cb funk", " cb "]),
                 ("vhf",     ["vhf"]),
                 ("uhf",     ["uhf"]),
+                ("fm",      ["fm ", "ukw", "mhz"]),
             ]:
                 if any(k in rs for k in keys):
                     band = cand
