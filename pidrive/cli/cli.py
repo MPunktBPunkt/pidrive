@@ -746,7 +746,7 @@ Flags (vor dem Befehl angeben):
             try:
                 import importlib as _il, sys as _sys, os as _osp
                 # Pfad des aktuell laufenden pidrive-Pakets
-                _pkg = _osp.dirname(_osp.dirname(_osp.abspath(__file__)))
+                _pkg = _osp.path.dirname(_osp.path.dirname(_osp.path.abspath(__file__)))
                 if _pkg not in _sys.path: _sys.path.insert(0, _pkg)
                 _gas = _il.import_module("modules.audio").get_audio_status
                 _as = _gas()
