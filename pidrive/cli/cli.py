@@ -741,6 +741,33 @@ Flags (vor dem Befehl angeben):
             if use_json: fmt.print_json({"audio_out": d.get("audio_out"), "effective": d.get("audio_eff")})
             else: fmt.out(f"Audio: {d.get('audio_eff','–')} (angefordert: {d.get('audio_out','–')})")
             sys.exit(EXIT_OK)
+        if args.audio_cmd == "status":
+            # Lokal ausfuehren — kein Service-Connect noetig
+            try:
+                import importlib as _il, sys as _sys, os as _osp
+                # Pfad des aktuell laufenden pidrive-Pakets
+                _pkg = _osp.dirname(_osp.dirname(_osp.abspath(__file__)))
+                if _pkg not in _sys.path: _sys.path.insert(0, _pkg)
+                _gas = _il.import_module("modules.audio").get_audio_status
+                _as = _gas()
+                if use_json:
+                    fmt.print_json(_as)
+                else:
+                    _ok  = fmt.GREEN + "✓" + fmt.RESET
+                    _err = "\033[31m✗\033[0m"
+                    _warn= "\033[33m⚠\033[0m"
+                    fmt.out(f"Backend:   {_ok + ' OK' if _as['backend_ok'] else _err + ' PulseAudio fehlt'}")
+                    fmt.out(f"Sink:      {_ok + ' ' + _as['sink'] if _as['sink_present'] else _warn + ' kein Sink'}")
+                    fmt.out(f"Bluetooth: {_ok + ' verbunden' if _as['bt_connected'] else '  getrennt'}")
+                    fmt.out(f"Route:     {_as['requested']} -> {_as['effective']}")
+                    if _as.get("degraded_reason"):
+                        fmt.out(f"Hinweis:   {_warn} {_as['degraded_reason'].replace('_',' ')}")
+                    else:
+                        fmt.out(f"Status:    {_ok} bereit")
+            except Exception as _e_as:
+                fmt.out(f"audio status Fehler: {_e_as}")
+            sys.exit(EXIT_OK)
+
         svc.require_online()
         if args.audio_cmd == "route":
             trig = {"klinke": "audio_klinke","bt":"audio_bt","hdmi":"audio_hdmi","auto":"audio_all"}[args.mode]
@@ -926,40 +953,6 @@ Flags (vor dem Befehl angeben):
             sys.exit(EXIT_OK)
 
 
-        elif args.audio_cmd == "status":
-            if use_json:
-                d = svc.get_status()
-                fmt.print_json({"audio_out": d.get("audio_eff","–"), "effective": d.get("audio_eff","–")})
-            else:
-                try:
-                    _sys_path = __import__("sys").path
-                    import importlib as _il, os as _os
-                    _core = "/home/pidrive/pidrive/pidrive"
-                    if _os.path.isdir(_core) and _core not in _sys_path: _sys_path.insert(0,_core)
-                    _gas = _il.import_module("modules.audio").get_audio_status
-                    _as = _gas()
-                    fmt.out(f"Backend:   {chr(10041)+chr(32)+'OK' if _as['backend_ok'] else chr(10007)+chr(32)+'PulseAudio fehlt'}")
-                    fmt.out(f"Sink:      {(_as['sink'] or chr(10007)+' kein Sink')}")
-                    fmt.out(f"Bluetooth: {'verbunden' if _as['bt_connected'] else 'getrennt'}")
-                    fmt.out(f"Route:     {_as['requested']} -> {_as['effective']}")
-                    if _as.get('degraded_reason'):
-                        fmt.out(f"Hinweis:   {_as['degraded_reason'].replace(chr(95),chr(32))}")
-                except Exception:
-                    d = svc.get_status()
-                    fmt.out(f"Ausgang:   {d.get('audio_eff',chr(8211))}")
-                    fmt.out(f"Angefragt: {d.get('audio_out',chr(8211))}")
-
-    # dab
-    if args.cmd == "dab":
-        if args.dab_cmd == "status":
-            d = svc.dab_status()
-            if use_json: fmt.print_json(d)
-            else: fmt.print_dab_status(d)
-        elif args.dab_cmd == "scan":
-            svc.require_online()
-            r = svc.send("dab_scan")
-            if use_json:
-                fmt.print_json(r); sys.exit(EXIT_OK)
             fmt.out("DAB-Sendersuchlauf gestartet (ca. 2-3 Minuten)…")
             fmt.out("  Ctrl+C: Monitor beenden (Scan laeuft weiter im Hintergrund)")
             import time as _ts, json as _js

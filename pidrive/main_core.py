@@ -376,19 +376,22 @@ def startup_tasks(S, settings):
     if not _ready:
         log.warn("Boot-Readiness: Timeout — starte trotzdem (PulseAudio oder BT nicht bereit)")
 
-    # ── Phase BT-Reconnect ────────────────────────────────────────────────────
-    source_state.set_boot_phase("restore_bt")
-
-    try:
-        if bluetooth.reconnect_known_devices(S, settings):
-            log.info("BT Boot-Reconnect: verbunden")
-        else:
-            # v0.9.26: bt_state explizit auf failed setzen statt in "connecting" hängen
+    # ── Phase BT-Reconnect (non-blocking) ─────────────────────────────────────
+    # BT-Reconnect im Hintergrund — blockiert NICHT mehr boot_phase=steady
+    # (Scan dauert 22s und verhinderte sonst die steady-Erkennung im Installer)
+    def _bt_reconnect_bg():
+        source_state.set_boot_phase("restore_bt")
+        try:
+            if bluetooth.reconnect_known_devices(S, settings):
+                log.info("BT Boot-Reconnect: verbunden")
+            else:
+                source_state.set_bt_state("failed")
+                log.info("BT Boot-Reconnect: kein Gerät verfügbar → bt_state=failed")
+        except Exception as _e:
             source_state.set_bt_state("failed")
-            log.info("BT Boot-Reconnect: kein Gerät verfügbar → bt_state=failed")
-    except Exception as _e:
-        source_state.set_bt_state("failed")
-        log.warn("BT Boot-Reconnect: " + str(_e))
+            log.warn("BT Boot-Reconnect: " + str(_e))
+    import threading as _tbt
+    _tbt.Thread(target=_bt_reconnect_bg, daemon=True, name="bt_boot_reconnect").start()
 
     # GPIO entfernt — Steuerung ausschliesslich via AVRCP/WebUI/CLI
     # (gpio_buttons.py nicht mehr geladen)

@@ -240,7 +240,8 @@ def get_audio_status() -> dict:
     try:
         _sinks = _list_sinks()
         sink_present = len(_sinks) > 0
-        sink_name    = _sinks[0] if _sinks else ""
+        _s0 = _sinks[0] if _sinks else {}
+        sink_name = _s0.get("name", str(_s0)) if isinstance(_s0, dict) else str(_s0)
     except Exception:
         pass
 

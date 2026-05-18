@@ -91,14 +91,10 @@ def play_station(station, S, settings=None):
                 _mpv_env_dict["PULSE_SINK"] = _target_sink
                 log.info(f"[WEB] mpv PULSE_SINK={_target_sink}")
             else:
-                # Kein Sink → sofort abbrechen mit klarer Degradationsmeldung
-                log.warn("[WEB] Kein PA-Sink verfügbar (kein BT-Gerät verbunden?)")
-                S["radio_playing"] = False
-                S["radio_station"] = url_or_name
-                S["radio_type"]    = "WEB"
-                S["radio_error"]   = "no_sink"
-                source_state.commit_source("webradio")
-                return False   # Degradation — kein Fehler, kein mpv starten
+                # Kein expliziter Sink-Name — PulseAudio Default-Sink verwenden.
+                # Wenn BT-Kopfhörer verbunden ist aber bluez_sink noch nicht sichtbar,
+                # läuft mpv trotzdem über PA-Default und Audio kommt an.
+                log.warn("[WEB] Kein expliziter PA-Sink — nutze PA-Default-Routing")
         except Exception as _se:
             log.warn(f"[WEB] Sink-Ermittlung: {_se}")
 
