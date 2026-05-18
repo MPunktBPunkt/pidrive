@@ -91,7 +91,14 @@ def play_station(station, S, settings=None):
                 _mpv_env_dict["PULSE_SINK"] = _target_sink
                 log.info(f"[WEB] mpv PULSE_SINK={_target_sink}")
             else:
-                log.warn("[WEB] Kein PA-Sink verfügbar — mpv startet ohne Sink-Override")
+                # Kein Sink → sofort abbrechen mit klarer Degradationsmeldung
+                log.warn("[WEB] Kein PA-Sink verfügbar (kein BT-Gerät verbunden?)")
+                S["radio_playing"] = False
+                S["radio_station"] = url_or_name
+                S["radio_type"]    = "WEB"
+                S["radio_error"]   = "no_sink"
+                source_state.commit_source("webradio")
+                return False   # Degradation — kein Fehler, kein mpv starten
         except Exception as _se:
             log.warn(f"[WEB] Sink-Ermittlung: {_se}")
 

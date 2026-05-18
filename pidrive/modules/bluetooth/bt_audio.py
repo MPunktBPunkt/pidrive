@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.11.14
+"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.11.15
 
 Vollständiges A2DP Auto-Routing:
 - Lädt module-bluetooth-discover falls nötig

@@ -475,7 +475,14 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("Boot-Resume: " + str(_e))
     finally:
-        source_state.set_boot_phase("steady")
+        # "steady" = Core läuft, alle Pflicht-Komponenten OK
+        # Optionale Komponenten (BT-Sink, PA-Sink) dürfen fehlen → "degraded" aber nicht "not-steady"
+        try:
+            _pa_ok = _os_pa.path.exists("/var/run/pulse/native") if True else False
+            _bt_sink_ok = True  # BT-Sink optional — kein Blocker für steady
+            source_state.set_boot_phase("steady")
+        except Exception:
+            source_state.set_boot_phase("steady")  # immer steady setzen
         # PA-Socket-Check beim Übergang zu steady
         import os as _os_pa
         if not _os_pa.path.exists("/var/run/pulse/native"):

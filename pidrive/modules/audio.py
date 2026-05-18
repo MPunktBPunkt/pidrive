@@ -217,6 +217,63 @@ def get_last_decision() -> dict:
     return dict(_last_decision)
 
 
+
+def get_audio_status() -> dict:
+    """Semantisch reiches Status-Dict für pidrivectl audio status / WebUI.
+    Unterscheidet: backend_ok, sink_present, bt_connected, route.
+    """
+    import subprocess as _sp
+
+    bt_connected = False
+    sink_name    = ""
+    sink_present = False
+    degraded_reason = ""
+
+    # BT-Verbindung prüfen
+    try:
+        _r = _sp.run(["bluetoothctl", "info"], capture_output=True, text=True, timeout=3)
+        bt_connected = "Connected: yes" in _r.stdout
+    except Exception:
+        pass
+
+    # PA-Sink prüfen
+    try:
+        _sinks = _list_sinks()
+        sink_present = len(_sinks) > 0
+        sink_name    = _sinks[0] if _sinks else ""
+    except Exception:
+        pass
+
+    # PA Backend
+    pa_ok = _pa_ok()
+
+    d = get_last_decision()
+    requested  = d.get("requested", "auto")
+    effective  = d.get("effective", "none")
+    reason     = d.get("reason", "")
+
+    if not pa_ok:
+        degraded_reason = "pulseaudio_fehlt"
+    elif not sink_present and not bt_connected:
+        degraded_reason = "kein_audiogeraet"
+    elif not sink_present and bt_connected:
+        degraded_reason = "bt_verbunden_kein_a2dp_sink"
+    elif not sink_present:
+        degraded_reason = "kein_sink"
+
+    return {
+        "backend_ok":     pa_ok,
+        "sink_present":   sink_present,
+        "sink":           sink_name,
+        "bt_connected":   bt_connected,
+        "requested":      requested,
+        "effective":      effective,
+        "reason":         reason,
+        "degraded":       bool(degraded_reason),
+        "degraded_reason": degraded_reason,
+    }
+
+
 def read_last_decision_file() -> dict:
     """Liest shared state file — prozessuebergreifend fuer WebUI."""
     try:

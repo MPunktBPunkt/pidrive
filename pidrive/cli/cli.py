@@ -927,12 +927,27 @@ Flags (vor dem Befehl angeben):
 
 
         elif args.audio_cmd == "status":
-            d = svc.get_status()
-            if use_json: fmt.print_json({"audio_out": d["audio_out"], "effective": d["audio_eff"]})
+            if use_json:
+                d = svc.get_status()
+                fmt.print_json({"audio_out": d.get("audio_eff","–"), "effective": d.get("audio_eff","–")})
             else:
-                fmt.out(f"Ausgang:   {d.get('audio_eff','–')}")
-                fmt.out(f"Angefragt: {d.get('audio_out','–')}")
-        sys.exit(EXIT_OK)
+                try:
+                    _sys_path = __import__("sys").path
+                    import importlib as _il, os as _os
+                    _core = "/home/pidrive/pidrive/pidrive"
+                    if _os.path.isdir(_core) and _core not in _sys_path: _sys_path.insert(0,_core)
+                    _gas = _il.import_module("modules.audio").get_audio_status
+                    _as = _gas()
+                    fmt.out(f"Backend:   {chr(10041)+chr(32)+'OK' if _as['backend_ok'] else chr(10007)+chr(32)+'PulseAudio fehlt'}")
+                    fmt.out(f"Sink:      {(_as['sink'] or chr(10007)+' kein Sink')}")
+                    fmt.out(f"Bluetooth: {'verbunden' if _as['bt_connected'] else 'getrennt'}")
+                    fmt.out(f"Route:     {_as['requested']} -> {_as['effective']}")
+                    if _as.get('degraded_reason'):
+                        fmt.out(f"Hinweis:   {_as['degraded_reason'].replace(chr(95),chr(32))}")
+                except Exception:
+                    d = svc.get_status()
+                    fmt.out(f"Ausgang:   {d.get('audio_eff',chr(8211))}")
+                    fmt.out(f"Angefragt: {d.get('audio_out',chr(8211))}")
 
     # dab
     if args.cmd == "dab":

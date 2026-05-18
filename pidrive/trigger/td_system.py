@@ -75,4 +75,6 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd == "audio_select":
         menu_state.navigate_to("audio_out")
 
+    else:
+        return False   # Trigger nicht von td_system behandelt
     return True

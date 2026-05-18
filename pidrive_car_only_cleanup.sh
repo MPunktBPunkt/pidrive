@@ -141,8 +141,22 @@ ok "RTL-SDR State bereinigt"
 # 6) Python-Cache bereinigen
 # ------------------------------------------------------------------
 info "Python-Cache entfernen..."
-find $INSTALL_DIR -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-find $INSTALL_DIR -name "*.pyc" -delete 2>/dev/null || true
+# INSTALL_DIR sicher bestimmen
+_INSTALL_DIR="${INSTALL_DIR:-}"
+if [ -z "$_INSTALL_DIR" ]; then
+    if [ -d "/home/pidrive/pidrive/pidrive" ]; then
+        _INSTALL_DIR="/home/pidrive/pidrive/pidrive"
+    elif [ -d "/opt/pidrive/pidrive" ]; then
+        _INSTALL_DIR="/opt/pidrive/pidrive"
+    else
+        echo "⚠ INSTALL_DIR nicht gefunden — Cache-Cleanup übersprungen"
+        _INSTALL_DIR=""
+    fi
+fi
+if [ -n "$_INSTALL_DIR" ]; then
+    find "$_INSTALL_DIR" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+    find "$_INSTALL_DIR" -name "*.pyc" -delete 2>/dev/null || true
+fi
 ok "Python-Cache bereinigt"
 
 # ------------------------------------------------------------------
