@@ -321,6 +321,46 @@ def handle(cmd, menu_state, store, S, settings, bg):
             log.error(f"CLI favorites_play Fehler: {e}")
 
 
+    elif cmd == "web_next":
+        # Nächster Webradio-Sender (zyklisch durch stations.json)
+        try:
+            import json as _wj
+            _cfg = os.path.join(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))), "config", "stations.json")
+            _st_data = _wj.load(open(_cfg))
+            _sts = _st_data.get("stations", _st_data) if isinstance(_st_data, dict) else _st_data
+            _sts = [s for s in _sts if s.get("enabled", True)]
+            _cur = S.get("radio_name", "") or S.get("radio_station", "")
+            _idx = next((i for i, s in enumerate(_sts)
+                         if s.get("name","") == _cur), -1)
+            _next = _sts[(_idx + 1) % len(_sts)] if _sts else None
+            if _next:
+                webradio.play_station(_next, S, settings)
+                source_state.commit_source("webradio")
+                log.info(f"web_next → {_next['name']}")
+        except Exception as e:
+            log.error(f"web_next Fehler: {e}")
+
+    elif cmd == "web_prev":
+        # Vorheriger Webradio-Sender (zyklisch)
+        try:
+            import json as _wj
+            _cfg = os.path.join(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))), "config", "stations.json")
+            _st_data = _wj.load(open(_cfg))
+            _sts = _st_data.get("stations", _st_data) if isinstance(_st_data, dict) else _st_data
+            _sts = [s for s in _sts if s.get("enabled", True)]
+            _cur = S.get("radio_name", "") or S.get("radio_station", "")
+            _idx = next((i for i, s in enumerate(_sts)
+                         if s.get("name","") == _cur), 0)
+            _prev = _sts[(_idx - 1) % len(_sts)] if _sts else None
+            if _prev:
+                webradio.play_station(_prev, S, settings)
+                source_state.commit_source("webradio")
+                log.info(f"web_prev → {_prev['name']}")
+        except Exception as e:
+            log.error(f"web_prev Fehler: {e}")
+
     elif cmd == "fm_next":
         bg(lambda: fm.play_next(S, store.fm))
     elif cmd == "fm_prev":

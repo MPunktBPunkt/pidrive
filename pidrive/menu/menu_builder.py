@@ -150,14 +150,21 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         return nodes
 
     # ── Jetzt läuft ───────────────────────────────────────────────────────
+    _src_label   = S.get("radio_type", S.get("source", "")) or "–"
+    _title_label = (S.get("radio_name") or S.get("radio_station") or
+                    S.get("track") or "–")
+    _is_playing  = bool(S.get("radio_playing") or S.get("source","") not in ("","idle"))
     now_playing = MenuNode(id="now_playing", label="Jetzt laeuft", type="folder", children=[
-        MenuNode(id="np_source",   label="Quelle",        type="info"),
-        MenuNode(id="np_title",    label="Titel/Sender",  type="info"),
-        MenuNode(id="spotify_tog", label="Spotify",       type="toggle",
+        MenuNode(id="np_source",   label=f"Quelle: {_src_label}",   type="info"),
+        MenuNode(id="np_title",    label=f"{_title_label[:32]}",     type="info"),
+        # Stop nur wenn etwas läuft
+        *([MenuNode(id="np_stop", label="■ Stop", type="action", action="radio_stop")]
+          if _is_playing else []),
+        MenuNode(id="spotify_tog", label="Spotify",    type="toggle",
                  action="spotify_toggle", active=S.get("spotify", False)),
-        MenuNode(id="audio_out",   label="Audioausgang",  type="action", action="audio_select"),
-        MenuNode(id="vol_up",      label="Lauter",        type="action", action="vol_up"),
-        MenuNode(id="vol_down",    label="Leiser",        type="action", action="vol_down"),
+        MenuNode(id="audio_out",   label="Audioausgang", type="action", action="audio_select"),
+        MenuNode(id="vol_up",      label="Lauter",      type="action", action="vol_up"),
+        MenuNode(id="vol_down",    label="Leiser",      type="action", action="vol_down"),
     ])
 
     # ── Quellen → FM ──────────────────────────────────────────────────────
@@ -242,12 +249,12 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     ])
 
     quellen = MenuNode(id="sources", label="Quellen", type="folder", children=[
-        spotify_node,
-        lib_node,
-        webradio_node,
-        dab_node,
-        fm_node,
-        scanner_node,
+        fm_node,        # FM Radio zuerst — häufigste Nutzung
+        dab_node,       # DAB+ direkt nach FM
+        webradio_node,  # Webradio (braucht BT/WiFi)
+        scanner_node,   # Funk-Scanner
+        spotify_node,   # Spotify (braucht OAuth)
+        lib_node,       # Bibliothek (lokal)
     ])
 
     # ── Favoriten ──────────────────────────────────────────────────────────

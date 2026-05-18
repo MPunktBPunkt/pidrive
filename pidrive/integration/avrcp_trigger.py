@@ -220,6 +220,19 @@ def map_event(event: str, ctx: dict) -> str | None:
                 "play": "radio_stop", "pause": "radio_stop",
                 "play_pause": "radio_stop", "stop": "back",
             }.get(event)
+        if radio_type == "WEB":
+            # Webradio: next/prev = nächster/vorheriger Sender aus stations.json
+            return {
+                "next":         "web_next",
+                "previous":     "web_prev",
+                "fast_forward": "web_next",
+                "rewind":       "web_prev",
+                "play":         "radio_stop",
+                "pause":        "radio_stop",
+                "play_pause":   "radio_stop",
+                "stop":         "back",
+            }.get(event)
+        # Fallback (unbekannte Radio-Quelle)
         return {
             "next": "down",  "previous": "up",
             "play": "radio_stop", "pause": "radio_stop",
