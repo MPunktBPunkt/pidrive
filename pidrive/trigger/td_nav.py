@@ -210,10 +210,12 @@ def _execute_node(node, menu_state, store, S, settings):
     log.info(f"MENU_ACTION id={node.id} type={node.type} action={action}")
 
     if node.type == "toggle":
-        __import__("trigger_dispatcher").handle_trigger(action, menu_state, store, S, settings)
+        from trigger.trigger_dispatcher import handle_trigger as _ht
+        _ht(action, menu_state, store, S, settings)
         return
 
-    __import__("trigger_dispatcher").handle_trigger(action, menu_state, store, S, settings)
+    from trigger.trigger_dispatcher import handle_trigger as _ht
+    _ht(action, menu_state, store, S, settings)
 
 
 

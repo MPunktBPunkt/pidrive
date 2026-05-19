@@ -539,8 +539,7 @@ def _connect_device_inner(mac, S, settings):
             last = getattr(connect_device, "_last_restart_ts", 0)
             if now - last > 5:
                 connect_device._last_restart_ts = now
-                with open("/tmp/pidrive_cmd", "w", encoding="utf-8") as cf:
-                    cf.write("radio_restart_on_bt\n")
+                import ipc as _bipc; _bipc.append_trigger("radio_restart_on_bt")
                 log.info("BT connect: radio_restart_on_bt ausgelöst")
         except Exception as e:
             log.warn(f"BT connect: radio restart failed: {e}")

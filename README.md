@@ -3,7 +3,7 @@
 Raspberry Pi Car Infotainment — Spotify Connect · Webradio · DAB+ · FM · Bluetooth  
 für **BMW iDrive** (NBT EVO) und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.11.26-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.27-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.13-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Debian%2013%20%7C%20Raspberry%20Pi%20OS-lightgrey.svg)](https://www.debian.org/)
@@ -73,53 +73,144 @@ BMW iDrive ──[BT AVRCP]──────────────── Steu
 
 ## pidrivectl — Befehlsreferenz
 
+### Status
+
 ```bash
-# Status
-pidrivectl status                    # Quelle, Titel, Lautstärke, BT, WiFi
-pidrivectl now                       # Was läuft gerade?
-pidrivectl quick                     # Kompakte Einzeile
+pidrivectl status             # Quelle, Titel, Lautstärke, BT, WiFi
+pidrivectl now                # Was läuft gerade? (Titel + Metadaten)
+pidrivectl quick              # Kompakte Einzeile
+pidrivectl version            # Versionsnummer
+```
 
-# Wiedergabe
-pidrivectl play dab "ROCK FM"        # DAB+ Sender starten
-pidrivectl play dab 27               # Sender #27 aus Liste
-pidrivectl play web "Bayern 1"       # Webradio starten
-pidrivectl play web 3                # Webradio #3 aus Liste
-pidrivectl play fm 104.4             # FM Frequenz
-pidrivectl play spotify              # Spotify Connect aktivieren
-pidrivectl stop                      # Alles stoppen
+### Wiedergabe
 
-# Sender
-pidrivectl station list dab          # DAB-Senderliste (★ = Favorit)
-pidrivectl station list web          # Webradio-Liste
-pidrivectl dab scan                  # Sendersuchlauf (Live-Feedback)
-pidrivectl dab status                # Empfangsstatus (Lock, PCM, Fehler)
+```bash
+pidrivectl play dab "ROCK FM" # DAB+ Sender nach Name
+pidrivectl play dab 27        # Sender #27 aus Senderliste
+pidrivectl play web "Bayern 1"# Webradio nach Name
+pidrivectl play web 3         # Webradio #3 aus Liste
+pidrivectl play fm 104.4      # FM-Frequenz in MHz
+pidrivectl play fm 1          # FM-Sender #1 aus fm_stations.json
+pidrivectl play spotify       # Spotify Connect aktivieren
+pidrivectl stop               # Wiedergabe stoppen
+```
 
-# Bluetooth
-pidrivectl bt scan                   # Scan (22s, Live-Ergebnisse)
-pidrivectl bt pair <mac|name>        # Koppeln (Gerät in Pairing-Modus!)
-pidrivectl bt connect <mac>          # Verbinden
-pidrivectl bt status                 # Verbindungsstatus
-pidrivectl bt known                  # Bekannte Geräte
+### Lokale Musikwiedergabe
 
-# Audio
-pidrivectl audio route klinke        # Ausgang: klinke | bt | hdmi | auto
-pidrivectl audio status              # Aktueller Ausgang
-pidrivectl audio test                # 440 Hz Testton (3s)
-pidrivectl volume up / down          # Lautstärke
-pidrivectl volume 70                 # Direkt auf 70%
-pidrivectl ppm set 49               # RTL-SDR PPM-Offset
-pidrivectl ppm calibrate            # Automatische Kalibrierung
+```bash
+pidrivectl play local /home/pidrive/Musik/song.mp3   # Einzeldatei
+pidrivectl play local /home/pidrive/Musik/            # Ganzer Ordner
+pidrivectl play local /home/pidrive/Musik/list.m3u   # M3U-Playlist
+pidrivectl play local /home/pidrive/Musik/ --shuffle  # Zufallswiedergabe
+```
 
-# AVRCP (BMW iDrive)
-pidrivectl avrcp                     # Live-Monitor BMW iDrive Tasten
-pidrivectl avrcp status              # Letztes AVRCP-Event
-pidrivectl avrcp inject next         # Trigger simulieren (ohne BMW testen)
+Unterstützte Formate: `.mp3` `.flac` `.ogg` `.m4a` `.aac` `.wav` `.opus`  
+Audio läuft über den gleichen PulseAudio-Pfad wie Webradio (BT/Klinke).
 
-# System
-pidrivectl system                    # System-Info
-pidrivectl system resources          # RAM, Speicher, Uptime
-pidrivectl system diagnose           # Vollständige Diagnose
-pidrivectl log                       # Core-Log (letzte 40 Einträge)
+### Senderlisten
+
+```bash
+pidrivectl station list dab   # DAB+-Stationen (★ = Favorit)
+pidrivectl station list fm    # FM-Stationen aus fm_stations.json
+pidrivectl station list web   # Webradio-Stationen
+pidrivectl station list local # Lokale Musikdateien in ~/Musik
+```
+
+### Favoriten
+
+```bash
+pidrivectl favorites list        # Favoritenliste anzeigen
+pidrivectl favorites add         # Aktuellen Sender als Favorit speichern
+pidrivectl favorites remove 1    # Favorit #1 entfernen
+pidrivectl favorites play 1      # Favorit #1 abspielen
+```
+
+### Bluetooth
+
+```bash
+pidrivectl bt scan               # Scan starten (22s, Live-Ergebnisse)
+pidrivectl bt pair <mac|name>    # Gerät koppeln (Pairing-Modus nötig!)
+pidrivectl bt connect <mac>      # Verbinden
+pidrivectl bt known              # Bekannte / gepaarte Geräte
+pidrivectl bt status             # Verbindungsstatus + Agent
+pidrivectl bt reconnect          # Letztes Gerät neu verbinden
+```
+
+### Audio & Lautstärke
+
+```bash
+pidrivectl volume up             # Lautstärke erhöhen
+pidrivectl volume down           # Lautstärke senken
+pidrivectl volume set 70         # Direkt auf 70% setzen
+pidrivectl audio route klinke    # Ausgang: klinke | bt | hdmi | auto
+pidrivectl audio status          # Aktueller Ausgang, Sink, BT-Status
+pidrivectl audio test            # 440 Hz Testton (3 Sekunden)
+```
+
+### DAB+
+
+```bash
+pidrivectl dab status            # Empfangsstatus (Lock, SNR, Fehler)
+pidrivectl dab live              # Live-Metadaten-Stream
+pidrivectl dab live --once       # Einmalig ausgeben
+pidrivectl dab live --changes    # Nur bei Änderungen (DLS/Titel)
+pidrivectl dab scan              # Sendersuchlauf mit Live-Feedback
+pidrivectl dab stop              # DAB-Wiedergabe stoppen
+```
+
+### Scanner (PMR/VHF/UHF/CB/FM)
+
+```bash
+pidrivectl scanner               # Status + alle verfügbaren Bänder
+pidrivectl scanner pmr446 scan   # Band scannen (pmr446 | vhf | uhf | cb | fm | freenet | lpd433)
+pidrivectl scanner pmr446 ch 1   # Direkt auf Kanal 1 springen
+pidrivectl scanner pmr446 freq 446.0  # Direkt auf Frequenz (MHz)
+pidrivectl scanner pmr446 next   # Nächster Kanal
+pidrivectl scanner pmr446 prev   # Vorheriger Kanal
+pidrivectl scanner squelch 25    # Squelch-Level (0=aus, 25=normal, 50=streng)
+pidrivectl scanner ppm 49        # PPM-Korrektur für RTL-SDR
+pidrivectl scanner stop          # Scanner stoppen
+```
+
+### PPM-Kalibrierung (RTL-SDR)
+
+```bash
+pidrivectl ppm                   # Aktuellen PPM-Wert anzeigen
+pidrivectl ppm set 49            # PPM-Offset manuell setzen
+pidrivectl ppm calibrate         # Automatische Kalibrierung (braucht Signal)
+```
+
+### AVRCP (BMW iDrive)
+
+```bash
+pidrivectl avrcp                 # Live-Monitor: BMW-Tasten in Echtzeit
+pidrivectl avrcp monitor         # Gleichbedeutend mit avrcp
+pidrivectl avrcp status          # Letztes empfangenes AVRCP-Event
+pidrivectl avrcp events          # Ringpuffer der letzten 20 Events
+pidrivectl avrcp inject next     # Trigger simulieren (ohne BMW testen)
+pidrivectl debug avrcp           # AVRCP-Debug-Modus
+pidrivectl debug inject <trigger># Beliebigen Trigger direkt injizieren
+```
+
+### System, Diagnose, Logs
+
+```bash
+pidrivectl system                # Allgemeine System-Info
+pidrivectl system resources      # RAM, SD-Karte, Uptime, CPU-Temp
+pidrivectl system diagnose       # Vollständige Systemdiagnose
+pidrivectl log                   # Core-Log (letzte 40 Einträge)
+pidrivectl log core              # Core-Service-Log
+pidrivectl log app               # App-Log
+pidrivectl log avrcp             # AVRCP-Service-Log
+```
+
+### Wiedergabe-Playlist
+
+```bash
+pidrivectl playlist today        # Gestreamte Sender/Titel heute
+pidrivectl playlist all          # Gesamte Playlist-History
+pidrivectl playlist last         # Letzte Session
+pidrivectl playlist 2026-05-17   # Playlist für bestimmtes Datum
 ```
 
 ---

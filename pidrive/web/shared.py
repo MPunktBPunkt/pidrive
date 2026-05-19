@@ -79,7 +79,8 @@ def read_json(path, default=None):
 
 
 def write_cmd(cmd):
-    with open(CMD_FILE, "w", encoding="utf-8") as f:
+    """Queue-kompatibel: append statt overwrite."""
+    with open(CMD_FILE, "a", encoding="utf-8") as f:
         f.write(cmd.strip() + "\n")
 
 
