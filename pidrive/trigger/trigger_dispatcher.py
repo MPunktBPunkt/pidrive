@@ -19,11 +19,7 @@ sys.path.insert(0, BASE_DIR)
 import log, ipc
 from settings import save_settings
 
-import td_nav
-import td_hardware
-import td_radio
-import td_scanner
-import td_system
+from trigger import td_nav, td_hardware, td_radio, td_scanner, td_system
 
 from trigger.td_nav import _execute_node, _fm_manual
 
