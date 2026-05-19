@@ -21,8 +21,8 @@ except Exception:
 from menu.menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import source_state
 from modules import (
-    musik, wifi, bluetooth, audio, system as sys_mod,
-    webradio, dab, fm, library, scanner, update, favorites
+    wifi, bluetooth, audio, system as sys_mod,
+    webradio, dab, fm, scanner, update, favorites
 )
 from modules.platform import CAPS
 
@@ -68,7 +68,7 @@ def _start_bt_agent_early():
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
 
 # ── Trigger-Dispatcher (ausgelagert v0.10.55) ─────────────────────────────────
-from trigger_dispatcher import (
+from trigger.trigger_dispatcher import (
     handle_trigger, _execute_node, _fm_manual,
     _set_guards, _debounced,
 )
