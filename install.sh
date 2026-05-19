@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.21"
+PIDRIVE_VERSION="0.11.22"
 
 # ============================================================
 # PiDrive Install Script
@@ -401,7 +401,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.21
+# pidrive_display.service: entfernt v0.11.22
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -965,8 +965,11 @@ else
 fi
 
 # Alt-Importe pruefen (ui/trigger/launcher wurden als Dead-Code entfernt)
-BAD_IMP=$(grep -RInE '^[[:space:]]*(from[[:space:]]+ui[[:space:]]+import|import[[:space:]]+ui[[:space:]]|from[[:space:]]+trigger[[:space:]]+import|from[[:space:]]+launcher[[:space:]]+import)' \
+BAD_IMP=$(grep -RInE '^[[:space:]]*(from[[:space:]]+ui[[:space:]]+import|import[[:space:]]+ui[[:space:]]|from[[:space:]]+launcher[[:space:]]+import)' \
     "$INSTALL_DIR/pidrive" --include="*.py" --exclude-dir="__pycache__" 2>/dev/null || true)
+BAD_IMP2=$(grep -RInE '^[[:space:]]*(import[[:space:]]+td_nav|import[[:space:]]+td_radio|import[[:space:]]+td_scanner|import[[:space:]]+td_hardware|import[[:space:]]+td_system)\b' \
+    "$INSTALL_DIR/pidrive" --include="*.py" --exclude-dir="__pycache__" 2>/dev/null || true)
+BAD_IMP="${BAD_IMP}${BAD_IMP2}"
 if [ -n "$BAD_IMP" ]; then
     err "Veraltete Imports gefunden (bitte melden):"
     echo "$BAD_IMP" | head -5
