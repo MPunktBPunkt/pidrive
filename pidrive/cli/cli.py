@@ -159,15 +159,17 @@ Flags (vor dem Befehl angeben):
 
     # ── play ──────────────────────────────────────────────────────────────
     p_play = sub.add_parser("play", help="Sender/Quelle starten")
-    p_play.add_argument("source", choices=["dab","fm","web","spotify"], help="Quelle")
+    p_play.add_argument("source", choices=["dab","fm","web","spotify","local"], help="Quelle")
     p_play.add_argument("name", nargs="?", default=None,
-                        help="Sendername oder Frequenz (nicht fuer spotify)")
+                        help="Sendername, Frequenz oder Pfad (local)")
+    p_play.add_argument("--shuffle", action="store_true")
+    p_play.add_argument("path", nargs="*", default=[])
 
     # ── station ───────────────────────────────────────────────────────────
     p_station = sub.add_parser("station", help="Senderverwaltung")
     st_sub = p_station.add_subparsers(dest="station_cmd")
     p_stl = st_sub.add_parser("list")
-    p_stl.add_argument("source", choices=["dab","fm","web"], help="Quelle")
+    p_stl.add_argument("source", choices=["dab","fm","web","local"], help="Quelle")
 
     # ── favorites ─────────────────────────────────────────────────────────
     p_fav = sub.add_parser("favorites", help="Favoriten")
@@ -361,7 +363,7 @@ Flags (vor dem Befehl angeben):
             _path = " ".join(_parts)
             _shuf = "|shuffle" if getattr(args, "shuffle", False) else ""
             svc.require_online()
-            svc.send_trigger(f"local_play:{_path}{_shuf}")
+            svc.send(f"local_play:{_path}{_shuf}")
             import time as _lt; _lt.sleep(0.8)
             _d = svc.get_status()
             fmt.out(f"  \u2713 Lokal: {_path}" if _d.get("radio_type")=="LOCAL"
@@ -444,6 +446,16 @@ Flags (vor dem Befehl angeben):
     # station
     if args.cmd == "station":
         if args.station_cmd == "list":
+            if (args.source or "").lower() == "local":
+                import glob as _gl, os as _osL
+                _mdir = _osL.path.expanduser("~/Musik")
+                _ext  = {".mp3",".flac",".ogg",".m4a",".aac",".wav",".opus"}
+                _fs = sorted([f for f in _gl.glob(_osL.path.join(_mdir,"**","*.*"),recursive=True)
+                               if _osL.path.splitext(f)[1].lower() in _ext])
+                fmt.out(f"Musikordner: {_mdir}  ({len(_fs)} Dateien)")
+                for _n,_f in enumerate(_fs[:60],1): fmt.out(f"  {_n:3}. {_osL.path.basename(_f)}")
+                if len(_fs)>60: fmt.out(f"  ... +{len(_fs)-60} weitere")
+                sys.exit(EXIT_OK)
             try:
                 stations = svc.list_stations(args.source)
                 if use_json: fmt.print_json(stations)
@@ -1035,17 +1047,17 @@ Flags (vor dem Befehl angeben):
             sys.exit(EXIT_OK)
 
         if sc_cmd == "squelch":
-            svc.send_trigger(f"set_scanner_squelch:{args.level}")
+            svc.send(f"set_scanner_squelch:{args.level}")
             fmt.out(f"  Squelch: {args.level}")
             sys.exit(EXIT_OK)
 
         if sc_cmd == "ppm":
-            svc.send_trigger(f"set_ppm:{args.value}")
+            svc.send(f"set_ppm:{args.value}")
             fmt.out(f"  PPM: {args.value}")
             sys.exit(EXIT_OK)
 
         if sc_cmd == "stop":
-            svc.send_trigger("scanner_stop")
+            svc.send("scanner_stop")
             fmt.out("  Scanner gestoppt")
             sys.exit(EXIT_OK)
 
@@ -1053,22 +1065,22 @@ Flags (vor dem Befehl angeben):
         band = sc_cmd
         if band in BANDS:
             if sc_action == "scan":
-                svc.send_trigger(f"scan_next:{band}")
+                svc.send(f"scan_next:{band}")
                 fmt.out(f"  Scanner {band}: Scan gestartet")
             elif sc_action == "stop":
-                svc.send_trigger("scanner_stop")
+                svc.send("scanner_stop")
                 fmt.out("  Scanner gestoppt")
             elif sc_action == "next":
-                svc.send_trigger(f"scan_up:{band}")
+                svc.send(f"scan_up:{band}")
                 fmt.out(f"  {band}: nächster Kanal")
             elif sc_action == "prev":
-                svc.send_trigger(f"scan_down:{band}")
+                svc.send(f"scan_down:{band}")
                 fmt.out(f"  {band}: vorheriger Kanal")
             elif sc_action == "ch":
-                svc.send_trigger(f"scan_setch:{band}:{args.n}")
+                svc.send(f"scan_setch:{band}:{args.n}")
                 fmt.out(f"  ✓ {band} Kanal {args.n}")
             elif sc_action == "freq":
-                svc.send_trigger(f"scan_setfreq:{band}:{args.f}")
+                svc.send(f"scan_setfreq:{band}:{args.f}")
                 fmt.out(f"  ✓ {band} Freq {args.f} MHz")
             else:
                 fmt.err(f"Unbekannte Aktion. Nutze: scan | ch N | freq F | next | prev | stop")
