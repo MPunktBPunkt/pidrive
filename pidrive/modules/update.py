@@ -93,8 +93,15 @@ def do_update():
                        color="green")
     time.sleep(3)
 
-    subprocess.Popen("sleep 2 && systemctl restart pidrive_core ",
-                     shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Prio C: threading.Timer statt sleep&&cmd in Shell
+    import threading as _upd_t
+    def _delayed_restart():
+        import time as _t; _t.sleep(2)
+        subprocess.Popen(
+            ["systemctl", "restart", "pidrive_core"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+    _upd_t.Thread(target=_delayed_restart, daemon=True).start()
     ipc.clear_progress()
     return True
 

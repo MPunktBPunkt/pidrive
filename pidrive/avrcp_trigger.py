@@ -579,8 +579,8 @@ def auto_connect_bmw():
             for mac, name in devices:
                 log.info(f"AVRCP auto-connect: verbinde {name!r} ({mac})")
                 subprocess.Popen(
-                    f"bluetoothctl connect {mac}",
-                    shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    ["bluetoothctl", "connect", mac],
+                    shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 time.sleep(2)
         else:
             log.info("AVRCP auto-connect: keine gepairten Geräte")

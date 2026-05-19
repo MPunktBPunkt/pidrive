@@ -48,10 +48,13 @@ def api_dab_diag():
 
     # welle-cli mit Web-Interface starten
     # -w PORT = HTTP-Server für Spektrum + Service-Übersicht + Statistiken
-    cmd = (f"welle-cli -c {channel} -C 1 -w {port} "
-           f"2>/tmp/pidrive_dab_webui.log &")
     try:
-        _sp.Popen(cmd, shell=True, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        _dab_log = open("/tmp/pidrive_dab_webui.log", "w")
+        _sp.Popen(
+            ["welle-cli", "-c", channel, "-C", "1", "-w", str(port)],
+            stdout=_sp.DEVNULL, stderr=_dab_log
+        )
+        _dab_log.close()
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
 

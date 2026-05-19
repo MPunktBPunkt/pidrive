@@ -132,12 +132,13 @@ def play_station(station, S, settings=None):
         if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
             log.info("DAB: PulseAudio inaktiv — kein Abbruch (ALSA-direkt)")
 
-        _welle_cmd = (
-            "welle-cli -c " + ch + " -g " + _gain +
-            " -p " + _name_q +
-            " < /dev/null" +
-            " 2>" + _sess_err_file
-        )
+        # Prio C: shell=True → Popen(list)
+        # _name_q (shlex.quote) war nur wegen shell=True nötig — jetzt direkt
+        _welle_cmd = [
+            "welle-cli", "-c", ch, "-g", _gain, "-p", name
+        ]
+        _welle_stdin  = open("/dev/null", "r")
+        _welle_stderr = open(_sess_err_file, "w")
 
         # ── v0.10.55: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
@@ -235,11 +236,15 @@ def play_station(station, S, settings=None):
         else:
             _player_proc = subprocess.Popen(
                 _welle_cmd,
-                shell=True,
+                shell=False,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                env=_welle_env,   # ← ohne PULSE_SINK (Timing-Fix), mit PULSE_SERVER
+                stdin=_welle_stdin,
+                stderr=_welle_stderr,
+                env=_welle_env,
             )
+            # Handles nach Übergabe schließen (Popen hat eigene Kopie)
+            _welle_stdin.close()
+            _welle_stderr.close()
 
         lock_wait_max = int(settings.get("dab_wait_lock", 20)) if settings else 20
         sync_ok = False

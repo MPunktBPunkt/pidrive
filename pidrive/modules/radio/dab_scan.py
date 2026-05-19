@@ -137,9 +137,12 @@ def scan_dab_channels(settings=None):
         _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, capture_output=True)
         _t.sleep(0.3)
 
-        cmd = (f"welle-cli -c {ch} -g {gain_idx} -C 1 -w {SCAN_PORT} "
-               f"2>/tmp/pidrive_dab_welle.err")
-        proc = _sp.Popen(cmd, shell=True, stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
+        _ds_err = open("/tmp/pidrive_dab_welle.err", "w")
+        proc = _sp.Popen(
+            ["welle-cli", "-c", ch, "-g", str(gain_idx), "-C", "1", "-w", str(SCAN_PORT)],
+            stdout=_sp.DEVNULL, stderr=_ds_err
+        )
+        _ds_err.close()
         _t.sleep(WAIT_LOCK)
 
         services = []
