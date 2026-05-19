@@ -47,8 +47,10 @@ def load_stations():
 def save_stations(stations):
     path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
     try:
-        with open(path, "w", encoding="utf-8") as f:
+        _ds_tmp = path + ".tmp"
+        with open(_ds_tmp, "w", encoding="utf-8") as f:
             json.dump(stations, f, indent=2, ensure_ascii=False)
+        os.replace(_ds_tmp, path)
     except Exception as e:
         log.error(f"DAB save Fehler: {e}")
 

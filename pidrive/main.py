@@ -210,8 +210,10 @@ def load_settings():
 
 def save_settings(settings):
     try:
-        with open(SETTINGS_FILE, "w") as f:
+        _tmp_f = SETTINGS_FILE + ".tmp"
+        with open(_tmp_f, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=2)
+        os.replace(_tmp_f, SETTINGS_FILE)
     except Exception as e:
         log.error(f"Settings speichern: {e}")
 

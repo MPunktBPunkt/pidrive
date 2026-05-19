@@ -27,8 +27,10 @@ def _load():
 def _save(favs):
     try:
         os.makedirs(os.path.dirname(FAV_FILE), exist_ok=True)
-        with open(FAV_FILE, "w") as f:
+        _fav_tmp = FAV_FILE + ".tmp"
+        with open(_fav_tmp, "w", encoding="utf-8") as f:
             json.dump({"version": 1, "favorites": favs}, f, indent=2, ensure_ascii=False)
+        os.replace(_fav_tmp, FAV_FILE)
     except Exception as e:
         log.error("Favoriten speichern: " + str(e))
 

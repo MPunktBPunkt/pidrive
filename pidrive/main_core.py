@@ -41,6 +41,8 @@ _SCAN_LOCK  = _scan_threading.Lock()
 _SCAN_STATE = {"active": False, "source": "", "started_ts": 0}
 
 
+
+# ═══ SECTION: Scan-Callbacks ═══════════════════════════
 def _scan_begin(source):
     with _SCAN_LOCK:
         if _SCAN_STATE["active"]:
@@ -71,6 +73,8 @@ _SOURCE_SWITCH_LOCK  = _src_threading.Lock()
 _SOURCE_SWITCH_STATE = {"active": False, "owner": "", "started_ts": 0.0}
 
 
+
+# ═══ SECTION: Quellwechsel-Callbacks ═══════════════════
 def _source_switch_begin(owner="unknown", blocking=False):
     ok = _SOURCE_SWITCH_LOCK.acquire(blocking=blocking)
     if not ok:
@@ -111,6 +115,8 @@ _TRIGGER_DEBOUNCE = {
 
 
 
+
+# ═══ SECTION: Debounce-Util ════════════════════════════
 def _debounced(cmd: str) -> bool:
     now   = _time_mod.time()
     limit = _TRIGGER_DEBOUNCE.get(cmd)
@@ -126,6 +132,8 @@ def _debounced(cmd: str) -> bool:
 
 # ── BT-Agent früh starten ────────────────────────────────────────────────────
 
+
+# ═══ SECTION: BT-Agent Init ════════════════════════════
 def _start_bt_agent_early():
     if not CAPS.get("bluetooth") and not CAPS.get("bluetoothctl"):
         log.info("BT Agent: kein Bluetooth-Adapter — uebersprungen")
@@ -149,6 +157,8 @@ from trigger_dispatcher import (
 )
 
 # Guards registrieren (nach allen lokalen Definitionen)
+
+# ═══ SECTION: Trigger-Dispatcher Init ══════════════════
 def _init_dispatcher():
     _set_guards(
         begin_fn = _source_switch_begin,
@@ -174,6 +184,8 @@ def _init_dispatcher():
     )
 
 
+
+# ═══ SECTION: Trigger-Polling ══════════════════════════
 def check_trigger(menu_state, store, S, settings):
     if not os.path.exists(ipc.CMD_FILE):
         return False
@@ -203,18 +215,18 @@ def check_trigger(menu_state, store, S, settings):
     except Exception:
         return False
 
-    if not cmd:
-        return False
-
-    try:
-        return handle_trigger(cmd, menu_state, store, S, settings)
-    except Exception as e:
-        log.error(f"Trigger '{cmd}' Fehler: {e}")
-        return False
+        try:
+            if handle_trigger(cmd, menu_state, store, S, settings):
+                processed = True
+        except Exception as e:
+            log.error(f"Trigger '{cmd}' Fehler: {e}")
+    return processed
 
 
 # ── System-Check ────────────────────────────────────────────────────────────
 
+
+# ═══ SECTION: System-Checks (PA/BT/RTL) ════════════════
 def system_check():
     import subprocess
     log.info("--- Core System-Check ---")
@@ -317,6 +329,8 @@ def system_check():
 
 # ── Menü neu bauen nach Scan/Reload ────────────────────────────────────────
 
+
+# ═══ SECTION: Menü-Builder ═════════════════════════════
 def rebuild_tree(menu_state, store, S, settings):
     old_path = menu_state.path[:]
     new_root = build_tree(store, S, settings)
@@ -342,6 +356,8 @@ def rebuild_tree(menu_state, store, S, settings):
 
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
+
+# ═══ SECTION: Boot-Startup-Sequenz ═════════════════════
 def startup_tasks(S, settings):
     # v0.10.55: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
@@ -503,6 +519,8 @@ def startup_tasks(S, settings):
 
 # ── Main ────────────────────────────────────────────────────────────────────
 
+
+# ═══ SECTION: Main-Loop ═════════════════════════════════
 def main():
     # VERSION aus Datei lesen — muss vor dem Banner passieren
     global VERSION

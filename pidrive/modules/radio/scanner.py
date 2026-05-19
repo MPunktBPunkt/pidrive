@@ -340,13 +340,30 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
             _out_sr = 32000
             _modulation = "fm"
 
-        cmd = (
-            f"rtl_fm -M {_modulation} -f {freq_hz} -s {_rtl_sr}"
-            f"{_ppm_arg}{_gain_arg}{_sq_arg} -r {_out_sr} -A fast - 2>/dev/null | "
-            f"{_sc_mpv_prefix}mpv --no-video --no-terminal --title=pidrive_scanner "
-            f"--demuxer=rawaudio --demuxer-rawaudio-rate={_out_sr} "
-            f"--demuxer-rawaudio-channels=1 --ao=pulse {_device_arg} - 2>/dev/null"
-        )
+        # Prio C: shell=True → Popen-Pipe
+        import os as _sc_os
+        rtl_cmd = [
+            "rtl_fm", "-M", _modulation,
+            "-f", str(freq_hz), "-s", str(_rtl_sr),
+            "-r", str(_out_sr), "-A", "fast", "-"
+        ]
+        if _ppm:    rtl_cmd += ["-p", str(_ppm)]
+        if _gain != -1: rtl_cmd += ["-g", str(_gain)]
+        if _sq and _sq > 0: rtl_cmd += ["-l", str(_sq)]
+
+        mpv_cmd = [
+            "mpv", "--no-video", "--no-terminal",
+            "--title=pidrive_scanner",
+            f"--demuxer=rawaudio",
+            f"--demuxer-rawaudio-rate={_out_sr}",
+            "--demuxer-rawaudio-channels=1",
+            "--ao=pulse",
+        ]
+        if _device_arg: mpv_cmd.append(_device_arg)
+        mpv_cmd.append("-")
+        mpv_env = dict(_sc_os.environ,
+                       PULSE_SERVER="unix:/var/run/pulse/native",
+                       XDG_RUNTIME_DIR="/tmp")
 
         if _rtlsdr:
             usb = _rtlsdr.detect_usb()
@@ -359,21 +376,19 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
                 log.warn("Scanner: RTL-SDR belegt")
                 return
 
+        _rtl_proc_sc = subprocess.Popen(
+            rtl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+        )
+        _mpv_proc_sc = subprocess.Popen(
+            mpv_cmd, stdin=_rtl_proc_sc.stdout,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env=mpv_env
+        )
+        _rtl_proc_sc.stdout.close()
+        _player_proc = _mpv_proc_sc
         if _rtlsdr:
-            _player_proc = _rtlsdr.start_process(
-                cmd,
-                owner=f"scanner:{name}",
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        else:
-            _player_proc = subprocess.Popen(
-                cmd,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            try: _rtlsdr._proc = _rtl_proc_sc
+            except Exception: pass
 
         S["radio_playing"] = True
         S["radio_station"] = f"{name} ({float(freq_mhz):.5g} MHz)"

@@ -14,7 +14,7 @@ MENU_FILE     = "/tmp/pidrive_menu.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 LIST_FILE     = "/tmp/pidrive_list.json"
 READY_FILE    = "/tmp/pidrive_ready"
-# DEBUG_FILE: entfernt v0.11.18 (Display deaktiviert)
+# DEBUG_FILE: entfernt v0.11.19 (Display deaktiviert)
 
 
 def write_json(path, data):
@@ -115,6 +115,38 @@ def clear_progress():
     write_json(PROGRESS_FILE, {"active": False})
 
 
+def append_trigger(cmd: str):
+    """Trigger an Queue anhängen — threadsicher, verlustfrei.
+    Ersetzt direktes open(CMD_FILE,'w') in AVRCP/WebUI/CLI.
+    """
+    try:
+        with open(CMD_FILE, "a", encoding="utf-8") as f:
+            f.write(cmd.strip() + "\n")
+    except Exception:
+        pass
+
+
+def drain_triggers() -> list:
+    """Alle ausstehenden Trigger atomar lesen und Queue leeren.
+    Gibt Liste von Trigger-Strings zurück (FIFO-Reihenfolge).
+    """
+    tmp = CMD_FILE + ".drain"
+    try:
+        os.replace(CMD_FILE, tmp)
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
+    try:
+        lines = open(tmp, encoding="utf-8").read().splitlines()
+        return [l.strip() for l in lines if l.strip()]
+    except Exception:
+        return []
+    finally:
+        try: os.unlink(tmp)
+        except Exception: pass
+
+
 def headless_pick(title, items, timeout=30):
     """Auswahlmenü via /tmp/pidrive_list.json + Trigger-Steuerung."""
     if not items: return None
@@ -123,13 +155,10 @@ def headless_pick(title, items, timeout=30):
                             "items": items, "selected": sel})
     deadline = time.time() + timeout
     while time.time() < deadline:
-        if not os.path.exists(CMD_FILE):
+        cmds = drain_triggers()
+        if not cmds:
             time.sleep(0.1); continue
-        try:
-            cmd = open(CMD_FILE).read().strip()
-            os.remove(CMD_FILE)
-        except Exception:
-            continue
+        cmd = cmds[0]  # für interaktive Menus: erstes Event pro Poll
         if   cmd == "up":    sel = max(0, sel - 1)
         elif cmd == "down":  sel = min(len(items)-1, sel + 1)
         elif cmd in ("enter","right"):
@@ -150,13 +179,10 @@ def headless_confirm(title, message, timeout=15):
     deadline = time.time() + timeout
     sel = 0
     while time.time() < deadline:
-        if not os.path.exists(CMD_FILE):
+        cmds = drain_triggers()
+        if not cmds:
             time.sleep(0.1); continue
-        try:
-            cmd = open(CMD_FILE).read().strip()
-            os.remove(CMD_FILE)
-        except Exception:
-            continue
+        cmd = cmds[0]
         if cmd in ("up","down"): sel = 1 - sel
         elif cmd in ("enter","right"):
             write_json(LIST_FILE, {"active": False})

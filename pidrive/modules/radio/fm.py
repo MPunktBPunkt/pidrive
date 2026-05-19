@@ -1,3 +1,4 @@
+import os
 """
 modules/fm.py — FM-Wiedergabe via rtl_fm | mpv (ALSA-direkt)
 Aufrufer: main_core.py
@@ -102,8 +103,10 @@ def save_stations(stations):
             "updated_at": int(time.time()),
             "stations":   stations
         }
-        with open(STATIONS_FILE, "w", encoding="utf-8") as f:
+        _fm_tmp = STATIONS_FILE + ".tmp"
+        with open(_fm_tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(_fm_tmp, STATIONS_FILE)
         log.info(f"FM: {len(stations)} Stationen gespeichert")
     except Exception as e:
         log.error(f"FM Stationen speichern: {e}")
@@ -218,28 +221,42 @@ def play_station(station, S, settings=None):
         _ppm_val   = int(settings.get("ppm", 0) if settings else 0)
         _ppm_arg   = f" -p {_ppm_val}" if _ppm_val else ""
 
-        cmd = (
-            "rtl_fm -M wbfm -f " + freq_hz + " -s 250000 -r 32000" + _fm_gain_arg + _ppm_arg + " -A fast - 2>/dev/null | "
-            + (_mpv_env2 + " " if _mpv_env2 else "") +
-            "mpv --no-video --really-quiet --title=pidrive_fm "
-            "--demuxer=rawaudio --demuxer-rawaudio-rate=32000 "
-            "--demuxer-rawaudio-channels=1 " + " ".join(_mpv_extra) + " - 2>/dev/null"
+        # Prio C: shell=True → Zwei-Prozess-Pipe (kein Shell-Interpreter)
+        rtl_cmd = ["rtl_fm", "-M", "wbfm",
+                   "-f", freq_hz, "-s", "250000", "-r", "32000",
+                   "-A", "fast", "-"]
+        if _gain_val >= 0:
+            rtl_cmd += ["-g", str(_gain_val)]
+        if _ppm_val:
+            rtl_cmd += ["-p", str(_ppm_val)]
+
+        mpv_cmd = ["mpv", "--no-video", "--really-quiet",
+                   "--title=pidrive_fm",
+                   "--demuxer=rawaudio", "--demuxer-rawaudio-rate=32000",
+                   "--demuxer-rawaudio-channels=1"] + _mpv_extra + ["-"]
+        mpv_env = dict(os.environ, PULSE_SERVER="unix:/var/run/pulse/native")
+
+        if _ppm_val:
+            log.info(f"FM play: PPM={_ppm_val} gain={_gain_val}")
+        log.info(f"FM play: Popen-Pipe freq_hz={freq_hz}")
+
+        _rtl_proc = subprocess.Popen(
+            rtl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
         )
+        _mpv_proc = subprocess.Popen(
+            mpv_cmd, stdin=_rtl_proc.stdout,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env=mpv_env
+        )
+        _rtl_proc.stdout.close()   # SIGPIPE wenn mpv endet
 
-        if _ppm_val != 0:
-            log.info(f"FM play: PPM-Korrektur aktiv: {_ppm_val} ppm")
-        log.info(f"FM play: PIPE zentral/mpv freq_hz={freq_hz}")
-
+        # _player_proc zeigt auf mpv (für stop/wait), _rtl_proc separat verfolgt
+        _player_proc = _mpv_proc
         if _rtlsdr:
-            _player_proc = _rtlsdr.start_process(
-                cmd, owner="fm_play", shell=True,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-        else:
-            _player_proc = subprocess.Popen(
-                cmd, shell=True,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
+            try:
+                _rtlsdr._proc = _rtl_proc   # RTL-SDR Tracker aktualisieren
+            except Exception:
+                pass
 
         S["radio_playing"]  = True
         S["radio_station"]  = f"FM: {name} ({freq_f:.1f} MHz)"
