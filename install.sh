@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.25"
+PIDRIVE_VERSION="0.11.26"
 
 # ============================================================
 # PiDrive Install Script
@@ -401,7 +401,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.25
+# pidrive_display.service: entfernt v0.11.26
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -1101,6 +1101,36 @@ while [ $_SW -lt 25 ]; do
   sleep 1; _SW=$((_SW+1))
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
+
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.26)
+_CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
+_RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | tr -d ' ')
+printf "  → Stabilitaetspruefung (15s)..."
+sleep 15
+_RESTART1=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | tr -d ' ')
+_ACTIVE=$(systemctl is-active pidrive_core 2>/dev/null)
+_TRACEBACK=$(journalctl -u pidrive_core --since "30 seconds ago" --no-pager -q 2>/dev/null \
+  | grep -c "Traceback\|UnboundLocalError\|ImportError\|ModuleNotFoundError" 2>/dev/null || echo 0)
+_STATUS_AGE=$(python3 -c "import os,time; f='/tmp/pidrive_status.json'; print(int(time.time()-os.path.getmtime(f))) if os.path.exists(f) else print(9999)" 2>/dev/null || echo 9999)
+echo ""
+if [ "$_ACTIVE" != "active" ]; then
+  err "KRITISCH: pidrive_core nach 15s nicht mehr aktiv — Installation fehlgeschlagen"
+  err "  journalctl -u pidrive_core -n 20"
+  exit 1
+elif [ "${_RESTART1:-0}" -gt "${_RESTART0:-0}" ] 2>/dev/null; then
+  err "KRITISCH: Restart-Loop erkannt! (${_RESTART0} -> ${_RESTART1})"
+  err "  journalctl -u pidrive_core -n 20"
+  exit 1
+elif [ "${_TRACEBACK:-0}" -gt 0 ]; then
+  err "KRITISCH: Python-Traceback im Core-Log (${_TRACEBACK}x)"
+  journalctl -u pidrive_core --since "30 seconds ago" --no-pager -q 2>/dev/null | grep -m5 "Error\|Traceback" || true
+  exit 1
+elif [ "${_STATUS_AGE:-9999}" -gt 20 ]; then
+  warn "Core laeuft, aber status.json veraltet (${_STATUS_AGE}s)"
+else
+  ok "Stabilitaetspruefung OK (15s stabil, kein Restart, kein Traceback)"
+fi
+
 echo -e "${BOLD}${CYAN}Automatische Diagnose...${NC}"
 if [ -f "$INSTALL_DIR/pidrive/diagnose.py" ]; then
     python3 "$INSTALL_DIR/pidrive/diagnose.py" 2>/dev/null || true

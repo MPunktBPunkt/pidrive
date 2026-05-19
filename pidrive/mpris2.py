@@ -232,8 +232,7 @@ _loop:   GLib.MainLoop | None = None
 def _write_trigger(cmd: str):
     """File-Trigger schreiben (von MPRIS2-Callback)."""
     try:
-        with open(ipc.CMD_FILE, "w") as f:
-            f.write(cmd.strip() + "\n")
+        ipc.append_trigger(cmd.strip())
     except Exception as e:
         log.error(f"mpris2 trigger: {e}")
 

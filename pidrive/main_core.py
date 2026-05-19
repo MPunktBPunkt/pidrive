@@ -617,8 +617,7 @@ def main():
                             log.info("[AUDIO] radio_restart_on_disconnect source=" + _rtype)
                             import time as _td
                             _td.sleep(0.5)
-                            with open("/tmp/pidrive_cmd", "w") as _cf:
-                                _cf.write("radio_restart_on_bt\n")
+                            ipc.append_trigger("radio_restart_on_bt")
                         elif _rtype:
                             log.info("[AUDIO] no restart on disconnect — source=" + _rtype)
                     except Exception as _e:

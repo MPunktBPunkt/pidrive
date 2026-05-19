@@ -30,8 +30,9 @@ class IPCAdapter:
             return default
 
     def write_cmd(self, cmd: str) -> bool:
+        """Queue-kompatibel: append statt overwrite — verhindert Event-Verlust."""
         try:
-            with open(CMD_FILE, "w", encoding="utf-8") as f:
+            with open(CMD_FILE, "a", encoding="utf-8") as f:
                 f.write(cmd.strip() + "\n")
             return True
         except OSError as e:

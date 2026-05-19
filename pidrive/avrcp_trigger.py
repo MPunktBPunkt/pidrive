@@ -128,7 +128,7 @@ def write_cmd(cmd: str):
     global _last_trigger, _event_count
     t_write_start = time.time()
     try:
-        with open(CMD_FILE, "w", encoding="utf-8") as f:
+        with open(CMD_FILE, "a", encoding="utf-8") as f:
             f.write(cmd.strip() + "\n")
         dt_ms = int((time.time() - t_write_start) * 1000)
         with _lock:

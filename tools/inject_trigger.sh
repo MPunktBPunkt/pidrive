@@ -8,5 +8,5 @@ if [ -z "$1" ]; then
     echo "           radio_stop | play_dab:ROCK FM | dab_scan"
     exit 1
 fi
-echo -n "$1" > "$CMD_FILE"
+printf "%s\n" "$1" >> "$CMD_FILE"  # append-Queue-kompatibel
 echo "Trigger: $1"
