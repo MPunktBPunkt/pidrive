@@ -41,16 +41,91 @@ _SCAN_LOCK  = _scan_threading.Lock()
 _SCAN_STATE = {"active": False, "source": "", "started_ts": 0}
 
 
+def _scan_begin(source):
+    with _SCAN_LOCK:
+        if _SCAN_STATE["active"]:
+            return False
+        _SCAN_STATE.update({
+            "active": True,
+            "source": source,
+            "started_ts": int(time.time())
+        })
+        return True
 
-# ═══ SECTION: Scan-Callbacks ═══════════════════════════
-# Extrahiert nach modules/core_callbacks.py (Prio C)
-from modules.core_callbacks import (
-    _scan_begin, _scan_end, _scan_info,
-    _source_switch_begin, _source_switch_end, _source_switch_info,
-    _debounced,
-)
 
-# ═══ SECTION: BT-Agent Init ════════════════════════════
+def _scan_end():
+    with _SCAN_LOCK:
+        _SCAN_STATE.update({"active": False, "source": "", "started_ts": 0})
+
+
+def _scan_info():
+    with _SCAN_LOCK:
+        return dict(_SCAN_STATE)
+
+
+# ── Globaler Source-Switch-Lock ──────────────────────────────────────────────
+
+import threading as _src_threading
+
+_SOURCE_SWITCH_LOCK  = _src_threading.Lock()
+_SOURCE_SWITCH_STATE = {"active": False, "owner": "", "started_ts": 0.0}
+
+
+def _source_switch_begin(owner="unknown", blocking=False):
+    ok = _SOURCE_SWITCH_LOCK.acquire(blocking=blocking)
+    if not ok:
+        return False
+    _SOURCE_SWITCH_STATE["active"]     = True
+    _SOURCE_SWITCH_STATE["owner"]      = owner
+    _SOURCE_SWITCH_STATE["started_ts"] = _time_mod.time() if "_time_mod" in dir() else 0.0
+    return True
+
+
+def _source_switch_end():
+    try:
+        if _SOURCE_SWITCH_LOCK.locked():
+            _SOURCE_SWITCH_STATE["active"]     = False
+            _SOURCE_SWITCH_STATE["owner"]      = ""
+            _SOURCE_SWITCH_STATE["started_ts"] = 0.0
+            _SOURCE_SWITCH_LOCK.release()
+    except RuntimeError:
+        pass
+
+
+def _source_switch_info():
+    return dict(_SOURCE_SWITCH_STATE)
+
+
+# ── Trigger-Entprellung ──────────────────────────────────────────────────────
+
+import time as _time_mod
+
+_LAST_TRIGGER_TS: dict = {}
+_TRIGGER_DEBOUNCE = {
+    "enter":    0.35,
+    "fm_next":  0.5,
+    "fm_prev":  0.5,
+    "dab_next": 0.5,
+    "dab_prev": 0.5,
+}
+
+
+
+def _debounced(cmd: str) -> bool:
+    now   = _time_mod.time()
+    limit = _TRIGGER_DEBOUNCE.get(cmd)
+    if not limit:
+        return False
+    last = _LAST_TRIGGER_TS.get(cmd, 0.0)
+    if now - last < limit:
+        log.info(f"TRIGGER debounce: {cmd}")
+        return True
+    _LAST_TRIGGER_TS[cmd] = now
+    return False
+
+
+# ── BT-Agent früh starten ────────────────────────────────────────────────────
+
 def _start_bt_agent_early():
     if not CAPS.get("bluetooth") and not CAPS.get("bluetoothctl"):
         log.info("BT Agent: kein Bluetooth-Adapter — uebersprungen")
@@ -74,8 +149,6 @@ from trigger.trigger_dispatcher import (
 )
 
 # Guards registrieren (nach allen lokalen Definitionen)
-
-# ═══ SECTION: Trigger-Dispatcher Init ══════════════════
 def _init_dispatcher():
     _set_guards(
         begin_fn = _source_switch_begin,
@@ -86,14 +159,14 @@ def _init_dispatcher():
         sc_info  = _scan_info,
     )
     # Guards auch in td_nav setzen — _execute_node lebt dort und braucht sie
-    from trigger import td_nav as _td_nav
+    import td_nav as _td_nav
     _td_nav._set_nav_guards(
         begin_fn = _source_switch_begin,
         end_fn   = _source_switch_end,
         info_fn  = _source_switch_info,
     )
     # Guards auch in td_radio setzen — _scan_begin lebt dort
-    from trigger import td_radio as _td_radio
+    import td_radio as _td_radio
     _td_radio._set_radio_guards(
         begin_fn = _scan_begin,
         end_fn   = _scan_end,
@@ -101,49 +174,44 @@ def _init_dispatcher():
     )
 
 
-
-# ═══ SECTION: Trigger-Polling ══════════════════════════
 def check_trigger(menu_state, store, S, settings):
-    if not os.path.exists(ipc.CMD_FILE):
-        return False
-
+    """Queue-basiertes Trigger-Polling — drain_triggers() FIFO."""
     NAV_CMDS = {"up", "down", "enter", "back", "left", "right"}
     try:
         lst = ipc.read_json(ipc.LIST_FILE, {})
         if lst.get("active"):
-            # Stale-Check: LIST_FILE älter als 60s → automatisch zurücksetzen
             lst_ts = lst.get("ts", 0)
             if lst_ts and (time.time() - lst_ts) > 60:
-                log.warn("LIST_FILE: stale active=true (>60s) — automatisch reset")
+                log.warn("LIST_FILE: stale — reset")
                 ipc.write_json(ipc.LIST_FILE, {"active": False})
             else:
-                with open(ipc.CMD_FILE) as f:
-                    peek = f.read().strip()
+                if not os.path.exists(ipc.CMD_FILE):
+                    return False
+                with open(ipc.CMD_FILE) as _pf:
+                    peek = _pf.read().strip().split("\n")[0]
                 if peek in NAV_CMDS:
                     return False
     except Exception:
         pass
-
-    try:
-        with open(ipc.CMD_FILE) as f:
-            cmd = f.read().strip()
-        os.remove(ipc.CMD_FILE)
-        log.info(f"CMD_READ: {cmd!r}")
-    except Exception:
+    cmds = ipc.drain_triggers()
+    if not cmds:
         return False
-
+    processed = False
+    for cmd in cmds:
+        if not cmd:
+            continue
+        log.info(f"CMD_READ: {cmd!r}")
         try:
             if handle_trigger(cmd, menu_state, store, S, settings):
                 processed = True
-        except Exception as e:
-            log.error(f"Trigger '{cmd}' Fehler: {e}")
+        except Exception as _e:
+            log.error(f"Trigger '{cmd}' Fehler: {_e}")
     return processed
+
 
 
 # ── System-Check ────────────────────────────────────────────────────────────
 
-
-# ═══ SECTION: System-Checks (PA/BT/RTL) ════════════════
 def system_check():
     import subprocess
     log.info("--- Core System-Check ---")
@@ -246,8 +314,6 @@ def system_check():
 
 # ── Menü neu bauen nach Scan/Reload ────────────────────────────────────────
 
-
-# ═══ SECTION: Menü-Builder ═════════════════════════════
 def rebuild_tree(menu_state, store, S, settings):
     old_path = menu_state.path[:]
     new_root = build_tree(store, S, settings)
@@ -273,8 +339,6 @@ def rebuild_tree(menu_state, store, S, settings):
 
 # ── Startup Tasks ───────────────────────────────────────────────────────────
 
-
-# ═══ SECTION: Boot-Startup-Sequenz ═════════════════════
 def startup_tasks(S, settings):
     # v0.10.55: Trigger-Dispatcher Guards registrieren
     _init_dispatcher()
@@ -309,22 +373,19 @@ def startup_tasks(S, settings):
     if not _ready:
         log.warn("Boot-Readiness: Timeout — starte trotzdem (PulseAudio oder BT nicht bereit)")
 
-    # ── Phase BT-Reconnect (non-blocking) ─────────────────────────────────────
-    # BT-Reconnect im Hintergrund — blockiert NICHT mehr boot_phase=steady
-    # (Scan dauert 22s und verhinderte sonst die steady-Erkennung im Installer)
-    def _bt_reconnect_bg():
-        source_state.set_boot_phase("restore_bt")
-        try:
-            if bluetooth.reconnect_known_devices(S, settings):
-                log.info("BT Boot-Reconnect: verbunden")
-            else:
-                source_state.set_bt_state("failed")
-                log.info("BT Boot-Reconnect: kein Gerät verfügbar → bt_state=failed")
-        except Exception as _e:
+    # ── Phase BT-Reconnect ────────────────────────────────────────────────────
+    source_state.set_boot_phase("restore_bt")
+
+    try:
+        if bluetooth.reconnect_known_devices(S, settings):
+            log.info("BT Boot-Reconnect: verbunden")
+        else:
+            # v0.9.26: bt_state explizit auf failed setzen statt in "connecting" hängen
             source_state.set_bt_state("failed")
-            log.warn("BT Boot-Reconnect: " + str(_e))
-    import threading as _tbt
-    _tbt.Thread(target=_bt_reconnect_bg, daemon=True, name="bt_boot_reconnect").start()
+            log.info("BT Boot-Reconnect: kein Gerät verfügbar → bt_state=failed")
+    except Exception as _e:
+        source_state.set_bt_state("failed")
+        log.warn("BT Boot-Reconnect: " + str(_e))
 
     # GPIO entfernt — Steuerung ausschliesslich via AVRCP/WebUI/CLI
     # (gpio_buttons.py nicht mehr geladen)
@@ -411,14 +472,7 @@ def startup_tasks(S, settings):
     except Exception as _e:
         log.warn("Boot-Resume: " + str(_e))
     finally:
-        # "steady" = Core läuft, alle Pflicht-Komponenten OK
-        # Optionale Komponenten (BT-Sink, PA-Sink) dürfen fehlen → "degraded" aber nicht "not-steady"
-        try:
-            _pa_ok = _os_pa.path.exists("/var/run/pulse/native") if True else False
-            _bt_sink_ok = True  # BT-Sink optional — kein Blocker für steady
-            source_state.set_boot_phase("steady")
-        except Exception:
-            source_state.set_boot_phase("steady")  # immer steady setzen
+        source_state.set_boot_phase("steady")
         # PA-Socket-Check beim Übergang zu steady
         import os as _os_pa
         if not _os_pa.path.exists("/var/run/pulse/native"):
@@ -436,8 +490,6 @@ def startup_tasks(S, settings):
 
 # ── Main ────────────────────────────────────────────────────────────────────
 
-
-# ═══ SECTION: Main-Loop ═════════════════════════════════
 def main():
     # VERSION aus Datei lesen — muss vor dem Banner passieren
     global VERSION

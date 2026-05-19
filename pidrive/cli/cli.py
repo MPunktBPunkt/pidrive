@@ -254,27 +254,6 @@ Flags (vor dem Befehl angeben):
     p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
 
     # ── avrcp ───────────────────────────────────────────────────────────────
-
-    # ── playlist ─────────────────────────────────────────────────────────────
-    p_pl = sub.add_parser("playlist", help="Gespielte Titel (History)")
-    p_pl.add_argument("pl_filter", nargs="?", default="today",
-                      help="today|all|last|YYYY-MM-DD")
-    p_pl.add_argument("--limit", type=int, default=50,
-                      help="Max Einträge (default 50)")
-
-
-    # ── scanner ──────────────────────────────────────────────────────────────
-    BANDS_ALL = ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]
-    p_sc = sub.add_parser("scanner",
-        help="Funk-Scanner  Beispiele: scanner pmr446 ch 3 | scanner uhf freq 430.0")
-    p_sc.add_argument("band", nargs="?",
-                      choices=BANDS_ALL + ["stop","status","next","prev","squelch","ppm"],
-                      help="Band oder Aktion (stop/status/squelch/ppm)")
-    p_sc.add_argument("sub_cmd", nargs="?",
-                      help="ch N | freq MHz | scan | next | prev | stop | squelch N | ppm N")
-    p_sc.add_argument("value", nargs="?",
-                      help="Kanal-Nr, Frequenz MHz, Squelch (0=off, 25=normal), oder PPM")
-
     p_avrcp = sub.add_parser("avrcp", help="AVRCP-Monitor (BMW iDrive Tasten)")
     p_avrcp.add_argument("avrcp_cmd", nargs="?", default="monitor",
                          choices=["monitor","status","events","inject"],
@@ -355,6 +334,21 @@ Flags (vor dem Befehl angeben):
             else: fmt.out("Spotify Connect aktiviert — Sender aus Spotify-App waehlen")
             sys.exit(EXIT_OK)
 
+        # Lokale Datei / Ordner / M3U Playlist
+        if args.source == "local":
+            _parts = ([args.name] if args.name else []) + list(getattr(args, "path", []))
+            if not _parts:
+                _exit_err("Pfad angeben: pidrivectl play local /pfad/zur/musik")
+            _path = " ".join(_parts)
+            _shuf = "|shuffle" if getattr(args, "shuffle", False) else ""
+            svc.require_online()
+            svc.send_trigger(f"local_play:{_path}{_shuf}")
+            import time as _lt; _lt.sleep(0.8)
+            _d = svc.get_status()
+            fmt.out(f"  \u2713 Lokal: {_path}" if _d.get("radio_type")=="LOCAL"
+                    else f"  Gestartet: {_path}")
+            sys.exit(EXIT_OK)
+
         name = args.name
         if not name:
             _exit_err(f"Name/Sender fuer {args.source} erforderlich", EXIT_ERROR)
@@ -419,31 +413,6 @@ Flags (vor dem Befehl angeben):
             else:
                 d = svc.get_status()
                 fmt.out(icon + " Status: " + d.get("dab_playback_state", "?"))
-        elif args.source == "web" and not use_json:
-            try:
-                r = svc.play(args.source, name)
-                fmt.out(f"Starte WEB: {name}")
-                # 6s warten (mpv Zombie-Check dauert 5s) dann Status prüfen
-                import time as _t
-                for _i in range(6):
-                    _t.sleep(1)
-                    print(f"  [{_i+1}s]...", end="\r", flush=True)
-                _d = svc.get_status()
-                _src = _d.get("source","")
-                _play = _d.get("radio_playing", False)
-                if _src == "webradio" and _play:
-                    fmt.out(f"  ✓ Stream läuft — {name}          ")
-                else:
-                    # Prüfe ob BT verbunden
-                    _bt = _d.get("bt", False) or _d.get("bt_connected", False)
-                    if not _bt:
-                        fmt.out(f"  ⚠ Kein BT-Sink — Kopfhörer verbinden!   ")
-                        fmt.out("    pidrivectl bt status")
-                    else:
-                        fmt.out(f"  ⚠ Stream nicht gestartet (rc=2 oder kein PA-Sink)   ")
-                        fmt.out("    pidrivectl audio test")
-            except LookupError as e:
-                _exit_err(str(e), EXIT_NOTFOUND)
         else:
             try:
                 r = svc.play(args.source, name)
@@ -741,33 +710,6 @@ Flags (vor dem Befehl angeben):
             if use_json: fmt.print_json({"audio_out": d.get("audio_out"), "effective": d.get("audio_eff")})
             else: fmt.out(f"Audio: {d.get('audio_eff','–')} (angefordert: {d.get('audio_out','–')})")
             sys.exit(EXIT_OK)
-        if args.audio_cmd == "status":
-            # Lokal ausfuehren — kein Service-Connect noetig
-            try:
-                import importlib as _il, sys as _sys, os as _osp
-                # Pfad des aktuell laufenden pidrive-Pakets
-                _pkg = _osp.path.dirname(_osp.path.dirname(_osp.path.abspath(__file__)))
-                if _pkg not in _sys.path: _sys.path.insert(0, _pkg)
-                _gas = _il.import_module("modules.audio").get_audio_status
-                _as = _gas()
-                if use_json:
-                    fmt.print_json(_as)
-                else:
-                    _ok  = fmt.GREEN + "✓" + fmt.RESET
-                    _err = "\033[31m✗\033[0m"
-                    _warn= "\033[33m⚠\033[0m"
-                    fmt.out(f"Backend:   {_ok + ' OK' if _as['backend_ok'] else _err + ' PulseAudio fehlt'}")
-                    fmt.out(f"Sink:      {_ok + ' ' + _as['sink'] if _as['sink_present'] else _warn + ' kein Sink'}")
-                    fmt.out(f"Bluetooth: {_ok + ' verbunden' if _as['bt_connected'] else '  getrennt'}")
-                    fmt.out(f"Route:     {_as['requested']} -> {_as['effective']}")
-                    if _as.get("degraded_reason"):
-                        fmt.out(f"Hinweis:   {_warn} {_as['degraded_reason'].replace('_',' ')}")
-                    else:
-                        fmt.out(f"Status:    {_ok} bereit")
-            except Exception as _e_as:
-                fmt.out(f"audio status Fehler: {_e_as}")
-            sys.exit(EXIT_OK)
-
         svc.require_online()
         if args.audio_cmd == "route":
             trig = {"klinke": "audio_klinke","bt":"audio_bt","hdmi":"audio_hdmi","auto":"audio_all"}[args.mode]
@@ -953,6 +895,25 @@ Flags (vor dem Befehl angeben):
             sys.exit(EXIT_OK)
 
 
+        elif args.audio_cmd == "status":
+            d = svc.get_status()
+            if use_json: fmt.print_json({"audio_out": d["audio_out"], "effective": d["audio_eff"]})
+            else:
+                fmt.out(f"Ausgang:   {d.get('audio_eff','–')}")
+                fmt.out(f"Angefragt: {d.get('audio_out','–')}")
+        sys.exit(EXIT_OK)
+
+    # dab
+    if args.cmd == "dab":
+        if args.dab_cmd == "status":
+            d = svc.dab_status()
+            if use_json: fmt.print_json(d)
+            else: fmt.print_dab_status(d)
+        elif args.dab_cmd == "scan":
+            svc.require_online()
+            r = svc.send("dab_scan")
+            if use_json:
+                fmt.print_json(r); sys.exit(EXIT_OK)
             fmt.out("DAB-Sendersuchlauf gestartet (ca. 2-3 Minuten)…")
             fmt.out("  Ctrl+C: Monitor beenden (Scan laeuft weiter im Hintergrund)")
             import time as _ts, json as _js
@@ -1216,180 +1177,6 @@ Flags (vor dem Befehl angeben):
             svc.send(arg)
             fmt.out(f"✓ Injiziert: {arg}")
             sys.exit(EXIT_OK)
-
-    # ── playlist ──────────────────────────────────────────────────────────────
-    if args.cmd == "playlist":
-        import json as _pj, os as _po, time as _pt
-        _hist_path = _po.path.join(
-            _po.path.dirname(_po.path.abspath(__file__)),
-            "..", "config", "play_history.json"
-        )
-        try:
-            with open(_hist_path) as _f: history = _pj.load(_f)
-            if not isinstance(history, list): history = []
-        except Exception:
-            history = []
-
-        filt = args.pl_filter or "today"
-        today = _pt.strftime("%Y-%m-%d")
-
-        if filt == "today":
-            entries = [e for e in history if e.get("date") == today]
-            label = f"Heute ({today})"
-        elif filt == "all":
-            entries = history
-            label = "Alle gespielten Titel"
-        elif filt == "last":
-            entries = history[-args.limit:]
-            label = f"Letzte {args.limit} Titel"
-        else:
-            entries = [e for e in history if e.get("date") == filt]
-            label = f"Datum {filt}"
-
-        entries = entries[-args.limit:]
-
-        if use_json:
-            fmt.print_json({"filter": filt, "count": len(entries), "entries": entries})
-        else:
-            fmt.out(f"\n  {label} — {len(entries)} Titel")
-            fmt.out("  " + "─" * 44)
-            if not entries:
-                fmt.out("  (keine Einträge)")
-            else:
-                prev_date = ""
-                for e in reversed(entries):
-                    d = e.get("date","")
-                    if d != prev_date and filt in ("all","last"):
-                        fmt.out(f"\n  {d}")
-                        prev_date = d
-                    t = e.get("ts_human","")[-8:]   # HH:MM:SS
-                    station = e.get("station","")
-                    raw = e.get("raw") or f"{e.get('artist','')} - {e.get('track','')}".strip(" -")
-                    src_tag = e.get("source","web")[:3].upper()
-                    fmt.out(f"  [{t}] [{src_tag}] {station:<16} {raw}")
-            fmt.out("")
-        sys.exit(EXIT_OK)
-
-    # ── scanner ────────────────────────────────────────────────────────────────
-    if args.cmd == "scanner":
-        BAND_LABELS = {
-            "pmr446": "PMR446  16 Kanäle   (446.00625–446.19375 MHz)",
-            "freenet": "Freenet  6 Kanäle   (149.0125–149.1125 MHz)",
-            "lpd433": "LPD433  69 Kanäle  (433.075–433.775 MHz)",
-            "vhf":    "VHF     Bereich    (144–146 MHz)",
-            "uhf":    "UHF     Bereich    (430–440 MHz)",
-            "cb":     "CB      40 Kanäle  (26.965–27.405 MHz)",
-            "fm":     "FM/UKW  Bereich    (87.5–108 MHz)",
-        }
-
-        band_arg = args.band or "status"
-        sub_cmd  = args.sub_cmd
-        value    = args.value
-
-        # Alias: "stop" / "status" / "squelch" / "ppm" als erstes Argument
-        if band_arg in ("stop", "status", "next", "prev", "squelch", "ppm"):
-            # sub_cmd enthält ggf. Zahlenwert (z.B. "0" bei scanner squelch 0)
-            _raw_sub = args.sub_cmd
-            sub_cmd  = band_arg
-            if sub_cmd in ("squelch", "ppm") and value is None:
-                value = _raw_sub  # z.B. "0" oder "49"
-            band_arg = None
-
-        if sub_cmd in ("stop", "status", None) and band_arg is None:
-            if sub_cmd == "stop":
-                svc.require_online()
-                svc.send("radio_stop")
-                fmt.out("✓ Scanner gestoppt")
-            else:
-                d = svc.get_status()
-                _src  = d.get("source","idle")
-                _band = d.get("scanner_band","")
-                _stat = d.get("radio_station","")
-                if _src == "scanner" or _band:
-                    fmt.out(f"Scanner aktiv — Band: {_band or '?'}")
-                    fmt.out(f"  Sender:   {_stat or '–'}")
-                    fmt.out(f"  Audio:    {d.get('audio_eff', d.get('audio_output','–'))}")
-                    fmt.out("  pidrivectl scanner BAND next | prev | stop")
-                else:
-                    fmt.out("Scanner: inaktiv")
-                    fmt.out("")
-                    fmt.out("Verwendung:")
-                    fmt.out("  pidrivectl scanner BAND ch N      → direkt auf Kanal N")
-                    fmt.out("  pidrivectl scanner BAND freq F    → direkt auf F MHz")
-                    fmt.out("  pidrivectl scanner BAND scan      → Scan starten")
-                    fmt.out("  pidrivectl scanner BAND next/prev → nächster/vorheriger Kanal")
-                    fmt.out("  pidrivectl scanner stop           → stoppen")
-                    fmt.out("")
-                    fmt.out("Bänder:")
-                    for bid, label in BAND_LABELS.items():
-                        fmt.out(f"  {bid:<8} {label}")
-            sys.exit(EXIT_OK)
-
-        band = band_arg
-        svc.require_online()
-
-        if sub_cmd == "ch":
-            # pidrivectl scanner pmr446 ch 3
-            try:
-                ch_num = int(value) if value else 1
-            except ValueError:
-                fmt.err(f"Ungültige Kanal-Nr: {value!r}")
-                sys.exit(EXIT_ERROR)
-            svc.send(f"scan_setch:{band}:{ch_num}")
-            fmt.out(f"✓ {band.upper()} Kanal {ch_num}")
-
-        elif sub_cmd == "freq":
-            # pidrivectl scanner uhf freq 430.0
-            try:
-                mhz = float(value) if value else 0.0
-                if not mhz:
-                    raise ValueError
-            except ValueError:
-                fmt.err(f"Ungültige Frequenz: {value!r} (Eingabe in MHz, z.B. 430.0)")
-                sys.exit(EXIT_ERROR)
-            svc.send(f"scan_setfreq:{band}:{mhz}")
-            fmt.out(f"✓ {band.upper()} {mhz} MHz")
-
-        elif sub_cmd in ("next", "scan", None):
-            svc.send(f"scan_next:{band}")
-            fmt.out(f"→ {band.upper()} Scan / nächster Kanal")
-
-        elif sub_cmd == "prev":
-            svc.send(f"scan_prev:{band}")
-            fmt.out(f"← {band.upper()} vorheriger Kanal")
-
-        elif sub_cmd == "squelch":
-            try:
-                sq = int(value) if value is not None else None
-                if sq is None:
-                    raise ValueError
-            except ValueError:
-                fmt.err(f"Squelch: Zahl 0–100 erwartet (0 = kein Squelch, 25 = normal)")
-                sys.exit(EXIT_ERROR)
-            svc.require_online()
-            svc.send(f"set_scanner_squelch:{sq}")
-            fmt.out(f"✓ Scanner Squelch: {sq}  (0=aus, 25=normal, 50=streng)")
-
-        elif sub_cmd == "ppm":
-            try:
-                ppm = int(value) if value is not None else None
-                if ppm is None:
-                    raise ValueError
-            except ValueError:
-                fmt.err("PPM: Ganzzahl erwartet (z.B. 0, 49, -20)")
-                sys.exit(EXIT_ERROR)
-            svc.require_online()
-            svc.send(f"set_ppm:{ppm}")
-            fmt.out(f"✓ PPM-Korrektur: {ppm}  (Fujitsu: 49, Pi: 0 oder messen)")
-
-        else:
-            fmt.err(f"Unbekannter Befehl: {sub_cmd!r}")
-            fmt.out("Verwendung: pidrivectl scanner BAND ch N | freq F | scan | next | prev")
-            fmt.out("            pidrivectl scanner squelch 0   (0=aus, kein Squelch)")
-            fmt.out("            pidrivectl scanner squelch 25  (normal)")
-            fmt.out("            pidrivectl scanner ppm 49      (PPM-Korrektur für Fujitsu)")
-            sys.exit(EXIT_ERROR)
-        sys.exit(EXIT_OK)
 
     parser.print_help()
     sys.exit(EXIT_OK)

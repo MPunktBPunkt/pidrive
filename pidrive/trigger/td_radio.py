@@ -361,6 +361,21 @@ def handle(cmd, menu_state, store, S, settings, bg):
         except Exception as e:
             log.error(f"web_prev Fehler: {e}")
 
+    elif cmd.startswith("local_play:"):
+        # Lokale Datei/Ordner/M3U Playlist spielen
+        payload = cmd.split(":", 1)[1]
+        shuffle = False
+        if payload.endswith("|shuffle"):
+            shuffle = True
+            payload = payload[:-8]
+        try:
+            from modules import local_player as _lp
+            _lp.play(payload, S, settings, shuffle=shuffle)
+            source_state.commit_source("local")
+            log.info(f"local_play: {payload!r} shuffle={shuffle}")
+        except Exception as _e:
+            log.error(f"local_play Fehler: {_e}")
+
     elif cmd == "fm_next":
         bg(lambda: fm.play_next(S, store.fm))
     elif cmd == "fm_prev":
