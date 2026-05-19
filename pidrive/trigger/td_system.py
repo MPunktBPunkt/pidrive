@@ -7,8 +7,8 @@ import log, ipc
 from settings import save_settings, load_settings
 from modules import source_state
 from modules import (
-    musik, wifi, bluetooth, audio, system as sys_mod,
-    webradio, dab, fm, library, scanner, update, favorites
+    wifi, bluetooth, audio, system as sys_mod,
+    webradio, dab, fm, scanner, update, favorites
 )
 
 

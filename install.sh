@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.23"
+PIDRIVE_VERSION="0.11.24"
 
 # ============================================================
 # PiDrive Install Script
@@ -401,7 +401,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.23
+# pidrive_display.service: entfernt v0.11.24
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -979,7 +979,25 @@ else
 fi
 
 # Import-Smoke-Test: prueft den echten Startpfad von main_core
-if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import main_core"
+if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "
+import sys; sys.path.insert(0, '.')
+import importlib, sys as _sys
+_mods = [
+    'log','ipc','settings','status','modules.source_state',
+    'modules.audio','modules.wifi','modules.bluetooth','modules.system',
+    'modules.webradio','modules.dab','modules.fm','modules.scanner',
+    'modules.update','modules.favorites','modules.core_callbacks',
+    'trigger.td_hardware','trigger.td_nav','trigger.td_radio',
+    'trigger.td_scanner','trigger.td_system','trigger.trigger_dispatcher',
+    'menu.menu_model','menu.menu_builder','menu.menu_state',
+    'cli.cli','webui','main_core',
+]
+_errs = []
+for _m in _mods:
+    try: importlib.import_module(_m)
+    except Exception as e: _errs.append(f'{_m}: {e}'); print(f'  ✗ {_m}: {e}', file=_sys.stderr)
+if _errs: sys.exit(1)
+"
   python3 -c "import webui"
   # Neue Zielpfade (v0.10.55+)
   python3 -c "import cli.cli" 2>/dev/null && echo "  ✓ cli.cli" || echo "  ⚠ cli.cli nicht importierbar"

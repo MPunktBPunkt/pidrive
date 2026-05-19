@@ -12,8 +12,8 @@ import log, ipc
 from settings import save_settings
 from modules import source_state
 from modules import (
-    musik, wifi, bluetooth, audio, system as sys_mod,
-    webradio, dab, fm, library, scanner, update, favorites
+    wifi, bluetooth, audio, system as sys_mod,
+    webradio, dab, fm, scanner, update, favorites
 )
 
 
@@ -23,7 +23,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     if cmd in ("spotify_on", "spotify_off", "spotify_toggle"):
         def _spotify_toggle():
             was_active = bool(S.get("spotify"))
-            musik.spotify_toggle(S)
+            update.spotify_toggle(S)
             if was_active:
                 source_state.commit_source("idle")
                 log.info("SOURCE spotify → idle (stop)")

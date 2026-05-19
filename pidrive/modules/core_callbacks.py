@@ -1,13 +1,12 @@
 """
 core_callbacks.py — Scan- und Quellwechsel-Callbacks für PiDrive Core.
-Extrahiert aus main_core.py (Prio C Architektur-Cleanup v0.11.23).
+Extrahiert aus main_core.py (Prio C Architektur-Cleanup v0.11.24).
 
 Importiert und registriert von main_core._init_dispatcher().
 """
 
 import time
-from log import get_logger
-log = get_logger("core")
+import log
 
 def _scan_begin(source):
     with _SCAN_LOCK:

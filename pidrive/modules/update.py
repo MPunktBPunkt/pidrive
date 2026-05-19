@@ -133,3 +133,27 @@ def run_update(S):
     except Exception as e:
         ipc.write_progress("Update", f"Fehler: {e}", color="red")
         time.sleep(4); ipc.clear_progress()
+
+
+def spotify_toggle(S: dict):
+    """Spotify Connect starten/stoppen (migriert aus modules/musik.py v0.11.24).
+    Startet oder stoppt raspotify/librespot Service.
+    """
+    import subprocess as _sp
+    was_active = bool(S.get("spotify"))
+    try:
+        if was_active:
+            _sp.run(["systemctl", "stop", "raspotify"],
+                    capture_output=True, timeout=5)
+            S["spotify"] = False
+        else:
+            _sp.run(["systemctl", "start", "raspotify"],
+                    capture_output=True, timeout=5)
+            # Status nach 1s prüfen
+            import time as _t; _t.sleep(1)
+            r = _sp.run(["systemctl", "is-active", "raspotify"],
+                        capture_output=True, text=True, timeout=3)
+            S["spotify"] = (r.stdout.strip() == "active")
+    except Exception as _e:
+        import log as _log
+        _log.warn(f"spotify_toggle: {_e}")
