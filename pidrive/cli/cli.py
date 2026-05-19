@@ -236,6 +236,25 @@ Flags (vor dem Befehl angeben):
     p_dab_live.add_argument("--changes", action="store_true")
     p_dab_live.add_argument("--interval", type=float, default=1.0)
 
+    # ── scanner ──────────────────────────────────────────────────────────
+    p_scanner = sub.add_parser("scanner", help="RTL-SDR Funk-Scanner")
+    sc_sub = p_scanner.add_subparsers(dest="sc_cmd")
+    # scanner ohne Subcommand → Status
+    p_sc_band = sc_sub.add_parser("band", help="Band-Kommando (intern)")
+    # scanner BAND scan|ch|freq|next|prev
+    for _scb in ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]:
+        _p = sc_sub.add_parser(_scb)
+        _sc_sub2 = _p.add_subparsers(dest="sc_action")
+        _sc_sub2.add_parser("scan")
+        _sc_sub2.add_parser("stop")
+        _sc_sub2.add_parser("next")
+        _sc_sub2.add_parser("prev")
+        _p_ch  = _sc_sub2.add_parser("ch");   _p_ch.add_argument("n",  type=int)
+        _p_fr  = _sc_sub2.add_parser("freq"); _p_fr.add_argument("f",  type=float)
+    _p_sq = sc_sub.add_parser("squelch"); _p_sq.add_argument("level", type=int)
+    _p_pp = sc_sub.add_parser("ppm");     _p_pp.add_argument("value", type=int)
+    _p_st = sc_sub.add_parser("stop")
+
     # ── system ────────────────────────────────────────────────────────────
     p_sys = sub.add_parser("system", help="System")
     sys_sub = p_sys.add_subparsers(dest="sys_cmd")
@@ -994,6 +1013,66 @@ Flags (vor dem Befehl angeben):
                         if not _os.isatty(1): break
             except KeyboardInterrupt:
                 fmt.out("\nMonitor beendet.")
+        sys.exit(EXIT_OK)
+
+    # scanner
+    if args.cmd == "scanner":
+        sc_cmd = getattr(args, "sc_cmd", None)
+        sc_action = getattr(args, "sc_action", None)
+
+        BANDS = ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]
+
+        if sc_cmd is None:
+            # scanner ohne Argument → Status
+            r = svc.get_status()
+            sc = r.get("scanner", {})
+            if sc.get("active"):
+                fmt.out(f"Scanner aktiv: Band={sc.get('band','?')}  Freq={sc.get('freq','?')} MHz  Kanal={sc.get('ch','?')}")
+                fmt.out(f"  Squelch={r.get('scanner_squelch', r.get('squelch','?'))}  PPM={r.get('ppm_correction','?')}")
+            else:
+                fmt.out("Scanner: inaktiv")
+                fmt.out(f"  Verfügbare Bänder: {', '.join(BANDS)}")
+            sys.exit(EXIT_OK)
+
+        if sc_cmd == "squelch":
+            svc.send_trigger(f"set_scanner_squelch:{args.level}")
+            fmt.out(f"  Squelch: {args.level}")
+            sys.exit(EXIT_OK)
+
+        if sc_cmd == "ppm":
+            svc.send_trigger(f"set_ppm:{args.value}")
+            fmt.out(f"  PPM: {args.value}")
+            sys.exit(EXIT_OK)
+
+        if sc_cmd == "stop":
+            svc.send_trigger("scanner_stop")
+            fmt.out("  Scanner gestoppt")
+            sys.exit(EXIT_OK)
+
+        # Band-Kommandos: sc_cmd ist das Band
+        band = sc_cmd
+        if band in BANDS:
+            if sc_action == "scan":
+                svc.send_trigger(f"scan_next:{band}")
+                fmt.out(f"  Scanner {band}: Scan gestartet")
+            elif sc_action == "stop":
+                svc.send_trigger("scanner_stop")
+                fmt.out("  Scanner gestoppt")
+            elif sc_action == "next":
+                svc.send_trigger(f"scan_up:{band}")
+                fmt.out(f"  {band}: nächster Kanal")
+            elif sc_action == "prev":
+                svc.send_trigger(f"scan_down:{band}")
+                fmt.out(f"  {band}: vorheriger Kanal")
+            elif sc_action == "ch":
+                svc.send_trigger(f"scan_setch:{band}:{args.n}")
+                fmt.out(f"  ✓ {band} Kanal {args.n}")
+            elif sc_action == "freq":
+                svc.send_trigger(f"scan_setfreq:{band}:{args.f}")
+                fmt.out(f"  ✓ {band} Freq {args.f} MHz")
+            else:
+                fmt.err(f"Unbekannte Aktion. Nutze: scan | ch N | freq F | next | prev | stop")
+            sys.exit(EXIT_OK)
         sys.exit(EXIT_OK)
 
     # system

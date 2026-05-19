@@ -1,6 +1,6 @@
 # PiDrive — Migration Backlog
 
-**Stand v0.11.27 · Arbeitsorientiertes Migrationsdokument**
+**Stand v0.11.28 · Arbeitsorientiertes Migrationsdokument**
 
 Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **Warum ist etwas noch da, wer blockiert den Abbau, was ist der nächste Schritt?**
 
@@ -11,13 +11,13 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 | Bereich | Reifegrad | Importstand | Shims vorhanden | Nächster Schritt |
 |---|---|---|---|---|
 | `menu/` | ✅ fertig | sauber | Facades bleiben | Root-Facades später entfernen |
-| `trigger/` | ✅ fast fertig | sauber seit v0.11.27 | keine aktiven | abgeschlossen erklären |
+| `trigger/` | ✅ fast fertig | sauber seit v0.11.28 | keine aktiven | abgeschlossen erklären |
 | `web/` | ✅ fast fertig | sauber | `webui.py` (Entry) | Entry ablösen |
 | `cli/` | ✅ fast fertig | sauber | Root-Shims entfernt | keine neuen Root-Pfade |
 | `modules/bluetooth/` | ✅ fast fertig | intern sauber | Root-bt_*.py vorhanden | späterer Shim-Abbau |
 | `modules/radio/` | ✅ fast fertig | intern sauber | Root-dab/fm/scanner vorhanden | späterer Shim-Abbau |
 | `integration/` | 🔄 Übergang | Shims aktiv | 2 Shims (avrcp, mpv_meta) | kanonisieren |
-| `core/` (main_core) | ⚠️ noch fragil | bereinigt v0.11.27 | Root-Entry bleibt | erst logisch zerlegen |
+| `core/` (main_core) | ⚠️ noch fragil | bereinigt v0.11.28 | Root-Entry bleibt | erst logisch zerlegen |
 
 ---
 
@@ -59,7 +59,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ## C. Migrationsblöcke
 
-### Block 1: `trigger/` abschließen — ✅ erledigt in v0.11.27
+### Block 1: `trigger/` abschließen — ✅ erledigt in v0.11.28
 
 **Was war:**
 - `main_core.py`: `import td_nav` / `import td_radio` als Root-Altimporte
@@ -73,7 +73,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ---
 
-### Block 2: IPC-Producer vereinheitlichen — ✅ erledigt in v0.11.27/27
+### Block 2: IPC-Producer vereinheitlichen — ✅ erledigt in v0.11.28/27
 
 **Was war:** Mehrere Producer schrieben per `open("w")` in `/tmp/pidrive_cmd` und überschrieben damit die Queue.
 
@@ -175,7 +175,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] Import-Smoke-Test grün für `trigger.*`-Pfade
 - [ ] Navigation, `play_*`, AVRCP-Events funktionieren end-to-end
 
-→ **Erreicht mit v0.11.27** ✅
+→ **Erreicht mit v0.11.28** ✅
 
 ---
 
@@ -194,7 +194,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] Kein `trigger_dispatcher` als Root-Import
 - [ ] Runtime-Smoke-Test grün (15s stabil, kein Traceback)
 
-→ **Erreicht mit v0.11.27** ✅
+→ **Erreicht mit v0.11.28** ✅
 
 ---
 
@@ -204,7 +204,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] systemd ExecStart für Web/AVRCP auf neue Pfade umgestellt
 - [ ] Runtime-Gate aktiv und schlägt bei Instabilität hart an
 
-→ **Runtime-Gate: erreicht v0.11.27 ✅ · Web/AVRCP-Entry: Ziel v0.11.28**
+→ **Runtime-Gate: erreicht v0.11.28 ✅ · Web/AVRCP-Entry: Ziel v0.11.28**
 
 ---
 
@@ -212,7 +212,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 
 | Version | Fokus | Status |
 |---|---|---|
-| v0.11.27 | `trigger/` abschließen, IPC-Producer, Docs | ✅ |
+| v0.11.28 | `trigger/` abschließen, IPC-Producer, Docs | ✅ |
 | v0.11.28 | `integration/` kanonisieren, Web-Entry ablösen | 🔄 geplant |
 | v0.11.29+ | `main_core.py` logisch zerlegen | 📅 nach Feldtest |
 | v0.11.30+ | systemd Core-Entry modernisieren | 📅 später |
