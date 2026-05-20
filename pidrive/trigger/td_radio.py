@@ -27,6 +27,16 @@ def _set_radio_guards(begin_fn, end_fn, info_fn):
     _scan_info  = info_fn
 
 
+def _clear_meta(S):
+    """Metadaten vor Quellwechsel löschen — verhindert Stale-Titel."""
+    for _k in ("radio_name", "radio_type", "radio_station", "track", "artist",
+               "album", "dls_text", "metadata_unavailable", "source_error"):
+        if _k in ("radio_name", "radio_type", "radio_station"):
+            S[_k] = ""
+        else:
+            S.pop(_k, None)
+
+
 def handle(cmd, menu_state, store, S, settings, bg):
     # ── DAB Suchlauf ───────────────────────────────────────────────────────
     if cmd == "dab_scan":
@@ -255,6 +265,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if not _match and _query.replace(".","").isdigit():
                 _match = {"name": f"FM {_query}", "freq_mhz": float(_query)}
             if _match:
+                _clear_meta(S)
                 try: webradio.stop(S)
                 except Exception: pass
                 try: dab.stop(S)
@@ -265,7 +276,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     source_state.commit_source("fm")
                     try:
                         from mpv_meta import write_source_history as _wsh
-                        _wsh("fm", S.get("radio_name") or _freq_str or "FM", _freq_str or "")
+                        _wsh("fm", _match.get("name") or S.get("radio_name") or _freq_str or "FM", _freq_str or "")
                     except Exception: pass
                     log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
                 else:
@@ -293,7 +304,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 source_state.commit_source("webradio")
                 try:
                     from mpv_meta import write_source_history as _wsh2
-                    _wsh2("webradio", S.get("radio_name") or "", S.get("radio_station") or "")
+                    _wsh2("webradio", _match.get("name") or S.get("radio_name") or "", "")
                 except Exception: pass
                 log.info(f"CLI play_web: {_match['name']}")
             else:
@@ -379,6 +390,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
         if payload.endswith("|shuffle"):
             shuffle = True
             payload = payload[:-8]
+        _clear_meta(S)
         try:
             from modules import local_player as _lp
             _lp.play(payload, S, settings, shuffle=shuffle)

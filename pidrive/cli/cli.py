@@ -335,13 +335,19 @@ Flags (vor dem Befehl angeben):
     if args.cmd == "version":
         import os as _ov
         _vv = "?"
+        # cli/ liegt EINE EBENE tiefer als VERSION → parent dir
+        _real = _ov.path.realpath(__file__)       # /…/pidrive/cli/cli.py
+        _cli_dir = _ov.path.dirname(_real)        # /…/pidrive/cli/
+        _pidrive_dir = _ov.path.dirname(_cli_dir) # /…/pidrive/
         for _vf in [
-            _ov.path.join(_ov.path.dirname(_ov.path.realpath(__file__)), "VERSION"),
-            _ov.path.join(_ov.path.dirname(_ov.path.abspath(__file__)), "VERSION"),
+            _ov.path.join(_pidrive_dir, "VERSION"),
+            _ov.path.join(_cli_dir, "VERSION"),
             "/home/pidrive/pidrive/pidrive/VERSION",
             "/opt/pidrive/pidrive/VERSION",
         ]:
-            try: _vv = open(_vf).read().strip(); break
+            try:
+                _vv = open(_vf).read().strip()
+                if _vv: break
             except Exception: pass
         fmt.out(f"PiDrive v{_vv}")
         sys.exit(EXIT_OK)

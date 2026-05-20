@@ -78,7 +78,8 @@ def play_station(station, S, settings=None):
             return
         if _rtlsdr.is_busy():
             S["radio_playing"] = False
-            S["radio_station"] = "RTL-SDR belegt"
+            S["radio_type"]   = "DAB+"
+            S["source_error"]  = "RTL-SDR belegt"
             log.warn(f"DAB: RTL-SDR belegt vor play {name} [{ch}]")
             return
 

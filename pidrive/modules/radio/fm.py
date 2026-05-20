@@ -207,7 +207,8 @@ def play_station(station, S, settings=None):
 
             if not _rtlsdr.wait_until_free(timeout=1.5, interval=0.05):
                 S["radio_playing"] = False
-                S["source_error"] = "RTL-SDR belegt"   # nicht in radio_name/radio_station
+                S["radio_type"]    = "FM"   # Label korrekt auch bei Fehler
+                S["source_error"]  = "RTL-SDR belegt"
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
                 return False
 

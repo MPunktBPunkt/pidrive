@@ -372,6 +372,7 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
                 log.error("Scanner: kein RTL-SDR")
                 return
             if _rtlsdr.is_busy():
+                S["radio_type"]   = "SCANNER"
                 S["source_error"] = "RTL-SDR belegt"
                 log.warn("Scanner: RTL-SDR belegt")
                 return
