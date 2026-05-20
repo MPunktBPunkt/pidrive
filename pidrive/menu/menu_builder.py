@@ -242,11 +242,46 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         MenuNode(id="spot_status", label="Status", type="info"),
     ])
 
-    lib_node = MenuNode(id="library", label="Bibliothek", type="folder", children=[
-        MenuNode(id="lib_browse", label="Durchsuchen", type="action", action="lib_browse"),
-        MenuNode(id="lib_stop",   label="Stop",        type="action", action="library_stop"),
-        MenuNode(id="lib_path",   label="Pfad",        type="info"),
-    ])
+    # ── Bibliothek: music_dir + USB-Sticks ────────────────────────────────
+    _music_dir = settings.get("music_dir") or settings.get("music_path") or "/home/pidrive/Musik"
+    import os as _os_lib
+    _lib_children = [
+        MenuNode(id="lib_play", label="▶ " + _os_lib.path.basename(_music_dir.rstrip("/")) or "Musik",
+                 type="station", source="local",
+                 action=f"local_play:{_music_dir}",
+                 meta={"path": _music_dir}),
+        MenuNode(id="lib_shuffle", label="▶ Zufällig",
+                 type="station", source="local",
+                 action=f"local_play:{_music_dir}|shuffle",
+                 meta={"path": _music_dir, "shuffle": True}),
+        MenuNode(id="lib_stop", label="■ Stop", type="action", action="library_stop"),
+    ]
+
+    # USB-Sticks dynamisch ergänzen
+    try:
+        from modules.usb_music import find_usb_sticks as _fus
+        for _ui, _usb in enumerate(_fus()):
+            _uid   = f"usb_{_ui}"
+            _ulbl  = f"USB: {_usb['name']}  ({_usb['files']} Dateien)"
+            _upath = _usb["path"]
+            _lib_children.append(MenuNode(
+                id=_uid, label=_ulbl, type="folder",
+                children=[
+                    MenuNode(id=f"{_uid}_play",    label="▶ Abspielen",
+                             type="station", source="local",
+                             action=f"local_play:{_upath}",
+                             meta={"path": _upath}),
+                    MenuNode(id=f"{_uid}_shuffle", label="▶ Zufällig",
+                             type="station", source="local",
+                             action=f"local_play:{_upath}|shuffle",
+                             meta={"path": _upath, "shuffle": True}),
+                ]
+            ))
+    except Exception:
+        pass
+
+    lib_node = MenuNode(id="library", label="Bibliothek", type="folder",
+                        children=_lib_children)
 
     quellen = MenuNode(id="sources", label="Quellen", type="folder", children=[
         fm_node,        # FM Radio zuerst — häufigste Nutzung

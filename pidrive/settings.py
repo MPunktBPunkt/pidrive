@@ -23,7 +23,8 @@ _DEFAULTS = {
     "webradio_enabled":   True,
     "dabfm_enabled":      True,
     # Audio
-    "music_path":         os.path.expanduser("~/Musik"),
+    "music_path":         os.path.expanduser("~/Musik"),  # legacy
+    "music_dir":          "/home/pidrive/Musik",           # kanonisch
     "audio_output":       "auto",        # auto | klinke | bt | hdmi
     "audio_sink_name":    "",            # Leer = automatisch erkennen
     "audio_card_index":   -1,            # -1 = automatisch

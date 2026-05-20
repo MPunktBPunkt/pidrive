@@ -382,8 +382,18 @@ Flags (vor dem Befehl angeben):
         if args.source == "local":
             _parts = ([args.name] if args.name else []) + list(getattr(args, "path", []))
             if not _parts:
-                _exit_err("Pfad angeben: pidrivectl play local /pfad/zur/musik")
-            _path = " ".join(_parts)
+                # Kein Pfad → music_dir aus settings verwenden
+                import os as _osP, sys as _sysP
+                _pd = _osP.path.dirname(_osP.path.dirname(_osP.path.realpath(__file__)))
+                if _pd not in _sysP.path: _sysP.path.insert(0, _pd)
+                try:
+                    from settings import load_settings as _llsp
+                    _path = _llsp().get("music_dir") or "/home/pidrive/Musik"
+                except Exception:
+                    _path = "/home/pidrive/Musik"
+                fmt.out(f"  Musikordner: {_path}")
+            else:
+                _path = " ".join(_parts)
             _shuf = "|shuffle" if getattr(args, "shuffle", False) else ""
             svc.require_online()
             svc.send(f"local_play:{_path}{_shuf}")
@@ -470,20 +480,43 @@ Flags (vor dem Befehl angeben):
     if args.cmd == "station":
         if args.station_cmd == "list":
             if (args.source or "").lower() == "local":
-                import glob as _gl, os as _osL
-                # Kein expanduser — als root liefert ~ /root/Musik statt /home/pidrive/Musik
+                import glob as _gl, os as _osL, sys as _sys3
+                _pidrive_dir = _osL.path.dirname(_osL.path.dirname(_osL.path.realpath(__file__)))
+                if _pidrive_dir not in _sys3.path: _sys3.path.insert(0, _pidrive_dir)
+                # Kanonischer Musikpfad aus settings
                 _mdir = "/home/pidrive/Musik"
                 try:
-                    import sys as _sys2; _sys2.path.insert(0, _osL.path.dirname(_osL.path.dirname(_osL.path.realpath(__file__))))
                     from settings import load_settings as _lls
                     _mdir = _lls().get("music_dir") or _mdir
                 except Exception: pass
-                _ext  = {".mp3",".flac",".ogg",".m4a",".aac",".wav",".opus"}
-                _fs = sorted([f for f in _gl.glob(_osL.path.join(_mdir,"**","*.*"),recursive=True)
-                               if _osL.path.splitext(f)[1].lower() in _ext])
-                fmt.out(f"Musikordner: {_mdir}  ({len(_fs)} Dateien)")
-                for _n,_f in enumerate(_fs[:60],1): fmt.out(f"  {_n:3}. {_osL.path.basename(_f)}")
-                if len(_fs)>60: fmt.out(f"  ... +{len(_fs)-60} weitere")
+                _ext = {".mp3",".flac",".ogg",".m4a",".aac",".wav",".opus"}
+
+                def _count_audio_files(d):
+                    return sorted([f for f in _gl.glob(_osL.path.join(d,"**","*.*"),recursive=True)
+                                   if _osL.path.splitext(f)[1].lower() in _ext])
+
+                # Musikordner anzeigen
+                _fs = _count_audio_files(_mdir)
+                fmt.out(f"\n  Musikordner: {_mdir}  ({len(_fs)} Dateien)")
+                for _n,_f in enumerate(_fs[:30],1): fmt.out(f"    {_n:3}. {_osL.path.basename(_f)}")
+                if len(_fs)>30: fmt.out(f"    ... +{len(_fs)-30} weitere")
+
+                # USB-Sticks suchen
+                try:
+                    from modules.usb_music import find_usb_sticks as _fus
+                    _usbs = _fus()
+                except Exception: _usbs = []
+
+                if _usbs:
+                    fmt.out(f"\n  USB-Sticks: {len(_usbs)} gefunden")
+                    for _u in _usbs:
+                        fmt.out(f"\n  USB: {_u['name']}  →  {_u['path']}  ({_u['files']} Dateien)")
+                        _ufs = _count_audio_files(_u['path'])
+                        for _n,_f in enumerate(_ufs[:20],1): fmt.out(f"    {_n:3}. {_osL.path.basename(_f)}")
+                        if len(_ufs)>20: fmt.out(f"    ... +{len(_ufs)-20} weitere")
+                else:
+                    fmt.out("\n  USB-Sticks: keiner gefunden")
+                    fmt.out("    (USB-Stick einstecken → erscheint automatisch)")
                 sys.exit(EXIT_OK)
             try:
                 stations = svc.list_stations(args.source)
