@@ -245,16 +245,13 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     # ── Bibliothek: music_dir + USB-Sticks ────────────────────────────────
     _music_dir = settings.get("music_dir") or settings.get("music_path") or "/home/pidrive/Musik"
     import os as _os_lib
+    _lib_name = _os_lib.path.basename(_music_dir.rstrip("/")) or "Musik"
     _lib_children = [
-        MenuNode(id="lib_play", label="▶ " + _os_lib.path.basename(_music_dir.rstrip("/")) or "Musik",
-                 type="station", source="local",
-                 action=f"local_play:{_music_dir}",
-                 meta={"path": _music_dir}),
+        MenuNode(id="lib_play",    label=f"▶ {_lib_name}",
+                 type="action", action=f"local_play:{_music_dir}"),
         MenuNode(id="lib_shuffle", label="▶ Zufällig",
-                 type="station", source="local",
-                 action=f"local_play:{_music_dir}|shuffle",
-                 meta={"path": _music_dir, "shuffle": True}),
-        MenuNode(id="lib_stop", label="■ Stop", type="action", action="library_stop"),
+                 type="action", action=f"local_play:{_music_dir}|shuffle"),
+        MenuNode(id="lib_stop",    label="■ Stop", type="action", action="library_stop"),
     ]
 
     # USB-Sticks dynamisch ergänzen
@@ -268,13 +265,9 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                 id=_uid, label=_ulbl, type="folder",
                 children=[
                     MenuNode(id=f"{_uid}_play",    label="▶ Abspielen",
-                             type="station", source="local",
-                             action=f"local_play:{_upath}",
-                             meta={"path": _upath}),
+                             type="action", action=f"local_play:{_upath}"),
                     MenuNode(id=f"{_uid}_shuffle", label="▶ Zufällig",
-                             type="station", source="local",
-                             action=f"local_play:{_upath}|shuffle",
-                             meta={"path": _upath, "shuffle": True}),
+                             type="action", action=f"local_play:{_upath}|shuffle"),
                 ]
             ))
     except Exception:

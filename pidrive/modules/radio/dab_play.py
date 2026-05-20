@@ -412,8 +412,15 @@ def stop(S):
         except Exception:
             pass
 
-    import subprocess as _sp
+    import subprocess as _sp, time as _tm
     _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, timeout=3, capture_output=True)
+    _tm.sleep(0.3)  # kurz warten damit pkill wirkt
+
+    # RTL-SDR Lock-File clearen — welle-cli ist tot, Lock kann weg
+    try:
+        from modules.radio.rtlsdr import clear_stale_lock as _csl_dab
+        _csl_dab()
+    except Exception: pass
 
     _player_proc = None
 

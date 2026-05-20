@@ -16,6 +16,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
     # ── Scanner ─────────────────────────────────────────────────────────────
     if cmd.startswith("scan_up:"):
         band = cmd.split(":", 1)[1]
+        # Stale Metadaten aus vorheriger Quelle löschen
+        for _sk in ("radio_name", "radio_type", "track", "artist", "source_error"):
+            if _sk in ("radio_name", "radio_type"): S[_sk] = ""
+            else: S.pop(_sk, None)
         def _scan_up(b=band):
             source_state.begin_transition(f"scan_up:{b}", "scanner")
             try:
@@ -40,6 +44,9 @@ def handle(cmd, menu_state, store, S, settings, bg):
 
     elif cmd.startswith("scan_next:"):
         band = cmd.split(":", 1)[1]
+        for _sk in ("radio_name", "radio_type", "track", "artist", "source_error"):
+            if _sk in ("radio_name", "radio_type"): S[_sk] = ""
+            else: S.pop(_sk, None)
         def _scan_next(b=band):
             if source_state.begin_transition(f"scan_next:{b}", "scanner"):
                 try:

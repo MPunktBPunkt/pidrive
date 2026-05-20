@@ -228,18 +228,13 @@ def system_check():
             _csl()
         except Exception: pass
 
-    # USB-Sticks beim Start erkennen und loggen
+    # USB-Sticks beim Start erkennen und loggen (kein S-Zugriff hier)
     try:
         from modules.usb_music import find_usb_sticks as _fus
-        _usbs = _fus()
-        if _usbs:
-            for _u in _usbs:
-                log.info(f"USB-Stick erkannt: {_u['name']} ({_u['files']} Dateien) → {_u['path']}")
-            S["usb_sticks"] = _usbs
-        else:
-            S["usb_sticks"] = []
+        for _u in _fus():
+            log.info(f"USB-Stick erkannt: {_u['name']} ({_u['files']} Dateien) → {_u['path']}")
     except Exception:
-        S["usb_sticks"] = []
+        pass
 
 
     log.info("  USB-Geraete:")
