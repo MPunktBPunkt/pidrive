@@ -1189,7 +1189,7 @@ Flags (vor dem Befehl angeben):
             fmt.out(f"\n  {_label} — {len(_fil)} Titel"); fmt.out("  " + "─"*36)
             for _e in _fil:
                 _t = str(_e.get("time",""))[-8:-3]
-                fmt.out(f"  {_t:5}  {_e.get('source',''):8}  {_e.get('name','?')}")
+                fmt.out(f"  {_t:5}  {_e.get('source',''):8}  {_e.get('station') or _e.get('name') or _e.get('track') or _e.get('artist') or '?'}")
             if not _fil: fmt.out("  (keine Einträge)")
         sys.exit(EXIT_OK)
 

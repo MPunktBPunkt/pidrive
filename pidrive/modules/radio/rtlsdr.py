@@ -95,6 +95,26 @@ def loaded_dvb_modules():
     r = _sh(f"lsmod 2>/dev/null | grep -E '{DVB_MOD_PATTERN}' || true", timeout=3)
     return [ln.strip() for ln in r["out"].splitlines() if ln.strip()]
 
+def clear_stale_lock():
+    """Beim Core-Start: Lock-File löschen wenn kein echter Prozess läuft.
+    Verhindert, dass ein alter Lock-File RTL-SDR nach Neustart blockiert.
+    """
+    try:
+        state = _read_state()
+        if not state.get("locked"):
+            return  # kein Lock → nichts zu tun
+        # Lock vorhanden: echte Prozesse prüfen
+        if find_rtl_processes():
+            return  # Prozesse laufen wirklich → Lock behalten
+        # Veralteter Lock: löschen
+        _clear_state()
+        _LOCK_REGISTRY.pop("proc", None)
+        import log as _log2
+        _log2.info("RTL-SDR: veralteten Lock-File gelöscht (kein Prozess läuft)")
+    except Exception:
+        pass
+
+
 def find_rtl_processes():
     """Laufende RTL-Prozesse (ps — kein Device-Zugriff)."""
     r = _sh(r"ps ax -o pid=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' "

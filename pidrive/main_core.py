@@ -221,6 +221,13 @@ def system_check():
     CAPS_DESC = _caps_describe()
     log.info("  " + CAPS_DESC)
 
+    # RTL-SDR: veralteten Lock-File beim Start bereinigen
+    if CAPS.get("rtlsdr"):
+        try:
+            from modules.radio.rtlsdr import clear_stale_lock as _csl
+            _csl()
+        except Exception: pass
+
 
     log.info("  USB-Geraete:")
     try:

@@ -243,9 +243,14 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception: pass
             try: fm.stop(S)
             except Exception: pass
-            dab.play_by_name(_query, S, settings=settings, service_id=_sid)
-            source_state.commit_source("dab")
-            log.info(f"CLI play_dab: {_query!r}")
+            _dab_ok = dab.play_by_name(_query, S, settings=settings, service_id=_sid)
+            if _dab_ok is not False:
+                source_state.commit_source("dab")
+                log.info(f"CLI play_dab: {_query!r}")
+            else:
+                log.warn(f"CLI play_dab: Fehler beim Starten — {S.get('source_error','?')}")
+                import modules.source_state as _sst_dab
+                _sst_dab.commit_source("idle", auto_end=True)
         except Exception as e:
             log.error(f"CLI play_dab Fehler: {e}")
 
@@ -281,6 +286,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
                 else:
                     log.warn(f"CLI play_fm: Fehler beim Starten — {S.get('source_error','?')}")
+                    import modules.source_state as _sst_fm
+                    _sst_fm.commit_source("idle", auto_end=True)
             else:
                 log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
         except Exception as e:
