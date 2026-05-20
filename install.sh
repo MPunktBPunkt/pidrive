@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.29"
+PIDRIVE_VERSION="0.11.30"
 
 # ============================================================
 # PiDrive Install Script
@@ -401,7 +401,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.29
+# pidrive_display.service: entfernt v0.11.30
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -1102,7 +1102,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.29)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.30)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | tr -d ' \n')
 printf "  → Stabilitaetspruefung (15s)..."

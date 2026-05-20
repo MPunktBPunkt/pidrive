@@ -295,7 +295,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
         _query = cmd.split(":", 1)[1].strip()
         try:
             from modules import favorites as _fav
-            _favs = _fav.load_favorites()
+            _favs = _fav.get_all()
             if _query.isdigit():
                 _item = _favs[int(_query) - 1] if 0 < int(_query) <= len(_favs) else None
             else:

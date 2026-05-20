@@ -460,6 +460,13 @@ def _connect_device_inner(mac, S, settings):
             from modules import audio as _aud_bt; _aud_bt.invalidate_sink_cache()
         except Exception: pass
         _src_state.set_audio_route("bt" if sink_ok else "klinke")
+        # Audio-Decision-File aktualisieren — damit status/audio status korrekt
+        try:
+            from modules import audio as _aud2
+            _decision = _aud2.decide_audio_route(settings)
+            _aud2.apply_audio_route(_decision)
+        except Exception as _ae:
+            log.warn(f"BT-Connect: audio route update: {_ae}")
 
     settings["bt_last_mac"] = mac
     settings["bt_last_name"] = name

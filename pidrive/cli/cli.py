@@ -267,6 +267,8 @@ Flags (vor dem Befehl angeben):
     sys_sub.add_parser("diagnose")
 
     # ── log ───────────────────────────────────────────────────────────────
+    p_playlist = sub.add_parser("playlist", help="Wiedergabe-History")
+    p_playlist.add_argument("date", nargs="?", default="today")
     p_log = sub.add_parser("log", help="Log anzeigen")
     p_log.add_argument("target", nargs="?", default="core",
                        choices=["core","app","display","avrcp"])
@@ -329,6 +331,14 @@ Flags (vor dem Befehl angeben):
         sys.exit(EXIT_OK)
 
     # quick
+    if args.cmd == "version":
+        import os as _ov
+        _vf = _ov.path.join(_ov.path.dirname(_ov.path.abspath(__file__)), "VERSION")
+        try: _vv = open(_vf).read().strip()
+        except Exception: _vv = "?"
+        fmt.out(f"PiDrive v{_vv}")
+        sys.exit(EXIT_OK)
+
     if args.cmd == "quick":
         d = svc.get_quick()
         if use_json: fmt.print_json(d)
@@ -1122,6 +1132,30 @@ Flags (vor dem Befehl angeben):
         elif args.sys_cmd == "diagnose":
             result = svc.run_diagnose()
             fmt.out(result)
+        sys.exit(EXIT_OK)
+
+    # playlist
+    if args.cmd == "playlist":
+        import json as _plj, os as _plo, datetime as _dt
+        _hist = _plo.path.join(_plo.path.dirname(_plo.path.dirname(_plo.path.abspath(__file__))),
+                               "config", "play_history.json")
+        try:
+            with open(_hist, encoding="utf-8") as _plf: _entries = _plj.load(_plf)
+        except Exception: _entries = []
+        _date = getattr(args, "date", "today")
+        _today = _dt.date.today().isoformat()
+        if _date == "today":   _fil = [e for e in _entries if e.get("date","").startswith(_today)]; _label = f"Heute ({_today})"
+        elif _date == "all":   _fil = _entries; _label = "Alle Einträge"
+        elif _date == "last":  _fil = _entries[-20:]; _label = "Letzte 20"
+        else:                  _fil = [e for e in _entries if e.get("date","").startswith(_date)]; _label = _date
+        if use_json:
+            fmt.print_json({"label": _label, "count": len(_fil), "entries": _fil})
+        else:
+            fmt.out(f"\n  {_label} — {len(_fil)} Titel"); fmt.out("  " + "─"*36)
+            for _e in _fil:
+                _t = str(_e.get("time",""))[-8:-3]
+                fmt.out(f"  {_t:5}  {_e.get('source',''):8}  {_e.get('name','?')}")
+            if not _fil: fmt.out("  (keine Einträge)")
         sys.exit(EXIT_OK)
 
     # log

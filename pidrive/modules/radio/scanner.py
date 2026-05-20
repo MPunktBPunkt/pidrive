@@ -425,8 +425,10 @@ def stop(S):
     if _player_proc:
         try:
             _player_proc.terminate()
+            _player_proc.wait(timeout=2.0)   # verhindert Zombie-Prozess
         except Exception:
-            pass
+            try: _player_proc.kill()
+            except Exception: pass
         _player_proc = None
 
     if S.get("radio_type") == "SCANNER":
