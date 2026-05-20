@@ -1,6 +1,6 @@
 # PiDrive — Migration Backlog
 
-**Stand v0.11.30 · Arbeitsorientiertes Migrationsdokument**
+**Stand v0.11.31 · Arbeitsorientiertes Migrationsdokument**
 
 Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **Warum ist etwas noch da, wer blockiert den Abbau, was ist der nächste Schritt?**
 
@@ -11,13 +11,13 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 | Bereich | Reifegrad | Importstand | Shims vorhanden | Nächster Schritt |
 |---|---|---|---|---|
 | `menu/` | ✅ fertig | sauber | Facades bleiben | Root-Facades später entfernen |
-| `trigger/` | ✅ fast fertig | sauber seit v0.11.30 | keine aktiven | abgeschlossen erklären |
+| `trigger/` | ✅ fast fertig | sauber seit v0.11.31 | keine aktiven | abgeschlossen erklären |
 | `web/` | ✅ fast fertig | sauber | `webui.py` (Entry) | Entry ablösen |
 | `cli/` | ✅ fast fertig | sauber | Root-Shims entfernt | keine neuen Root-Pfade |
 | `modules/bluetooth/` | ✅ fast fertig | intern sauber | Root-bt_*.py vorhanden | späterer Shim-Abbau |
 | `modules/radio/` | ✅ fast fertig | intern sauber | Root-dab/fm/scanner vorhanden | späterer Shim-Abbau |
 | `integration/` | 🔄 Übergang | Shims aktiv | 2 Shims (avrcp, mpv_meta) | kanonisieren |
-| `core/` (main_core) | ⚠️ noch fragil | bereinigt v0.11.30 | Root-Entry bleibt | erst logisch zerlegen |
+| `core/` (main_core) | ⚠️ noch fragil | bereinigt v0.11.31 | Root-Entry bleibt | erst logisch zerlegen |
 
 ---
 
@@ -27,9 +27,9 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 | Datei | Service | Wer nutzt sie? | Blocker für Abbau | Nächster Schritt | Priorität |
 |---|---|---|---|---|---|
-| `main_core.py` | `pidrive_core.service` | systemd, alle Importe | Core-Logik zu eng verzahnt, Hochrisiko-Move | Erst logisch zerlegen, `core_callbacks.py` vervollständigen | P1 (nach v0.11.30) |
-| `webui.py` | `pidrive_web.service` | systemd | Flask-Startkontext | Service auf `web/app.py` umstellen | P1 (v0.11.30) |
-| `avrcp_trigger.py` | `pidrive_avrcp.service` | systemd | Service-Einstieg | `integration/avrcp_trigger.py` kanonisieren, dann Service umstellen | P1 (v0.11.30) |
+| `main_core.py` | `pidrive_core.service` | systemd, alle Importe | Core-Logik zu eng verzahnt, Hochrisiko-Move | Erst logisch zerlegen, `core_callbacks.py` vervollständigen | P1 (nach v0.11.31) |
+| `webui.py` | `pidrive_web.service` | systemd | Flask-Startkontext | Service auf `web/app.py` umstellen | P1 (v0.11.31) |
+| `avrcp_trigger.py` | `pidrive_avrcp.service` | systemd | Service-Einstieg | `integration/avrcp_trigger.py` kanonisieren, dann Service umstellen | P1 (v0.11.31) |
 
 ### Integration-Shims
 
@@ -59,7 +59,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ## C. Migrationsblöcke
 
-### Block 1: `trigger/` abschließen — ✅ erledigt in v0.11.30
+### Block 1: `trigger/` abschließen — ✅ erledigt in v0.11.31
 
 **Was war:**
 - `main_core.py`: `import td_nav` / `import td_radio` als Root-Altimporte
@@ -73,7 +73,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ---
 
-### Block 2: IPC-Producer vereinheitlichen — ✅ erledigt in v0.11.30/27
+### Block 2: IPC-Producer vereinheitlichen — ✅ erledigt in v0.11.31/27
 
 **Was war:** Mehrere Producer schrieben per `open("w")` in `/tmp/pidrive_cmd` und überschrieben damit die Queue.
 
@@ -88,7 +88,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ---
 
-### Block 3: `integration/` kanonisieren — 🔄 geplant v0.11.30
+### Block 3: `integration/` kanonisieren — 🔄 geplant v0.11.31
 
 **Ziel:** `integration/avrcp_trigger.py` und `integration/mpris2.py` werden die echten Implementierungen, die Root-Dateien werden Shims.
 
@@ -109,7 +109,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ---
 
-### Block 4: Web-Entry ablösen — 🔄 geplant v0.11.30
+### Block 4: Web-Entry ablösen — 🔄 geplant v0.11.31
 
 **Ziel:** `webui.py` wird reiner Shim, `pidrive_web.service` startet `web/app.py` direkt.
 
@@ -122,7 +122,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ---
 
-### Block 5: `main_core.py` logisch zerlegen — 📅 geplant v0.11.30+
+### Block 5: `main_core.py` logisch zerlegen — 📅 geplant v0.11.31+
 
 **Warum noch nicht:**
 - 620 Zeilen, trägt zu viele Verantwortungen
@@ -138,7 +138,7 @@ Dieses Dokument ergänzt `MIGRATION_STRUCTURE.md` (Shim-Status) um die Frage: **
 
 ---
 
-### Block 6: Systemd Core-Entrypoint modernisieren — 📅 geplant v0.11.30+
+### Block 6: Systemd Core-Entrypoint modernisieren — 📅 geplant v0.11.31+
 
 **Voraussetzung:** Block 5 (Core-Zerlegung) muss stabilen neuen Entry-Pfad liefern.
 
@@ -175,7 +175,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] Import-Smoke-Test grün für `trigger.*`-Pfade
 - [ ] Navigation, `play_*`, AVRCP-Events funktionieren end-to-end
 
-→ **Erreicht mit v0.11.30** ✅
+→ **Erreicht mit v0.11.31** ✅
 
 ---
 
@@ -185,7 +185,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] `pidrive_avrcp.service` startet stabil über neuen Pfad
 - [ ] AVRCP-Monitor und Inject-Tests laufen durch
 
-→ **Ziel: v0.11.30**
+→ **Ziel: v0.11.31**
 
 ---
 
@@ -194,7 +194,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] Kein `trigger_dispatcher` als Root-Import
 - [ ] Runtime-Smoke-Test grün (15s stabil, kein Traceback)
 
-→ **Erreicht mit v0.11.30** ✅
+→ **Erreicht mit v0.11.31** ✅
 
 ---
 
@@ -204,7 +204,7 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 - [ ] systemd ExecStart für Web/AVRCP auf neue Pfade umgestellt
 - [ ] Runtime-Gate aktiv und schlägt bei Instabilität hart an
 
-→ **Runtime-Gate: erreicht v0.11.30 ✅ · Web/AVRCP-Entry: Ziel v0.11.30**
+→ **Runtime-Gate: erreicht v0.11.31 ✅ · Web/AVRCP-Entry: Ziel v0.11.31**
 
 ---
 
@@ -212,10 +212,10 @@ Erst dann: `pidrive_core.service` ExecStart auf neuen Pfad umstellen.
 
 | Version | Fokus | Status |
 |---|---|---|
-| v0.11.30 | `trigger/` abschließen, IPC-Producer, Docs | ✅ |
-| v0.11.30 | `integration/` kanonisieren, Web-Entry ablösen | 🔄 geplant |
-| v0.11.30+ | `main_core.py` logisch zerlegen | 📅 nach Feldtest |
-| v0.11.30+ | systemd Core-Entry modernisieren | 📅 später |
+| v0.11.31 | `trigger/` abschließen, IPC-Producer, Docs | ✅ |
+| v0.11.31 | `integration/` kanonisieren, Web-Entry ablösen | 🔄 geplant |
+| v0.11.31+ | `main_core.py` logisch zerlegen | 📅 nach Feldtest |
+| v0.11.31+ | systemd Core-Entry modernisieren | 📅 später |
 | tbd | Root-Shim-Abbau (Module/BT/Radio) | 📅 gebündelt |
 
 ---

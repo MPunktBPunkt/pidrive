@@ -155,6 +155,7 @@ Flags (vor dem Befehl angeben):
     sub.add_parser("status", help="Quelle, Titel, Vol, BT, WiFi")
     sub.add_parser("now",    help="Was laeuft gerade? (Titel + DLS)")
     sub.add_parser("quick",  help="Kompakte Einzeile: Quelle, Titel, Vol, BT")
+    sub.add_parser("version", help="Version anzeigen")
     sub.add_parser("stop",   help="Radio + Spotify stoppen")
 
     # ── play ──────────────────────────────────────────────────────────────
@@ -937,12 +938,28 @@ Flags (vor dem Befehl angeben):
 
 
         elif args.audio_cmd == "status":
-            d = svc.get_status()
-            if use_json: fmt.print_json({"audio_out": d["audio_out"], "effective": d["audio_eff"]})
+            try:
+                import sys as _s2, os as _o2
+                _b2 = _o2.path.dirname(_o2.path.abspath(__file__))
+                if _b2 not in _s2.path: _s2.path.insert(0, _b2)
+                from modules.audio import read_last_decision_file as _rld
+                _ad = _rld()
+            except Exception: _ad = {}
+            _bt = svc.get_status().get("bt_status", "–")
+            if use_json:
+                fmt.print_json({"requested": _ad.get("requested","–"), "effective": _ad.get("effective","–"),
+                                "sink": _ad.get("sink","–"), "reason": _ad.get("reason","–"), "bt": _bt})
             else:
-                fmt.out(f"Ausgang:   {d.get('audio_eff','–')}")
-                fmt.out(f"Angefragt: {d.get('audio_out','–')}")
-        sys.exit(EXIT_OK)
+                _eff = _ad.get("effective") or "none"
+                _req = _ad.get("requested") or "–"
+                _rsn = _ad.get("reason") or ""
+                _snk = _ad.get("sink") or ""
+                fmt.out(f"Ausgang:   {_eff}" + (" ✓" if _eff not in ("none","–","") else ""))
+                fmt.out(f"Angefragt: {_req}")
+                if _rsn: fmt.out(f"Grund:     {_rsn}")
+                if _snk: fmt.out(f"Sink:      {_snk[:55]}")
+                fmt.out(f"Bluetooth: {_bt}")
+            sys.exit(EXIT_OK)
 
     # dab
     if args.cmd == "dab":

@@ -76,10 +76,12 @@ class PiDriveService:
         src = ""
         # source_current ist autoritativ — spotify=True heisst nur Raspotify läuft
         _cur = ss.get("source_current", "")
-        if _cur == "spotify":         src = "Spotify Connect"
+        _src_labels = {"spotify":"Spotify Connect","library":"Bibliothek",
+                       "local":"Lokal","scanner":"Scanner"}
+        if _cur in _src_labels:       src = _src_labels[_cur]
         elif _cur in ("dab","fm","webradio"): src = s.get("radio_type", _cur.upper())
-        elif _cur == "library":       src = "Bibliothek"
-        elif s.get("radio") and not _cur: src = s.get("radio_type", "Radio")
+        elif _cur and _cur != "idle": src = _cur.upper()
+        elif s.get("radio"):          src = s.get("radio_type", "Radio")
         title  = (s.get("track") or s.get("radio_name") or
                   s.get("lib_track") or s.get("lib_artist") or "")
         artist = s.get("artist", "")
@@ -90,7 +92,7 @@ class PiDriveService:
             "artist":             artist,
             "dls":                dls,
             "metadata_unavailable": s.get("metadata_unavailable", False),
-            "playing":            bool(s.get("radio") or s.get("spotify") or s.get("library")),
+            "playing":            (_cur not in ("", "idle", None)) or bool(s.get("radio") or s.get("spotify") or s.get("library")),
         }
 
     def get_volume(self) -> int | None:

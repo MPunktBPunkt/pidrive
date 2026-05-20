@@ -137,6 +137,10 @@ def _execute_node(node, menu_state, store, S, settings):
         S["radio_name"] = ""
         S["radio_type"] = ""
         S["control_context"] = "idle"
+        # Metadaten vollständig löschen beim Quellwechsel
+        for _k in ("track", "artist", "album", "dls_text", "metadata_unavailable",
+                   "dab_lock", "dab_sync", "dab_state", "_last_hist_track"):
+            S.pop(_k, None)
         source_state.commit_source("idle")
         _time_mod.sleep(0.10)
 

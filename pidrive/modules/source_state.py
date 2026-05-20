@@ -151,6 +151,18 @@ def commit_source(source_name: str, auto_end: bool = False):
         else:
             log.info(f"SOURCE commit: {old} → {source_name}")
         _write_state_file()
+        # Play-History für nicht-Webradio-Quellen (Webradio schreibt via mpv_meta)
+        if source_name not in ("idle", "webradio", ""):
+            try:
+                import sys as _sh, os as _oh
+                _bp = _oh.path.dirname(_oh.path.abspath(__file__))
+                _pp = _oh.path.dirname(_bp)  # pidrive/
+                if _pp not in _sh.path: _sh.path.insert(0, _pp)
+                from mpv_meta import _write_play_history as _wph
+                _wph(station=source_name, artist="", track="", raw="",
+                     source=source_name)
+            except Exception:
+                pass
 
 
 def end_transition():
