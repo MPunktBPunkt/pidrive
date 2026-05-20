@@ -207,7 +207,7 @@ def play_station(station, S, settings=None):
 
             if not _rtlsdr.wait_until_free(timeout=1.5, interval=0.05):
                 S["radio_playing"] = False
-                S["radio_station"] = "RTL-SDR belegt"
+                S["source_error"] = "RTL-SDR belegt"   # nicht in radio_name/radio_station
                 log.warn(f"FM: RTL-SDR belegt vor play {name} @ {freq_f}")
                 return False
 
@@ -301,7 +301,7 @@ def stop(S):
     # Kurzes Warten auf echte Freigabe — verhindert sofortiges Busy beim Folgestart
     try:
         if _rtlsdr:
-            _rtlsdr.wait_until_free(timeout=1.5, interval=0.05)
+            _rtlsdr.wait_until_free(timeout=3.0, interval=0.1)
     except Exception:
         pass
     if S.get("radio_type") == "FM":

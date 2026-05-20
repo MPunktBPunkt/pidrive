@@ -105,7 +105,10 @@ def play_station(station, S, settings=None):
                 if not _has_any_sink:
                     log.warn("[WEB] Kein PA-Sink verfügbar — mpv-Start abgebrochen")
                     S["radio_playing"] = False
-                    source_state.commit_source("idle", auto_end=True)
+                    try:
+                        from modules import source_state as _ss_wr
+                        _ss_wr.commit_source("idle", auto_end=True)
+                    except Exception: pass
                     return False
                 log.warn("[WEB] Kein expliziter PA-Sink — nutze PA-Default-Routing")
         except Exception as _se:

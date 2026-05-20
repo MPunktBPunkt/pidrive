@@ -84,6 +84,7 @@ class PiDriveService:
         elif s.get("radio"):          src = s.get("radio_type", "Radio")
         title  = (s.get("track") or s.get("radio_name") or
                   s.get("lib_track") or s.get("lib_artist") or "")
+        _src_err = s.get("source_error", "")
         artist = s.get("artist", "")
         dls    = s.get("dls_text", "")
         return {
@@ -92,7 +93,8 @@ class PiDriveService:
             "artist":             artist,
             "dls":                dls,
             "metadata_unavailable": s.get("metadata_unavailable", False),
-            "playing":            (_cur not in ("", "idle", None)) or bool(s.get("radio") or s.get("spotify") or s.get("library")),
+            "playing":            (_cur not in ("", "idle", None)),
+            "source_error":       _src_err,
         }
 
     def get_volume(self) -> int | None:

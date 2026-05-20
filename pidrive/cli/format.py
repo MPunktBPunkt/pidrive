@@ -73,7 +73,9 @@ def print_now(d: dict):
 
     if d.get("artist"): out(_c("  Artist: ", DIM) + d["artist"])
     if d.get("dls"):    out(_c("  DLS:    ", DIM) + d["dls"])
-    if d.get("metadata_unavailable") and not title:
+    if d.get("source_error"):
+        out(_c(f"  ⚠ {d['source_error']}", YELLOW))
+    elif d.get("metadata_unavailable") and not title:
         out(_c("  (Metadaten nicht verfügbar)", YELLOW))
 
 def print_quick(d: dict):

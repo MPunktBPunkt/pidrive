@@ -260,13 +260,16 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 try: dab.stop(S)
                 except Exception: pass
                 _freq = str(_match.get("freq") or _match.get("freq_mhz",""))
-                fm.play_station({"name": _match["name"], "freq": _freq}, S, settings)
-                source_state.commit_source("fm")
-                try:
-                    from mpv_meta import write_source_history as _wsh
-                    _wsh("fm", S.get("radio_name") or _freq_str or "FM", _freq_str or "")
-                except Exception: pass
-                log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
+                _fm_ok = fm.play_station({"name": _match["name"], "freq": _freq}, S, settings)
+                if _fm_ok is not False:
+                    source_state.commit_source("fm")
+                    try:
+                        from mpv_meta import write_source_history as _wsh
+                        _wsh("fm", S.get("radio_name") or _freq_str or "FM", _freq_str or "")
+                    except Exception: pass
+                    log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
+                else:
+                    log.warn(f"CLI play_fm: Fehler beim Starten — {S.get('source_error','?')}")
             else:
                 log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
         except Exception as e:

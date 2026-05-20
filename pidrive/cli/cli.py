@@ -334,9 +334,15 @@ Flags (vor dem Befehl angeben):
     # quick
     if args.cmd == "version":
         import os as _ov
-        _vf = _ov.path.join(_ov.path.dirname(_ov.path.abspath(__file__)), "VERSION")
-        try: _vv = open(_vf).read().strip()
-        except Exception: _vv = "?"
+        _vv = "?"
+        for _vf in [
+            _ov.path.join(_ov.path.dirname(_ov.path.realpath(__file__)), "VERSION"),
+            _ov.path.join(_ov.path.dirname(_ov.path.abspath(__file__)), "VERSION"),
+            "/home/pidrive/pidrive/pidrive/VERSION",
+            "/opt/pidrive/pidrive/VERSION",
+        ]:
+            try: _vv = open(_vf).read().strip(); break
+            except Exception: pass
         fmt.out(f"PiDrive v{_vv}")
         sys.exit(EXIT_OK)
 
@@ -459,7 +465,13 @@ Flags (vor dem Befehl angeben):
         if args.station_cmd == "list":
             if (args.source or "").lower() == "local":
                 import glob as _gl, os as _osL
-                _mdir = _osL.path.expanduser("~/Musik")
+                # Kein expanduser — als root liefert ~ /root/Musik statt /home/pidrive/Musik
+                _mdir = "/home/pidrive/Musik"
+                try:
+                    import sys as _sys2; _sys2.path.insert(0, _osL.path.dirname(_osL.path.dirname(_osL.path.realpath(__file__))))
+                    from settings import load_settings as _lls
+                    _mdir = _lls().get("music_dir") or _mdir
+                except Exception: pass
                 _ext  = {".mp3",".flac",".ogg",".m4a",".aac",".wav",".opus"}
                 _fs = sorted([f for f in _gl.glob(_osL.path.join(_mdir,"**","*.*"),recursive=True)
                                if _osL.path.splitext(f)[1].lower() in _ext])
