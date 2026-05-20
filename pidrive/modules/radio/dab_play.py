@@ -358,6 +358,7 @@ def play_station(station, S, settings=None):
         else:
             # no_lock: DAB läuft noch (welle-cli), aber Status ehrlich halten
             S["radio_playing"] = False
+            S["source_error"]  = "Kein Lock"   # für CLI / now-Ausgabe
             log.warn(f"DAB: no_lock — radio_playing=False, welle-cli läuft weiter (session={session_id})")
         S["dab_playback_state"] = "no_lock"
         S["dab_attempting"]   = True    # welle-cli läuft weiter — Lock noch nicht erreicht

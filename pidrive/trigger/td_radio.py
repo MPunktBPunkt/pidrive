@@ -249,6 +249,9 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 log.info(f"CLI play_dab: {_query!r}")
             else:
                 log.warn(f"CLI play_dab: Fehler beim Starten — {S.get('source_error','?')}")
+                # welle-cli läuft noch nach no_lock → explizit stoppen damit RTL-SDR frei wird
+                try: dab.stop(S)
+                except Exception: pass
                 import modules.source_state as _sst_dab
                 _sst_dab.commit_source("idle", auto_end=True)
         except Exception as e:

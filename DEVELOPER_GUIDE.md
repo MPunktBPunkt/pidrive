@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand v0.11.35 · Übergangsarchitektur aktiv**
+**Stand v0.11.36 · Übergangsarchitektur aktiv**
 
 Dieses Dokument hilft beim schnellen Wiedereinstieg: wo liegt was, was ist kanonisch, was ist noch Shim.
 

@@ -460,8 +460,23 @@ def startup_tasks(S, settings):
             dab.play_station(last_dab, S, settings)
 
         elif last_src == "webradio" and last_web and last_web.get("url"):
-            log.info("Boot-Resume: Webradio → " + str(last_web.get("name", "")))
-            webradio.play_station(last_web, S, settings)
+            # Webradio-Resume: erst starten wenn PA-Sink bereit (BT braucht Zeit nach Boot)
+            import subprocess as _sp_wr, os as _os_wr
+            _sink_env = {**_os_wr.environ, "PULSE_SERVER": "unix:/var/run/pulse/native"}
+            _sinks = ""
+            for _wi in range(6):   # max 6s warten
+                try:
+                    _sinks = _sp_wr.run(["pactl","list","short","sinks"],
+                                        capture_output=True, text=True,
+                                        env=_sink_env, timeout=2).stdout.strip()
+                    if _sinks: break
+                except Exception: pass
+                time.sleep(1)
+            if _sinks:
+                log.info("Boot-Resume: Webradio → " + str(last_web.get("name", "")))
+                webradio.play_station(last_web, S, settings)
+            else:
+                log.warn("Boot-Resume: Webradio übersprungen — kein PA-Sink nach 6s")
 
         elif last_src and not last_src:
             pass  # last_source explizit leer → kein Resume
