@@ -54,17 +54,26 @@ def print_status(d: dict):
     out(f"  WiFi:         {wifi_info}")
 
 def print_now(d: dict):
-    if not d.get("playing") and not d.get("source"):
+    src    = d.get("source", "")
+    title  = d.get("title", "")
+    playing = d.get("playing", False)
+
+    if not playing and not src:
         out("Nichts läuft gerade.")
         return
-    src = d.get("source", "")
+
+    # Quelle aktiv aber keine Metadaten → sinnvoll anzeigen statt "–"
+    _title_display = title or ("(Sender läuft, Metadaten folgen...)"
+                               if playing else "(keine Metadaten)")
+
     if src:
-        out(_c(f"[{src}]", CYAN) + "  " + (d.get("title") or "–"))
+        out(_c(f"[{src}]", CYAN) + "  " + _title_display)
     else:
-        out(d.get("title") or "–")
+        out(_title_display)
+
     if d.get("artist"): out(_c("  Artist: ", DIM) + d["artist"])
     if d.get("dls"):    out(_c("  DLS:    ", DIM) + d["dls"])
-    if d.get("metadata_unavailable"):
+    if d.get("metadata_unavailable") and not title:
         out(_c("  (Metadaten nicht verfügbar)", YELLOW))
 
 def print_quick(d: dict):

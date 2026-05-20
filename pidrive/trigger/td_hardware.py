@@ -30,17 +30,28 @@ def handle(cmd, menu_state, store, S, settings, bg):
             else:
                 # v0.10.55: status.py forcieren statt blind 1.5s warten
                 import time as _t
-                for _attempt in range(6):      # max 3s in 0.5s-Schritten
+                # Spotify braucht bis zu 8s (OAuth + Daemon-Start)
+                S["radio_name"]  = "Spotify Connect"
+                S["radio_type"]  = "SPOTIFY"
+                S["radio_playing"] = False  # pending bis Spotify tatsächlich spielt
+                for _attempt in range(16):   # max 8s in 0.5s-Schritten
                     _t.sleep(0.5)
                     try:
                         import status as _sm; _sm.refresh(force=True)
                     except Exception: pass
                     if S.get("spotify"):
                         source_state.commit_source("spotify")
+                        S["radio_playing"] = True
                         log.info(f"SOURCE commit: spotify (attempt={_attempt+1})")
+                        try:
+                            from mpv_meta import write_source_history as _wshsp
+                            _wshsp("spotify", "Spotify Connect", "")
+                        except Exception: pass
                         break
                 else:
-                    log.warn("SOURCE spotify: nicht aktiv nach 3s — kein commit")
+                    log.warn("SOURCE spotify: nicht aktiv nach 8s — kein commit")
+                    S["radio_name"] = ""
+                    S["radio_type"] = ""
         bg(_spotify_toggle)
 
     # ── Audio ─────────────────────────────────────────────────────────────

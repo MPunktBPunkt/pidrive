@@ -1,5 +1,5 @@
 """
-local_player.py — Lokale Musikwiedergabe für PiDrive v0.11.31
+local_player.py — Lokale Musikwiedergabe für PiDrive v0.11.32
 Unterstützt: Einzeldateien, Ordner, M3U-Playlisten, Shuffle.
 Audio über PulseAudio → BT/Klinke wie alle anderen Quellen.
 """
@@ -72,11 +72,12 @@ def play(path: str, S: dict, settings: dict,
     _current_idx      = min(idx, len(files) - 1)
 
     _start_mpv(files[_current_idx:], S, settings)
-    S["source"]       = "local"
-    S["radio_type"]   = "LOCAL"
+    # source_current wird durch td_radio.commit_source("local") gesetzt — hier nur Metadaten
+    S["radio_type"]    = "LOCAL"
     S["radio_playing"] = True
-    S["radio_name"]   = os.path.basename(files[_current_idx])
+    S["radio_name"]    = os.path.basename(files[_current_idx])
     S["radio_station"] = path
+    S["metadata_unavailable"] = False
     log.info(f"local_player: {len(files)} Dateien ab {files[_current_idx]!r}")
     return True
 
@@ -113,7 +114,7 @@ def stop(S: dict):
             _player_proc = None
     _current_playlist = []
     S.pop("radio_playing", None)
-    S["source"] = "idle"
+    # source_current → td_nav._stop_all_sources oder commit_source("idle")
     S["radio_type"] = ""
 
 

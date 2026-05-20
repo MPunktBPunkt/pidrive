@@ -262,6 +262,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 _freq = str(_match.get("freq") or _match.get("freq_mhz",""))
                 fm.play_station({"name": _match["name"], "freq": _freq}, S, settings)
                 source_state.commit_source("fm")
+                try:
+                    from mpv_meta import write_source_history as _wsh
+                    _wsh("fm", S.get("radio_name") or _freq_str or "FM", _freq_str or "")
+                except Exception: pass
                 log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
             else:
                 log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
@@ -284,6 +288,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 except Exception: pass
                 webradio.play_station(_match, S, settings)
                 source_state.commit_source("webradio")
+                try:
+                    from mpv_meta import write_source_history as _wsh2
+                    _wsh2("webradio", S.get("radio_name") or "", S.get("radio_station") or "")
+                except Exception: pass
                 log.info(f"CLI play_web: {_match['name']}")
             else:
                 log.warn(f"CLI play_web: Sender nicht gefunden: {_query!r}")
@@ -372,6 +380,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
             from modules import local_player as _lp
             _lp.play(payload, S, settings, shuffle=shuffle)
             source_state.commit_source("local")
+            try:
+                import os as _oslh
+                from mpv_meta import write_source_history as _wsh3
+                _wsh3("local", _oslh.path.basename(payload.rstrip("/")) or "Lokal", payload)
+            except Exception: pass
             log.info(f"local_play: {payload!r} shuffle={shuffle}")
         except Exception as _e:
             log.error(f"local_play Fehler: {_e}")

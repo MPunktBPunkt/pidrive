@@ -136,9 +136,12 @@ class PiDriveService:
         ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
         now = self.get_now()
         vol = self.get_volume()
+        _cur = ss.get("source_current", "")
+        # Wenn idle: keinen veralteten Titel zeigen
+        _title = now["title"] if _cur not in ("", "idle") else "–"
         return {
-            "source":    ss.get("source_current", "–"),
-            "title":     now["title"] or "–",
+            "source":    _cur or "idle",
+            "title":     _title or "–",
             "volume":    (str(vol) + "%") if vol is not None else "–",
             "audio":     s.get("audio_effective", "–"),
             "bt":        f"{'verbunden' if s.get('bt') else 'getrennt'} {s.get('bt_device','')}".strip(),

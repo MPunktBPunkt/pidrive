@@ -91,9 +91,22 @@ def play_station(station, S, settings=None):
                 _mpv_env_dict["PULSE_SINK"] = _target_sink
                 log.info(f"[WEB] mpv PULSE_SINK={_target_sink}")
             else:
-                # Kein expliziter Sink-Name — PulseAudio Default-Sink verwenden.
-                # Wenn BT-Kopfhörer verbunden ist aber bluez_sink noch nicht sichtbar,
-                # läuft mpv trotzdem über PA-Default und Audio kommt an.
+                # Kein expliziter Sink: PA-Default verwenden falls irgendein Sink da
+                # (HDMI, Klinke, etc.) — sonst früh abbrechen
+                import subprocess as _pchk
+                _sinks_out = _pchk.run(
+                    ["pactl", "list", "short", "sinks"],
+                    capture_output=True, text=True,
+                    env={**__import__("os").environ,
+                         "PULSE_SERVER": "unix:/var/run/pulse/native"},
+                    timeout=3
+                ).stdout.strip()
+                _has_any_sink = bool(_sinks_out)
+                if not _has_any_sink:
+                    log.warn("[WEB] Kein PA-Sink verfügbar — mpv-Start abgebrochen")
+                    S["radio_playing"] = False
+                    source_state.commit_source("idle", auto_end=True)
+                    return False
                 log.warn("[WEB] Kein expliziter PA-Sink — nutze PA-Default-Routing")
         except Exception as _se:
             log.warn(f"[WEB] Sink-Ermittlung: {_se}")
