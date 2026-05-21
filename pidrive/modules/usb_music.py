@@ -1,5 +1,5 @@
 """
-usb_music.py — USB-Stick Erkennung für PiDrive v0.11.38
+usb_music.py — USB-Stick Erkennung für PiDrive v0.11.39
 
 Scannt /media/ und /mnt/ nach gemounteten USB-Sticks mit Audiodateien.
 Wird vom Menü, CLI und local_player verwendet.

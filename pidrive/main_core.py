@@ -221,9 +221,16 @@ def system_check():
     CAPS_DESC = _caps_describe()
     log.info("  " + CAPS_DESC)
 
-    # RTL-SDR: veralteten Lock-File beim Start bereinigen
+    # RTL-SDR: beim Core-Start verwaiste Prozesse töten und Lock freigeben
+    # Beim Start kann kein legitimer RTL-SDR-Prozess vom AKTUELLEN Core laufen.
     if CAPS.get("rtlsdr"):
         try:
+            import subprocess as _rsp
+            # Verwaiste welle-cli und rtl_fm aus vorherigen Sessions beenden
+            _rsp.run("pkill -f welle-cli 2>/dev/null; pkill -f rtl_fm 2>/dev/null",
+                     shell=True, timeout=3, capture_output=True)
+            import time as _rst; _rst.sleep(0.3)
+            # Lock jetzt immer clearen (Prozesse sind tot)
             from modules.radio.rtlsdr import clear_stale_lock as _csl
             _csl()
         except Exception: pass

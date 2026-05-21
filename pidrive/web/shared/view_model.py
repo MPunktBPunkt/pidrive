@@ -144,7 +144,7 @@ def get_dab_scan_debug():
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
-        from modules import dab
+        from modules.radio import dab
         return dab.load_last_scan_diag_file() or dab.get_last_scan_diag()
     except Exception as e:
         return {"error": str(e)}
@@ -154,7 +154,7 @@ def get_spectrum_debug():
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
-        from modules import spectrum
+        from modules.radio import spectrum
         return spectrum.load_last_spectrum()
     except Exception as e:
         return {"error": str(e)}

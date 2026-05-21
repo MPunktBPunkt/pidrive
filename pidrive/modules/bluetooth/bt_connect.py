@@ -342,7 +342,7 @@ def _connect_device_inner(mac, S, settings):
 
     # Scanner stoppen, falls aktiv
     try:
-        from modules import scanner as _scanner
+        from modules.radio import scanner as _scanner
         if S.get("radio_type") == "SCANNER":
             log.info("BT connect: stoppe Scanner vor Connect")
             _scanner.stop(S)
