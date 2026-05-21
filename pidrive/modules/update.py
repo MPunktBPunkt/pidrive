@@ -136,7 +136,7 @@ def run_update(S):
 
 
 def spotify_toggle(S: dict):
-    """Spotify Connect starten/stoppen (migriert aus modules/musik.py v0.11.39).
+    """Spotify Connect starten/stoppen (migriert aus modules/musik.py v0.11.40).
     Startet oder stoppt raspotify/librespot Service.
     """
     import subprocess as _sp

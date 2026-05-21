@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.39"
+PIDRIVE_VERSION="0.11.40"
 
 # ============================================================
 # PiDrive Install Script
@@ -401,7 +401,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.39
+# pidrive_display.service: entfernt v0.11.40
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -549,12 +549,53 @@ if ! command -v librespot &>/dev/null && ! dpkg -l raspotify 2>/dev/null | grep 
         fi
     else
         info "librespot installieren (x86)..."
-        # librespot direkt aus Debian-Repo (verfuegbar ab Bullseye)
+        _LB_INSTALLED=false
+
+        # Versuch 1: Debian-Repo (Bullseye/Bookworm, fehlt in Trixie)
         if apt-get install -y librespot -q 2>/dev/null && command -v librespot &>/dev/null; then
-            ok "librespot installiert (Spotify Connect)"
-        else
-            warn "librespot nicht in Repo — Spotify Connect nicht verfuegbar"
-            warn "  Manuell: https://github.com/librespot-org/librespot"
+            ok "librespot installiert via apt"
+            _LB_INSTALLED=true
+        fi
+
+        # Versuch 2: GitHub Binary (Fallback fuer Trixie/neuere Distros)
+        if ! $_LB_INSTALLED; then
+            info "librespot GitHub Binary laden..."
+            _LB_TMP=$(mktemp -d)
+            _LB_OK=false
+            # Versuche verschiedene Release-Pfade (GitHub naming variiert)
+            for _LB_URL in \
+                "https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-x86_64.tar.gz" \
+                "https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-amd64.tar.gz"; do
+                if curl -sfL --connect-timeout 15 "$_LB_URL" \
+                        -o "$_LB_TMP/librespot.tar.gz" 2>/dev/null; then
+                    tar xzf "$_LB_TMP/librespot.tar.gz" -C "$_LB_TMP" 2>/dev/null || true
+                    # Binary suchen (direkt oder in Unterverzeichnis)
+                    _LB_BIN=$(find "$_LB_TMP" -name "librespot" -type f 2>/dev/null | head -1)
+                    if [ -n "$_LB_BIN" ]; then
+                        install -m 755 "$_LB_BIN" /usr/local/bin/librespot
+                        command -v librespot &>/dev/null && _LB_OK=true && break
+                    fi
+                fi
+            done
+            rm -rf "$_LB_TMP"
+            if $_LB_OK; then
+                ok "librespot installiert (GitHub Binary)"
+                _LB_INSTALLED=true
+            else
+                warn "librespot GitHub Download fehlgeschlagen"
+                warn "  Manuell nach Install (einmalig):"
+                warn "    curl -sfL https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-x86_64.tar.gz | tar xz"
+                warn "    sudo install -m755 librespot /usr/local/bin/"
+            fi
+        fi
+
+        # Versuch 3: cargo (falls Rust installiert)
+        if ! $_LB_INSTALLED && command -v cargo &>/dev/null; then
+            info "librespot via cargo installieren (dauert 2-5 Min)..."
+            if cargo install librespot 2>/dev/null && command -v librespot &>/dev/null; then
+                ok "librespot installiert via cargo"
+                _LB_INSTALLED=true
+            fi
         fi
     fi
 else
@@ -846,6 +887,43 @@ if [ -f /etc/raspotify/conf ]; then
 
 fi
 
+# librespot.service fuer x86 (falls kein raspotify vorhanden)
+if command -v librespot &>/dev/null && [ ! -f /etc/raspotify/conf ]; then
+    if [ ! -f /etc/systemd/system/librespot.service ]; then
+        info "librespot.service anlegen (x86 PulseAudio)..."
+        cat > /etc/systemd/system/librespot.service << 'LSEOF'
+[Unit]
+Description=PiDrive Spotify Connect (librespot)
+After=network-online.target pulseaudio.service
+Wants=network-online.target
+
+[Service]
+User=PIDRIVE_REAL_USER_PLACEHOLDER
+Environment=PULSE_SERVER=unix:/var/run/pulse/native
+ExecStart=/usr/local/bin/librespot \
+  --name PiDrive \
+  --backend pulseaudio \
+  --device-type automobileambient \
+  --onevent /usr/local/bin/spotify_event.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+LSEOF
+        # REAL_USER in Service ersetzen
+        sed -i "s/PIDRIVE_REAL_USER_PLACEHOLDER/$REAL_USER/g" \
+            /etc/systemd/system/librespot.service
+        systemctl daemon-reload
+        systemctl enable librespot 2>/dev/null || true
+        ok "librespot.service eingerichtet (x86, PulseAudio)"
+    else
+        ok "librespot.service bereits vorhanden"
+    fi
+elif command -v librespot &>/dev/null && [ -f /etc/raspotify/conf ]; then
+    : # ARM mit raspotify — bereits weiter oben behandelt
+fi
+
 # ── Zeitzone und fake-hwclock ──────────────────────────────────────────────
 info "Zeitzone und Uhr..."
 
@@ -1102,7 +1180,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.39)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.40)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."
@@ -1149,10 +1227,10 @@ echo -e "  ${CYAN}tail -20 $LOG_DIR/pidrive.log${NC}"
 echo -e "  ${CYAN}journalctl -u pidrive_core -f${NC}"
 echo ""
 echo -e "${BOLD}Naechste Schritte:${NC}"
-echo -e "  1. ${YELLOW}Spotify OAuth (einmalig, falls Raspotify/librespot installiert):${NC}"
-echo -e "     sudo systemctl stop raspotify"
-echo -e "     /usr/bin/librespot --name PiDrive --enable-oauth \\"
-echo -e "       --system-cache /var/cache/raspotify"
+echo -e "  1. ${YELLOW}Spotify OAuth (einmalig, nach librespot-Installation):${NC}"
+echo -e "     sudo systemctl stop librespot raspotify 2>/dev/null; true"
+echo -e "     /usr/local/bin/librespot --name PiDrive --enable-oauth \\"
+echo -e "       --system-cache /var/cache/librespot"
 echo ""
 echo -e "  2. ${YELLOW}Reboot (nach Erstinstallation — wichtig fuer RTL-SDR!):${NC}"
 echo -e "     ${CYAN}sudo reboot${NC}"
