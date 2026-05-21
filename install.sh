@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.40"
+PIDRIVE_VERSION="0.11.42"
 
 # ============================================================
 # PiDrive Install Script
@@ -108,9 +108,13 @@ echo "╚═══════════════════════�
 echo -e "${NC}" 
 
 if [ "$EUID" -ne 0 ]; then
-    err "Bitte als root ausfuehren: sudo bash install.sh"
+    err "Bitte als root ausfuehren:  su -  dann  bash ~/pidrive/install.sh"
+    err "  (oder: sudo bash install.sh  wenn sudo installiert ist)"
     exit 1
 fi
+
+# sudo verfuegbar? Auf Systemen ohne sudo direkt als root.
+if command -v sudo &>/dev/null; then _SUDO="sudo"; else _SUDO=""; fi
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 1: Service stoppen (falls aktiv)
@@ -401,7 +405,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.40
+# pidrive_display.service: entfernt v0.11.42
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -564,8 +568,8 @@ if ! command -v librespot &>/dev/null && ! dpkg -l raspotify 2>/dev/null | grep 
             _LB_OK=false
             # Versuche verschiedene Release-Pfade (GitHub naming variiert)
             for _LB_URL in \
-                "https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-x86_64.tar.gz" \
-                "https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-amd64.tar.gz"; do
+                "https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-amd64.tar.gz" \
+                "https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-x86_64.tar.gz"; do
                 if curl -sfL --connect-timeout 15 "$_LB_URL" \
                         -o "$_LB_TMP/librespot.tar.gz" 2>/dev/null; then
                     tar xzf "$_LB_TMP/librespot.tar.gz" -C "$_LB_TMP" 2>/dev/null || true
@@ -584,8 +588,8 @@ if ! command -v librespot &>/dev/null && ! dpkg -l raspotify 2>/dev/null | grep 
             else
                 warn "librespot GitHub Download fehlgeschlagen"
                 warn "  Manuell nach Install (einmalig):"
-                warn "    curl -sfL https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-x86_64.tar.gz | tar xz"
-                warn "    sudo install -m755 librespot /usr/local/bin/"
+                warn "    curl -sfL https://github.com/librespot-org/librespot/releases/latest/download/librespot-linux-amd64.tar.gz | tar xz"
+                warn "    ${_SUDO} install -m755 librespot /usr/local/bin/"
             fi
         fi
 
@@ -721,13 +725,23 @@ if ! $IS_CONTAINER && [ "$REAL_USER" != "root" ]; then
         sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.service 2>/dev/null || true
     fi
 fi
-sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
-sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
+runuser -u "$REAL_USER" -- XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
+runuser -u "$REAL_USER" -- XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
 # User-PA-Socket null-masken: ln -sf /dev/null verhindert Socket-Aktivierung zuverlässig
 mkdir -p /etc/systemd/user
 ln -sf /dev/null /etc/systemd/user/pulseaudio.socket
 ln -sf /dev/null /etc/systemd/user/pulseaudio.service
 ok "User-PA Socket + Service null-maskiert"
+# PipeWire-Konflikt erkennen: PipeWire + System-PulseAudio konkurrieren um den PA-Socket
+if systemctl --user is-active pipewire-pulse &>/dev/null 2>&1    || pgrep -x pipewire-pulse &>/dev/null 2>&1    || pgrep -x pipewire &>/dev/null 2>&1; then
+    warn "PipeWire laeuft gleichzeitig mit System-PulseAudio!"
+    warn "  → Das verursacht: Keine Sinks, Default Sink (null), Audio-Konflikte"
+    warn "  → Fix: ${_SUDO} bash ~/pidrive/pidrive_car_only_cleanup.sh && ${_SUDO} reboot"
+    warn "  → (deaktiviert PipeWire, behaelt nur System-PulseAudio)"
+else
+    : # Kein PipeWire-Konflikt
+fi
+
 # Alle laufenden PA-Prozesse als User beenden
 pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
 sleep 1
@@ -785,7 +799,7 @@ if systemctl is-active --quiet pulseaudio && [ "${_pa_sinks:-0}" -gt 0 ]; then
   fi
 elif systemctl is-active --quiet pulseaudio; then
   warn "PulseAudio: Service aktiv aber keine Sinks — Reboot erforderlich"
-  warn "  → Nach Reboot: sudo systemctl status pulseaudio"
+  warn "  → Nach Reboot: ${_SUDO} systemctl status pulseaudio"
 else
   warn "PulseAudio System-Service inaktiv"
   warn "  Debug: journalctl -u pulseaudio --no-pager | tail -20"
@@ -846,7 +860,7 @@ fi
     ok "PA Unit-Datei: /etc/systemd/system/pulseaudio.service vorhanden ✓"
   else
     warn "PA Unit-Datei FEHLT — systemctl kann pulseaudio.service nicht finden!"
-    warn "  → sudo bash ~/pidrive/pidrive_car_only_cleanup.sh && sudo reboot"
+    warn "  → ${_SUDO} bash ~/pidrive/pidrive_car_only_cleanup.sh && ${_SUDO} reboot"
   fi
 
 
@@ -985,17 +999,17 @@ fi
 if which rtl_fm >/dev/null 2>&1; then
     ok "rtl_fm vorhanden"
 else
-    warn "rtl_fm nicht installiert -> sudo apt install rtl-sdr"
+    warn "rtl_fm nicht installiert -> ${_SUDO} apt install rtl-sdr"
 fi
 if which rtl_sdr >/dev/null 2>&1; then
     ok "rtl_sdr vorhanden (Spectrum/FFT verfuegbar)"
 else
-    warn "rtl_sdr nicht gefunden — Spectrum/FFT nicht verfuegbar (sudo apt install rtl-sdr)"
+    warn "rtl_sdr nicht gefunden — Spectrum/FFT nicht verfuegbar (${_SUDO} apt install rtl-sdr)"
 fi
 if which welle-cli >/dev/null 2>&1; then
     ok "welle-cli vorhanden (DAB+)"
 else
-    warn "welle-cli nicht installiert -> sudo apt install welle.io"
+    warn "welle-cli nicht installiert -> ${_SUDO} apt install welle.io"
 fi
 # DVB-Treiber Status
 if lsmod 2>/dev/null | grep -qE "dvb_usb_rtl28xxu|dvb_core"; then
@@ -1180,16 +1194,17 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.40)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.42)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."
 sleep 15
 _RESTART1=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 _ACTIVE=$(systemctl is-active pidrive_core 2>/dev/null)
-_TRACEBACK=$(journalctl -u pidrive_core --since "30 seconds ago" --no-pager -q 2>/dev/null \
-  | grep -c "Traceback\|UnboundLocalError\|ImportError\|ModuleNotFoundError" 2>/dev/null || echo 0)
-_STATUS_AGE=$(python3 -c "import os,time; f='/tmp/pidrive_status.json'; print(int(time.time()-os.path.getmtime(f))) if os.path.exists(f) else print(9999)" 2>/dev/null || echo 9999)
+_TRACEBACK=$(journalctl -u pidrive_core --since "30 seconds ago" --no-pager -q 2>/dev/null   | grep -c "Traceback\|UnboundLocalError\|ImportError\|ModuleNotFoundError" 2>/dev/null   | tr -dc '0-9' || echo 0)
+_TRACEBACK=${_TRACEBACK:-0}
+_STATUS_AGE=$(python3 -c "import os,time; f='/tmp/pidrive_status.json'; print(int(time.time()-os.path.getmtime(f))) if os.path.exists(f) else print(9999)" 2>/dev/null | tr -dc '0-9' || echo 9999)
+_STATUS_AGE=${_STATUS_AGE:-9999}
 echo ""
 if [ "$_ACTIVE" != "active" ]; then
   err "KRITISCH: pidrive_core nach 15s nicht mehr aktiv — Installation fehlgeschlagen"
@@ -1228,15 +1243,15 @@ echo -e "  ${CYAN}journalctl -u pidrive_core -f${NC}"
 echo ""
 echo -e "${BOLD}Naechste Schritte:${NC}"
 echo -e "  1. ${YELLOW}Spotify OAuth (einmalig, nach librespot-Installation):${NC}"
-echo -e "     sudo systemctl stop librespot raspotify 2>/dev/null; true"
+echo -e "     ${_SUDO} systemctl stop librespot raspotify 2>/dev/null; true"
 echo -e "     /usr/local/bin/librespot --name PiDrive --enable-oauth \\"
 echo -e "       --system-cache /var/cache/librespot"
 echo ""
 echo -e "  2. ${YELLOW}Reboot (nach Erstinstallation — wichtig fuer RTL-SDR!):${NC}"
-echo -e "     ${CYAN}sudo reboot${NC}"
+echo -e "     ${CYAN}${_SUDO} reboot${NC}"
 echo ""
 echo -e "     RTL-SDR-Hinweis: DVB-T Treiber wird erst nach Reboot deaktiviert."
-echo -e "     Alternativ ohne Reboot: ${CYAN}sudo modprobe -r dvb_usb_rtl28xxu rtl2832${NC}"
+echo -e "     Alternativ ohne Reboot: ${CYAN}${_SUDO} modprobe -r dvb_usb_rtl28xxu rtl2832${NC}"
 echo ""
 
 # ── Car-Only Cleanup (v0.10.55: bei Frisch-Install mit anschliessendem Reboot) ──
@@ -1250,10 +1265,10 @@ if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
     ok "Car-Only Cleanup abgeschlossen"
     echo ""
     warn "Erstinstallation: Reboot erforderlich damit PulseAudio System-Mode greift."
-    echo -e "  ${CYAN}sudo reboot${NC}"
+    echo -e "  ${CYAN}${_SUDO} reboot${NC}"
     echo ""
     echo -e "${BOLD}Update nach Reboot:${NC}"
-    echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash${NC}"
+    echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | ${_SUDO} bash${NC}"
     exit 0
   else
     echo ""
@@ -1269,14 +1284,14 @@ if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
       ok "Car-Only Cleanup abgeschlossen"
     else
       echo -e "  Cleanup übersprungen."
-      echo -e "  Manuell: ${CYAN}sudo bash ~/pidrive/pidrive_car_only_cleanup.sh${NC}"
+      echo -e "  Manuell: ${CYAN}${_SUDO} bash ~/pidrive/pidrive_car_only_cleanup.sh${NC}"
     fi
   fi
 fi
 
 echo ""
 echo -e "${BOLD}Update:${NC}"
-echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash${NC}"
+echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | ${_SUDO} bash${NC}"
 # ── Journald: Größe begrenzen (SD-Karten-Schonung) ─────────────────────────
 _jcf=/etc/systemd/journald.conf.d/pidrive.conf
 mkdir -p /etc/systemd/journald.conf.d
