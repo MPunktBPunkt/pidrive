@@ -135,25 +135,34 @@ def run_update(S):
         time.sleep(4); ipc.clear_progress()
 
 
+def _spotify_service() -> str:
+    """Gibt den konfigurierten Spotify-Service zurück (librespot bevorzugt)."""
+    import subprocess as _sp2
+    for _svc in ("librespot", "raspotify"):
+        try:
+            r = _sp2.run(["systemctl", "is-enabled", _svc],
+                         capture_output=True, text=True, timeout=2)
+            if r.returncode == 0:
+                return _svc
+        except Exception:
+            pass
+    return "librespot"
+
+
 def spotify_toggle(S: dict):
-    """Spotify Connect starten/stoppen (migriert aus modules/musik.py v0.11.42).
-    Startet oder stoppt raspotify/librespot Service.
-    """
-    import subprocess as _sp
+    """Spotify Connect starten/stoppen — librespot und raspotify."""
+    import subprocess as _sp, time as _t
+    _svc = _spotify_service()
     was_active = bool(S.get("spotify"))
     try:
         if was_active:
-            _sp.run(["systemctl", "stop", "raspotify"],
-                    capture_output=True, timeout=5)
+            _sp.run(["systemctl", "stop", _svc], capture_output=True, timeout=5)
             S["spotify"] = False
         else:
-            _sp.run(["systemctl", "start", "raspotify"],
-                    capture_output=True, timeout=5)
-            # Status nach 1s prüfen
-            import time as _t; _t.sleep(1)
-            r = _sp.run(["systemctl", "is-active", "raspotify"],
+            _sp.run(["systemctl", "start", _svc], capture_output=True, timeout=5)
+            _t.sleep(2)
+            r = _sp.run(["systemctl", "is-active", _svc],
                         capture_output=True, text=True, timeout=3)
             S["spotify"] = (r.stdout.strip() == "active")
     except Exception as _e:
-        import log as _log
-        _log.warn(f"spotify_toggle: {_e}")
+        import log as _log; _log.warn(f"spotify_toggle ({_svc}): {_e}")

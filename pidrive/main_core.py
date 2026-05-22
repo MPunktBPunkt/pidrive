@@ -316,12 +316,21 @@ def system_check():
         pass
 
     try:
-        sp = subprocess.run(["systemctl", "is-active", "raspotify"],
-                            capture_output=True, text=True, timeout=3)
-        if sp.stdout.strip() == "active":
-            log.info("  ✓ Raspotify: aktiv")
-        else:
-            log.warn("  ⚠ Raspotify: nicht aktiv")
+        # librespot oder raspotify
+        _sp_active = False
+        for _sp_svc in ("librespot", "raspotify"):
+            try:
+                _sp_r = subprocess.run(["systemctl", "is-active", _sp_svc],
+                                       capture_output=True, text=True, timeout=3)
+                if _sp_r.stdout.strip() == "active":
+                    log.info(f"  ✓ Spotify Connect ({_sp_svc}): aktiv")
+                    S["spotify"] = True
+                    _sp_active = True
+                    break
+            except Exception:
+                pass
+        if not _sp_active:
+            log.warn("  ⚠ Spotify Connect (librespot): nicht aktiv")
     except Exception:
         pass
 

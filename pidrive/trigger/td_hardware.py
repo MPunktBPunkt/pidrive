@@ -39,7 +39,20 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     try:
                         import status as _sm; _sm.refresh(force=True)
                     except Exception: pass
+                    # S["spotify"] ODER Service direkt prüfen
                     if S.get("spotify"):
+                        _sp_active2 = True
+                    else:
+                        try:
+                            import subprocess as _ssp
+                            for _ssvc in ("librespot", "raspotify"):
+                                _sr = _ssp.run(["systemctl", "is-active", _ssvc],
+                                               capture_output=True, text=True, timeout=2)
+                                if _sr.stdout.strip() == "active":
+                                    S["spotify"] = True; _sp_active2 = True; break
+                            else: _sp_active2 = False
+                        except Exception: _sp_active2 = False
+                    if _sp_active2:
                         source_state.commit_source("spotify")
                         S["radio_playing"] = True
                         log.info(f"SOURCE commit: spotify (attempt={_attempt+1})")

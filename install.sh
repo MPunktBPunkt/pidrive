@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.42"
+PIDRIVE_VERSION="0.11.44"
 
 # ============================================================
 # PiDrive Install Script
@@ -405,7 +405,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.42
+# pidrive_display.service: entfernt v0.11.44
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -604,6 +604,15 @@ if ! command -v librespot &>/dev/null && ! dpkg -l raspotify 2>/dev/null | grep 
     fi
 else
     ok "librespot/Raspotify bereits installiert"
+fi
+# Spotify OAuth Credentials prüfen
+if command -v librespot &>/dev/null; then
+    if [ -f /var/cache/librespot/credentials.json ]; then
+        ok "Spotify OAuth: Token vorhanden"
+    else
+        warn "Spotify OAuth: noch nicht eingerichtet"
+        warn "  → Nach Install: pidrivectl system spotify-oauth"
+    fi
 fi
 # ══════════════════════════════════════════════════════════════
 # Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.55)
@@ -916,8 +925,8 @@ User=PIDRIVE_REAL_USER_PLACEHOLDER
 Environment=PULSE_SERVER=unix:/var/run/pulse/native
 ExecStart=/usr/local/bin/librespot \
   --name PiDrive \
-  --backend pulseaudio \
-  --device-type automobileambient \
+  --device-type automobile \
+  --system-cache /var/cache/librespot
   --onevent /usr/local/bin/spotify_event.sh
 Restart=on-failure
 RestartSec=5
@@ -1194,7 +1203,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.42)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.44)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."

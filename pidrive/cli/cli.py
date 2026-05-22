@@ -1174,17 +1174,24 @@ Flags (vor dem Befehl angeben):
             if use_json:
                 fmt.print_json({"version": v, "online": d["online"],
                                  "ip": d.get("wifi_ssid",""),
-                                 "raspotify": sp})
+                                 "spotify": sp})
             else:
                 fmt.out(f"PiDrive v{v}")
                 fmt.out(f"Core: {'online' if d['online'] else 'OFFLINE'}")
                 if d.get("wifi_ssid"): fmt.out(f"WiFi: {d['wifi_ssid']}")
-                sp_state = "aktiv ✓" if sp["active"] else ("inaktiv – Anmeldung nötig" if sp["enabled"] else "deaktiviert")
-                fmt.out(f"Spotify: {sp_state}")
-                if not sp["active"]:
+                # librespot oder raspotify
+                import subprocess as _ssp2, os as _oss
+                _sp_svc = "librespot" if _oss.path.exists("/usr/local/bin/librespot") else "raspotify"
+                _sp_r = _ssp2.run(["systemctl","is-active",_sp_svc],capture_output=True,text=True,timeout=3)
+                _sp_active = _sp_r.stdout.strip() == "active"
+                _cred = _oss.path.exists("/var/cache/librespot/credentials.json")
+                sp_state = "aktiv ✓" if _sp_active else ("gestoppt (Token vorhanden)" if _cred else "nicht eingerichtet")
+                fmt.out(f"Spotify: {sp_state}  [{_sp_svc}]")
+                if not _sp_active:
                     import cli.format as _f
-                    fmt.out(f"{_f.DIM}  → sudo systemctl enable --now raspotify{_f.RESET}")
-                    fmt.out(f"{_f.DIM}  → OAuth: {sp['oauth_cmd'][:60]}...{_f.RESET}")
+                    if not _cred:
+                        fmt.out(f"{_f.DIM}  → OAuth einmalig: pidrivectl system spotify-oauth{_f.RESET}")
+                    fmt.out(f"{_f.DIM}  → systemctl start {_sp_svc}{_f.RESET}")
         elif args.sys_cmd == "resources":
             r = svc.system_resources()
             if use_json: fmt.print_json(r)
@@ -1200,6 +1207,24 @@ Flags (vor dem Befehl angeben):
         elif args.sys_cmd == "diagnose":
             result = svc.run_diagnose()
             fmt.out(result)
+        elif args.sys_cmd == "spotify-oauth":
+            import subprocess as _sosp, os as _soos
+            _lb = "/usr/local/bin/librespot"
+            if not _soos.path.exists(_lb):
+                _exit_err("librespot nicht gefunden. Bitte zuerst installieren.")
+            fmt.out("Spotify OAuth — Browser-URL erscheint gleich.")
+            fmt.out("Im Browser öffnen, einloggen, dann Strg+C.")
+            _env = {**__import__("os").environ,
+                    "PULSE_SERVER": "unix:/var/run/pulse/native"}
+            _sosp.run([_lb, "--name", "PiDrive", "--device-type", "automobile",
+                       "--enable-oauth", "--system-cache", "/var/cache/librespot"],
+                      env=_env)
+            if _soos.path.exists("/var/cache/librespot/credentials.json"):
+                fmt.out("\n✓ Token gespeichert.")
+                _sosp.run(["systemctl", "restart", "librespot"], capture_output=True)
+                fmt.out("✓ librespot.service neugestartet.")
+            else:
+                fmt.err("Kein Token — OAuth nicht abgeschlossen?")
         sys.exit(EXIT_OK)
 
     # playlist

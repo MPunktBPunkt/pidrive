@@ -3,7 +3,7 @@
 Raspberry Pi Car Infotainment — Spotify Connect · Webradio · DAB+ · FM · Bluetooth  
 für **BMW iDrive** (NBT EVO) und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.11.42-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.44-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.13-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Debian%2013%20%7C%20Raspberry%20Pi%20OS-lightgrey.svg)](https://www.debian.org/)
@@ -296,7 +296,48 @@ Der Installer erkennt automatisch:
 | Pi vs. x86 | RPi.GPIO nur auf ARM; fbcon-Konfiguration nur auf Pi |
 | Container (LXC) | Null-Sink für PulseAudio; fake-hwclock übersprungen |
 | User vs. root | INSTALL_DIR: `/home/<user>/pidrive` vs. `/opt/pidrive` |
-| librespot | Auf ARM: Raspotify; auf x86: apt oder cargo-Build |
+| librespot | Auf ARM: Raspotify; auf x86: Binary von GitHub (automatisch) |
+
+## Spotify Connect einrichten
+
+### Installation (automatisch via Installer)
+
+Der Installer lädt librespot automatisch von GitHub und richtet `librespot.service` ein.
+
+```bash
+curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | bash
+```
+
+### OAuth (einmalig, nach librespot-Installation)
+
+```bash
+pidrivectl system spotify-oauth
+```
+
+Es erscheint eine Browser-URL. Diese auf einem PC oder Handy im selben Netzwerk öffnen.
+
+**Falls Verbindungsfehler:** SSH-Tunnel nutzen:
+```bash
+# Auf dem Windows-PC (zweites Terminal):
+ssh -L 5588:127.0.0.1:5588 pidrive@192.168.178.100
+# Dann die URL im Browser öffnen (127.0.0.1:5588 bleibt unverändert)
+```
+
+Nach dem Spotify-Login → `Strg+C` → Token wird in `/var/cache/librespot/credentials.json` gespeichert.
+
+### Spotify verwenden
+
+```bash
+pidrivectl play spotify    # Spotify Connect aktivieren
+```
+
+Dann in der Spotify-App das Gerät **PiDrive** auswählen.
+
+### Status prüfen
+
+```bash
+pidrivectl system          # zeigt Spotify: aktiv ✓ [librespot]
+```
 
 ---
 
