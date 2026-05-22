@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.11.44
+# PiDrive — Kontext & Projektdokumentation v0.11.46
 
 ## Projektbeschreibung
 
@@ -25,13 +25,13 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 ---
 
-## Funktionsstatus v0.11.44
+## Funktionsstatus v0.11.46
 
 | Feature | Status |
 |---|---|
 | Webradio (13 Sender inkl. Rock) | ✅ stabil, Metadaten, Playlist |
 | FM Radio (rtl_fm \| mpv, BT) | ✅ stabil |
-| FM Scanner (wbfm, Squelch, PPM) | ✅ v0.11.44 |
+| FM Scanner (wbfm, Squelch, PPM) | ✅ v0.11.46 |
 | DAB+ Code | ✅ kein Lock innen = Signal-Problem, nicht SW |
 | BT A2DP Auto-Reconnect | ✅ stabil |
 | Metadata (now/playlist) | ✅ via mpv IPC Socket |

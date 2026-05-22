@@ -23,6 +23,20 @@ def handle(cmd, menu_state, store, S, settings, bg):
     if cmd in ("spotify_on", "spotify_off", "spotify_toggle"):
         def _spotify_toggle():
             was_active = bool(S.get("spotify"))
+            if not was_active:
+                # Alle laufenden Quellen stoppen vor Spotify-Start
+                try:
+                    from modules import webradio as _wr_sp
+                    _wr_sp.stop(S)
+                except Exception: pass
+                try:
+                    from modules.radio import fm as _fm_sp, scanner as _sc_sp
+                    _fm_sp.stop(S); _sc_sp.stop(S)
+                except Exception: pass
+                try:
+                    from modules import local_player as _lp_sp
+                    _lp_sp.stop(S)
+                except Exception: pass
             update.spotify_toggle(S)
             if was_active:
                 source_state.commit_source("idle")
@@ -31,6 +45,15 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 # v0.10.55: status.py forcieren statt blind 1.5s warten
                 import time as _t
                 # Spotify braucht bis zu 8s (OAuth + Daemon-Start)
+                # Stale Metadaten aus vorheriger Quelle löschen
+                for _k in ("artist","track","dls","radio_station","source_error"):
+                    S.pop(_k, None)
+                # PipeWire-Konflikt-Warnung
+                import subprocess as _spw
+                if _spw.run(["pgrep","-x","pipewire-pulse"],
+                            capture_output=True).returncode == 0:
+                    log.warn("Spotify: PipeWire läuft — Audio-Konflikt möglich. "
+                             "Fix: bash ~/pidrive/pidrive_car_only_cleanup.sh && reboot")
                 S["radio_name"]  = "Spotify Connect"
                 S["radio_type"]  = "SPOTIFY"
                 S["radio_playing"] = False  # pending bis Spotify tatsächlich spielt

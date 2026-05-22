@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.11.44
+"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.11.46
 
 Vollständiges A2DP Auto-Routing:
 - Lädt module-bluetooth-discover falls nötig
@@ -258,7 +258,12 @@ def _set_raspotify_device(device, restart=True):
             with open(conf) as fh:
                 lines = fh.readlines()
         except FileNotFoundError:
-            log.warn("Raspotify: /etc/raspotify/conf nicht gefunden")
+            # Nur warnen wenn raspotify installiert ist, nicht bei librespot-only Setups
+            import os as _os_ra, subprocess as _sp_ra
+            _rasp_inst = _sp_ra.run(["systemctl","is-enabled","raspotify"],
+                                    capture_output=True, text=True, timeout=2).returncode == 0
+            if _rasp_inst:
+                log.warn("Raspotify: /etc/raspotify/conf nicht gefunden")
             return
         new_lines = []
         replaced = False
