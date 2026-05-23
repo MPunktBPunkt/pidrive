@@ -33,7 +33,16 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-REAL_USER="${SUDO_USER:-pi}"
+# REAL_USER: SUDO_USER bevorzugen, dann pidrive als Default (nicht pi)
+if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+    REAL_USER="$SUDO_USER"
+elif id pidrive &>/dev/null 2>&1; then
+    REAL_USER="pidrive"
+elif id pi &>/dev/null 2>&1; then
+    REAL_USER="pi"
+else
+    REAL_USER="$(getent passwd | awk -F: '$3>=1000 && $3<65534{print $1;exit}')"
+fi
 REAL_UID="$(id -u "$REAL_USER" 2>/dev/null || echo 1000)"
 
 # ------------------------------------------------------------------
@@ -82,7 +91,7 @@ for CMD in \
   "systemctl --user mask pipewire.socket" \
   "systemctl --user mask pipewire-media-session.service"
 do
-  sudo -u "$REAL_USER" \
+  runuser -u "$REAL_USER" -- \
     XDG_RUNTIME_DIR="/run/user/${REAL_UID}" \
     DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${REAL_UID}/bus" \
     bash -lc "$CMD" 2>/dev/null || true

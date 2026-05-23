@@ -35,11 +35,9 @@ _dab_session_id = ""
 _dab_session_lock = threading.RLock()
 
 def _err_file_for_session(session_id: str = "") -> str:
-    """Session-spezifischer Pfad für welle-cli stderr.
-    Verhindert Race-Conditions bei parallelen DAB-Operationen."""
-    if session_id:
-        return f"/tmp/pidrive_dab_{session_id}.err"
-    return ERR_FILE
+    """Immer die einzelne rotierende DAB-Fehlerdatei zurückgeben.
+    Session-spezifische Dateien würden sich unbegrenzt akkumulieren."""
+    return ERR_FILE  # /tmp/pidrive_dab_welle.err — wird überschrieben
 
 
 

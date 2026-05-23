@@ -221,6 +221,14 @@ def system_check():
     CAPS_DESC = _caps_describe()
     log.info("  " + CAPS_DESC)
 
+    # Alte DAB-Fehlerdateien aufräumen (können sehr groß werden)
+    try:
+        import glob as _glb
+        for _ef in _glb.glob("/tmp/pidrive_dab_dab_*.err"):
+            try: __import__("os").remove(_ef)
+            except Exception: pass
+    except Exception: pass
+
     # RTL-SDR: beim Core-Start verwaiste Prozesse töten und Lock freigeben
     # Beim Start kann kein legitimer RTL-SDR-Prozess vom AKTUELLEN Core laufen.
     if CAPS.get("rtlsdr"):

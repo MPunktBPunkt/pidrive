@@ -1,6 +1,6 @@
 # PiDrive — Troubleshooting-Runbook
 
-**Stand v0.11.47 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
+**Stand v0.11.48 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
 
 Dieses Runbook deckt die häufigsten Fehlerbilder im Alltag ab. Jeder Abschnitt folgt dem Muster: Symptom → Ursache → Prüfbefehle → Maßnahmen.
 
