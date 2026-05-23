@@ -9,6 +9,7 @@ UMask=0000
 Type=simple
 User=root
 WorkingDirectory=/home/pi/pidrive/pidrive
+Environment=PYTHONPATH=/home/pi/pidrive/pidrive
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/integration/avrcp_trigger.py
 Restart=always
 RestartSec=5
