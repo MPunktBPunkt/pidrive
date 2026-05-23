@@ -228,12 +228,19 @@ def _bt_adapter_up() -> bool:
     return "UP RUNNING" in out
 
 
+_rfkill_done = False  # rfkill nur einmal pro Session ausführen
+
+
 def _ensure_bt_on(S=None) -> bool:
     """
     Adapter sicher aktivieren.
+    rfkill wird nur beim ersten Aufruf oder wenn tatsächlich geblockt ausgeführt.
     """
+    global _rfkill_done
     try:
-        _bg("rfkill unblock bluetooth")
+        if not _rfkill_done:
+            _bg("rfkill unblock bluetooth")
+            _rfkill_done = True
         _bg("hciconfig hci0 up")
         rc, _ = _btctl("power on", timeout=8)
         _sleep_s(1.0)
