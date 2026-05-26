@@ -31,6 +31,8 @@ try:
     import dbus.service
     import dbus.mainloop.glib
     from gi.repository import GLib
+    # DBusGMainLoop MUSS vor jeder Bus-Verbindung gesetzt werden — beim Import!
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     DBUS_OK = True
 except ImportError:
     DBUS_OK = False
@@ -246,7 +248,7 @@ def start_mpris2():
         return None
 
     try:
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        # DBusGMainLoop bereits beim Modulimport gesetzt
         # v0.10.55: SystemBus für root-Systemdienste (SessionBus braucht X11/Display)
         # Fallback auf SessionBus für Desktop-Umgebungen
         try:
