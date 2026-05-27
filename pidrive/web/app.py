@@ -183,6 +183,24 @@ def index():
     return resp
 
 
+@app.route("/cover/<name>")
+def cover_art(name):
+    """Cover Art Endpunkt für MPRIS2 artUrl (BMW holt Bild wenn im selben Netz)."""
+    import os as _os
+    static_dir = _os.path.join(_os.path.dirname(__file__), "static")
+    fname = name.replace(".svg", "").replace(".png", "")
+    candidates = [
+        _os.path.join(static_dir, f"{fname}.svg"),
+        _os.path.join(static_dir, "pidrive_logo.svg"),
+    ]
+    for p in candidates:
+        if _os.path.exists(p):
+            with open(p) as _svg_f:
+                svg = _svg_f.read()
+            return app.response_class(svg, mimetype="image/svg+xml")
+    return "", 404
+
+
 @app.route("/api/ping")
 def api_ping():
     """Einfacher Verbindungstest — gibt ok:true zurück."""
@@ -350,7 +368,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.11.50
+        r = ""  # display entfernt v0.11.55
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)

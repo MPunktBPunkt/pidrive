@@ -76,7 +76,9 @@ def start_agent_session():
             )
 
             # Agent initialisieren
-            _AGENT_PROC.stdin.write("agent NoInputNoOutput\n")
+            # DisplayYesNo: Pi bestätigt Passkeys automatisch
+            # Nötig für BMW Numeric Comparison (Request confirmation)
+            _AGENT_PROC.stdin.write("agent DisplayYesNo\n")
             _AGENT_PROC.stdin.write("default-agent\n")
             _AGENT_PROC.stdin.flush()
             _sleep_s(0.5)
@@ -250,6 +252,23 @@ def pair_with_agent(mac, timeout=PAIR_TIMEOUT_SECONDS):
             s = line.strip()
             lines.append(s)
             low = s.lower()
+
+            # Auto-Bestätigung: Passkey/Confirm/Authorize
+            if "request confirmation" in low or "confirm passkey" in low:
+                log.info(f"BT agent: Passkey-Bestätigung → yes ({s[:60]})")
+                _AGENT_PROC.stdin.write("yes\n")
+                _AGENT_PROC.stdin.flush()
+                continue
+            if "request passkey" in low or "enter passkey" in low:
+                log.info(f"BT agent: Passkey-Eingabe → 000000 ({s[:60]})")
+                _AGENT_PROC.stdin.write("000000\n")
+                _AGENT_PROC.stdin.flush()
+                continue
+            if "authorize service" in low:
+                log.info(f"BT agent: Service autorisiert → yes ({s[:60]})")
+                _AGENT_PROC.stdin.write("yes\n")
+                _AGENT_PROC.stdin.flush()
+                continue
 
             if (
                 "pairing successful" in low or

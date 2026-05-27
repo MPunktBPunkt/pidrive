@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <rect width="100" height="100" fill="#1a1a2e"/>
+  <text x="50" y="35" font-size="14" fill="#4fc3f7" text-anchor="middle" font-family="sans-serif">PiDrive</text>
+  <path d="M50,75 m-5,0 a5,5 0 0,1 10,0 a5,5 0 0,1 -10,0" fill="#4fc3f7"/>
+  <path d="M50,75 m-20,-15 a24,24 0 0,1 40,0" fill="none" stroke="#4fc3f7" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50,75 m-35,-28 a41,41 0 0,1 70,0" fill="none" stroke="#4fc3f7" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+  <text x="50" y="95" font-size="10" fill="#4fc3f7" text-anchor="middle" font-family="monospace">WiFi</text>
+</svg>

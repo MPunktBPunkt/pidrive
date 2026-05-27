@@ -53,11 +53,14 @@ class PiDrivePlayer(dbus.service.Object):
     def __init__(self, bus, cmd_callback):
         dbus.service.Object.__init__(self, bus,
                                      "/org/mpris/MediaPlayer2")
-        self._cmd_callback = cmd_callback
-        self._metadata     = {}
-        self._status       = "Playing"
+        self._cmd_callback  = cmd_callback
+        self._metadata      = {}
+        self._status        = "Playing"
         self._volume        = 1.0
         self._lock          = threading.Lock()
+        self._last_trackid  = -1
+        self._last_emit     = 0.0
+        self._track_id      = 0  # für push_test_metadata
 
     def update_metadata(self, title: str, artist: str, album: str,
                         track_nr: int = 1, total: int = 1,
@@ -88,6 +91,7 @@ class PiDrivePlayer(dbus.service.Object):
                 "xesam:genre":    dbus.Array([dbus.String(genre[:32])],
                                              signature="s"),
                 "xesam:url":      dbus.String(""),
+                "mpris:artUrl":   dbus.String(art_url or ""),
             }, signature="sv")
 
         # Bei Track-Wechsel: kurz "Stopped" → dann neue Metadaten
@@ -268,17 +272,133 @@ def start_mpris2():
         _player = PiDrivePlayer(bus, _write_trigger)
         _loop   = GLib.MainLoop()
 
-        t = threading.Thread(target=_loop.run, daemon=True)
+        t = threading.Thread(target=_loop.run, daemon=True, name="mpris2-glib")
         t.start()
+
+        # Watchdog: prüft ob GLib-Loop noch läuft, startet bei Bedarf neu
+        def _watchdog():
+            global _loop, _player
+            while True:
+                time.sleep(30)
+                try:
+                    # Testen ob Service noch auf Bus registriert
+                    import subprocess as _sp
+                    r = _sp.run(["dbus-send","--system","--print-reply",
+                                  "--dest=org.freedesktop.DBus","/",
+                                  "org.freedesktop.DBus.ListNames"],
+                                 capture_output=True, text=True, timeout=3)
+                    if SERVICE_NAME not in r.stdout:
+                        log.warn("MPRIS2 Watchdog: Service vom Bus verschwunden — Neustart")
+                        try:
+                            if _loop and _loop.is_running():
+                                _loop.quit()
+                        except Exception:
+                            pass
+                        # Neu registrieren
+                        try:
+                            new_name = dbus.service.BusName(SERVICE_NAME, bus)
+                            _loop = GLib.MainLoop()
+                            nt = threading.Thread(target=_loop.run, daemon=True,
+                                                   name="mpris2-glib-restart")
+                            nt.start()
+                            log.info("MPRIS2 Watchdog: Service neu gestartet")
+                        except Exception as _we:
+                            log.error(f"MPRIS2 Watchdog Neustart: {_we}")
+                except Exception as _we:
+                    log.warn(f"MPRIS2 Watchdog: {_we}")
+
+        wt = threading.Thread(target=_watchdog, daemon=True, name="mpris2-watchdog")
+        wt.start()
 
         log.info("MPRIS2: D-Bus Service gestartet")
         log.info(f"  Service: {SERVICE_NAME}")
-        log.info("  BMW-Display erhält Metadaten automatisch")
+        log.info("MPRIS2: gestartet (BT verfuegbar)")
         return _player
 
     except Exception as e:
         log.error(f"MPRIS2 Start: {e}")
         return None
+
+
+def _get_pi_ip() -> str:
+    """Aktuelle WLAN/Ethernet-IP des Pi."""
+    import subprocess as _sp
+    for iface in ("wlan0", "eth0", "wlan1"):
+        try:
+            r = _sp.run(["ip", "-4", "addr", "show", iface],
+                        capture_output=True, text=True, timeout=2)
+            for ln in r.stdout.splitlines():
+                ln = ln.strip()
+                if ln.startswith("inet "):
+                    return ln.split()[1].split("/")[0]
+        except Exception:
+            pass
+    return "?"
+
+
+def announce_wifi_ip(ssid: str = "", port: int = 8080, duration: float = 8.0):
+    """
+    IP-Adresse + SSID für `duration` Sekunden im BMW-Display anzeigen.
+    Nutzung beim Hotspot-Debugging: SSH-Adresse direkt im iDrive ablesen.
+    Aufgerufen nach WiFi-Connect aus modules/wifi.py.
+    """
+    if _player is None:
+        log.warn("MPRIS2: announce_wifi_ip — kein Player")
+        return
+    ip = _get_pi_ip()
+    log.info(f"MPRIS2: WiFi-IP → BMW-Display: {ip} (SSID: {ssid!r})")
+    art = f"http://{ip}:{port}/cover/wifi_icon" if ip != "?" else ""
+    _player.update_metadata(
+        title=f"SSH: {ip}",
+        artist=f"ssh pidrive@{ip}",
+        album=f"WiFi: {ssid}" if ssid else "WiFi verbunden",
+        track_nr=9999,
+        genre="Debug",
+        art_url=art,
+    )
+    _player.set_status(True)
+
+    def _restore():
+        time.sleep(duration)
+        try: ipc.append_trigger("mpris_refresh")
+        except Exception: pass
+    threading.Thread(target=_restore, daemon=True, name="wifi-ip-restore").start()
+
+
+def push_test_metadata(title: str = "Testradio",
+                       artist: str = "PiDrive Test",
+                       album: str = "Debug"):
+    """Test-Metadaten direkt ans BMW-Display senden (für Debugging).
+    Nutzung: pidrivectl debug mpris push --title "Bayern 3" --artist "Test"
+    """
+    global _player
+    if _player is None:
+        log.warn("MPRIS2: push_test_metadata — kein Player registriert")
+        return
+    try:
+        _player._track_id += 1
+        _player._meta = {
+            "mpris:trackid":    dbus.ObjectPath(
+                                    f"/org/pidrive/track/{_player._track_id}"),
+            "xesam:title":      dbus.String(title),
+            "xesam:artist":     dbus.Array([dbus.String(artist)],
+                                           signature="s"),
+            "xesam:album":      dbus.String(album),
+            "xesam:genre":      dbus.Array([dbus.String("Debug")],
+                                           signature="s"),
+            "xesam:trackNumber": dbus.Int32(_player._track_id),
+            "mpris:length":     dbus.Int64(0),
+        }
+        _player._status = "Playing"
+        _player.PropertiesChanged(
+            PLAYER_IFACE,
+            {"Metadata":       _player._meta,
+             "PlaybackStatus": dbus.String("Playing")},
+            []
+        )
+        log.info(f"MPRIS2: Test-Push → '{title}' / '{artist}'")
+    except Exception as e:
+        log.warn(f"MPRIS2: push_test_metadata Fehler: {e}")
 
 
 def update(status: dict, menu: dict):
@@ -386,5 +506,17 @@ def update(status: dict, menu: dict):
         album   = "PiDrive Menü"
         playing = False
 
+    # artUrl: Web-Server auf Pi liefert Cover-Icon (im selben Netz abrufbar)
+    _art = ""
+    try:
+        _ip = _get_pi_ip()
+        if _ip and _ip != "?":
+            _src = (status.get("source") or "pidrive").lower()
+            _icon = {"webradio": "webradio", "fm": "fm", "dab": "dab",
+                     "scanner": "scanner", "spotify": "spotify"}.get(_src, "pidrive_logo")
+            _art = f"http://{_ip}:8080/cover/{_icon}"
+    except Exception:
+        pass
+
     _player.set_status(playing)
-    _player.update_metadata(title, artist, album, genre=genre)
+    _player.update_metadata(title, artist, album, genre=genre, art_url=_art)

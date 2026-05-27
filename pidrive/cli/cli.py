@@ -82,6 +82,82 @@ def _exit_err(msg, code=EXIT_ERROR):
     sys.exit(code)
 
 
+def _run_debug_mpris(args, fmt, use_json):
+    """MPRIS2 D-Bus Diagnose und Test-Metadaten-Push."""
+    import subprocess as _sp, json as _j, os as _os
+
+    action = getattr(args, 'mpris_action', 'status')
+
+    fmt.out("\n=== MPRIS2 D-Bus Status ===")
+    r = _sp.run(["dbus-send","--system","--print-reply",
+                  "--dest=org.freedesktop.DBus","/",
+                  "org.freedesktop.DBus.ListNames"],
+                 capture_output=True, text=True)
+    registered = "org.mpris.MediaPlayer2.pidrive" in r.stdout
+    fmt.out("  " + ("✓ REGISTRIERT" if registered else "✗ NICHT REGISTRIERT") +
+            "  org.mpris.MediaPlayer2.pidrive")
+
+    pw = _sp.run(["pgrep","-a","pipewire-pulse"], capture_output=True, text=True)
+    if pw.stdout.strip():
+        fmt.out("  ⚠ pipewire-pulse läuft — D-Bus Konflikt möglich!")
+    else:
+        fmt.out("  ✓ Kein pipewire-pulse")
+
+    fmt.out("\n=== BlueZ AVRCP Player ===")
+    r2 = _sp.run(["bluetoothctl","show"], capture_output=True, text=True)
+    r3 = _sp.run(["dbus-send","--system","--print-reply",
+                   "--dest=org.bluez","/",
+                   "org.freedesktop.DBus.ObjectManager.GetManagedObjects"],
+                  capture_output=True, text=True)
+    if "MediaPlayer1" in r3.stdout:
+        fmt.out("  ✓ BlueZ MediaPlayer1 vorhanden")
+    else:
+        fmt.out("  ✗ Kein BlueZ MediaPlayer1 (BT verbunden?)")
+
+    fmt.out("\n=== Pi IP-Adresse ===")
+    try:
+        import subprocess as _sp3
+        r_ip = _sp3.run(["ip", "-4", "addr", "show", "wlan0"],
+                        capture_output=True, text=True, timeout=2)
+        for _ln in r_ip.stdout.splitlines():
+            if _ln.strip().startswith("inet "):
+                _ip = _ln.strip().split()[1].split("/")[0]
+                fmt.out(f"  wlan0: {_ip}")
+                fmt.out(f"  SSH:   ssh pidrive@{_ip}")
+                fmt.out(f"  WebUI: http://{_ip}:8080")
+                break
+        else:
+            fmt.out("  wlan0: nicht verbunden")
+    except Exception:
+        fmt.out("  IP nicht ermittelbar")
+
+    fmt.out("\n=== Core-Status Metadaten ===")
+    try:
+        s = _j.loads(open("/tmp/pidrive_status.json").read())
+        fmt.out(f"  Quelle:  {s.get('source','?')}")
+        fmt.out(f"  Titel:   {s.get('track') or s.get('radio_name','–')}")
+        fmt.out(f"  Artist:  {s.get('artist','–')}")
+    except Exception as e:
+        fmt.out(f"  Status nicht lesbar: {e}")
+
+    if action == "push":
+        title  = getattr(args, 'title', 'Testradio')
+        artist = getattr(args, 'artist', 'PiDrive Test')
+        album  = getattr(args, 'album', 'Debug')
+        fmt.out(f"\n=== Test-Push: '{title}' / '{artist}' ===")
+        try:
+            with open("/tmp/pidrive_cmd", "a") as _f2:
+                _f2.write(f"mpris_push:{title}|{artist}|{album}\n")
+            fmt.out("  ✓ Trigger gesendet (mpris_push:...)")
+            fmt.out("  → dbus-send --system --print-reply \\")
+            fmt.out("      --dest=org.mpris.MediaPlayer2.pidrive \\")
+            fmt.out("      /org/mpris/MediaPlayer2 \\")
+            fmt.out("      org.freedesktop.DBus.Properties.GetAll \\")
+            fmt.out("      string:org.mpris.MediaPlayer2.Player 2>&1 | grep -A2 Title")
+        except Exception as e:
+            fmt.out(f"  ✗ Fehler: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="pidrivectl",
@@ -275,6 +351,14 @@ Flags (vor dem Befehl angeben):
                        choices=["core","app","display","avrcp"])
 
     # ── debug ─────────────────────────────────────────────────────────────
+    # ── test ──────────────────────────────────────────────────────────────────
+    p_test = sub.add_parser("test", help="System-Test (alle Quellen + Audio + BT)")
+    p_test.add_argument("test_cmd", nargs="?", default="all",
+                        choices=["all", "system", "audio", "bt", "mpris",
+                                 "webradio", "fm", "scanner", "dab", "dabscan",
+                                 "spotify", "avrcp", "log"],
+                        help="all=kompletter Test, oder einzelner Block")
+
     p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
 
     # ── avrcp ───────────────────────────────────────────────────────────────
@@ -289,6 +373,13 @@ Flags (vor dem Befehl angeben):
     dbg_sub.add_parser("state")
     dbg_sub.add_parser("dab")
     dbg_sub.add_parser("avrcp", help="Letzte AVRCP-Events (Ringbuffer)")
+    p_mpris = dbg_sub.add_parser("mpris", help="MPRIS2 D-Bus Diagnose + Test-Push")
+    p_mpris.add_argument("mpris_action", nargs="?", default="status",
+                         choices=["status","push"],
+                         help="status=D-Bus-Check, push=Test-Metadaten senden")
+    p_mpris.add_argument("--title", default="Testradio")
+    p_mpris.add_argument("--artist", default="PiDrive Test")
+    p_mpris.add_argument("--album", default="Debug")
     p_inject = dbg_sub.add_parser("inject", help="Trigger direkt injizieren")
     p_inject.add_argument("trigger", help="z.B. nav_down, enter, back, vol_up")
     dbg_sub.add_parser("bt")
@@ -1263,67 +1354,28 @@ Flags (vor dem Befehl angeben):
         sys.exit(EXIT_OK)
 
     # debug
-    if args.cmd == "debug":
-        if args.dbg_cmd == "inject":
-            svc.require_online()
-            svc.send(args.trigger)
-            if use_json: fmt.print_json({"ok": True, "trigger": args.trigger})
-            else: fmt.out("Trigger injiziert: " + args.trigger)
-            sys.exit(EXIT_OK)
-        if args.dbg_cmd == "avrcp":
-            import json as _j
-            try:
-                with open("/tmp/pidrive_avrcp_events.json") as _f:
-                    data = _j.load(_f)
-                events = data.get("events", [])
-                total  = data.get("total", 0)
-                if use_json:
-                    fmt.print_json(data)
-                else:
-                    fmt.out("AVRCP Ringbuffer — letzte " + str(len(events)) + "/" + str(total) + " Events:")
-                    for ev in events[-20:]:
-                        import datetime as _dt
-                        ts = _dt.datetime.fromtimestamp(ev["ts"]).strftime("%H:%M:%S.%f")[:11]
-                        mapped = ev.get("trigger","") or fmt.DIM + "(ignoriert)" + fmt.RESET
-                        ctx = ev.get("context","?")
-                        fmt.out("  [" + ts + "] #" + str(ev["id"]).rjust(3) + " " +
-                                ev["event"].ljust(14) + " ctx=" + ctx.ljust(10) + " -> " + mapped)
-            except FileNotFoundError:
-                fmt.out("Noch keine AVRCP-Events (kein Bluetooth verbunden?)")
-            sys.exit(EXIT_OK)
-        if not args.dbg_cmd:
-            fmt.print_json(svc.debug_state())
-            sys.exit(EXIT_OK)
-        if args.dbg_cmd == "state":
-            d = svc.debug_state()
-            if use_json: fmt.print_json(d)
-            else:
-                fmt.out("=== Source State ===")
-                fmt.print_json(d.get("source_state", {}))
-        elif args.dbg_cmd == "dab":
-            d = svc.dab_status()
-            fmt.print_json(d)
-        elif args.dbg_cmd == "bt":
-            fmt.out("=== Bekannte Geräte ===")
-            fmt.print_json(svc.bt_known())
-            fmt.out("\n=== Gefundene Geräte ===")
-            fmt.print_json(svc.bt_discovered())
-        elif args.dbg_cmd == "audio":
-            try:
-                d = svc.http.get_json("/api/audio")
-                fmt.print_json(d)
-            except Exception:
-                fmt.print_json(svc.get_status())
-        elif args.dbg_cmd == "menu":
-            d = svc.ipc.read_json("/tmp/pidrive_menu.json", {})
-            if not d: _exit_err("Menu-Datei nicht gefunden", EXIT_NOTFOUND)
-            fmt.print_json(d)
-        elif args.dbg_cmd == "source-state":
-            d = svc.ipc.read_json("/tmp/pidrive_source_state.json", {})
-            if not d: _exit_err("Source-State nicht gefunden", EXIT_NOTFOUND)
-            fmt.print_json(d)
+    if args.cmd == "test":
+        import test_suite as _ts
+        cmd = getattr(args, "test_cmd", "all") or "all"
+        if cmd == "all":
+            ok = _ts.run_all()
+            sys.exit(EXIT_OK if ok else EXIT_ERROR)
+        elif cmd == "system":   _ts.test_system()
+        elif cmd == "audio":    _ts.test_audio()
+        elif cmd == "bt":       _ts.test_bluetooth()
+        elif cmd == "mpris":    _ts.test_mpris2_push()
+        elif cmd == "webradio": _ts.test_webradio()
+        elif cmd == "fm":       _ts.test_fm()
+        elif cmd == "scanner":  _ts.test_scanner_fm()
+        elif cmd == "dab":      _ts.test_dab()
+        elif cmd == "dabscan":  _ts.test_dab_scan()
+        elif cmd == "spotify":  _ts.test_spotify()
+        elif cmd == "avrcp":    _ts.test_avrcp_inject()
+        elif cmd == "log":      _ts.test_log_summary()
         sys.exit(EXIT_OK)
 
+    if args.cmd == "debug":
+        pass  # debug-Handler folgt unten
     # ── avrcp ─────────────────────────────────────────────────────────────────
     if args.cmd == "avrcp":
         import json as _aj, time as _at

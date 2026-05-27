@@ -103,6 +103,12 @@ def connect_network(ssid, S, settings):
             log.info("WiFi: verbunden mit " + ssid)
             S["wifi"] = True
             S["wifi_ssid"] = ssid
+            # IP-Adresse für 8s im BMW-Display anzeigen (Hotspot-Debug)
+            try:
+                import mpris2 as _m2
+                _m2.announce_wifi_ip(ssid=ssid, duration=8.0)
+            except Exception as _we:
+                log.warn(f"WiFi: IP-Announcement: {_we}")
         else:
             ipc.write_progress("WiFi", "Verbindung fehlgeschlagen", color="red")
             log.warn("WiFi: Verbindung fehlgeschlagen: " + ssid)

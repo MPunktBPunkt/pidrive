@@ -208,12 +208,13 @@ def _is_public_or_bredr(info_out: str) -> bool:
 
 
 def _is_audio_device_info(info_out: str) -> bool:
+    """Prüft ob ein BT-Gerät Audio-fähig ist (Kopfhörer, Lautsprecher, AVRCP)."""
     low = (info_out or "").lower()
     return (
-        "0000110b" in low or
-        "0000110e" in low or
-        "00001108" in low or
-        "0000111e" in low or
+        "0000110b" in low or   # Audio Sink (Kopfhörer/Lautsprecher)
+        "0000110e" in low or   # A/V Remote Control (AVRCP)
+        "00001108" in low or   # Headset
+        "0000111e" in low or   # Handsfree
         "audio sink" in low or
         "headset" in low or
         "headphone" in low or
@@ -221,6 +222,44 @@ def _is_audio_device_info(info_out: str) -> bool:
         "a/v remote control" in low or
         "class:" in low
     )
+
+
+def _is_avrcp_controller(info_out: str) -> bool:
+    """
+    Prüft ob ein BT-Gerät ein AVRCP-Controller ist (BMW iDrive, Autoradio).
+    Unterschied zu Kopfhörern:
+    - BMW hat UUID 0x110c (A/V Remote Control TARGET) → empfängt Kommandos
+    - BMW hat UUID 0x110d (Advanced Audio Distribution) → sendet Audio-Metadaten
+    - Kopfhörer haben 0x110b (Audio SINK) aber typisch NICHT 0x110c als Target
+    - AVRCP-Controller sendet Next/Prev/Play → PiDrive reagiert darauf
+    """
+    low = (info_out or "").lower()
+    # 0x110c = A/V Remote Control Target — das ist BMW's AVRCP-Controller-UUID
+    # 0x110d = Advanced Audio Distribution — zeigt Audio-Streaming-Fähigkeit
+    has_avrcp_target   = "0000110c" in low or "a/v remote control target" in low
+    has_advanced_audio = "0000110d" in low or "advanced audio" in low
+    has_avrcp_ctrl     = "0000110e" in low or "a/v remote control" in low
+    # Echte AVRCP-Controller (BMW etc.) haben typisch BEIDE: Target + Controller
+    return has_avrcp_target or (has_avrcp_ctrl and has_advanced_audio)
+
+
+def _device_type(info_out: str) -> str:
+    """
+    Geräteklasse aus bluetoothctl info ableiten.
+    Rückgabe: 'avrcp_controller' | 'headphones' | 'speaker' | 'audio' | 'unknown'
+    """
+    low = (info_out or "").lower()
+    if _is_avrcp_controller(info_out):
+        return "avrcp_controller"   # BMW iDrive, Autoradio
+    if "0000110b" in low and "headphone" in low:
+        return "headphones"         # Kopfhörer mit A2DP
+    if "0000110b" in low and "speaker" in low:
+        return "speaker"            # Lautsprecher
+    if "0000110b" in low:
+        return "audio"              # Generisch Audio Sink
+    if _is_audio_device_info(info_out):
+        return "audio"
+    return "unknown"
 
 
 def _bt_adapter_up() -> bool:

@@ -73,6 +73,25 @@ def handle_trigger(cmd, menu_state, store, S, settings):
     if _debounced(cmd):
         return False
 
+    # mpris_refresh: MPRIS2 sofort mit aktuellem Status aktualisieren
+    if cmd == "mpris_refresh":
+        # Core-Loop macht das automatisch beim nächsten Durchlauf
+        return True  # rebuild = True → update wird ausgelöst
+
+    # mpris_push: Test-Metadaten direkt per MPRIS2 senden
+    # Format: mpris_push:Titel|Artist|Album
+    if cmd.startswith("mpris_push:"):
+        payload = cmd[len("mpris_push:"):]
+        parts = (payload + "||").split("|")
+        title, artist, album = parts[0], parts[1], parts[2]
+        try:
+            import mpris2 as _m2
+            _m2.push_test_metadata(title, artist, album)
+        except Exception as _e:
+            import log as _log
+            _log.warn(f"mpris_push: {_e}")
+        return False
+
     def bg(fn, name="bg_trigger"):
         def _safe_runner():
             try:

@@ -391,7 +391,7 @@ def monitor_bluetoothctl():
             proc = subprocess.Popen(
                 ["bluetoothctl", "monitor"],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                text=True, bufsize=1)
+                text=True, bufsize=4096)
 
             for line in proc.stdout:
                 raw = line.strip()
@@ -400,7 +400,7 @@ def monitor_bluetoothctl():
 
                 # v0.10.55: Heartbeat alle 60s
                 now = time.time()
-                if now - heartbeat_ts > 60:
+                if now - heartbeat_ts > 120:
                     log.debug(f"AVRCP heartbeat: bluetoothctl-thread läuft, events={_event_count}")
                     heartbeat_ts = now
 
@@ -514,7 +514,7 @@ def monitor_dbus():
                  "interface=org.bluez.MediaPlayer1",
                  "interface=org.bluez.MediaControl1"],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, bufsize=1)
+                text=True, bufsize=4096)
 
             log.info("AVRCP: dbus-monitor PID=" + str(proc.pid) + " gestartet")
             _raw_log(f"dbus-monitor PID={proc.pid}")
@@ -525,7 +525,7 @@ def monitor_dbus():
                     continue
 
                 now = time.time()
-                if now - heartbeat_ts > 60:
+                if now - heartbeat_ts > 120:
                     log.info(f"AVRCP heartbeat: dbus-thread läuft, events={_event_count}")
                     heartbeat_ts = now
 

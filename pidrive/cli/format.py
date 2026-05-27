@@ -115,7 +115,12 @@ def print_bt_list(devices: list, title: str):
         paired = "✓P" if d.get("paired") else "  "
         conn   = "✓" if d.get("connected") else " "
         trust  = "★" if d.get("trusted") else " "
-        out(f"  {conn}{trust}{paired}  {name:<25}  {_c(mac, DIM)}")
+        dtype = d.get("device_type", "")
+        dtype_tag = ""
+        if dtype == "avrcp_controller": dtype_tag = _c(" [AVRCP]", "[96m")
+        elif dtype == "headphones":     dtype_tag = _c(" [Kopfhörer]", DIM)
+        elif dtype == "speaker":        dtype_tag = _c(" [Lautsprecher]", DIM)
+        out(f"  {conn}{trust}{paired}  {name:<25}  {_c(mac, DIM)}{dtype_tag}")
     if ble:
         out(f"  {_c(f'(+ {len(ble)} BLE-Geräte ohne Audio ausgeblendet)', DIM)}")
 

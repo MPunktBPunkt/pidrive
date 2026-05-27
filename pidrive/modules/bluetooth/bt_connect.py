@@ -13,6 +13,7 @@ from modules.bluetooth.bt_helpers import (
     PAIR_TIMEOUT_SECONDS, A2DP_WAIT_SECONDS,
     _bt_connect_lock,
     RECENT_SEEN_SECONDS,
+    _is_avrcp_controller, _device_type,
 )
 from modules.bluetooth.bt_agent import (
     _ensure_agent, pair_with_agent,
@@ -310,6 +311,50 @@ def connect_device(mac, S, settings):
         _bt_connect_lock.release()
 
 
+def _ensure_avrcp_player(mac: str, timeout: int = 8) -> bool:
+    """
+    Fix C: AVRCP-Controller-Profil connecten und warten bis BlueZ
+    /player0 erstellt. BMW zeigt erst dann Metadaten im iDrive-Display.
+    """
+    mac_norm = _normalize_mac(mac)
+    dev_path = f"/org/bluez/hci0/dev_{mac_norm.replace(':', '_')}"
+    player_path = dev_path + "/player0"
+
+    # Prüfen ob player0 schon da ist
+    r = _run_cmd(
+        f"dbus-send --system --print-reply --dest=org.bluez {dev_path} "
+        f"org.freedesktop.DBus.Properties.GetAll string:org.bluez.MediaControl1 2>/dev/null",
+        timeout=3
+    )
+    if "player0" in (r or ""):
+        log.info(f"AVRCP player: /player0 bereits vorhanden für {mac}")
+        return True
+
+    # avrcp-controller Profil explizit connecten
+    log.info(f"AVRCP player: Verbinde avrcp-controller Profil für {mac}")
+    _run_cmd(
+        f"bluetoothctl -- connect {mac_norm} 2>/dev/null",
+        timeout=5
+    )
+
+    # Auf /player0 warten
+    import time as _t
+    deadline = _t.time() + timeout
+    while _t.time() < deadline:
+        r2 = _run_cmd(
+            f"dbus-send --system --print-reply --dest=org.bluez / "
+            f"org.freedesktop.DBus.ObjectManager.GetManagedObjects 2>/dev/null",
+            timeout=3
+        )
+        if r2 and "player0" in r2:
+            log.info(f"AVRCP player: /player0 erschienen für {mac}")
+            return True
+        _t.sleep(1.0)
+
+    log.warn(f"AVRCP player: /player0 nicht erschienen nach {timeout}s für {mac}")
+    return False
+
+
 def _connect_device_inner(mac, S, settings):
     mac = _normalize_mac(mac)
     name = mac
@@ -529,6 +574,17 @@ def _connect_device_inner(mac, S, settings):
         settings["alsa_device"] = "default"
         _set_pulseaudio_sink(pa_sink)
         _set_raspotify_device("default")
+        # Fix C: AVRCP-Player nur für AVRCP-Controller (BMW), nicht Kopfhörer
+        try:
+            _info = _btctl(f"info {mac}", timeout=5)[1] or ""
+            _dtype = _device_type(_info)
+            log.info(f"BT connect: Geräteklasse: {_dtype} mac={mac}")
+            if _dtype == "avrcp_controller":
+                _ensure_avrcp_player(mac)
+            else:
+                log.info(f"BT connect: AVRCP-Player übersprungen ({_dtype})")
+        except Exception as _dce:
+            log.warn(f"BT connect: device_type: {_dce}")
 
     # BT-Backup nach Erfolg
     try:
