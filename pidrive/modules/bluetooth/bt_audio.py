@@ -110,7 +110,14 @@ def _force_a2dp_profile(mac: str) -> bool:
 # ── module-bluetooth-discover laden ──────────────────────────────────────────
 
 def _ensure_bt_pa_modules():
-    """Lädt BT-PulseAudio-Module falls nicht vorhanden."""
+    """Lädt BT-PA-Module — nur für Legacy-PulseAudio nötig.
+    Mit PipeWire/WirePlumber: BT wird automatisch erkannt, kein load-module.
+    """
+    # PipeWire erkennen: pactl info zeigt "PulseAudio" oder "PipeWire"
+    _info = _pa_run("pactl info 2>/dev/null")
+    if "PipeWire" in _info or "pipewire" in _info.lower():
+        log.info("[BT-AUDIO] PipeWire erkannt — module-bluetooth-discover nicht nötig")
+        return False
     modules_out = _pa_run("pactl list modules short 2>/dev/null")
     changed = False
     for mod in ("module-bluetooth-discover", "module-bluetooth-policy"):
