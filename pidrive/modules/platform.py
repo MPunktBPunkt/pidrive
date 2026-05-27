@@ -1,5 +1,5 @@
 """
-modules/platform.py — Hardware-Capability-Detection  v0.11.55
+modules/platform.py — Hardware-Capability-Detection  v0.11.56
 ==============================================================
 Einmalig beim Start ausgewertet. Alle Subsysteme prüfen
 nur noch CAPS statt /proc/cpuinfo oder importierte Hardware.
@@ -123,7 +123,8 @@ CAPS: dict = {
     "is_container":    _is_container(),
     "is_arm":          _is_arm(),
     # Audio
-    "pulseaudio":      _pa_running(),
+    "pulseaudio":      _pa_running(),   # True wenn PipeWire-Pulse ODER PulseAudio den Socket bereitstellt
+    "pipewire":        _cmd_exists("pipewire"),
     "alsa_card":       _headphone_card(),    # int oder None
     "alsa_device":     None,                 # gesetzt nach alsa_card Auswertung
     # RTL-SDR

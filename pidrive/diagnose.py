@@ -145,7 +145,7 @@ def check_services():
         except Exception:
             pass
 
-    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.55)")
+    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.56)")
     disp_pid = None  # Display dauerhaft deaktiviert
     if disp_pid and disp_pid != "0":
         nfo(f"Display PID: {disp_pid}")
@@ -195,7 +195,7 @@ def check_ipc():
 
 def check_display_env():
     S("DISPLAY SERVICE KONFIGURATION")
-    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.55")
+    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.56")
     nfo("Steuerung via WebUI (Port 8080) / pidrivectl / AVRCP")
 
 
@@ -204,7 +204,7 @@ def check_vtcon():
     if not __import__("os").path.isdir("/sys/class/vtconsole"):
         nfo("vtconsole: nicht vorhanden (kein Pi oder kein Display)")
         return
-    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.55)
+    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.56)
 
     for i in (0, 1):
         try:
@@ -246,10 +246,13 @@ def check_audio():
     S("AUDIO (PulseAudio + amixer)")
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
-    pa_state = run("systemctl is-active pulseaudio 2>/dev/null")
-    pa_procs = run("pgrep -a pulseaudio 2>/dev/null") or ""
+    # PipeWire oder PulseAudio erkennen
+    pw_state  = run("systemctl is-active pipewire       2>/dev/null")
+    pwp_state = run("systemctl is-active pipewire-pulse 2>/dev/null")
+    wp_state  = run("systemctl is-active wireplumber    2>/dev/null")
+    pa_state  = run("systemctl is-active pulseaudio     2>/dev/null")
+    pa_procs  = run("pgrep -a pulseaudio 2>/dev/null") or ""
     is_system_pa = "--system" in pa_procs
-    is_user_pa   = "--daemonize=no" in pa_procs or ("pulseaudio" in pa_procs and not is_system_pa)
     if pa_state == "active" and is_system_pa:
         ok("pulseaudio.service: active (System-Mode ✓)")
     elif pa_state == "active":

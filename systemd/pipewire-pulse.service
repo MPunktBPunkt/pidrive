@@ -1,0 +1,21 @@
+[Unit]
+Description=PiDrive PulseAudio Compatibility Layer (PipeWire)
+After=pipewire.service
+Requires=pipewire.service
+
+[Service]
+Type=simple
+User=pulse
+Group=pulse
+SupplementaryGroups=audio bluetooth
+RuntimeDirectory=pulse
+RuntimeDirectoryMode=0755
+Environment=XDG_RUNTIME_DIR=/run/pipewire
+Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
+Environment=DBUS_SESSION_BUS_ADDRESS=
+ExecStart=/usr/bin/pipewire-pulse
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

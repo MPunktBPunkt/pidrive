@@ -300,6 +300,12 @@ def _pa_ok() -> bool:
     """
     if os.path.exists("/var/run/pulse/native"):
         return True
+    # PipeWire-Pulse oder PulseAudio — beide liefern /var/run/pulse/native
+    import os as _os
+    if _os.path.exists("/var/run/pulse/native"):
+        return True
+    if _run("systemctl is-active pipewire-pulse 2>/dev/null", 3) == "active":
+        return True
     return _run("systemctl is-active pulseaudio 2>/dev/null", 3) == "active"
 
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.55"
+PIDRIVE_VERSION="0.11.56"
 
 # ============================================================
 # PiDrive Install Script
@@ -405,7 +405,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.55
+# pidrive_display.service: entfernt v0.11.56
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -460,9 +460,9 @@ if command -v sudo >/dev/null 2>&1; then
 # PiDrive: ausgewaehlte Befehle ohne Passwort fuer Benutzer ${REAL_USER}
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
-${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pulseaudio
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_core
-${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pulseaudio
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pipewire
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/journalctl
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/reboot
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/poweroff
@@ -615,234 +615,139 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: ALSA + PulseAudio System-Mode (v0.10.55)
-# Läuft IMMER — unabhängig von Raspotify-Installation
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.56)
 # ══════════════════════════════════════════════════════════════
-# ALSA-Karten dynamisch erkennen (Pi: Card 0=HDMI, Card 1=Klinke; andere: variabel)
+# PipeWire ersetzt System-PulseAudio vollständig.
+# Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
+# WirePlumber übernimmt BT A2DP automatisch.
+# ══════════════════════════════════════════════════════════════
+
+# ALSA erkennen + asound.conf schreiben
 ALSA_HEADPHONE_CARD=""
-ALSA_HDMI_CARD=""
 while IFS= read -r line; do
     [[ "$line" =~ ^card\ ([0-9]+).*[Hh]eadphone ]] && ALSA_HEADPHONE_CARD="${BASH_REMATCH[1]}"
-    [[ "$line" =~ ^card\ ([0-9]+).*[Hh][Dd][Mm][Ii] ]] && ALSA_HDMI_CARD="${BASH_REMATCH[1]}"
 done < <(aplay -l 2>/dev/null)
-# Fallback: Pi-Standard
 [ -z "$ALSA_HEADPHONE_CARD" ] && $IS_PI && ALSA_HEADPHONE_CARD=1
-[ -z "$ALSA_HEADPHONE_CARD" ] && ALSA_HEADPHONE_CARD=0  # Fallback: erste Karte
+[ -z "$ALSA_HEADPHONE_CARD" ] && ALSA_HEADPHONE_CARD=0
 
 if [ -n "$ALSA_HEADPHONE_CARD" ]; then
     cat > /etc/asound.conf << ASOUNDEOF
-# PiDrive: ALSA Default auf Klinken-Ausgang (Card ${ALSA_HEADPHONE_CARD})
 defaults.pcm.card ${ALSA_HEADPHONE_CARD}
 defaults.ctl.card ${ALSA_HEADPHONE_CARD}
 defaults.pcm.device 0
 ASOUNDEOF
-    ok "ALSA: /etc/asound.conf geschrieben (Card ${ALSA_HEADPHONE_CARD} = Klinke)"
-else
-    ok "ALSA: kein Headphone-Ausgang erkannt — /etc/asound.conf uebersprungen"
+    ok "ALSA: /etc/asound.conf (Card ${ALSA_HEADPHONE_CARD} = Klinke)"
 fi
 
-# Klinke via amixer aktivieren (nur wenn Hardware vorhanden)
-if ! $IS_CONTAINER && command -v amixer >/dev/null 2>&1; then
-    KLINKE_CARD=$(aplay -l 2>/dev/null | grep -i "headphones" | head -1 | awk '{print $2}' | tr -d ':')
-    [ -z "$KLINKE_CARD" ] && $IS_PI && KLINKE_CARD=1
-    if [ -n "$KLINKE_CARD" ]; then
-        amixer -q -c "$KLINKE_CARD" sset 'PCM' 85% unmute 2>/dev/null \
-            && ok "Pi Audio: Klinke aktiviert (card $KLINKE_CARD PCM unmute 85%)" \
-            || ok "Pi Audio: amixer PCM card $KLINKE_CARD nicht gefunden"
-    fi
-else
-    ok "Pi Audio: amixer uebersprungen (Container oder amixer nicht verfuegbar)"
+if ! $IS_CONTAINER && command -v amixer >/dev/null 2>&1 && [ -n "$ALSA_HEADPHONE_CARD" ]; then
+    amixer -q -c "$ALSA_HEADPHONE_CARD" sset 'PCM' 85% unmute 2>/dev/null || true
+    ok "Pi Audio: Klinke aktiviert"
 fi
 
-# system.pa: plattformadaptiv schreiben
-mkdir -p /etc/pulse
-if $IS_CONTAINER; then
-    # Im Container: minimales system.pa (kein ALSA, aber IPC/Basis)
-    mkdir -p /etc/pulse
-    cat > /etc/pulse/system.pa << CONTAINER_PA_END
-# PiDrive system.pa — Container/Dev-Modus (kein echtes Audio-Device)
-.fail
-load-module module-device-restore
-load-module module-null-sink sink_name=pidrive_null
-set-default-sink pidrive_null
-load-module module-native-protocol-unix auth-anonymous=1
-CONTAINER_PA_END
-    ok "system.pa: Container-Modus (Null-Sink fuer Entwicklung)"
-else
-    # Ermittle verfuegbare ALSA-Karten dynamisch
-    PA_CARD_LINES=""
-    PA_DEFAULT_SINK=""
-    while IFS= read -r card_line; do
-        CARD_NUM=$(echo "$card_line" | grep -oP "(?<=card )\d+" || echo "")
-        [ -n "$CARD_NUM" ] && PA_CARD_LINES="${PA_CARD_LINES}load-module module-alsa-card device_id=${CARD_NUM}
-"
-    done < <(aplay -l 2>/dev/null | grep "^card " || echo "card 0:")
-    # Fallback wenn keine Karten erkannt
-    [ -z "$PA_CARD_LINES" ] && PA_CARD_LINES="load-module module-alsa-sink
-"
-
-    # Default Sink: auf Pi Klinke (Card 1), sonst auto
-    if $IS_PI && [ -n "$ALSA_HEADPHONE_CARD" ]; then
-        PA_DEFAULT_SINK="set-default-sink alsa_output.${ALSA_HEADPHONE_CARD}.stereo-fallback"
-    fi
-
-    cat > /etc/pulse/system.pa << SYSTEMPA_END
-# PiDrive system.pa — $(date +%Y-%m-%d)
-# Plattform: ${ARCH}$(${IS_PI} && echo " (Pi)")$(${IS_CONTAINER} && echo " (Container)")
-.fail
-
-load-module module-device-restore
-load-module module-stream-restore
-load-module module-card-restore
-
-# ALSA Hardware (automatisch erkannt)
-$(echo -e "$PA_CARD_LINES")
-# Bluetooth A2DP
-load-module module-bluetooth-discover
-load-module module-bluetooth-policy
-
-# Null-Sink als Fallback (z.B. wenn kein BT verbunden — verhindert librespot-Crash)
-load-module module-null-sink sink_name=pidrive_null sink_properties=device.description=PiDrive-Fallback
-
-# D-Bus + IPC
-load-module module-dbus-protocol
-load-module module-native-protocol-unix auth-anonymous=1
-
-$([ -n "$PA_DEFAULT_SINK" ] && echo "$PA_DEFAULT_SINK")
-SYSTEMPA_END
-    ok "system.pa: geschrieben (${ARCH}$(${IS_PI} && echo ", Pi-Klinke" || echo ", generisch"))"
-fi
-
-# v0.9.14: pulse-access Gruppe
-groupadd -f pulse-access 2>/dev/null || true
-usermod -aG pulse-access root 2>/dev/null || true
-usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
-ok "pulse-access Gruppe: root + $REAL_USER hinzugefügt"
-
-# v0.10.55: PulseAudio System-Service einrichten (Bookworm-kompatibel)
-# Bookworm installiert PA als User-Session-Service → umschalten auf System-Mode
-# Schritt 1: User-Session PA für ALLE User deaktivieren + laufende Instanz töten
+# ── PulseAudio vollständig deaktivieren ───────────────────────────────────────
+systemctl stop     pulseaudio pulseaudio.socket 2>/dev/null || true
+systemctl disable  pulseaudio pulseaudio.socket 2>/dev/null || true
 systemctl --global disable pulseaudio.socket pulseaudio.service 2>/dev/null || true
-# User-PA stoppen/maskieren (nur auf echtem Host mit User-Session)
-if ! $IS_CONTAINER && [ "$REAL_USER" != "root" ]; then
-    UID_VAL=$(id -u "$REAL_USER" 2>/dev/null || echo 1000)
-    XDG_RT="/run/user/${UID_VAL}"
-    if command -v runuser >/dev/null 2>&1; then
-        runuser -u "$REAL_USER" -- env XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
-        runuser -u "$REAL_USER" -- env XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.socket 2>/dev/null || true
-        runuser -u "$REAL_USER" -- env XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.service 2>/dev/null || true
-    elif command -v sudo >/dev/null 2>&1; then
-        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user stop pulseaudio.service pulseaudio.socket 2>/dev/null || true
-        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.socket 2>/dev/null || true
-        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="$XDG_RT"             systemctl --user mask pulseaudio.service 2>/dev/null || true
-    fi
-fi
-runuser -u "$REAL_USER" -- XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user mask pulseaudio.socket 2>/dev/null || true
-runuser -u "$REAL_USER" -- XDG_RUNTIME_DIR="/run/user/$(id -u $REAL_USER 2>/dev/null || echo 1000)"       systemctl --user disable pulseaudio.service 2>/dev/null || true
-# User-PA-Socket null-masken: ln -sf /dev/null verhindert Socket-Aktivierung zuverlässig
+pkill -x pulseaudio 2>/dev/null || true
+rm -f /etc/systemd/system/pulseaudio.service 2>/dev/null || true
 mkdir -p /etc/systemd/user
-ln -sf /dev/null /etc/systemd/user/pulseaudio.socket
-ln -sf /dev/null /etc/systemd/user/pulseaudio.service
-ok "User-PA Socket + Service null-maskiert"
-# PipeWire-Konflikt erkennen: PipeWire + System-PulseAudio konkurrieren um den PA-Socket
-if systemctl --user is-active pipewire-pulse &>/dev/null 2>&1    || pgrep -x pipewire-pulse &>/dev/null 2>&1    || pgrep -x pipewire &>/dev/null 2>&1; then
-    warn "PipeWire laeuft gleichzeitig mit System-PulseAudio!"
-    warn "  → Das verursacht: Keine Sinks, Default Sink (null), Audio-Konflikte"
-    warn "  → Fix: ${_SUDO} bash ~/pidrive/pidrive_car_only_cleanup.sh && ${_SUDO} reboot"
-    warn "  → (deaktiviert PipeWire, behaelt nur System-PulseAudio)"
-else
-    : # Kein PipeWire-Konflikt
+ln -sf /dev/null /etc/systemd/user/pulseaudio.socket  2>/dev/null || true
+ln -sf /dev/null /etc/systemd/user/pulseaudio.service 2>/dev/null || true
+ok "PulseAudio: deaktiviert + maskiert (PipeWire übernimmt)"
+
+# ── PipeWire System-Mode Setup ────────────────────────────────────────────────
+# pulse-User: audio + bluetooth Gruppen
+usermod -aG audio,bluetooth pulse 2>/dev/null || true
+# WirePlumber State-Dir
+mkdir -p /var/lib/pipewire
+chown pulse:pulse /var/lib/pipewire 2>/dev/null || true
+
+# PipeWire-Pulse: Socket-Pfad = /var/run/pulse/native (PA-Compat)
+mkdir -p /etc/pipewire/pipewire-pulse.conf.d
+cat > /etc/pipewire/pipewire-pulse.conf.d/00-pidrive.conf << 'PWEOF'
+context.properties = {
+    server.address = [ "unix:/var/run/pulse/native" ]
+}
+PWEOF
+ok "PipeWire-Pulse: Socket /var/run/pulse/native konfiguriert"
+
+# WirePlumber: BT A2DP (Pi = A2DP Source → BMW)
+mkdir -p /etc/wireplumber/wireplumber.conf.d
+cat > /etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf << 'WPEOF'
+monitor.bluez.properties = {
+    bluez5.roles = [ a2dp_source hfp_ag ]
+    bluez5.codecs = [ sbc ]
+    bluez5.auto-connect = [ a2dp_source ]
+}
+WPEOF
+ok "WirePlumber: BT A2DP konfiguriert"
+
+# D-Bus Policy: pulse-User darf BlueZ (WirePlumber braucht das)
+cat > /etc/dbus-1/system.d/pipewire-pidrive.conf << 'DBEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <policy user="pulse">
+    <allow send_destination="org.bluez"/>
+    <allow receive_sender="org.bluez"/>
+    <allow send_destination="org.freedesktop.DBus"/>
+  </policy>
+</busconfig>
+DBEOF
+ok "D-Bus Policy: pulse → BlueZ"
+
+# pulse-access Gruppe
+groupadd -f pulse-access 2>/dev/null || true
+usermod -aG pulse-access root         2>/dev/null || true
+usermod -aG pulse-access "$REAL_USER" 2>/dev/null || true
+ok "pulse-access: root + $REAL_USER"
+
+# ── Systemd-Units für PipeWire System-Mode ────────────────────────────────────
+for _svc in pipewire pipewire-pulse wireplumber; do
+    _src="$INSTALL_DIR/systemd/${_svc}.service"
+    if [ -f "$_src" ]; then
+        cp "$_src" /etc/systemd/system/
+        # User-Unit maskieren → PipeWire läuft nur noch als System-Service
+        ln -sf /dev/null "/etc/systemd/user/${_svc}.service" 2>/dev/null || true
+        ln -sf /dev/null "/etc/systemd/user/${_svc}.socket"  2>/dev/null || true
+    fi
+done
+
+# PIPEWIRE_RUNTIME_DIR in Core-Service ergänzen (falls noch nicht da)
+if ! grep -q PIPEWIRE_RUNTIME_DIR /etc/systemd/system/pidrive_core.service 2>/dev/null; then
+    sed -i '/^Environment=PULSE_SERVER/a Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire' \
+        /etc/systemd/system/pidrive_core.service 2>/dev/null || true
 fi
 
-# Alle laufenden PA-Prozesse als User beenden
-pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
+# Laufende User-PipeWire-Prozesse beenden (System-Service übernimmt)
+pkill -u "$REAL_USER" -x pipewire    2>/dev/null || true
+pkill -u "$REAL_USER" -x wireplumber 2>/dev/null || true
 sleep 1
-# Schritt 2: System-Service Unit schreiben
-cat > /etc/systemd/system/pulseaudio.service << 'PASERVICE'
-[Unit]
-Description=PiDrive Sound Service (System Mode)
-After=bluetooth.target dbus.service
-Requires=dbus.service
-Before=pidrive_core.service
 
-[Service]
-Type=notify
-UMask=0000
-ExecStart=/usr/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit --log-target=journal
-Restart=on-failure
-RestartSec=5
-LimitRTPRIO=99
-LimitNICE=-19
-ProtectSystem=false
-ProtectHome=false
-PrivateUsers=false
-
-[Install]
-WantedBy=multi-user.target
-PASERVICE
-# Lingering deaktivieren: verhindert user-systemd Session-Autostart
-loginctl disable-linger "$REAL_USER" 2>/dev/null || true
-# Alle PA-Prozesse killen bevor System-PA startet
-pkill -9 pulseaudio 2>/dev/null || true
-sleep 1
 systemctl daemon-reload
-systemctl enable pulseaudio 2>/dev/null || true
-systemctl start pulseaudio 2>/dev/null || true
-sleep 3
-# Sicherstellen dass kein User-PA mehr läuft
-pkill -u "$REAL_USER" pulseaudio 2>/dev/null || true
-sleep 1
-# Sinks prüfen (nicht nur ob Service aktiv)
-_pa_sinks=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | wc -l)
-# PA Unit-Datei verifizieren
-if [ -f /etc/systemd/system/pulseaudio.service ]; then
-  ok "PA Unit-Datei: /etc/systemd/system/pulseaudio.service vorhanden ✓"
+systemctl enable pipewire pipewire-pulse wireplumber 2>/dev/null || true
+systemctl start  pipewire 2>/dev/null || true ; sleep 2
+systemctl start  pipewire-pulse 2>/dev/null || true ; sleep 1
+systemctl start  wireplumber    2>/dev/null || true ; sleep 3
+
+# Ergebnis
+if systemctl is-active --quiet pipewire && \
+   systemctl is-active --quiet pipewire-pulse; then
+    ok "PipeWire System-Mode: aktiv ✓"
+    [ -S /var/run/pulse/native ] \
+        && ok "Socket /var/run/pulse/native: vorhanden ✓" \
+        || warn "Socket noch nicht da — erscheint nach Reboot"
+    _ns=$(PULSE_SERVER=unix:/var/run/pulse/native \
+          pactl list sinks short 2>/dev/null | wc -l)
+    [ "$_ns" -gt 0 ] \
+        && ok "PipeWire: $_ns Sink(s) vorhanden" \
+        || warn "Noch keine Sinks (erscheinen nach BT-Connect)"
 else
-  warn "PA Unit-Datei FEHLT — systemctl kann pulseaudio.service nicht finden!"
-  warn "  → Installer-Fehler: PA-Setup wurde nicht korrekt abgeschlossen"
-fi
-if systemctl is-active --quiet pulseaudio && [ "${_pa_sinks:-0}" -gt 0 ]; then
-  ok "PulseAudio: System-Service läuft ($_pa_sinks Sinks vorhanden)"
-  # Socket-Existenz prüfen (pidrive_core.service braucht diesen Pfad)
-  if [ -S /var/run/pulse/native ]; then
-    ok "PulseAudio: Socket /var/run/pulse/native vorhanden ✓"
-  else
-    warn "PulseAudio: Socket /var/run/pulse/native fehlt — Reboot erforderlich"
-  fi
-elif systemctl is-active --quiet pulseaudio; then
-  warn "PulseAudio: Service aktiv aber keine Sinks — Reboot erforderlich"
-  warn "  → Nach Reboot: ${_SUDO} systemctl status pulseaudio"
-else
-  warn "PulseAudio System-Service inaktiv"
-  warn "  Debug: journalctl -u pulseaudio --no-pager | tail -20"
+    warn "PipeWire noch nicht aktiv — Reboot empfohlen"
 fi
 
-# v0.9.13: Default Sink auf Klinke (Card 1 = alsa_output.1.*) setzen
-# ACHTUNG: alsa_output.0.* enthält KEIN "hdmi" im Namen!
-# -v hdmi filtert NOT, weil "0.stereo-fallback" ≠ "hdmi" — Card-Index ist der Indikator.
-KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | awk '$2 ~ /alsa_output\.1\./ {print $2; exit}')
-if [ -z "$KLINKE_SINK" ]; then
-  # Fallback: analog-stereo oder headphone im Namen
-  KLINKE_SINK=$(PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null | grep -i 'analog\|headphone' | grep alsa_output | head -1 | awk '{print $2}')
-fi
-if [ -n "$KLINKE_SINK" ]; then
-  PULSE_SERVER=unix:/var/run/pulse/native pactl set-default-sink "$KLINKE_SINK" 2>/dev/null || true
-  ok "PulseAudio: Default Sink = $KLINKE_SINK (Klinke Card 1)"
-
-  # v0.10.3: Default Sink in system.pa persistieren (überlebt Reboots)
-  if [ -f /etc/pulse/system.pa ]; then
-    # Alten set-default-sink Eintrag entfernen, neuen am Ende schreiben
-    grep -v "^set-default-sink" /etc/pulse/system.pa > /tmp/system.pa.new
-    echo "" >> /tmp/system.pa.new
-    echo "# PiDrive: Klinke als Default-Sink (v0.10.3)" >> /tmp/system.pa.new
-    echo "set-default-sink $KLINKE_SINK" >> /tmp/system.pa.new
-    mv /tmp/system.pa.new /etc/pulse/system.pa
-    ok "PulseAudio: Default Sink in system.pa persistiert ($KLINKE_SINK)"
-  fi
-else
-  warn "PulseAudio: Klinken-Sink noch nicht sichtbar — beim ersten Abspielen gesetzt"
-fi
-
+# __pycache__ loeschen
 # __pycache__ loeschen: alte .pyc mit pygame-Import
 find "$INSTALL_DIR/pidrive" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 find "$INSTALL_DIR/pidrive" -name "*.pyc" -delete 2>/dev/null || true
@@ -1206,7 +1111,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.55)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.56)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."

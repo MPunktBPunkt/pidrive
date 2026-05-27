@@ -1,0 +1,22 @@
+[Unit]
+Description=PiDrive Audio Server (PipeWire, System Mode)
+Documentation=https://pipewire.org
+After=dbus.service
+Before=pipewire-pulse.service wireplumber.service
+
+[Service]
+Type=simple
+User=pulse
+Group=pulse
+SupplementaryGroups=audio bluetooth
+RuntimeDirectory=pipewire
+RuntimeDirectoryMode=0755
+Environment=XDG_RUNTIME_DIR=/run/pipewire
+Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
+Environment=DBUS_SESSION_BUS_ADDRESS=
+ExecStart=/usr/bin/pipewire
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

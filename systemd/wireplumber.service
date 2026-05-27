@@ -1,0 +1,21 @@
+[Unit]
+Description=PiDrive Session Manager (WirePlumber, System Mode)
+After=pipewire.service
+Requires=pipewire.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+User=pulse
+Group=pulse
+SupplementaryGroups=audio bluetooth
+Environment=XDG_RUNTIME_DIR=/run/pipewire
+Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
+Environment=DBUS_SESSION_BUS_ADDRESS=
+Environment=HOME=/var/lib/pipewire
+ExecStart=/usr/bin/wireplumber
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

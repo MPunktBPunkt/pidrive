@@ -192,11 +192,16 @@ def test_audio():
     _send_to_bmw("2/9: Audio-Check", "PulseAudio · Sinks · BT")
 
     # PA läuft?
-    pa = _run("systemctl is-active pulseaudio")
-    if pa == "active":
-        _p(PASS, "PulseAudio: aktiv")
+    # PipeWire oder PulseAudio
+    pw  = _run("systemctl is-active pipewire 2>/dev/null")
+    pwp = _run("systemctl is-active pipewire-pulse 2>/dev/null")
+    pa  = _run("systemctl is-active pulseaudio 2>/dev/null")
+    if pw == "active" and pwp == "active":
+        _p(PASS, "PipeWire System-Mode: aktiv ✓")
+    elif pa == "active":
+        _p(WARN, "PulseAudio aktiv (PipeWire-Upgrade empfohlen)")
     else:
-        _p(FAIL, f"PulseAudio: {pa}")
+        _p(FAIL, "Kein Audio-Server aktiv!")
 
     # Sinks
     sinks = _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null")
@@ -216,11 +221,8 @@ def test_audio():
                     _p(PASS, f"Sink: {name}", state)
 
     # PipeWire-Konflikt?
-    pw = _run("pgrep -a pipewire-pulse 2>/dev/null")
-    if pw.strip():
-        _p(WARN, "PipeWire-Pulse läuft!", "kann PA-BT stören → cleanup empfohlen")
-    else:
-        _p(PASS, "Kein PipeWire-Pulse")
+    # PipeWire ist jetzt der Audio-Server — kein Konflikt mehr
+    _p(INFO, "Audio-Stack: PipeWire (kein PA-Konflikt)")
 
     # BT Audio-Test
     bt_sink = ""
@@ -306,7 +308,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.55|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.56|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
