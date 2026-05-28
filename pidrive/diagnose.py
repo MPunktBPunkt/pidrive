@@ -145,7 +145,7 @@ def check_services():
         except Exception:
             pass
 
-    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.57)")
+    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.58)")
     disp_pid = None  # Display dauerhaft deaktiviert
     if disp_pid and disp_pid != "0":
         nfo(f"Display PID: {disp_pid}")
@@ -195,7 +195,7 @@ def check_ipc():
 
 def check_display_env():
     S("DISPLAY SERVICE KONFIGURATION")
-    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.57")
+    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.58")
     nfo("Steuerung via WebUI (Port 8080) / pidrivectl / AVRCP")
 
 
@@ -204,7 +204,7 @@ def check_vtcon():
     if not __import__("os").path.isdir("/sys/class/vtconsole"):
         nfo("vtconsole: nicht vorhanden (kein Pi oder kein Display)")
         return
-    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.57)
+    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.58)
 
     for i in (0, 1):
         try:
@@ -246,57 +246,50 @@ def check_audio():
     S("AUDIO (PipeWire / PulseAudio + amixer)")
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
-    # PipeWire oder PulseAudio erkennen
+    # ── Audio-Server: PipeWire oder PulseAudio ──────────────────────────────
     pw_state  = run("systemctl is-active pipewire       2>/dev/null")
     pwp_state = run("systemctl is-active pipewire-pulse 2>/dev/null")
     wp_state  = run("systemctl is-active wireplumber    2>/dev/null")
     pa_state  = run("systemctl is-active pulseaudio     2>/dev/null")
     pa_procs  = run("pgrep -a pulseaudio 2>/dev/null") or ""
     is_system_pa = "--system" in pa_procs
-    if pa_state == "active" and is_system_pa:
-        ok("pulseaudio.service: active (System-Mode ✓)")
+
+    if pw_state == "active" and pwp_state == "active":
+        ok(f"PipeWire System-Mode: aktiv ✓  (wireplumber: {wp_state})")
+        if pa_state == "active":
+            warn("PulseAudio läuft parallel zu PipeWire — deaktivieren!")
+            warn("  → systemctl stop pulseaudio && systemctl disable pulseaudio")
+    elif pa_state == "active" and is_system_pa:
+        ok("PulseAudio System-Mode: aktiv (PipeWire-Upgrade empfohlen)")
     elif pa_state == "active":
-        warn("pulseaudio.service: active aber evtl. User-Mode")
-    elif is_user_pa:
-        err("pulseaudio.service: NICHT aktiv — User-PA läuft noch!")
-        err("  → FIX: sudo bash ~/pidrive/pidrive_car_only_cleanup.sh && sudo reboot")
-    elif is_system_pa:
-        ok("pulseaudio: System-Prozess aktiv (systemd noch nicht synchron)")
+        warn("User-Audio läuft (PulseAudio/PipeWire) — pidrive_car_only_cleanup.sh ausführen")
     else:
-        # Check if unit file even exists
-        import os as _pa_os
-        unit_file = "/etc/systemd/system/pulseaudio.service"
-        if not _pa_os.path.exists(unit_file):
-            err("pulseaudio.service: Unit-Datei FEHLT komplett!")
-            err(f"  → {unit_file} wurde nie angelegt")
-            err("  → FIX: curl .../install.sh | sudo bash  (neu installieren)")
+        err("Kein Audio-Server aktiv! PipeWire oder PulseAudio starten:")
+        err("  → systemctl start pipewire pipewire-pulse wireplumber")
+
+    # PipeWire-Konfiguration prüfen
+    import os as _os_diag
+    for _cf, _desc in [
+        ("/etc/pipewire/pipewire-pulse.conf.d/00-pidrive.conf", "PipeWire-Pulse Socket-Config"),
+        ("/etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf", "WirePlumber BT A2DP"),
+    ]:
+        if _os_diag.path.exists(_cf):
+            ok(f"{_desc}: {_cf.split('/')[-1]} ✓")
         else:
-            err("pulseaudio.service: inaktiv (Unit-Datei vorhanden)")
-            err("  → FIX: sudo systemctl enable --now pulseaudio")
+            warn(f"{_desc}: Konfiguration fehlt → Installer erneut ausführen")
 
-    # system.pa
-    sys_pa = "/etc/pulse/system.pa"
-    if os.path.exists(sys_pa):
+    # system.pa (nur relevant bei Legacy-PulseAudio)
+    if pa_state == "active" and is_system_pa and _os_diag.path.exists("/etc/pulse/system.pa"):
         try:
-            with open(sys_pa) as f:
-                spa_content = f.read()
-            has_card0 = "device_id=0" in spa_content
-            has_card1 = "device_id=1" in spa_content
-            if has_card0 and has_card1:
-                ok("system.pa: Card 0 (HDMI) + Card 1 (Headphones/Klinke) ✓")
-            elif has_card1 and not has_card0:
-                ok("system.pa: Card 1 (Headphones/Klinke) geladen — Card 0 fehlt (OK wenn kein HDMI)")
-            elif has_card0 and not has_card1:
-                err("system.pa: NUR Card 0 (HDMI) geladen — Card 1 (Klinke) FEHLT!")
-                err("  → FIX: sudo sed -i 's/device_id=0/device_id=0\\nload-module module-alsa-card device_id=1/' /etc/pulse/system.pa")
-                err("  → dann: sudo systemctl restart pulseaudio")
+            _spa = open("/etc/pulse/system.pa").read()
+            if "device_id=1" in _spa:
+                ok("system.pa: Klinken-Karte (device_id=1) ✓ [Legacy-PA]")
             else:
-                warn("system.pa: kein module-alsa-card gefunden")
-        except Exception as e:
-            warn(f"system.pa: Lesefehler ({e})")
-    else:
-        warn("system.pa: /etc/pulse/system.pa nicht gefunden")
+                warn("system.pa: nur HDMI (device_id=0) [Legacy-PA]")
+        except Exception as _e:
+            nfo(f"system.pa: {_e}")
 
+    # ALSA Hardware
     # ALSA Hardware
     aplay_out = run("aplay -l 2>/dev/null")
     has_hdmi = "HDMI" in aplay_out or "hdmi" in aplay_out.lower()
@@ -360,7 +353,7 @@ def check_audio():
                 sink_list.append(parts[1])
                 nfo(f"Sink: {s[:90]}")
     else:
-        err("Keine PulseAudio-Sinks — PulseAudio läuft aber keine Sinks?")
+        warn("Keine Audio-Sinks — PipeWire läuft aber keine Sinks (normal ohne BT)")
 
     klinke_sinks = [s for s in sink_list if "alsa_output" in s and not _sink_is_hdmi(s)]
     hdmi_sinks   = [s for s in sink_list if "alsa_output" in s and _sink_is_hdmi(s)]
@@ -368,11 +361,11 @@ def check_audio():
     if klinke_sinks:
         ok(f"Klinken-Sink vorhanden: {klinke_sinks[0]} ✓")
     else:
-        err("KEIN Klinken-Sink in PulseAudio!")
+        warn("Kein Klinken-Sink (erwartet wenn kein ALSA-Headphone-Gerät)")
         if hdmi_sinks:
             err(f"  Nur HDMI-Sink vorhanden: {hdmi_sinks[0]}")
             err("  → Audio geht zu HDMI → kein Ton auf Klinke")
-            err("  → FIX: sudo sed -i 's/device_id=0/device_id=0\\nload-module module-alsa-card device_id=1/' /etc/pulse/system.pa && sudo systemctl restart pulseaudio")
+            nfo("  → ALSA-Karte wird von PipeWire dynamisch erkannt")
 
     # Default Sink
     ds = run(PA + "pactl get-default-sink 2>/dev/null")
@@ -508,18 +501,13 @@ def check_bluetooth():
     if os.path.exists(sys_pa):
         with open(sys_pa) as f:
             spa = f.read()
-        has_discover = "module-bluetooth-discover" in spa
-        has_policy   = "module-bluetooth-policy" in spa
-        if has_discover:
-            ok("system.pa: module-bluetooth-discover ✓")
+        # PipeWire: WirePlumber ersetzt module-bluetooth-discover
+        if "module-bluetooth-discover" in spa:
+            ok("system.pa: module-bluetooth-discover ✓ (Legacy-PA)")
         else:
-            err("system.pa: module-bluetooth-discover FEHLT — BT A2DP wird nie als Sink geladen!")
-        if has_policy:
-            ok("system.pa: module-bluetooth-policy ✓")
-        else:
-            warn("system.pa: module-bluetooth-policy fehlt — Auto-Switching evtl. deaktiviert")
+            nfo("system.pa: kein module-bluetooth-discover (PipeWire → WirePlumber übernimmt)")
     else:
-        warn("system.pa: /etc/pulse/system.pa nicht gefunden")
+        nfo("system.pa: nicht vorhanden (PipeWire-Mode, erwartet)")
 
     pa_modules = run(PA + "pactl list modules short 2>/dev/null")
     if pa_modules:
@@ -529,7 +517,7 @@ def check_bluetooth():
                 f"PulseAudio: {mod} {'geladen ✓' if loaded else 'NICHT geladen'}"
             )
     else:
-        warn("PulseAudio: Modulliste nicht abrufbar")
+        warn("Audio: PA/PipeWire Modulliste nicht abrufbar")
 
     paired = run("bluetoothctl paired-devices 2>/dev/null")
     if paired:
@@ -610,7 +598,7 @@ def check_bluetooth():
         else:
             nfo("Kein BT A2DP Sink aktiv (normal wenn kein BT verbunden)")
     else:
-        nfo("PulseAudio Sinks nicht abrufbar")
+        nfo("Audio Sinks nicht abrufbar")
 
     nfo("Hinweis: BT-Scan scannt Classic BR/EDR UND BLE gleichzeitig")
     nfo("  BLE-Geräte haben (random) MACs und sind für A2DP-Audio irrelevant")
@@ -687,10 +675,10 @@ def check_processes():
         pa_out = run(pa_cmd)
         has_mpv = any("mpv" in l for l in out.splitlines())
         if has_mpv and not pa_out:
-            warn("mpv läuft, aber keine PulseAudio Sink-Inputs!")
+            warn("mpv läuft, aber keine Audio Sink-Inputs!")
             warn("→ PULSE_SERVER in pidrive_core.service prüfen")
         elif pa_out:
-            ok(f"PulseAudio Sink-Inputs: {len(pa_out.splitlines())}")
+            ok(f"Audio Sink-Inputs: {len(pa_out.splitlines())}")
     else:
         warn("Keine relevanten Prozesse gefunden")
 
@@ -789,31 +777,25 @@ def summary():
             ok(f"{check_path}: {owner}:{group} {mode}")
         else:
             if check_path in ["/var/run/pulse", "/var/run/pulse/native"]:
-                err(f"{check_path}: FEHLT — PulseAudio nicht aktiv")
+                err(f"{check_path}: FEHLT — Audio-Server nicht aktiv")
             else:
                 info(f"{check_path}: nicht vorhanden (kein Trigger gesetzt)")
     
     # PA Unit File
-    pa_unit = "/etc/systemd/system/pulseaudio.service"
-    if _ctx_os.path.exists(pa_unit):
-        ok(f"PA Unit-Datei: {pa_unit} vorhanden ✓")
-        # Check it has --system flag
-        unit_content = open(pa_unit).read()
-        if "--system" in unit_content:
-            ok("PA Unit: ExecStart mit --system ✓")
+    # PipeWire System-Units prüfen
+    for _unit in ("pipewire", "pipewire-pulse", "wireplumber"):
+        _state = run(f"systemctl is-active {_unit} 2>/dev/null")
+        if _state == "active":
+            ok(f"{_unit}.service: active ✓")
         else:
-            warn("PA Unit: kein --system Flag in ExecStart!")
-    else:
-        err(f"PA Unit-Datei: {pa_unit} FEHLT!")
-        err("  → Installer hat PA-Setup nie korrekt abgeschlossen")
-    
+            warn(f"{_unit}.service: {_state} — systemctl start {_unit}")
     # User-PA: läuft noch User-PulseAudio?
     user_pa = run("pgrep -u pi -a pulseaudio 2>/dev/null || pgrep -u 1000 -a pulseaudio 2>/dev/null")
     if user_pa.strip():
-        err(f"User-PulseAudio läuft noch: {user_pa.strip()[:80]}")
+        err(f"User-Audio (PipeWire/PA) läuft noch: {user_pa.strip()[:80]}")
         err("  → FIX: sudo bash ~/pidrive/pidrive_car_only_cleanup.sh")
     else:
-        ok("Kein User-PulseAudio aktiv ✓")
+        ok("Kein User-Audio-Server aktiv ✓")
     
     # PipeWire check
     pw = run("pgrep -a pipewire 2>/dev/null")
@@ -823,7 +805,11 @@ def summary():
         ok("Kein PipeWire aktiv ✓")
     
     # /etc/systemd/user masks
-    for mask in ["/etc/systemd/user/pulseaudio.socket", "/etc/systemd/user/pulseaudio.service"]:
+    for mask in ["/etc/systemd/user/pipewire.service",
+                 "/etc/systemd/user/pipewire-pulse.service",
+                 "/etc/systemd/user/wireplumber.service",
+                 "/etc/systemd/user/pulseaudio.socket",
+                 "/etc/systemd/user/pulseaudio.service"]:
         if _ctx_os.path.islink(mask):
             target = _ctx_os.readlink(mask)
             if target == "/dev/null":

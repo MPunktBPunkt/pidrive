@@ -6,7 +6,7 @@ Ausgelagert in:
   bt_helpers.py   — Basis-Helfer, Konstanten, Adapter-Steuerung
   bt_agent.py     — BT-Agent, Pairing
   bt_devices.py   — Geräte-Datenbank, Scan
-  bt_audio.py     — PulseAudio-Sink, A2DP-Management
+  bt_audio.py     — Audio-Sink/A2DP (PipeWire/WirePlumber)
   bt_connect.py   — Connect/Disconnect-Logik, Reconnect-State
   bt_watcher.py   — Auto-Reconnect Watcher
 

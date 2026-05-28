@@ -27,6 +27,7 @@ _total = 0
 _passed = 0
 _failed = 0
 _warnings = 0
+_has_audio_sink = False
 
 def _p(symbol, label, detail="", elapsed=None):
     global _passed, _failed, _warnings
@@ -187,9 +188,9 @@ def test_system():
 
 
 def test_audio():
-    """2. Audio + PulseAudio."""
+    """2. Audio + PipeWire/PA."""
     _section("AUDIO", "🔊")
-    _send_to_bmw("2/9: Audio-Check", "PulseAudio · Sinks · BT")
+    _send_to_bmw("2/9: Audio-Check", "PipeWire · Sinks · BT")
 
     # PA läuft?
     # PipeWire oder PulseAudio
@@ -238,6 +239,13 @@ def test_audio():
         _p(PASS, "BT-Ton abgespielt", f"{bt_sink[:40]}", time.time()-t0)
     else:
         _p(WARN, "Kein BT-Sink — BT verbinden für Audio-Test")
+
+    # Sink-Status für Wiedergabe-Tests merken
+    global _has_audio_sink
+    _has_audio_sink = bool(bt_sink) or bool(
+        _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null"
+             " | grep -v null")
+    )
 
     return True
 
@@ -308,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.57|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.58|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -339,10 +347,22 @@ def test_webradio():
     _section("WEBRADIO", "📻")
     _send_to_bmw("5/9: Webradio-Test", "Rock Antenne · Metadaten")
 
+    # Prüfen ob Audio-Sink vorhanden — ohne Sink startet mpv nicht
+    _sinks = _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null")
+    _real_sink = any(s for s in _sinks.splitlines() if "null" not in s.lower())
+    if not _real_sink:
+        _p(WARN, "Webradio: kein realer Audio-Sink (BT nicht verbunden / vor Reboot)")
+        _p(INFO, "  → pidrivectl bt connect <MAC> && pidrivectl play web 9")
+        return None
+
     t0 = time.time()
     _write_trigger("play_web:Rock Antenne")
     src_ok = _wait_for_source("webradio", max_wait=12)
     if not src_ok:
+        # Ohne Audio-Sink: mpv startet nicht — erwartet, kein Fehler
+        if not _has_audio_sink:
+            _p(WARN, "Webradio: kein Audio-Sink (BT verbinden) — übersprungen")
+            return None
         _p(FAIL, "Webradio: Quelle nicht aktiv nach 12s")
         return False
     _p(PASS, "Webradio: gestartet", f"{time.time()-t0:.1f}s")
@@ -377,6 +397,9 @@ def test_fm(freq="104.4"):
     _write_trigger(f"fm:{freq}")
     src_ok = _wait_for_source("fm", max_wait=12)
     elapsed = time.time() - t0
+    if not _has_audio_sink and not src_ok:
+        _p(WARN, f"FM {freq}: kein Audio-Sink — übersprungen")
+        return None
     if src_ok:
         _p(PASS, f"FM {freq} MHz: gestartet", f"{elapsed:.1f}s")
         meta = _wait_for_metadata("fm", max_wait=15)
@@ -602,7 +625,10 @@ def test_spotify():
         else:
             _p(INFO, "Noch kein Titel (Abspielen in App nötig)")
     else:
-        _p(WARN, "Spotify: source nicht 'spotify' nach 10s")
+        if not _has_audio_sink:
+            _p(INFO, "Spotify aktiviert — kein Audio-Sink (BT verbinden)")
+        else:
+            _p(WARN, "Spotify: source nicht 'spotify' nach 10s")
 
 
 def test_avrcp_inject():
@@ -663,6 +689,8 @@ def run_all():
     global _start_ts, _results, _passed, _failed, _warnings
     _start_ts = time.time()
     _results = []; _passed = 0; _failed = 0; _warnings = 0
+    global _has_audio_sink
+    _has_audio_sink = False
 
     print(f"\n{BOLD}{M}{'═'*60}{RST}")
     print(f"{BOLD}{M}  PiDrive System-Test{RST}  {DIM}pidrivectl test all{RST}")

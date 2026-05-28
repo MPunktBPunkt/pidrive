@@ -936,17 +936,17 @@ Flags (vor dem Befehl angeben):
                 fmt.out(NOK + " Keine ALSA-Geräte (aplay -l leer)")
 
             # ── B) PulseAudio ────────────────────────────────────────────────
-            fmt.out("\n=== B) PulseAudio ===")
+            fmt.out("\n=== B) Audio (PipeWire / PulseAudio) ===")
             PA_CMD = "PULSE_SERVER=unix:/var/run/pulse/native"
             pa_info, pa_ok = _run(f"{PA_CMD} pactl info 2>/dev/null")
             if pa_ok:
-                fmt.out(OK + " PulseAudio läuft")
+                fmt.out(OK + " Audio-Server läuft")
                 for line in pa_info.splitlines():
                     if "Default Sink:" in line or "Server Version:" in line:
                         fmt.out(f"     {line.strip()}")
             else:
-                fmt.out(NOK + " PulseAudio nicht erreichbar")
-                fmt.out(WRN + " Tipp: systemctl status pulseaudio")
+                fmt.out(NOK + " Audio-Server nicht erreichbar")
+                fmt.out(WRN + " Tipp: systemctl status pipewire pipewire-pulse wireplumber")
 
             sinks_out, _ = _run(f"{PA_CMD} pactl list sinks short 2>/dev/null")
             sinks = [l for l in sinks_out.splitlines() if l.strip()]
@@ -964,8 +964,8 @@ Flags (vor dem Befehl angeben):
                         fmt.out(f"     {name}  [{state}]")
             else:
                 fmt.out(NOK + " Keine PA-Sinks vorhanden")
-                fmt.out(WRN + " → systemctl restart pulseaudio")
-                fmt.out(WRN + " → Bei BT: pactl load-module module-bluetooth-discover")
+                fmt.out(WRN + " → systemctl restart pipewire pipewire-pulse wireplumber")
+                fmt.out(WRN + " → BT: WirePlumber lädt A2DP automatisch nach BT-Connect")
 
             # PA-Module für BT
             mods_out, _ = _run(f"{PA_CMD} pactl list modules short 2>/dev/null")
@@ -1042,10 +1042,10 @@ Flags (vor dem Befehl angeben):
                     else:
                         fmt.out(NOK + " PA-Ton fehlgeschlagen (kein Sink oder BT nicht A2DP)")
                 else:
-                    fmt.out(WRN + " pacat nicht verfügbar — apt install pulseaudio-utils")
+                    fmt.out(WRN + " pacat nicht verfügbar — apt install pulseaudio-utils (oder pipewire-pulse)")
             else:
                 fmt.out(WRN + " Kein realer PA-Sink — Wiedergabe übersprungen")
-                fmt.out("     → systemctl restart pulseaudio")
+                fmt.out("     → systemctl restart pipewire pipewire-pulse wireplumber")
 
             # ── E) mpv Audio-Routing ─────────────────────────────────────────
             fmt.out("\n=== E) mpv ===")
@@ -1053,7 +1053,7 @@ Flags (vor dem Befehl angeben):
             if mpv_ok:
                 fmt.out(OK + " mpv vorhanden")
                 if "pulse" in mpv_devs.lower() or "pipewire" in mpv_devs.lower():
-                    fmt.out(OK + " mpv hat PulseAudio-Backend")
+                    fmt.out(OK + " mpv hat PulseAudio/PipeWire-Backend")
                 else:
                     fmt.out(WRN + " mpv hat kein PA-Backend erkannt")
             else:
@@ -1063,11 +1063,10 @@ Flags (vor dem Befehl angeben):
             fmt.out("\n=== Empfehlungen ===")
             recs = []
             if not pa_ok:
-                recs.append("systemctl restart pulseaudio")
+                recs.append("systemctl restart pipewire pipewire-pulse wireplumber")
             if not sinks:
-                recs.append("systemctl restart pulseaudio  (keine Sinks)")
-            if "module-bluetooth-discover" not in mods_out:
-                recs.append(f"{PA_CMD} pactl load-module module-bluetooth-discover")
+                recs.append("systemctl restart pipewire pipewire-pulse wireplumber  (keine Sinks)")
+            # PipeWire/WirePlumber: kein load-module nötig
             if not conn_out.strip() and aplay_ok:
                 recs.append("BT verbinden: pidrivectl bt connect <MAC>")
             if recs:

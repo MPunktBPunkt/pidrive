@@ -131,7 +131,7 @@ def play_station(station, S, settings=None):
         _name_q = shlex.quote(name)
 
         if _adec.get("reason") == "pulseaudio_inactive" or _adec.get("effective") == "none":
-            log.info("DAB: PulseAudio inaktiv — kein Abbruch (ALSA-direkt)")
+            log.info("DAB: Audio-Server inaktiv — kein Abbruch (ALSA-direkt)")
 
         # Prio C: shell=True → Popen(list)
         # _name_q (shlex.quote) war nur wegen shell=True nötig — jetzt direkt
@@ -144,11 +144,11 @@ def play_station(station, S, settings=None):
         # ── v0.10.55: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
         #          → wird von welle-cli geerbt
-        #          → PulseAudio ALSA-Plugin (pcm.!default {type pulse})
+        #          → PipeWire ALSA-Plugin (pcm.!default → PipeWire)
         #            fängt ALSA-Calls ab → falscher Sink → kein Ton
         # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
         #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
-        # ── v0.10.55 (korrigiert): ALSA→PulseAudio-Routing für welle-cli ────────
+        # ── ALSA→PipeWire-Routing für welle-cli ──────────────────────────────────
         # PULSE_SERVER BEHALTEN: welle-cli nutzt ALSA default = PA-Plugin → System-PA
         # PA-Default-Sink wurde von get_mpv_args() auf Klinke gesetzt (s.o.)
         # PULSE_SINK ENTFERNEN: verhindert PA-Init-Timing-Konflikt mit RTL-SDR

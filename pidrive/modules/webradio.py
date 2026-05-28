@@ -1,5 +1,5 @@
 """
-modules/webradio.py — Webradio via mpv (PulseAudio)
+modules/webradio.py — Webradio via mpv (PipeWire-Compat/PA)
 Aufrufer: main_core.py
 Abhängig von: modules/audio.py, modules/source_state.py, ipc.py
 Schreibt: settings[last_web_station], settings[last_source]

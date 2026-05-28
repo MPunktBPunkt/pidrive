@@ -314,12 +314,16 @@ def system_check():
         pass
 
     try:
-        pa = subprocess.run(["systemctl", "is-active", "pulseaudio"],
-                            capture_output=True, text=True, timeout=3)
-        if pa.stdout.strip() == "active":
-            log.info("  ✓ PulseAudio: aktiv (BT A2DP)")
+        _pw = subprocess.run(["systemctl","is-active","pipewire-pulse"],
+                              capture_output=True, text=True, timeout=3)
+        _pa = subprocess.run(["systemctl","is-active","pulseaudio"],
+                              capture_output=True, text=True, timeout=3)
+        if _pw.stdout.strip() == "active":
+            log.info("  ✓ PipeWire: aktiv (BT A2DP)")
+        elif _pa.stdout.strip() == "active":
+            log.info("  ✓ PulseAudio: aktiv (Legacy-Mode)")
         else:
-            log.warn("  ⚠ PulseAudio: nicht aktiv")
+            log.warn("  ⚠ Kein Audio-Server aktiv")
     except Exception:
         pass
 
@@ -389,7 +393,7 @@ def startup_tasks(S, settings):
     """
     import time, subprocess as _sp_boot
 
-    # ── TICKET 7: Boot-Readiness — warte auf PulseAudio + BT-Adapter ────────
+    # ── Boot-Readiness — warte auf Audio-Socket + BT-Adapter ───────────────
     source_state.set_boot_phase("restore_bt_prepare")
     _ready = False
     for _attempt in range(12):  # max 12s warten
@@ -403,14 +407,14 @@ def startup_tasks(S, settings):
                 shell=True, capture_output=True, timeout=2
             ).returncode == 0
             if _pa_ok and _bt_ok:
-                log.info(f"Boot-Readiness: PulseAudio + BT bereit ({_attempt+1}s)")
+                log.info(f"Boot-Readiness: Audio + BT bereit ({_attempt+1}s)")
                 _ready = True
                 break
         except Exception:
             pass
         time.sleep(1)
     if not _ready:
-        log.warn("Boot-Readiness: Timeout — starte trotzdem (PulseAudio oder BT nicht bereit)")
+        log.warn("Boot-Readiness: Timeout — starte trotzdem (Audio oder BT nicht bereit)")
 
     # ── Phase BT-Reconnect ────────────────────────────────────────────────────
     source_state.set_boot_phase("restore_bt")
@@ -530,7 +534,7 @@ def startup_tasks(S, settings):
         # PA-Socket-Check beim Übergang zu steady
         import os as _os_pa
         if not _os_pa.path.exists("/var/run/pulse/native"):
-            log.warn("PA-Socket /var/run/pulse/native fehlt — Audio läuft ohne PulseAudio")
+            log.warn("Audio-Socket /var/run/pulse/native fehlt — Audio evtl. nicht verfügbar")
         # v0.9.30: TICKET 2 — Watcher erst jetzt starten (nach boot_phase=steady)
         try:
             if CAPS.get("bluetooth") or CAPS.get("bluetoothctl"):

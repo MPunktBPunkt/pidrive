@@ -126,7 +126,9 @@ def get_audio_debug() -> dict:
         data["fallback_reason"] = ""
 
     try:
-        pa_svc = safe_run("systemctl is-active pulseaudio 2>/dev/null")
+        _pw = safe_run("systemctl is-active pipewire-pulse 2>/dev/null")
+        _pa = safe_run("systemctl is-active pulseaudio 2>/dev/null")
+        pa_svc = "active" if _pw == "active" or _pa == "active" else _pa
         pa_svc_ok = (pa_svc.get("stdout", "").strip() in ("active", "activating"))
         if pa_svc_ok:
             pa2 = safe_run(PA_ENV + " pactl info 2>/dev/null")

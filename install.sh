@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.57"
+PIDRIVE_VERSION="0.11.58"
 
 # ============================================================
 # PiDrive Install Script
@@ -147,7 +147,7 @@ apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     python3-pygame python3-pip git mpv \
     avahi-daemon avahi-utils rfkill \
-    bluez pulseaudio pulseaudio-module-bluetooth \
+    bluez \
     wpasupplicant rtl-sdr sox \
     python3-flask \
     python3-bluez \
@@ -405,7 +405,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.57
+# pidrive_display.service: entfernt v0.11.58
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -513,10 +513,8 @@ ok "Gruppen: video, input, render, tty, systemd-journal"
   _chk "/var/log/pidrive" "root" "$REAL_USER" "775" "Log-Dir"
   for f in /var/log/pidrive/*.log; do [ -f "$f" ] && _chk "$f" "root" "root" "644" "Log-Datei"; done
   # System-Konfiguration
-  [ -f /etc/pulse/system.pa ] && _chk /etc/pulse/system.pa root root 644 "system.pa"
   [ -f /etc/asound.conf ]     && _chk /etc/asound.conf     root root 644 "asound.conf"
   for f in /etc/systemd/system/pidrive*.service; do [ -f "$f" ] && _chk "$f" root root 644 "systemd"; done
-  [ -f /etc/systemd/system/pulseaudio.service ] && _chk /etc/systemd/system/pulseaudio.service root root 644 "PA Service"
   # Binaries: nur prüfen, nicht ändern
   for bin in /usr/bin/rtl_fm /usr/bin/welle-cli /usr/bin/mpv /usr/bin/pactl; do
     if [ ! -x "$bin" ]; then warn "  Binary fehlt: $bin"; _perm_err=$((_perm_err+1)); else _perm_ok=$((_perm_ok+1)); fi
@@ -615,7 +613,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.57)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.58)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -772,12 +770,12 @@ if [ -f "$SERVICE_DIR/pidrive_avrcp.service" ]; then
   systemctl restart pidrive_avrcp 2>/dev/null || true
   ok "pidrive_avrcp.service gestartet"
 fi
-  # Verify: PA unit file tatsächlich geschrieben?
-  if [ -f /etc/systemd/system/pulseaudio.service ]; then
-    ok "PA Unit-Datei: /etc/systemd/system/pulseaudio.service vorhanden ✓"
+  # PipeWire-Pulse nach Core-Start nochmals prüfen
+  if systemctl is-active --quiet pipewire-pulse; then
+    ok "PipeWire-Pulse: aktiv ✓"
   else
-    warn "PA Unit-Datei FEHLT — systemctl kann pulseaudio.service nicht finden!"
-    warn "  → ${_SUDO} bash ~/pidrive/pidrive_car_only_cleanup.sh && ${_SUDO} reboot"
+    warn "PipeWire-Pulse nicht aktiv — Reboot empfohlen"
+    warn "  Nach Reboot: systemctl status pipewire pipewire-pulse wireplumber"
   fi
 
 
@@ -814,7 +812,7 @@ if [ -f /etc/raspotify/conf ]; then
         systemctl enable systemd-networkd-wait-online.service 2>/dev/null || true
         systemctl daemon-reload
     fi
-    ok "Raspotify konfiguriert (zentral via PulseAudio)"
+    ok "Raspotify konfiguriert (via PipeWire-Compat-Layer)"
 
 fi
 
@@ -825,7 +823,7 @@ if command -v librespot &>/dev/null && [ ! -f /etc/raspotify/conf ]; then
         cat > /etc/systemd/system/librespot.service << 'LSEOF'
 [Unit]
 Description=PiDrive Spotify Connect (librespot)
-After=network-online.target pulseaudio.service
+After=network-online.target pipewire.service pipewire-pulse.service
 Wants=network-online.target
 
 [Service]
@@ -1111,7 +1109,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.57)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.58)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."

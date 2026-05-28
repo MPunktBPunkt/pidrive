@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""bt_audio.py — PulseAudio-Sink und A2DP-Management  v0.11.57
+"""bt_audio.py — Audio-Sink und A2DP-Management (PipeWire/PulseAudio)  v0.11.58
 
 Vollständiges A2DP Auto-Routing:
-- Lädt module-bluetooth-discover falls nötig
+- PipeWire/WirePlumber: BT A2DP automatisch; Legacy-PA: load-module
 - Schaltet Card-Profil auf a2dp-sink
 - Setzt Default-Sink
 - Verschiebt alle laufenden Streams
@@ -138,7 +138,7 @@ def _ensure_bt_pa_modules():
 
 def _ensure_a2dp_sink(mac, timeout=A2DP_WAIT_SECONDS):
     """
-    Stellt sicher dass ein A2DP-Sink für mac in PulseAudio verfügbar ist.
+    Stellt sicher dass ein A2DP-Sink für mac verfügbar ist.
     Strategie:
       1. BT-PA-Module laden falls nötig
       2. Card-Profil auf a2dp-sink schalten

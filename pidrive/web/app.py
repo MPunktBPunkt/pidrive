@@ -368,7 +368,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.11.57
+        r = ""  # display entfernt v0.11.58
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)
@@ -744,7 +744,7 @@ def api_diag_system():
     
     # Relevante Prozesse mit User + PID + Cmdline
     r = safe_run("ps -eo pid,user,pcpu,pmem,stat,cmd --no-headers 2>/dev/null | "
-                 "grep -E 'python|pulseaudio|welle|rtl_fm|mpv|bluetoothd|raspotify|librespot' | "
+                 "grep -E 'python|pipewire|wireplumber|pulseaudio|welle|rtl_fm|mpv|bluetoothd|raspotify|librespot' | "
                  "grep -v grep | head -20")
     out["processes"] = r.get("stdout", "").strip()
     
@@ -762,7 +762,7 @@ def api_diag_system():
     out["rtlfm_instances"] = (r.get("stdout","0")).strip()
     
     # PulseAudio System vs User
-    r = safe_run("pgrep -a pulseaudio 2>/dev/null")
+    r = safe_run("pgrep -a pipewire 2>/dev/null") or safe_run("pgrep -a pulseaudio 2>/dev/null")
     pa_procs = r.get("stdout","").strip()
     out["pa_mode"] = "system" if "--system" in pa_procs else ("user" if pa_procs else "none")
     out["pa_procs"] = pa_procs

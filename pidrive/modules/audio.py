@@ -30,7 +30,7 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
 
     set_output(mode, settings)
         Schaltet Ausgang manuell: klinke / hdmi / bt / all.
-        Ändert: PulseAudio Default-Sink + amixer.
+        Ändert: Audio Default-Sink (PipeWire/PA) + amixer.
         NICHT geändert: Laufende welle-cli/mpv-Prozesse. Diese müssen neu gestartet
         werden damit der neue Ausgang wirkt.
         → "Klinke"-Button hat KEINEN Live-Effekt auf laufendes welle-cli (DAB/FM).
@@ -53,13 +53,13 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
     Quelle      Ausgabe         Pfad
     ──────────────────────────────────────────────────────────────
     DAB         ALSA hw:{_get_headphone_card()},0    welle-cli -p NAME (AlsaProgrammeHandler)
-                               KEIN PulseAudio — OFDM-Timing-sensitiv
+                               kein PA-Routing — ALSA-direkt
     FM          ALSA hw:{_get_headphone_card()},0    rtl_fm | mpv --ao=alsa --alsa-device=hw:{_get_headphone_card()},0
-                               KEIN PulseAudio — raw PCM Resampling-Problem
+                               kein PA-Routing — raw PCM direkt
     Scanner     ALSA hw:N,0    rtl_fm | mpv --ao=alsa
-    Webradio    PulseAudio     mpv --ao=pulse PULSE_SERVER=...
-    Spotify     PulseAudio     librespot → PulseAudio
-    BT (A2DP)   PulseAudio     mpv/librespot + PULSE_SINK=bluez_sink.*
+    Webradio    PipeWire-Pulse mpv --ao=pulse PULSE_SERVER=...
+    Spotify     PipeWire-Pulse librespot --device pulse
+    BT (A2DP)   PipeWire       WirePlumber → bluez_sink.* automatisch
 
     # hw:X,0 = Klinken-Karte (dynamisch per _get_headphone_card())
     hw:0,0 = Card 0 = bcm2835 HDMI — NIEMALS für PiDrive-Audio verwenden
@@ -74,11 +74,11 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
 
 ## Bekannte Einschränkungen
 
-    - "Klinke"-Button während DAB/FM läuft: ändert PulseAudio, aber welle-cli/rtl_fm
+    - "Klinke"-Button während DAB/FM läuft: ändert Audio-Routing, aber welle-cli/rtl_fm
       laufen ALSA-direkt. Wirkung erst nach Stop + Neustart der Quelle.
     - volume > 100%: wird beim Boot auf 90% korrigiert (settings.json Altlasten).
     - BT + DAB: funktioniert nur wenn asound.conf default=card 1 korrekt gesetzt
-      und PulseAudio Sink-Input nach BT-Connect verschoben wird.
+      und Sink-Input nach BT-Connect verschoben wird.
 """
 
 try:
@@ -254,7 +254,7 @@ def get_audio_status() -> dict:
     reason     = d.get("reason", "")
 
     if not pa_ok:
-        degraded_reason = "pulseaudio_fehlt"
+        degraded_reason = "audio_server_fehlt"
     elif not sink_present and not bt_connected:
         degraded_reason = "kein_audiogeraet"
     elif not sink_present and bt_connected:
@@ -298,11 +298,8 @@ def _pa_ok() -> bool:
     v0.10.55: Socket-Datei zuerst prüfen (~0.1ms statt ~150ms systemctl subprocess).
     Falls Socket existiert: PA läuft definitiv. Sonst: systemctl als Fallback.
     """
+    # PipeWire-Pulse oder PulseAudio — Socket-Existenz ist entscheidend
     if os.path.exists("/var/run/pulse/native"):
-        return True
-    # PipeWire-Pulse oder PulseAudio — beide liefern /var/run/pulse/native
-    import os as _os
-    if _os.path.exists("/var/run/pulse/native"):
         return True
     if _run("systemctl is-active pipewire-pulse 2>/dev/null", 3) == "active":
         return True
@@ -335,7 +332,8 @@ def invalidate_sink_cache():
 def get_bt_sink(retry: int = 1) -> str:
     """
     Gibt den BT A2DP Sink zurück.
-    Falls kein Sink vorhanden: versucht module-bluetooth-discover nachzuladen.
+    Bei PipeWire: WirePlumber lädt BT automatisch.
+    Bei Legacy-PA: versucht module-bluetooth-discover nachzuladen.
     """
     import time as _t
     for attempt in range(max(1, retry)):
@@ -352,7 +350,7 @@ def get_bt_sink(retry: int = 1) -> str:
         _t.sleep(1)
         for s in _list_sinks():
             if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
-                log.info("[AUDIO] A2DP-Sink nach module-bluetooth-discover gefunden")
+                log.info("[AUDIO] A2DP-Sink nach load-module gefunden (Legacy-PA)")
                 return s["name"]
     except Exception:
         pass
@@ -382,8 +380,8 @@ def _sink_is_hdmi(sink_name: str) -> bool:
 
 def _ensure_klinke_sink() -> bool:
     """
-    Lädt Card 1 (Headphones/Klinke) als PulseAudio-Sink falls noch nicht vorhanden (v0.9.10).
-    Root Cause: setup_bt_audio.sh schrieb system.pa nur mit device_id=0 (HDMI).
+    Lädt Card 1 (Headphones/Klinke) als Audio-Sink falls noch nicht vorhanden.
+    ALSA-Karte dynamisch via pactl laden (PipeWire-kompatibel).
     Card 1 wurde nie als PA-Sink geladen → kein Klinken-Audio möglich.
     """
     sinks = _list_sinks()
@@ -392,7 +390,7 @@ def _ensure_klinke_sink() -> bool:
         n, r = s["name"].lower(), s["raw"].lower()
         if "hdmi" not in n and "hdmi" not in r and "alsa_output" in s["name"]:
             return True  # Klinken-Sink vorhanden
-    # Card 1 dynamisch laden (Fallback wenn system.pa noch nicht aktualisiert)
+    # Card 1 via pactl laden (PipeWire-kompatibel, Fallback)
     try:
         r = _run(
             PA_ENV + " pactl load-module module-alsa-card device_id=1 2>/dev/null",
@@ -430,7 +428,7 @@ def get_hdmi_sink() -> str:
 
 def set_default_sink(sink_name: str) -> bool:
     """
-    Setzt PulseAudio Default-Sink UND verschiebt laufende Sink-Inputs (v0.9.7).
+    Setzt Audio Default-Sink UND verschiebt laufende Sink-Inputs.
     Ohne move-sink-input hat ein bereits laufender mpv-Prozess keinen Ton auf
     dem neuen Sink — er bleibt auf dem alten verbunden.
     """
@@ -624,7 +622,7 @@ def get_mpv_args(settings=None, source: str = "") -> list:
     d = decide_audio_route(settings=settings, source=source)
     if not d.get("pa_ok", True):
         src_tag = ("source=" + source).ljust(17) if source else "source=-         "
-        log.error("[AUDIO] " + src_tag + " effective=none reason=pulseaudio_inactive")
+        log.error("[AUDIO] " + src_tag + " effective=none reason=audio_inactive")
         return ["--ao=pulse"]
     apply_audio_route(d)
     return build_player_args(d, source)
@@ -685,7 +683,7 @@ def apply_startup_volume(settings=None):
     """
     Lautstärke beim Boot anwenden. v0.9.24:
     - Default 90% (kein volume > 100% beim Start)
-    - Alle PulseAudio-Sinks werden gesetzt
+    - Alle Audio-Sinks werden gesetzt
     - amixer Card 1 mitziehen (FM/Scanner ALSA direkt)
     - Gespeicherter Wert bleibt über Neustarts erhalten
     """
@@ -731,9 +729,9 @@ def _get_current_sink() -> str:
 
 def get_sink_volume(sink_name: str = "") -> str:
     """
-    Liest die aktuelle PulseAudio-Lautstärke eines Sinks (v0.9.15).
+    Liest die aktuelle Lautstärke eines Sinks via pactl.
     Parst aus 'pactl list sinks' statt 'pactl get-sink-volume',
-    weil letzteres in PulseAudio --system Mode oft fehlschlägt.
+    weil letzteres im System-Mode (PA/PipeWire) oft fehlschlägt.
     """
     if not sink_name:
         sink_name = _get_current_sink()

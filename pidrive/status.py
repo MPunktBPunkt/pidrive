@@ -156,7 +156,7 @@ def _do_refresh():
 
         # Runtime-Prozesse für WebUI
         ps = _run(
-            r"ps ax -o pid=,comm=,cmd= | egrep 'python3|mpv|rtl_fm|welle-cli|librespot|pulseaudio|bluetoothd' | grep -v grep",
+            r"ps ax -o pid=,comm=,cmd= | egrep 'python3|mpv|rtl_fm|welle-cli|librespot|pipewire|wireplumber|pulseaudio|bluetoothd' | grep -v grep",
             timeout=4
         )
         new["processes"] = [ln.strip() for ln in ps.splitlines() if ln.strip()]
