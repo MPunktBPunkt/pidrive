@@ -62,19 +62,16 @@ def _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS):
     if rc == 0 and "device" in low and "not available" not in low:
         return True, out
 
-    # kurzer aktiver Discovery-Pfad
-    _btctl("scan on", timeout=5)
-    try:
-        end = time.time() + timeout
-        while time.time() < end:
-            rc, out = _btctl(f"info {mac}", timeout=5)
-            low = (out or "").lower()
-            if rc == 0 and "device" in low and "not available" not in low:
-                return True, out
-            _sleep_s(2.0)
-        return False, out
-    finally:
-        _btctl("scan off", timeout=5)
+    # Kurzer Discovery ohne scan on/off — nur info abrufen
+    # scan on/off erzeugt viele D-Bus-Verbindungen → CPU-Last
+    end = time.time() + timeout
+    while time.time() < end:
+        rc, out = _btctl(f"info {mac}", timeout=5)
+        low = (out or "").lower()
+        if rc == 0 and "device" in low and "not available" not in low:
+            return True, out
+        _sleep_s(3.0)
+    return False, out
 
 
 def _ensure_clean_bond_state(mac):

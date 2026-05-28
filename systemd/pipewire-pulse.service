@@ -8,11 +8,15 @@ Type=simple
 User=pulse
 Group=pulse
 SupplementaryGroups=audio bluetooth
+# RuntimeDirectory erstellt /run/pulse/ → Socket landet dort
 RuntimeDirectory=pulse
 RuntimeDirectoryMode=0755
+# XDG_RUNTIME_DIR = Verzeichnis für PipeWire-interne Sockets
 Environment=XDG_RUNTIME_DIR=/run/pipewire
 Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
-Environment=DBUS_SESSION_BUS_ADDRESS=
+# Pulse-Compat-Socket explizit in /run/pulse/
+Environment=PULSE_RUNTIME_PATH=/run/pulse
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 ExecStart=/usr/bin/pipewire-pulse
 Restart=on-failure
 RestartSec=3

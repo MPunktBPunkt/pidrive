@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.58"
+PIDRIVE_VERSION="0.11.59"
 
 # ============================================================
 # PiDrive Install Script
@@ -405,7 +405,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.58
+# pidrive_display.service: entfernt v0.11.59
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -613,7 +613,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.58)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.59)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -725,9 +725,19 @@ sleep 1
 
 systemctl daemon-reload
 systemctl enable pipewire pipewire-pulse wireplumber 2>/dev/null || true
+# /run/pulse Verzeichnis vor Start erstellen (RuntimeDirectory macht das erst beim Start)
+mkdir -p /run/pulse
+chown pulse:pulse /run/pulse 2>/dev/null || true
+chmod 755 /run/pulse
+
 systemctl start  pipewire 2>/dev/null || true ; sleep 2
 systemctl start  pipewire-pulse 2>/dev/null || true ; sleep 1
 systemctl start  wireplumber    2>/dev/null || true ; sleep 3
+
+# /var/run ist Symlink auf /run auf modernen Systemen
+# Sicherheitshalber: /var/run/pulse Verzeichnis sicherstellen
+mkdir -p /var/run/pulse 2>/dev/null || true
+chown pulse:pulse /var/run/pulse 2>/dev/null || true
 
 # Ergebnis
 if systemctl is-active --quiet pipewire && \
@@ -1109,7 +1119,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.58)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.59)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."

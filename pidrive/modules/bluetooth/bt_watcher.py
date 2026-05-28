@@ -171,9 +171,12 @@ def start_auto_reconnect(S, settings):
                 log.warn("BT auto-reconnect Watcher: " + str(e))
                 fail_streak += 1
 
-            # Schlafmodus nach Fehlschlag
+            # Exponentieller Backoff nach Fehlschlag
+            # (verhindert D-Bus-Sturm durch zu häufige bluetoothctl-Spawns)
             if not S.get("bt", False) and fail_streak > 0:
-                log.info("BT auto-reconnect [Watcher]: Fehlschlag → Schlafmodus")
+                # Backoff: 30s → 60s → 120s → 300s (max)
+                _backoff = min(30 * (2 ** min(fail_streak - 1, 3)), 300)
+                log.info(f"BT auto-reconnect [Watcher]: Fehlschlag #{fail_streak} → Schlafmodus {_backoff}s")
                 _write_watcher_state(
                     running=True,
                     sleeping=True,
@@ -183,8 +186,10 @@ def start_auto_reconnect(S, settings):
                     current_mac=_normalize_mac(settings.get("bt_last_mac", ""))
                 )
 
-                while not _reconnect_stop:
-                    _sleep_s(30)
+                _slept = 0
+                while not _reconnect_stop and _slept < _backoff:
+                    _sleep_s(10)
+                    _slept += 10
                     if _reconnect_wakeup is not None and _reconnect_wakeup.is_set():
                         _reconnect_wakeup.clear()
                         fail_streak = 0

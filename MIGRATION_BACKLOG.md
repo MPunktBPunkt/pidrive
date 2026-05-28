@@ -1,6 +1,6 @@
 # PiDrive — Migration Backlog
 
-**Stand v0.11.58**
+**Stand v0.11.59**
 
 ---
 
@@ -14,7 +14,7 @@
 | Web-Entry auf `web/app.py` | ✅ abgeschlossen | v0.11.39 |
 | Root-Shim-Abbau Module/BT/Radio | 🟡 niedrige Priorität | — |
 | `main_core.py` logisch zerlegen | 📅 nach Feldtest | — |
-| **PulseAudio → PipeWire** | ✅ abgeschlossen | v0.11.58 |
+| **PulseAudio → PipeWire** | ✅ abgeschlossen | v0.11.59 |
 | AVRCP Phase 2 State Machine | 📅 nach Feldtest | — |
 
 ---
@@ -32,7 +32,7 @@
 
 ---
 
-## Audio-Migration: PulseAudio → PipeWire (v0.11.58)
+## Audio-Migration: PulseAudio → PipeWire (v0.11.59)
 
 **Abgeschlossen.** Kein Code-Umbau nötig — Socket-Pfad identisch.
 
@@ -67,7 +67,7 @@ Was geändert wurde:
 
 | Version | Fokus | Status |
 |---|---|---|
-| v0.11.58 | Markdown-Cleanup | ✅ |
-| v0.11.58+ | BMW AVRCP Feldtest-Fixes | 🔄 nach Feldtest |
+| v0.11.59 | Markdown-Cleanup | ✅ |
+| v0.11.59+ | BMW AVRCP Feldtest-Fixes | 🔄 nach Feldtest |
 | v0.11.6x | AVRCP Phase 2 State Machine | 📅 |
 | v0.12.x | main_core.py logisch zerlegen | 📅 Hochrisiko |

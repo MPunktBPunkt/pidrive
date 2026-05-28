@@ -316,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.58|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.59|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -463,6 +463,10 @@ def test_dab(sender_nr=22):
         name = f"Sender #{sender_nr}"
 
     t0 = time.time()
+    # Sicherstellen dass kein welle-cli mehr läuft
+    import subprocess as _sp3
+    _sp3.run("pkill -f welle-cli 2>/dev/null", shell=True)
+    time.sleep(0.5)
     _write_trigger("stop")
     time.sleep(0.5)
     _write_trigger(f"play_dab:{name}")
@@ -551,6 +555,9 @@ def test_dab_scan(channel="11B"):
         proc.terminate()
         try: proc.wait(timeout=3)
         except: proc.kill()
+        # Sicherheits-Kill: alle welle-cli Prozesse beenden
+        import subprocess as _sp2
+        _sp2.run("pkill -f welle-cli 2>/dev/null", shell=True)
 
     elapsed = time.time() - t0
 
@@ -719,8 +726,10 @@ def run_all():
     test_spotify()
     test_avrcp_inject()
 
-    # Stop
+    # Stop + Cleanup
     _write_trigger("stop")
+    import subprocess as _sp4
+    _sp4.run("pkill -f welle-cli 2>/dev/null", shell=True)
     time.sleep(0.5)
 
     test_log_summary()
