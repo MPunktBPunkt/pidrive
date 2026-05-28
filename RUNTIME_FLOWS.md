@@ -1,6 +1,6 @@
 # PiDrive — Runtime Flows
 
-**Stand v0.11.56 · Debugging-Referenz für Laufzeitpfade**
+**Stand v0.11.57 · Debugging-Referenz für Laufzeitpfade**
 
 Dieses Dokument zeigt die echten Laufzeitpfade, nicht nur die statische Architektur. Es hilft dabei zu verstehen, welche Schichten bei einem Ereignis beteiligt sind und wo Debugging ansetzen muss.
 
@@ -132,7 +132,7 @@ modules/webradio.py — play(name, url, S, settings)
     mpv IPC-Socket: /tmp/pidrive_mpv.sock
             │
             ▼
-    PulseAudio → BT A2DP (bluez_sink.<MAC>) oder ALSA
+    PipeWire → BT A2DP (bluez_sink.<MAC>) oder ALSA
 ```
 
 **Wichtige Fallstricke:**
@@ -172,7 +172,7 @@ modules/local_player.py — play(path, S, settings, shuffle=True)
     └── Popen(["mpv", "--no-video", ...sink..., *files])
             │
             ▼
-    PulseAudio → BT A2DP oder ALSA
+    PipeWire → BT A2DP oder ALSA
 ```
 
 **Wichtig:** Audio-Pfad ist identisch mit Webradio — BT muss verbunden sein für BT-Ausgabe.

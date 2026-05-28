@@ -145,7 +145,7 @@ def check_services():
         except Exception:
             pass
 
-    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.56)")
+    nfo("pidrive_display.service: dauerhaft deaktiviert (TFT entfernt v0.11.57)")
     disp_pid = None  # Display dauerhaft deaktiviert
     if disp_pid and disp_pid != "0":
         nfo(f"Display PID: {disp_pid}")
@@ -195,7 +195,7 @@ def check_ipc():
 
 def check_display_env():
     S("DISPLAY SERVICE KONFIGURATION")
-    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.56")
+    nfo("TFT-Display + GPIO dauerhaft entfernt v0.11.57")
     nfo("Steuerung via WebUI (Port 8080) / pidrivectl / AVRCP")
 
 
@@ -204,7 +204,7 @@ def check_vtcon():
     if not __import__("os").path.isdir("/sys/class/vtconsole"):
         nfo("vtconsole: nicht vorhanden (kein Pi oder kein Display)")
         return
-    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.56)
+    # fbcon=nodeconfig: nicht mehr relevant (TFT-Display entfernt v0.11.57)
 
     for i in (0, 1):
         try:
@@ -241,9 +241,9 @@ def check_log():
 def check_audio():
     """
     Vollständige Audio-Diagnose:
-    system.pa → ALSA → amixer → PulseAudio Sinks → Default-Sink → Audio-State
+    PipeWire / PulseAudio → ALSA → amixer → PA-Sinks → Default-Sink → Audio-State
     """
-    S("AUDIO (PulseAudio + amixer)")
+    S("AUDIO (PipeWire / PulseAudio + amixer)")
     PA = "PULSE_SERVER=unix:/var/run/pulse/native "
 
     # PipeWire oder PulseAudio erkennen

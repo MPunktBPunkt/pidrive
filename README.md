@@ -3,7 +3,7 @@
 Raspberry Pi Car Infotainment — Spotify Connect · Webradio · DAB+ · FM · Bluetooth  
 für **BMW iDrive** (NBT EVO) und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.11.56-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.57-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.13-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Debian%2013%20%7C%20Raspberry%20Pi%20OS-lightgrey.svg)](https://www.debian.org/)
@@ -13,19 +13,18 @@ für **BMW iDrive** (NBT EVO) und ähnliche Systeme.
 ## Was ist PiDrive?
 
 PiDrive verwandelt einen Einplatinen-Rechner in ein Car-Infotainment-System.  
-Steuerung erfolgt über **BMW iDrive AVRCP** (Lenkrad/Drehsteller), **WebUI** (Port 8080) oder **CLI**.  
-Kein Display nötig — der Fujitsu Futro S920 / HP T630 oder ein Raspberry Pi 4 genügt.
+Steuerung über **BMW iDrive AVRCP** (Lenkrad/Drehsteller), **WebUI** (Port 8080) oder **CLI**.  
+Kein Display nötig — ein Raspberry Pi 4 oder x86-Minirechner genügt.
 
 **Audioquellen:**
 - 🎵 **Spotify Connect** (Raspotify / librespot)
-- 📻 **Webradio** (mpv, konfiguierbare Stationen)
+- 📻 **Webradio** (mpv, 13 konfigurierte Sender)
 - 📡 **DAB+** (RTL-SDR + welle-cli)
 - 🔊 **FM Radio** (RTL-SDR + rtl_fm)
+- 🔍 **Funk-Scanner** (PMR446, VHF, UHF, CB, FM)
+- 💾 **Lokale Musik** (MP3/FLAC/OGG von USB-Stick oder Festplatte)
 
-**Steuerung:**
-- BMW iDrive → Bluetooth AVRCP → `pidrive_avrcp.service` → Trigger
-- `pidrivectl` CLI (vollständige Kontrolle via SSH)
-- WebUI auf Port 8080
+**Audio-Stack:** PipeWire System-Mode (ab v0.11.57) — effizient, konfliktfrei, BT-stabil.
 
 ---
 
@@ -33,15 +32,15 @@ Kein Display nötig — der Fujitsu Futro S920 / HP T630 oder ein Raspberry Pi 4
 
 ```bash
 curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | bash
+sudo reboot
 ```
 
-Als `root` ausführen — `sudo` wird nicht benötigt und ist auf minimalen Systemen meist nicht installiert.  
-Der Installer erkennt automatisch die Plattform (Pi / x86, Container / Bare Metal).
+Als `root` ausführen. Der Installer erkennt automatisch Pi / x86, Container / Bare Metal.
 
-**Nach der Installation:**
 ```bash
-pidrivectl status          # System-Status
-pidrivectl play web 1      # Ersten Webradio-Sender starten
+pidrivectl status          # System-Status prüfen
+pidrivectl test all        # Komplett-Test aller Funktionen
+pidrivectl play web 9      # Rock Antenne starten
 pidrivectl bt scan         # Bluetooth-Geräte suchen
 ```
 
@@ -53,189 +52,15 @@ pidrivectl bt scan         # Bluetooth-Geräte suchen
 
 | Komponente | Details |
 |---|---|
-| Primär (Entwicklung) | Fujitsu Futro S920 · Debian 13 · x86_64 |
-| Geplant (Fahrzeug) | Raspberry Pi 4 · Raspberry Pi OS |
-| RTL-SDR | RTL2838 DVB-T Stick (DAB+ · FM) |
+| Fahrzeug | Raspberry Pi 4 · Raspberry Pi OS · Kühlkörper erforderlich |
+| Entwicklung | Fujitsu Futro S920 · Debian 13 · x86_64 |
+| RTL-SDR | RTL2838 DVB-T Stick (DAB+ · FM · Scanner) |
 | Bluetooth | Cambridge Silicon Radio Dongle (oder eingebaut) |
-| Audio-Ausgang | 3.5mm Klinke → AUX-IN · Bluetooth A2DP |
-| Stromversorgung | 12V KFZ → USB-Adapter 5V/3A |
+| Audio | 3.5mm Klinke → AUX-IN **oder** Bluetooth A2DP → BMW |
+| Netzteil | 5V/3A USB-C (Pi 4 offiziell) — kein Billig-Ladekabel! |
 
-### Verbindung im Auto
-
-```
-Pi/x86 ──[3.5mm Klinke]──────────────── Auto AUX-IN oder Verstärker
-Pi/x86 ──[Bluetooth A2DP]────────────── BMW Audio-System
-Pi/x86 ──[USB/WLAN]──── SSH/WebUI ───── Entwicklung & Wartung
-BMW iDrive ──[BT AVRCP]──────────────── Steuerung (Tasten → Trigger)
-```
-
----
-
-## pidrivectl — Befehlsreferenz
-
-### Status
-
-```bash
-pidrivectl status             # Quelle, Titel, Lautstärke, BT, WiFi
-pidrivectl now                # Was läuft gerade? (Titel + Metadaten)
-pidrivectl quick              # Kompakte Einzeile
-pidrivectl version            # Versionsnummer
-```
-
-### Wiedergabe
-
-```bash
-pidrivectl play dab "ROCK FM" # DAB+ Sender nach Name
-pidrivectl play dab 27        # Sender #27 aus Senderliste
-pidrivectl play web "Bayern 1"# Webradio nach Name
-pidrivectl play web 3         # Webradio #3 aus Liste
-pidrivectl play fm 104.4      # FM-Frequenz in MHz
-pidrivectl play fm 1          # FM-Sender #1 aus fm_stations.json
-pidrivectl play spotify       # Spotify Connect aktivieren
-pidrivectl stop               # Wiedergabe stoppen
-```
-
-### Lokale Musikwiedergabe
-
-```bash
-pidrivectl play local /home/pidrive/Musik/song.mp3   # Einzeldatei
-pidrivectl play local /home/pidrive/Musik/            # Ganzer Ordner
-pidrivectl play local /home/pidrive/Musik/list.m3u   # M3U-Playlist
-pidrivectl play local /home/pidrive/Musik/ --shuffle  # Zufallswiedergabe
-```
-
-Unterstützte Formate: `.mp3` `.flac` `.ogg` `.m4a` `.aac` `.wav` `.opus`  
-Audio läuft über den gleichen PulseAudio-Pfad wie Webradio (BT/Klinke).
-
-### Senderlisten
-
-```bash
-pidrivectl station list dab   # DAB+-Stationen (★ = Favorit)
-pidrivectl station list fm    # FM-Stationen aus fm_stations.json
-pidrivectl station list web   # Webradio-Stationen
-pidrivectl station list local # Lokale Musikdateien in ~/Musik
-```
-
-### Favoriten
-
-```bash
-pidrivectl favorites list        # Favoritenliste anzeigen
-pidrivectl favorites add         # Aktuellen Sender als Favorit speichern
-pidrivectl favorites remove 1    # Favorit #1 entfernen
-pidrivectl favorites play 1      # Favorit #1 abspielen
-```
-
-### Bluetooth
-
-```bash
-pidrivectl bt scan               # Scan starten (22s, Live-Ergebnisse)
-pidrivectl bt pair <mac|name>    # Gerät koppeln (Pairing-Modus nötig!)
-pidrivectl bt connect <mac>      # Verbinden
-pidrivectl bt known              # Bekannte / gepaarte Geräte
-pidrivectl bt status             # Verbindungsstatus + Agent
-pidrivectl bt reconnect          # Letztes Gerät neu verbinden
-```
-
-### Audio & Lautstärke
-
-```bash
-pidrivectl volume up             # Lautstärke erhöhen
-pidrivectl volume down           # Lautstärke senken
-pidrivectl volume set 70         # Direkt auf 70% setzen
-pidrivectl audio route klinke    # Ausgang: klinke | bt | hdmi | auto
-pidrivectl audio status          # Aktueller Ausgang, Sink, BT-Status
-pidrivectl audio test            # 440 Hz Testton (3 Sekunden)
-```
-
-### DAB+
-
-```bash
-pidrivectl dab status            # Empfangsstatus (Lock, SNR, Fehler)
-pidrivectl dab live              # Live-Metadaten-Stream
-pidrivectl dab live --once       # Einmalig ausgeben
-pidrivectl dab live --changes    # Nur bei Änderungen (DLS/Titel)
-pidrivectl dab scan              # Sendersuchlauf mit Live-Feedback
-pidrivectl dab stop              # DAB-Wiedergabe stoppen
-```
-
-### Scanner (PMR/VHF/UHF/CB/FM)
-
-```bash
-pidrivectl scanner               # Status + alle verfügbaren Bänder
-pidrivectl scanner pmr446 scan   # Band scannen (pmr446 | vhf | uhf | cb | fm | freenet | lpd433)
-pidrivectl scanner pmr446 ch 1   # Direkt auf Kanal 1 springen
-pidrivectl scanner pmr446 freq 446.0  # Direkt auf Frequenz (MHz)
-pidrivectl scanner pmr446 next   # Nächster Kanal
-pidrivectl scanner pmr446 prev   # Vorheriger Kanal
-pidrivectl scanner squelch 25    # Squelch-Level (0=aus, 25=normal, 50=streng)
-pidrivectl scanner ppm 49        # PPM-Korrektur für RTL-SDR
-pidrivectl scanner stop          # Scanner stoppen
-```
-
-### PPM-Kalibrierung (RTL-SDR)
-
-```bash
-pidrivectl ppm                   # Aktuellen PPM-Wert anzeigen
-pidrivectl ppm set 49            # PPM-Offset manuell setzen
-pidrivectl ppm calibrate         # Automatische Kalibrierung (braucht Signal)
-```
-
-### AVRCP (BMW iDrive)
-
-```bash
-pidrivectl avrcp                 # Live-Monitor: BMW-Tasten in Echtzeit
-pidrivectl avrcp monitor         # Gleichbedeutend mit avrcp
-pidrivectl avrcp status          # Letztes empfangenes AVRCP-Event
-pidrivectl avrcp events          # Ringpuffer der letzten 20 Events
-pidrivectl avrcp inject next     # Trigger simulieren (ohne BMW testen)
-pidrivectl debug avrcp           # AVRCP-Debug-Modus
-pidrivectl debug inject <trigger># Beliebigen Trigger direkt injizieren
-```
-
-### System, Diagnose, Logs
-
-```bash
-pidrivectl system                # Allgemeine System-Info
-pidrivectl system resources      # RAM, SD-Karte, Uptime, CPU-Temp
-pidrivectl system diagnose       # Vollständige Systemdiagnose
-pidrivectl log                   # Core-Log (letzte 40 Einträge)
-pidrivectl log core              # Core-Service-Log
-pidrivectl log app               # App-Log
-pidrivectl log avrcp             # AVRCP-Service-Log
-```
-
-### Wiedergabe-Playlist
-
-```bash
-pidrivectl playlist today        # Gestreamte Sender/Titel heute
-pidrivectl playlist all          # Gesamte Playlist-History
-pidrivectl playlist last         # Letzte Session
-pidrivectl playlist 2026-05-17   # Playlist für bestimmtes Datum
-```
-
----
-
-## Architektur
-
-```
-BMW iDrive (AVRCP)
-    │
-    ▼
-avrcp_trigger.py ──► /tmp/pidrive_cmd ──► main_core.py
-                                               │
-                      ┌────────────────────────┤
-                      │                        │
-               WebUI (Port 8080)         trigger/
-               pidrivectl CLI            td_radio / td_nav / td_hardware
-                                               │
-                                    modules/radio/  modules/bluetooth/
-                                    modules/audio/  modules/platform/
-                                               │
-                                    rtl_fm · welle-cli · mpv · librespot
-```
-
-**CAPS-System (`modules/platform.py`):** Plattform-Fähigkeiten werden beim Start einmalig ermittelt.  
-Alle Subsysteme prüfen `CAPS["rtlsdr"]`, `CAPS["bluetooth"]` etc. statt `/proc/cpuinfo`.
+> **Temperatur:** Pi 4 braucht Kühlkörper. Ohne Kühlung throttelt er bei 80°C.  
+> Empfohlen: Argon NEO Gehäuse oder Pimoroni Fan SHIM für Fahrzeugbetrieb.
 
 ---
 
@@ -246,12 +71,136 @@ Alle Subsysteme prüfen `CAPS["rtlsdr"]`, `CAPS["bluetooth"]` etc. statt `/proc/
 | `pidrive_core.service` | Haupt-Core (Wiedergabe, Menü, Trigger) |
 | `pidrive_web.service` | WebUI + REST-API (Port 8080) |
 | `pidrive_avrcp.service` | BMW iDrive AVRCP → Trigger |
-| `pulseaudio.service` | System-Mode PulseAudio |
+| `pipewire.service` | Audio-Server (System-Mode) |
+| `pipewire-pulse.service` | PulseAudio-Compat-Layer (Socket: /var/run/pulse/native) |
+| `wireplumber.service` | Session-Manager (BT A2DP automatisch) |
+
+---
+
+## pidrivectl — Kurzreferenz
+
+### Status & Test
 
 ```bash
-systemctl status pidrive_core
-journalctl -u pidrive_core -f
+pidrivectl status             # Quelle, Titel, Lautstärke, BT, WiFi
+pidrivectl now                # Was läuft gerade?
+pidrivectl quick              # Kompakte Einzeile
+pidrivectl test all           # Komplett-Systemtest (alle Quellen + Audio + BT + AVRCP)
+pidrivectl test system        # Nur System-Ressourcen
 ```
+
+### Wiedergabe
+
+```bash
+pidrivectl play web "Bayern 1"   # Webradio
+pidrivectl play web 9            # Webradio #9 (Rock Antenne)
+pidrivectl play dab "ROCK FM"    # DAB+ nach Name
+pidrivectl play dab 27           # DAB+ nach Nummer
+pidrivectl play fm 104.4         # FM-Frequenz
+pidrivectl play spotify          # Spotify Connect aktivieren
+pidrivectl play local /pfad/     # Lokale Musik [--shuffle]
+pidrivectl stop
+```
+
+### Bluetooth
+
+```bash
+pidrivectl bt scan               # Scan (22s, Live)
+pidrivectl bt pair <mac|name>    # Pairing (Gerät vorher in Pairing-Modus!)
+pidrivectl bt connect <mac>      # Verbinden
+pidrivectl bt known              # Bekannte Geräte (mit Typ: [AVRCP] / [Kopfhörer])
+pidrivectl bt status
+```
+
+### Audio
+
+```bash
+pidrivectl audio route bt|klinke|hdmi|auto
+pidrivectl audio test            # 440 Hz Testton
+pidrivectl volume set 70
+pidrivectl volume up / down
+```
+
+### AVRCP (BMW iDrive)
+
+```bash
+pidrivectl avrcp                 # Live-Monitor BMW-Tasten
+pidrivectl avrcp inject next     # Trigger simulieren
+pidrivectl debug mpris status    # MPRIS2 D-Bus + IP anzeigen
+pidrivectl debug mpris push --title "Test"  # Test-Metadaten ans BMW
+```
+
+### Scanner
+
+```bash
+pidrivectl scanner pmr446 scan   # Band scannen
+pidrivectl scanner pmr446 ch 3   # Direkt auf Kanal 3
+pidrivectl scanner fm freq 104.4 # FM-Scanner auf Frequenz
+pidrivectl scanner squelch 0     # Squelch deaktivieren (Test)
+```
+
+### System & Diagnose
+
+```bash
+pidrivectl system                # PipeWire, Spotify, Core-Status
+pidrivectl system resources      # RAM, Disk, Temp, Throttling
+pidrivectl system diagnose       # Volldiagnose
+pidrivectl log                   # Core-Log
+```
+
+---
+
+## Architektur
+
+```
+BMW iDrive (AVRCP) ──[BT]──► integration/avrcp_trigger.py
+WebUI (Port 8080) ──────────► web/api/
+pidrivectl CLI ─────────────► cli/
+                                    │
+                               /tmp/pidrive_cmd (append-Queue)
+                                    │
+                              main_core.py
+                             trigger_dispatcher.py
+                          ┌───┬───┬────┬──────┐
+                       td_nav td_radio td_hw td_scanner td_system
+                                    │
+                    modules/radio/  modules/bluetooth/  modules/audio/
+                    rtl_fm · welle-cli · mpv · librespot
+                                    │
+                    PipeWire (System-Mode) ──► BT A2DP (BMW)
+                                              ALSA (Klinke/HDMI)
+
+mpris2.py ──► org.mpris.MediaPlayer2.pidrive (System-D-Bus)
+              BlueZ liest Properties ──► BMW-Display zeigt Metadaten
+```
+
+---
+
+## Spotify Connect einrichten
+
+```bash
+# OAuth einmalig (nach librespot-Installation):
+pidrivectl system spotify-oauth
+
+# SSH-Tunnel falls Browser nicht erreichbar:
+# (auf Windows-PC:) ssh -L 5588:127.0.0.1:5588 pidrive@<PI-IP>
+# Dann URL im Browser öffnen
+```
+
+Token wird in `/var/cache/librespot/credentials.json` gespeichert.
+
+---
+
+## WiFi-IP im BMW-Display
+
+Beim Verbinden mit einem Hotspot zeigt PiDrive für 8 Sekunden:
+```
+Zeile 1: SSH: 192.168.43.105
+Zeile 2: ssh pidrive@192.168.43.105  
+Zeile 3: WiFi: IPhone-Hotspot
+```
+
+Manuell: `pidrivectl debug mpris status` zeigt IP + SSH-Adresse.
 
 ---
 
@@ -259,109 +208,35 @@ journalctl -u pidrive_core -f
 
 | Datei | Inhalt |
 |---|---|
-| `pidrive_cmd` | Trigger-Datei (0660 root:pidrive) |
+| `pidrive_cmd` | Trigger-Queue (append-only, 0660 root:pidrive) |
 | `pidrive_status.json` | Wiedergabe, BT, WiFi |
-| `pidrive_source_state.json` | Aktive Quelle, Transitions |
+| `pidrive_source_state.json` | Aktive Quelle, boot_phase |
 | `pidrive_avrcp_events.json` | AVRCP Ringbuffer (30 Events) |
-| `pidrive_avrcp_status.json` | Letztes AVRCP-Event |
-
----
-
-## Konfiguration
-
-`/opt/pidrive/pidrive/config/settings.json` (Root-Install) bzw.  
-`/home/pidrive/pidrive/pidrive/config/settings.json` (User-Install)
-
-Wichtige Keys:
-
-```json
-{
-  "audio_out": "auto",
-  "startup_volume": 75,
-  "bt_last_mac": "00:16:94:2E:85:DB",
-  "dab_ppm": 49,
-  "fm_ppm": 49
-}
-```
-
----
-
-## Plattformen
-
-PiDrive läuft auf **Debian 13** (x86_64) und **Raspberry Pi OS** ohne Code-Änderungen.  
-Der Installer erkennt automatisch:
-
-| Merkmal | Verhalten |
-|---|---|
-| Pi vs. x86 | RPi.GPIO nur auf ARM; fbcon-Konfiguration nur auf Pi |
-| Container (LXC) | Null-Sink für PulseAudio; fake-hwclock übersprungen |
-| User vs. root | INSTALL_DIR: `/home/<user>/pidrive` vs. `/opt/pidrive` |
-| librespot | Auf ARM: Raspotify; auf x86: Binary von GitHub (automatisch) |
-
-## Spotify Connect einrichten
-
-### Installation (automatisch via Installer)
-
-Der Installer lädt librespot automatisch von GitHub und richtet `librespot.service` ein.
-
-```bash
-curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | bash
-```
-
-### OAuth (einmalig, nach librespot-Installation)
-
-```bash
-pidrivectl system spotify-oauth
-```
-
-Es erscheint eine Browser-URL. Diese auf einem PC oder Handy im selben Netzwerk öffnen.
-
-**Falls Verbindungsfehler:** SSH-Tunnel nutzen:
-```bash
-# Auf dem Windows-PC (zweites Terminal):
-ssh -L 5588:127.0.0.1:5588 pidrive@192.168.178.100
-# Dann die URL im Browser öffnen (127.0.0.1:5588 bleibt unverändert)
-```
-
-Nach dem Spotify-Login → `Strg+C` → Token wird in `/var/cache/librespot/credentials.json` gespeichert.
-
-### Spotify verwenden
-
-```bash
-pidrivectl play spotify    # Spotify Connect aktivieren
-```
-
-Dann in der Spotify-App das Gerät **PiDrive** auswählen.
-
-### Status prüfen
-
-```bash
-pidrivectl system          # zeigt Spotify: aktiv ✓ [librespot]
-```
+| `pidrive_test_results.json` | Ergebnis von `pidrivectl test all` |
 
 ---
 
 ## Entwicklung
 
 ```bash
-# Status live verfolgen
-pidrivectl log               # Core-Log
-journalctl -u pidrive_core -f
-
 # Trigger manuell senden
-echo "play_dab:ROCK FM" > /tmp/pidrive_cmd
-echo "vol_up" > /tmp/pidrive_cmd
+printf "play_web:Rock Antenne\n" >> /tmp/pidrive_cmd
 
 # AVRCP ohne BMW testen
 pidrivectl avrcp inject next
 pidrivectl avrcp monitor
 
-# Diagnose
-pidrivectl system diagnose
+# MPRIS2 debuggen
+pidrivectl debug mpris status
+pidrivectl debug mpris push --title "Bayern 3" --artist "Test"
+
+# Vollständiger System-Check
+pidrivectl test all
+cat /tmp/pidrive_test_results.json | python3 -m json.tool
 ```
 
-**Repo:** https://github.com/MPunktBPunkt/pidrive  
-**Dokumentation:** `KontextPiDrive.md` (Projekthistorie, Entscheidungen, Bugs)
+**Log (INFO-Level):** `tail -f /var/log/pidrive/pidrive.log`  
+**Dokumentation:** `KontextPiDrive.md` (Architektur, Entscheidungen, Bugs)
 
 ---
 
