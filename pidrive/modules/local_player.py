@@ -1,5 +1,5 @@
 """
-local_player.py — Lokale Musikwiedergabe für PiDrive v0.11.59
+local_player.py — Lokale Musikwiedergabe für PiDrive v0.11.60
 Unterstützt: Einzeldateien, Ordner, M3U-Playlisten, Shuffle.
 Audio über PipeWire-Compat → BT/Klinke wie alle anderen Quellen.
 """

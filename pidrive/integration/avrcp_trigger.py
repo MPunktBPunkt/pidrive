@@ -406,8 +406,10 @@ def monitor_bluetoothctl():
 
                 # Alle AVRCP/Player-Zeilen im Raw-Log
                 low = raw.lower()
+                # Nur echte AVRCP/Player-Events loggen (nicht jeden BT-Connect-Versuch)
                 if any(k in low for k in ("avrcp", "player", "media", "next", "previous",
-                                           "play", "pause", "stop", "rewind", "forward")):
+                                           "play", "pause", "stop", "rewind", "forward",
+                                           "passthrough", "volume")):
                     _raw_log(f"BTCTL: {raw}")
                     log.info(f"AVRCP btctl-raw: {raw[:120]}")
 

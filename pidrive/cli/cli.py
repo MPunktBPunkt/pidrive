@@ -967,14 +967,18 @@ Flags (vor dem Befehl angeben):
                 fmt.out(WRN + " → systemctl restart pipewire pipewire-pulse wireplumber")
                 fmt.out(WRN + " → BT: WirePlumber lädt A2DP automatisch nach BT-Connect")
 
-            # PA-Module für BT
-            mods_out, _ = _run(f"{PA_CMD} pactl list modules short 2>/dev/null")
-            for mod in ("module-bluetooth-discover", "module-bluetooth-policy"):
-                if mod in mods_out:
-                    fmt.out(OK + f" {mod} geladen")
-                else:
-                    fmt.out(NOK + f" {mod} NICHT geladen")
-                    fmt.out(f"     → {PA_CMD} pactl load-module {mod}")
+            # BT-Module: Mit PipeWire übernimmt WirePlumber — kein load-module nötig
+            pa_info, _ = _run(f"{PA_CMD} pactl info 2>/dev/null")
+            if "PipeWire" in pa_info:
+                fmt.out(OK + " PipeWire/WirePlumber: BT A2DP automatisch (kein load-module)")
+            else:
+                mods_out, _ = _run(f"{PA_CMD} pactl list modules short 2>/dev/null")
+                for mod in ("module-bluetooth-discover", "module-bluetooth-policy"):
+                    if mod in mods_out:
+                        fmt.out(OK + f" {mod} geladen")
+                    else:
+                        fmt.out(NOK + f" {mod} NICHT geladen")
+                        fmt.out(f"     → {PA_CMD} pactl load-module {mod}")
 
             # ── C) Bluetooth ─────────────────────────────────────────────────
             fmt.out("\n=== C) Bluetooth ===")
