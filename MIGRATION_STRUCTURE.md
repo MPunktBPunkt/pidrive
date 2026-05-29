@@ -1,6 +1,6 @@
 # PiDrive — Migrationsstatus Verzeichnisstruktur
 
-## Aktueller Stand: v0.11.62 (Übergangsphase)
+## Aktueller Stand: v0.11.63 (Übergangsphase)
 
 Die Zielstruktur ist dokumentiert in `ARCHITECTURE.md`.
 Dieser Plan zeigt den Migrationsstatus jeder Datei.
