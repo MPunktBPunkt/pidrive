@@ -48,12 +48,6 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 # Stale Metadaten aus vorheriger Quelle löschen
                 for _k in ("artist","track","dls","radio_station","source_error"):
                     S.pop(_k, None)
-                # PipeWire-Konflikt-Warnung
-                import subprocess as _spw
-                if _spw.run(["pgrep","-x","pipewire-pulse"],
-                            capture_output=True).returncode == 0:
-                    log.warn("Spotify: PipeWire läuft — Audio-Konflikt möglich. "
-                             "Fix: bash ~/pidrive/pidrive_car_only_cleanup.sh && reboot")
                 S["radio_name"]  = "Spotify Connect"
                 S["radio_type"]  = "SPOTIFY"
                 S["radio_playing"] = False  # pending bis Spotify tatsächlich spielt
@@ -158,7 +152,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd == "bt_backup":
         def _do_bt_backup():
             try:
-                from modules import bt_backup as _btb
+                from modules.bluetooth import bt_backup as _btb
                 ipc.write_progress("BT-Backup", "Sichern...", color="blue")
                 res = _btb.backup()
                 if res.get("ok"):
@@ -179,7 +173,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd == "bt_restore":
         def _do_bt_restore():
             try:
-                from modules import bt_backup as _btb
+                from modules.bluetooth import bt_backup as _btb
                 if not _btb.has_backup():
                     ipc.write_progress("BT-Restore", "Kein Backup vorhanden!", color="orange")
                     import time as _t
@@ -281,7 +275,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd == "rtlsdr_reset":
         def _do_rtlsdr_reset():
             try:
-                from modules import rtlsdr as _rtl
+                from modules.radio import rtlsdr as _rtl
                 ipc.write_progress("RTL-SDR", "USB-Reset läuft...", color="blue")
                 result = _rtl.usb_reset()
                 if result.get("ok"):

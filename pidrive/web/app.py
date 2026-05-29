@@ -368,7 +368,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.11.60
+        r = ""  # display entfernt v0.11.62
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)
@@ -608,7 +608,7 @@ def api_spectrum_capture():
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)
-        from modules import spectrum
+        from modules.radio import spectrum
         from settings import load_settings as _ls
         s = _ls()
         ppm  = int(args.get("ppm",  s.get("ppm_correction", 0)))
@@ -664,7 +664,7 @@ def api_spectrum_capture():
 @app.route("/api/spectrum/stations")
 def api_spectrum_stations():
     try:
-        from modules import spectrum
+        from modules.radio import spectrum
         min_hits = int(request.args.get("min_hits", 2))
         stations = spectrum.get_confirmed_stations(min_hits=min_hits)
         return jsonify({"ok": True, "stations": stations, "count": len(stations)})

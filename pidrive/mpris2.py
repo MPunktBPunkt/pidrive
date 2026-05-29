@@ -81,7 +81,7 @@ class PiDrivePlayer(dbus.service.Object):
         with self._lock:
             self._metadata = dbus.Dictionary({
                 "mpris:trackid":  dbus.ObjectPath(
-                    f"/org/mpris/MediaPlayer2/Track/{track_nr}"),
+                    self._safe_track_path(track_nr)),
                 "mpris:length":   dbus.Int64(0),
                 "xesam:title":    dbus.String(title[:64]),
                 "xesam:artist":   dbus.Array([dbus.String(artist[:64])],

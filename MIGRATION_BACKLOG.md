@@ -1,10 +1,10 @@
 # PiDrive — Migration Backlog
 
-**Stand v0.11.60**
+**Stand v0.11.62**
 
 ---
 
-## Status-Übersicht
+## Gesamtstatus
 
 | Bereich | Status | Version |
 |---|---|---|
@@ -12,62 +12,83 @@
 | IPC-Producer unified | ✅ abgeschlossen | v0.11.27 |
 | `integration/` kanonisiert | ✅ abgeschlossen | v0.11.39 |
 | Web-Entry auf `web/app.py` | ✅ abgeschlossen | v0.11.39 |
-| Root-Shim-Abbau Module/BT/Radio | 🟡 niedrige Priorität | — |
-| `main_core.py` logisch zerlegen | 📅 nach Feldtest | — |
-| **PulseAudio → PipeWire** | ✅ abgeschlossen | v0.11.60 |
+| PulseAudio → PipeWire | ✅ abgeschlossen | v0.11.56 |
+| **Root-Shim-Abbau (24 Dateien)** | ✅ **abgeschlossen** | **v0.11.62** |
+| MPRIS2 SIGABRT-Fix | ✅ abgeschlossen | v0.11.62 |
 | AVRCP Phase 2 State Machine | 📅 nach Feldtest | — |
+| `main_core.py` logisch zerlegen | 📅 später | — |
 
 ---
 
-## Aktive Systemd-Entrypoints
+## v0.11.62: Root-Shim-Abbau — Was wurde gemacht
 
-| Datei | Service | Zustand |
+### 24 Dateien gelöscht
+
+**Tote Root-Shims (7 Zeilen, nur Delegation):**
+- `modules/bt_agent.py`, `bt_audio.py`, `bt_backup.py`, `bt_connect.py`
+- `modules/bt_devices.py`, `bt_helpers.py`, `bt_watcher.py`, `bluetooth.py`
+- `modules/dab.py`, `dab_dls.py`, `dab_helpers.py`, `dab_play.py`, `dab_scan.py`
+- `modules/fm.py`, `rtlsdr.py`, `scanner.py`, `spectrum.py`
+
+**Toter Code (keine Importer):**
+- `modules/bluetooth_impl.py` — 3 Zeilen, nie genutzt
+- `modules/radio_impl.py` — 4 Zeilen, nie genutzt
+- `modules/core_callbacks.py` — 96 Zeilen, Extraktion nie abgeschlossen
+- `modules/system.py` — 51 Zeilen, nie genutzt
+- `modules/update.py` — 168 Zeilen, nie genutzt
+
+**Veraltete Integration-Kopien:**
+- `integration/mpris2.py` — 388 Zeilen, alte v0.7.10 Kopie, nie importiert
+- `integration/mpv_meta.py` — 4 Zeilen Shim, nie importiert
+
+### 8 Importpfade auf kanonische Pfade umgestellt
+
+| Datei | Alter Import | Neuer Import |
 |---|---|---|
-| `main_core.py` | `pidrive_core.service` | Root-Entry, bleibt vorerst |
-| `web/app.py` | `pidrive_web.service` | direkt, kein Shim mehr |
-| `integration/avrcp_trigger.py` | `pidrive_avrcp.service` | direkt, kein Shim mehr |
-| `systemd/pipewire.service` | `pipewire.service` | System-Mode, User=pulse |
-| `systemd/pipewire-pulse.service` | `pipewire-pulse.service` | PA-Compat, Socket=/var/run/pulse/native |
-| `systemd/wireplumber.service` | `wireplumber.service` | BT A2DP automatisch |
+| `main_core.py` | `from modules import rtlsdr` | `from modules.radio import rtlsdr` |
+| `trigger/td_hardware.py` | `from modules import rtlsdr` | `from modules.radio import rtlsdr` |
+| `trigger/td_hardware.py` | `from modules import bt_backup` | `from modules.bluetooth import bt_backup` |
+| `web/shared.py` | `from modules import dab` | `from modules.radio import dab` |
+| `web/shared.py` | `from modules import spectrum` | `from modules.radio import spectrum` |
+| `web/app.py` | `from modules import spectrum` | `from modules.radio import spectrum` |
+| `menu/station_store.py` | `from modules.scanner import ...` | `from modules.radio.scanner import ...` |
+| `menu/menu_builder.py` | `from modules.scanner import ...` | `from modules.radio.scanner import ...` |
 
 ---
 
-## Audio-Migration: PulseAudio → PipeWire (v0.11.60)
+## Aktuelle Dateistruktur (71 Python-Dateien)
 
-**Abgeschlossen.** Kein Code-Umbau nötig — Socket-Pfad identisch.
-
-Was geändert wurde:
-- `install.sh`: System-PA-Block → PipeWire-Block
-- `modules/audio.py`: `_pa_running()` prüft jetzt Socket + PipeWire-Service
-- `modules/bluetooth/bt_audio.py`: `_ensure_bt_pa_modules()` erkennt PipeWire, überspringt `load-module`
-- `modules/platform.py`: CAPS `pipewire` ergänzt
-- `diagnose.py`: Audio-Section Header + Checks aktualisiert
-- `test_suite.py`: PipeWire-Check statt PA-Konflikt-Check
-- Neue Systemd-Units: `pipewire.service`, `pipewire-pulse.service`, `wireplumber.service`
-- Neue Konfig: `/etc/pipewire/pipewire-pulse.conf.d/00-pidrive.conf`
-- Neue Konfig: `/etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf`
-- D-Bus Policy: `pulse`-User darf BlueZ ansprechen (für WirePlumber)
+```
+pidrive/
+├── main_core.py           ← systemd-Entry (bleibt vorerst)
+├── webui.py               ← Entry-Shim → web/app.py
+├── avrcp_trigger.py       ← Entry-Shim → integration/avrcp_trigger.py
+├── mpris2.py              ← MPRIS2-Implementierung (Root, Core importiert direkt)
+├── mpv_meta.py            ← mpv IPC/Metadaten
+├── diagnose.py, ipc.py, log.py, settings.py, status.py, test_suite.py
+│
+├── cli/                   ✅ sauber
+├── menu/                  ✅ sauber
+├── modules/
+│   ├── audio.py, favorites.py, local_player.py, platform.py
+│   ├── source_state.py, usb_music.py, webradio.py, wifi.py
+│   ├── bluetooth/         ✅ sauber (bt_agent, bt_audio, bt_backup,
+│   │                                bt_connect, bt_devices, bt_helpers, bt_watcher)
+│   └── radio/             ✅ sauber (dab, dab_dls, dab_helpers, dab_play,
+│                                     dab_scan, fm, rtlsdr, scanner, spectrum)
+├── trigger/               ✅ sauber
+├── web/                   ✅ sauber
+└── integration/
+    └── avrcp_trigger.py   ← echte AVRCP-Implementierung
+```
 
 ---
 
-## Root-Shims (noch vorhanden, niedrige Priorität)
+## Verbleibende Aufgaben
 
-| Root-Shim | Echter Code | Wann abbaubar? |
+| Aufgabe | Priorität | Wann |
 |---|---|---|
-| `modules/dab.py` | `modules/radio/dab.py` | nach Repo-Check |
-| `modules/fm.py` | `modules/radio/fm.py` | nach Repo-Check |
-| `modules/scanner.py` | `modules/radio/scanner.py` | nach Repo-Check |
-| `modules/bluetooth.py` | `modules/bluetooth/bluetooth.py` | nach Repo-Check |
-| `modules/bt_*.py` (Root) | `modules/bluetooth/bt_*.py` | nach Repo-Check |
-| `avrcp_trigger.py` (Root) | `integration/avrcp_trigger.py` | jetzt Shim (1 Zeile) |
-
----
-
-## Nächste Releases
-
-| Version | Fokus | Status |
-|---|---|---|
-| v0.11.60 | Markdown-Cleanup | ✅ |
-| v0.11.60+ | BMW AVRCP Feldtest-Fixes | 🔄 nach Feldtest |
-| v0.11.6x | AVRCP Phase 2 State Machine | 📅 |
-| v0.12.x | main_core.py logisch zerlegen | 📅 Hochrisiko |
+| AVRCP Phase 2 State Machine | P1 | nach BMW Feldtest |
+| BMW AVRCP Feldtest (Tasten + Display) | P1 | nächste Fahrt |
+| `main_core.py` logisch zerlegen (~728 Zeilen) | P3 | v0.12.x |
+| systemd Core-Entry modernisieren | P3 | nach Core-Zerlegung |

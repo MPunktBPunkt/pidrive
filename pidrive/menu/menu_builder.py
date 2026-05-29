@@ -9,7 +9,7 @@ import log
 import ipc
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
-from modules.scanner import BANDS, VHF_RANGE, UHF_RANGE
+from modules.radio.scanner import BANDS, VHF_RANGE, UHF_RANGE
 try:
     from modules import favorites as _fav_mod
 except Exception:

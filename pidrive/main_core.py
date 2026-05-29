@@ -347,7 +347,7 @@ def system_check():
         pass
 
     try:
-        from modules import rtlsdr as _rtlsdr_check
+        from modules.radio import rtlsdr as _rtlsdr_check
         _rtlsdr_check.log_startup_check(log)
     except Exception as _e:
         log.warn("  ⚠ RTL-SDR Check: " + str(_e))

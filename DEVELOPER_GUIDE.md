@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand v0.11.60**
+**Stand v0.11.62**
 
 ---
 
@@ -88,7 +88,7 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 
 ---
 
-## D. Audio: PipeWire System-Mode (ab v0.11.60)
+## D. Audio: PipeWire System-Mode (ab v0.11.62)
 
 ```
 /etc/systemd/system/pipewire.service         User=pulse
