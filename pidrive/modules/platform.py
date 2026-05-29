@@ -1,5 +1,5 @@
 """
-modules/platform.py — Hardware-Capability-Detection  v0.11.63
+modules/platform.py — Hardware-Capability-Detection  v0.11.64
 ==============================================================
 Einmalig beim Start ausgewertet. Alle Subsysteme prüfen
 nur noch CAPS statt /proc/cpuinfo oder importierte Hardware.
@@ -14,8 +14,6 @@ Verwendung:
 import os
 import shutil
 import subprocess
-import importlib as _importlib
-_stdlib_platform = _importlib.import_module("platform")  # stdlib, nicht modules/platform.py
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Hilfsfunktionen
@@ -46,8 +44,11 @@ def _is_container() -> bool:
         return False
 
 def _is_arm() -> bool:
-    m = _stdlib_platform.machine()
-    return m.startswith("arm") or m == "aarch64"
+    try:
+        m = os.uname().machine  # kein "import platform" nötig
+        return m.startswith("arm") or m == "aarch64"
+    except Exception:
+        return False
 
 def _headphone_card() -> int | None:
     """ALSA-Karte mit 'Headphones' oder 'Analog' — None wenn keine gefunden."""
