@@ -126,3 +126,40 @@ def run_update(S):
     except Exception as e:
         ipc.write_progress("Update", f"Fehler: {e}", color="red")
         time.sleep(4); ipc.clear_progress()
+
+
+def spotify_toggle(S: dict) -> None:
+    """Spotify Connect ein-/ausschalten via systemctl.
+    Startet raspotify oder librespot, je nach Installation.
+    """
+    import subprocess as _sp
+    import log as _log
+
+    active = bool(S.get("spotify"))
+
+    if active:
+        # Spotify stoppen
+        for svc in ("raspotify", "librespot"):
+            try:
+                _sp.run(["systemctl", "stop", svc],
+                        capture_output=True, timeout=5)
+            except Exception:
+                pass
+        S["spotify"] = False
+        _log.info("[UPDATE] Spotify: gestoppt")
+    else:
+        # Spotify starten — raspotify bevorzugt
+        started = False
+        for svc in ("raspotify", "librespot"):
+            try:
+                r = _sp.run(["systemctl", "start", svc],
+                            capture_output=True, timeout=8)
+                if r.returncode == 0:
+                    S["spotify"] = True
+                    started = True
+                    _log.info(f"[UPDATE] Spotify: {svc} gestartet")
+                    break
+            except Exception:
+                pass
+        if not started:
+            _log.warn("[UPDATE] Spotify: kein Dienst startbar (raspotify/librespot)")

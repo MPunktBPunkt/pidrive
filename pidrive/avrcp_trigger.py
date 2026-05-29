@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-avrcp_trigger.py — Entry-Shim (v0.11.64)
+avrcp_trigger.py — Entry-Shim (v0.11.65)
 Echte Implementierung: integration/avrcp_trigger.py
 
 Dieser Shim existiert für Rückwärtskompatibilität.

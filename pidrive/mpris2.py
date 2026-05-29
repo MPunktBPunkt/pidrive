@@ -91,7 +91,8 @@ class PiDrivePlayer(dbus.service.Object):
                 "xesam:genre":    dbus.Array([dbus.String(genre[:32])],
                                              signature="s"),
                 "xesam:url":      dbus.String(""),
-                "mpris:artUrl":   dbus.String(art_url or ""),
+                **({{"mpris:artUrl": dbus.String(art_url)}}
+                   if art_url else {}),
             }, signature="sv")
 
         # Bei Track-Wechsel: kurz "Stopped" → dann neue Metadaten
