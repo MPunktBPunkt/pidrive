@@ -110,7 +110,7 @@ def play_station(station, S, settings=None):
                         _ss_wr.commit_source("idle", auto_end=True)
                     except Exception: pass
                     return False
-                log.warn("[WEB] Kein expliziter PA-Sink — nutze PA-Default-Routing")
+                log.info("[WEB] Kein expliziter PA-Sink — PA-Default-Routing (BT getrennt?)")
         except Exception as _se:
             log.warn(f"[WEB] Sink-Ermittlung: {_se}")
 

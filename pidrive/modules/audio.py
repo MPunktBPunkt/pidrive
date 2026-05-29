@@ -542,8 +542,10 @@ def decide_audio_route(settings=None, source: str = "") -> dict:
         try:
             _r = _pctl.run("pactl --server unix:/var/run/pulse/native list sinks short 2>/dev/null",
                            shell=True, capture_output=True, text=True, timeout=2)
-            if "null" in _r.stdout.lower() or "pidrive_null" in _r.stdout.lower():
-                effective, reason, sink = "virtual", "null_sink_container", "pidrive_null"
+            if "null" in _r.stdout.lower() or "auto_null" in _r.stdout.lower():
+                # PipeWire: auto_null; PA: pidrive_null
+                _null_name = "auto_null" if "auto_null" in _r.stdout else "pidrive_null"
+                effective, reason, sink = "virtual", "null_sink_container", _null_name
             else:
                 effective, reason = "none", "no_sink_available"
         except Exception:
