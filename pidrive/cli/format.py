@@ -31,9 +31,12 @@ def print_status(d: dict):
     out(_c("Wiedergabe", BOLD))
     out(f"  Quelle:       {src or '–'}")
     title = d.get("track") or d.get("radio_name") or "–"
-    out(f"  Sender/Titel: {title}")
-    if d.get("artist"): out(f"  Artist:       {d['artist']}")
-    if d.get("dls"):    out(f"  DLS:          {d['dls']}")
+    if src and src != "idle":
+        out(f"  Sender/Titel: {title}")
+        if d.get("artist"): out(f"  Artist:       {d['artist']}")
+        if d.get("dls"):    out(f"  DLS:          {d['dls']}")
+    else:
+        out(f"  Sender/Titel: –")  # Keine aktive Quelle
     dab_ps = d.get("dab_play_state","")
     # DAB-Status nur zeigen wenn Quelle gerade DAB ist
     if d.get("source","") == "dab" and dab_ps and dab_ps != "locked":

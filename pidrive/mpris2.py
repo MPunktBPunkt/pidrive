@@ -54,7 +54,13 @@ class PiDrivePlayer(dbus.service.Object):
         dbus.service.Object.__init__(self, bus,
                                      "/org/mpris/MediaPlayer2")
         self._cmd_callback  = cmd_callback
-        self._metadata      = {}
+        self._metadata      = dbus.Dictionary({
+            'mpris:trackid': dbus.ObjectPath('/org/mpris/MediaPlayer2/Track/0'),
+            'xesam:title':   dbus.String('PiDrive'),
+            'xesam:artist':  dbus.Array([dbus.String('')], signature='s'),
+            'xesam:album':   dbus.String(''),
+            'mpris:length':  dbus.Int64(0),
+        }, signature='sv')
         self._status        = "Playing"
         self._volume        = 1.0
         self._lock          = threading.Lock()
@@ -165,7 +171,9 @@ class PiDrivePlayer(dbus.service.Object):
                 "LoopStatus":     dbus.String("None"),
                 "Rate":           dbus.Double(1.0),
                 "Shuffle":        dbus.Boolean(False),
-                "Metadata":       self._metadata,
+                "Metadata":       (self._metadata
+                                   if isinstance(self._metadata, dbus.Dictionary)
+                                   else dbus.Dictionary(self._metadata, signature="sv")),
                 "Volume":         dbus.Double(self._volume),
                 "Position":       dbus.Int64(0),
                 "MinimumRate":    dbus.Double(1.0),

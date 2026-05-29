@@ -253,6 +253,7 @@ def play_station(station, S, settings=None):
         sync_seen = False
         superframe_seen = False
         last_err = ""
+        _last_err_ts = 0.0
 
         for _ in range(lock_wait_max):
             time.sleep(1.0)
@@ -288,8 +289,9 @@ def play_station(station, S, settings=None):
                         log.info(f"DAB lock: ✓ PCM bereit — {ln[:80]}")
                     if any(x in low for x in ["failed", "lost coarse", "cannot open",
                                                "permission denied", "xrun", "error"]):
-                        if ln[:180] != last_err:
+                        if ln[:180] != last_err or (__import__("time").time() - _last_err_ts) > 10.0:
                             last_err = ln[:180]
+                            _last_err_ts = __import__("time").time()
                             log.warn(f"DAB stderr: {ln[:100]}")
 
                     # Fataler Fehler — RTL-SDR nicht erreichbar → sofort abbrechen
