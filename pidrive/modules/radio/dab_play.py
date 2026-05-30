@@ -218,7 +218,11 @@ def play_station(station, S, settings=None):
 
         # Prio C: shell=True → Popen(list)
         # _name_q (shlex.quote) war nur wegen shell=True nötig — jetzt direkt
-        _welle_cmd = [
+        # stdbuf -oL: stdout line-buffered erzwingen
+        # Ohne stdbuf: bei Datei-Redirect full-buffered (4KB) → DLS kommt nie an
+        # Mit stdbuf: jede Zeile wird sofort in STDOUT_FILE geschrieben
+        _stdbuf = ["stdbuf", "-oL"]
+        _welle_cmd = _stdbuf + [
             "welle-cli", "-c", ch, "-g", _gain, "-p", name
         ]
         _welle_stdin  = open("/dev/null", "r")
