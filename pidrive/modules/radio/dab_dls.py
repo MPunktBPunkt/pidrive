@@ -92,7 +92,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
                     if parsed_dls:
                         raw = parsed_dls["raw"]
                         if raw != last_dls:
-                            S["dls_text"] = raw          # direkt für WebUI/ipc
+                            S["dls_text"] = raw
                             dls_lines_seen += 1
                             S["dls"] = raw
                             S["dls_raw"] = raw
@@ -101,6 +101,17 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
                             S["track"] = parsed_dls["track"]
                             S["dls_ts"] = int(time.time())
                             S["dab_dls_state"] = "ok"
+                            # Playlist-Eintrag schreiben (wie Webradio)
+                            try:
+                                import sys as _sys, os as _os
+                                _base = _os.path.dirname(_os.path.dirname(
+                                    _os.path.dirname(_os.path.abspath(__file__))))
+                                if _base not in _sys.path: _sys.path.insert(0, _base)
+                                from mpv_meta import _write_play_history as _wph
+                                _wph(station_name, parsed_dls["artist"],
+                                     parsed_dls["track"], raw, source="dab")
+                            except Exception as _pe:
+                                pass  # Playlist-Fehler nicht propagieren
 
                             _write_play_debug({
                                 "last_dls_raw": raw,

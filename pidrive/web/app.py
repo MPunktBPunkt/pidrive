@@ -368,7 +368,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.11.67
+        r = ""  # display entfernt v0.11.68
         if not r.get("ok") or not r.get("stdout","").strip():
             r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
         return jsonify(r)
@@ -449,7 +449,9 @@ def api_rtlsdr_reset():
 @app.route("/api/rtlsdr/calibrate")
 def api_rtlsdr_calibrate():
     import re as _re
-    result = safe_run("timeout 32s rtl_test -p 2>&1")
+    # Mindestlaufzeit: 3 Minuten für stabile PPM-Messung
+    # <60s liefert unzuverlässige Werte (Ausreißer ±50 ppm möglich)
+    result = safe_run("timeout 180s rtl_test -p 2>&1")
     stdout = result.get("stdout", "") or ""
 
     ppm = None
@@ -467,7 +469,8 @@ def api_rtlsdr_calibrate():
 
     if cum_ppms:
         ppm = cum_ppms[-1]
-        method = f"cumulative PPM aus rtl_test ({len(cum_ppms)} Messungen, letzter Wert)"
+        stability = "⚠ zu wenige Messungen — Ergebnis unzuverlässig" if len(cum_ppms) < 6 else f"{len(cum_ppms)} Messungen — stabil"
+        method = f"cumulative PPM aus rtl_test ({stability})"
 
     if ppm is None:
         cur_ppms = []

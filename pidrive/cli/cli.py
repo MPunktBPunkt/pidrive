@@ -840,21 +840,14 @@ Flags (vor dem Befehl angeben):
             sys.exit(EXIT_OK)
         elif args.vol_cmd == "set":
             lvl = max(0, min(100, args.level))
-            import subprocess as _sp
-            # PulseAudio direkt setzen (genauer als up/down)
-            pct = str(lvl) + "%"
-            r2 = _sp.run(
-                ["pactl", "--server", "/var/run/pulse/native",
-                 "set-sink-volume", "@DEFAULT_SINK@", pct],
-                capture_output=True
-            )
-            if r2.returncode == 0:
-                if use_json: fmt.print_json({"ok": True, "volume": lvl})
-                else: fmt.out("Lautstaerke: " + pct)
-            else:
-                # Fallback: Trigger senden (up/down naehert sich an)
-                svc.send("vol_up" if lvl > 50 else "vol_down")
-                if not use_json: fmt.out("Lautstaerke ca. " + pct + " (Naeherung)")
+            import time as _tv
+            # vol_set:N → Core aktualisiert PA + amixer + settings["volume"]
+            svc.send(f"vol_set:{lvl}")
+            _tv.sleep(0.6)  # Core braucht kurz zum Verarbeiten
+            d = svc.get_status()
+            actual = d.get("volume", lvl)
+            if use_json: fmt.print_json({"ok": True, "volume": actual})
+            else: fmt.out(f"Lautstaerke: {actual}%")
             sys.exit(EXIT_OK)
         if use_json: fmt.print_json(r)
         else: fmt.out(f"Lautstärke: {args.vol_cmd}")
@@ -884,7 +877,12 @@ Flags (vor dem Befehl angeben):
             svc.require_online()
             r = svc.send("ppm_calibrate")
             if use_json: fmt.print_json(r)
-            else: fmt.out("PPM-Kalibrierung gestartet — pruefe in ~60s: pidrivectl ppm")
+            else:
+                fmt.out("PPM-Kalibrierung gestartet — rtl_test -p")
+                fmt.out("⏱  Mindestlaufzeit: 3 Minuten für stabile Messung")
+                fmt.out("   Alternativ direkt: rtl_test -p  (mind. 3 min laufen lassen)")
+                fmt.out("   Abbruch nach <60s liefert ungenaue Werte (Ausreißer ±50 ppm)")
+                fmt.out("   Ergebnis nach 3 min: pidrivectl ppm")
         sys.exit(EXIT_OK)
 
     # audio

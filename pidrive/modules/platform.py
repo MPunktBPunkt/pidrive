@@ -1,5 +1,5 @@
 """
-modules/platform.py — Hardware-Capability-Detection  v0.11.67
+modules/platform.py — Hardware-Capability-Detection  v0.11.68
 ==============================================================
 Einmalig beim Start ausgewertet. Alle Subsysteme prüfen
 nur noch CAPS statt /proc/cpuinfo oder importierte Hardware.

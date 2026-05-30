@@ -97,6 +97,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
         bg(lambda: audio.volume_up(settings))
     elif cmd == "vol_down":
         bg(lambda: audio.volume_down(settings))
+    elif cmd.startswith("vol_set:"):
+        try:
+            _lvl = int(cmd.split(":", 1)[1])
+            bg(lambda l=_lvl: audio.set_volume(l, settings))
+        except (ValueError, IndexError):
+            log.warn(f"vol_set: ungültiger Wert: {cmd}")
 
     # ── WiFi / BT ─────────────────────────────────────────────────────────
     elif cmd in ("wifi_on", "wifi_off", "wifi_toggle"):

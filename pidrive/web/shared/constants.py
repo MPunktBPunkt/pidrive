@@ -38,7 +38,7 @@ ALLOWED_COMMANDS = {
     "spotify_on", "spotify_off", "spotify_toggle",
     "radio_stop", "library_stop",
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
-    "vol_up", "vol_down",
+    "vol_up", "vol_set", "vol_down",
     "gain_fm_auto", "gain_dab_auto",
     "dab_scan", "dab_scan_replace", "fm_scan",
     "fm_next", "fm_prev", "dab_next", "dab_prev",

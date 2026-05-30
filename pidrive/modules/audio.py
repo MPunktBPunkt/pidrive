@@ -760,6 +760,47 @@ def get_sink_volume(sink_name: str = "") -> str:
         return ""
 
 
+
+def set_volume(level: int, settings=None) -> int:
+    """Lautstärke direkt auf level% setzen (0-100).
+    Aktualisiert PA-Sink, amixer UND settings["volume"].
+    Gibt tatsächlich gesetzte Lautstärke zurück.
+    """
+    global _last_vol_save
+    level = max(0, min(100, int(level)))
+    pct = f"{level}%"
+
+    # PA-Sink setzen
+    try:
+        sink = _get_current_sink()
+        target = sink if sink else "@DEFAULT_SINK@"
+        subprocess.run(PA_ENV + f" pactl set-sink-volume {target} {pct}",
+                       shell=True, capture_output=True, timeout=3)
+    except Exception:
+        pass
+
+    # amixer synchronisieren
+    try:
+        card = _get_headphone_card()
+        subprocess.run(f"amixer -c {card} sset PCM {pct} 2>/dev/null",
+                       shell=True, capture_output=True, timeout=2)
+    except Exception:
+        pass
+
+    # settings["volume"] aktualisieren + speichern
+    if settings is not None:
+        settings["volume"] = level
+        try:
+            from settings import save_settings as _ss_sv
+            import time as _time_sv
+            if _time_sv.time() - _last_vol_save > 0.5:
+                _ss_sv(settings)
+                _last_vol_save = _time_sv.time()
+        except Exception:
+            pass
+
+    return level
+
 def volume_up(settings=None):
     try:
         sink = _get_current_sink()

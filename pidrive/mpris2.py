@@ -287,6 +287,8 @@ def start_mpris2():
         # Watchdog: prüft ob GLib-Loop noch läuft, startet bei Bedarf neu
         def _watchdog():
             global _loop, _player
+            # Erster Check nach 60s — BlueZ/WirePlumber brauchen Zeit nach Boot
+            time.sleep(60)
             while True:
                 time.sleep(30)
                 try:
