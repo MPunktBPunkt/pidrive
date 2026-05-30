@@ -298,7 +298,7 @@ def play_station(station, S, settings=None):
                 _player_proc = _rtlsdr.start_process(
                     _welle_cmd,
                     owner="dab_play",
-                    shell=True,
+                    shell=False,  # Liste direkt — shell=True mit Liste übergibt KEINE Argumente!
                     stdout=_welle_stderr,  # DLS auf stdout → ERR_FILE
                     stderr=_welle_stderr,  # Fehler → ERR_FILE
                     env=_welle_env,   # ← ohne PULSE_SINK (Timing-Fix), mit PULSE_SERVER
