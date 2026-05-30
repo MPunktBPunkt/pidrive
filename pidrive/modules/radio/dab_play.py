@@ -7,7 +7,7 @@ from modules.radio.dab_helpers import (
     _write_play_debug, _reset_runtime_dls_fields, _set_dab_status_fields,
     _parse_welle_status_line, _append_play_debug_line, _get_dab_gain,
     _err_file_for_session,
-    ERR_FILE, PLAY_DEBUG_FILE, C_DAB,
+    ERR_FILE, STDOUT_FILE, PLAY_DEBUG_FILE, C_DAB,
     _player_proc, _scan_running,
     _rtlsdr, _src_state, _audio,
 )
