@@ -299,8 +299,8 @@ def play_station(station, S, settings=None):
                     _welle_cmd,
                     owner="dab_play",
                     shell=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
+                    stdout=_welle_stderr,  # DLS auf stdout → ERR_FILE
+                    stderr=_welle_stderr,  # Fehler → ERR_FILE
                     env=_welle_env,   # ← ohne PULSE_SINK (Timing-Fix), mit PULSE_SERVER
                 )
             except Exception as e:
@@ -320,7 +320,7 @@ def play_station(station, S, settings=None):
             _player_proc = subprocess.Popen(
                 _welle_cmd,
                 shell=False,
-                stdout=subprocess.DEVNULL,
+                stdout=_welle_stderr,  # DLS/Info auf stdout → ERR_FILE
                 stdin=_welle_stdin,
                 stderr=_welle_stderr,
                 env=_welle_env,
