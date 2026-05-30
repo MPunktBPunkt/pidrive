@@ -223,7 +223,12 @@ def play_station(station, S, settings=None):
         ]
         _welle_stdin  = open("/dev/null", "r")
         _welle_stderr = open(_sess_err_file, "w")  # stderr
-        _welle_stdout = open(STDOUT_FILE, "w")     # stdout: DLS, service list
+        try:
+            _welle_stdout = open(STDOUT_FILE, "w")  # stdout: DLS, service list
+        except Exception as _oe:
+            log.warn(f"DAB: STDOUT_FILE open fehlgeschlagen: {_oe} — nutze DEVNULL")
+            import subprocess as _sp_null
+            _welle_stdout = open(os.devnull, "w")
 
         # ── v0.10.55: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
@@ -301,10 +306,14 @@ def play_station(station, S, settings=None):
                     _welle_cmd,
                     owner="dab_play",
                     shell=False,
-                    stdout=_welle_stdout,  # DLS/stdout → STDOUT_FILE (getrennt!)
-                    stderr=_welle_stderr,  # Fehler/sync → ERR_FILE
-                    env=_welle_env,   # ← ohne PULSE_SINK (Timing-Fix), mit PULSE_SERVER
+                    stdout=_welle_stdout,
+                    stderr=_welle_stderr,
+                    env=_welle_env,
                 )
+                # Handles nach Übergabe schließen (wie im else-Pfad)
+                _welle_stdin.close()
+                _welle_stderr.close()
+                _welle_stdout.close()
             except Exception as e:
                 _set_dab_status_fields(
                     S,
