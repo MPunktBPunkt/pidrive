@@ -329,6 +329,10 @@ def play_station(station, S, settings=None):
             _welle_stdin.close()
             _welle_stderr.close()
 
+        # DLS-Thread sofort starten — DLS kommt oft während des Lock-Waits!
+        # Nicht erst nach Lock-Wait: dann ist die DLS-Zeile schon im File
+        _start_dls_thread(session_id, name, S)
+
         lock_wait_max = int(settings.get("dab_wait_lock", 20)) if settings else 20
         sync_ok = False
         pcm_seen = False
@@ -454,10 +458,6 @@ def play_station(station, S, settings=None):
         S["radio_name"] = name
         S["radio_type"] = "DAB"
         S["control_context"] = "radio_dab"
-
-        # DLS-Thread: immer starten wenn welle-cli läuft — auch bei no_lock
-        # (DLS kommt oft bevor Audio stabil ist)
-        _start_dls_thread(session_id, name, S)
 
         # Recovery-Monitor: nach no_lock im Hintergrund auf Lock warten
         # Tunnel-Szenario: Signal weg → kommt zurück → auto-commit
