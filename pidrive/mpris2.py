@@ -55,7 +55,7 @@ class PiDrivePlayer(dbus.service.Object):
                                      "/org/mpris/MediaPlayer2")
         self._cmd_callback  = cmd_callback
         self._metadata      = dbus.Dictionary({
-            'mpris:trackid': dbus.ObjectPath('/org/mpris/MediaPlayer2/Track/0'),
+            'mpris:trackid': dbus.ObjectPath('/org/mpris/MediaPlayer2/TrackList/NoTrack'),
             'xesam:title':   dbus.String('PiDrive'),
             'xesam:artist':  dbus.Array([dbus.String('')], signature='s'),
             'xesam:album':   dbus.String(''),
@@ -86,8 +86,7 @@ class PiDrivePlayer(dbus.service.Object):
 
         with self._lock:
             self._metadata = dbus.Dictionary({
-                "mpris:trackid":  dbus.ObjectPath(
-                    self._safe_track_path(track_nr)),
+                "mpris:trackid":  dbus.ObjectPath(f"/org/pidrive/track/t{abs(int(track_nr))}"),
                 "mpris:length":   dbus.Int64(0),
                 "xesam:title":    dbus.String(title[:64]),
                 "xesam:artist":   dbus.Array([dbus.String(artist[:64])],
@@ -390,7 +389,7 @@ def push_test_metadata(title: str = "Testradio",
         _player._track_id += 1
         _player._meta = {
             "mpris:trackid":    dbus.ObjectPath(
-                                    f"/org/pidrive/track/{_player._track_id}"),
+                                    f"/org/pidrive/track/t{_player._track_id}"),
             "xesam:title":      dbus.String(title),
             "xesam:artist":     dbus.Array([dbus.String(artist)],
                                            signature="s"),

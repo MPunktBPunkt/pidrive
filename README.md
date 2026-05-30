@@ -3,7 +3,7 @@
 Raspberry Pi Car Infotainment — Spotify Connect · Webradio · DAB+ · FM · Bluetooth  
 für **BMW iDrive** (NBT EVO) und ähnliche Systeme.
 
-[![Version](https://img.shields.io/badge/version-0.11.69-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.70-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.13-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Debian%2013%20%7C%20Raspberry%20Pi%20OS-lightgrey.svg)](https://www.debian.org/)
@@ -24,7 +24,7 @@ Kein Display nötig — ein Raspberry Pi 4 oder x86-Minirechner genügt.
 - 🔍 **Funk-Scanner** (PMR446, VHF, UHF, CB, FM)
 - 💾 **Lokale Musik** (MP3/FLAC/OGG von USB-Stick oder Festplatte)
 
-**Audio-Stack:** PipeWire System-Mode (ab v0.11.69) — effizient, konfliktfrei, BT-stabil.
+**Audio-Stack:** PipeWire System-Mode (ab v0.11.70) — effizient, konfliktfrei, BT-stabil.
 
 ---
 

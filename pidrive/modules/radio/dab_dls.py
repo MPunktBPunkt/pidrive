@@ -43,12 +43,18 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
         "dls_station": station_name,
     })
 
-    # Startoffset: wir lesen ab Dateiende nur neue Zeilen
+    # Startoffset: ab Dateiende (nur neue Zeilen)
+    # Ausnahme: wenn Datei existiert und klein (<10KB) → ab Anfang lesen
+    # (nach Core-Crash: welle-cli läuft weiter, DLS schon in Datei)
     try:
         if os.path.exists(ERR_FILE):
-            with open(ERR_FILE, "r", encoding="utf-8", errors="ignore") as f:
-                f.seek(0, os.SEEK_END)
-                last_pos = f.tell()
+            _fsize = os.path.getsize(ERR_FILE)
+            if _fsize < 10240:  # <10KB → frische Session, ab Anfang
+                last_pos = 0
+            else:               # große Datei → nur neue Zeilen
+                with open(ERR_FILE, "r", encoding="utf-8", errors="ignore") as f:
+                    f.seek(0, os.SEEK_END)
+                    last_pos = f.tell()
     except Exception:
         last_pos = 0
 
