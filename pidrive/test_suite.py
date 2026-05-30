@@ -316,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.71|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.72|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")

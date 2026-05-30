@@ -48,7 +48,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
     # DLS erscheint oft während Lock-Wait → muss von Anfang gelesen werden.
     last_pos = 0
 
-    log.info(f"DAB DLS poller: start session={session_id} station={station_name!r}")
+    log.warn(f"DAB DLS poller: start session={session_id[:12]} station={station_name!r} last_pos={last_pos}")
 
     while not _dls_stop_event.is_set():
         if _get_session() != session_id:
@@ -97,6 +97,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
                             S["track"] = parsed_dls["track"]
                             S["dls_ts"] = int(time.time())
                             S["dab_dls_state"] = "ok"
+                            log.warn(f"DLS gefunden: {raw[:60]!r} → S[dls]={S.get('dls','-')!r}")
                             # Playlist-Eintrag schreiben (wie Webradio)
                             try:
                                 import sys as _sys, os as _os
@@ -107,7 +108,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
                                 _wph(station_name, parsed_dls["artist"],
                                      parsed_dls["track"], raw, source="dab")
                             except Exception as _pe:
-                                pass  # Playlist-Fehler nicht propagieren
+                                log.warn(f"DLS play_history Fehler: {_pe}")
 
                             _write_play_debug({
                                 "last_dls_raw": raw,

@@ -331,6 +331,7 @@ def play_station(station, S, settings=None):
 
         # DLS-Thread sofort starten — DLS kommt oft während des Lock-Waits!
         # Nicht erst nach Lock-Wait: dann ist die DLS-Zeile schon im File
+        log.warn(f"DAB DLS-Thread starten: session={session_id[:12]} err_file={_sess_err_file}")
         _start_dls_thread(session_id, name, S)
 
         lock_wait_max = int(settings.get("dab_wait_lock", 20)) if settings else 20
