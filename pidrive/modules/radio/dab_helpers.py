@@ -20,7 +20,8 @@ try:
 except Exception:
     _audio = None
 
-ERR_FILE        = "/tmp/pidrive_dab_welle.err"
+ERR_FILE        = "/tmp/pidrive_dab_welle.err"   # stderr
+STDOUT_FILE     = "/tmp/pidrive_dab_welle_out.txt"  # stdout (DLS, service list)
 PLAY_DEBUG_FILE = "/tmp/pidrive_dab_play_debug.json"
 SCAN_DEBUG_FILE = "/tmp/pidrive_dab_scan_debug.json"
 C_DAB           = (0, 200, 180)

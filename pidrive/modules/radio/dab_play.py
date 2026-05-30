@@ -170,6 +170,7 @@ def play_station(station, S, settings=None):
     _stop_dls_thread()
     _sess_err_file = _err_file_for_session(session_id)
     _truncate_file(_sess_err_file)
+    _truncate_file(STDOUT_FILE)  # DLS-stdout sauber starten
     _reset_runtime_dls_fields(S)
 
     _set_dab_status_fields(
@@ -221,7 +222,8 @@ def play_station(station, S, settings=None):
             "welle-cli", "-c", ch, "-g", _gain, "-p", name
         ]
         _welle_stdin  = open("/dev/null", "r")
-        _welle_stderr = open(_sess_err_file, "w")
+        _welle_stderr = open(_sess_err_file, "w")  # stderr
+        _welle_stdout = open(STDOUT_FILE, "w")     # stdout: DLS, service list
 
         # ── v0.10.55: Saubere ALSA-Umgebung für welle-cli ────────────────────
         # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
@@ -298,9 +300,9 @@ def play_station(station, S, settings=None):
                 _player_proc = _rtlsdr.start_process(
                     _welle_cmd,
                     owner="dab_play",
-                    shell=False,  # Liste direkt — shell=True mit Liste übergibt KEINE Argumente!
-                    stdout=_welle_stderr,  # DLS auf stdout → ERR_FILE
-                    stderr=_welle_stderr,  # Fehler → ERR_FILE
+                    shell=False,
+                    stdout=_welle_stdout,  # DLS/stdout → STDOUT_FILE (getrennt!)
+                    stderr=_welle_stderr,  # Fehler/sync → ERR_FILE
                     env=_welle_env,   # ← ohne PULSE_SINK (Timing-Fix), mit PULSE_SERVER
                 )
             except Exception as e:
@@ -320,14 +322,15 @@ def play_station(station, S, settings=None):
             _player_proc = subprocess.Popen(
                 _welle_cmd,
                 shell=False,
-                stdout=_welle_stderr,  # DLS/Info auf stdout → ERR_FILE
+                stdout=_welle_stdout,  # DLS/stdout → STDOUT_FILE
                 stdin=_welle_stdin,
-                stderr=_welle_stderr,
+                stderr=_welle_stderr,  # Fehler → ERR_FILE
                 env=_welle_env,
             )
             # Handles nach Übergabe schließen (Popen hat eigene Kopie)
             _welle_stdin.close()
             _welle_stderr.close()
+            _welle_stdout.close()
 
         # DLS-Thread sofort starten — DLS kommt oft während des Lock-Waits!
         # Nicht erst nach Lock-Wait: dann ist die DLS-Zeile schon im File

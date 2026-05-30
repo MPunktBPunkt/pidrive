@@ -2,7 +2,7 @@
 """dab_dls.py — DLS-Poller (Dynamic Label Segment)  v0.10.55"""
 
 from modules.radio.dab_helpers import (
-    _dls_thread, _dls_stop_event, ERR_FILE, _err_file_for_session,
+    _dls_thread, _dls_stop_event, ERR_FILE, STDOUT_FILE, _err_file_for_session,
     _reset_runtime_dls_fields, _parse_dls_line,
     _dab_session_id, _dab_session_lock, _get_session,
     _write_play_debug,
@@ -43,9 +43,7 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
         "dls_station": station_name,
     })
 
-    # Immer ab Position 0 starten:
-    # ERR_FILE wird bei jedem Session-Start neu erstellt (_truncate_file).
-    # DLS erscheint oft während Lock-Wait → muss von Anfang gelesen werden.
+    # DLS ist auf stdout → STDOUT_FILE (kein Interleaving mit stderr)
     last_pos = 0
 
     log.warn(f"DAB DLS poller: start session={session_id[:12]} station={station_name!r} last_pos={last_pos}")
@@ -65,11 +63,11 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
             break
 
         try:
-            if not os.path.exists(ERR_FILE):
+            if not os.path.exists(STDOUT_FILE):
                 time.sleep(1.0)
                 continue
 
-            with open(ERR_FILE, "r", encoding="utf-8", errors="ignore") as f:
+            with open(STDOUT_FILE, "r", encoding="utf-8", errors="ignore") as f:
                 f.seek(last_pos)
                 new_data = f.read()
                 last_pos = f.tell()
