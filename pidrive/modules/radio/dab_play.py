@@ -56,7 +56,16 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
         log.info(f"DAB Recovery-Monitor: start session={session_id}")
         _lock_found = False
 
+        _mon_start = _t.time()
         while not _recovery_stop.is_set():
+            if _t.time() - _mon_start > 300:  # 5 min Timeout
+                log.warn("DAB Recovery-Monitor: 5min Timeout — gebe RTL-SDR frei")
+                _sp2 = __import__("subprocess")
+                _sp2.run("pkill -f welle-cli 2>/dev/null",
+                         shell=True, timeout=3, capture_output=True)
+                S["dab_playback_state"] = "idle"
+                S["dab_attempting"] = False
+                break
             # Session gewechselt oder andere Quelle → beenden
             if _get_session() != session_id:
                 log.info("DAB Recovery-Monitor: session gewechselt — stop")
@@ -517,6 +526,13 @@ def stop(S):
             _rtlsdr.stop_process()
         except Exception:
             pass
+    # Orphan-Killer: alle welle-cli Prozesse beenden
+    try:
+        import subprocess as _sp_kill
+        _sp_kill.run("pkill -f welle-cli 2>/dev/null",
+                     shell=True, timeout=3, capture_output=True)
+    except Exception:
+        pass
 
     import subprocess as _sp, time as _tm
     _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, timeout=3, capture_output=True)
