@@ -316,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.76|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.77|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -445,7 +445,7 @@ def test_scanner_fm(freq="103.0"):
 def test_dab(sender_nr=22):
     """8. DAB+."""
     _section(f"DAB+ (Sender #{sender_nr})", "📻")
-    _send_to_bmw(f"8/9: DAB+ Sender #{sender_nr}", "welle-cli · Lock-Warte")
+    # _send_to_bmw absichtlich NICHT aufgerufen — würde MPRIS2-Push triggern → SIGABRT
 
     caps_dab = _run("which welle-cli 2>/dev/null")
     if not caps_dab:
@@ -502,6 +502,22 @@ def test_dab(sender_nr=22):
         _send_to_bmw(f"DAB: no_lock", name, "Antenne fehlt")
     else:
         _p(WARN, f"DAB: unklar nach {elapsed:.1f}s", f"state={dab_state}")
+    import os as _dab_os
+    _sf = "/tmp/pidrive_dab_welle_out.txt"
+    _ef = "/tmp/pidrive_dab_welle.err"
+    _sf_sz = _dab_os.path.getsize(_sf) if _dab_os.path.exists(_sf) else -1
+    _ef_sz = _dab_os.path.getsize(_ef) if _dab_os.path.exists(_ef) else -1
+    _p(INFO if _sf_sz >= 0 else WARN,
+       f"STDOUT_FILE: {_sf_sz} Bytes" if _sf_sz >= 0 else "STDOUT_FILE fehlt!")
+    _p(INFO if _ef_sz >= 0 else WARN,
+       f"ERR_FILE:    {_ef_sz} Bytes" if _ef_sz >= 0 else "ERR_FILE fehlt")
+    if _sf_sz > 0:
+        _dls_hits = [l for l in open(_sf).read().splitlines() if "DLS:" in l]
+        _p(PASS if _dls_hits else WARN,
+           f"DLS: {_dls_hits[-1]}" if _dls_hits else "Keine DLS-Zeile in STDOUT_FILE")
+    if _ef_sz > 0:
+        _last_err = [l for l in open(_ef).read().splitlines() if l.strip()][-1:]
+        if _last_err: _p(INFO, f"Letzter Fehler: {_last_err[0][:70]}")
 
     return dab_state not in ("no_lock","unknown")
 

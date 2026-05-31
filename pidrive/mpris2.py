@@ -387,24 +387,24 @@ def push_test_metadata(title: str = "Testradio",
         return
     try:
         _player._track_id += 1
-        _player._meta = {
+        _player._metadata = dbus.Dictionary({
             "mpris:trackid":    dbus.ObjectPath(
                                     f"/org/pidrive/track/t{_player._track_id}"),
             "xesam:title":      dbus.String(title),
-            "xesam:artist":     dbus.Array([dbus.String(artist)],
-                                           signature="s"),
+            "xesam:artist":     dbus.Array([dbus.String(artist)], signature="s"),
             "xesam:album":      dbus.String(album),
-            "xesam:genre":      dbus.Array([dbus.String("Debug")],
-                                           signature="s"),
+            "xesam:genre":      dbus.Array([dbus.String("Debug")], signature="s"),
             "xesam:trackNumber": dbus.Int32(_player._track_id),
             "mpris:length":     dbus.Int64(0),
-        }
+        }, signature="sv")
         _player._status = "Playing"
         _player.PropertiesChanged(
             PLAYER_IFACE,
-            {"Metadata":       _player._meta,
-             "PlaybackStatus": dbus.String("Playing")},
-            []
+            dbus.Dictionary({
+                "Metadata":       _player._metadata,
+                "PlaybackStatus": dbus.String("Playing"),
+            }, signature="sv"),
+            dbus.Array([], signature="s")
         )
         log.info(f"MPRIS2: Test-Push → '{title}' / '{artist}'")
     except Exception as e:
