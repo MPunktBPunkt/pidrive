@@ -532,7 +532,8 @@ def monitor_dbus():
                 text=True, bufsize=4096)
 
             log.info("AVRCP: dbus-monitor PID=" + str(proc.pid) + " gestartet")
-            _raw_log(f"dbus-monitor PID={proc.pid}")
+            _raw_log(f"dbus-monitor PID={proc.pid}",
+                start_new_session=True)
 
             for line in proc.stdout:
                 raw = line.rstrip()
@@ -574,6 +575,16 @@ def monitor_dbus():
             log.error(f"AVRCP dbus-monitor: {e}")
             _raw_log(f"ERROR dbus-monitor: {e}")
             time.sleep(5)
+        finally:
+            try:
+                if proc and proc.poll() is None:
+                    import signal as _sig
+                    os.killpg(os.getpgid(proc.pid), _sig.SIGTERM)
+                    proc.wait(timeout=3)
+            except Exception:
+                try:
+                    if proc: proc.kill()
+                except Exception: pass
 
 
 # ── Auto-Connect ──────────────────────────────────────────────────────────────

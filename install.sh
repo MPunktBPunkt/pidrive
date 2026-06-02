@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.81"
+PIDRIVE_VERSION="0.11.83"
 
 # ============================================================
 # PiDrive Install Script
@@ -153,8 +153,8 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     python3-bluez \
     python3-dbus \
     python3-gi \
-    pipewire pipewire-pulse wireplumber \
-    libspa-0.2-bluetooth \
+    pipewire pipewire-pulse wireplumber pipewire-audio \
+    libspa-0.2-bluetooth pulseaudio-utils \
     2>/dev/null || true
 
 apt-get install -y -qq welle.io 2>/dev/null || \
@@ -407,7 +407,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.81
+# pidrive_display.service: entfernt v0.11.83
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -615,7 +615,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.81)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.83)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -676,11 +676,15 @@ ok "PipeWire-Pulse: Socket /var/run/pulse/native konfiguriert"
 
 # WirePlumber: BT A2DP (Pi = A2DP Source → BMW)
 mkdir -p /etc/wireplumber/wireplumber.conf.d
+# WirePlumber BT-Konfiguration (kompatibel mit 0.4.x und 0.5.x)
+_wp_version=$(wireplumber --version 2>/dev/null | grep -oP '\d+\.\d+' | head -1)
 cat > /etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf << 'WPEOF'
+# PiDrive BT A2DP Source Konfiguration
 monitor.bluez.properties = {
     bluez5.roles = [ a2dp_source hfp_ag ]
     bluez5.codecs = [ sbc ]
     bluez5.auto-connect = [ a2dp_source ]
+    bluez5.hw-offload-sco = false
 }
 WPEOF
 ok "WirePlumber: BT A2DP konfiguriert"
@@ -738,6 +742,8 @@ chmod 755 /run/pulse
 systemctl start  pipewire 2>/dev/null || true ; sleep 2
 systemctl start  pipewire-pulse 2>/dev/null || true ; sleep 1
 systemctl start  wireplumber    2>/dev/null || true ; sleep 3
+# WirePlumber nach bluetooth starten damit A2DP-Profile registriert werden
+systemctl restart wireplumber 2>/dev/null || true ; sleep 2
 
 # /var/run ist Symlink auf /run auf modernen Systemen
 # Sicherheitshalber: /var/run/pulse Verzeichnis sicherstellen
@@ -1152,7 +1158,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.81)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.83)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."
