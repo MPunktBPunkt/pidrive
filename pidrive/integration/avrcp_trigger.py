@@ -391,7 +391,8 @@ def monitor_bluetoothctl():
             proc = subprocess.Popen(
                 ["bluetoothctl", "monitor"],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                text=True, bufsize=4096)
+                text=True, bufsize=4096,
+                start_new_session=True)  # ← eigene Prozessgruppe → kein Zombie
 
             for line in proc.stdout:
                 raw = line.strip()
@@ -421,6 +422,18 @@ def monitor_bluetoothctl():
             log.error(f"AVRCP bluetoothctl-monitor: {e}")
             _raw_log(f"ERROR bluetoothctl: {e}")
             time.sleep(5)
+        finally:
+            # Prozessgruppe sauber beenden — verhindert Zombie + 49% dbus-CPU
+            try:
+                if proc and proc.poll() is None:
+                    import signal as _sig
+                    os.killpg(os.getpgid(proc.pid), _sig.SIGTERM)
+                    proc.wait(timeout=3)
+            except Exception:
+                try:
+                    if proc: proc.kill()
+                except Exception:
+                    pass
 
 
 # ── Monitor: dbus-monitor ─────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.77"
+PIDRIVE_VERSION="0.11.80"
 
 # ============================================================
 # PiDrive Install Script
@@ -405,7 +405,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.77
+# pidrive_display.service: entfernt v0.11.80
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -613,7 +613,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.77)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.80)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -654,7 +654,10 @@ ln -sf /dev/null /etc/systemd/user/pulseaudio.service 2>/dev/null || true
 ok "PulseAudio: deaktiviert + maskiert (PipeWire übernimmt)"
 
 # ── PipeWire System-Mode Setup ────────────────────────────────────────────────
-# pulse-User: audio + bluetooth Gruppen
+# pulse-User anlegen falls nicht vorhanden (Trixie: kein PA installiert → kein pulse)
+id pulse &>/dev/null || useradd --system --no-create-home \
+    --home-dir /var/run/pulse --shell /usr/sbin/nologin \
+    --comment "PipeWire System User" pulse 2>/dev/null || true
 usermod -aG audio,bluetooth pulse 2>/dev/null || true
 # WirePlumber State-Dir
 mkdir -p /var/lib/pipewire
@@ -822,6 +825,31 @@ if [ -f /etc/raspotify/conf ]; then
         systemctl enable systemd-networkd-wait-online.service 2>/dev/null || true
         systemctl daemon-reload
     fi
+
+    # Raspotify-Konfiguration: Cache-Pfad + Discovery deaktivieren
+    # LIBRESPOT_DISABLE_DISCOVERY=true verhindert Avahi-Kollision
+    # ("PiDrive" wird von avahi-daemon bereits gemeldet → zeroconf collision)
+    mkdir -p /etc/raspotify /var/cache/librespot
+    if [ ! -f /etc/raspotify/conf ]; then
+        cat > /etc/raspotify/conf << 'RASPEOF'
+LIBRESPOT_NAME="PiDrive"
+LIBRESPOT_DEVICE_TYPE="automobile"
+LIBRESPOT_SYSTEM_CACHE="/var/cache/librespot"
+LIBRESPOT_DISABLE_DISCOVERY=true
+RASPEOF
+        ok "Raspotify: /etc/raspotify/conf angelegt"
+    else
+        # Bestehende conf: fehlende Keys ergänzen
+        grep -q LIBRESPOT_SYSTEM_CACHE /etc/raspotify/conf || \
+            echo 'LIBRESPOT_SYSTEM_CACHE="/var/cache/librespot"' >> /etc/raspotify/conf
+        grep -q LIBRESPOT_DISABLE_DISCOVERY /etc/raspotify/conf || \
+            echo 'LIBRESPOT_DISABLE_DISCOVERY=true' >> /etc/raspotify/conf
+        ok "Raspotify: /etc/raspotify/conf aktualisiert"
+    fi
+    # Cache-Verzeichnis: beschreibbar (volume-File)
+    chmod 755 /var/cache/librespot
+    [ -f /var/cache/librespot/credentials.json ] && \
+        chmod 644 /var/cache/librespot/credentials.json || true
     ok "Raspotify konfiguriert (via PipeWire-Compat-Layer)"
 
 fi
@@ -1122,7 +1150,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.77)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.80)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."

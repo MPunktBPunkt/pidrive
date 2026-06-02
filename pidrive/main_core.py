@@ -488,12 +488,15 @@ def startup_tasks(S, settings):
             fm.play_station(last_fm, S, settings)
 
         elif last_src == "dab" and last_dab and last_dab.get("name"):
-            # DAB-Resume: service_id + channel bevorzugt (stabil, kein Name-Lookup nötig)
-            _sid = last_dab.get("service_id", "")
-            _ch  = last_dab.get("channel", "")
-            _nm  = last_dab.get("name", "")
-            log.info(f"Boot-Resume: DAB → {_nm} (ch={_ch} sid={_sid})")
-            dab.play_station(last_dab, S, settings)
+            if not CAPS.get("rtlsdr"):
+                log.warn("Boot-Resume: DAB übersprungen — RTL-SDR nicht verfügbar")
+            else:
+                # DAB-Resume: service_id + channel bevorzugt
+                _sid = last_dab.get("service_id", "")
+                _ch  = last_dab.get("channel", "")
+                _nm  = last_dab.get("name", "")
+                log.info(f"Boot-Resume: DAB → {_nm} (ch={_ch} sid={_sid})")
+                dab.play_station(last_dab, S, settings)
 
         elif last_src == "webradio" and last_web and last_web.get("url"):
             # Webradio-Resume: erst starten wenn PA-Sink bereit (BT braucht Zeit nach Boot)

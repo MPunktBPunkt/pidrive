@@ -1,6 +1,6 @@
 # PiDrive — Troubleshooting-Runbook
 
-**Stand v0.11.77 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
+**Stand v0.11.80 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
 
 ---
 
@@ -118,7 +118,7 @@ Ursache: Netzteil zu schwach (Pi 4 braucht 5V/3A) oder keine Kühlung.
 
 ### BT-Gerät kann nicht gepairt werden (`AuthenticationFailed`)
 
-Ab v0.11.77 bestätigt der Agent `Request confirmation` automatisch.  
+Ab v0.11.80 bestätigt der Agent `Request confirmation` automatisch.  
 Falls noch ein Problem:
 ```bash
 systemctl status pidrive_core   # Agent läuft als Teil des Core
@@ -193,7 +193,7 @@ dbus-send --system --print-reply \
 
 ### AVRCP Service verbraucht viel CPU
 
-Ab v0.11.77 gefixt (bufsize: 1→4096). Falls noch hoch:
+Ab v0.11.80 gefixt (bufsize: 1→4096). Falls noch hoch:
 ```bash
 systemctl status pidrive_avrcp | grep CPU
 journalctl -u pidrive_avrcp --no-pager | tail -20
@@ -268,7 +268,7 @@ apt install python3-dbus
 ### DBusGMainLoop Fehler
 
 `DBusGMainLoop(set_as_default=True)` muss beim Modulimport gesetzt werden.  
-In `mpris2.py` ist das ab v0.11.77 korrekt — beim Import, nicht in `start_mpris2()`.
+In `mpris2.py` ist das ab v0.11.80 korrekt — beim Import, nicht in `start_mpris2()`.
 
 ---
 

@@ -1,3 +1,4 @@
+import re
 #!/usr/bin/env python3
 """dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.55"""
 
@@ -127,6 +128,13 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
 def play_station(station, S, settings=None):
     global _player_proc
 
+    # RTL-SDR verfügbar? Wenn nicht → sofort abbrechen
+    from modules.platform import CAPS
+    if not CAPS.get("rtlsdr"):
+        log.warn("DAB play_station: RTL-SDR nicht verfügbar — abgebrochen")
+        S["dab_playback_state"] = "idle"
+        return {"state": "no_rtlsdr", "error": "RTL-SDR nicht verfügbar"}
+
     stop(S)
 
     if settings is not None:
@@ -177,6 +185,13 @@ def play_station(station, S, settings=None):
     session_id = _new_session_id()
     _set_session(session_id)
     _stop_dls_thread()
+    # Alle laufenden welle-cli zuerst beenden (Orphan-Prevention)
+    try:
+        import subprocess as _sp_pre
+        _sp_pre.run("pkill -f welle-cli 2>/dev/null",
+                    shell=True, timeout=3, capture_output=True)
+    except Exception:
+        pass
     _sess_err_file = _err_file_for_session(session_id)
     _truncate_file(_sess_err_file)
     _truncate_file(STDOUT_FILE)  # DLS-stdout sauber starten
@@ -568,6 +583,12 @@ def stop(S):
 
 
 def play_by_name(name, S, settings=None, service_id=""):
+    # "Sender #N" → per Nummer nachschlagen (Boot-Resume-Kompatibilität)
+    _nr_match = re.match(r"Sender\s+#?(\d+)$", str(name or "").strip(), re.I)
+    if _nr_match:
+        _nr = int(_nr_match.group(1))
+        log.info(f"DAB play_by_name: 'Sender #{_nr}' → lookup per Nummer")
+        return play_by_number(_nr, S, settings)
     path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
     try:
         data = json.load(open(path, encoding="utf-8"))
