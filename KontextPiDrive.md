@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.11.80
+# PiDrive — Kontext & Projektdokumentation v0.11.81
 
 ## Projektbeschreibung
 
@@ -25,7 +25,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 ---
 
-## Funktionsstatus v0.11.80
+## Funktionsstatus v0.11.81
 
 | Feature | Status |
 |---|---|
@@ -38,19 +38,19 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | Scanner CLI (pmr446/vhf/uhf/cb/fm) | ✅ stabil |
 | AVRCP Phase 1 (Kontextmapping) | ✅ v0.8.6 |
 | AVRCP Phase 2 (State Machine) | 🟡 nach Feldtest |
-| MPRIS2 (BMW-Metadaten + Watchdog) | ✅ v0.11.80 — noch nicht im Auto validiert |
+| MPRIS2 (BMW-Metadaten + Watchdog) | ✅ v0.11.81 — noch nicht im Auto validiert |
 | Spotify Connect (librespot/raspotify) | ✅ OAuth vorhanden |
 | USB-Musik + lokale Wiedergabe | ✅ v0.11.38 |
-| **Audio-Stack: PipeWire System-Mode** | ✅ v0.11.80 — ersetzt System-PulseAudio |
-| **BT-Pairing Auto-Confirm** | ✅ v0.11.80 — DisplayYesNo + yes-Handler |
+| **Audio-Stack: PipeWire System-Mode** | ✅ v0.11.81 — ersetzt System-PulseAudio |
+| **BT-Pairing Auto-Confirm** | ✅ v0.11.81 — DisplayYesNo + yes-Handler |
 | **AVRCP MPRIS2 D-Bus Stabilität** | 🟡 Watchdog läuft, Feldtest ausstehend |
 | **Pi 4 BMW Feldtest** | 🟡 BT gepairt, Audio bestätigt, AVRCP ausstehend |
 | Boot-Restore | ✅ teilweise |
-| pidrivectl test all | ✅ v0.11.80 — Komplett-Systemtest |
+| pidrivectl test all | ✅ v0.11.81 — Komplett-Systemtest |
 
 ---
 
-## Audio-Stack: PipeWire System-Mode (ab v0.11.80)
+## Audio-Stack: PipeWire System-Mode (ab v0.11.81)
 
 **Architektur:**
 ```
@@ -189,7 +189,7 @@ PipeWire (System-Mode) / Socket: /var/run/pulse/native
 | fake-hwclock | IS_PI && !IS_CONTAINER |
 | dhcpcd5 | IS_PI |
 | Raspotify | IS_ARM; sonst librespot Binary von GitHub oder Cargo |
-| PipeWire | immer (ersetzt PulseAudio ab v0.11.80) |
+| PipeWire | immer (ersetzt PulseAudio ab v0.11.81) |
 | amixer | !IS_CONTAINER && amixer vorhanden |
 | REAL_USER Erkennung | SUDO_USER → pidrive → pi → UID≥1000 → root |
 | INSTALL_DIR | /home/\<user>/pidrive (User) oder /opt/pidrive (root) |
@@ -234,7 +234,7 @@ _device_type(info_out)  # → 'avrcp_controller' | 'headphones' | 'speaker' | 'a
 
 ---
 
-## BT Pairing — Automatisch (v0.11.80)
+## BT Pairing — Automatisch (v0.11.81)
 
 ```python
 # bt_agent.py: pair_with_agent() bestätigt automatisch:
@@ -362,7 +362,7 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
 - `.gitignore` muss `play_history.json` enthalten (Nutzerdaten, nicht versionieren)
 
 ### Audio / PipeWire
-- **PipeWire System-Mode** ab v0.11.80 — `pulseaudio --system` komplett ersetzt
+- **PipeWire System-Mode** ab v0.11.81 — `pulseaudio --system` komplett ersetzt
 - **Socket gleich:** `/var/run/pulse/native` — kein Code-Umbau nötig
 - **WirePlumber** übernimmt BT A2DP automatisch — kein `module-bluetooth-discover` mehr
 - **`_ensure_bt_pa_modules()`** prüft jetzt ob PipeWire läuft (pactl info) und überspringt load-module
