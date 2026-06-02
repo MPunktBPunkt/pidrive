@@ -13,6 +13,8 @@ RuntimeDirectory=pipewire
 RuntimeDirectoryMode=0755
 Environment=XDG_RUNTIME_DIR=/run/pipewire
 Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
+# Session-Bus auf System-Bus zeigen — PipeWire braucht spa.dbus für BT/ALSA
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 ExecStart=/usr/bin/pipewire
 Restart=on-failure
 RestartSec=3
