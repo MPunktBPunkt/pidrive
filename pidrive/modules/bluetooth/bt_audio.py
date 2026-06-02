@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""bt_audio.py — Audio-Sink und A2DP-Management (PipeWire/PulseAudio)  v0.11.83
+"""bt_audio.py — Audio-Sink und A2DP-Management (PipeWire/PulseAudio)  v0.11.84
 
 Vollständiges A2DP Auto-Routing:
 - PipeWire/WirePlumber: BT A2DP automatisch; Legacy-PA: load-module
