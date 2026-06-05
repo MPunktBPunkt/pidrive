@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.85"
+PIDRIVE_VERSION="0.11.87"
 
 # ============================================================
 # PiDrive Install Script
@@ -407,7 +407,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.85
+# pidrive_display.service: entfernt v0.11.87
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -615,7 +615,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.85)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.87)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -697,6 +697,7 @@ cat > /etc/dbus-1/system.d/pipewire-pidrive.conf << 'DBEOF'
 <busconfig>
   <policy user="pulse">
     <allow own="org.pulseaudio.Server"/>
+    <allow own="org.freedesktop.ReserveDevice1.*"/>
     <allow send_destination="org.bluez"/>
     <allow receive_sender="org.bluez"/>
     <allow send_interface="org.bluez.Profile1"/>
@@ -706,6 +707,7 @@ cat > /etc/dbus-1/system.d/pipewire-pidrive.conf << 'DBEOF'
   </policy>
   <policy context="default">
     <allow send_destination="org.pulseaudio.Server"/>
+    <allow send_destination="org.freedesktop.ReserveDevice1"/>
   </policy>
 </busconfig>
 DBEOF
@@ -1165,7 +1167,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.85)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.87)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."

@@ -532,8 +532,7 @@ def monitor_dbus():
                 text=True, bufsize=4096)
 
             log.info("AVRCP: dbus-monitor PID=" + str(proc.pid) + " gestartet")
-            _raw_log(f"dbus-monitor PID={proc.pid}",
-                start_new_session=True)
+            _raw_log(f"dbus-monitor PID={proc.pid}")
 
             for line in proc.stdout:
                 raw = line.rstrip()
