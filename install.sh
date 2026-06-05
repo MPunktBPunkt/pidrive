@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.87"
+PIDRIVE_VERSION="0.11.88"
 
 # ============================================================
 # PiDrive Install Script
@@ -407,7 +407,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.87
+# pidrive_display.service: entfernt v0.11.88
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -615,7 +615,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.87)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.88)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -687,17 +687,32 @@ monitor.bluez.properties = {
     bluez5.hw-offload-sco = false
 }
 WPEOF
+
+# PiDrive: ReserveDevice deaktivieren
+# Kein konkurrierender Audio-Server → Reservation nicht nötig
+# Verhindert D-Bus-Policy-Probleme mit org.freedesktop.ReserveDevice1
+cat > /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf << 'WPEOF'
+wireplumber.profiles.main = {
+  support.reserve-device = disabled
+  monitor.alsa.reserve-device = disabled
+}
+WPEOF
 ok "WirePlumber: BT A2DP konfiguriert"
 
 # D-Bus Policy: pulse-User darf BlueZ (WirePlumber braucht das)
-cat > /etc/dbus-1/system.d/pipewire-pidrive.conf << 'DBEOF'
+# Policy in beide mögliche D-Bus-Verzeichnisse schreiben
+for _dbus_dir in /etc/dbus-1/system.d /usr/share/dbus-1/system.d; do
+  [ -d "$_dbus_dir" ] || continue
+  cat > "$_dbus_dir/pipewire-pidrive.conf" << 'DBEOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
   "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
 <busconfig>
   <policy user="pulse">
     <allow own="org.pulseaudio.Server"/>
-    <allow own="org.freedesktop.ReserveDevice1.*"/>
+    <allow own="org.freedesktop.ReserveDevice1.Audio0"/>
+    <allow own="org.freedesktop.ReserveDevice1.Audio1"/>
+    <allow own="org.freedesktop.ReserveDevice1.Audio2"/>
     <allow send_destination="org.bluez"/>
     <allow receive_sender="org.bluez"/>
     <allow send_interface="org.bluez.Profile1"/>
@@ -711,6 +726,7 @@ cat > /etc/dbus-1/system.d/pipewire-pidrive.conf << 'DBEOF'
   </policy>
 </busconfig>
 DBEOF
+done
 ok "D-Bus Policy: pulse → BlueZ"
 
 # pulse-access Gruppe
@@ -1167,7 +1183,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.87)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.88)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."
