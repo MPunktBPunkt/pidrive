@@ -1,7 +1,7 @@
 # PiDrive — Bluetooth A2DP Fehleranalyse
 
 **Zeitraum:** ca. 2026-05-31 – 2026-06-05  
-**Versionen:** v0.11.71 → v0.11.88  
+**Versionen:** v0.11.71 → v0.11.89  
 **Plattform:** Raspberry Pi 4, Raspberry Pi OS (Debian Trixie), Kernel 6.18.33+rpt-rpi-v8  
 **Betroffene Hardware:** Cambridge Silicon Radio Bluetooth-Dongle, Sennheiser HD 4.40BT (00:16:94:2E:85:DB)
 
@@ -174,7 +174,7 @@ sudo reboot
 
 **Wichtig:** D-Bus-Policy-Änderungen werden erst nach einem vollständigen Reboot wirksam. `systemctl reload dbus` oder `restart dbus` reicht nicht, weil alle laufenden Dienste ihre bestehenden D-Bus-Verbindungen behalten.
 
-### Fix im Installer (ab v0.11.88)
+### Fix im Installer (ab v0.11.89)
 
 Der Installer schreibt `pipewire-pidrive.conf` jetzt mit der vollständigen Policy inklusive `ReserveDevice1`.
 
@@ -194,7 +194,7 @@ Während der Fehlersuche wurden weitere Probleme entdeckt und behoben:
 | v0.11.85 | `pipewire-pulse` bekam `AccessDenied` für `org.pulseaudio.Server` | `<allow own="org.pulseaudio.Server"/>` in Policy |
 | v0.11.85 | `diagnose.py` crashte mit `NameError: info is not defined` | `info(...)` → `nfo(...)` |
 | v0.11.86 | `_raw_log()` bekam `start_new_session=True` als falsches Argument | Argument entfernt |
-| **v0.11.88** | **`ReserveDevice1`-Ownership fehlte → kein ALSA-Device → kein A2DP** | **`<allow own="org.freedesktop.ReserveDevice1.*"/>` in Policy** |
+| **v0.11.89** | **`ReserveDevice1`-Ownership fehlte → kein ALSA-Device → kein A2DP** | **`<allow own="org.freedesktop.ReserveDevice1.*"/>` in Policy** |
 
 ---
 
@@ -248,4 +248,4 @@ pactl list sinks short
 
 ---
 
-*Dokumentiert nach Debugging-Session v0.11.71–v0.11.88 · Juni 2026*
+*Dokumentiert nach Debugging-Session v0.11.71–v0.11.89 · Juni 2026*
