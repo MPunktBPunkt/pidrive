@@ -1,6 +1,6 @@
 # iDrive Bluetooth — Technische Referenz für PiDrive
 
-**BMW 118d F20/F21 LCI 2017 · NBT Evo · PiDrive v0.11.92**  
+**BMW 118d F20/F21 LCI 2017 · NBT Evo · PiDrive v0.11.93**  
 Erstellt auf Basis von Quellcode-Analyse, BlueZ-Dokumentation und Felderfahrung.
 
 ---
@@ -530,7 +530,7 @@ rfkill unblock bluetooth
 | Kein Titelwechsel auf Display | TrackChanged Event fehlt | `mpris:trackid` inkr. + kurz `Stopped` senden |
 | Metadaten frieren ein | Notification Overflow | Rate-Limiting 300ms |
 | Lautstärke springt | Absolute Volume Konflikt | Volume auf 1.0 fixiert |
-| Keine Genre-Anzeige | fehlender `xesam:genre` | seit v0.11.92 implementiert |
+| Keine Genre-Anzeige | fehlender `xesam:genre` | seit v0.11.93 implementiert |
 | BMW ignoriert Metadaten | AVRCP 1.4 Browsing-Request | nur Legacy Metadata, kein Browsing |
 | Connect bricht nach 30s ab | Link Supervision Timeout | A2DP-Stream kontinuierlich halten |
 
@@ -658,5 +658,5 @@ SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 
 ---
 
-*Erstellt für PiDrive v0.11.92 — BMW 118d F20/F21 LCI 2017 · NBT Evo · BlueZ 5.x*  
+*Erstellt für PiDrive v0.11.93 — BMW 118d F20/F21 LCI 2017 · NBT Evo · BlueZ 5.x*  
 *Quellen: BlueZ-Quellcode, Bluetooth SIG AVRCP 1.4 Spec, PiDrive-Feldbeobachtungen*

@@ -1,6 +1,6 @@
 # PiDrive — Migration Backlog
 
-**Stand v0.11.92**
+**Stand v0.11.93**
 
 ---
 
@@ -13,14 +13,14 @@
 | `integration/` kanonisiert | ✅ abgeschlossen | v0.11.39 |
 | Web-Entry auf `web/app.py` | ✅ abgeschlossen | v0.11.39 |
 | PulseAudio → PipeWire | ✅ abgeschlossen | v0.11.56 |
-| **Root-Shim-Abbau (24 Dateien)** | ✅ **abgeschlossen** | **v0.11.92** |
-| MPRIS2 SIGABRT-Fix | ✅ abgeschlossen | v0.11.92 |
+| **Root-Shim-Abbau (24 Dateien)** | ✅ **abgeschlossen** | **v0.11.93** |
+| MPRIS2 SIGABRT-Fix | ✅ abgeschlossen | v0.11.93 |
 | AVRCP Phase 2 State Machine | 📅 nach Feldtest | — |
 | `main_core.py` logisch zerlegen | 📅 später | — |
 
 ---
 
-## v0.11.92: Root-Shim-Abbau — Was wurde gemacht
+## v0.11.93: Root-Shim-Abbau — Was wurde gemacht
 
 ### 24 Dateien gelöscht
 

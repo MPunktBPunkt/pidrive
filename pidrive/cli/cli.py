@@ -1338,7 +1338,9 @@ Flags (vor dem Befehl angeben):
         else:
             fmt.out(f"\n  {_label} — {len(_fil)} Titel"); fmt.out("  " + "─"*36)
             for _e in _fil:
-                _t = str(_e.get("time",""))[-8:-3]
+                _ts_raw = str(_e.get("date","") or _e.get("time","") or "")
+                # Zeitstempel: aus "YYYY-MM-DD HH:MM:SS" oder "HH:MM:SS"
+                _t = _ts_raw[11:16] if len(_ts_raw) > 10 else _ts_raw[:5]
                 _sta = _e.get('station') or _e.get('name') or ''
                 _trk = _e.get('track') or ''
                 _art = _e.get('artist') or ''

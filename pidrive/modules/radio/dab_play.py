@@ -79,8 +79,8 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                 if not _os.path.exists(err_file):
                     _t.sleep(1.0)
                     continue
-                # ERR_FILE auf 2MB begrenzen
-                _limit_file_size(err_file, 2_000_000)
+                # ERR_FILE auf 500KB begrenzen (wächst sonst sehr schnell bei schwachem Signal)
+                _limit_file_size(err_file, 500_000)
                 with open(err_file, "r", encoding="utf-8", errors="ignore") as f:
                     f.seek(last_pos)
                     new = f.read()
