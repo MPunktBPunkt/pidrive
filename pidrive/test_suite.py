@@ -316,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.91|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.92|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -359,8 +359,10 @@ def test_webradio():
     _write_trigger("play_web:Rock Antenne")
     src_ok = _wait_for_source("webradio", max_wait=12)
     if not src_ok:
-        # Ohne Audio-Sink: mpv startet nicht — erwartet, kein Fehler
-        if not _has_audio_sink:
+        # Bei Einzeltest-Aufruf _has_audio_sink direkt prüfen
+        _any_sink = _run("PULSE_SERVER=unix:/var/run/pulse/native "
+                        "pactl list sinks short 2>/dev/null | grep -v null")
+        if not _has_audio_sink and not _any_sink:
             _p(WARN, "Webradio: kein Audio-Sink (BT verbinden) — übersprungen")
             return None
         _p(FAIL, "Webradio: Quelle nicht aktiv nach 12s")
@@ -398,8 +400,11 @@ def test_fm(freq="104.4"):
     src_ok = _wait_for_source("fm", max_wait=12)
     elapsed = time.time() - t0
     if not _has_audio_sink and not src_ok:
-        _p(WARN, f"FM {freq}: kein Audio-Sink — übersprungen")
-        return None
+        _any_sink = _run("PULSE_SERVER=unix:/var/run/pulse/native "
+                        "pactl list sinks short 2>/dev/null | grep -v null")
+        if not _any_sink:
+            _p(WARN, f"FM {freq}: kein Audio-Sink — übersprungen")
+            return None
     if src_ok:
         _p(PASS, f"FM {freq} MHz: gestartet", f"{elapsed:.1f}s")
         meta = _wait_for_metadata("fm", max_wait=15)

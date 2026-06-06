@@ -3,7 +3,7 @@ import re
 """dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.55"""
 
 from modules.radio.dab_helpers import (
-    _write_json_atomic, _read_json, _run, _truncate_file, _normalize_station,
+    _write_json_atomic, _read_json, _run, _truncate_file, _limit_file_size, _normalize_station,
     _new_session_id, _set_session, _get_session, _clear_session,
     _write_play_debug, _reset_runtime_dls_fields, _set_dab_status_fields,
     _parse_welle_status_line, _append_play_debug_line, _get_dab_gain,
@@ -79,6 +79,8 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                 if not _os.path.exists(err_file):
                     _t.sleep(1.0)
                     continue
+                # ERR_FILE auf 2MB begrenzen
+                _limit_file_size(err_file, 2_000_000)
                 with open(err_file, "r", encoding="utf-8", errors="ignore") as f:
                     f.seek(last_pos)
                     new = f.read()

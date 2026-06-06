@@ -78,6 +78,20 @@ def _truncate_file(path):
         pass
 
 
+def _limit_file_size(path, max_bytes=2_000_000):
+    """Begrenzt Dateigröße auf max_bytes — behält letzte Bytes (neueste Daten)."""
+    try:
+        size = os.path.getsize(path)
+        if size > max_bytes:
+            with open(path, "rb") as f:
+                f.seek(-max_bytes, 2)
+                tail = f.read()
+            with open(path, "wb") as f:
+                f.write(tail)
+    except Exception:
+        pass
+
+
 def _run(cmd, capture=False, timeout=10):
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
