@@ -1,7 +1,7 @@
 # PiDrive — Bluetooth A2DP Fehleranalyse
 
 **Zeitraum:** ca. 2026-05-31 – 2026-06-05  
-**Versionen:** v0.11.71 → v0.11.89  
+**Versionen:** v0.11.71 → v0.11.91  
 **Plattform:** Raspberry Pi 4, Raspberry Pi OS (Debian Trixie), Kernel 6.18.33+rpt-rpi-v8  
 **Betroffene Hardware:** Cambridge Silicon Radio Bluetooth-Dongle, Sennheiser HD 4.40BT (00:16:94:2E:85:DB)
 
@@ -174,7 +174,7 @@ sudo reboot
 
 **Wichtig:** D-Bus-Policy-Änderungen werden erst nach einem vollständigen Reboot wirksam. `systemctl reload dbus` oder `restart dbus` reicht nicht, weil alle laufenden Dienste ihre bestehenden D-Bus-Verbindungen behalten.
 
-### Fix im Installer (ab v0.11.89)
+### Fix im Installer (ab v0.11.91)
 
 Der Installer schreibt `pipewire-pidrive.conf` jetzt mit der vollständigen Policy inklusive `ReserveDevice1`.
 
@@ -194,7 +194,72 @@ Während der Fehlersuche wurden weitere Probleme entdeckt und behoben:
 | v0.11.85 | `pipewire-pulse` bekam `AccessDenied` für `org.pulseaudio.Server` | `<allow own="org.pulseaudio.Server"/>` in Policy |
 | v0.11.85 | `diagnose.py` crashte mit `NameError: info is not defined` | `info(...)` → `nfo(...)` |
 | v0.11.86 | `_raw_log()` bekam `start_new_session=True` als falsches Argument | Argument entfernt |
-| **v0.11.89** | **`ReserveDevice1`-Ownership fehlte → kein ALSA-Device → kein A2DP** | **`<allow own="org.freedesktop.ReserveDevice1.*"/>` in Policy** |
+| v0.11.88 | `ReserveDevice1`-Wildcard `.*` funktioniert nicht auf Debian Trixie | Policy nach `/usr/share/dbus-1/system.d/` + explizite Namen `Audio0/1/2` |
+| v0.11.89 | WirePlumber BT-Monitor deaktiviert sich: `Seat state changed: offline` | `bluez.lua` lokal nach `/etc/wireplumber/scripts/monitors/` kopiert, `config.seat_monitoring = false` |
+| v0.11.90 | `support.logind = disabled` → WirePlumber hängt nach `metadata.lua` | Nur `monitor.bluez.seat-monitoring = disabled` im Profil, logind aktiv lassen |
+| **v0.11.91** | **`hfp_ag` Rolle → `org.pipewire.Telephony` D-Bus Fehler → BT-Monitor blockiert** | **`hfp_ag` aus Rollen entfernt, nur `a2dp_source`; `org.pipewire.Telephony` in Policy** |
+
+---
+
+## WirePlumber System-Mode: Bekannte Fallstricke
+
+### Fallstrick 1: Seat-Monitoring blockiert BT-Monitor
+
+**Symptom:** `Seat state changed: offline` — BT-Monitor deaktiviert sich sofort.
+
+**Ursache:** `bluez.lua` prüft logind-Seat. Im System-Mode ohne User-Session meldet logind `offline`.
+
+**Fix:** `bluez.lua` lokal überschreiben:
+```bash
+sudo mkdir -p /etc/wireplumber/scripts/monitors
+sudo cp /usr/share/wireplumber/scripts/monitors/bluez.lua \
+   /etc/wireplumber/scripts/monitors/bluez.lua
+sudo sed -i 's/config\.seat_monitoring = Core\.test_feature.*/config.seat_monitoring = false/' \
+   /etc/wireplumber/scripts/monitors/bluez.lua
+```
+WirePlumber sucht Scripts zuerst in `/etc/wireplumber/scripts/` — diese Datei hat Vorrang.
+
+---
+
+### Fallstrick 2: `support.logind = disabled` → WirePlumber hängt
+
+**Symptom:** WirePlumber stoppt nach `Loading profile 'main'` / `metadata.lua` und hängt 10+ Sekunden.
+
+**Ursache:** Logind ist intern als Abhängigkeit mehrerer Komponenten nötig. Beim Deaktivieren entsteht ein Dependency-Deadlock.
+
+**Fix:** logind NICHT deaktivieren. Stattdessen nur das Seat-Monitoring im BT-Monitor ausschalten (siehe Fallstrick 1).
+
+---
+
+### Fallstrick 3: `hfp_ag` Rolle → Telephony-Fehler
+
+**Symptom:** `spa.bluez5.telephony: D-Bus RequestName() error: org.pipewire.Telephony — not allowed`
+
+**Ursache:** Die Rolle `hfp_ag` (Hands-Free Profile Gateway) zwingt WirePlumber zur Registrierung von `org.pipewire.Telephony` auf dem System-Bus. Das ist im System-Mode ohne spezielle Policy verboten.
+
+**Fix:** `hfp_ag` aus den Rollen entfernen. Für PiDrive (A2DP-Audio) ist nur `a2dp_source` nötig:
+```
+monitor.bluez.properties = {
+    bluez5.roles = [ a2dp_source ]
+    ...
+}
+```
+
+---
+
+### Fallstrick 4: `wireplumber.profiles.main = {}` vs `wireplumber.profiles = { main = {} }`
+
+**Symptom:** Feature-Flags wie `monitor.bluez.seat-monitoring = disabled` greifen nicht.
+
+**Ursache:** In WirePlumber 0.5.x ist die korrekte Profil-Syntax:
+```
+wireplumber.profiles = {
+  main = {
+    feature-name = disabled
+  }
+}
+```
+Nicht `wireplumber.profiles.main = { ... }` (point-notation).
 
 ---
 
@@ -248,4 +313,4 @@ pactl list sinks short
 
 ---
 
-*Dokumentiert nach Debugging-Session v0.11.71–v0.11.89 · Juni 2026*
+*Dokumentiert nach Debugging-Session v0.11.71–v0.11.91 · Juni 2026*

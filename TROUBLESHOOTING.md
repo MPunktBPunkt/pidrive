@@ -1,6 +1,6 @@
 # PiDrive — Troubleshooting-Runbook
 
-**Stand v0.11.89 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
+**Stand v0.11.91 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
 
 ---
 
@@ -118,7 +118,7 @@ Ursache: Netzteil zu schwach (Pi 4 braucht 5V/3A) oder keine Kühlung.
 
 ### BT-Gerät kann nicht gepairt werden (`AuthenticationFailed`)
 
-Ab v0.11.89 bestätigt der Agent `Request confirmation` automatisch.  
+Ab v0.11.91 bestätigt der Agent `Request confirmation` automatisch.  
 Falls noch ein Problem:
 ```bash
 systemctl status pidrive_core   # Agent läuft als Teil des Core
@@ -158,6 +158,33 @@ pidrivectl bt known
 
 ---
 
+### WirePlumber BT-Monitor startet nicht (System-Mode)
+
+**Symptom:** `br-connection-profile-unavailable` trotz gepairtem Gerät.
+
+**Diagnose:**
+```bash
+journalctl -u wireplumber -b | grep -iE "seat|bluez|telephony|offline"
+```
+
+**Ursache A:** `Seat state changed: offline`
+```bash
+sudo mkdir -p /etc/wireplumber/scripts/monitors
+sudo cp /usr/share/wireplumber/scripts/monitors/bluez.lua \
+   /etc/wireplumber/scripts/monitors/bluez.lua
+sudo sed -i 's/config.seat_monitoring = Core.test_feature.*/config.seat_monitoring = false/' \
+   /etc/wireplumber/scripts/monitors/bluez.lua
+sudo systemctl restart wireplumber
+```
+
+**Ursache B:** `spa.bluez5.telephony: D-Bus RequestName() error`
+In `/etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf`:
+`bluez5.roles = [ a2dp_source ]` — kein `hfp_ag`
+
+**ACHTUNG:** `support.logind = disabled` NICHT setzen → blockiert WirePlumber.
+
+---
+
 ## 4. AVRCP / BMW iDrive
 
 ### AVRCP-Monitor zeigt keine Events
@@ -193,7 +220,7 @@ dbus-send --system --print-reply \
 
 ### AVRCP Service verbraucht viel CPU
 
-Ab v0.11.89 gefixt (bufsize: 1→4096). Falls noch hoch:
+Ab v0.11.91 gefixt (bufsize: 1→4096). Falls noch hoch:
 ```bash
 systemctl status pidrive_avrcp | grep CPU
 journalctl -u pidrive_avrcp --no-pager | tail -20
@@ -268,7 +295,7 @@ apt install python3-dbus
 ### DBusGMainLoop Fehler
 
 `DBusGMainLoop(set_as_default=True)` muss beim Modulimport gesetzt werden.  
-In `mpris2.py` ist das ab v0.11.89 korrekt — beim Import, nicht in `start_mpris2()`.
+In `mpris2.py` ist das ab v0.11.91 korrekt — beim Import, nicht in `start_mpris2()`.
 
 ---
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.89"
+PIDRIVE_VERSION="0.11.91"
 
 # ============================================================
 # PiDrive Install Script
@@ -407,7 +407,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.89
+# pidrive_display.service: entfernt v0.11.91
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -615,7 +615,7 @@ if command -v librespot &>/dev/null; then
     fi
 fi
 # ══════════════════════════════════════════════════════════════
-# Audio-Konfiguration: PipeWire System-Mode (v0.11.89)
+# Audio-Konfiguration: PipeWire System-Mode (v0.11.91)
 # ══════════════════════════════════════════════════════════════
 # PipeWire ersetzt System-PulseAudio vollständig.
 # Socket /var/run/pulse/native bleibt identisch → kein Code-Umbau nötig.
@@ -680,8 +680,9 @@ mkdir -p /etc/wireplumber/wireplumber.conf.d
 _wp_version=$(wireplumber --version 2>/dev/null | grep -oP '\d+\.\d+' | head -1)
 cat > /etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf << 'WPEOF'
 # PiDrive BT A2DP Source Konfiguration
+# Nur a2dp_source — kein hfp_ag/Telephony (kein D-Bus org.pipewire.Telephony nötig)
 monitor.bluez.properties = {
-    bluez5.roles = [ a2dp_source hfp_ag ]
+    bluez5.roles = [ a2dp_source ]
     bluez5.codecs = [ sbc ]
     bluez5.auto-connect = [ a2dp_source ]
     bluez5.hw-offload-sco = false
@@ -692,13 +693,30 @@ WPEOF
 # Kein konkurrierender Audio-Server → Reservation nicht nötig
 # Verhindert D-Bus-Policy-Probleme mit org.freedesktop.ReserveDevice1
 cat > /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf << 'WPEOF'
+# PiDrive System-Mode: keine D-Bus Device-Reservation nötig
 wireplumber.profiles.main = {
   support.reserve-device = disabled
   monitor.alsa.reserve-device = disabled
-  monitor.bluez.seat-monitoring = disabled
 }
 WPEOF
 ok "WirePlumber: BT A2DP konfiguriert"
+
+# PiDrive: bluez.lua patchen — seat_monitoring=false für System-Mode
+# WirePlumber sucht Scripts zuerst in /etc/wireplumber/scripts/
+mkdir -p /etc/wireplumber/scripts/monitors
+if [ -f /usr/share/wireplumber/scripts/monitors/bluez.lua ]; then
+    cp /usr/share/wireplumber/scripts/monitors/bluez.lua \
+       /etc/wireplumber/scripts/monitors/bluez.lua
+    sed -i 's/config\.seat_monitoring = Core\.test_feature.*/config.seat_monitoring = false/' \
+       /etc/wireplumber/scripts/monitors/bluez.lua
+    if grep -q 'config.seat_monitoring = false' /etc/wireplumber/scripts/monitors/bluez.lua; then
+        ok "WirePlumber: bluez.lua seat-monitoring deaktiviert (System-Mode)"
+    else
+        warn "WirePlumber: bluez.lua Patch fehlgeschlagen"
+    fi
+else
+    warn "WirePlumber: bluez.lua nicht gefunden"
+fi
 
 # D-Bus Policy: pulse-User darf BlueZ (WirePlumber braucht das)
 # Policy in beide mögliche D-Bus-Verzeichnisse schreiben
@@ -711,6 +729,7 @@ for _dbus_dir in /etc/dbus-1/system.d /usr/share/dbus-1/system.d; do
 <busconfig>
   <policy user="pulse">
     <allow own="org.pulseaudio.Server"/>
+    <allow own="org.pipewire.Telephony"/>
     <allow own="org.freedesktop.ReserveDevice1.Audio0"/>
     <allow own="org.freedesktop.ReserveDevice1.Audio1"/>
     <allow own="org.freedesktop.ReserveDevice1.Audio2"/>
@@ -1184,7 +1203,7 @@ while [ $_SW -lt 25 ]; do
 done
 [ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.89)
+# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.91)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 printf "  → Stabilitaetspruefung (15s)..."
