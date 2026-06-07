@@ -316,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.95|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.96|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -398,8 +398,10 @@ def test_fm(freq="104.4"):
     t0 = time.time()
     _write_trigger("stop")
     time.sleep(0.5)
-    _write_trigger(f"fm:{freq}")
-    src_ok = _wait_for_source("fm", max_wait=12)
+    _write_trigger("radio_stop")  # laufende Quelle stoppen
+    import time as _tfm; _tfm.sleep(1.5)
+    _write_trigger(f"play_fm:{freq}")
+    src_ok = _wait_for_source("fm", max_wait=20)
     elapsed = time.time() - t0
     if not _has_audio_sink and not src_ok:
         _any_sink = _run("PULSE_SERVER=unix:/var/run/pulse/native "
@@ -435,8 +437,10 @@ def test_scanner_fm(freq="103.0"):
     t0 = time.time()
     _write_trigger("stop")
     time.sleep(0.5)
-    _write_trigger(f"scanner_freq:fm:{freq}")
-    src_ok = _wait_for_source("scanner", max_wait=12)
+    _write_trigger("scanner_stop")  # laufende Quelle stoppen
+    import time as _tsc; _tsc.sleep(1.5)
+    _write_trigger(f"scan_setfreq:fm:{freq}")
+    src_ok = _wait_for_source("scanner", max_wait=20)
     elapsed = time.time() - t0
     if src_ok:
         _p(PASS, f"Scanner FM {freq}: aktiv", f"{elapsed:.1f}s")

@@ -1338,8 +1338,8 @@ Flags (vor dem Befehl angeben):
         else:
             fmt.out(f"\n  {_label} — {len(_fil)} Titel"); fmt.out("  " + "─"*36)
             for _e in _fil:
-                # "time" hat "YYYY-MM-DD HH:MM:SS" → [-8:-3] = "HH:MM"
-                _time_str = str(_e.get("time","") or "")
+                # "ts_human" hat "YYYY-MM-DD HH:MM:SS" → [-8:-3] = "HH:MM"
+                _time_str = str(_e.get("ts_human","") or _e.get("time","") or "")
                 _t = _time_str[-8:-3] if len(_time_str) >= 8 else ""
                 _sta = _e.get('station') or _e.get('name') or ''
                 _trk = _e.get('track') or ''
