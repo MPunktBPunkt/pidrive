@@ -584,6 +584,23 @@ def stop(S):
     log.info("DAB stop: done")
 
 
+def play_by_number(nr, S, settings=None):
+    """Spielt Station Nr. nr (1-basiert) aus dab_stations.json."""
+    path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
+    try:
+        data = json.load(open(path, encoding="utf-8"))
+        stations = data.get("stations", data) if isinstance(data, dict) else data
+        if 1 <= nr <= len(stations):
+            s = stations[nr - 1]
+            log.info(f"DAB play_by_number: #{nr} → {s.get('name','?')!r}")
+            return play_station(_normalize_station(s), S, settings=settings)
+        log.warn(f"DAB play_by_number: Nr {nr} außerhalb 1-{len(stations)}")
+        return False
+    except Exception as e:
+        log.error(f"DAB play_by_number: Fehler {e}")
+        return False
+
+
 def play_by_name(name, S, settings=None, service_id=""):
     # "Sender #N" → per Nummer nachschlagen (Boot-Resume-Kompatibilität)
     _nr_match = re.match(r"Sender\s+#?(\d+)$", str(name or "").strip(), re.I)

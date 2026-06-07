@@ -1,7 +1,7 @@
 # PiDrive — Bluetooth A2DP Fehleranalyse
 
 **Zeitraum:** ca. 2026-05-31 – 2026-06-05  
-**Versionen:** v0.11.71 → v0.11.93  
+**Versionen:** v0.11.71 → v0.11.94  
 **Plattform:** Raspberry Pi 4, Raspberry Pi OS (Debian Trixie), Kernel 6.18.33+rpt-rpi-v8  
 **Betroffene Hardware:** Cambridge Silicon Radio Bluetooth-Dongle, Sennheiser HD 4.40BT (00:16:94:2E:85:DB)
 
@@ -174,7 +174,7 @@ sudo reboot
 
 **Wichtig:** D-Bus-Policy-Änderungen werden erst nach einem vollständigen Reboot wirksam. `systemctl reload dbus` oder `restart dbus` reicht nicht, weil alle laufenden Dienste ihre bestehenden D-Bus-Verbindungen behalten.
 
-### Fix im Installer (ab v0.11.93)
+### Fix im Installer (ab v0.11.94)
 
 Der Installer schreibt `pipewire-pidrive.conf` jetzt mit der vollständigen Policy inklusive `ReserveDevice1`.
 
@@ -197,7 +197,7 @@ Während der Fehlersuche wurden weitere Probleme entdeckt und behoben:
 | v0.11.88 | `ReserveDevice1`-Wildcard `.*` funktioniert nicht auf Debian Trixie | Policy nach `/usr/share/dbus-1/system.d/` + explizite Namen `Audio0/1/2` |
 | v0.11.89 | WirePlumber BT-Monitor deaktiviert sich: `Seat state changed: offline` | `bluez.lua` lokal nach `/etc/wireplumber/scripts/monitors/` kopiert, `config.seat_monitoring = false` |
 | v0.11.90 | `support.logind = disabled` → WirePlumber hängt nach `metadata.lua` | Nur `monitor.bluez.seat-monitoring = disabled` im Profil, logind aktiv lassen |
-| **v0.11.93** | **`hfp_ag` Rolle → `org.pipewire.Telephony` D-Bus Fehler → BT-Monitor blockiert** | **`hfp_ag` aus Rollen entfernt, nur `a2dp_source`; `org.pipewire.Telephony` in Policy** |
+| **v0.11.94** | **`hfp_ag` Rolle → `org.pipewire.Telephony` D-Bus Fehler → BT-Monitor blockiert** | **`hfp_ag` aus Rollen entfernt, nur `a2dp_source`; `org.pipewire.Telephony` in Policy** |
 
 ---
 
@@ -313,4 +313,4 @@ pactl list sinks short
 
 ---
 
-*Dokumentiert nach Debugging-Session v0.11.71–v0.11.93 · Juni 2026*
+*Dokumentiert nach Debugging-Session v0.11.71–v0.11.94 · Juni 2026*

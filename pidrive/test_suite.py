@@ -316,7 +316,7 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.93|pidrivectl test all")
+    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.94|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -356,8 +356,10 @@ def test_webradio():
         return None
 
     t0 = time.time()
+    _write_trigger("radio_stop")  # laufende Quelle stoppen
+    import time as _twb; _twb.sleep(2.0)
     _write_trigger("play_web:Rock Antenne")
-    src_ok = _wait_for_source("webradio", max_wait=12)
+    src_ok = _wait_for_source("webradio", max_wait=20)
     if not src_ok:
         # Bei Einzeltest-Aufruf _has_audio_sink direkt prüfen
         _any_sink = _run("PULSE_SERVER=unix:/var/run/pulse/native "

@@ -525,9 +525,10 @@ def monitor_dbus():
             proc = subprocess.Popen(
                 ["dbus-monitor",
                  "--system",
-                 "interface=org.mpris.MediaPlayer2.Player",
-                 "interface=org.bluez.MediaPlayer1",
-                 "interface=org.bluez.MediaControl1"],
+                 "type=signal,interface=org.mpris.MediaPlayer2.Player",
+                 "type=signal,interface=org.bluez.MediaPlayer1",
+                 "type=signal,interface=org.bluez.MediaControl1",
+                 "type=signal,interface=org.freedesktop.DBus.Properties,member=PropertiesChanged,path_namespace=/org/bluez"],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, bufsize=4096)
 
@@ -655,9 +656,11 @@ def main():
 
     auto_connect_bmw()
 
-    t1 = threading.Thread(target=monitor_bluetoothctl, daemon=True, name="btctl-monitor")
+    # bluetoothctl monitor deaktiviert → 50% dbus-CPU-Fix
+    # PropertiesChanged via dbus-monitor (path_namespace=/org/bluez) ersetzt es
+    t1 = None  # threading.Thread(target=monitor_bluetoothctl, ...)
     t2 = threading.Thread(target=monitor_dbus,         daemon=True, name="dbus-monitor")
-    t1.start()
+    if t1 is not None: t1.start()
     t2.start()
 
     log.info("AVRCP: Warte auf Events ...")

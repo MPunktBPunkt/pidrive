@@ -23,12 +23,12 @@ from modules.radio.dab_scan import (
     load_last_scan_diag_file, is_scan_running,
 )
 from modules.radio.dab_play import (
-    play_station, play_by_name, stop,
+    play_station, play_by_name, play_by_number, stop,
     play_next, play_prev,
 )
 
 __all__ = [
-    "play_station", "play_by_name", "stop", "play_next", "play_prev",
+    "play_station", "play_by_name", "play_by_number", "stop", "play_next", "play_prev",
     "scan_dab_channels", "load_stations", "save_stations",
     "get_last_scan_diag", "load_last_scan_diag_file",
     "is_scan_running", "C_DAB",
