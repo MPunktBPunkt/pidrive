@@ -528,7 +528,7 @@ def monitor_dbus():
                  "type=signal,interface=org.mpris.MediaPlayer2.Player",
                  "type=signal,interface=org.bluez.MediaPlayer1",
                  "type=signal,interface=org.bluez.MediaControl1",
-                 "type=signal,interface=org.freedesktop.DBus.Properties,member=PropertiesChanged,path_namespace=/org/bluez"],
+                 "type=signal,interface=org.freedesktop.DBus.Properties,member=PropertiesChanged,path=/org/bluez/hci0"],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, bufsize=4096)
 

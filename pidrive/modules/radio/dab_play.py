@@ -79,8 +79,16 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                 if not _os.path.exists(err_file):
                     _t.sleep(1.0)
                     continue
-                # ERR_FILE auf 500KB begrenzen (wächst sonst sehr schnell bei schwachem Signal)
-                _limit_file_size(err_file, 500_000)
+                # ERR_FILE: last_pos korrigieren (welle-cli hat fd offen → kein truncate)
+                try:
+                    _fsize = _os.path.getsize(err_file)
+                    # Zu weit zurückgefallen? Max 50KB Rückstand lesen
+                    if last_pos > _fsize:
+                        last_pos = max(0, _fsize - 200)
+                    elif _fsize - last_pos > 50_000:
+                        last_pos = _fsize - 50_000
+                except Exception:
+                    pass
                 with open(err_file, "r", encoding="utf-8", errors="ignore") as f:
                     f.seek(last_pos)
                     new = f.read()
