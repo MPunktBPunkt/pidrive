@@ -118,7 +118,7 @@ def print_bt_list(devices: list, title: str):
         trust  = "*" if d.get("trusted") else " "
         if d.get("connected"):
             reach = _c("verbunden", GREEN)
-        elif d.get("visible_now"):
+        elif d.get("reachable") or d.get("visible_now"):
             reach = _c("in Reichweite", YELLOW)
         else:
             reach = _c("offline", DIM)

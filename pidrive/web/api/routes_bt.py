@@ -24,6 +24,29 @@ def api_bt_known():
     data = read_json(KNOWN_BT_FILE, {"devices": []})
     devs = data.get("devices", []) if isinstance(data, dict) else []
     try:
+        import subprocess as _sp
+        for d in devs:
+            mac = (d.get("mac") or "").strip()
+            if not mac:
+                continue
+            try:
+                r = _sp.run(
+                    ["bluetoothctl", "info", mac],
+                    capture_output=True, text=True, timeout=4,
+                )
+                out = (r.stdout or "").lower()
+                if "not available" in out or not (r.stdout or "").strip():
+                    d["connected"] = False
+                    d["reachable"] = False
+                else:
+                    d["connected"] = "connected: yes" in out
+                    d["reachable"] = True
+            except Exception:
+                d.setdefault("connected", False)
+                d["reachable"] = False
+    except Exception:
+        pass
+    try:
         devs = sorted(devs, key=lambda d: (
             0 if d.get("connected") else 1,
             0 if d.get("paired") else 1,

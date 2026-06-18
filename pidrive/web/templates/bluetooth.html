@@ -37,7 +37,7 @@ let _btScanPending = false;
 
 function btReachLabel(d) {
   if (d.connected) return '<span style="color:var(--green)">verbunden</span>';
-  if (d.visible_now || d.seen_this_scan) return '<span style="color:var(--yellow)">in Reichweite</span>';
+  if (d.reachable || d.visible_now || d.seen_this_scan) return '<span style="color:var(--yellow)">in Reichweite</span>';
   return '<span style="color:var(--muted)">offline</span>';
 }
 

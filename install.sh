@@ -463,8 +463,12 @@ if command -v sudo >/dev/null 2>&1; then
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire-pulse
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart wireplumber
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart bluetooth
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_core
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pipewire
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status wireplumber
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/journalctl
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/reboot
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/poweroff

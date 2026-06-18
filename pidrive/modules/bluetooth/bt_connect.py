@@ -28,6 +28,7 @@ from modules.bluetooth.bt_devices import (
 from modules.bluetooth.bt_audio import (
     _ensure_a2dp_sink, _set_pulseaudio_sink, bt_audio_autoroute,
     _set_raspotify_device, get_bt_sink,
+    a2dp_stack_ready, try_recover_a2dp_stack, _is_a2dp_profile_error,
 )
 import threading
 import subprocess
@@ -152,6 +153,52 @@ def _ensure_connected(mac, retries=3):
         _sleep_s(2.0)
 
     return False, last_out
+
+
+def _resolve_reconnect_mac(settings):
+    """Letztes BT-Gerät aus settings oder bekannten Audio-Geräten."""
+    mac = _normalize_mac(settings.get("bt_last_mac", ""))
+    if mac:
+        return mac, settings.get("bt_last_name", "") or mac
+
+    candidates = []
+    for d in _get_known_devices():
+        m = _normalize_mac(d.get("mac", ""))
+        if not m or not d.get("paired"):
+            continue
+        name = (d.get("name") or "").strip()
+        score = 0
+        if d.get("audio_candidate", True):
+            score += 2
+        if name and ":" not in name.replace("-", ":")[:8]:
+            score += 3
+        if d.get("trusted"):
+            score += 1
+        candidates.append((score, m, name or m))
+
+    if candidates:
+        candidates.sort(key=lambda x: (-x[0], x[2].lower()))
+        _, mac, name = candidates[0]
+        return mac, name
+    return "", ""
+
+
+def _save_bt_last_device(settings, mac, name):
+    settings["bt_last_mac"] = mac
+    settings["bt_last_name"] = name
+    try:
+        from settings import save_settings as _ss
+        _ss(settings)
+    except Exception:
+        pass
+
+
+def _ensure_a2dp_stack_or_recover():
+    ready, reason = a2dp_stack_ready()
+    if ready:
+        return True
+    log.warn(f"BT connect: A2DP-Stack nicht bereit ({reason}) — Recovery")
+    return try_recover_a2dp_stack()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -415,9 +462,21 @@ def _connect_device_inner(mac, S, settings):
 
     _ensure_agent()
 
+    _save_bt_last_device(settings, mac, name)
+
+    if not _ensure_a2dp_stack_or_recover():
+        ipc.write_progress(
+            "Bluetooth",
+            "A2DP nicht bereit — kein Pairing nötig",
+            color="orange",
+        )
+        log.warn("BT connect: WirePlumber liefert kein A2DP — sudo systemctl restart wireplumber")
+        _sleep_s(3)
+        ipc.clear_progress()
+
     visible, info = _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS)
     if not visible:
-        ipc.write_progress("Bluetooth", "Nicht gefunden — Pairing-Modus aktivieren", color="red")
+        ipc.write_progress("Bluetooth", "Nicht gefunden — Gerät einschalten", color="red")
         if _src_state:
             _src_state.set_bt_state("failed")
             _src_state.set_bt_link_state("failed")
@@ -466,12 +525,21 @@ def _connect_device_inner(mac, S, settings):
 
     connected_ok, conn_info = _ensure_connected(mac, retries=3)
     if not connected_ok:
-        ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
+        if _is_a2dp_profile_error(conn_info):
+            ipc.write_progress(
+                "Bluetooth",
+                "A2DP fehlt — Audio-Stack neu starten (kein Pairing)",
+                color="orange",
+            )
+            try_recover_a2dp_stack()
+            _mark_reconnect_failure(mac, "a2dp_unavailable")
+        else:
+            ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
+            _mark_reconnect_failure(mac, "connect_failed")
         if _src_state:
             _src_state.set_bt_state("failed")
             _src_state.set_bt_link_state("failed")
             _src_state.set_bt_audio_state("no_sink")
-        _mark_reconnect_failure(mac, "connect_failed")
         _sleep_s(3)
         ipc.clear_progress()
         S["bt"] = False
@@ -732,15 +800,16 @@ def repair_device(mac, S, settings):
 
 
 def reconnect_last(S, settings):
-    mac = _normalize_mac(settings.get("bt_last_mac", ""))
-    name = settings.get("bt_last_name", "") or mac
+    mac, name = _resolve_reconnect_mac(settings)
 
     if not mac:
         ipc.write_progress("Bluetooth", "Kein letztes Gerät", color="orange")
-        log.warn("BT reconnect_last: keine bt_last_mac")
+        log.warn("BT reconnect_last: keine bt_last_mac und kein Kandidat")
         _sleep_s(2)
         ipc.clear_progress()
         return False
+
+    _save_bt_last_device(settings, mac, name)
 
     try:
         from modules.bluetooth.bt_watcher import wake_auto_reconnect as _wake

@@ -73,6 +73,44 @@ def _expected_pa_card_for_mac(mac: str) -> str:
     return "bluez_card." + _normalize_mac(mac).replace(":", "_")
 
 
+def _is_a2dp_profile_error(text: str) -> bool:
+    low = (text or "").lower()
+    return any(x in low for x in (
+        "profile-unavailable", "protocol not available",
+        "br-connection-profile-unavailable",
+    ))
+
+
+def a2dp_stack_ready() -> tuple:
+    """WirePlumber muss MediaEndpoint1 bei BlueZ registrieren."""
+    out = _run(
+        "dbus-send --system --print-reply --dest=org.bluez / "
+        "org.freedesktop.DBus.ObjectManager.GetManagedObjects 2>/dev/null",
+        timeout=5,
+    )
+    if "org.bluez.MediaEndpoint1" in (out or ""):
+        return True, ""
+    return False, "no_media_endpoints"
+
+
+def try_recover_a2dp_stack() -> bool:
+    """WirePlumber/Bluetooth neu starten (sudoers: NOPASSWD)."""
+    log.info("[BT-AUDIO] A2DP-Stack Recovery: wireplumber + bluetooth restart")
+    ok_any = False
+    for svc in ("wireplumber", "pipewire-pulse", "pipewire", "bluetooth"):
+        rc = subprocess.run(
+            f"sudo -n systemctl restart {svc}",
+            shell=True, capture_output=True, text=True, timeout=25,
+        )
+        if rc.returncode == 0:
+            ok_any = True
+        else:
+            log.warn(f"[BT-AUDIO] restart {svc}: rc={rc.returncode}")
+    _sleep_s(4)
+    ready, _ = a2dp_stack_ready()
+    return ready or ok_any
+
+
 # ── A2DP Profile erzwingen ────────────────────────────────────────────────────
 
 def _force_a2dp_profile(mac: str) -> bool:
