@@ -444,10 +444,13 @@ class PiDriveService:
                     state = "paired"
                 else:
                     prog = self.ipc.read_json("/tmp/pidrive_progress.json", {})
+                    prog_ts = float(prog.get("ts", 0) or 0)
                     msg = (prog.get("message") or "").lower()
-                    if "pairing fehlgeschlagen" in msg or "pairing-modus?" in msg:
+                    if prog_ts >= start and (
+                        "pairing fehlgeschlagen" in msg or "pairing-modus?" in msg
+                    ):
                         state = "failed"
-                    elif "verbunden" in msg:
+                    elif "verbunden" in msg and prog_ts >= start:
                         state = "connected"
                     else:
                         state = "pairing"

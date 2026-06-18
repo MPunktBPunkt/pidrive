@@ -780,6 +780,8 @@ def repair_device(mac, S, settings):
 
     ipc.write_progress("Bluetooth", f"Neu koppeln: {name[:18]}...", color="blue")
     log.info(f"BT repair: START mac={mac} name={name}")
+    ipc.clear_progress()
+    ipc.write_progress("Bluetooth", f"Neu koppeln: {name[:18]}...", color="blue")
 
     _PAIRING_ACTIVE = True
     try:
@@ -903,6 +905,10 @@ def reconnect_known_devices(S, settings):
         return False
 
     for d in devs:
+        if _PAIRING_ACTIVE:
+            log.info("BT reconnect_known: abgebrochen — Pairing aktiv")
+            return False
+
         mac = _normalize_mac(d.get("mac", ""))
         if not mac:
             continue
