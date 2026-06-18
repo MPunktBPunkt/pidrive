@@ -7,7 +7,7 @@ from modules.radio.dab_helpers import (
     _new_session_id, _set_session, _get_session, _clear_session,
     _write_play_debug, _reset_runtime_dls_fields, _set_dab_status_fields,
     _parse_welle_status_line, _append_play_debug_line, _get_dab_gain,
-    _err_file_for_session,
+    _err_file_for_session, _is_welle_noise_line, _dab_play_lock,
     ERR_FILE, STDOUT_FILE, PLAY_DEBUG_FILE, C_DAB,
     _player_proc, _scan_running,
     _rtlsdr, _src_state, _audio,
@@ -57,14 +57,21 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
         _pcm_found = bool(S.get("dab_pcm_seen"))
 
         _mon_start = _t.time()
+        _last_trim = _mon_start
         while not _recovery_stop.is_set():
-            if _t.time() - _mon_start > 300:  # 5 min Timeout
-                log.warn("DAB Runtime-Monitor: 5min Timeout — gebe RTL-SDR frei")
+            _elapsed = _t.time() - _mon_start
+            _timeout = 1800 if _lock_found else 300
+            if _elapsed > _timeout:
+                log.warn(
+                    f"DAB Runtime-Monitor: {_timeout // 60}min Timeout "
+                    f"(sync={_lock_found} pcm={_pcm_found}) — gebe RTL-SDR frei"
+                )
                 _sp2 = __import__("subprocess")
                 _sp2.run("pkill -f welle-cli 2>/dev/null",
                          shell=True, timeout=3, capture_output=True)
                 S["dab_playback_state"] = "idle"
                 S["dab_attempting"] = False
+                S["radio_playing"] = False
                 break
             if _get_session() != session_id:
                 log.info("DAB Runtime-Monitor: session gewechselt — stop")
@@ -147,10 +154,17 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                         if "lost coarse sync" in low and _lock_found and not _pcm_found:
                             S["dab_playback_state"] = "partial_sync"
                             S["dab_sync_ok"] = False
-                            S["dab_last_error"] = s[:180]
 
             except Exception as _e:
                 log.warn(f"DAB Runtime-Monitor: {_e}")
+
+            if _t.time() - _last_trim > 60:
+                _last_trim = _t.time()
+                try:
+                    from modules.radio.dab_helpers import _limit_file_size as _lfs
+                    _lfs(err_file, max_bytes=4_000_000)
+                except Exception:
+                    pass
 
             _t.sleep(1.0)
 
@@ -166,6 +180,13 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
 
 
 def play_station(station, S, settings=None):
+    global _player_proc
+
+    with _dab_play_lock:
+        return _play_station_locked(station, S, settings)
+
+
+def _play_station_locked(station, S, settings=None):
     global _player_proc
 
     # RTL-SDR verfügbar? Wenn nicht → sofort abbrechen
@@ -288,7 +309,7 @@ def play_station(station, S, settings=None):
         # Mit stdbuf: jede Zeile wird sofort in STDOUT_FILE geschrieben
         _stdbuf = ["stdbuf", "-oL", "-eL"]
         _welle_cmd = _stdbuf + [
-            "welle-cli", "-c", ch, "-g", _gain, "-p", name
+            "welle-cli", "-F", "rtl_sdr", "-T", "-c", ch, "-g", _gain, "-p", name
         ]
         _welle_stdin  = open("/dev/null", "r")
         _welle_stderr = open(_sess_err_file, "w")  # stderr
@@ -434,8 +455,8 @@ def play_station(station, S, settings=None):
         for _ in range(lock_wait_max):
             time.sleep(1.0)
             if _get_session() != session_id:
-                log.warn(f"DAB play: session changed during lock wait {session_id}")
-                return
+                log.warn(f"DAB play: session superseded during lock wait {session_id}")
+                return False
 
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
             if not os.path.exists(_err_path):
@@ -482,8 +503,9 @@ def play_station(station, S, settings=None):
                             _aud_pcm.unsuspend_sink()
                         except Exception:
                             pass
-                    if any(x in low for x in ["failed", "lost coarse", "cannot open",
-                                               "permission denied", "xrun", "error"]):
+                    if (not _is_welle_noise_line(ln)
+                            and any(x in low for x in ["failed", "lost coarse", "cannot open",
+                                                       "permission denied", "xrun", "error"])):
                         # Globales Rate-Limit: max 1 Warnung/10s (Lost sync + SyncOnPhase wechseln sonst ab)
                         if (__import__("time").time() - _last_err_ts) > 10.0:
                             last_err = ln[:180]
@@ -588,6 +610,13 @@ def play_station(station, S, settings=None):
 
 
 def stop(S):
+    global _player_proc, _scan_running
+
+    with _dab_play_lock:
+        _stop_locked(S)
+
+
+def _stop_locked(S):
     global _player_proc, _scan_running
 
     log.info("DAB stop: requested")

@@ -34,6 +34,8 @@ _dls_thread     = None
 _dls_stop_event = threading.Event()
 _dab_session_id = ""
 _dab_session_lock = threading.RLock()
+_dab_play_lock = threading.RLock()
+_play_debug_lock = threading.Lock()
 
 def _err_file_for_session(session_id: str = "") -> str:
     """Immer die einzelne rotierende DAB-Fehlerdatei zurückgeben.
@@ -51,13 +53,50 @@ def _err_file_for_session(session_id: str = "") -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _write_json_atomic(path, data):
+    tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
+    use_lock = path == PLAY_DEBUG_FILE
+    if use_lock:
+        _play_debug_lock.acquire()
     try:
-        tmp = path + ".tmp"
+        parent = os.path.dirname(path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         os.replace(tmp, path)
     except Exception as e:
         log.warn(f"DAB write json {path}: {e}")
+    finally:
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
+        if use_lock:
+            _play_debug_lock.release()
+
+
+def _is_welle_noise_line(line: str) -> bool:
+    """Harmloses welle-cli stderr — nicht als dab_last_error werten."""
+    low = (line or "").strip().lower()
+    if not low:
+        return True
+    if any(x in low for x in [
+        "airspy", "airpsy_open",
+        "r82xx", "pll not locked",
+        "wait for sync",
+        "rtlsdr_read_async",
+        "utctime",
+        "sync on phase", "synconphase",
+    ]):
+        return True
+    if '"tii"' in low or low.startswith("tii:"):
+        return True
+    if low.startswith("[0x") and "component" in low:
+        return True
+    if "ascty:" in low and "subch" in low:
+        return True
+    return False
 
 
 def _read_json(path, default=None):
@@ -203,6 +242,9 @@ def _parse_welle_status_line(line: str):
         return ("pcm_ready", line.strip())
     if "dls:" in low:
         return ("dls_seen", line.strip())
+
+    if _is_welle_noise_line(line):
+        return None
 
     if any(x in low for x in [
         "failed",
