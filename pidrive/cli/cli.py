@@ -541,7 +541,7 @@ Flags (vor dem Befehl angeben):
                     if len(log_lines) < 8:  # max 8 Logzeilen
                         log_lines.append(line)
                         fmt.out("  " + fmt.DIM + "  " + line[:80] + fmt.RESET)
-            result = svc.watch_dab_play(name, timeout=_lock_s,
+            result = svc.watch_dab_play(name, timeout=_lock_s + 15,
                                          on_status=_on_status, on_log_line=_on_log)
             icon = STATE_ICONS.get(result, "?")
             if result == "locked":

@@ -479,35 +479,61 @@ class PiDriveService:
 
         return found
 
-    def watch_dab_play(self, station_name, timeout=55, on_status=None, on_log_line=None):
+    def watch_dab_play(self, station_name, timeout=None, on_status=None, on_log_line=None):
         """DAB-Station starten und live Status verfolgen.
         Gibt 'locked', 'no_lock', 'partial_sync' oder 'timeout' zurueck.
         """
         import time, glob
-        # Zustand VOR dem Start merken um ihn zu ignorieren
+        try:
+            from settings import load_settings as _lds
+            _lock_max = int(_lds().get("dab_wait_lock", 90))
+        except Exception:
+            _lock_max = 90
+        if timeout is None:
+            timeout = _lock_max + 15
+
         pre = self.ipc.read_json("/tmp/pidrive_status.json", {})
+        pre_dbg = self.ipc.read_json(DAB_DEBUG_FILE, {})
         initial_state = pre.get("dab_playback_state", "")
         initial_ts    = pre.get("ts", 0)
+        pre_session   = pre_dbg.get("session_id", "")
 
         self.send("play_dab:" + station_name)
-        time.sleep(1.5)  # Core braucht Zeit um neuen Versuch zu starten
+
+        # play_dab laeuft async im Core — auf neuen Session/starting warten
+        for _ in range(30):
+            dbg = self.ipc.read_json(DAB_DEBUG_FILE, {})
+            if dbg.get("session_id") and dbg.get("session_id") != pre_session:
+                break
+            if dbg.get("state") == "starting":
+                break
+            time.sleep(0.5)
 
         start      = time.time()
         last_state = ""
         best_state = ""
         log_pos    = 0
-        RANK = {"locked": 4, "pcm_only": 3, "partial_sync": 2, "no_lock": 1, "starting": 0}
+        RANK = {"locked": 4, "pcm_only": 3, "partial_sync": 2, "no_lock": 1, "starting": 0, "idle": -1}
 
         while True:
             elapsed = time.time() - start
             if elapsed > timeout:
-                return "no_lock" if best_state in ("no_lock", "partial_sync") else "timeout"
+                s_final = self.ipc.read_json("/tmp/pidrive_status.json", {})
+                if s_final.get("dab_pcm_seen") or best_state in ("locked", "pcm_only"):
+                    return "locked"
+                if s_final.get("dab_sync_seen") or best_state == "partial_sync":
+                    return "partial_sync"
+                return "no_lock" if best_state == "no_lock" else "timeout"
 
             s     = self.ipc.read_json("/tmp/pidrive_status.json", {})
-            state = s.get("dab_playback_state", "")
+            state = s.get("dab_playback_state", "") or ""
             cur_ts = s.get("ts", 0)
 
-            # Initialen Zustand ignorieren solange ts unveraendert
+            # Stale idle von vorheriger Quelle ignorieren bis DAB startet
+            if state in ("idle", "") and elapsed < 8:
+                time.sleep(0.5)
+                continue
+
             if state == initial_state and cur_ts == initial_ts and elapsed < 5:
                 time.sleep(0.5)
                 continue
