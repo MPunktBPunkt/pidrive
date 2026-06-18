@@ -43,6 +43,7 @@ except Exception:
 # Reconnect-State (lokal, wird von bt_watcher via Import referenziert)
 _RECONNECT_LAST_TRY: dict = {}
 _RECONNECT_FAILS: dict = {}
+_PAIRING_ACTIVE = False
 
 def _device_visible_in_recent_scan(mac: str) -> bool:
     mac = _normalize_mac(mac)
@@ -768,6 +769,7 @@ def disconnect_current(S, settings):
 
 
 def repair_device(mac, S, settings):
+    global _PAIRING_ACTIVE
     mac = _normalize_mac(mac)
     name = mac
 
@@ -779,6 +781,14 @@ def repair_device(mac, S, settings):
     ipc.write_progress("Bluetooth", f"Neu koppeln: {name[:18]}...", color="blue")
     log.info(f"BT repair: START mac={mac} name={name}")
 
+    _PAIRING_ACTIVE = True
+    try:
+        return _repair_device_inner(mac, name, S, settings)
+    finally:
+        _PAIRING_ACTIVE = False
+
+
+def _repair_device_inner(mac, name, S, settings):
     _ensure_bt_on(S)
     _ensure_agent()
     stop_scan()
@@ -796,34 +806,38 @@ def repair_device(mac, S, settings):
     ]
     _write_discovered_devices(remaining)
 
-    # Schritt 2: Scan starten und warten bis Gerät sichtbar
+    # Schritt 2: Aktiver Scan (gleiche Methode wie pidrivectl bt scan)
     ipc.write_progress("Bluetooth", f"Suche {name[:16]}... (Pairing-Modus!)", color="blue")
     log.info(f"BT repair: Scan — warte auf Gerät (Pairing-Modus noetig!)")
-    _btctl("scan on", timeout=3)
+    try:
+        from modules.bluetooth.bt_devices import scan_devices as _scan_devs
+        _scan_devs(S, settings, scan_seconds=18)
+    except Exception as _se:
+        log.warn(f"BT repair: scan_devices: {_se}")
+
     _device_visible = False
     _info = ""
-    for _attempt in range(45):
-        _sleep_s(1)
-        seen, _info = _device_seen_during_scan(mac)
-        if not seen:
-            for d in _read_discovered_devices():
-                if _normalize_mac(d.get("mac", "")) == mac:
-                    seen = True
-                    name = d.get("name", name)
-                    break
-        if seen:
+    for d in _read_discovered_devices():
+        if _normalize_mac(d.get("mac", "")) == mac:
             _device_visible = True
-            if _info and "Name:" in _info:
-                for line in _info.splitlines():
-                    if line.strip().startswith("Name:"):
-                        name = line.split("Name:", 1)[1].strip() or name
-                        break
-            log.info(f"BT repair: Gerät sichtbar nach {_attempt+1}s")
+            name = d.get("name", name)
             break
-        if _attempt in (4, 14, 24):
-            _run("(echo 'scan on'; sleep 6) | bluetoothctl 2>/dev/null", timeout=10)
-        ipc.write_progress("Bluetooth",
-            f"Warte auf {name[:14]}... ({_attempt+1}/45s)", color="blue")
+    if not _device_visible:
+        seen, _info = _device_seen_during_scan(mac)
+        _device_visible = seen
+
+    if not _device_visible:
+        _btctl("scan on", timeout=3)
+        for _attempt in range(20):
+            _sleep_s(1)
+            seen, _info = _device_seen_during_scan(mac)
+            if seen:
+                _device_visible = True
+                break
+            if _attempt in (4, 10, 15):
+                _run("(echo 'scan on'; sleep 6) | bluetoothctl 2>/dev/null", timeout=10)
+            ipc.write_progress("Bluetooth",
+                f"Warte auf {name[:14]}... ({_attempt+1}/20s)", color="blue")
 
     if not _device_visible:
         log.warn(f"BT repair: Gerät nicht sichtbar — Pairing-Modus aktiv?")
@@ -883,6 +897,10 @@ def reconnect_known_devices(S, settings):
     - Cooldown/Fails beachten
     """
     devs = _reconnect_candidates(settings)
+
+    if _PAIRING_ACTIVE:
+        log.info("BT reconnect_known: pausiert — Pairing aktiv")
+        return False
 
     for d in devs:
         mac = _normalize_mac(d.get("mac", ""))

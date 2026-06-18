@@ -25,6 +25,10 @@ from modules.bluetooth.bt_connect import (
     _RECONNECT_LAST_TRY, _RECONNECT_FAILS,
     _ensure_device_visible,
 )
+try:
+    from modules.bluetooth.bt_connect import _PAIRING_ACTIVE
+except Exception:
+    _PAIRING_ACTIVE = False
 import os
 import threading
 import subprocess
@@ -88,6 +92,10 @@ def start_auto_reconnect(S, settings):
 
         while not _reconnect_stop:
             try:
+                if _PAIRING_ACTIVE:
+                    _sleep_s(5)
+                    continue
+
                 if _reconnect_wakeup is not None and _reconnect_wakeup.is_set():
                     _reconnect_wakeup.clear()
                     fail_streak = 0

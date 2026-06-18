@@ -442,8 +442,6 @@ class PiDriveService:
                 out = (r.stdout or "").lower()
                 if "paired: yes" in out:
                     state = "paired"
-                elif "pairing fehlgeschlagen" in out or "not available" in out and elapsed > 50:
-                    state = "failed"
                 else:
                     prog = self.ipc.read_json("/tmp/pidrive_progress.json", {})
                     msg = (prog.get("message") or "").lower()
