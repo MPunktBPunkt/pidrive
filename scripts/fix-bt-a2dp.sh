@@ -23,14 +23,9 @@ monitor.bluez.properties = {
 }
 EOF
 
-cat > /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf << 'EOF'
-wireplumber.profiles = {
-  main = {
-    support.reserve-device = disabled
-    monitor.alsa.reserve-device = disabled
-  }
-}
-EOF
+# ReserveDevice per D-Bus-Policy (install.sh) — kein Profil-Override,
+# sonst wird main-Profil ohne inherits/hardware.bluetooth ersetzt → kein BT-Monitor
+rm -f /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf
 
 # bluez.lua: Seat-Monitoring aus (System-Mode ohne logind-Session)
 if [ -f /usr/share/wireplumber/scripts/monitors/bluez.lua ]; then

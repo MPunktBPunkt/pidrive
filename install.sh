@@ -694,18 +694,9 @@ monitor.bluez.properties = {
 }
 WPEOF
 
-# PiDrive: ReserveDevice deaktivieren
-# Kein konkurrierender Audio-Server → Reservation nicht nötig
-# Verhindert D-Bus-Policy-Probleme mit org.freedesktop.ReserveDevice1
-cat > /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf << 'WPEOF'
-# PiDrive System-Mode: keine D-Bus Device-Reservation nötig
-wireplumber.profiles = {
-  main = {
-    support.reserve-device = disabled
-    monitor.alsa.reserve-device = disabled
-  }
-}
-WPEOF
+# ReserveDevice: D-Bus-Policy (pipewire-pidrive.conf) reicht — kein Profil-Override.
+# 10-no-reserve-pidrive.conf überschreibt sonst main ohne inherits → hardware.bluetooth fehlt.
+rm -f /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf
 ok "WirePlumber: BT A2DP konfiguriert"
 
 # PiDrive: bluez.lua patchen — seat_monitoring=false für System-Mode
