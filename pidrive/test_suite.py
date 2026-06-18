@@ -496,36 +496,37 @@ def test_dab(sender_nr=22):
     _write_trigger(f"play_dab:{name}")
     _send_to_bmw(f"DAB: {name}", "Warte auf Lock...", "max 30s")
 
-    # Warte auf Lock oder no_lock
-    deadline = time.time() + 35
+    # Warte auf Lock / PCM / DLS
+    deadline = time.time() + 50
     dab_state = "unknown"
     while time.time() < deadline:
-        dab = _read_json("/tmp/pidrive_dab_scan_debug.json", {})
-        state = dab.get("state","")
-        if state in ("pcm_ok","ready","playing"):
-            dab_state = state; break
-        if state == "no_lock":
+        dbg = _read_json("/tmp/pidrive_dab_play_debug.json", {})
+        st = _read_json("/tmp/pidrive_status.json", {})
+        if dbg.get("pcm_seen") or st.get("dab_pcm_seen"):
+            dab_state = "pcm_ok"; break
+        if st.get("dab_sync_ok"):
+            dab_state = "sync_ok"; break
+        if _current_source() == "dab" and st.get("dab_sync_seen"):
+            dab_state = "partial"; break
+        if st.get("dab_playback_state") == "no_lock":
             dab_state = "no_lock"; break
-        src = _read_json("/tmp/pidrive_status.json").get("source","")
-        if src == "dab":
-            dab_state = "active"; break
         time.sleep(1)
 
     elapsed = time.time() - t0
 
-    if dab_state in ("pcm_ok","ready","playing","active"):
-        meta = _wait_for_metadata("dab", max_wait=10)
-        _p(PASS, f"DAB Lock: {name}", f"{elapsed:.1f}s  state={dab_state}")
+    if dab_state in ("pcm_ok", "sync_ok", "partial"):
+        meta = _wait_for_metadata("dab", max_wait=15)
+        _p(PASS if dab_state == "pcm_ok" else WARN,
+           f"DAB: {name}", f"{elapsed:.1f}s  state={dab_state}")
         if meta:
             _p(PASS, f"DAB-Metadaten: '{meta[:50]}'")
-            _send_to_bmw(f"DAB: {name}", meta[:40], "✓")
         else:
-            _p(INFO, "Keine DLS-Metadaten (normal ohne Signal)")
+            _p(WARN, "Keine DLS-Metadaten (noch nicht empfangen)")
     elif dab_state == "no_lock":
-        _p(WARN, f"DAB no_lock: kein Signal für {name}", f"{elapsed:.1f}s  (Antenne nötig!)")
-        _send_to_bmw(f"DAB: no_lock", name, "Antenne fehlt")
+        _p(WARN, f"DAB no_lock: kein Signal für {name}", f"{elapsed:.1f}s")
     else:
         _p(WARN, f"DAB: unklar nach {elapsed:.1f}s", f"state={dab_state}")
+
     import os as _dab_os
     _sf = "/tmp/pidrive_dab_welle_out.txt"
     _ef = "/tmp/pidrive_dab_welle.err"
@@ -534,14 +535,27 @@ def test_dab(sender_nr=22):
     _p(INFO if _sf_sz >= 0 else WARN,
        f"STDOUT_FILE: {_sf_sz} Bytes" if _sf_sz >= 0 else "STDOUT_FILE fehlt!")
     _p(INFO if _ef_sz >= 0 else WARN,
-       f"ERR_FILE:    {_ef_sz} Bytes" if _ef_sz >= 0 else "ERR_FILE fehlt")
-    if _sf_sz > 0:
-        _dls_hits = [l for l in open(_sf).read().splitlines() if "DLS:" in l]
-        _p(PASS if _dls_hits else WARN,
-           f"DLS: {_dls_hits[-1]}" if _dls_hits else "Keine DLS-Zeile in STDOUT_FILE")
+       f"ERR_FILE:    {_ef_sz} Bytes" if _ef_sz >= 0 else "ERR_FILE fehlt!")
+    _dls_hits = []
+    for _df in (_ef, _sf):
+        if _dab_os.path.exists(_df) and _dab_os.path.getsize(_df) > 0:
+            try:
+                _dls_hits += [l for l in open(_df, encoding="utf-8", errors="ignore")
+                              if "DLS:" in l]
+            except Exception:
+                pass
+    if _dls_hits:
+        _p(PASS, f"DLS: {_dls_hits[-1][:70]}")
+    else:
+        _p(WARN, "Keine DLS-Zeile in stderr/stdout")
     if _ef_sz > 0:
-        _last_err = [l for l in open(_ef).read().splitlines() if l.strip()][-1:]
-        if _last_err: _p(INFO, f"Letzter Fehler: {_last_err[0][:70]}")
+        try:
+            _last_err = [l for l in open(_ef, encoding="utf-8", errors="ignore")
+                         if l.strip() and "TII:" not in l and "UTCTime" not in l][-1:]
+            if _last_err:
+                _p(INFO, f"Letzter Fehler: {_last_err[0][:70]}")
+        except Exception:
+            pass
 
     return dab_state not in ("no_lock","unknown")
 

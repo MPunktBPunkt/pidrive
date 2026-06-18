@@ -546,11 +546,11 @@ Flags (vor dem Befehl angeben):
             icon = STATE_ICONS.get(result, "?")
             if result == "locked":
                 fmt.out("")
-                fmt.out(icon + " Lock — DAB laeuft stabil")
+                fmt.out(icon + " Lock + PCM — DAB spielt")
             elif result == "partial_sync":
                 fmt.out("")
-                fmt.out(icon + " Partieller Lock — laeuft (schwacher Empfang, Audio aktiv)")
-                fmt.out("  Tipp: Im Auto mit Antenne deutlich besser")
+                fmt.out(icon + " Sync OK — warte auf Audio (Empfang instabil)")
+                fmt.out("  Tipp: Antenne/Fenster — bei Lock ohne Ton: pidrivectl dab live")
             elif result == "no_lock":
                 fmt.out("")
                 fmt.out(icon + " Kein Lock — Signal zu schwach")

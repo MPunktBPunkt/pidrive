@@ -7,6 +7,7 @@ from modules.radio.dab_helpers import (
     _new_session_id, _set_session, _get_session, _clear_session,
     _write_play_debug, _reset_runtime_dls_fields, _set_dab_status_fields,
     _parse_welle_status_line, _append_play_debug_line, _get_dab_gain,
+    _limit_file_size,
     _err_file_for_session,
     ERR_FILE, STDOUT_FILE, PLAY_DEBUG_FILE, C_DAB,
     _player_proc, _scan_running,
@@ -42,9 +43,7 @@ _recovery_thread = None
 _recovery_stop   = threading.Event() if False else None  # wird unten initialisiert
 
 def _start_recovery_monitor(session_id, station_name, S, settings):
-    """Hintergrund-Thread: wartet nach no_lock auf Lock-Recovery.
-    Tunnel-Szenario: Signal weg → kommt zurück → source auto-committed.
-    """
+    """Hintergrund-Thread: Sync/PCM/DLS überwachen solange welle-cli läuft."""
     global _recovery_thread, _recovery_stop
     if _recovery_stop:
         _recovery_stop.set()
@@ -54,41 +53,43 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
         import time as _t, os as _os
         err_file = _err_file_for_session(session_id)
         last_pos  = 0
-        log.info(f"DAB Recovery-Monitor: start session={session_id}")
-        _lock_found = False
+        log.info(f"DAB Runtime-Monitor: start session={session_id}")
+        _lock_found = bool(S.get("dab_sync_seen"))
+        _pcm_found = bool(S.get("dab_pcm_seen"))
 
         _mon_start = _t.time()
         while not _recovery_stop.is_set():
             if _t.time() - _mon_start > 300:  # 5 min Timeout
-                log.warn("DAB Recovery-Monitor: 5min Timeout — gebe RTL-SDR frei")
+                log.warn("DAB Runtime-Monitor: 5min Timeout — gebe RTL-SDR frei")
                 _sp2 = __import__("subprocess")
                 _sp2.run("pkill -f welle-cli 2>/dev/null",
                          shell=True, timeout=3, capture_output=True)
                 S["dab_playback_state"] = "idle"
                 S["dab_attempting"] = False
                 break
-            # Session gewechselt oder andere Quelle → beenden
             if _get_session() != session_id:
-                log.info("DAB Recovery-Monitor: session gewechselt — stop")
+                log.info("DAB Runtime-Monitor: session gewechselt — stop")
                 break
             if S.get("radio_type") not in ("DAB", "", None):
-                log.info("DAB Recovery-Monitor: andere Quelle aktiv — stop")
+                log.info("DAB Runtime-Monitor: andere Quelle aktiv — stop")
                 break
 
             try:
                 if not _os.path.exists(err_file):
                     _t.sleep(1.0)
                     continue
-                # ERR_FILE: last_pos korrigieren (welle-cli hat fd offen → kein truncate)
+
+                _limit_file_size(err_file, 1_000_000)
+
                 try:
                     _fsize = _os.path.getsize(err_file)
-                    # Zu weit zurückgefallen? Max 50KB Rückstand lesen
                     if last_pos > _fsize:
                         last_pos = max(0, _fsize - 200)
                     elif _fsize - last_pos > 50_000:
                         last_pos = _fsize - 50_000
                 except Exception:
                     pass
+
                 with open(err_file, "r", encoding="utf-8", errors="ignore") as f:
                     f.seek(last_pos)
                     new = f.read()
@@ -99,39 +100,71 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                         s = ln.strip()
                         if not s:
                             continue
-                        # Lock erkannt
-                        if "Found sync" in s or "Superframe sync succeeded" in s:
-                            if not _lock_found:
-                                _lock_found = True
-                                S["radio_playing"] = True
+                        low = s.lower()
+
+                        if "found sync" in low:
+                            _lock_found = True
+                            S["dab_sync_seen"] = True
+                            S["radio_playing"] = True
+                            S["dab_attempting"] = True
+                            S.pop("source_error", None)
+                            if not S.get("dab_pcm_seen"):
                                 S["dab_playback_state"] = "partial_sync"
-                                S["dab_attempting"] = True
-                                S.pop("source_error", None)
-                                log.info(f"DAB Recovery: Lock zurück! — {s[:60]}")
-                                # source_state committen
+                            log.info(f"DAB Runtime: sync — {s[:60]}")
+
+                        if "superframe sync succeeded" in low:
+                            _lock_found = True
+                            S["dab_sync_seen"] = True
+                            S["dab_superframe_seen"] = True
+                            S["dab_sync_ok"] = True
+                            S["radio_playing"] = True
+                            if not S.get("dab_pcm_seen"):
+                                S["dab_playback_state"] = "locked"
+                            try:
+                                from modules import source_state as _sst
+                                _sst.commit_source("dab")
+                            except Exception:
+                                pass
+
+                        if ("pcm name:" in low or "pcm state: prepared" in low
+                                or "create audio output" in low):
+                            if not _pcm_found:
+                                _pcm_found = True
+                                S["dab_pcm_seen"] = True
+                                S["dab_audio_ready"] = True
+                                S["dab_playback_state"] = "locked"
+                                S["dab_sync_ok"] = True
+                                S["radio_playing"] = True
+                                log.info(f"DAB Runtime: PCM aktiv — {s[:70]}")
                                 try:
-                                    from modules import source_state as _sst
-                                    _sst.commit_source("dab")
-                                except Exception:
-                                    pass
-                        # PCM = voll dekodiert
-                        if "PCM" in s and _lock_found:
-                            S["dab_playback_state"] = "locked"
-                            log.info("DAB Recovery: PCM aktiv — locked")
-                        # Lock verloren (Tunnel)
-                        if "Lost coarse sync" in s and _lock_found:
-                            _lock_found = False
+                                    from modules import audio as _aud
+                                    _aud.unsuspend_sink()
+                                except Exception as _ue:
+                                    log.warn(f"DAB Runtime: unsuspend: {_ue}")
+
+                        if "permission denied" in low and "pcm" in low:
+                            S["dab_last_error"] = s[:180]
+                            S["dab_playback_state"] = "pcm_error"
+                            log.error(f"DAB Runtime: PCM blockiert — {s[:100]}")
+
+                        if "lost coarse sync" in low and _lock_found and not _pcm_found:
                             S["dab_playback_state"] = "partial_sync"
-                            log.info("DAB Recovery: Tunnel/Signalverlust (Lost coarse sync)")
+                            S["dab_sync_ok"] = False
+                            S["dab_last_error"] = s[:180]
+
             except Exception as _e:
-                log.warn(f"DAB Recovery-Monitor: {_e}")
+                log.warn(f"DAB Runtime-Monitor: {_e}")
 
             _t.sleep(1.0)
 
-        log.info(f"DAB Recovery-Monitor: end session={session_id} lock_found={_lock_found}")
+        log.info(
+            f"DAB Runtime-Monitor: end session={session_id} "
+            f"lock={_lock_found} pcm={_pcm_found}"
+        )
 
-    _recovery_thread = _threading.Thread(target=_monitor, daemon=True,
-                                          name=f"dab_recovery_{session_id[:8]}")
+    _recovery_thread = _threading.Thread(
+        target=_monitor, daemon=True, name=f"dab_runtime_{session_id[:8]}"
+    )
     _recovery_thread.start()
 
 
@@ -255,7 +288,7 @@ def play_station(station, S, settings=None):
         # stdbuf -oL: stdout line-buffered erzwingen
         # Ohne stdbuf: bei Datei-Redirect full-buffered (4KB) → DLS kommt nie an
         # Mit stdbuf: jede Zeile wird sofort in STDOUT_FILE geschrieben
-        _stdbuf = ["stdbuf", "-oL"]
+        _stdbuf = ["stdbuf", "-oL", "-eL"]
         _welle_cmd = _stdbuf + [
             "welle-cli", "-c", ch, "-g", _gain, "-p", name
         ]
@@ -285,6 +318,7 @@ def play_station(station, S, settings=None):
         # Ohne PULSE_SERVER kann welle-cli die Hardware nicht öffnen → kein Ton.
         # Mit PULSE_SERVER → welle-cli nutzt PA-Plugin → Default-Sink = Klinke Card 1.
         _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
+        _welle_env["PIPEWIRE_RUNTIME_DIR"] = "/run/pipewire"
         _welle_env.pop("PULSE_SINK", None)   # Kein fixer Sink — PA Default-Sink gilt
 
         # /etc/asound.conf prüfen und bei Bedarf korrigieren
@@ -406,6 +440,7 @@ def play_station(station, S, settings=None):
 
             # v0.10.55: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
+            _limit_file_size(_err_path, 1_000_000)
             if not os.path.exists(_err_path):
                 continue
 
@@ -516,10 +551,8 @@ def play_station(station, S, settings=None):
         S["radio_type"] = "DAB"
         S["control_context"] = "radio_dab"
 
-        # Recovery-Monitor: nach no_lock im Hintergrund auf Lock warten
-        # Tunnel-Szenario: Signal weg → kommt zurück → auto-commit
-        if not _radio_started:
-            _start_recovery_monitor(session_id, name, S, settings)
+        # Runtime-Monitor: Sync/PCM/DLS auch nach partiellem Lock weiter verfolgen
+        _start_recovery_monitor(session_id, name, S, settings)
 
         log.action("DAB", f"Wiedergabe: {name} ({ch}, sid={sid or '-'}) session={session_id} started={_radio_started}")
         return _radio_started

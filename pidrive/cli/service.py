@@ -516,7 +516,10 @@ class PiDriveService:
                         "elapsed":    int(elapsed),
                     })
                 if state in ("locked", "pcm_only"):
-                    return "locked"
+                    if s.get("dab_pcm_seen") or s.get("dab_audio_ready"):
+                        return "locked"
+                    if elapsed > 20:
+                        return "partial_sync"
                 if state == "partial_sync" and elapsed > 25:
                     return "partial_sync"  # laeuft mit instabilem Empfang
                 if state == "no_lock" and elapsed > 12:
