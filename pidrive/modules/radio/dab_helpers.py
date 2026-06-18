@@ -108,6 +108,7 @@ def _welle_line_flags(line: str) -> dict:
         ),
         "service_list": low == "service list" or low.startswith("service list"),
         "programme_prompt": "please enter programme name" in low,
+        "trying_tune": "trying to tune" in low,
     }
 
 

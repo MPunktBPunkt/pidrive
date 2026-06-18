@@ -39,6 +39,49 @@ _DAB_FATAL_PATTERNS = [
 # ── Recovery Monitor ─────────────────────────────────────────────────────────
 import threading as _threading
 
+
+def _feed_welle_programme(proc, name: str, reason: str = "") -> bool:
+    """Sendet Sendernamen an welle-cli stdin (non-TTY braucht das trotz -p)."""
+    try:
+        if proc and proc.stdin and proc.poll() is None:
+            proc.stdin.write((name + "\n").encode("utf-8"))
+            proc.stdin.flush()
+            log.info(f"DAB: welle stdin → {name!r} ({reason or 'feed'})")
+            return True
+    except Exception as e:
+        log.warn(f"DAB welle stdin feed: {e}")
+    return False
+
+
+def _start_welle_stdin_feeder(proc, name: str, session_id: str):
+    """Hintergrund: Sendernamen senden wenn welle-cli danach fragt."""
+    def _run():
+        fed = False
+        err_pos = out_pos = 0
+        start = time.time()
+        while _get_session() == session_id and proc and proc.poll() is None:
+            for path in (ERR_FILE, STDOUT_FILE):
+                pos = err_pos if path == ERR_FILE else out_pos
+                chunk, new_pos = _read_welle_log_tail(path, pos)
+                if path == ERR_FILE:
+                    err_pos = new_pos
+                else:
+                    out_pos = new_pos
+                for ln in chunk:
+                    fl = _welle_line_flags(ln)
+                    if fl["programme_prompt"] or fl.get("trying_tune"):
+                        if _feed_welle_programme(proc, name, "prompt"):
+                            fed = True
+                            return
+            if not fed and time.time() - start > 20:
+                if _feed_welle_programme(proc, name, "timeout20s"):
+                    return
+            time.sleep(0.5)
+
+    _threading.Thread(
+        target=_run, daemon=True, name=f"dab_stdin_{session_id[:8]}"
+    ).start()
+
 _recovery_thread = None
 _recovery_stop   = threading.Event() if False else None  # wird unten initialisiert
 
@@ -301,7 +344,6 @@ def _play_station_locked(station, S, settings=None):
         _welle_cmd = _stdbuf + [
             "welle-cli", "-F", "rtl_sdr", "-T", "-c", ch, "-g", _gain, "-p", name
         ]
-        _welle_stdin  = open("/dev/null", "r")
         _welle_stderr = open(_sess_err_file, "w")  # stderr
         try:
             _welle_stdout = open(STDOUT_FILE, "w")  # stdout: DLS, service list
@@ -379,18 +421,21 @@ def _play_station_locked(station, S, settings=None):
         except Exception as _ue:
             log.warn(f"DAB: unsuspend sink: {_ue}")
 
+        _pop_common = dict(
+            shell=False,
+            stdout=_welle_stdout,
+            stderr=_welle_stderr,
+            env=_welle_env,
+            stdin=subprocess.PIPE,
+        )
+
         if _rtlsdr:
             try:
                 _player_proc = _rtlsdr.start_process(
                     _welle_cmd,
                     owner="dab_play",
-                    shell=False,
-                    stdout=_welle_stdout,
-                    stderr=_welle_stderr,
-                    env=_welle_env,
+                    **_pop_common,
                 )
-                # Handles nach Übergabe schließen (wie im else-Pfad)
-                _welle_stdin.close()
                 _welle_stderr.close()
                 _welle_stdout.close()
             except Exception as e:
@@ -409,16 +454,13 @@ def _play_station_locked(station, S, settings=None):
         else:
             _player_proc = subprocess.Popen(
                 _welle_cmd,
-                shell=False,
-                stdout=_welle_stdout,  # DLS/stdout → STDOUT_FILE
-                stdin=_welle_stdin,
-                stderr=_welle_stderr,  # Fehler → ERR_FILE
-                env=_welle_env,
+                **_pop_common,
             )
-            # Handles nach Übergabe schließen (Popen hat eigene Kopie)
-            _welle_stdin.close()
             _welle_stderr.close()
             _welle_stdout.close()
+
+        _feed_welle_programme(_player_proc, name, "startup")
+        _start_welle_stdin_feeder(_player_proc, name, session_id)
 
         _write_play_debug({
             "welle_pid": getattr(_player_proc, "pid", None),
@@ -608,6 +650,11 @@ def _stop_locked(S):
 
     if _player_proc:
         try:
+            if getattr(_player_proc, "stdin", None):
+                try:
+                    _player_proc.stdin.close()
+                except Exception:
+                    pass
             _player_proc.terminate()
             _player_proc.wait(timeout=2)
         except Exception:
