@@ -14,6 +14,11 @@ import subprocess
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, make_response
 
+# Paket-Root (pidrive/) — sonst schlägt "from web.shared" fehl wenn app.py direkt gestartet wird
+_PKG_ROOT = Path(__file__).resolve().parent.parent
+if str(_PKG_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PKG_ROOT))
+
 BASE_DIR = Path(__file__).resolve().parent
 WEB_DIR = BASE_DIR / "web"
 TEMPLATE_DIR = WEB_DIR / "templates"
