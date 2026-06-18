@@ -60,6 +60,39 @@ def _device_bluez_available(info: str) -> bool:
     return bool(info) and "not available" not in low and "name:" in low
 
 
+def _bluez_is_paired(mac: str) -> bool:
+    mac = _normalize_mac(mac)
+    try:
+        r = subprocess.run(
+            ["bluetoothctl", "info", mac],
+            capture_output=True, text=True, timeout=6,
+        )
+        return "paired: yes" in (r.stdout or "").lower()
+    except Exception:
+        return False
+
+
+def _reset_discovery():
+    stop_scan()
+    for _ in range(3):
+        _btctl("scan off", timeout=4)
+        _sleep_s(0.4)
+
+
+def _device_seen_during_scan(mac: str) -> tuple:
+    """Prüft info + devices-Liste während aktivem Scan."""
+    mac = _normalize_mac(mac)
+    rc, info = _btctl(f"info {mac}", timeout=5)
+    if rc == 0 and _device_bluez_available(info):
+        return True, info
+    _, out = _btctl("devices", timeout=5)
+    if mac in (out or "").upper().replace("-", ":"):
+        rc2, info2 = _btctl(f"info {mac}", timeout=5)
+        if rc2 == 0 and _device_bluez_available(info2):
+            return True, info2
+    return False, info or ""
+
+
 def _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS):
     mac = _normalize_mac(mac)
 
@@ -748,6 +781,8 @@ def repair_device(mac, S, settings):
 
     _ensure_bt_on(S)
     _ensure_agent()
+    stop_scan()
+    _reset_discovery()
 
     # Schritt 1: Alten Bond entfernen (behebt "BT bond: inkonsistent")
     _btctl(f"disconnect {mac}", timeout=6)
@@ -766,20 +801,29 @@ def repair_device(mac, S, settings):
     log.info(f"BT repair: Scan — warte auf Gerät (Pairing-Modus noetig!)")
     _btctl("scan on", timeout=3)
     _device_visible = False
-    for _attempt in range(30):
+    _info = ""
+    for _attempt in range(45):
         _sleep_s(1)
-        rc, _info = _btctl(f"info {mac}", timeout=4)
-        if rc == 0 and _device_bluez_available(_info):
+        seen, _info = _device_seen_during_scan(mac)
+        if not seen:
+            for d in _read_discovered_devices():
+                if _normalize_mac(d.get("mac", "")) == mac:
+                    seen = True
+                    name = d.get("name", name)
+                    break
+        if seen:
             _device_visible = True
-            if "Name:" in (_info or ""):
-                for line in (_info or "").splitlines():
+            if _info and "Name:" in _info:
+                for line in _info.splitlines():
                     if line.strip().startswith("Name:"):
                         name = line.split("Name:", 1)[1].strip() or name
                         break
             log.info(f"BT repair: Gerät sichtbar nach {_attempt+1}s")
             break
+        if _attempt in (4, 14, 24):
+            _run("(echo 'scan on'; sleep 6) | bluetoothctl 2>/dev/null", timeout=10)
         ipc.write_progress("Bluetooth",
-            f"Warte auf {name[:14]}... ({_attempt+1}/30s)", color="blue")
+            f"Warte auf {name[:14]}... ({_attempt+1}/45s)", color="blue")
 
     if not _device_visible:
         log.warn(f"BT repair: Gerät nicht sichtbar — Pairing-Modus aktiv?")
@@ -790,8 +834,17 @@ def repair_device(mac, S, settings):
         S["menu_rev"] = S.get("menu_rev", 0) + 1
         return False
 
-    # Schritt 3: Pair + Connect
+    # Schritt 3: Pair (Scan bleibt an — manche Headsets brauchen das)
+    paired_ok, pair_info = _ensure_paired(mac, timeout=PAIR_TIMEOUT_SECONDS)
     _btctl("scan off", timeout=3)
+    if not paired_ok:
+        ipc.write_progress("Bluetooth", "Pairing fehlgeschlagen", color="red")
+        _sleep_s(3)
+        ipc.clear_progress()
+        S["menu_rev"] = S.get("menu_rev", 0) + 1
+        return False
+
+    _merge_known_update(mac, name=name, known=True, paired=True, trusted=True, source="repair")
     ok = connect_device(mac, S, settings)
     log.info(f"BT repair: {'OK' if ok else 'FAIL'} mac={mac}")
     S["menu_rev"] = S.get("menu_rev", 0) + 1

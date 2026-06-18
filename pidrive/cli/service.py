@@ -422,8 +422,49 @@ class PiDriveService:
                     return "failed"
             time.sleep(1.5)
 
+    def watch_bt_pair(self, mac, timeout=90, on_status=None):
+        """Wartet auf bt_repair-Ergebnis via BlueZ + Progress."""
+        import subprocess as _sp
+        import time
+        mac_norm = mac.upper().replace("-", ":")
+        self.send("bt_repair:" + mac)
+        start = time.time()
+        last = ""
+        while True:
+            elapsed = time.time() - start
+            if elapsed > timeout:
+                return "timeout"
+            try:
+                r = _sp.run(
+                    ["bluetoothctl", "info", mac_norm],
+                    capture_output=True, text=True, timeout=5,
+                )
+                out = (r.stdout or "").lower()
+                if "paired: yes" in out:
+                    state = "paired"
+                elif "pairing fehlgeschlagen" in out or "not available" in out and elapsed > 50:
+                    state = "failed"
+                else:
+                    prog = self.ipc.read_json("/tmp/pidrive_progress.json", {})
+                    msg = (prog.get("message") or "").lower()
+                    if "pairing fehlgeschlagen" in msg or "pairing-modus?" in msg:
+                        state = "failed"
+                    elif "verbunden" in msg:
+                        state = "connected"
+                    else:
+                        state = "pairing"
+            except Exception:
+                state = "pairing"
+            if state != last:
+                last = state
+                if on_status:
+                    on_status({"state": state, "elapsed": int(elapsed), "mac": mac})
+                if state in ("paired", "connected"):
+                    return "paired"
+                if state == "failed":
+                    return "failed"
+            time.sleep(2)
 
-    # ── DAB Live Monitor ──────────────────────────────────────────────────
 
     def get_dab_live_snapshot(self) -> dict:
         """Aggregiert Status, Source-State und DAB-Debug zu einem Live-Snapshot."""

@@ -784,24 +784,20 @@ Flags (vor dem Befehl angeben):
             else:
                 fmt.out("Pairing mit " + (name + " (" + mac + ")" if name and name != mac else mac))
                 fmt.out("  → Geraet jetzt in Pairing-Modus bringen!")
-                fmt.out("  → Warte auf Pairing-Abschluss (bis 30s)…")
-                import time as _t_pair
-                svc.send("bt_repair:" + mac)
-                _t_pair.sleep(2)
-                # Prüfe nach 5, 15, 25 Sekunden ob Gerät gepairt wurde
-                for _wait in [5, 10, 8]:
-                    _t_pair.sleep(_wait)
-                    _d = svc.get_status()
-                    # Prüfe BlueZ-Datenbank via bt_known
-                    _devs = svc.ipc.read_json("/tmp/pidrive_bt_known_devices.json", {}).get("devices", [])
-                    _paired = [x for x in _devs if x.get("mac","").upper() == mac.upper() and x.get("paired")]
-                    if _paired:
-                        fmt.out(fmt.GREEN + "✓ Gepairt: " + (_paired[0].get("name") or mac) + fmt.RESET)
-                        fmt.out("  Jetzt verbinden: pidrivectl bt connect " + mac)
-                        break
+                fmt.out("  → Warte auf Pairing (bis 90s)…")
+
+                def _on_pair(d):
+                    fmt.out("  [" + str(d["elapsed"]).rjust(2) + "s] " + d["state"])
+
+                result = svc.watch_bt_pair(mac, timeout=90, on_status=_on_pair)
+                fmt.out("")
+                if result == "paired":
+                    fmt.out(fmt.GREEN + "✓ Gepairt: " + (name if name != mac else mac) + fmt.RESET)
+                    fmt.out("  Verbinden: pidrivectl bt connect " + mac)
+                elif result == "failed":
+                    fmt.out(fmt.RED + "✗ Pairing fehlgeschlagen — Pairing-Modus pruefen" + fmt.RESET)
                 else:
-                    fmt.out("  Pairing-Status unbekannt — pruefe: pidrivectl bt known")
-                    fmt.out("  Tipp: Geraet wirklich in Pairing-Modus?")
+                    fmt.out("✗ Timeout — Scan zeigt Geraet? pidrivectl bt scan")
         elif args.bt_cmd == "status":
             d = svc.get_status()
             # Fallback: wenn IPC "getrennt" sagt, direkt BlueZ prüfen
