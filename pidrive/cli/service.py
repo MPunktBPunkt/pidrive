@@ -382,6 +382,7 @@ class PiDriveService:
         Gibt 'connected', 'failed' oder 'timeout' zurueck.
         """
         import time
+        mac_norm = mac.upper().replace("-", ":")
         self.send("bt_connect:" + mac)
         start = time.time()
         last = ""
@@ -390,11 +391,35 @@ class PiDriveService:
             if elapsed > timeout:
                 return "timeout"
             d = self.ipc.read_json("/tmp/pidrive_status.json", {})
-            state = "connected" if d.get("bt") and d.get("bt_device","").replace("-",":").upper() == mac.upper() else                     "connecting" if d.get("bt_on") else "failed"
+            ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
+            sink_mac = (d.get("bt_sink_mac") or "").upper().replace("-", ":")
+            bt_status = d.get("bt_status", "")
+            link = ss.get("bt_link_state", "")
+
+            if d.get("bt") and bt_status == "verbunden":
+                if not sink_mac or sink_mac == mac_norm:
+                    state = "connected"
+                else:
+                    state = "connected"
+            elif bt_status == "getrennt" and not d.get("bt") and elapsed > 2:
+                state = "failed"
+            elif bt_status == "verbindet" or d.get("bt_on"):
+                state = "connecting"
+            elif link == "connected":
+                state = "connected"
+            elif link == "failed" and elapsed > 2:
+                state = "failed"
+            else:
+                state = "connecting"
+
             if state != last:
                 last = state
-                if on_status: on_status({"state": state, "elapsed": int(elapsed), "mac": mac})
-                if state == "connected": return "connected"
+                if on_status:
+                    on_status({"state": state, "elapsed": int(elapsed), "mac": mac})
+                if state == "connected":
+                    return "connected"
+                if state == "failed":
+                    return "failed"
             time.sleep(1.5)
 
 

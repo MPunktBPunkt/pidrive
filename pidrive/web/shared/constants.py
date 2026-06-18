@@ -22,6 +22,7 @@ READY_FILE    = "/tmp/pidrive_ready"
 KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
 DISC_BT_FILE  = "/tmp/pidrive_bt_devices.json"
 BT_AGENT_FILE = "/tmp/pidrive_bt_agent.json"
+WATCHER_STATE_FILE = "/tmp/pidrive_bt_watcher.json"
 DAB_DEBUG_FILE= "/tmp/pidrive_dab_play_debug.json"
 
 # STATIONS_FILE verwendet BASE_DIR (config liegt unter pidrive/config/)

@@ -420,6 +420,28 @@ def startup_tasks(S, settings):
     source_state.set_boot_phase("restore_bt")
 
     try:
+        from modules.bluetooth import bt_backup as _btbak
+        last_mac = (settings.get("bt_last_mac") or "").strip().upper().replace("-", ":")
+        if last_mac and _btbak.has_backup():
+            mac_path = last_mac.replace(":", "_")
+            found = False
+            bt_lib = "/var/lib/bluetooth"
+            if os.path.isdir(bt_lib):
+                for adapter in os.listdir(bt_lib):
+                    if os.path.isdir(os.path.join(bt_lib, adapter, mac_path)):
+                        found = True
+                        break
+            if not found:
+                log.info(f"BT Boot: Pairing-Keys fuer {last_mac} fehlen — auto-restore")
+                res = _btbak.restore()
+                if res.get("ok"):
+                    log.info(f"BT Boot: {res.get('count', 0)} Pairing-Dateien wiederhergestellt")
+                else:
+                    log.warn("BT Boot: auto-restore fehlgeschlagen: " + str(res.get("error", "?")))
+    except Exception as _e_restore:
+        log.warn("BT Boot: auto-restore check: " + str(_e_restore))
+
+    try:
         if bluetooth.reconnect_known_devices(S, settings):
             log.info("BT Boot-Reconnect: verbunden")
         else:

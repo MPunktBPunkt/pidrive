@@ -85,20 +85,14 @@ def start_auto_reconnect(S, settings):
 
         fail_streak = 0
         start_ts = time.time()
-        max_runtime = 20 * 60
 
         while not _reconnect_stop:
             try:
-                if time.time() - start_ts > max_runtime:
-                    log.info("BT auto-reconnect: aufgehört nach 20min ohne Erfolg")
-                    _write_watcher_state(
-                        running=False,
-                        sleeping=False,
-                        fail_count=fail_streak,
-                        last_result="timeout_stop",
-                        next_action="manual_reconnect"
-                    )
-                    break
+                if _reconnect_wakeup is not None and _reconnect_wakeup.is_set():
+                    _reconnect_wakeup.clear()
+                    fail_streak = 0
+                    start_ts = time.time()
+                    log.info("BT auto-reconnect [Watcher]: geweckt — Timer zurueckgesetzt")
 
                 mac = _normalize_mac(settings.get("bt_last_mac", ""))
                 name = settings.get("bt_last_name", "") or mac

@@ -379,7 +379,7 @@ def api_cmd():
         "cat:", "reload_stations:",
         "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
         "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
-        "dab_scan_channels:", "bt_connect:", "wifi_connect:", "bt_repair:",
+        "dab_scan_channels:", "bt_connect:", "bt_forget:", "wifi_connect:", "bt_repair:",
         "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
         "set_scanner_squelch:", "set_ppm:",
         "webradio_play:",

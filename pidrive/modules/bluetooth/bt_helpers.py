@@ -55,30 +55,6 @@ _scan_stop_flag = False
 
 _AGENT_PROC = None
 _AGENT_LOCK = threading.Lock()
-
-_reconnect_thread = None
-_reconnect_stop = False
-_reconnect_wakeup = None
-
-_RECONNECT_LAST_TRY = {}
-_RECONNECT_FAILS = {}
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Basis-Helper
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-
-# ── Globale Sperren und geteilter Prozess-State ──────────────────────────────
-# Diese Objekte werden hier definiert und von bt_connect.py / bt_devices.py
-# per `from modules.bluetooth.bt_helpers import _bt_connect_lock, _scan_lock` importiert.
-# Da es Lock-Objekte sind (mutable), wird die Referenz korrekt geteilt.
-
-_bt_connect_lock = threading.Lock()
-_scan_lock = threading.Lock()
-
-# ── Basis-Helfer ─────────────────────────────────────────────────────────────
 def _now() -> int:
     return int(time.time())
 

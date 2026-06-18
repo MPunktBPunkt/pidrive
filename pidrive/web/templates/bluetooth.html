@@ -5,8 +5,9 @@
   <div class="card-title">🔵 Bluetooth-Status</div>
   <div id="btStatusBlock" style="font-size:13px;color:var(--muted)">Lade…</div>
   <div class="btn-row" style="margin-top:10px">
-    <button class="btn primary" onclick="sendCmd('bt_scan')">Geräte scannen</button>
+    <button class="btn primary" onclick="btScan()">Geräte scannen</button>
     <button class="btn" onclick="sendCmd('bt_reconnect_last')">Reconnect</button>
+    <button class="btn" onclick="sendCmd('bt_disconnect')">Trennen</button>
     <button class="btn" onclick="sendCmd('bt_on')">BT an</button>
     <button class="btn" onclick="sendCmd('bt_off')">BT aus</button>
   </div>
@@ -18,12 +19,10 @@
 <div class="card">
   <div class="card-title">🔍 Gefundene Geräte (Scan)</div>
   <div id="btDiscList" style="font-size:13px">–</div>
-  <div class="btn-row" style="margin-top:8px">
-    <button class="btn" onclick="loadBtDisc()">Aktualisieren</button>
-  </div>
 </div>
 <div class="card">
   <div class="card-title">🔐 Pairing Keys</div>
+  <div id="btBackupInfo" style="font-size:12px;color:var(--muted);margin-bottom:8px">–</div>
   <div class="btn-row">
     <button class="btn" onclick="sendCmd('bt_backup')">Backup</button>
     <button class="btn" onclick="sendCmd('bt_restore')">Restore</button>
@@ -31,42 +30,122 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/page-bluetooth.js"></script><script>
+<script src="/static/js/page-bluetooth.js"></script>
+<script>
+let _btListTs = 0;
+let _btScanPending = false;
+
+function btReachLabel(d) {
+  if (d.connected) return '<span style="color:var(--green)">verbunden</span>';
+  if (d.visible_now || d.seen_this_scan) return '<span style="color:var(--yellow)">in Reichweite</span>';
+  return '<span style="color:var(--muted)">offline</span>';
+}
+
+function btDeviceRow(d, actions) {
+  const name = d.name || d.mac || '?';
+  const dtype = d.device_type === 'avrcp_controller' ? ' <span style="color:var(--cyan);font-size:10px">AVRCP</span>' : '';
+  return `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+    <span style="color:${d.connected?'var(--green)':'var(--muted)'}">●</span>
+    <span style="flex:1"><b>${name}</b>${dtype}<br>
+      <span style="color:var(--muted);font-size:11px">${d.mac}</span>
+      <span style="margin-left:8px;font-size:11px">${btReachLabel(d)}</span>
+    </span>
+    ${actions}
+  </div>`;
+}
+
 async function loadBtKnown() {
   try {
-    const r=await fetch('/api/bt/known'); const j=await r.json();
-    const devs=(j.data&&j.data.devices)||j.devices||[];
-    const el=document.getElementById('btKnownList');
-    if(!el) return;
-    if(!devs.length){el.innerHTML='<span style="color:var(--muted)">Keine bekannten Geräte</span>';return;}
-    el.innerHTML=devs.map(d=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
-      <span style="color:${d.connected?'var(--green)':'var(--muted)'}">●</span>
-      <span style="flex:1"><b>${d.name||d.mac}</b><br><span style="color:var(--muted);font-size:11px">${d.mac}</span></span>
+    const r = await fetch('/api/bt/known');
+    const j = await r.json();
+    const devs = (j.data && j.data.devices) || j.devices || [];
+    const el = document.getElementById('btKnownList');
+    if (!el) return;
+    if (!devs.length) {
+      el.innerHTML = '<span style="color:var(--muted)">Keine bekannten Geräte</span>';
+      return;
+    }
+    el.innerHTML = devs.map(d => btDeviceRow(d, `
       <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')">Verbinden</button>
-    </div>`).join('');
-  } catch(e){console.log(e);}
+      <button class="btn" onclick="sendCmd('bt_repair:${d.mac}')" style="font-size:11px">Neu koppeln</button>
+      <button class="btn danger" onclick="sendCmd('bt_forget:${d.mac}')" style="font-size:11px">Vergessen</button>
+    `)).join('');
+  } catch (e) { console.log(e); }
 }
+
 async function loadBtDisc() {
   try {
-    const r=await fetch('/api/bt/discovered'); const j=await r.json();
-    const devs=(j.data&&j.data.devices)||j.devices||[];
-    const el=document.getElementById('btDiscList');
-    if(!el) return;
-    if(!devs.length){el.innerHTML='<span style="color:var(--muted)">Keine Geräte gefunden — Scan starten</span>';return;}
-    el.innerHTML=devs.map(d=>`<div style="padding:5px 0;border-bottom:1px solid var(--line-soft)">
-      <b>${d.name||d.mac}</b> <span style="color:var(--muted);font-size:11px">${d.mac}</span>
-      ${d.ble_random_mac?'<span style="color:var(--yellow);font-size:10px"> BLE</span>':''}
-      <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')" style="float:right">Verbinden</button>
-    </div>`).join('');
-  } catch(e){}
+    const r = await fetch('/api/bt/discovered');
+    const j = await r.json();
+    const devs = (j.data && j.data.devices) || j.devices || [];
+    const el = document.getElementById('btDiscList');
+    if (!el) return;
+    if (!devs.length) {
+      el.innerHTML = '<span style="color:var(--muted)">Keine Geräte gefunden — Scan starten</span>';
+      return;
+    }
+    el.innerHTML = devs.map(d => btDeviceRow(d, `
+      <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')">Verbinden</button>
+    `)).join('');
+  } catch (e) {}
 }
-async function refreshBtStatus(j, st, ss) {
-  const el=document.getElementById('btStatusBlock');
-  if(!el) return;
-  el.innerHTML=`<b>Status:</b> ${st.bt?'Verbunden':'Getrennt'}${st.bt_device?' — '+st.bt_device:''}<br>
-    <b>Adapter:</b> ${st.bt_on?'AN':'AUS'} | <b>Quelle:</b> ${ss.source_current||'–'}`;
+
+async function loadBtBackupInfo() {
+  try {
+    const r = await fetch('/api/bt/backup');
+    const j = await r.json();
+    const el = document.getElementById('btBackupInfo');
+    if (!el) return;
+    if (!j.available) {
+      el.textContent = 'Kein Backup vorhanden';
+      return;
+    }
+    el.textContent = `Backup: ${(j.devices || []).length} Gerät(e), zuletzt ${j.date || '?'}`;
+  } catch (e) {}
 }
-function onBaseRefresh(j, st, ss, now) { refreshBtStatus(j,st,ss); }
+
+function btScan() {
+  _btScanPending = true;
+  sendCmd('bt_scan');
+  showToast('Scan gestartet…');
+  setTimeout(() => { loadBtDisc(); loadBtKnown(); _btScanPending = false; }, 8000);
+}
+
+function refreshBtStatus(j, st, ss) {
+  const el = document.getElementById('btStatusBlock');
+  if (!el) return;
+  const link = ss.bt_link_state || (st.bt ? 'connected' : 'idle');
+  const audio = ss.bt_audio_state || (st.bt ? 'unknown' : 'no_sink');
+  const audioLabel = {
+    a2dp_ready: 'A2DP bereit',
+    no_sink: 'kein A2DP',
+    pending: 'Audio wird eingerichtet…',
+    unknown: '–'
+  }[audio] || audio;
+  const statusLabel = {
+    verbunden: 'Verbunden',
+    verbindet: 'Verbindet…',
+    getrennt: 'Getrennt',
+    aus: 'Aus'
+  }[st.bt_status] || (st.bt ? 'Verbunden' : 'Getrennt');
+
+  el.innerHTML = `<b>Link:</b> ${statusLabel}${st.bt_device ? ' — ' + st.bt_device : ''}<br>
+    <b>Adapter:</b> ${st.bt_on ? 'AN' : 'AUS'} | <b>Audio:</b> ${audioLabel}<br>
+    <b>Quelle:</b> ${ss.source_current || '–'} | <b>Route:</b> ${ss.audio_route || '–'}`;
+}
+
+function onBaseRefresh(j, st, ss, now) {
+  refreshBtStatus(j, st, ss || j.source_state || {});
+  const nowTs = Date.now();
+  if (_btScanPending || nowTs - _btListTs > 5000) {
+    _btListTs = nowTs;
+    loadBtKnown();
+    loadBtDisc();
+  }
+}
+
 loadBtKnown();
 loadBtDisc();
-</script>{% endblock %}
+loadBtBackupInfo();
+</script>
+{% endblock %}

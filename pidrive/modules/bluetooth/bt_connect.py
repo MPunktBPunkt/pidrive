@@ -10,7 +10,7 @@ from modules.bluetooth.bt_helpers import (
     _parse_bool_from_info, _extract_name_from_info, _extract_alias_from_info,
     KNOWN_BT_FILE, DISCOVERED_BT_FILE,
     RECONNECT_COOLDOWN, RECONNECT_FAIL_SOFT_LIMIT, VISIBILITY_WAIT_SECONDS,
-    PAIR_TIMEOUT_SECONDS, A2DP_WAIT_SECONDS,
+    PAIR_TIMEOUT_SECONDS, A2DP_WAIT_SECONDS, VISIBLE_TTL_SECONDS,
     _bt_connect_lock,
     RECENT_SEEN_SECONDS,
     _is_avrcp_controller, _device_type,
@@ -259,6 +259,11 @@ def _reconnect_candidates(settings):
 def bt_toggle(S):
     if S.get("bt_on", False) or S.get("bt", False):
         log.info("BT toggle: OFF")
+        try:
+            from modules.bluetooth.bt_watcher import stop_auto_reconnect as _stop_watcher
+            _stop_watcher()
+        except Exception:
+            pass
         stop_scan()
         _ensure_bt_off()
         S["bt"] = False
@@ -318,7 +323,7 @@ def _ensure_avrcp_player(mac: str, timeout: int = 8) -> bool:
     player_path = dev_path + "/player0"
 
     # Prüfen ob player0 schon da ist
-    r = _run_cmd(
+    r = _run(
         f"dbus-send --system --print-reply --dest=org.bluez {dev_path} "
         f"org.freedesktop.DBus.Properties.GetAll string:org.bluez.MediaControl1 2>/dev/null",
         timeout=3
@@ -329,7 +334,7 @@ def _ensure_avrcp_player(mac: str, timeout: int = 8) -> bool:
 
     # avrcp-controller Profil explizit connecten
     log.info(f"AVRCP player: Verbinde avrcp-controller Profil für {mac}")
-    _run_cmd(
+    _run(
         f"bluetoothctl -- connect {mac_norm} 2>/dev/null",
         timeout=5
     )
@@ -338,7 +343,7 @@ def _ensure_avrcp_player(mac: str, timeout: int = 8) -> bool:
     import time as _t
     deadline = _t.time() + timeout
     while _t.time() < deadline:
-        r2 = _run_cmd(
+        r2 = _run(
             f"dbus-send --system --print-reply --dest=org.bluez / "
             f"org.freedesktop.DBus.ObjectManager.GetManagedObjects 2>/dev/null",
             timeout=3
@@ -585,7 +590,7 @@ def _connect_device_inner(mac, S, settings):
 
     # BT-Backup nach Erfolg
     try:
-        from modules import bt_backup as _btbak
+        from modules.bluetooth import bt_backup as _btbak
         res = _btbak.backup()
         if res.get("ok"):
             log.info(f"BT-Backup: nach Connect automatisch gesichert ({res['count']} Dateien)")

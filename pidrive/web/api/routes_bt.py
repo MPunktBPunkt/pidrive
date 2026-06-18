@@ -61,7 +61,7 @@ def api_bt_agent():
 
 @bt_bp.route("/api/bt/watcher")
 def api_bt_watcher():
-    wf = "/tmp/pidrive_bt_watcher.json"
+    wf = WATCHER_STATE_FILE
     if not os.path.exists(wf):
         return jsonify({"ok": True, "data": None, "exists": False})
     try:
@@ -76,3 +76,11 @@ def api_bt_watcher():
         return jsonify({"ok": False, "error": str(e)})
 
 
+@bt_bp.route("/api/bt/backup")
+def api_bt_backup():
+    try:
+        from modules.bluetooth import bt_backup as _btbak
+        info = _btbak.backup_info()
+        return jsonify({"ok": True, **info})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "available": False})
