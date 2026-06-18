@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""cli_format.py — PiDrive CLI: Ausgabe-Formatierung"""
+"""cli_format.py - PiDrive CLI: Ausgabe-Formatierung"""
 import json
 import sys
 
@@ -29,31 +29,31 @@ def print_status(d: dict):
     out(_c(f"PiDrive {'online' if online else 'OFFLINE'}", GREEN if online else RED))
     out()
     out(_c("Wiedergabe", BOLD))
-    out(f"  Quelle:       {src or '–'}")
-    title = d.get("track") or d.get("radio_name") or "–"
+    out(f"  Quelle:       {src or '-'}")
+    title = d.get("track") or d.get("radio_name") or "-"
     if src and src != "idle":
         out(f"  Sender/Titel: {title}")
         if d.get("artist"): out(f"  Artist:       {d['artist']}")
         if d.get("dls"):    out(f"  DLS:          {d['dls']}")
     else:
-        out(f"  Sender/Titel: –")  # Keine aktive Quelle
+        out(f"  Sender/Titel: -")
     dab_ps = d.get("dab_play_state","")
-    # DAB-Status nur zeigen wenn Quelle gerade DAB ist
     if d.get("source","") == "dab" and dab_ps and dab_ps != "locked":
-        out("  DAB-Status:   " + dab_ps)
+        out(f"  DAB-Status:   {dab_ps}")
     out()
     out(_c("Audio", BOLD))
-    _audio = d.get("audio_eff", "–")
+    _audio = d.get("audio_eff", "-")
     if _audio == "virtual": _audio = "virtuell (Container)"
     out(f"  Ausgang:      {_audio}")
-    vol = d.get("volume"); out("  Lautstaerke:  " + (str(vol) + "%" if vol is not None else "–"))
+    vol = d.get("volume")
+    out(f"  Lautstaerke:  {str(vol) + '%' if vol is not None else '-'}")
     out()
     out(_c("Verbindungen", BOLD))
     bt_info = d.get("bt_device","") or ("verbunden" if d.get("bt") else "getrennt")
     out(f"  Bluetooth:    {bt_info}")
-    sp = "aktiv ✓" if d.get("spotify") else "inaktiv"
+    sp = "aktiv" if d.get("spotify") else "inaktiv"
     out(f"  Spotify:      {sp}")
-    wifi_info = (d.get("wifi_ssid") or "–") if d.get("wifi") else "aus"
+    wifi_info = (d.get("wifi_ssid") or "-") if d.get("wifi") else "aus"
     out(f"  WiFi:         {wifi_info}")
 
 def print_now(d: dict):
@@ -62,11 +62,10 @@ def print_now(d: dict):
     playing = d.get("playing", False)
 
     if not playing and not src:
-        out("Nichts läuft gerade.")
+        out("Nichts laeuft gerade.")
         return
 
-    # Quelle aktiv aber keine Metadaten → sinnvoll anzeigen statt "–"
-    _title_display = title or ("(Sender läuft, Metadaten folgen...)"
+    _title_display = title or ("(Sender laeuft, Metadaten folgen...)"
                                if playing else "(keine Metadaten)")
 
     if src:
@@ -77,28 +76,28 @@ def print_now(d: dict):
     if d.get("artist"): out(_c("  Artist: ", DIM) + d["artist"])
     if d.get("dls"):    out(_c("  DLS:    ", DIM) + d["dls"])
     if d.get("source_error"):
-        out(_c(f"  ⚠ {d['source_error']}", YELLOW))
+        out(_c(f"  ! {d['source_error']}", YELLOW))
     elif d.get("metadata_unavailable") and not title:
-        out(_c("  (Metadaten nicht verfügbar)", YELLOW))
+        out(_c("  (Metadaten nicht verfuegbar)", YELLOW))
 
 def print_quick(d: dict):
-    out(f"{_c('Quelle', BOLD)}  {d.get('source','–')}")
-    out(f"{_c('Titel ', BOLD)}  {d.get('title','–')}")
-    out(f"{_c('Vol   ', BOLD)}  {d.get('volume','–')}")
-    out(f"{_c('Audio ', BOLD)}  {d.get('audio','–')}")
-    out(f"{_c('BT    ', BOLD)}  {d.get('bt','–')}")
-    out(f"{_c('WiFi  ', BOLD)}  {d.get('wifi','–')}")
+    out(f"{_c('Quelle', BOLD)}  {d.get('source','-')}")
+    out(f"{_c('Titel ', BOLD)}  {d.get('title','-')}")
+    out(f"{_c('Vol   ', BOLD)}  {d.get('volume','-')}")
+    out(f"{_c('Audio ', BOLD)}  {d.get('audio','-')}")
+    out(f"{_c('BT    ', BOLD)}  {d.get('bt','-')}")
+    out(f"{_c('WiFi  ', BOLD)}  {d.get('wifi','-')}")
 
 def print_stations(stations: list, source: str):
-    out(_c(f"Sender ({source.upper()}) — {len(stations)} Einträge:", BOLD))
+    out(_c(f"Sender ({source.upper()}) - {len(stations)} Eintraege:", BOLD))
     for i, s in enumerate(stations, 1):
         name = s.get("name", "?")
         extra = s.get("freq","") or s.get("channel","") or s.get("url","")[:40]
-        fav = "★ " if s.get("favorite") else "  "
+        fav = "* " if s.get("favorite") else "  "
         out(f"  {i:3}.  {fav}{name:<30}  {_c(str(extra), DIM)}")
 
 def print_favorites(favs: list):
-    out(_c(f"Favoriten — {len(favs)} Einträge:", BOLD))
+    out(_c(f"Favoriten - {len(favs)} Eintraege:", BOLD))
     for i, f in enumerate(favs, 1):
         src = f.get("source","?")
         out(f"  {i:2}.  {f.get('name','?'):<30}  {_c('['+src+']', DIM)}")
@@ -107,36 +106,41 @@ def print_bt_list(devices: list, title: str):
     if not devices:
         out(f"{title}: (leer)")
         return
-    # Trenne echte Audio-Geräte von BLE-Rauschen
     audio = [d for d in devices if not d.get("ble_random_mac") and not d.get("random_mac")]
     ble   = [d for d in devices if d.get("ble_random_mac") or d.get("random_mac")]
-    show  = audio if audio else devices  # Fallback: alles zeigen
-    out(_c(f"{title} — {len(show)} Gerät(e):", BOLD))
+    show  = audio if audio else devices
+    out(_c(f"{title} - {len(show)} Geraet(e):", BOLD))
     for d in show:
         mac    = d.get("mac","?")
         name   = d.get("name","?") or mac
-        paired = "✓P" if d.get("paired") else "  "
-        conn   = "✓" if d.get("connected") else " "
-        trust  = "★" if d.get("trusted") else " "
+        paired = "P" if d.get("paired") else " "
+        conn   = "+" if d.get("connected") else " "
+        trust  = "*" if d.get("trusted") else " "
+        if d.get("connected"):
+            reach = _c("verbunden", GREEN)
+        elif d.get("visible_now"):
+            reach = _c("in Reichweite", YELLOW)
+        else:
+            reach = _c("offline", DIM)
         dtype = d.get("device_type", "")
         dtype_tag = ""
-        if dtype == "avrcp_controller": dtype_tag = _c(" [AVRCP]", "[96m")
-        elif dtype == "headphones":     dtype_tag = _c(" [Kopfhörer]", DIM)
+        if dtype == "avrcp_controller": dtype_tag = _c(" [AVRCP]", CYAN)
+        elif dtype == "headphones":     dtype_tag = _c(" [Kopfhoerer]", DIM)
         elif dtype == "speaker":        dtype_tag = _c(" [Lautsprecher]", DIM)
-        out(f"  {conn}{trust}{paired}  {name:<25}  {_c(mac, DIM)}{dtype_tag}")
+        out(f"  {conn}{trust}{paired}  {name:<25}  {_c(mac, DIM)}  {reach}{dtype_tag}")
     if ble:
-        out(f"  {_c(f'(+ {len(ble)} BLE-Geräte ohne Audio ausgeblendet)', DIM)}")
+        out(f"  {_c(f'(+ {len(ble)} BLE-Geraete ohne Audio ausgeblendet)', DIM)}")
 
 def print_resources(r: dict):
     out(_c("Systemressourcen:", BOLD))
-    out(f"  RAM:        {r.get('ram','–')}")
-    out(f"  Speicher:   {r.get('disk','–')}")
-    out(f"  Uptime:     {r.get('uptime','–')}")
+    out(f"  RAM:        {r.get('ram','-')}")
+    out(f"  Speicher:   {r.get('disk','-')}")
+    out(f"  Uptime:     {r.get('uptime','-')}")
     thr = r.get("throttled","")
     if thr and thr != "0x0":
-        out(_c(f"  Throttled:  {thr}  ← Unterspannung!", YELLOW))
+        out(_c(f"  Throttled:  {thr}  ! Unterspannung!", YELLOW))
     else:
-        out(f"  Throttled:  {thr or '0x0'}  ✓")
+        out(f"  Throttled:  {thr or '0x0'}  OK")
 
 def print_dab_status(data: dict):
     d = data.get("data") or {}
@@ -144,13 +148,13 @@ def print_dab_status(data: dict):
         out("Kein DAB aktiv.")
         return
     out(_c("DAB Status:", BOLD))
-    out(f"  Sender:        {d.get('name','–')}")
-    out(f"  Kanal/SID:     {d.get('channel','–')} / {d.get('service_id','–')}")
-    out(f"  State:         {d.get('dab_state', d.get('state','–'))}")
+    out(f"  Sender:        {d.get('name','-')}")
+    out(f"  Kanal/SID:     {d.get('channel','-')} / {d.get('service_id','-')}")
+    out(f"  State:         {d.get('dab_state', d.get('state','-'))}")
     sync_ok = d.get("sync_ok") or d.get("dab_sync_ok", False)
     pcm     = d.get("dab_pcm_seen", d.get("pcm_seen", False))
-    out(f"  Sync OK:       {'✓' if sync_ok else '✗'}")
-    out(f"  PCM:           {'✓' if pcm else '✗'}")
+    out(f"  Sync OK:       {'ja' if sync_ok else 'nein'}")
+    out(f"  PCM:           {'ja' if pcm else 'nein'}")
     dls = d.get("last_dls_raw") or d.get("dls_text","")
     if dls:
         out(f"  DLS:           {dls}")
@@ -169,19 +173,19 @@ def _state_color(state):
     return state or "?"
 
 def format_dab_live_block(snap: dict) -> str:
-    """Kompakter Refresh-Block für pidrivectl dab live."""
+    """Kompakter Refresh-Block fuer pidrivectl dab live."""
     import datetime as _dt
     ts   = _dt.datetime.fromtimestamp(snap["ts"]).strftime("%H:%M:%S")
     src  = snap.get("source_current", "?")
     name = snap.get("radio_name", "?") or "?"
-    ch   = snap.get("channel", "") or "–"
-    sid  = snap.get("service_id", "") or "–"
+    ch   = snap.get("channel", "") or "-"
+    sid  = snap.get("service_id", "") or "-"
     st   = _state_color(snap.get("dab_playback_state", "?"))
-    err  = snap.get("last_error", "") or "–"
-    dls  = snap.get("dls_text", "") or "–"
+    err  = snap.get("last_error", "") or "-"
+    dls  = snap.get("dls_text", "") or "-"
     art  = snap.get("artist", "") or ""
     trk  = snap.get("track", "") or ""
-    ef   = snap.get("sess_err_file", "") or "–"
+    ef   = snap.get("sess_err_file", "") or "-"
     warns = snap.get("warnings", [])
 
     lines = [
@@ -200,26 +204,25 @@ def format_dab_live_block(snap: dict) -> str:
         "  DLS:         " + dls[:60],
     ]
     if art or trk:
-        lines.append("  Titel:       " + " – ".join(filter(None, [art, trk]))[:60])
+        lines.append("  Titel:       " + " - ".join(filter(None, [art, trk]))[:60])
     lines.append("  Letzter Fehler: " + err[:70])
     lines.append("  Errfile:     " + ef)
     if warns:
         for w in warns:
-            lines.append("  " + YELLOW + "⚠  " + w + RESET)
+            lines.append("  " + YELLOW + "!  " + w + RESET)
     return "\n".join(lines)
 
 
 def format_dab_change_line(snap: dict, diff: dict) -> str:
-    """Eine Zeile für --changes Modus."""
+    """Eine Zeile fuer --changes Modus."""
     import datetime as _dt
     ts = _dt.datetime.fromtimestamp(snap["ts"]).strftime("%H:%M:%S")
     parts = []
     for k, v in sorted(diff.items()):
         if isinstance(v, bool): parts.append(k + "=" + ("ja" if v else "nein"))
-        elif v == "" or v is None: parts.append(k + "=–")
+        elif v == "" or v is None: parts.append(k + "=-")
         else: parts.append(k + "=" + repr(str(v)[:40]))
     warn_str = ""
     for w in snap.get("warnings", []):
-        warn_str += "  " + YELLOW + "⚠ " + w + RESET
+        warn_str += "  " + YELLOW + "! " + w + RESET
     return ts + "  " + "  ".join(parts) + warn_str
-

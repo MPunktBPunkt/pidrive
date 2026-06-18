@@ -76,6 +76,7 @@ if _BASE not in sys.path:
 
 from cli import format as fmt
 from cli.service import PiDriveService, EXIT_OK, EXIT_ERROR, EXIT_NOTFOUND, EXIT_OFFLINE, EXIT_BUSY
+from cli.adapters import SOURCE_STATE_FILE
 
 def _exit_err(msg, code=EXIT_ERROR):
     fmt.err(msg)
@@ -342,6 +343,7 @@ Flags (vor dem Befehl angeben):
     sys_sub.add_parser("reboot")
     sys_sub.add_parser("shutdown")
     sys_sub.add_parser("diagnose")
+    sys_sub.add_parser("spotify-oauth", help="Spotify OAuth einmalig einrichten")
 
     # ── log ───────────────────────────────────────────────────────────────
     p_playlist = sub.add_parser("playlist", help="Wiedergabe-History")
@@ -388,6 +390,20 @@ Flags (vor dem Befehl angeben):
     dbg_sub.add_parser("source-state")
 
     # ──────────────────────────────────────────────────────────────────────
+    # CLI-Aliase: stations web → station list web, web stop → stop, …
+    if len(sys.argv) >= 2:
+        if sys.argv[1] == "stations":
+            sys.argv[1] = "station"
+            if len(sys.argv) >= 3 and sys.argv[2] not in ("list",):
+                sys.argv.insert(2, "list")
+        elif sys.argv[1] == "web" and len(sys.argv) >= 3 and sys.argv[2] == "stop":
+            sys.argv = [sys.argv[0], "stop"] + sys.argv[3:]
+        elif sys.argv[1] == "station" and len(sys.argv) >= 3:
+            if sys.argv[2] in ("web", "dab", "fm", "local"):
+                sys.argv.insert(2, "list")
+            elif sys.argv[2] == "list" and len(sys.argv) == 3:
+                sys.argv.append("web")
+
     # Normalize: "volume 50" → "volume set 50", "volume set 50" unverändert
     if len(sys.argv) >= 3 and sys.argv[1] == "volume":
         # "volume set N" → vol_arg würde "set" schlucken → fix: remove vol_arg ambiguity
@@ -846,12 +862,18 @@ Flags (vor dem Befehl angeben):
         elif args.vol_cmd == "set":
             lvl = max(0, min(100, args.level))
             import time as _tv
-            # vol_set:N → Core aktualisiert PA + amixer + settings["volume"]
             svc.send(f"vol_set:{lvl}")
-            _tv.sleep(0.6)  # Core braucht kurz zum Verarbeiten
-            d = svc.get_status()
-            actual = d.get("volume", lvl)
-            if use_json: fmt.print_json({"ok": True, "volume": actual})
+            actual = lvl
+            for _ in range(10):
+                _tv.sleep(0.15)
+                d = svc.get_status()
+                v = d.get("volume")
+                if v is not None and int(v) == lvl:
+                    actual = int(v)
+                    break
+                if v is not None:
+                    actual = int(v)
+            if use_json: fmt.print_json({"ok": True, "volume": actual, "requested": lvl})
             else: fmt.out(f"Lautstaerke: {actual}%")
             sys.exit(EXIT_OK)
         if use_json: fmt.print_json(r)
@@ -1383,7 +1405,53 @@ Flags (vor dem Befehl angeben):
         sys.exit(EXIT_OK)
 
     if args.cmd == "debug":
-        pass  # debug-Handler folgt unten
+        dbg = getattr(args, "dbg_cmd", None)
+        import json as _dj
+
+        def _dump(data):
+            if use_json:
+                fmt.print_json(data)
+            else:
+                fmt.out(_dj.dumps(data, indent=2, ensure_ascii=False))
+
+        if dbg == "state" or dbg is None:
+            _dump(svc.debug_state())
+        elif dbg == "dab":
+            _dump(svc.dab_status().get("data", {}))
+        elif dbg == "bt":
+            _dump({
+                "known": svc.bt_known(),
+                "discovered": svc.bt_discovered(),
+                "status": svc.get_status(),
+            })
+        elif dbg == "audio":
+            try:
+                from web.shared.audio import get_audio_debug
+                _dump(get_audio_debug())
+            except Exception as e:
+                _dump({"error": str(e)})
+        elif dbg == "menu":
+            _dump(svc.ipc.read_json("/tmp/pidrive_menu.json", {}))
+        elif dbg == "source-state":
+            _dump(svc.ipc.read_json(SOURCE_STATE_FILE, {}))
+        elif dbg == "avrcp":
+            try:
+                _dump(svc.ipc.read_json("/tmp/pidrive_avrcp_events.json", {}))
+            except Exception as e:
+                _dump({"error": str(e)})
+        elif dbg == "inject":
+            trig = getattr(args, "trigger", None)
+            if not trig:
+                _exit_err("Trigger fehlt — z.B. pidrivectl debug inject next", EXIT_NOTFOUND)
+            svc.require_online()
+            svc.send(trig)
+            fmt.out(f"✓ Trigger injiziert: {trig}")
+        elif dbg == "mpris":
+            _run_debug_mpris(args, fmt, use_json)
+        else:
+            _exit_err(f"Unbekannter debug-Befehl: {dbg}", EXIT_NOTFOUND)
+        sys.exit(EXIT_OK)
+
     # ── avrcp ─────────────────────────────────────────────────────────────────
     if args.cmd == "avrcp":
         import json as _aj, time as _at

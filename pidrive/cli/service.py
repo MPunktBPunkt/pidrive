@@ -73,33 +73,43 @@ class PiDriveService:
     def get_now(self) -> dict:
         s  = self.ipc.read_json(STATUS_FILE, {})
         ss = self.ipc.read_json(SOURCE_STATE_FILE, {})
-        src = ""
-        # source_current ist autoritativ — spotify=True heisst nur Raspotify läuft
         _cur = ss.get("source_current", "")
+        try:
+            from modules.playback_meta import metadata_for_source
+            meta = metadata_for_source(_cur, s)
+        except Exception:
+            meta = {"title": s.get("track") or s.get("radio_name") or "",
+                    "artist": s.get("artist", ""), "dls": s.get("dls_text", ""),
+                    "playing": _cur not in ("", "idle", None)}
+        src = ""
         _src_labels = {"spotify":"Spotify Connect","library":"Bibliothek",
                        "local":"Lokal","scanner":"Scanner"}
-        if _cur in _src_labels:       src = _src_labels[_cur]
-        elif _cur in ("dab","fm","webradio"): src = s.get("radio_type", _cur.upper())
-        elif _cur and _cur != "idle": src = _cur.upper()
-        elif s.get("radio"):          src = s.get("radio_type", "Radio")
-        title  = (s.get("track") or s.get("radio_name") or
-                  s.get("lib_track") or s.get("lib_artist") or "")
-        _src_err = s.get("source_error", "")
-        artist = s.get("artist", "")
-        dls    = s.get("dls_text", "")
+        if _cur in _src_labels:
+            src = _src_labels[_cur]
+        elif _cur in ("dab","fm","webradio"):
+            src = s.get("radio_type", _cur.upper())
+        elif _cur and _cur != "idle":
+            src = _cur.upper()
+        elif s.get("radio"):
+            src = s.get("radio_type", "Radio")
         return {
             "source":             src,
-            "title":              title,
-            "artist":             artist,
-            "dls":                dls,
+            "title":              meta.get("title", ""),
+            "artist":             meta.get("artist", ""),
+            "dls":                meta.get("dls", ""),
             "metadata_unavailable": s.get("metadata_unavailable", False),
-            "playing":            (_cur not in ("", "idle", None)),
-            "source_error":       _src_err,
+            "playing":            meta.get("playing", _cur not in ("", "idle", None)),
+            "source_error":       s.get("source_error", ""),
         }
 
     def get_volume(self) -> int | None:
-        """Liest Lautstärke: erst settings.json (aktuell nach vol_up/down), dann PA-Fallback."""
-        # settings["volume"] wird von audio.volume_up/down sofort aktualisiert
+        """Lautstärke: status.json (live) → settings.json → PA-Fallback."""
+        try:
+            _vol = self.get_status().get("volume")
+            if _vol is not None:
+                return int(_vol)
+        except Exception:
+            pass
         try:
             import json as _j, os as _os
             _cfg = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
@@ -219,7 +229,36 @@ class PiDriveService:
     # ── Bluetooth ──────────────────────────────────────────────────────────
 
     def bt_known(self) -> list:
-        return self.ipc.read_json(BT_KNOWN_FILE, {}).get("devices", [])
+        devices = self.ipc.read_json(BT_KNOWN_FILE, {}).get("devices", [])
+        return self._refresh_bt_reachability(devices)
+
+    def _refresh_bt_reachability(self, devices: list) -> list:
+        """Aktualisiert connected/reachable per bluetoothctl info."""
+        import subprocess as _sp
+        refreshed = []
+        for d in devices:
+            row = dict(d)
+            mac = (d.get("mac") or "").strip()
+            if not mac:
+                refreshed.append(row)
+                continue
+            try:
+                r = _sp.run(
+                    ["bluetoothctl", "info", mac],
+                    capture_output=True, text=True, timeout=4,
+                )
+                out = (r.stdout or "").lower()
+                if "not available" in out or not (r.stdout or "").strip():
+                    row["connected"] = False
+                    row["reachable"] = False
+                else:
+                    row["connected"] = "connected: yes" in out
+                    row["reachable"] = True
+            except Exception:
+                row.setdefault("connected", False)
+                row["reachable"] = False
+            refreshed.append(row)
+        return refreshed
 
     def bt_discovered(self) -> list:
         return self.ipc.read_json(BT_DISC_FILE, {}).get("devices", [])

@@ -209,17 +209,14 @@ def cover_art(name):
 @app.route("/api/ping")
 def api_ping():
     """Einfacher Verbindungstest — gibt ok:true zurück."""
-    return jsonify({"ok": True, "version": open(
-        __import__("os").path.join(__import__("os").path.dirname(__file__), "VERSION")
-    ).read().strip() if True else "?"})
+    return jsonify({"ok": True, "version": get_version()})
 
 
 @app.route("/api/core")
 def api_core():
     """
-    v0.10.55: Leichter Endpoint für Tab-1 Fast-Poll (1.5s).
-    Liest nur status.json + menu.json — keine subprocess-Calls, keine pactl.
-    Latenz auf Pi 3B: ~5–15ms statt ~80–200ms für /api/state.
+    Leichter Endpoint fuer Fast-Poll (~1.2s).
+    status.json + menu.json + source_state.json
     """
     status = read_json(STATUS_FILE, {})
     menu   = read_json(MENU_FILE, {})
@@ -228,22 +225,35 @@ def api_core():
     nodes  = menu.get("nodes", [])
     cursor = menu.get("cursor", 0)
     sel    = nodes[cursor] if nodes and cursor < len(nodes) else {}
+    try:
+        from modules.source_state import load_snapshot_file
+        source_state = load_snapshot_file()
+    except Exception:
+        source_state = {}
+    try:
+        from modules.playback_meta import metadata_for_source
+        now = metadata_for_source(source_state.get("source_current", "idle"), status)
+    except Exception:
+        now = {}
 
     return jsonify({
-        "status":    status,
-        "path":      menu.get("path", []),
-        "nodes":     nodes,
-        "cursor":    cursor,
-        "rev":       menu.get("rev", 0),
-        "can_back":  menu.get("can_back", False),
-        "categories": menu.get("categories", []),
-        "items":     menu.get("items", []),
-        "progress":  prog,
-        "list_data": list_d,
-        "list_active":   list_d.get("active", False),
-        "list_title":    list_d.get("title", ""),
-        "list_items":    list_d.get("items", []),
-        "list_selected": list_d.get("selected", 0),
+        "status":       status,
+        "source_state": source_state,
+        "now":          now,
+        "path":         menu.get("path", []),
+        "nodes":        nodes,
+        "cursor":       cursor,
+        "rev":          menu.get("rev", 0),
+        "can_back":     menu.get("can_back", False),
+        "categories":   menu.get("categories", []),
+        "items":        menu.get("items", []),
+        "progress":     prog,
+        "list_data":    list_d,
+        "list_active":      list_d.get("active", False),
+        "list_title":       list_d.get("title", ""),
+        "list_items":         list_d.get("items", []),
+        "list_selected":      list_d.get("selected", 0),
+        "ts":           time.time(),
         "debug": {
             "rev":            menu.get("rev", 0),
             "path":           menu.get("path", []),
@@ -260,6 +270,34 @@ def api_core():
     })
 
 
+@app.route("/api/playlist")
+def api_playlist():
+    """Wiedergabe-History aus play_history.json."""
+    import datetime as _dt
+    date = request.args.get("date", "today")
+    hist_path = os.path.join(str(_PKG_ROOT), "config", "play_history.json")
+    try:
+        with open(hist_path, encoding="utf-8") as f:
+            entries = json.load(f)
+    except Exception:
+        entries = []
+    today = _dt.date.today().isoformat()
+    if date == "today":
+        filtered = [e for e in entries if str(e.get("date", "")).startswith(today)]
+        label = f"Heute ({today})"
+    elif date == "all":
+        filtered = entries
+        label = "Alle Eintraege"
+    elif date == "last":
+        filtered = entries[-30:]
+        label = "Letzte 30"
+    else:
+        filtered = [e for e in entries if str(e.get("date", "")).startswith(date)]
+        label = date
+    filtered = list(reversed(filtered[-50:]))
+    return jsonify({"ok": True, "label": label, "count": len(filtered), "entries": filtered})
+
+
 @app.route("/api/state")
 def api_state():
     try:
@@ -267,7 +305,7 @@ def api_state():
         vm = _sanitize_floats(vm)
         # Senderlisten für WebUI Player
         import json as _j, os as _os
-        _cfg = os.path.join(BASE_DIR, "config")
+        _cfg = os.path.join(str(_PKG_ROOT), "config")
         def _load(fname, key="stations"):
             try: return _j.load(open(os.path.join(_cfg, fname))).get(key, [])
             except Exception: return []
@@ -340,12 +378,14 @@ def api_cmd():
     prefixes = (
         "cat:", "reload_stations:",
         "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
-        "scan_jump:", "scan_step:", "scan_setfreq:", "scan_inputfreq:",
+        "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
         "dab_scan_channels:", "bt_connect:", "wifi_connect:", "bt_repair:",
         "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
+        "set_scanner_squelch:", "set_ppm:",
         "webradio_play:",
         "play_dab:", "play_fm:", "play_web:",
         "favorites_play:",
+        "vol_set:",
     )
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
@@ -373,9 +413,7 @@ def api_logs():
             r = safe_run(f"tail -n 150 {log_dir}/core.log 2>/dev/null || tail -n 150 {LOG_FILE} 2>/dev/null")
         return jsonify(r)
     elif target == "display":
-        r = ""  # display entfernt v0.11.96
-        if not r.get("ok") or not r.get("stdout","").strip():
-            r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null")
+        r = safe_run(f"tail -n 150 {log_dir}/display.log 2>/dev/null || echo '(display log not found)'")
         return jsonify(r)
     elif target == "avrcp":
         r = safe_run("journalctl -u pidrive_avrcp -n 150 --no-pager 2>/dev/null")

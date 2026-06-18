@@ -39,6 +39,7 @@ STATE = {
     "transition_count": 0,        # v0.10.55: Gesamtzahl Transitionen (für Diagnose)
     "stale_cleared":    0,        # v0.10.55: Zähler für automatisch abgeräumte Stale-Transitions
     "dab_playback_state": "idle",   # idle | starting | locked | no_lock | failed
+    "playback_epoch": 0,
 }
 
 
@@ -140,6 +141,7 @@ def commit_source(source_name: str, auto_end: bool = False):
         old = STATE["source_current"]
         if old != source_name:
             STATE["source_previous"] = old
+            STATE["playback_epoch"] = STATE.get("playback_epoch", 0) + 1
         STATE["source_current"] = source_name
         if auto_end and STATE["transition"]:
             duration = time.time() - STATE["since"] if STATE["since"] else 0

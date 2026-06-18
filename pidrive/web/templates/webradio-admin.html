@@ -18,7 +18,7 @@
 <script src="/static/js/page-webradio-admin.js"></script><script>
 async function loadStations() {
   try{const r=await fetch('/api/webradio/stations');const j=await r.json();
-    const stations=j.stations||j||[];
+    const stations=(j.stations)||((j.data&&j.data.stations))||[];
     const el=document.getElementById('stationList');
     if(!stations.length){el.innerHTML='<span style="color:var(--muted)">Keine Sender</span>';return;}
     el.innerHTML=stations.map(s=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">

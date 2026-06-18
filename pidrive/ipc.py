@@ -53,6 +53,19 @@ def _get_audio_reason():
         return ""
 
 
+def _dls_for_status(S: dict) -> str:
+    """DLS nur fuer DAB — kein Track-Fallback fuer Scanner/FM/Web."""
+    rt = str(S.get("radio_type", "")).upper()
+    if rt == "SCANNER":
+        return ""
+    dls = S.get("dls_text") or ""
+    if dls:
+        return dls
+    if rt == "DAB":
+        return S.get("dls") or ""
+    return ""
+
+
 def write_status(S, settings):
     write_json(STATUS_FILE, {
         "wifi":      S.get("wifi",    False),
@@ -68,7 +81,7 @@ def write_status(S, settings):
         "radio":     S.get("radio_playing", S.get("radio", False)),
         "radio_name":S.get("radio_station", ""),
         "radio_type":S.get("radio_type", ""),
-        "dls_text":  S.get("dls_text", S.get("dls", S.get("track", ""))),
+        "dls_text":  _dls_for_status(S),
         "dls_raw":   S.get("dls_raw", ""),
         "library":   S.get("library_playing", False),
         "lib_track": S.get("library_track", S.get("lib_track", "")),

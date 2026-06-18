@@ -808,15 +808,15 @@ def set_volume(level: int, settings=None) -> int:
     except Exception:
         pass
 
-    # settings["volume"] aktualisieren + speichern
+    # settings["volume"] aktualisieren + sofort speichern
     if settings is not None:
         settings["volume"] = level
         try:
             from settings import save_settings as _ss_sv
+            _ss_sv(settings)
+            global _last_vol_save
             import time as _time_sv
-            if _time_sv.time() - _last_vol_save > 0.5:
-                _ss_sv(settings)
-                _last_vol_save = _time_sv.time()
+            _last_vol_save = _time_sv.time()
         except Exception:
             pass
 

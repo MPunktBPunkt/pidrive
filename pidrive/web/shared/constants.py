@@ -20,6 +20,7 @@ LIST_FILE     = "/tmp/pidrive_list.json"
 LOG_FILE      = "/var/log/pidrive/pidrive.log"
 READY_FILE    = "/tmp/pidrive_ready"
 KNOWN_BT_FILE = "/tmp/pidrive_bt_known_devices.json"
+DISC_BT_FILE  = "/tmp/pidrive_bt_devices.json"
 BT_AGENT_FILE = "/tmp/pidrive_bt_agent.json"
 DAB_DEBUG_FILE= "/tmp/pidrive_dab_play_debug.json"
 
@@ -46,5 +47,6 @@ ALLOWED_COMMANDS = {
     "reboot", "shutdown", "sys_info", "sys_version", "update",
     "rtlsdr_reset",
     "bt_backup", "bt_restore",
+    "scanner_stop",
     "favorites_add_current", "favorites_add", "favorites_remove",
 }

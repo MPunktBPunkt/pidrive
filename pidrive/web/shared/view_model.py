@@ -5,7 +5,7 @@ import time
 from web.shared.constants import (
     STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE, AVRCP_FILE,
     LIST_FILE, READY_FILE, KNOWN_BT_FILE, BT_AGENT_FILE,
-    DAB_DEBUG_FILE, STATIONS_FILE, BASE_DIR,
+    DAB_DEBUG_FILE, STATIONS_FILE, BASE_DIR, LOG_FILE,
 )
 from web.shared.files import read_json, file_age   # noqa: F401
 from web.shared.system import get_version, get_ip  # noqa: F401

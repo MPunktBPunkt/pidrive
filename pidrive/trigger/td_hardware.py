@@ -100,7 +100,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd.startswith("vol_set:"):
         try:
             _lvl = int(cmd.split(":", 1)[1])
-            bg(lambda l=_lvl: audio.set_volume(l, settings))
+            audio.set_volume(_lvl, settings)
         except (ValueError, IndexError):
             log.warn(f"vol_set: ungültiger Wert: {cmd}")
 
@@ -300,12 +300,14 @@ def handle(cmd, menu_state, store, S, settings, bg):
 
     elif cmd == "radio_stop":
         def _radio_stop():
+            from modules.playback_meta import clear_playback_metadata
             if source_state.begin_transition("trigger:radio_stop", "idle"):
                 try:
                     webradio.stop(S)
                     dab.stop(S)
                     fm.stop(S)
                     scanner.stop(S)
+                    clear_playback_metadata(S)
                     S["radio_playing"] = False
                     S["radio_station"] = ""
                     S["radio_name"] = ""
@@ -319,6 +321,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 dab.stop(S)
                 fm.stop(S)
                 scanner.stop(S)
+                clear_playback_metadata(S)
                 S["radio_playing"] = False
                 S["radio_station"] = ""
                 S["radio_name"] = ""

@@ -32,7 +32,7 @@
 <div class="card">
   <div class="card-title">🎛 PPM Kalibrierung</div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <input id="ppmVal" type="number" value="{{ vm['settings'].get('ppm',49) }}" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px">
+    <input id="ppmVal" type="number" value="{{ (vm.get('settings') or {}).get('ppm', (vm.get('settings') or {}).get('ppm_correction', 49)) }}" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px">
     <button class="btn" onclick="sendCmd('ppm:'+document.getElementById('ppmVal').value)">PPM setzen</button>
     <button class="btn" onclick="sendCmd('/api/ppm_calibrate')">Auto-Kalibrieren</button>
   </div>

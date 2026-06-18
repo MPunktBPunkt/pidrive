@@ -35,7 +35,7 @@
 async function loadBtKnown() {
   try {
     const r=await fetch('/api/bt/known'); const j=await r.json();
-    const devs=j.devices||j||[];
+    const devs=(j.data&&j.data.devices)||j.devices||[];
     const el=document.getElementById('btKnownList');
     if(!el) return;
     if(!devs.length){el.innerHTML='<span style="color:var(--muted)">Keine bekannten Geräte</span>';return;}
@@ -48,8 +48,8 @@ async function loadBtKnown() {
 }
 async function loadBtDisc() {
   try {
-    const r=await fetch('/api/bt/known'); const j=await r.json();
-    const devs=j.devices||[];
+    const r=await fetch('/api/bt/discovered'); const j=await r.json();
+    const devs=(j.data&&j.data.devices)||j.devices||[];
     const el=document.getElementById('btDiscList');
     if(!el) return;
     if(!devs.length){el.innerHTML='<span style="color:var(--muted)">Keine Geräte gefunden — Scan starten</span>';return;}
@@ -66,7 +66,7 @@ async function refreshBtStatus(j, st, ss) {
   el.innerHTML=`<b>Status:</b> ${st.bt?'Verbunden':'Getrennt'}${st.bt_device?' — '+st.bt_device:''}<br>
     <b>Adapter:</b> ${st.bt_on?'AN':'AUS'} | <b>Quelle:</b> ${ss.source_current||'–'}`;
 }
-function onBaseRefresh(j, st, ss) { refreshBtStatus(j,st,ss); }
+function onBaseRefresh(j, st, ss, now) { refreshBtStatus(j,st,ss); }
 loadBtKnown();
 loadBtDisc();
 </script>{% endblock %}

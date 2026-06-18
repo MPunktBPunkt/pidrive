@@ -10,17 +10,58 @@ from modules import (
     wifi, bluetooth, audio, system as sys_mod,
     webradio, dab, fm, scanner, update, favorites
 )
+from modules.playback_meta import clear_playback_metadata
+
+
+def _stop_other_sources(S):
+    """Webradio/DAB/FM beenden bevor der Scanner übernimmt."""
+    try:
+        webradio.stop(S)
+    except Exception as e:
+        log.warn(f"scanner: webradio.stop: {e}")
+    try:
+        dab.stop(S)
+    except Exception as e:
+        log.warn(f"scanner: dab.stop: {e}")
+    try:
+        fm.stop(S)
+    except Exception as e:
+        log.warn(f"scanner: fm.stop: {e}")
+    S["radio_playing"] = False
+    S["radio_name"] = ""
+    if str(S.get("radio_type", "")).upper() not in ("SCANNER",):
+        S["radio_type"] = ""
+    clear_playback_metadata(S)
+
+
+def _clear_scanner_metadata(S):
+    for _sk in ("radio_name", "radio_type", "track", "artist", "source_error"):
+        if _sk in ("radio_name", "radio_type"):
+            S[_sk] = ""
+        else:
+            S.pop(_sk, None)
 
 
 def handle(cmd, menu_state, store, S, settings, bg):
     # ── Scanner ─────────────────────────────────────────────────────────────
-    if cmd.startswith("scan_up:"):
+    if cmd == "scanner_stop":
+        scanner.stop(S)
+        source_state.commit_source("idle")
+        S["radio_playing"] = False
+        S["radio_station"] = ""
+        S["radio_name"] = ""
+        S["radio_type"] = ""
+        S["control_context"] = "idle"
+        log.info("Scanner via scanner_stop beendet")
+
+    elif cmd.startswith("scan_up:"):
         band = cmd.split(":", 1)[1]
         # Stale Metadaten aus vorheriger Quelle löschen
         for _sk in ("radio_name", "radio_type", "track", "artist", "source_error"):
             if _sk in ("radio_name", "radio_type"): S[_sk] = ""
             else: S.pop(_sk, None)
         def _scan_up(b=band):
+            _stop_other_sources(S)
             source_state.begin_transition(f"scan_up:{b}", "scanner")
             try:
                 scanner.channel_up(b, S)
@@ -33,6 +74,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd.startswith("scan_down:"):
         band = cmd.split(":", 1)[1]
         def _scan_down(b=band):
+            _stop_other_sources(S)
             source_state.begin_transition(f"scan_down:{b}", "scanner")
             try:
                 scanner.channel_down(b, S)
@@ -48,6 +90,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if _sk in ("radio_name", "radio_type"): S[_sk] = ""
             else: S.pop(_sk, None)
         def _scan_next(b=band):
+            _stop_other_sources(S)
             if source_state.begin_transition(f"scan_next:{b}", "scanner"):
                 try:
                     scanner.scan_next(b, S, settings)
@@ -60,6 +103,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd.startswith("scan_prev:"):
         band = cmd.split(":", 1)[1]
         def _scan_prev(b=band):
+            _stop_other_sources(S)
             if source_state.begin_transition(f"scan_prev:{b}", "scanner"):
                 try:
                     scanner.scan_prev(b, S, settings)
@@ -80,6 +124,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if delta:
                 # v0.10.55: settings durchreichen + begin_transition wrapper
                 def _scan_jump_fn(b=band, d=delta):
+                    _stop_other_sources(S)
                     if source_state.begin_transition(f"scan_jump:{b}", "scanner"):
                         try:
                             scanner.channel_jump(b, d, S, settings)
@@ -100,6 +145,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if delta:
                 # v0.10.55: begin_transition wrapper
                 def _scan_step_fn(b=band, d=delta):
+                    _stop_other_sources(S)
                     if source_state.begin_transition(f"scan_step:{b}", "scanner"):
                         try:
                             scanner.freq_step(b, d, S, settings)
@@ -120,6 +166,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
             if freq:
                 # v0.10.55: begin_transition wrapper
                 def _scan_setfreq_fn(b=band, f=freq):
+                    _stop_other_sources(S)
+                    _clear_scanner_metadata(S)
                     if source_state.begin_transition(f"scan_setfreq:{b}", "scanner"):
                         try:
                             scanner.set_freq(b, f, S, settings)
@@ -138,6 +186,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 ch_num = 1
             def _scan_setch_fn(b=band, c=ch_num):
+                _stop_other_sources(S)
+                _clear_scanner_metadata(S)
                 if source_state.begin_transition(f"scan_setch:{b}", "scanner"):
                     try:
                         scanner.set_channel(b, c, S, settings)
@@ -155,6 +205,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
             def _input_and_set(b=band):
                 freq = scanner.freq_input_screen(b, settings)
                 if freq is not None:
+                    _stop_other_sources(S)
                     if source_state.begin_transition(f"scan_inputfreq:{b}", "scanner"):
                         try:
                             scanner.set_freq(b, freq, S, settings)
@@ -171,6 +222,16 @@ def handle(cmd, menu_state, store, S, settings, bg):
             save_settings(settings)
             S["scanner_squelch"] = sq
             log.info(f"Scanner Squelch gesetzt: {sq}")
+            # Laufenden Scanner mit neuem Squelch neu starten
+            if source_state.current_source() == "scanner":
+                band = S.get("scanner_band")
+                if band:
+                    import re as _re_sq
+                    label = S.get("radio_station") or S.get(f"scanner_{band}", "")
+                    m = _re_sq.search(r"([\d.]+)\s*MHz", label or "")
+                    if m:
+                        scanner.set_freq(band, float(m.group(1)), S, settings)
+                        log.info(f"Scanner Squelch angewendet: {sq} auf {band} {m.group(1)} MHz")
         except Exception as e:
             log.error(f"set_scanner_squelch Fehler: {e}")
 

@@ -178,8 +178,9 @@ async function sendCmd(cmd) {
 async function refreshBase() {
   try {
     const r = await fetch('/api/core'); const j = await r.json();
-    const vm = j.vm || {}; const st = vm.status || {};
-    const ss = vm.source_state || {};
+    const st = j.status || {};
+    const ss = j.source_state || {};
+    const now = j.now || {};
 
     // Topbar Flags
     const btEl = el('bTopBt'), wlEl = el('bTopWifi'), spEl = el('bTopSpot');
@@ -189,21 +190,20 @@ async function refreshBase() {
     if (wlEl) wlEl.className = 'flag ' + (st.wifi ? 'on' : 'off');
     if (spEl) spEl.className = 'flag ' + (st.spotify ? 'on' : 'off');
 
-    // Debug-Bar oben rechts
     const dbEl = el('topDebug');
     if (dbEl) {
-      const rev = vm.menu_rev || '–';
-      const path = (vm.menu_path||[]).join(' › ') || '–';
-      const svc_age = j.age ? j.age.toFixed(1)+'s' : '–';
-      dbEl.textContent = `v${st.version||'–'} | Rev=${rev} | ${path} | ${svc_age}`;
+      const rev = j.rev || '–';
+      const path = (j.path||[]).join(' › ') || '–';
+      const age = j.ts ? ((Date.now()/1000 - j.ts).toFixed(1) + 's') : '–';
+      dbEl.textContent = `Core ${age} | Rev=${rev} | ${ss.source_current||'idle'}`;
     }
 
-    // Schnellstatus
-    const src  = ss.source_current || '–';
-    const title = st.track || st.radio_name || '–';
+    const src = ss.source_current || 'idle';
+    const playing = src !== 'idle';
+    const title = playing ? (now.title || st.radio_name || st.track || '–') : '–';
     setText('qsSource', src);
-    setText('qsTitle',  title.substring(0,35));
-    setText('qsVol',    (st.volume || '–') + '%');
+    setText('qsTitle',  String(title).substring(0, 35));
+    setText('qsVol',    (st.volume != null ? st.volume : '–') + '%');
     setText('qsAudio',  st.audio_effective || '–');
     const btInfo = st.bt ? (st.bt_device||'verbunden') : 'aus';
     setText('qsBt', btInfo);
@@ -235,7 +235,7 @@ async function refreshBase() {
     });
 
     // Seiten-spezifischer Hook
-    if (typeof onBaseRefresh === 'function') onBaseRefresh(j, st, ss);
+    if (typeof onBaseRefresh === 'function') onBaseRefresh(j, st, ss, now);
   } catch(e) { /* Core offline — kein Crash */ }
 }
 

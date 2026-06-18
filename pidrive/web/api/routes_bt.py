@@ -36,6 +36,14 @@ def api_bt_known():
     return jsonify({"ok": True, "data": {"devices": devs}})
 
 
+@bt_bp.route("/api/bt/discovered")
+def api_bt_discovered():
+    from web.shared.constants import DISC_BT_FILE
+    data = read_json(DISC_BT_FILE, {"devices": []})
+    devs = data.get("devices", []) if isinstance(data, dict) else []
+    return jsonify({"ok": True, "data": {"devices": devs}})
+
+
 @bt_bp.route("/api/bt/connect_known", methods=["POST"])
 def api_bt_connect_known():
     data = request.get_json(silent=True) or {}

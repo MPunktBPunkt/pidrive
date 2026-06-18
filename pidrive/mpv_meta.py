@@ -147,7 +147,10 @@ def _listener_loop(sock_path: str, station_name: str, S: dict, stop: threading.E
                 if icy:
                     log.info(f"[MPV_META] Stream-Titel: {icy!r} "
                              f"→ artist={parsed['artist']!r} track={parsed['track']!r}")
-                    # Play-History bei Titelwechsel
+                    # Play-History nur bei aktivem Webradio
+                    _rt = str(S.get("radio_type", "")).upper()
+                    if _rt not in ("WEB", "WEBRADIO"):
+                        continue
                     if parsed["track"] and parsed["track"] != S.get("_last_hist_track",""):
                         S["_last_hist_track"] = parsed["track"]
                         try:
