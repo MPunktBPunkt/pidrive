@@ -136,9 +136,13 @@ def _do_refresh():
                 except Exception:
                     pass
 
-        # Spotify
-        sp = _run("systemctl is-active raspotify 2>/dev/null", timeout=2)
-        new["spotify"] = (sp == "active")
+        # Spotify (raspotify auf ARM, librespot auf x86)
+        sp_active = False
+        for _svc in ("raspotify", "librespot"):
+            if _run(f"systemctl is-active {_svc} 2>/dev/null", timeout=2) == "active":
+                sp_active = True
+                break
+        new["spotify"] = sp_active
         new["spotify_track"]  = ""
         new["spotify_artist"] = ""
         new["spotify_album"]  = ""

@@ -113,9 +113,13 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                 _sp2 = __import__("subprocess")
                 _sp2.run("pkill -f welle-cli 2>/dev/null",
                          shell=True, timeout=3, capture_output=True)
+                _stop_dls_thread()
+                _clear_session()
                 S["dab_playback_state"] = "idle"
+                S["dab_state"] = "idle"
                 S["dab_attempting"] = False
                 S["radio_playing"] = False
+                S["dab_sync_ok"] = False
                 break
             if _get_session() != session_id:
                 log.info("DAB Runtime-Monitor: session gewechselt — stop")
@@ -158,6 +162,7 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                         S["dab_sync_seen"] = True
                         S["dab_superframe_seen"] = True
                         S["dab_sync_ok"] = True
+                        S["dab_attempting"] = False
                         S["radio_playing"] = True
                         if not S.get("dab_pcm_seen"):
                             S["dab_playback_state"] = "locked"
@@ -173,7 +178,9 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                             S["dab_pcm_seen"] = True
                             S["dab_audio_ready"] = True
                             S["dab_playback_state"] = "locked"
+                            S["dab_state"] = "locked"
                             S["dab_sync_ok"] = True
+                            S["dab_attempting"] = False
                             S["radio_playing"] = True
                             log.info(f"DAB Runtime: PCM aktiv — {s[:70]}")
                             try:
@@ -296,6 +303,7 @@ def _play_station_locked(station, S, settings=None):
         S,
         dab_session_id=session_id,
         dab_state="starting",
+        dab_playback_state="starting",
         dab_sync_ok=False,
         dab_last_error="",
         dab_channel=ch,
@@ -607,8 +615,8 @@ def _play_station_locked(station, S, settings=None):
             _radio_started = False
             log.warn(f"DAB: no_lock — welle-cli läuft weiter, Recovery-Monitor aktiv (session={session_id})")
 
-        S["dab_attempting"]   = True
-        S["dab_last_error"]   = last_err or "no_lock"
+        S["dab_attempting"] = dab_state in ("starting", "partial_sync", "no_lock")
+        S["dab_last_error"] = last_err if last_err else ("" if _radio_started else "no_lock")
         S["radio_station"] = "DAB: " + name
         S["radio_name"] = name
         S["radio_type"] = "DAB"
@@ -623,7 +631,8 @@ def _play_station_locked(station, S, settings=None):
     except Exception as e:
         S["radio_playing"] = False
         S["radio_station"] = "DAB Fehler"
-        _set_dab_status_fields(S, dab_state="exception", dab_last_error=str(e))
+        _set_dab_status_fields(S, dab_state="exception", dab_playback_state="exception",
+                               dab_last_error=str(e), radio_playing=False)
         _write_play_debug({
             "state": "exception",
             "error": str(e),
@@ -644,6 +653,10 @@ def _stop_locked(S):
 
     log.info("DAB stop: requested")
     _scan_running = False
+
+    global _recovery_stop
+    if _recovery_stop:
+        _recovery_stop.set()
 
     _stop_dls_thread()
     _clear_session()
@@ -696,9 +709,14 @@ def _stop_locked(S):
 
     _set_dab_status_fields(
         S,
-        dab_state="stopped",
+        dab_state="idle",
+        dab_playback_state="idle",
         dab_sync_ok=False,
         dab_audio_ready=False,
+        dab_pcm_seen=False,
+        dab_sync_seen=False,
+        dab_superframe_seen=False,
+        dab_attempting=False,
         dab_dls_text="",
     )
 

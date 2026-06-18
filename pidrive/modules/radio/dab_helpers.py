@@ -229,6 +229,11 @@ def _reset_runtime_dls_fields(S):
 
 
 def _set_dab_status_fields(S, **kwargs):
+    """dab_state und dab_playback_state immer synchron halten."""
+    if "dab_state" in kwargs and "dab_playback_state" not in kwargs:
+        kwargs["dab_playback_state"] = kwargs["dab_state"]
+    elif "dab_playback_state" in kwargs and "dab_state" not in kwargs:
+        kwargs["dab_state"] = kwargs["dab_playback_state"]
     for k, v in kwargs.items():
         S[k] = v
 

@@ -20,7 +20,7 @@ from modules import (
 def handle(cmd, menu_state, store, S, settings, bg):
     """Hardware-Trigger: Audio, WiFi, BT, Gain, PPM, Squelch, RTL-SDR."""
     # ── Spotify ───────────────────────────────────────────────────────────
-    if cmd in ("spotify_on", "spotify_off", "spotify_toggle"):
+    if cmd in ("spotify_on", "spotify_off", "spotify_toggle", "play_spotify"):
         def _spotify_toggle():
             was_active = bool(S.get("spotify"))
             if not was_active:

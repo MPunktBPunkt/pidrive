@@ -239,7 +239,17 @@ class PiDriveService:
                 return self.http.get_json("/api/dab/status")
             except Exception:
                 pass
-        return {"ok": True, "data": self.ipc.read_json(DAB_DEBUG_FILE, {})}
+        st = self.ipc.read_json(STATUS_FILE, {})
+        dbg = self.ipc.read_json(DAB_DEBUG_FILE, {})
+        merged = dict(dbg)
+        merged["dab_playback_state"] = st.get("dab_playback_state") or dbg.get("state") or dbg.get("dab_state", "")
+        merged["dab_sync_ok"] = st.get("dab_sync_ok", dbg.get("sync_ok"))
+        merged["dab_pcm_seen"] = st.get("dab_pcm_seen", dbg.get("pcm_seen"))
+        merged["dab_sync_seen"] = st.get("dab_sync_seen", dbg.get("sync_seen"))
+        merged["dab_last_error"] = st.get("dab_last_error", dbg.get("last_error_line", ""))
+        merged["dab_attempting"] = st.get("dab_attempting")
+        merged["dls"] = st.get("dls") or st.get("dls_text") or dbg.get("last_dls_raw", "")
+        return {"ok": True, "data": merged}
 
     # ── System ─────────────────────────────────────────────────────────────
 

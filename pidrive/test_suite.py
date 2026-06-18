@@ -329,7 +329,8 @@ def test_mpris2_push():
     _section("MPRIS2 TEST-PUSH", "📡")
     _send_to_bmw("4/9: MPRIS2 Push-Test", "BMW-Display Metadaten-Test")
 
-    _write_trigger("mpris_push:System Test läuft|PiDrive v0.11.96|pidrivectl test all")
+    _ver = open(os.path.join(BASE_DIR, "VERSION")).read().strip() if os.path.exists(os.path.join(BASE_DIR, "VERSION")) else "?"
+    _write_trigger(f"mpris_push:System Test läuft|PiDrive v{_ver}|pidrivectl test all")
     time.sleep(1.0)
     _p(INFO, "Test-Metadaten ans BMW-Display gesendet",
        "Zeile1: 'System Test läuft'  Artist: 'PiDrive v...'")
@@ -672,7 +673,7 @@ def test_spotify():
     t0 = time.time()
     _write_trigger("stop")
     time.sleep(0.3)
-    _write_trigger("play_spotify")
+    _write_trigger("spotify_on")
     src_ok = _wait_for_source("spotify", max_wait=10)
     if src_ok:
         _p(PASS, "Spotify Connect: aktiviert", f"{time.time()-t0:.1f}s")

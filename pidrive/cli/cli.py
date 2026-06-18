@@ -517,9 +517,9 @@ Flags (vor dem Befehl angeben):
             fmt.out(f"Starte DAB: {name}")
             try:
                 from settings import load_settings as _lds
-                _lock_s = int(_lds().get("dab_wait_lock", 45))
+                _lock_s = int(_lds().get("dab_wait_lock", 90))
             except Exception:
-                _lock_s = 45
+                _lock_s = 90
             fmt.out(f"{fmt.DIM}  (warte auf Lock — bis {_lock_s}s){fmt.RESET}")
             STATE_ICONS = {
                 "starting":     "⏳", "partial_sync": "📡",

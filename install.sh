@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.103"
+PIDRIVE_VERSION="0.11.104"
 
 # ============================================================
 # PiDrive Install Script
@@ -923,7 +923,7 @@ Environment=PULSE_SERVER=unix:/var/run/pulse/native
 ExecStart=/usr/local/bin/librespot \
   --name PiDrive \
   --device-type automobile \
-  --system-cache /var/cache/librespot
+  --system-cache /var/cache/librespot \
   --onevent /usr/local/bin/spotify_event.sh
 Restart=on-failure
 RestartSec=5

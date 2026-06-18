@@ -235,27 +235,31 @@ def handle(cmd, menu_state, store, S, settings, bg):
 
     # ── pidrivectl High-Level Play-Trigger ─────────────────────────────────
     elif cmd.startswith("play_dab:"):
-        # Format: play_dab:<name_or_service_id>
         _query = cmd.split(":", 1)[1].strip()
-        try:
+
+        def _run_cli_dab():
             _sid = _query if _query.startswith("0x") else ""
-            try: webradio.stop(S)
-            except Exception: pass
-            try: fm.stop(S)
-            except Exception: pass
-            _dab_ok = dab.play_by_name(_query, S, settings=settings, service_id=_sid)
-            if _dab_ok is not False:
-                source_state.commit_source("dab")
-                log.info(f"CLI play_dab: {_query!r}")
-            else:
-                log.warn(f"CLI play_dab: Fehler beim Starten — state={S.get('dab_playback_state','?')} err={S.get('source_error','?')}")
-                # welle-cli läuft noch nach no_lock → explizit stoppen damit RTL-SDR frei wird
-                try: dab.stop(S)
+            try:
+                try: webradio.stop(S)
                 except Exception: pass
-                import modules.source_state as _sst_dab
-                _sst_dab.commit_source("idle", auto_end=True)
-        except Exception as e:
-            log.error(f"CLI play_dab Fehler: {e}")
+                try: fm.stop(S)
+                except Exception: pass
+                _dab_ok = dab.play_by_name(_query, S, settings=settings, service_id=_sid)
+                if _dab_ok is not None:
+                    source_state.commit_source("dab")
+                    if _dab_ok:
+                        log.info(f"CLI play_dab: {_query!r} lock ok")
+                    else:
+                        log.info(
+                            f"CLI play_dab: {_query!r} no_lock/partial — "
+                            f"welle-cli läuft weiter state={S.get('dab_playback_state','?')}"
+                        )
+                else:
+                    log.warn(f"CLI play_dab: Exception — kein commit {_query!r}")
+            except Exception as e:
+                log.error(f"CLI play_dab Fehler: {e}")
+
+        bg(_run_cli_dab)
 
     elif cmd.startswith("play_fm:"):
         _query = cmd.split(":", 1)[1].strip()
