@@ -5,7 +5,7 @@ from modules.radio.dab_helpers import (
     _dls_thread, _dls_stop_event, ERR_FILE, STDOUT_FILE, _err_file_for_session,
     _reset_runtime_dls_fields, _parse_dls_line,
     _dab_session_id, _dab_session_lock, _get_session,
-    _write_play_debug, _limit_file_size,
+    _write_play_debug,
     _append_play_debug_line, _parse_welle_status_line,
 )
 import threading, time, os
@@ -77,9 +77,6 @@ def _dls_poller(session_id: str, station_name: str, S: dict):
             break
 
         try:
-            _limit_file_size(ERR_FILE, 1_000_000)
-            _limit_file_size(STDOUT_FILE, 256_000)
-
             for path, pos_ref in ((ERR_FILE, "err"), (STDOUT_FILE, "out")):
                 new_data, new_pos = _read_new_lines(
                     path, err_pos if pos_ref == "err" else out_pos

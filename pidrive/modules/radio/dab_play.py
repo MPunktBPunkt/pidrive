@@ -7,7 +7,6 @@ from modules.radio.dab_helpers import (
     _new_session_id, _set_session, _get_session, _clear_session,
     _write_play_debug, _reset_runtime_dls_fields, _set_dab_status_fields,
     _parse_welle_status_line, _append_play_debug_line, _get_dab_gain,
-    _limit_file_size,
     _err_file_for_session,
     ERR_FILE, STDOUT_FILE, PLAY_DEBUG_FILE, C_DAB,
     _player_proc, _scan_running,
@@ -78,8 +77,6 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                 if not _os.path.exists(err_file):
                     _t.sleep(1.0)
                     continue
-
-                _limit_file_size(err_file, 1_000_000)
 
                 try:
                     _fsize = _os.path.getsize(err_file)
@@ -233,6 +230,7 @@ def play_station(station, S, settings=None):
         import subprocess as _sp_pre
         _sp_pre.run("pkill -f welle-cli 2>/dev/null",
                     shell=True, timeout=3, capture_output=True)
+        time.sleep(0.5)  # RTL-Stick nach pkill stabilisieren
     except Exception:
         pass
     _sess_err_file = _err_file_for_session(session_id)
@@ -431,6 +429,7 @@ def play_station(station, S, settings=None):
         superframe_seen = False
         last_err = ""
         _last_err_ts = 0.0
+        _err_tail_pos = 0
 
         for _ in range(lock_wait_max):
             time.sleep(1.0)
@@ -438,17 +437,26 @@ def play_station(station, S, settings=None):
                 log.warn(f"DAB play: session changed during lock wait {session_id}")
                 return
 
-            # v0.10.55: _sess_err_file statt globalem ERR_FILE (Session-Isolation)
             _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
-            _limit_file_size(_err_path, 1_000_000)
             if not os.path.exists(_err_path):
                 continue
 
             try:
                 with open(_err_path, "r", encoding="utf-8", errors="ignore") as f:
-                    lines = [ln.strip() for ln in f.readlines()[-30:] if ln.strip()]
+                    try:
+                        fsize = os.path.getsize(_err_path)
+                        if _err_tail_pos > fsize:
+                            _err_tail_pos = max(0, fsize - 200)
+                        elif fsize - _err_tail_pos > 80_000:
+                            _err_tail_pos = fsize - 80_000
+                    except Exception:
+                        pass
+                    f.seek(_err_tail_pos)
+                    new_chunk = f.read()
+                    _err_tail_pos = f.tell()
+                lines = [ln.strip() for ln in new_chunk.splitlines() if ln.strip()]
 
-                for ln in lines[-12:]:
+                for ln in lines:
                     parsed = _parse_welle_status_line(ln)
                     if parsed:
                         _append_play_debug_line(parsed[0], parsed[1])
@@ -457,14 +465,23 @@ def play_station(station, S, settings=None):
                     if "found sync" in low and not sync_seen:
                         sync_seen = True
                         log.info(f"DAB lock: ✓ found sync — {ln[:80]}")
-                        S["dab_playback_state"] = "locked"
-                        S["dab_attempting"]   = False
+                        S["dab_playback_state"] = "partial_sync"
+                        S["dab_attempting"]   = True
                     if "superframe sync succeeded" in low and not superframe_seen:
                         superframe_seen = True
                         log.info(f"DAB lock: ✓ superframe sync — {ln[:80]}")
+                        S["dab_playback_state"] = "locked"
+                        S["dab_attempting"] = False
                     if "pcm name:" in low and not pcm_seen:
                         pcm_seen = True
                         log.info(f"DAB lock: ✓ PCM bereit — {ln[:80]}")
+                        S["dab_playback_state"] = "locked"
+                        S["dab_attempting"] = False
+                        try:
+                            from modules import audio as _aud_pcm
+                            _aud_pcm.unsuspend_sink()
+                        except Exception:
+                            pass
                     if any(x in low for x in ["failed", "lost coarse", "cannot open",
                                                "permission denied", "xrun", "error"]):
                         # Globales Rate-Limit: max 1 Warnung/10s (Lost sync + SyncOnPhase wechseln sonst ab)
@@ -512,6 +529,7 @@ def play_station(station, S, settings=None):
             dab_superframe_seen=superframe_seen,
             dab_audio_ready=bool(pcm_seen),
         )
+        S["dab_playback_state"] = dab_state
 
         _write_play_debug({
             "state": dab_state,
