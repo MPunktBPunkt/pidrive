@@ -93,11 +93,15 @@ def a2dp_stack_ready() -> tuple:
     return False, "no_media_endpoints"
 
 
-def try_recover_a2dp_stack() -> bool:
+def try_recover_a2dp_stack(include_bluetooth=True) -> bool:
     """WirePlumber/Bluetooth neu starten (sudoers: NOPASSWD)."""
-    log.info("[BT-AUDIO] A2DP-Stack Recovery: wireplumber + bluetooth restart")
+    log.info("[BT-AUDIO] A2DP-Stack Recovery: wireplumber"
+             + (" + bluetooth" if include_bluetooth else " only"))
     ok_any = False
-    for svc in ("wireplumber", "pipewire-pulse", "pipewire", "bluetooth"):
+    services = ["wireplumber", "pipewire-pulse", "pipewire"]
+    if include_bluetooth:
+        services.append("bluetooth")
+    for svc in services:
         rc = subprocess.run(
             f"sudo -n systemctl restart {svc}",
             shell=True, capture_output=True, text=True, timeout=25,

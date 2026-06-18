@@ -55,12 +55,16 @@ def _device_visible_in_recent_scan(mac: str) -> bool:
     return False
 
 
+def _device_bluez_available(info: str) -> bool:
+    low = (info or "").lower()
+    return bool(info) and "not available" not in low and "name:" in low
+
+
 def _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS):
     mac = _normalize_mac(mac)
 
     rc, out = _btctl(f"info {mac}", timeout=5)
-    low = (out or "").lower()
-    if rc == 0 and "device" in low and "not available" not in low:
+    if rc == 0 and _device_bluez_available(out):
         return True, out
 
     # Kurzer Discovery ohne scan on/off — nur info abrufen
@@ -68,8 +72,7 @@ def _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS):
     end = time.time() + timeout
     while time.time() < end:
         rc, out = _btctl(f"info {mac}", timeout=5)
-        low = (out or "").lower()
-        if rc == 0 and "device" in low and "not available" not in low:
+        if rc == 0 and _device_bluez_available(out):
             return True, out
         _sleep_s(3.0)
     return False, out
@@ -193,12 +196,12 @@ def _save_bt_last_device(settings, mac, name):
         pass
 
 
-def _ensure_a2dp_stack_or_recover():
+def _ensure_a2dp_stack_or_recover(*, allow_bluetooth_restart=True):
     ready, reason = a2dp_stack_ready()
     if ready:
         return True
     log.warn(f"BT connect: A2DP-Stack nicht bereit ({reason}) — Recovery")
-    return try_recover_a2dp_stack()
+    return try_recover_a2dp_stack(include_bluetooth=allow_bluetooth_restart)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -464,16 +467,6 @@ def _connect_device_inner(mac, S, settings):
 
     _save_bt_last_device(settings, mac, name)
 
-    if not _ensure_a2dp_stack_or_recover():
-        ipc.write_progress(
-            "Bluetooth",
-            "A2DP nicht bereit — kein Pairing nötig",
-            color="orange",
-        )
-        log.warn("BT connect: WirePlumber liefert kein A2DP — sudo systemctl restart wireplumber")
-        _sleep_s(3)
-        ipc.clear_progress()
-
     visible, info = _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS)
     if not visible:
         ipc.write_progress("Bluetooth", "Nicht gefunden — Gerät einschalten", color="red")
@@ -522,6 +515,9 @@ def _connect_device_inner(mac, S, settings):
     if not trusted_ok:
         # kein harter Abbruch, nur Warnung
         log.warn(f"BT connect: trust nicht bestätigt mac={mac}")
+
+    if not _ensure_a2dp_stack_or_recover():
+        log.warn("BT connect: A2DP-Stack nicht bereit — sudo systemctl restart wireplumber")
 
     connected_ok, conn_info = _ensure_connected(mac, retries=3)
     if not connected_ok:
@@ -759,28 +755,31 @@ def repair_device(mac, S, settings):
     log.info(f"BT repair: alter Bond entfernt mac={mac}")
     _sleep_s(1)
 
+    remaining = [
+        d for d in _read_discovered_devices()
+        if _normalize_mac(d.get("mac", "")) != mac
+    ]
+    _write_discovered_devices(remaining)
+
     # Schritt 2: Scan starten und warten bis Gerät sichtbar
     ipc.write_progress("Bluetooth", f"Suche {name[:16]}... (Pairing-Modus!)", color="blue")
     log.info(f"BT repair: Scan — warte auf Gerät (Pairing-Modus noetig!)")
     _btctl("scan on", timeout=3)
     _device_visible = False
-    for _attempt in range(15):  # max 15s warten
+    for _attempt in range(30):
         _sleep_s(1)
-        _, _info = _btctl(f"info {mac}", timeout=4)
-        if _info and mac.upper() in (_info or "").upper():
+        rc, _info = _btctl(f"info {mac}", timeout=4)
+        if rc == 0 and _device_bluez_available(_info):
             _device_visible = True
+            if "Name:" in (_info or ""):
+                for line in (_info or "").splitlines():
+                    if line.strip().startswith("Name:"):
+                        name = line.split("Name:", 1)[1].strip() or name
+                        break
             log.info(f"BT repair: Gerät sichtbar nach {_attempt+1}s")
             break
-        # Scan-Cache aus discovered_devices prüfen
-        for d in _read_discovered_devices():
-            if _normalize_mac(d.get("mac", "")) == mac:
-                _device_visible = True
-                name = d.get("name", name)
-                break
-        if _device_visible:
-            break
         ipc.write_progress("Bluetooth",
-            f"Warte auf {name[:14]}... ({_attempt+1}/15s)", color="blue")
+            f"Warte auf {name[:14]}... ({_attempt+1}/30s)", color="blue")
 
     if not _device_visible:
         log.warn(f"BT repair: Gerät nicht sichtbar — Pairing-Modus aktiv?")

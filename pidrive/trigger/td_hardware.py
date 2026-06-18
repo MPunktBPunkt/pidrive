@@ -144,6 +144,17 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 bluetooth._btctl(f"remove {m}", timeout=10)
                 knw = bluetooth._get_known_devices()
                 bluetooth._write_known_devices([d for d in knw if d.get("mac") != m])
+                from modules.bluetooth.bt_devices import _read_discovered_devices, _write_discovered_devices
+                disc = [d for d in _read_discovered_devices() if d.get("mac") != m]
+                _write_discovered_devices(disc)
+                if settings.get("bt_last_mac", "").upper().replace("-", ":") == m.upper().replace("-", ":"):
+                    settings["bt_last_mac"] = ""
+                    settings["bt_last_name"] = ""
+                    try:
+                        from settings import save_settings as _ss
+                        _ss(settings)
+                    except Exception:
+                        pass
                 log.info(f"BT: Gerät vergessen mac={m}")
                 S["menu_rev"] = S.get("menu_rev", 0) + 1
             except Exception as _e:

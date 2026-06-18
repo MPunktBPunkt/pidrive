@@ -54,6 +54,13 @@ function btDeviceRow(d, actions) {
   </div>`;
 }
 
+function btConnectOrPair(mac, paired) {
+  const cmd = paired ? ('bt_connect:' + mac) : ('bt_repair:' + mac);
+  showToast(paired ? 'Verbinden…' : 'Koppeln… (Pairing-Modus)');
+  sendCmd(cmd);
+  setTimeout(() => { loadBtDisc(); loadBtKnown(); }, 12000);
+}
+
 async function loadBtKnown() {
   try {
     const r = await fetch('/api/bt/known');
@@ -66,7 +73,7 @@ async function loadBtKnown() {
       return;
     }
     el.innerHTML = devs.map(d => btDeviceRow(d, `
-      <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')">Verbinden</button>
+      <button class="btn" onclick="btConnectOrPair('${d.mac}', ${d.paired ? 'true' : 'false'})">${d.paired ? 'Verbinden' : 'Koppeln'}</button>
       <button class="btn" onclick="sendCmd('bt_repair:${d.mac}')" style="font-size:11px">Neu koppeln</button>
       <button class="btn danger" onclick="sendCmd('bt_forget:${d.mac}')" style="font-size:11px">Vergessen</button>
     `)).join('');
@@ -85,7 +92,7 @@ async function loadBtDisc() {
       return;
     }
     el.innerHTML = devs.map(d => btDeviceRow(d, `
-      <button class="btn" onclick="sendCmd('bt_connect:${d.mac}')">Verbinden</button>
+      <button class="btn" onclick="btConnectOrPair('${d.mac}', ${d.paired ? 'true' : 'false'})">${d.paired ? 'Verbinden' : 'Koppeln'}</button>
     `)).join('');
   } catch (e) {}
 }

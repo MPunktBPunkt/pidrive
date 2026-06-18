@@ -18,32 +18,40 @@ from web.shared import *  # noqa: F401,F403
 
 bt_bp = Blueprint("bt_bp", __name__)
 
+
+def _refresh_bt_live(devs):
+    import subprocess as _sp
+    for d in devs:
+        mac = (d.get("mac") or "").strip()
+        if not mac:
+            continue
+        try:
+            r = _sp.run(
+                ["bluetoothctl", "info", mac],
+                capture_output=True, text=True, timeout=4,
+            )
+            out = r.stdout or ""
+            low = out.lower()
+            if r.returncode != 0 or "not available" in low or "name:" not in low:
+                d["connected"] = False
+                d["reachable"] = False
+                d["paired"] = False
+            else:
+                d["connected"] = "connected: yes" in low
+                d["reachable"] = True
+                d["paired"] = "paired: yes" in low
+        except Exception:
+            d.setdefault("connected", False)
+            d["reachable"] = False
+
+
 # Routen: app.route → bt_bp.route
 @bt_bp.route("/api/bt/known")
 def api_bt_known():
     data = read_json(KNOWN_BT_FILE, {"devices": []})
     devs = data.get("devices", []) if isinstance(data, dict) else []
     try:
-        import subprocess as _sp
-        for d in devs:
-            mac = (d.get("mac") or "").strip()
-            if not mac:
-                continue
-            try:
-                r = _sp.run(
-                    ["bluetoothctl", "info", mac],
-                    capture_output=True, text=True, timeout=4,
-                )
-                out = (r.stdout or "").lower()
-                if "not available" in out or not (r.stdout or "").strip():
-                    d["connected"] = False
-                    d["reachable"] = False
-                else:
-                    d["connected"] = "connected: yes" in out
-                    d["reachable"] = True
-            except Exception:
-                d.setdefault("connected", False)
-                d["reachable"] = False
+        _refresh_bt_live(devs)
     except Exception:
         pass
     try:
@@ -64,6 +72,10 @@ def api_bt_discovered():
     from web.shared.constants import DISC_BT_FILE
     data = read_json(DISC_BT_FILE, {"devices": []})
     devs = data.get("devices", []) if isinstance(data, dict) else []
+    try:
+        _refresh_bt_live(devs)
+    except Exception:
+        pass
     return jsonify({"ok": True, "data": {"devices": devs}})
 
 
