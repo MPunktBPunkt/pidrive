@@ -3,11 +3,12 @@ import re
 """dab_play.py — DAB+ Wiedergabe via welle-cli  v0.10.55"""
 
 from modules.radio.dab_helpers import (
-    _write_json_atomic, _read_json, _run, _truncate_file, _limit_file_size, _normalize_station,
+    _write_json_atomic, _read_json, _run, _truncate_file, _normalize_station,
     _new_session_id, _set_session, _get_session, _clear_session,
     _write_play_debug, _reset_runtime_dls_fields, _set_dab_status_fields,
     _parse_welle_status_line, _append_play_debug_line, _get_dab_gain,
     _err_file_for_session, _is_welle_noise_line, _dab_play_lock,
+    _read_welle_log_tail, _welle_line_flags,
     ERR_FILE, STDOUT_FILE, PLAY_DEBUG_FILE, C_DAB,
     _player_proc, _scan_running,
     _rtlsdr, _src_state, _audio,
@@ -51,13 +52,13 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
     def _monitor():
         import time as _t, os as _os
         err_file = _err_file_for_session(session_id)
-        last_pos  = 0
+        err_pos = 0
+        out_pos = 0
         log.info(f"DAB Runtime-Monitor: start session={session_id}")
         _lock_found = bool(S.get("dab_sync_seen"))
         _pcm_found = bool(S.get("dab_pcm_seen"))
 
         _mon_start = _t.time()
-        _last_trim = _mon_start
         while not _recovery_stop.is_set():
             _elapsed = _t.time() - _mon_start
             _timeout = 1800 if _lock_found else 300
@@ -81,90 +82,74 @@ def _start_recovery_monitor(session_id, station_name, S, settings):
                 break
 
             try:
-                if not _os.path.exists(err_file):
-                    _t.sleep(1.0)
-                    continue
+                new_lines = []
+                for path, pos_name in ((err_file, "err"), (STDOUT_FILE, "out")):
+                    chunk, new_pos = _read_welle_log_tail(
+                        path, err_pos if pos_name == "err" else out_pos
+                    )
+                    if pos_name == "err":
+                        err_pos = new_pos
+                    else:
+                        out_pos = new_pos
+                    new_lines.extend(chunk)
 
-                try:
-                    _fsize = _os.path.getsize(err_file)
-                    if last_pos > _fsize:
-                        last_pos = max(0, _fsize - 200)
-                    elif _fsize - last_pos > 50_000:
-                        last_pos = _fsize - 50_000
-                except Exception:
-                    pass
+                for ln in new_lines:
+                    s = ln.strip()
+                    if not s:
+                        continue
+                    low = s.lower()
+                    flags = _welle_line_flags(s)
 
-                with open(err_file, "r", encoding="utf-8", errors="ignore") as f:
-                    f.seek(last_pos)
-                    new = f.read()
-                    last_pos = f.tell()
+                    if flags["sync"]:
+                        _lock_found = True
+                        S["dab_sync_seen"] = True
+                        S["radio_playing"] = True
+                        S["dab_attempting"] = True
+                        S.pop("source_error", None)
+                        if not S.get("dab_pcm_seen"):
+                            S["dab_playback_state"] = "partial_sync"
+                        log.info(f"DAB Runtime: sync — {s[:60]}")
 
-                if new:
-                    for ln in new.splitlines():
-                        s = ln.strip()
-                        if not s:
-                            continue
-                        low = s.lower()
+                    if flags["superframe"]:
+                        _lock_found = True
+                        S["dab_sync_seen"] = True
+                        S["dab_superframe_seen"] = True
+                        S["dab_sync_ok"] = True
+                        S["radio_playing"] = True
+                        if not S.get("dab_pcm_seen"):
+                            S["dab_playback_state"] = "locked"
+                        try:
+                            from modules import source_state as _sst
+                            _sst.commit_source("dab")
+                        except Exception:
+                            pass
 
-                        if "found sync" in low:
-                            _lock_found = True
-                            S["dab_sync_seen"] = True
-                            S["radio_playing"] = True
-                            S["dab_attempting"] = True
-                            S.pop("source_error", None)
-                            if not S.get("dab_pcm_seen"):
-                                S["dab_playback_state"] = "partial_sync"
-                            log.info(f"DAB Runtime: sync — {s[:60]}")
-
-                        if "superframe sync succeeded" in low:
-                            _lock_found = True
-                            S["dab_sync_seen"] = True
-                            S["dab_superframe_seen"] = True
+                    if flags["pcm"]:
+                        if not _pcm_found:
+                            _pcm_found = True
+                            S["dab_pcm_seen"] = True
+                            S["dab_audio_ready"] = True
+                            S["dab_playback_state"] = "locked"
                             S["dab_sync_ok"] = True
                             S["radio_playing"] = True
-                            if not S.get("dab_pcm_seen"):
-                                S["dab_playback_state"] = "locked"
+                            log.info(f"DAB Runtime: PCM aktiv — {s[:70]}")
                             try:
-                                from modules import source_state as _sst
-                                _sst.commit_source("dab")
-                            except Exception:
-                                pass
+                                from modules import audio as _aud
+                                _aud.unsuspend_sink()
+                            except Exception as _ue:
+                                log.warn(f"DAB Runtime: unsuspend: {_ue}")
 
-                        if ("pcm name:" in low or "pcm state: prepared" in low
-                                or "create audio output" in low):
-                            if not _pcm_found:
-                                _pcm_found = True
-                                S["dab_pcm_seen"] = True
-                                S["dab_audio_ready"] = True
-                                S["dab_playback_state"] = "locked"
-                                S["dab_sync_ok"] = True
-                                S["radio_playing"] = True
-                                log.info(f"DAB Runtime: PCM aktiv — {s[:70]}")
-                                try:
-                                    from modules import audio as _aud
-                                    _aud.unsuspend_sink()
-                                except Exception as _ue:
-                                    log.warn(f"DAB Runtime: unsuspend: {_ue}")
+                    if "permission denied" in low and "pcm" in low:
+                        S["dab_last_error"] = s[:180]
+                        S["dab_playback_state"] = "pcm_error"
+                        log.error(f"DAB Runtime: PCM blockiert — {s[:100]}")
 
-                        if "permission denied" in low and "pcm" in low:
-                            S["dab_last_error"] = s[:180]
-                            S["dab_playback_state"] = "pcm_error"
-                            log.error(f"DAB Runtime: PCM blockiert — {s[:100]}")
-
-                        if "lost coarse sync" in low and _lock_found and not _pcm_found:
-                            S["dab_playback_state"] = "partial_sync"
-                            S["dab_sync_ok"] = False
+                    if "lost coarse sync" in low and _lock_found and not _pcm_found:
+                        S["dab_playback_state"] = "partial_sync"
+                        S["dab_sync_ok"] = False
 
             except Exception as _e:
                 log.warn(f"DAB Runtime-Monitor: {_e}")
-
-            if _t.time() - _last_trim > 60:
-                _last_trim = _t.time()
-                try:
-                    from modules.radio.dab_helpers import _limit_file_size as _lfs
-                    _lfs(err_file, max_bytes=4_000_000)
-                except Exception:
-                    pass
 
             _t.sleep(1.0)
 
@@ -251,7 +236,12 @@ def _play_station_locked(station, S, settings=None):
         import subprocess as _sp_pre
         _sp_pre.run("pkill -f welle-cli 2>/dev/null",
                     shell=True, timeout=3, capture_output=True)
-        time.sleep(0.5)  # RTL-Stick nach pkill stabilisieren
+        time.sleep(1.0)
+        if _rtlsdr:
+            try:
+                _rtlsdr.wait_until_free(timeout=3.0)
+            except Exception:
+                pass
     except Exception:
         pass
     _sess_err_file = _err_file_for_session(session_id)
@@ -320,25 +310,13 @@ def _play_station_locked(station, S, settings=None):
             import subprocess as _sp_null
             _welle_stdout = open(os.devnull, "w")
 
-        # ── v0.10.55: Saubere ALSA-Umgebung für welle-cli ────────────────────
-        # Problem: pidrive_core.service hat Environment=PULSE_SERVER=...
-        #          → wird von welle-cli geerbt
-        #          → PipeWire ALSA-Plugin (pcm.!default → PipeWire)
-        #            fängt ALSA-Calls ab → falscher Sink → kein Ton
-        # Fix: PULSE_SERVER aus der Kindprozess-Umgebung entfernen,
-        #      damit ALSA direkt auf die Hardware-Karte (Card 1 = Klinke) geht.
-        # ── ALSA→PipeWire-Routing für welle-cli ──────────────────────────────────
-        # PULSE_SERVER BEHALTEN: welle-cli nutzt ALSA default = PA-Plugin → System-PA
-        # PA-Default-Sink wurde von get_mpv_args() auf Klinke gesetzt (s.o.)
-        # PULSE_SINK ENTFERNEN: verhindert PA-Init-Timing-Konflikt mit RTL-SDR
-        #   (war der echte Sync-Bug aus v0.9.30, nicht PULSE_SERVER selbst)
+        # v0.11.102: Direktes ALSA wie manuelles `sudo welle-cli` (ohne PA-Plugin).
+        # pidrive_core.service setzt PULSE_SERVER global — fuer welle-cli entfernen,
+        # sonst blockiert das PipeWire-ALSA-Plugin den Decode/PCM-Pfad.
         _welle_env = dict(os.environ)
-        # v0.10.55: PULSE_SERVER wiederherstellen — PA System-Mode hält ALSA Card 1 exklusiv.
-        # Ohne PULSE_SERVER kann welle-cli die Hardware nicht öffnen → kein Ton.
-        # Mit PULSE_SERVER → welle-cli nutzt PA-Plugin → Default-Sink = Klinke Card 1.
-        _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
-        _welle_env["PIPEWIRE_RUNTIME_DIR"] = "/run/pipewire"
-        _welle_env.pop("PULSE_SINK", None)   # Kein fixer Sink — PA Default-Sink gilt
+        _welle_env.pop("PULSE_SERVER", None)
+        _welle_env.pop("PIPEWIRE_RUNTIME_DIR", None)
+        _welle_env.pop("PULSE_SINK", None)
 
         # /etc/asound.conf prüfen und bei Bedarf korrigieren
         # (ohne asound.conf → ALSA default = Card 0 = HDMI → kein Ton)
@@ -379,16 +357,20 @@ def _play_station_locked(station, S, settings=None):
         _write_play_debug({
             "audio_decision": _adec,
             "welle_cmd": _welle_cmd,
+            "welle_direct_alsa": True,
             "pulse_server_in_env": "PULSE_SERVER" in _welle_env,
             "pulse_sink_in_env": "PULSE_SINK" in _welle_env,
             "pa_default_sink_before_start": _pa_default,
             "ppm": _ppm_val,
             "gain": _gain,
             "sess_err_file": _sess_err_file,
+            "stdout_file": STDOUT_FILE,
         })
 
         log.info(
-            f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain} "            f"session={session_id} | "            f"PULSE_SERVER={'✓' if 'PULSE_SERVER' in _welle_env else '✗'} "            f"PA_Default={_pa_default or '(nicht gesetzt)'}"
+            f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain} "
+            f"session={session_id} | ALSA=direct PULSE_SERVER={'✗' if 'PULSE_SERVER' not in _welle_env else '✓'} "
+            f"PA_Default={_pa_default or '(nicht gesetzt)'}"
         )
 
         try:
@@ -438,12 +420,17 @@ def _play_station_locked(station, S, settings=None):
             _welle_stderr.close()
             _welle_stdout.close()
 
+        _write_play_debug({
+            "welle_pid": getattr(_player_proc, "pid", None),
+            "welle_started_ts": time.time(),
+        })
+
         # DLS-Thread sofort starten — DLS kommt oft während des Lock-Waits!
         # Nicht erst nach Lock-Wait: dann ist die DLS-Zeile schon im File
         log.warn(f"DAB DLS-Thread starten: session={session_id[:12]} err_file={_sess_err_file}")
         _start_dls_thread(session_id, name, S)
 
-        lock_wait_max = int(settings.get("dab_wait_lock", 45)) if settings else 45
+        lock_wait_max = int(settings.get("dab_wait_lock", 90)) if settings else 90
         sync_ok = False
         pcm_seen = False
         sync_seen = False
@@ -451,6 +438,7 @@ def _play_station_locked(station, S, settings=None):
         last_err = ""
         _last_err_ts = 0.0
         _err_tail_pos = 0
+        _out_tail_pos = 0
 
         for _ in range(lock_wait_max):
             time.sleep(1.0)
@@ -458,42 +446,35 @@ def _play_station_locked(station, S, settings=None):
                 log.warn(f"DAB play: session superseded during lock wait {session_id}")
                 return False
 
-            _err_path = _sess_err_file if os.path.exists(_sess_err_file) else ERR_FILE
-            if not os.path.exists(_err_path):
-                continue
-
             try:
-                with open(_err_path, "r", encoding="utf-8", errors="ignore") as f:
-                    try:
-                        fsize = os.path.getsize(_err_path)
-                        if _err_tail_pos > fsize:
-                            _err_tail_pos = max(0, fsize - 200)
-                        elif fsize - _err_tail_pos > 80_000:
-                            _err_tail_pos = fsize - 80_000
-                    except Exception:
-                        pass
-                    f.seek(_err_tail_pos)
-                    new_chunk = f.read()
-                    _err_tail_pos = f.tell()
-                lines = [ln.strip() for ln in new_chunk.splitlines() if ln.strip()]
+                new_lines = []
+                for path, pos_attr in ((ERR_FILE, "_err_tail_pos"), (STDOUT_FILE, "_out_tail_pos")):
+                    pos = _err_tail_pos if pos_attr == "_err_tail_pos" else _out_tail_pos
+                    chunk, new_pos = _read_welle_log_tail(path, pos)
+                    if pos_attr == "_err_tail_pos":
+                        _err_tail_pos = new_pos
+                    else:
+                        _out_tail_pos = new_pos
+                    new_lines.extend(chunk)
 
-                for ln in lines:
+                for ln in new_lines:
                     parsed = _parse_welle_status_line(ln)
                     if parsed:
                         _append_play_debug_line(parsed[0], parsed[1])
 
+                    flags = _welle_line_flags(ln)
                     low = ln.lower()
-                    if "found sync" in low and not sync_seen:
+                    if flags["sync"] and not sync_seen:
                         sync_seen = True
                         log.info(f"DAB lock: ✓ found sync — {ln[:80]}")
                         S["dab_playback_state"] = "partial_sync"
                         S["dab_attempting"]   = True
-                    if "superframe sync succeeded" in low and not superframe_seen:
+                    if flags["superframe"] and not superframe_seen:
                         superframe_seen = True
                         log.info(f"DAB lock: ✓ superframe sync — {ln[:80]}")
                         S["dab_playback_state"] = "locked"
                         S["dab_attempting"] = False
-                    if "pcm name:" in low and not pcm_seen:
+                    if flags["pcm"] and not pcm_seen:
                         pcm_seen = True
                         log.info(f"DAB lock: ✓ PCM bereit — {ln[:80]}")
                         S["dab_playback_state"] = "locked"
@@ -503,16 +484,16 @@ def _play_station_locked(station, S, settings=None):
                             _aud_pcm.unsuspend_sink()
                         except Exception:
                             pass
+                    if flags["service_list"]:
+                        log.info("DAB lock: service list empfangen")
                     if (not _is_welle_noise_line(ln)
-                            and any(x in low for x in ["failed", "lost coarse", "cannot open",
+                            and any(x in low for x in ["failed", "cannot open",
                                                        "permission denied", "xrun", "error"])):
-                        # Globales Rate-Limit: max 1 Warnung/10s (Lost sync + SyncOnPhase wechseln sonst ab)
                         if (__import__("time").time() - _last_err_ts) > 10.0:
                             last_err = ln[:180]
                             _last_err_ts = __import__("time").time()
-                            log.warn(f"DAB stderr: {ln[:100]}")
+                            log.warn(f"DAB welle: {ln[:100]}")
 
-                    # Fataler Fehler — RTL-SDR nicht erreichbar → sofort abbrechen
                     if any(p in low for p in _DAB_FATAL_PATTERNS):
                         log.error(f"DAB FATAL: RTL-SDR nicht verfuegbar ({ln[:80]}) — stoppe")
                         try:
@@ -522,7 +503,7 @@ def _play_station_locked(station, S, settings=None):
                             pass
                         _set_dab_status_fields(S, dab_state="device_error",
                                                dab_last_error=ln[:100], radio_playing=False)
-                        return
+                        return False
 
                 if sync_seen and superframe_seen:
                     sync_ok = True

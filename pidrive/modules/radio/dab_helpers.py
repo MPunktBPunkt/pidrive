@@ -76,6 +76,41 @@ def _write_json_atomic(path, data):
             _play_debug_lock.release()
 
 
+def _read_welle_log_tail(path: str, pos: int) -> tuple:
+    """Neue Zeilen aus welle stderr/stdout (inkrementell, mit Tail-Cap)."""
+    if not path or not os.path.exists(path):
+        return [], pos
+    try:
+        fsize = os.path.getsize(path)
+        if pos > fsize:
+            pos = max(0, fsize - 200)
+        elif fsize - pos > 80_000:
+            pos = fsize - 80_000
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            f.seek(pos)
+            chunk = f.read()
+            lines = [ln.strip() for ln in chunk.splitlines() if ln.strip()]
+            return lines, f.tell()
+    except Exception:
+        return [], pos
+
+
+def _welle_line_flags(line: str) -> dict:
+    """Sync/PCM/Superframe-Marker in welle-cli Logzeile (stdout oder stderr)."""
+    low = (line or "").strip().lower()
+    return {
+        "sync": "found sync" in low,
+        "superframe": "superframe sync succeeded" in low,
+        "pcm": (
+            "pcm name:" in low
+            or "pcm state: prepared" in low
+            or "create audio output" in low
+        ),
+        "service_list": low == "service list" or low.startswith("service list"),
+        "programme_prompt": "please enter programme name" in low,
+    }
+
+
 def _is_welle_noise_line(line: str) -> bool:
     """Harmloses welle-cli stderr — nicht als dab_last_error werten."""
     low = (line or "").strip().lower()
@@ -88,6 +123,8 @@ def _is_welle_noise_line(line: str) -> bool:
         "rtlsdr_read_async",
         "utctime",
         "sync on phase", "synconphase",
+        "lost coarse sync", "lost fine sync",
+        "synconendnull", "syncondnull",
     ]):
         return True
     if '"tii"' in low or low.startswith("tii:"):
@@ -248,7 +285,8 @@ def _parse_welle_status_line(line: str):
 
     if any(x in low for x in [
         "failed",
-        "lost",
+        "lost coarse sync",
+        "lost fine sync",
         "cannot open",
         "permission denied",
         "xrun",
