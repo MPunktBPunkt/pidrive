@@ -95,12 +95,14 @@ def a2dp_stack_ready() -> tuple:
 
 def try_recover_a2dp_stack(include_bluetooth=True) -> bool:
     """WirePlumber/Bluetooth neu starten (sudoers: NOPASSWD)."""
-    log.info("[BT-AUDIO] A2DP-Stack Recovery: wireplumber"
-             + (" + bluetooth" if include_bluetooth else " only"))
-    ok_any = False
-    services = ["wireplumber", "pipewire-pulse", "pipewire"]
+    log.info("[BT-AUDIO] A2DP-Stack Recovery: pipewire → wireplumber"
+             + (" → bluetooth" if include_bluetooth else ""))
+    # Reihenfolge wichtig: PipeWire zuerst, WirePlumber danach, Bluetooth zuletzt
+    services = ["pipewire", "pipewire-pulse", "wireplumber"]
     if include_bluetooth:
         services.append("bluetooth")
+    ok_any = False
+    failed = []
     for svc in services:
         rc = subprocess.run(
             f"sudo -n systemctl restart {svc}",
@@ -109,7 +111,15 @@ def try_recover_a2dp_stack(include_bluetooth=True) -> bool:
         if rc.returncode == 0:
             ok_any = True
         else:
-            log.warn(f"[BT-AUDIO] restart {svc}: rc={rc.returncode}")
+            failed.append(svc)
+            err = (rc.stderr or "").strip()[:80]
+            log.warn(
+                f"[BT-AUDIO] restart {svc}: rc={rc.returncode}"
+                + (f" ({err})" if err else "")
+            )
+    if failed:
+        log.warn(f"[BT-AUDIO] sudo fehlgeschlagen für: {', '.join(failed)}"
+                 " — auf dem Pi: sudo ~/pidrive/scripts/fix-bt-a2dp.sh")
     _sleep_s(4)
     ready, _ = a2dp_stack_ready()
     return ready or ok_any

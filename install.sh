@@ -685,6 +685,7 @@ _wp_version=$(wireplumber --version 2>/dev/null | grep -oP '\d+\.\d+' | head -1)
 cat > /etc/wireplumber/wireplumber.conf.d/50-bt-pidrive.conf << 'WPEOF'
 # PiDrive BT A2DP Source Konfiguration
 # Nur a2dp_source — kein hfp_ag/Telephony (kein D-Bus org.pipewire.Telephony nötig)
+monitor.bluez.seat-monitoring = disabled
 monitor.bluez.properties = {
     bluez5.roles = [ a2dp_source ]
     bluez5.codecs = [ sbc ]
@@ -698,9 +699,11 @@ WPEOF
 # Verhindert D-Bus-Policy-Probleme mit org.freedesktop.ReserveDevice1
 cat > /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf << 'WPEOF'
 # PiDrive System-Mode: keine D-Bus Device-Reservation nötig
-wireplumber.profiles.main = {
-  support.reserve-device = disabled
-  monitor.alsa.reserve-device = disabled
+wireplumber.profiles = {
+  main = {
+    support.reserve-device = disabled
+    monitor.alsa.reserve-device = disabled
+  }
 }
 WPEOF
 ok "WirePlumber: BT A2DP konfiguriert"
