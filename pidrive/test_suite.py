@@ -62,45 +62,58 @@ def _read_json(path, default=None):
 
 def _write_trigger(trigger):
     try:
-        with open("/tmp/pidrive_cmd", "a") as f:
-            f.write(trigger + "\n")
+        from ipc import append_trigger
+        append_trigger(trigger)
         return True
     except Exception:
-        return False
+        try:
+            with open("/tmp/pidrive_cmd", "a") as f:
+                f.write(trigger + "\n")
+            return True
+        except Exception:
+            return False
 
-def _send_to_bmw(title, artist="PiDrive Test", album="System Test"):
-    """Aktuellen Test-Schritt ans BMW-Display senden."""
-    try:
-        with open("/tmp/pidrive_cmd", "a") as f:
-            # Titel auf 50 Zeichen begrenzen
-            t = title[:50].replace("|","")
-            a = artist[:40].replace("|","")
-            al = album[:30].replace("|","")
-            f.write(f"mpris_push:{t}|{a}|{al}\n")
-    except Exception:
-        pass
+def _current_source():
+    ss = _read_json("/tmp/pidrive_source_state.json")
+    return ss.get("source_current", "idle")
 
 def _wait_for_metadata(source_key, max_wait=20, poll=1.0):
     """Wartet bis Metadaten für eine Quelle vorhanden sind."""
     deadline = time.time() + max_wait
     while time.time() < deadline:
+        cur = _current_source()
         s = _read_json("/tmp/pidrive_status.json")
-        track = s.get("track") or s.get("radio_name") or s.get("dls")
-        src = s.get("source","")
-        if track and src == source_key:
+        track = s.get("track") or s.get("radio_name") or s.get("dls_text") or s.get("dls")
+        if track and (cur == source_key or source_key == "any"):
             return track
         time.sleep(poll)
     return None
 
 def _wait_for_source(source_key, max_wait=15):
-    """Wartet bis source_key aktiv ist."""
+    """Wartet bis source_key aktiv ist (source_state.json, nicht status.json)."""
+    ctx_map = {"webradio": "radio_web", "fm": "radio_fm", "dab": "radio_dab"}
     deadline = time.time() + max_wait
     while time.time() < deadline:
+        cur = _current_source()
+        if cur == source_key:
+            return True
         s = _read_json("/tmp/pidrive_status.json")
-        if s.get("source") == source_key:
+        if s.get("control_context") == ctx_map.get(source_key):
+            return True
+        if source_key == "spotify" and s.get("spotify"):
             return True
         time.sleep(0.5)
     return False
+
+def _send_to_bmw(title, artist="PiDrive Test", album="System Test"):
+    """Aktuellen Test-Schritt ans BMW-Display senden."""
+    try:
+        t = title[:50].replace("|", "")
+        a = artist[:40].replace("|", "")
+        al = album[:30].replace("|", "")
+        _write_trigger(f"mpris_push:{t}|{a}|{al}")
+    except Exception:
+        pass
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TEST-BLÖCKE
@@ -367,7 +380,7 @@ def test_webradio():
         if not _has_audio_sink and not _any_sink:
             _p(WARN, "Webradio: kein Audio-Sink (BT verbinden) — übersprungen")
             return None
-        _p(FAIL, "Webradio: Quelle nicht aktiv nach 12s")
+        _p(FAIL, f"Webradio: Quelle nicht aktiv nach {max_wait}s")
         return False
     _p(PASS, "Webradio: gestartet", f"{time.time()-t0:.1f}s")
 

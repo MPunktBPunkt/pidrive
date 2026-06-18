@@ -515,7 +515,12 @@ Flags (vor dem Befehl angeben):
         # DAB: live Feedback während Lock-Phase
         if args.source == "dab" and not use_json:
             fmt.out(f"Starte DAB: {name}")
-            fmt.out(f"{fmt.DIM}  (warte auf Lock — bis 30s){fmt.RESET}")
+            try:
+                from settings import load_settings as _lds
+                _lock_s = int(_lds().get("dab_wait_lock", 45))
+            except Exception:
+                _lock_s = 45
+            fmt.out(f"{fmt.DIM}  (warte auf Lock — bis {_lock_s}s){fmt.RESET}")
             STATE_ICONS = {
                 "starting":     "⏳", "partial_sync": "📡",
                 "locked":       "🔒", "pcm_only":     "🔊",
@@ -536,7 +541,7 @@ Flags (vor dem Befehl angeben):
                     if len(log_lines) < 8:  # max 8 Logzeilen
                         log_lines.append(line)
                         fmt.out("  " + fmt.DIM + "  " + line[:80] + fmt.RESET)
-            result = svc.watch_dab_play(name, timeout=30,
+            result = svc.watch_dab_play(name, timeout=_lock_s,
                                          on_status=_on_status, on_log_line=_on_log)
             icon = STATE_ICONS.get(result, "?")
             if result == "locked":
