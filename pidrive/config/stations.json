@@ -1,71 +1,7 @@
 {
-  "version": 1,
-  "updated_at": "2026-04-10T13:59:30",
+  "version": 2,
+  "updated_at": "2026-06-18",
   "stations": [
-    {
-      "id": "web_bayern_3",
-      "name": "Bayern 3",
-      "url": "https://dispatcher.rndfnk.com/br/br3/live/mp3/low",
-      "genre": "Pop/Rock",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_bayern_1",
-      "name": "Bayern 1",
-      "url": "https://dispatcher.rndfnk.com/br/br1/sued/mp3/low",
-      "genre": "Pop",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_antenne_bayern",
-      "name": "Antenne Bayern",
-      "url": "https://stream.antenne.de/antenne",
-      "genre": "Pop",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_radio_gong",
-      "name": "Radio Gong",
-      "url": "https://stream.radiogong.com/radiogong.mp3",
-      "genre": "Rock",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_dlf",
-      "name": "DLF",
-      "url": "https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3",
-      "genre": "Info",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_dlf_nova",
-      "name": "DLF Nova",
-      "url": "https://st03.sslstream.dlf.de/dlf/03/128/mp3/stream.mp3",
-      "genre": "Info/Kultur",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_radio_bob",
-      "name": "Radio Bob",
-      "url": "https://streams.radiobob.de/bob-national/mp3-128",
-      "genre": "Rock",
-      "favorite": false,
-      "enabled": true
-    },
-    {
-      "id": "web_1live",
-      "name": "1LIVE",
-      "url": "https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3",
-      "genre": "Pop/Dance",
-      "favorite": false,
-      "enabled": true
-    },
     {
       "id": "web_rock_antenne",
       "name": "Rock Antenne",
@@ -75,34 +11,154 @@
       "enabled": true
     },
     {
-      "id": "web_rock_fm",
-      "name": "Rock FM",
-      "url": "https://liveradio.swr.de/sw282p3/rockfm/play.mp3",
+      "id": "web_rock_antenne_bayern",
+      "name": "Rock Antenne Bayern",
+      "url": "https://stream.rockantenne.de/rockantenne-bayern/stream/mp3",
       "genre": "Rock",
       "favorite": true,
       "enabled": true
     },
     {
       "id": "web_rock_antenne_heavy",
-      "name": "Rock Antenne Heavy",
-      "url": "https://stream.rockantenne.de/heavy/stream/mp3",
+      "name": "Rock Antenne Heavy Metal",
+      "url": "https://stream.rockantenne.de/heavy-metal/stream/mp3",
       "genre": "Heavy Metal",
       "favorite": false,
       "enabled": true
     },
     {
-      "id": "web_rock_antenne_classic",
-      "name": "Rock Antenne Classic Rock",
-      "url": "https://stream.rockantenne.de/classic-rock/stream/mp3",
+      "id": "web_rock_antenne_80er",
+      "name": "Rock Antenne 80er",
+      "url": "https://stream.rockantenne.de/80er-rock/stream/mp3",
       "genre": "Classic Rock",
       "favorite": false,
       "enabled": true
     },
     {
-      "id": "web_radio_21",
-      "name": "Radio 21",
-      "url": "https://stream.radio21.de/radio21/mp3-192/stream",
+      "id": "web_rock_antenne_alternative",
+      "name": "Rock Antenne Alternative",
+      "url": "https://stream.rockantenne.de/alternative/stream/mp3",
+      "genre": "Alternative Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_radio_bob",
+      "name": "Radio BOB!",
+      "url": "https://streams.radiobob.de/bob-national/mp3-128",
       "genre": "Rock",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "web_radio_bob_classics",
+      "name": "Radio BOB! Rock Classics",
+      "url": "https://streams.radiobob.de/rockclassics/mp3-128",
+      "genre": "Classic Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_radio_bob_metal",
+      "name": "Radio BOB! Metal",
+      "url": "https://streams.radiobob.de/metal/mp3-128",
+      "genre": "Metal",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_radio_bob_blues",
+      "name": "Radio BOB! Blues",
+      "url": "https://streams.radiobob.de/blues/mp3-128",
+      "genre": "Blues Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_rock_fm",
+      "name": "SWR Rock FM",
+      "url": "https://liveradio.swr.de/sw282p3/rockfm/play.mp3",
+      "genre": "Rock",
+      "favorite": true,
+      "enabled": true
+    },
+    {
+      "id": "web_bob_ra_heavymetal",
+      "name": "ROCK ANTENNE Heavy Metal (BOB)",
+      "url": "https://streams.radiobob.de/rockantenne-heavymetal/mp3-128",
+      "genre": "Heavy Metal",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_bob_ra_classic",
+      "name": "ROCK ANTENNE Classic Rock (BOB)",
+      "url": "https://streams.radiobob.de/rockantenne-classicrock/mp3-128",
+      "genre": "Classic Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_bob_ra_reggae",
+      "name": "ROCK ANTENNE Reggae (BOB)",
+      "url": "https://streams.radiobob.de/rockantenne-reggae/mp3-128",
+      "genre": "Reggae Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_bob_ra_80er",
+      "name": "ROCK ANTENNE 80er (BOB)",
+      "url": "https://streams.radiobob.de/rockantenne-80er/mp3-128",
+      "genre": "80er Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_lautfm_deutschrock",
+      "name": "Deutschrock (laut.fm)",
+      "url": "https://stream.laut.fm/deutschrock",
+      "genre": "Deutschrock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_lautfm_classicrock",
+      "name": "Classic Rock (laut.fm)",
+      "url": "https://stream.laut.fm/classicrock",
+      "genre": "Classic Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_lautfm_metal",
+      "name": "Metal (laut.fm)",
+      "url": "https://stream.laut.fm/metal",
+      "genre": "Metal",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_lautfm_1000rockhits",
+      "name": "1000 Rockhits (laut.fm)",
+      "url": "https://stream.laut.fm/1000rockhits",
+      "genre": "Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_radio_paradise",
+      "name": "Radio Paradise",
+      "url": "https://stream.radioparadise.com/aac-320",
+      "genre": "Eclectic Rock",
+      "favorite": false,
+      "enabled": true
+    },
+    {
+      "id": "web_bayern3",
+      "name": "Bayern 3",
+      "url": "https://dispatcher.rndfnk.com/br/br3/live/mp3/low",
+      "genre": "Pop/Rock",
       "favorite": false,
       "enabled": true
     }

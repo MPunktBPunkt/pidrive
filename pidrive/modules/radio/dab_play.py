@@ -338,6 +338,12 @@ def play_station(station, S, settings=None):
             f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain} "            f"session={session_id} | "            f"PULSE_SERVER={'✓' if 'PULSE_SERVER' in _welle_env else '✗'} "            f"PA_Default={_pa_default or '(nicht gesetzt)'}"
         )
 
+        try:
+            from modules import audio as _audio_wake
+            _audio_wake.unsuspend_sink(_adec.get("sink") or _audio_wake.get_alsa_sink())
+        except Exception as _ue:
+            log.warn(f"DAB: unsuspend sink: {_ue}")
+
         if _rtlsdr:
             try:
                 _player_proc = _rtlsdr.start_process(
@@ -384,7 +390,7 @@ def play_station(station, S, settings=None):
         log.warn(f"DAB DLS-Thread starten: session={session_id[:12]} err_file={_sess_err_file}")
         _start_dls_thread(session_id, name, S)
 
-        lock_wait_max = int(settings.get("dab_wait_lock", 20)) if settings else 20
+        lock_wait_max = int(settings.get("dab_wait_lock", 45)) if settings else 45
         sync_ok = False
         pcm_seen = False
         sync_seen = False

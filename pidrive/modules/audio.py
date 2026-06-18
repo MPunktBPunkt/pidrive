@@ -390,13 +390,14 @@ def _ensure_klinke_sink() -> bool:
         n, r = s["name"].lower(), s["raw"].lower()
         if "hdmi" not in n and "hdmi" not in r and "alsa_output" in s["name"]:
             return True  # Klinken-Sink vorhanden
-    # Card 1 via pactl laden (PipeWire-kompatibel, Fallback)
+    # Klinken-Karte dynamisch laden (Pi 4: card 0, Pi 3B: meist card 1)
     try:
+        card = _get_headphone_card()
         r = _run(
-            PA_ENV + " pactl load-module module-alsa-card device_id=1 2>/dev/null",
+            PA_ENV + f" pactl load-module module-alsa-card device_id={card} 2>/dev/null",
             timeout=5
         )
-        log.info("[AUDIO] _ensure_klinke_sink: module-alsa-card device_id=1 geladen")
+        log.info(f"[AUDIO] _ensure_klinke_sink: module-alsa-card device_id={card} geladen")
         import time as _t; _t.sleep(1)
         return True
     except Exception as e:
@@ -424,6 +425,26 @@ def get_hdmi_sink() -> str:
         if "hdmi" in n or "hdmi" in r:
             return s["name"]
     return ""
+
+
+def unsuspend_sink(sink_name: str = "") -> bool:
+    """PipeWire/Pulse: SUSPENDED-Sink aktivieren (welle-cli/mpv brauchen aktiven Sink)."""
+    sink = sink_name or get_alsa_sink() or get_bt_sink()
+    if not sink:
+        return False
+    try:
+        import shlex as _sq
+        r = subprocess.run(
+            PA_ENV + " pactl suspend-sink " + _sq.quote(sink) + " 0",
+            shell=True, capture_output=True, text=True, timeout=4,
+        )
+        if r.returncode == 0:
+            log.info("[AUDIO] unsuspend sink -> " + sink)
+            return True
+        log.warn("[AUDIO] unsuspend failed: " + (r.stderr or "").strip()[:80])
+    except Exception as e:
+        log.warn("[AUDIO] unsuspend_sink: " + str(e))
+    return False
 
 
 def set_default_sink(sink_name: str) -> bool:

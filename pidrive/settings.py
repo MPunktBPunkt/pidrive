@@ -34,6 +34,7 @@ _DEFAULTS = {
     "fm_gain":            -1,            # -1 = Auto AGC, 0–49 = dB
     # DAB
     "dab_gain":           -1,            # -1 = Auto AGC, gültige RTL-Stufe
+    "dab_wait_lock":      45,            # Sekunden auf DAB-Lock warten (innen oft 30-40s)
     # v0.9.4: DAB-Scan konfigurierbar
     "dab_scan_wait_lock": 20,            # Sekunden pro Kanal (schwacher Empfang: 20-30s)
     "dab_scan_http_timeout": 4,          # HTTP Timeout für mux.json
