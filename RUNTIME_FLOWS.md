@@ -339,4 +339,104 @@ cat /tmp/pidrive_status.json
 
 ---
 
-*Weiterführend: `TROUBLESHOOTING.md` (Was tun wenn etwas schiefgeht?), `DEVELOPER_GUIDE.md` (Wo liegt der Code?)*
+## I. Menü → BMW-Display → Lenkrad-/iDrive-Tasten
+
+### I.1 Wo ist das Menü definiert?
+
+Der komplette Menübaum wird **im Code** aufgebaut — es gibt keine Menü-Konfigurationsdatei:
+
+| Was | Datei |
+|---|---|
+| Baum-Aufbau (`build_tree()`) | `menu/menu_builder.py` |
+| Knoten + Navigation (`MenuNode`, `MenuState`) | `menu/menu_state.py` |
+| Public-API-Facade (re-export) | `menu/menu_model.py` |
+| Stationsdaten (FM/DAB/Web) | `menu/station_store.py` + `config/*stations.json` |
+
+`build_tree(store, S, settings)` wird in `main_core.main()` einmal aufgerufen und bei
+Änderungen (neue Sender, BT-Geräteliste, USB-Stick, `S["menu_rev"]`) via `rebuild_tree()`
+neu erzeugt. Knotentypen: `folder` · `station` · `action` · `toggle` · `info`.
+
+### I.2 Menübaum (Stand `build_tree()`)
+
+```
+PiDrive  (root)
+├── Jetzt läuft        Quelle · Titel · [■ Stop] · Spotify · Audioausgang · Lauter · Leiser
+├── Favoriten          gespeicherte FM/DAB/Web/Scanner-Favoriten
+├── Quellen
+│   ├── FM Radio        Jetzt läuft · Sender · Suchlauf · Nächster/Vorheriger · Frequenz manuell
+│   ├── DAB+            Jetzt läuft · Sender (nach Kanal gruppiert) · Suchlauf · Nächster/Vorheriger
+│   ├── Webradio        Jetzt läuft · Sender · Sender neu laden
+│   ├── Scanner         PMR446 · Freenet · LPD433 · CB-Funk · VHF · UHF
+│   ├── Spotify         An/Aus · Status
+│   └── Bibliothek      Musik-Ordner · Zufällig · Stop · (+ USB-Sticks dynamisch)
+├── Verbindungen       Bluetooth An/Aus · Scan · Geräte · Reconnect · Trennen · Status
+│                       WiFi An/Aus · Scan · Netzwerke · Status
+└── System             IP · System-Info · Version · Neustart · Ausschalten · Update
+```
+
+### I.3 Wie kommt das Menü auf das iDrive-Display?
+
+**Wichtig:** Das iDrive rendert **kein** grafisches PiDrive-Menü. PiDrive ist für das
+BMW ein „Audio-Player" — sichtbar werden nur die **drei MPRIS2-Textzeilen** (wie bei
+einem Song). Es ist immer nur **der aktuell markierte Eintrag** sichtbar, nicht die
+ganze Liste.
+
+```
+Navigation ändert MenuState  →  menu_state.rev++
+        │
+        ▼
+main_core Core-Loop: rev geändert?
+        ├── ipc.write_menu(export)        → /tmp/pidrive_menu.json  (für WebUI/CLI)
+        └── mpris2.update(S, menu)         → BMW-Display
+                │  (Menü-Zweig, wenn nichts spielt)
+                ▼
+        xesam:title  = Label des markierten Knotens   (nodes[cursor].label)
+        xesam:artist = Pfad (z. B. "Quellen › DAB+")
+        xesam:album  = "PiDrive Menü"
+                │
+                ▼
+        PropertiesChanged auf System-D-Bus → BlueZ → AVRCP → iDrive zeigt die Zeilen
+```
+
+> **Voraussetzungen, damit überhaupt etwas erscheint:**
+> 1. Im iDrive **Multimedia → Bluetooth** als Quelle wählen (Now-Playing-Ansicht).
+> 2. `org.mpris.MediaPlayer2.pidrive` muss auf dem **System-Bus** registriert sein
+>    (`pidrivectl debug mpris status`); D-Bus-Policy:
+>    `/etc/dbus-1/system.d/pidrive-mpris2.conf`.
+> 3. MPRIS2 startet nur bei vorhandenem BT-Adapter (`CAPS["bluetooth"]`).
+>
+> ⚠️ **Historischer Bug (gefixt):** Bis einschließlich v0.11.122 brach
+> `mpris2.update_metadata()` mit `TypeError` ab (fehlender `art_url`-Parameter +
+> `**{{…}}`), was `main_core` in `try/except: pass` verschluckte → **das Menü erschien
+> nie auf dem Display.** Mit dem Fix wird der markierte Eintrag wieder gesendet.
+
+### I.4 iDrive-/Lenkrad-Taste → Menü-Aktion
+
+Das BMW sendet keine dedizierten „up/down/enter/back"-Tasten, sondern die fünf
+AVRCP-Medienkommandos. Diese werden auf die Navigation gemappt:
+
+| BMW-Aktion (AVRCP) | Trigger im Menü-Kontext | Wirkung (`menu/menu_state.py`) |
+|---|---|---|
+| Skip ⏭ (Next) | `down` | Cursor +1 |
+| Skip ⏮ (Previous) | `up` | Cursor −1 |
+| ► / ❚❚ (Play/Pause) | `enter` | Ordner öffnen bzw. Station/Aktion/Toggle ausführen |
+| ■ (Stop) | `back` | eine Ebene zurück |
+| Doppel-Tipp ►/❚❚ | `cat:0` | Sprung zu „Jetzt läuft" (nur über `avrcp_trigger.py`-Pfad) |
+
+Verarbeitungskette: `enter`/`up`/`down`/`back` → `trigger/td_nav.py: handle()` →
+`menu_state.key_*()` → `rev++` → erneut `write_menu()` + `mpris2.update()`.
+
+> **Praxis-Einschränkung „Zurück":** Ein `back` entsteht nur aus einem **Stop**-Kommando.
+> Viele BMW-Bedienpfade senden kein Stop, und der iDrive-Dreh-/Drück-Regler navigiert
+> die **BMW-eigene** Oberfläche (kein AVRCP). Wenn im Auto kein „eine Ebene zurück"
+> möglich ist, fehlt das Stop-Kommando — Workaround: `cat:0` (Doppel-Tipp) bzw.
+> Bedienung über WebUI/CLI.
+>
+> **Zwei Empfangspfade beachten** (siehe `iDriveBt.md` §6.1): Der `mpris2.py`-Pfad mappt
+> **fest** (Next→down, Stop→back …), der `avrcp_trigger.py`-Pfad **kontextabhängig**.
+> Im Menü-Kontext ergeben beide dasselbe; in Radio-/Scanner-Kontexten unterscheiden sie
+> sich (z. B. Next→`fm_next`).
+
+---
+
+*Weiterführend: `TROUBLESHOOTING.md` (Was tun wenn etwas schiefgeht?), `DEVELOPER_GUIDE.md` (Wo liegt der Code?), `iDriveBt.md` (Bluetooth/AVRCP/MPRIS2-Details)*
