@@ -263,6 +263,33 @@ def test_audio():
     return True
 
 
+def _avrcp_version_info(mac):
+    """AVRCP-Version des Geräts aus dem SDP-Record lesen (Cover-Art-Fähigkeit).
+    Gibt (version_int|None, cover_art_bool, note) zurück.
+    Cover Art (Bilder über BT) gibt es erst ab AVRCP 1.6 (0x0106)."""
+    import re
+    if not mac:
+        return None, False, "keine MAC"
+    out = _run(f"sdptool browse {mac} 2>&1", timeout=10)
+    low = (out or "").lower()
+    if (not out) or ("not found" in low) or ("no such file" in low) or ("command not found" in low):
+        return None, False, "sdptool nicht verfuegbar (Teil von bluez)"
+    if ("failed to connect" in low or "host is down" in low
+            or "connection refused" in low or "can't connect" in low):
+        return None, False, "Geraet nicht erreichbar (verbunden?)"
+    lines = out.splitlines()
+    versions = []
+    for i, ln in enumerate(lines):
+        if "remote control" in ln.lower():
+            for j in range(i, min(i + 18, len(lines))):
+                m = re.search(r"Version:\s*0x(01[0-9a-fA-F]{2})", lines[j])
+                if m:
+                    versions.append(int(m.group(1), 16))
+    if not versions:
+        return None, False, "keine AVRCP-Version im SDP gefunden"
+    return max(versions), (max(versions) >= 0x0106), ""
+
+
 def test_bluetooth():
     """3. Bluetooth + AVRCP."""
     _section("BLUETOOTH + AVRCP", "🔵")
@@ -310,6 +337,17 @@ def test_bluetooth():
         _p(PASS, "AVRCP /player0 vorhanden", f"{time.time()-t0:.1f}s")
     else:
         _p(WARN, "AVRCP /player0 nicht gefunden", "BT gerade getrennt?")
+
+    # AVRCP-Version der Headunit → Cover-Art-Fähigkeit (Bilder gibt's erst ab 1.6)
+    _ver, _cover, _note = _avrcp_version_info(bt_mac)
+    if _ver is not None:
+        _vs = f"{_ver >> 8}.{_ver & 0xff}"
+        if _cover:
+            _p(PASS, f"AVRCP-Version: {_vs}", "Cover Art (ab 1.6) wird unterstuetzt")
+        else:
+            _p(INFO, f"AVRCP-Version: {_vs}", "kein Cover Art (Bilder erst ab AVRCP 1.6)")
+    else:
+        _p(INFO, "AVRCP-Version nicht ermittelbar", _note)
 
     # MPRIS2 auf D-Bus?
     t0 = time.time()
