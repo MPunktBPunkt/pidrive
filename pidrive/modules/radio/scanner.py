@@ -179,6 +179,27 @@ _player_proc = None
 _scan_abort = False
 SQUELCH = 25
 
+# Ergebnis eines Suchlaufs (für CLI/WebUI-Rückmeldung)
+SCAN_RESULT_FILE = "/tmp/pidrive_scan_result.json"
+
+
+def _write_scan_result(band_id, found, name="", freq=None):
+    """Suchlauf-Ergebnis in eine kleine JSON-Datei schreiben.
+    Wird von `pidrivectl scanner BAND scan` gepollt, um zurückzumelden
+    ob/wohin gewechselt wurde."""
+    try:
+        import json as _j
+        with open(SCAN_RESULT_FILE, "w", encoding="utf-8") as f:
+            _j.dump({
+                "band":  band_id,
+                "found": bool(found),
+                "name":  name,
+                "freq":  freq,
+                "ts":    time.time(),
+            }, f)
+    except Exception:
+        pass
+
 
 # ── Settings Helper ──────────────────────────────────────────────────────────
 
@@ -908,6 +929,9 @@ def scan_next(band_id, S, settings=None):
         else:
             _set_scanner_label(band_id, ch["name"], S)
         play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
+        _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
+    else:
+        _write_scan_result(band_id, False)
 
 
 def scan_prev(band_id, S, settings=None):
@@ -938,3 +962,6 @@ def scan_prev(band_id, S, settings=None):
         else:
             _set_scanner_label(band_id, ch["name"], S)
         play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
+        _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
+    else:
+        _write_scan_result(band_id, False)
