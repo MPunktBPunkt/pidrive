@@ -356,23 +356,37 @@ Der komplette Menübaum wird **im Code** aufgebaut — es gibt keine Menü-Konfi
 Änderungen (neue Sender, BT-Geräteliste, USB-Stick, `S["menu_rev"]`) via `rebuild_tree()`
 neu erzeugt. Knotentypen: `folder` · `station` · `action` · `toggle` · `info`.
 
-### I.2 Menübaum (Stand `build_tree()`)
+### I.2 Menübaum (Stand `build_tree()`, v0.11.123 — fahrtauglich)
+
+Jeder Ordner (außer Wurzel) hat als **ersten** Eintrag „Zurueck" (per enter
+bedienbar), weil die Hardware-„Zurück"-Funktion (Stop) im Fahrzeug oft fehlt.
 
 ```
 PiDrive  (root)
-├── Jetzt läuft        Quelle · Titel · [■ Stop] · Spotify · Audioausgang · Lauter · Leiser
-├── Favoriten          gespeicherte FM/DAB/Web/Scanner-Favoriten
+├── Favoriten          Aktuellen Sender merken · gemischt FM/DAB/Web/Spotify/Scanner
 ├── Quellen
-│   ├── FM Radio        Jetzt läuft · Sender · Suchlauf · Nächster/Vorheriger · Frequenz manuell
-│   ├── DAB+            Jetzt läuft · Sender (nach Kanal gruppiert) · Suchlauf · Nächster/Vorheriger
-│   ├── Webradio        Jetzt läuft · Sender · Sender neu laden
+│   ├── FM Radio        Sender · Suchlauf · Nächster/Vorheriger · Frequenz manuell
+│   ├── DAB+            Sender (flach, Favoriten zuerst) · Suchlauf · Nächster/Vorheriger
+│   ├── Webradio        Sender · Sender neu laden
+│   ├── Spotify         An/Aus · Status (live)
 │   ├── Scanner         PMR446 · Freenet · LPD433 · CB-Funk · VHF · UHF
-│   ├── Spotify         An/Aus · Status
-│   └── Bibliothek      Musik-Ordner · Zufällig · Stop · (+ USB-Sticks dynamisch)
-├── Verbindungen       Bluetooth An/Aus · Scan · Geräte · Reconnect · Trennen · Status
-│                       WiFi An/Aus · Scan · Netzwerke · Status
-└── System             IP · System-Info · Version · Neustart · Ausschalten · Update
+│   └── Bibliothek      music_dir abspielen · Zufällig · Stop · (+ USB-Sticks dynamisch)
+├── Stop               (radio_stop — beendet die Wiedergabe)
+├── Audio              Ausgang (Auto/Bluetooth/Klinke/HDMI) · Lauter · Leiser
+├── Verbindungen       Bluetooth: Scan · Geräte · Reconnect · Trennen* · Aus*  ·  WiFi: An/Aus · Scan · Netzwerke
+└── System             IP (live) · System-Info · Version · Neustart* · Ausschalten* · Update*
 ```
+
+`*` = Aktion mit **Bestätigungs-Ebene** (erster Unterpunkt „Abbrechen", danach
+„Ja, …"). Schützt vor versehentlichem Auslösen per Skip+Play und — bei „Bluetooth
+trennen/aus" — vor dem Verlust der iDrive-Steuerung.
+
+**Quellen:** Der Menübaum entsteht in `menu/menu_builder.py: build_tree()`. „Jetzt
+läuft" als eigener Ordner entfällt — Titel/Sender stehen bereits in den
+MPRIS2-Metadaten (siehe I.3). Lokale Musik (`Bibliothek`) liest `settings["music_dir"]`
+(`modules/local_player.py`: mp3/flac/ogg/m4a/aac/wav/opus + `.m3u` + Ordner + Shuffle).
+Favoriten quellenübergreifend inkl. Spotify; „Aktuellen Sender merken" →
+`favorites_add_current` (`trigger/td_system.py`).
 
 ### I.3 Wie kommt das Menü auf das iDrive-Display?
 
@@ -426,11 +440,19 @@ AVRCP-Medienkommandos. Diese werden auf die Navigation gemappt:
 Verarbeitungskette: `enter`/`up`/`down`/`back` → `trigger/td_nav.py: handle()` →
 `menu_state.key_*()` → `rev++` → erneut `write_menu()` + `mpris2.update()`.
 
-> **Praxis-Einschränkung „Zurück":** Ein `back` entsteht nur aus einem **Stop**-Kommando.
-> Viele BMW-Bedienpfade senden kein Stop, und der iDrive-Dreh-/Drück-Regler navigiert
-> die **BMW-eigene** Oberfläche (kein AVRCP). Wenn im Auto kein „eine Ebene zurück"
-> möglich ist, fehlt das Stop-Kommando — Workaround: `cat:0` (Doppel-Tipp) bzw.
-> Bedienung über WebUI/CLI.
+> **Wichtig — was das iDrive überhaupt sendet:** Die Tasten der iDrive-Bedieneinheit
+> (`MENU`, `BACK`, `OPTION`, `AUDIO`, `TEL`) und der Dreh-/Drück-Regler steuern die
+> **BMW-eigene** Oberfläche und werden **nicht** als AVRCP an PiDrive weitergereicht.
+> Zuverlässig bei PiDrive ankommen nur die **Medien-Transportkommandos** (Skip/Play/
+> Pause, teils Stop) — typischerweise von den Lenkrad-/Medientasten, wenn im iDrive
+> „Multimedia → Bluetooth" aktiv ist. PiDrive ist daher faktisch auf **up/down (Skip)**
+> und **enter (Play/Pause)** angewiesen.
+>
+> **Deshalb: explizite „Zurueck"-Einträge.** Da `back` (= Stop) im Fahrzeug oft nicht
+> ankommt, hat seit v0.11.123 **jeder Ordner** als ersten Eintrag „Zurueck" (Aktion
+> `back`, per enter auslösbar). So kommt man auch ohne Stop-Kommando eine Ebene hoch.
+> Zusätzlich: Doppel-Tipp Play (`cat:0`) springt an den Menüanfang; volle Bedienung
+> jederzeit über WebUI/CLI.
 >
 > **Zwei Empfangspfade beachten** (siehe `iDriveBt.md` §6.1): Der `mpris2.py`-Pfad mappt
 > **fest** (Next→down, Stop→back …), der `avrcp_trigger.py`-Pfad **kontextabhängig**.
