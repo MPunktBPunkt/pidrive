@@ -254,6 +254,7 @@ class PiDriveService:
                 else:
                     row["connected"] = "connected: yes" in out
                     row["reachable"] = True
+                    row["paired"] = "paired: yes" in out
             except Exception:
                 row.setdefault("connected", False)
                 row["reachable"] = False

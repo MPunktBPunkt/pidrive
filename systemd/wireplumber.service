@@ -14,7 +14,7 @@ Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
 # Session-Bus auf System-Bus zeigen — WirePlumber braucht D-Bus für BT-Plugin
 Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 Environment=HOME=/var/lib/pipewire
-ExecStart=/usr/bin/wireplumber
+ExecStart=/usr/bin/wireplumber -p main-systemwide
 Restart=on-failure
 RestartSec=5
 
