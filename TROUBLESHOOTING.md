@@ -1,6 +1,11 @@
 # PiDrive — Troubleshooting-Runbook
 
-**Stand v0.11.96 · Plattform: Debian 13 (x86) / Raspberry Pi OS**
+**Stand v0.11.122 · Plattform: Debian 13 (x86) / Raspberry Pi OS (Pi 4)**
+
+> Pfad-Hinweis: Das Installationsverzeichnis (`INSTALL_DIR`) ist
+> `/home/<user>/pidrive` (bei Installation als User) oder `/opt/pidrive` (als root).
+> Der Core-Entry liegt unter `$INSTALL_DIR/pidrive/main_core.py`. In den Beispielen
+> unten ggf. an die eigene Installation anpassen.
 
 ---
 
@@ -26,7 +31,7 @@ sleep 5 && pidrivectl status
 
 ```bash
 journalctl -u pidrive_core -n 50 --no-pager | grep -E "Traceback|Error|Exception"
-python3 /home/pidrive/pidrive/pidrive/main_core.py
+python3 "$INSTALL_DIR/pidrive/main_core.py"   # INSTALL_DIR = /home/<user>/pidrive o. /opt/pidrive
 rm -f /tmp/pidrive_*.json /tmp/pidrive_cmd
 systemctl restart pidrive_core
 ```
@@ -90,15 +95,23 @@ Erwartet ohne BT-Verbindung — kein Bug.
 ```bash
 PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short | grep bluez
 pidrivectl audio status
-journalctl -u bluetooth | grep -i "a2dp\|sink"
+journalctl -u wireplumber -u bluetooth | grep -i "a2dp\|sink"
 ```
 
-WirePlumber sollte A2DP-Sink automatisch erstellen. Falls nicht:
+> **Sink-Name:** Unter PipeWire/WirePlumber heißt der Sink `bluez_output.<MAC>.<N>`
+> (nicht `bluez_sink.<MAC>.a2dp_sink`). PiDrive ermittelt ihn ab v0.11.121 via
+> `find_bt_sink_for_mac()`.
+
+WirePlumber sollte den A2DP-Sink automatisch erstellen. Falls nicht:
 ```bash
 systemctl restart wireplumber
 sleep 3
 pidrivectl bt connect <MAC>
 ```
+
+> **A2DP-Recovery (ab v0.11.122):** Bei einem bereits verbundenen Gerät startet PiDrive
+> den `bluetooth`-Dienst während der Recovery **nicht** neu — ein Neustart hatte zuvor
+> die Verbindung abreißen lassen. Hilfsskript: `scripts/fix-bt-a2dp.sh`.
 
 ---
 
@@ -138,13 +151,19 @@ bluetoothctl
 
 ### BT verbunden, kein A2DP-Sink
 
-WirePlumber sollte automatisch. Falls nicht:
+WirePlumber sollte das A2DP-Profil automatisch aktivieren. Falls nicht:
 ```bash
 PULSE_SERVER=unix:/var/run/pulse/native pactl list cards short
 # bluez_card.MAC sollte erscheinen
 PULSE_SERVER=unix:/var/run/pulse/native \
   pactl set-card-profile bluez_card.D4_36_39_CF_E1_B5 a2dp-sink
+# Sink prüfen (PipeWire-Schema):
+PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short | grep bluez_output
 ```
+
+> Pairing-/Reconnect-Robustheit wurde in v0.11.111–v0.11.116 deutlich verbessert
+> (Auto-Restore bekannter Geräte, Reconnect für Kopfhörer ohne Pairing-Modus,
+> Pause des Boot-Reconnects während eines aktiven Pairings). Siehe `KontextPiDrive.md`.
 
 ---
 
@@ -305,7 +324,7 @@ In `mpris2.py` ist das ab v0.11.96 korrekt — beim Import, nicht in `start_mpri
 
 ```bash
 journalctl -u pidrive_core -n 30
-python3 /home/pidrive/pidrive/pidrive/main_core.py
+python3 "$INSTALL_DIR/pidrive/main_core.py"   # INSTALL_DIR = /home/<user>/pidrive o. /opt/pidrive
 ```
 
 ---
