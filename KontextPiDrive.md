@@ -1,4 +1,7 @@
-# PiDrive — Kontext & Projektdokumentation v0.11.96
+# PiDrive — Kontext & Projektdokumentation v0.11.126
+
+> **Pflegehinweis:** Diese Datei ist der Entwicklungs-/Entscheidungsverlauf und wird
+> **nach jeder Session aktualisiert** (Changelog-Abschnitt unten + Funktionsstatus).
 
 ## Projektbeschreibung
 
@@ -25,28 +28,46 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 ---
 
-## Funktionsstatus v0.11.96
+## Funktionsstatus v0.11.126
 
 | Feature | Status |
 |---|---|
-| Webradio (13 Sender inkl. Rock) | ✅ stabil, Metadaten, Playlist |
-| FM Radio (rtl_fm \| mpv, BT) | ✅ stabil |
+| Webradio (20 Sender inkl. Rock) | ✅ stabil, Metadaten, Playlist |
+| FM Radio (rtl_fm \| mpv, BT) | ✅ stabil — **kein RDS/Songtitel** (bewusst, FM kommt vom BMW) |
 | FM Scanner (wbfm, Squelch, PPM) | ✅ stabil |
-| DAB+ | ✅ kein Lock innen = Signal-Problem, nicht SW |
-| BT A2DP Auto-Reconnect | ✅ stabil |
+| DAB+ | ✅ DLS/Titel via welle-cli; kein Lock innen = Signal, nicht SW |
+| BT A2DP (PipeWire `bluez_output.*`) | ✅ v0.11.121 `find_bt_sink_for_mac`; v0.11.122 kein BT-Restart bei Recovery |
+| BT Pairing/Reconnect | ✅ v0.11.111–116 Auto-Restore, Reconnect, Pause während Pairing |
 | Metadata (now/playlist) | ✅ via mpv IPC Socket |
-| Scanner CLI (pmr446/vhf/uhf/cb/fm) | ✅ stabil |
+| Scanner CLI (pmr446/vhf/uhf/cb/fm) | ✅ stabil; **Scan mit Rückmeldung** (v0.11.124) |
 | AVRCP Phase 1 (Kontextmapping) | ✅ v0.8.6 |
-| AVRCP Phase 2 (State Machine) | 🟡 nach Feldtest |
-| MPRIS2 (BMW-Metadaten + Watchdog) | ✅ v0.11.96 — noch nicht im Auto validiert |
-| Spotify Connect (librespot/raspotify) | ✅ OAuth vorhanden |
-| USB-Musik + lokale Wiedergabe | ✅ v0.11.38 |
-| **Audio-Stack: PipeWire System-Mode** | ✅ v0.11.96 — ersetzt System-PulseAudio |
-| **BT-Pairing Auto-Confirm** | ✅ v0.11.96 — DisplayYesNo + yes-Handler |
-| **AVRCP MPRIS2 D-Bus Stabilität** | 🟡 Watchdog läuft, Feldtest ausstehend |
-| **Pi 4 BMW Feldtest** | 🟡 BT gepairt, Audio bestätigt, AVRCP ausstehend |
+| MPRIS2 (BMW-Metadaten + Watchdog) | ✅ **v0.11.123 art_url-Bug gefixt** — Menü/Metadaten erscheinen wieder |
+| Spotify Connect (librespot/raspotify) | ✅ OAuth vorhanden; **als Favorit möglich** (v0.11.123) |
+| USB-Musik + lokale Wiedergabe (mp3/m3u) | ✅ v0.11.38 — `settings.music_dir`, im Menü Quellen→Bibliothek |
+| **Menü (iDrive-tauglich)** | ✅ v0.11.123 — Favoriten zuerst, „Zurueck"-Einträge, Bestätigungen |
+| **Audio-Stack: PipeWire System-Mode** | ✅ ersetzt System-PulseAudio |
+| **WirePlumber System-Mode (Trixie/Pi 4)** | ✅ v0.11.118/119 main-Profil, seat-monitoring aus |
+| pidrivectl test all | ✅ Komplett-Systemtest; **AVRCP-Version/Cover-Art-Check** (v0.11.126) |
+| **BMW iDrive Feldtest (Display/Tasten)** | 🟡 MPRIS-Fix drin, Anzeige im Auto noch zu bestätigen |
 | Boot-Restore | ✅ teilweise |
-| pidrivectl test all | ✅ v0.11.96 — Komplett-Systemtest |
+
+---
+
+## Changelog v0.11.97 – v0.11.126 (Kurzüberblick)
+
+| Version | Änderung |
+|---|---|
+| 0.11.97–0.11.105 | DAB-Stabilisierung: Lock-Wait, welle-cli stdin/Programme, DLS aus stderr, Err-Log-Rotation, State-Machine, Spotify-Trigger; CLI async DAB-Watcher |
+| 0.11.106–0.11.110 | WebUI-Start (`sys.path` in app.py), State-Sync, Scanner/Volume-CLI, Playback-Metadaten |
+| 0.11.111–0.11.116 | Bluetooth: Auto-Restore, Reconnect für Kopfhörer ohne Pairing-Modus, Pairing-Fixes (scan_devices), Boot-Reconnect während Pairing pausieren |
+| 0.11.117–0.11.119 | A2DP-Recovery-Reihenfolge, `scripts/fix-bt-a2dp.sh`, WirePlumber main-systemwide-Profil, Live-Paired-Status in CLI |
+| 0.11.121 | BT-Sink-Schema `bluez_output.<MAC>.<N>` via `find_bt_sink_for_mac()` |
+| 0.11.122 | PipeWire-BT-Routing-Fix; A2DP-Recovery startet `bluetooth` nicht mehr neu (kein Verbindungsabbruch) |
+| 0.11.122 (docs) | Doku auf Stand: ARCHITECTURE/DEVELOPER_GUIDE/RUNTIME_FLOWS/TROUBLESHOOTING; `iDriveBt.md` mit Code abgeglichen (PipeWire-Sinks, dbus-monitor, zweistufiges AVRCP-Mapping, System-Bus MPRIS2) |
+| 0.11.123 | **MPRIS2 `art_url`-Bug gefixt** (fehlte als Parameter + `{{…}}`); **iDrive-Menü-Redesign** (Favoriten zuerst inkl. Spotify, `favorites_add_current`, „Zurueck"-Einträge, Audio-Menü, Bestätigungen für Reboot/Shutdown/Update + BT-Trennen/Aus); RUNTIME_FLOWS Abschnitt I (Menü→Display→Tasten) |
+| 0.11.124 | Scanner-Suchlauf mit Rückmeldung: `scan_next/prev` → `/tmp/pidrive_scan_result.json`; `pidrivectl scanner <band> scan` meldet gefunden/leer/Timeout |
+| 0.11.125 | Diagnose bereinigt (keine falschen PulseAudio-BT-Warnungen unter PipeWire, kein Pairing-Widerspruch); DAB-Status zeigt `pcm_only` als „spielt" statt „Sync OK: nein" |
+| 0.11.126 | `pidrivectl test bt` liest AVRCP-Version aus SDP und meldet Cover-Art-Fähigkeit (erst ab AVRCP 1.6) |
 
 ---
 
@@ -177,6 +198,7 @@ PipeWire (System-Mode) / Socket: /var/run/pulse/native
 | `pidrive_dab_welle.err` | — | welle-cli Fehlerlog (rotierend, wird überschrieben) |
 | `pidrive_mpv.sock` | — | mpv IPC-Socket |
 | `pidrive_test_results.json` | — | Ergebnis pidrivectl test all |
+| `pidrive_scan_result.json` | — | Scanner-Suchlauf-Ergebnis (v0.11.124) — `{band,found,name,freq,ts}` |
 
 ---
 
@@ -342,15 +364,17 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
 
 | Thema | Status |
 |---|---|
-| **AVRCP Feldtest BMW iDrive** | 🔴 BT verbunden, Audio ok, MPRIS2-Display + Tasten ausstehend |
-| **welle-cli + PipeWire ALSA** | 🟡 Feldtest ausstehend (theoretisch kompatibel) |
-| **MPRIS2 stabil auf D-Bus** | 🟡 Watchdog implementiert, Feldtest ausstehend |
+| **BMW iDrive Display-Feldtest** | 🟡 MPRIS2-`art_url`-Bug gefixt (v0.11.123) → markierter Menüeintrag/Metadaten sollten erscheinen; im Auto bestätigen |
+| **AVRCP „Zurueck" im Auto** | 🟡 BMW sendet Stop oft nicht; Workaround: „Zurueck"-Einträge per enter. Prüfen ob Knopf-links ein AVRCP-Event liefert (`/var/log/pidrive/avrcp_raw.log`) |
+| **Cover Art auf iDrive** | 🔴 NBT Evo AVRCP 1.4/1.5 → kein BT-Cover-Art (erst ab 1.6); via `pidrivectl test bt` verifizierbar. Logos nur in WebUI sinnvoll |
+| DAB-Slides (MOT SLS) für WebUI | ⬜ optional: `welle-cli -w` → `/slide/<sid>` liefert Bilder; nicht implementiert |
+| FM RDS / Songtitel | ⬜ bewusst nicht umgesetzt (FM kommt vom BMW-Radio) |
 | DAB mit Fahrzeugantenne | 🟡 RTL-SDR vorhanden, Antenne im Auto testen |
-| AVRCP Phase 2 (State Machine) | 🟡 nach Feldtest |
 | Webradio Auto-Resume nach BT | 🟡 mpv startet neu wenn BT sich verbindet |
 | RTL-SDR DVB-Treiber nach Install | ⚠ Reboot nötig |
-| `AVRCP scanner fm` Context | 🟡 fm-Band fehlt in map_event |
-| pidrivectl bt remove/trust | ⚠ fehlen noch als Subkommandos |
+| `favorites_add_current` für FM | 🟡 nutzt `settings.last_fm_station`; muss beim Abspielen gesetzt sein |
+| pidrivectl bt remove/trust | ⚠ fehlen noch als Subkommandos (`bt_forget` existiert) |
+| `sdptool` für AVRCP-Versions-Check | ⚠ Teil von `bluez`, ggf. nicht installiert |
 
 ---
 
@@ -404,9 +428,31 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
 - `bufsize=1` in dbus-monitor + bluetoothctl Popen → 65% CPU — gefixt auf `bufsize=4096`
 
 ### Version-Bump
-- Nur `VERSION`, `install.sh` (`PIDRIVE_VERSION`), `README.md` Badge
+- **Vier Dateien** synchron halten: `VERSION`, `pidrive/VERSION`, `install.sh` (`PIDRIVE_VERSION`), `README.md` Badge
+- (waren zwischenzeitlich auseinandergelaufen — v0.11.123 wieder angeglichen)
 - NIEMALS `re.sub()` auf Changelog-Abschnitte
-- `.gitignore` fehlt im Container → direkt open/write
+- Bei parallelen Branches: `VERSION` kollidiert beim Merge → höhere Nummer behalten
+
+### MPRIS2 / BMW-Display (v0.11.123)
+- **`art_url`-Bug:** `update_metadata()` referenzierte `art_url` ohne Parameter + `**{{…}}` (Set statt Dict) → `TypeError`, von `main_core` in `try/except: pass` verschluckt → **alle** Display-Metadaten (inkl. Menü) wurden still verworfen. Behoben.
+- Das „Menü" auf dem iDrive ist **kein** grafisches Menü, sondern die MPRIS2-Textzeilen (Title = markierter Eintrag, Artist = Pfad). Es wird nur bei `menu_state.rev`-Änderung gepusht.
+- **Cover Art** ist erst ab **AVRCP 1.6** (BIP/OBEX, kein http-URL!). NBT Evo (1.4/1.5) → nicht möglich. `mpris:artUrl` erreicht das BMW nicht.
+
+### iDrive-Eingaben (wichtig fürs Menü-Design)
+- Die Bedieneinheit-Tasten (`MENU/BACK/OPTION/AUDIO`) und der Dreh-/Drück-Regler steuern die **BMW-eigene** UI — werden **nicht** als AVRCP weitergereicht. Zuverlässig kommen nur Medien-Transportkommandos an: Skip→up/down, Play/Pause→enter, (Stop→back, oft nicht gesendet).
+- Konsequenz: **jeder Ordner hat einen „Zurueck"-Eintrag** (Aktion `back`, per enter), folgenreiche Aktionen laufen über Bestätigungs-Ebene (erster Unterpunkt = Abbrechen).
+- Zwei Empfangspfade mit unterschiedlichem Mapping: `mpris2.py` (fest: Next→down …) und `integration/avrcp_trigger.py` (kontextabhängig via `map_event`).
+
+### Scanner-Suchlauf-Feedback (v0.11.124)
+- `scanner.scan_next/scan_prev` schreiben Ergebnis nach `/tmp/pidrive_scan_result.json`; CLI pollt via `svc.watch_scanner_scan()` → meldet gefunden/leer/Timeout.
+
+### Diagnose-/Status-Hygiene (v0.11.125)
+- Unter PipeWire **keine** `module-bluetooth-*`-Warnungen mehr (existieren dort nicht).
+- `bluetoothctl devices Paired` (neuere Syntax) statt `paired-devices`; leeres Ergebnis nur Hinweis (BlueZ-DB ist maßgeblich) — kein Widerspruch mehr.
+- DAB `pcm_only` wird als „spielt (PCM-Decode)" dargestellt statt „Sync OK: nein".
+
+### FM RDS — bewusst nicht umgesetzt
+- Würde separaten Decoder (`redsea`, nicht in Debian) + parallelen Demod-Pfad brauchen. FM kommt beim Nutzer ohnehin vom BMW-Radio → Aufwand nicht gerechtfertigt. Hook `fm.update_rds_metadata()` bleibt No-Op.
 
 ---
 
@@ -417,6 +463,6 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
 3. Patches via `str.replace()` + `assert old in src` VOR Ersetzung
 4. Zeilenbasiert bei Einrückungsproblemen
 5. `py_compile` + `bash -n` nach jeder Änderung
-6. Version bump: `VERSION`, `install.sh`, `README.md` Badge — niemals Changelog
+6. Version bump: `VERSION`, `pidrive/VERSION`, `install.sh`, `README.md` Badge — niemals Changelog
 7. ZIP → `present_files`
 8. **KontextPiDrive.md nach jeder Session aktualisieren**
