@@ -70,7 +70,7 @@ class PiDrivePlayer(dbus.service.Object):
 
     def update_metadata(self, title: str, artist: str, album: str,
                         track_nr: int = 1, total: int = 1,
-                        genre: str = ""):
+                        genre: str = "", art_url: str = ""):
         """Neue Metadaten setzen und ans BMW-Display senden.
         Rate-Limiting: max 1 PropertiesChanged pro 300ms (BMW-Stabilität).
         """
@@ -96,7 +96,7 @@ class PiDrivePlayer(dbus.service.Object):
                 "xesam:genre":    dbus.Array([dbus.String(genre[:32])],
                                              signature="s"),
                 "xesam:url":      dbus.String(""),
-                **({{"mpris:artUrl": dbus.String(art_url)}}
+                **({"mpris:artUrl": dbus.String(art_url)}
                    if art_url else {}),
             }, signature="sv")
 
