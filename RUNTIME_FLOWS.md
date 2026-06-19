@@ -289,6 +289,11 @@ Scanner (pidrivectl scanner pmr446 scan):
 
 **Wichtig:** FM-Broadcast braucht `-M wbfm` — `-M fm` ist Schmalband (PMR), liefert kein Radio-Audio.
 
+**Suchlauf-Rückmeldung (ab v0.11.124):** `scanner.scan_next()`/`scan_prev()` schreiben das
+Ergebnis nach `/tmp/pidrive_scan_result.json` (`{band, found, name, freq, ts}`).
+`pidrivectl scanner <band> scan` pollt diese Datei (`svc.watch_scanner_scan`) und meldet
+zurück: „Aktiver Kanal: … — gewechselt", „Kein aktiver Kanal gefunden" oder Timeout.
+
 ---
 
 ## H. Installer → Service-Start → Runtime-Smoke-Test
