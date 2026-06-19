@@ -586,6 +586,31 @@ class PiDriveService:
 
         return found
 
+    def watch_scanner_scan(self, band, timeout=150, on_tick=None):
+        """Suchlauf starten und auf das Ergebnis warten.
+        Gibt dict {status: 'found'|'none'|'timeout', name, freq} zurück.
+        Das Ergebnis kommt aus /tmp/pidrive_scan_result.json (scanner._write_scan_result).
+        """
+        import time
+        start = time.time()
+        self.send(f"scan_next:{band}")
+        last_tick = -1
+        while True:
+            elapsed = time.time() - start
+            if elapsed > timeout:
+                return {"status": "timeout"}
+            res = self.ipc.read_json("/tmp/pidrive_scan_result.json", {})
+            if res.get("ts", 0) > start and res.get("band") == band:
+                return {
+                    "status": "found" if res.get("found") else "none",
+                    "name":   res.get("name", ""),
+                    "freq":   res.get("freq"),
+                }
+            if on_tick and int(elapsed) != last_tick:
+                last_tick = int(elapsed)
+                on_tick(int(elapsed), timeout)
+            time.sleep(0.4)
+
     def watch_dab_play(self, station_name, timeout=None, on_status=None, on_log_line=None):
         """DAB-Station starten und live Status verfolgen.
         Gibt 'locked', 'no_lock', 'partial_sync' oder 'timeout' zurueck.

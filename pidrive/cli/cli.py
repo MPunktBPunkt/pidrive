@@ -1292,8 +1292,23 @@ Flags (vor dem Befehl angeben):
         band = sc_cmd
         if band in BANDS:
             if sc_action == "scan":
-                svc.send(f"scan_next:{band}")
-                fmt.out(f"  Scanner {band}: Scan gestartet")
+                if use_json:
+                    fmt.print_json(svc.send(f"scan_next:{band}"))
+                else:
+                    fmt.out(f"  Scanner {band}: suche aktiven Kanal …")
+                    def _sc_tick(elapsed, total):
+                        print(f"  … scanne {band}  {elapsed}s", end="\r", flush=True)
+                    res = svc.watch_scanner_scan(band, on_tick=_sc_tick)
+                    print()  # Zeilenumbruch nach Fortschritt
+                    st = res.get("status")
+                    if st == "found":
+                        _fr  = res.get("freq")
+                        _frs = f"  ({_fr} MHz)" if _fr else ""
+                        fmt.out(f"  ✓ Aktiver Kanal: {res.get('name','?')}{_frs} — gewechselt")
+                    elif st == "none":
+                        fmt.out("  ✗ Kein aktiver Kanal gefunden")
+                    else:
+                        fmt.out("  ⏳ Scan läuft noch — Status: pidrivectl now")
             elif sc_action == "stop":
                 svc.send("scanner_stop")
                 fmt.out("  Scanner gestoppt")
