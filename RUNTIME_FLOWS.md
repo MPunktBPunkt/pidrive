@@ -1,6 +1,6 @@
 # PiDrive — Runtime Flows
 
-**Stand v0.11.96 · Debugging-Referenz für Laufzeitpfade**
+**Stand v0.11.122 · Debugging-Referenz für Laufzeitpfade**
 
 Dieses Dokument zeigt die echten Laufzeitpfade, nicht nur die statische Architektur. Es hilft dabei zu verstehen, welche Schichten bei einem Ereignis beteiligt sind und wo Debugging ansetzen muss.
 
@@ -199,22 +199,29 @@ trigger/td_hardware.py — handle("bt_connect:...")
     ▼
 modules/bluetooth/bt_connect.py — _on_connected(mac)
     │
-    ├── Warte 2-3s (PA-Modul braucht Zeit)
-    ├── PulseAudio: module-bluetooth-discover erkennt neuen Sink
-    │     Sink-Name: bluez_sink.XX_XX_XX_XX_XX_XX.a2dp_sink
-    ├── modules/audio.py — update_sink(new_sink)
+    ├── Warte 2-3s (WirePlumber braucht Zeit für den Sink)
+    ├── WirePlumber erkennt das A2DP-Profil automatisch und legt den Sink an
+    │     Sink-Name: bluez_output.XX_XX_XX_XX_XX_XX.N   (PipeWire-Schema!)
+    │     → modules/bluetooth/bt_audio.py: find_bt_sink_for_mac() ermittelt ihn
+    ├── modules/audio.py — Sink-Auswahl / Routing
     └── source_state.update("bt_connected")
             │
             ▼
     Audio-Reroute: laufende Wiedergabe neu starten mit neuem Sink
-        modules/webradio.py oder fm.py:  _restart_with_sink(new_sink)
+        modules/webradio.py oder radio/fm.py
 ```
+
+> **Sink-Namensschema:** Unter PipeWire/WirePlumber heißt der A2DP-Sink
+> `bluez_output.<MAC>.<N>` — **nicht** `bluez_sink.<MAC>.a2dp_sink` (klassisches
+> PulseAudio). `find_bt_sink_for_mac()` (ab v0.11.121) deckt beide Varianten ab.
+> Ab v0.11.122 wird bei verbundenem Gerät der `bluetooth`-Dienst während der
+> A2DP-Recovery **nicht** mehr neu gestartet (verhinderte Verbindungsabbrüche).
 
 **Debugging:**
 ```bash
 pidrivectl bt status
-PULSE_SERVER=unix:/var/run/pulse/native pactl list short sinks
-journalctl -u bluetooth | grep -i "a2dp\|connect\|sink"
+PULSE_SERVER=unix:/var/run/pulse/native pactl list short sinks   # bluez_output.* suchen
+journalctl -u wireplumber -u bluetooth | grep -i "a2dp\|connect\|sink"
 ```
 
 ---
@@ -298,13 +305,14 @@ curl ... | bash  →  install.sh
     ├── 7/10  D-Bus Policy, pidrivectl symlink
     ├── 8/10  systemd Units aktivieren
     ├── 9/10  Berechtigungen setzen
-    └── 10/10 PulseAudio, Librespot, ...
+    └── 10/10 PipeWire/WirePlumber, Librespot, ...
             │
             ▼
     Python Syntax-Check (alle .py)
     Shell Syntax-Check (install.sh)
     Altimport-Check (grep auf bare `import td_*`)
-    Import-Smoke-Test (28 Module einzeln importieren)
+    Import-Smoke-Test (echter main_core-Startpfad: ~33 Module einzeln importieren,
+                       danach webui / cli.cli / web.app / web.shared / web.api)
             │
             ▼
     pidrive_core.service starten

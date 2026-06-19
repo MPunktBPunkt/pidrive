@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand v0.11.96**
+**Stand v0.11.122**
 
 ---
 
@@ -10,7 +10,7 @@ PiDrive ist ein Python-Daemon mit Web-Frontend. Trigger aus BMW AVRCP, WebUI und
 
 ```
 BMW iDrive ──[AVRCP BT]──► integration/avrcp_trigger.py
-WebUI       ──[HTTP POST]──► web/api/*.py
+WebUI       ──[HTTP POST]──► web/app.py + web/api/*.py
 CLI         ──[IPC-Datei]──► cli/adapters.py
                                     │
                                /tmp/pidrive_cmd   (append-Queue)
@@ -26,6 +26,12 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
                           │
                        PipeWire ──► BT A2DP / Klinke / HDMI
 ```
+
+> **Hinweis zu Compat-Shims:** Die alten flachen Pfade existieren als dünne
+> Weiterleitungen weiter (`webui.py` → `web/app.py`, `avrcp_trigger.py` →
+> `integration/avrcp_trigger.py`, `modules/dab.py|fm.py|scanner.py` →
+> `modules/radio/*`). Für neuen Code immer die kanonischen Pfade unten (Abschnitt C)
+> verwenden.
 
 ---
 
@@ -55,18 +61,30 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 | Flask App | `web/app.py` |
 | MPRIS2 D-Bus (BMW-Metadaten) | `mpris2.py` |
 | MPRIS2 Debug / IP-Announcement | `mpris2.py: announce_wifi_ip(), push_test_metadata()` |
-| mpv IPC / Metadaten | `mpv_meta.py` |
+| mpv IPC / Now-Playing-Metadaten | `mpv_meta.py` |
+| Metadaten-Reset bei Quellwechsel | `modules/playback_meta.py` |
 | BT-Verbindung | `modules/bluetooth/bt_connect.py` |
 | BT-Agent / Pairing | `modules/bluetooth/bt_agent.py` |
 | BT-Geräteklasse (AVRCP vs. Kopfhörer) | `modules/bluetooth/bt_helpers.py: _device_type()` |
-| BT-Audio (A2DP Sink, WirePlumber) | `modules/bluetooth/bt_audio.py` |
+| BT-Audio (A2DP Sink, WirePlumber) | `modules/bluetooth/bt_audio.py: find_bt_sink_for_mac()` |
+| BT-Watcher / Auto-Reconnect | `modules/bluetooth/bt_watcher.py` |
+| BT-Backup / Restore | `modules/bluetooth/bt_backup.py` |
 | Lokale Musik | `modules/local_player.py` |
 | USB-Stick-Erkennung | `modules/usb_music.py` |
+| Webradio-Playback | `modules/webradio.py` |
+| Menü-Modell / Builder / State | `menu/menu_model.py`, `menu/menu_builder.py`, `menu/menu_state.py` |
+| Senderdaten-Store | `menu/station_store.py` |
+| Favoriten | `modules/favorites.py` |
+| WiFi | `modules/wifi.py` |
+| System-Infos (RAM/Temp/throttled) | `modules/system.py` |
+| OTA-Update | `modules/update.py` |
 | System-Test | `test_suite.py` |
 | Core-Loop | `main_core.py` |
 | IPC-Queue / Status | `ipc.py` |
 | Einstellungen | `settings.py` |
 | Plattformerkennung + CAPS | `modules/platform.py` |
+| Web Shared-Helfer / Konstanten | `web/shared/constants.py`, `web/shared/files.py` |
+| Web View-Model | `web/shared/view_model.py` |
 | Installer | `install.sh` |
 | Systemdienste | `systemd/pidrive_*.service` |
 | PipeWire Systemd-Units | `systemd/pipewire.service`, `pipewire-pulse.service`, `wireplumber.service` |
@@ -78,13 +96,18 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 | Bereich | Kanonischer Pfad |
 |---|---|
 | Trigger-Handler | `trigger/td_*.py`, `trigger/trigger_dispatcher.py` |
-| CLI | `cli/cli.py`, `cli/service.py`, `cli/adapters.py` |
+| CLI | `cli/cli.py`, `cli/service.py`, `cli/adapters.py`, `cli/format.py` |
 | Web | `web/app.py`, `web/shared/`, `web/api/` |
+| Menü | `menu/menu_model.py`, `menu/menu_state.py`, `menu/menu_builder.py`, `menu/station_store.py` |
 | Bluetooth | `modules/bluetooth/*.py` |
 | Radio | `modules/radio/*.py` |
 | AVRCP (Service-Entry) | `integration/avrcp_trigger.py` |
 | MPRIS2 | `mpris2.py` (Root) |
 | Core | `main_core.py` (Root, systemd-Entry) |
+
+> **Shims (nicht für neuen Code):** `webui.py`, `web/shared.py`, `avrcp_trigger.py`,
+> `modules/dab.py`, `modules/fm.py`, `modules/scanner.py` leiten auf die kanonischen
+> Pfade weiter und bleiben aus Kompatibilitätsgründen bestehen.
 
 ---
 
@@ -108,6 +131,13 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 _info = subprocess.run(PA_ENV + " pactl info", ...).stdout
 is_pipewire = "PipeWire" in _info
 ```
+
+**BT-Sink-Name (wichtig):** Unter PipeWire/WirePlumber heißt der A2DP-Sink
+`bluez_output.<MAC>.<N>` (z. B. `bluez_output.D4_36_39_CF_E1_B5.1`) — **nicht** mehr
+`bluez_sink.<MAC>.a2dp_sink` wie unter klassischem PulseAudio. Ab v0.11.121 ermittelt
+`modules/bluetooth/bt_audio.py: find_bt_sink_for_mac()` den korrekten Sink-Namen
+robust. Ab v0.11.122 wird bei einem bereits verbundenen Gerät der `bluetooth`-Dienst
+während der A2DP-Recovery **nicht** mehr neu gestartet (verhindert Verbindungsabbrüche).
 
 ---
 
@@ -158,16 +188,28 @@ printf "mein_trigger\n" >> /tmp/pidrive_cmd
 ## H. System-Test
 
 ```bash
-pidrivectl test all           # Kompletter Test ~2-3 Minuten
+pidrivectl test all           # Kompletter Test (alle Quellen + Audio + BT + AVRCP)
 pidrivectl test system        # Nur Ressourcen
+pidrivectl test audio         # Nur Audio/Sinks
 pidrivectl test bt            # Nur Bluetooth/AVRCP
 pidrivectl test mpris         # Nur MPRIS2 D-Bus
 pidrivectl test webradio      # Nur Webradio
+pidrivectl test fm            # Nur FM
+pidrivectl test scanner       # Nur Scanner (FM)
+pidrivectl test dab           # Nur DAB-Wiedergabe
 pidrivectl test dabscan       # DAB 11B Scan mit Stationsliste
+pidrivectl test spotify       # Nur Spotify
+pidrivectl test avrcp         # Nur AVRCP-Inject
+pidrivectl test log           # Nur Log-Zusammenfassung
 
 # Ergebnis:
 cat /tmp/pidrive_test_results.json | python3 -m json.tool
 ```
+
+Implementierung der Testfälle: `test_suite.py` (`run_all()` ruft `test_system`,
+`test_audio`, `test_bluetooth`, `test_mpris2_push`, `test_webradio`, `test_fm`,
+`test_scanner_fm`, `test_dab`, `test_dab_scan`, `test_spotify`, `test_avrcp_inject`,
+`test_log_summary`).
 
 ---
 
