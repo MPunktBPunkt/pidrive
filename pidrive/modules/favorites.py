@@ -2,7 +2,7 @@
 modules/favorites.py - Favoritenliste
 PiDrive - GPL-v3
 
-Unterstuetzt: FM, DAB+, Webradio, Scanner-Kanaele
+Unterstuetzt: FM, DAB+, Webradio, Spotify, Scanner-Kanaele
 Gespeichert in config/favorites.json
 """
 
