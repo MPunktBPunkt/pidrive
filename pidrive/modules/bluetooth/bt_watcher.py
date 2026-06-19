@@ -6,7 +6,7 @@ from modules.bluetooth.bt_helpers import (
     _btctl, _run, _sleep_s, _now, _normalize_mac,
     _write_json_atomic, _read_json,
     _bt_adapter_up, _ensure_bt_on,
-    _is_audio_device_info,
+    _is_audio_device_info, bt_connect_active,
     WATCHER_STATE_FILE, RECONNECT_COOLDOWN, RECONNECT_FAIL_SOFT_LIMIT,
 )
 
@@ -143,6 +143,9 @@ def start_auto_reconnect(S, settings):
 
                 visible, _ = _ensure_device_visible(mac, timeout=6)
                 if visible:
+                    if bt_connect_active():
+                        _sleep_s(5)
+                        continue
                     log.info(f"BT auto-reconnect [Watcher]: versuche Connect mac={mac} name={name}")
                     ok = connect_device(mac, S, settings)
                     if ok:

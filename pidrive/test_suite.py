@@ -286,11 +286,19 @@ def test_bluetooth():
         _p(WARN, "BT nicht verbunden (kein A2DP-Test möglich)")
         return True
 
-    # A2DP-Sink?
+    # A2DP-Sink? (PipeWire: bluez_output.* / Legacy: bluez_sink.*)
     sinks = _run("PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short 2>/dev/null")
     mac_u = bt_mac.replace(":","_")
-    if mac_u in sinks:
-        _p(PASS, "A2DP-Sink aktiv", f"bluez_sink.{mac_u}.a2dp_sink")
+    bt_sink = ""
+    for ln in sinks.splitlines():
+        parts = ln.split()
+        if len(parts) >= 2 and mac_u in parts[1].upper() and (
+            "bluez_output" in parts[1] or "bluez_sink" in parts[1]
+        ):
+            bt_sink = parts[1]
+            break
+    if bt_sink:
+        _p(PASS, "A2DP-Sink aktiv", bt_sink)
     else:
         _p(FAIL, "A2DP-Sink fehlt!", "pactl set-card-profile... ausführen")
 

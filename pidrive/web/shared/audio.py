@@ -56,7 +56,10 @@ def get_volume_data() -> dict:
         if not sink:
             for ln in sinks_out.splitlines():
                 parts = ln.split()
-                if len(parts) >= 2 and "bluez_sink" in parts[1] and "a2dp_sink" in parts[1]:
+                if len(parts) >= 2 and (
+                    ("bluez_sink" in parts[1] and "a2dp_sink" in parts[1]) or
+                    "bluez_output" in parts[1]
+                ):
                     sink = parts[1]
                     source_label = "bt_sink"
                     break
@@ -161,7 +164,7 @@ def get_audio_debug() -> dict:
             if len(parts) >= 2:
                 name = parts[1]
                 typ = (
-                    "bt" if "bluez_sink" in name else
+                    "bt" if ("bluez_sink" in name or "bluez_output" in name) else
                     "hdmi" if _sink_is_hdmi(name) else
                     "alsa" if "alsa_output" in name else
                     "other"

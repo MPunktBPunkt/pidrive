@@ -10,7 +10,7 @@ Vollständiges A2DP Auto-Routing:
 
 from modules.bluetooth.bt_helpers import (
     _run, _normalize_mac, _read_json, _now, _sleep_s,
-    PA_ENV, A2DP_WAIT_SECONDS,
+    PA_ENV, A2DP_WAIT_SECONDS, find_bt_sink_for_mac, list_pa_sink_names,
 )
 import subprocess
 import time
@@ -93,8 +93,39 @@ def a2dp_stack_ready() -> tuple:
     return False, "no_media_endpoints"
 
 
-def try_recover_a2dp_stack(include_bluetooth=True) -> bool:
-    """WirePlumber/Bluetooth neu starten (sudoers: NOPASSWD)."""
+def wait_for_a2dp_stack(timeout=25, poll=0.5) -> bool:
+    """Beim Boot kann WirePlumber Endpoints erst Sekunden nach Start registrieren."""
+    deadline = time.time() + max(0, float(timeout))
+    while time.time() < deadline:
+        ready, _ = a2dp_stack_ready()
+        if ready:
+            return True
+        _sleep_s(poll)
+    return False
+
+
+_RECOVERY_COOLDOWN_S = 90
+_last_recovery_ts = 0.0
+
+
+def _bt_device_connected() -> bool:
+    out = _run("bluetoothctl devices Connected 2>/dev/null", timeout=4)
+    return bool((out or "").strip())
+
+
+def try_recover_a2dp_stack(include_bluetooth=False) -> bool:
+    """WirePlumber/PipeWire neu starten. Bluetooth nur als letztes Mittel."""
+    global _last_recovery_ts
+    now = time.time()
+    if now - _last_recovery_ts < _RECOVERY_COOLDOWN_S:
+        log.info("[BT-AUDIO] A2DP-Recovery übersprungen (Cooldown aktiv)")
+        ready, _ = a2dp_stack_ready()
+        return ready
+
+    if include_bluetooth and _bt_device_connected():
+        log.info("[BT-AUDIO] A2DP-Recovery: BT verbunden — bluetooth-Restart übersprungen")
+        include_bluetooth = False
+
     log.info("[BT-AUDIO] A2DP-Stack Recovery: pipewire → wireplumber"
              + (" → bluetooth" if include_bluetooth else ""))
     # Reihenfolge wichtig: PipeWire zuerst, WirePlumber danach, Bluetooth zuletzt
@@ -120,9 +151,10 @@ def try_recover_a2dp_stack(include_bluetooth=True) -> bool:
     if failed:
         log.warn(f"[BT-AUDIO] sudo fehlgeschlagen für: {', '.join(failed)}"
                  " — auf dem Pi: sudo ~/pidrive/scripts/fix-bt-a2dp.sh")
-    _sleep_s(4)
-    ready, _ = a2dp_stack_ready()
-    return ready or ok_any
+    if not ok_any:
+        return False
+    _last_recovery_ts = time.time()
+    return wait_for_a2dp_stack(timeout=20)
 
 
 # ── A2DP Profile erzwingen ────────────────────────────────────────────────────
@@ -197,32 +229,27 @@ def _ensure_a2dp_sink(mac, timeout=A2DP_WAIT_SECONDS):
       3. Warten bis Sink erscheint (timeout Sekunden)
     Gibt (ok, sink_name) zurück.
     """
-    pa_sink = _expected_pa_sink_for_mac(mac)
     deadline = time.time() + timeout
+    hint = _expected_pa_sink_for_mac(mac)
 
-    # Schritt 1: Sofortprüfung
-    sinks_out = _pa_run("pactl list sinks short 2>/dev/null")
-    if pa_sink in sinks_out:
-        return True, pa_sink
+    found = find_bt_sink_for_mac(mac, list_pa_sink_names())
+    if found:
+        return True, found
 
-    # Schritt 2: BT-Module sicherstellen
     _ensure_bt_pa_modules()
     _sleep_s(1.0)
-
-    # Schritt 3: A2DP-Profil erzwingen
     _force_a2dp_profile(mac)
     _sleep_s(1.5)
 
-    # Schritt 4: Warten bis Sink erscheint
     while time.time() < deadline:
-        sinks_out = _pa_run("pactl list sinks short 2>/dev/null")
-        if pa_sink in sinks_out:
-            log.info(f"[BT-AUDIO] A2DP-Sink erschienen: {pa_sink}")
-            return True, pa_sink
+        found = find_bt_sink_for_mac(mac, list_pa_sink_names())
+        if found:
+            log.info(f"[BT-AUDIO] A2DP-Sink erschienen: {found}")
+            return True, found
         _sleep_s(1.0)
 
-    log.warn(f"[BT-AUDIO] A2DP-Sink nach {timeout}s nicht verfügbar: {pa_sink}")
-    return False, pa_sink
+    log.warn(f"[BT-AUDIO] A2DP-Sink nach {timeout}s nicht verfügbar (erwartet ~{hint})")
+    return False, hint
 
 
 # ── Default-Sink + Stream-Routing ────────────────────────────────────────────

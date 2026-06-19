@@ -198,6 +198,9 @@ Während der Fehlersuche wurden weitere Probleme entdeckt und behoben:
 | v0.11.89 | WirePlumber BT-Monitor deaktiviert sich: `Seat state changed: offline` | `bluez.lua` lokal nach `/etc/wireplumber/scripts/monitors/` kopiert, `config.seat_monitoring = false` |
 | v0.11.90 | `support.logind = disabled` → WirePlumber hängt nach `metadata.lua` | Nur `monitor.bluez.seat-monitoring = disabled` im Profil, logind aktiv lassen |
 | **v0.11.96** | **`hfp_ag` Rolle → `org.pipewire.Telephony` D-Bus Fehler → BT-Monitor blockiert** | **`hfp_ag` aus Rollen entfernt, nur `a2dp_source`; `org.pipewire.Telephony` in Policy** |
+| v0.11.120 | Boot-Reconnect vor WirePlumber-Endpoints → `profile-unavailable` | `wait_for_a2dp_stack()`, `pidrive_core.service` startet nach pipewire/wireplumber |
+| v0.11.121 | PipeWire nennt Sinks `bluez_output.MAC.N`, Code suchte `bluez_sink.MAC.a2dp_sink` → `no_a2dp_sink`, Audio auf Klinke | `find_bt_sink_for_mac()` erkennt beide Namenskonventionen; CLI `audio route` ohne falsches ✓ |
+| v0.11.122 | A2DP-Recovery startete `bluetooth` neu → Kopfhörer getrennt, BT-Ton kurz dann weg | Recovery standardmäßig ohne `bluetooth`-Restart; 90s Cooldown; Connect bricht bei fehlenden Endpoints nicht mehr ab |
 
 ---
 
@@ -260,6 +263,26 @@ wireplumber.profiles = {
 }
 ```
 Nicht `wireplumber.profiles.main = { ... }` (point-notation).
+
+---
+
+### Fallstrick 5: PipeWire-Sinkname `bluez_output.*` vs. Legacy `bluez_sink.*.a2dp_sink`
+
+**Symptom:** BT verbunden, A2DP-Profil aktiv, aber PiDrive meldet `no_a2dp_sink` / Audio Debug Cockpit `effective: none`. `pactl list sinks` zeigt `bluez_output.00_16_94_2E_85_DB.1`.
+
+**Ursache:** PipeWire/WirePlumber 0.5.x benennt A2DP-Sinks anders als Legacy-PulseAudio.
+
+**Fix (ab v0.11.121):** `find_bt_sink_for_mac()` in `bt_helpers.py` — alle Routing-/Connect-Pfade nutzen diese Funktion.
+
+---
+
+### Fallstrick 6: A2DP-Recovery trennt aktive BT-Verbindung
+
+**Symptom:** Kurz Ton auf Kopfhörer, dann Stille; Log zeigt `systemctl restart bluetooth` während Gerät verbunden war.
+
+**Ursache:** `try_recover_a2dp_stack(include_bluetooth=True)` bei fehlenden MediaEndpoints.
+
+**Fix (ab v0.11.122):** Recovery nur noch `pipewire` → `pipewire-pulse` → `wireplumber`; `bluetooth` nur wenn kein Gerät verbunden. Cooldown 90s.
 
 ---
 

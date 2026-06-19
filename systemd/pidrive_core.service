@@ -1,7 +1,7 @@
 [Unit]
 Description=PiDrive Core - Car Infotainment
-After=multi-user.target network-online.target pulseaudio.service bluetooth.service
-Wants=network-online.target pulseaudio.service bluetooth.service
+After=multi-user.target network-online.target pipewire.service pipewire-pulse.service wireplumber.service bluetooth.service
+Wants=network-online.target pipewire.service pipewire-pulse.service wireplumber.service bluetooth.service
 StartLimitIntervalSec=60
 StartLimitBurst=5
 

@@ -919,12 +919,31 @@ Flags (vor dem Befehl angeben):
         if args.audio_cmd == "route":
             trig = {"klinke": "audio_klinke","bt":"audio_bt","hdmi":"audio_hdmi","auto":"audio_all"}[args.mode]
             r = svc.send(trig)
-            if use_json: fmt.print_json(r)
-            else:
-                import time as _t_ar; _t_ar.sleep(0.3)
-                d2 = svc.get_status()
-                new_out = d2.get("audio_effective", args.mode)
+            if use_json:
+                fmt.print_json(r)
+                sys.exit(EXIT_OK)
+            import time as _t_ar
+            _t_ar.sleep(1.0)
+            try:
+                from modules.audio import read_last_decision_file as _rld
+                _ad = _rld()
+            except Exception:
+                _ad = {}
+            new_out = _ad.get("effective") or svc.get_status().get("audio_effective") or args.mode
+            sink = _ad.get("sink") or ""
+            reason = _ad.get("reason") or ""
+            ok = new_out == args.mode or (args.mode == "auto" and new_out not in ("none", "", "–"))
+            if ok:
                 fmt.out("Audio-Ausgang: " + fmt.GREEN + new_out + " ✓" + fmt.RESET)
+                if sink:
+                    fmt.out("  Sink: " + sink[:60])
+            else:
+                fmt.out(fmt.RED + f"Audio-Ausgang: {args.mode} fehlgeschlagen" + fmt.RESET)
+                if reason:
+                    fmt.out("  Grund: " + reason)
+                if args.mode == "bt":
+                    fmt.out("  Tipp: pidrivectl bt connect <MAC>  dann erneut versuchen")
+            sys.exit(EXIT_OK)
         elif args.audio_cmd == "test":
             # Vollständige Audio-Diagnose
             import subprocess as _sp, os as _os
@@ -1032,13 +1051,28 @@ Flags (vor dem Befehl angeben):
                                     fmt.out(NOK + f"   Profil: {prof}  (kein A2DP!)")
                                     fmt.out(f"     → {PA_CMD} pactl set-card-profile {bt_card} a2dp-sink")
                                 break
-                    # A2DP-Sink suchen
-                    expected_sink = "bluez_sink." + mac.replace(":", "_") + ".a2dp_sink"
-                    if expected_sink in sinks_out:
-                        fmt.out(OK + f"   A2DP-Sink: {expected_sink}")
+                    # A2DP-Sink suchen (PipeWire: bluez_output.* / Legacy: bluez_sink.*)
+                    mac_u = mac.replace(":", "_")
+                    bt_sinks = [
+                        ln.split()[1] for ln in sinks_out.splitlines()
+                        if ln.split() and (
+                            "bluez_output" in ln or
+                            ("bluez_sink" in ln and "a2dp" in ln)
+                        ) and mac_u in ln.replace("-", "_").upper()
+                    ]
+                    if not bt_sinks:
+                        bt_sinks = [
+                            ln.split()[1] for ln in sinks_out.splitlines()
+                            if ln.split() and (
+                                "bluez_output" in ln or
+                                ("bluez_sink" in ln and "a2dp" in ln)
+                            )
+                        ]
+                    if bt_sinks:
+                        fmt.out(OK + f"   A2DP-Sink: {bt_sinks[0]}")
                     else:
                         fmt.out(NOK + f"   Kein A2DP-Sink in PA")
-                        fmt.out(f"     → Erwartet: {expected_sink}")
+                        fmt.out(f"     → Erwartet: bluez_output.{mac_u}.* oder bluez_sink.{mac_u}.a2dp_sink")
             else:
                 bt_paired, _ = _run("bluetoothctl devices Paired 2>/dev/null")
                 if bt_paired.strip():

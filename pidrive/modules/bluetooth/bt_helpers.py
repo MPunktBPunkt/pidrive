@@ -50,6 +50,11 @@ PAIR_TIMEOUT_SECONDS = 45
 _bt_connect_lock = threading.Lock()
 _scan_lock = threading.Lock()
 
+
+def bt_connect_active() -> bool:
+    """True solange ein connect_device()-Lauf den Lock hält."""
+    return _bt_connect_lock.locked()
+
 _scan_proc = None
 _scan_stop_flag = False
 
@@ -140,6 +145,45 @@ def _bg(cmd):
 
 def _normalize_mac(mac: str) -> str:
     return (mac or "").strip().upper()
+
+
+def is_bt_a2dp_sink(name: str) -> bool:
+    """PipeWire: bluez_output.MAC.N — Legacy-PA: bluez_sink.MAC.a2dp_sink"""
+    n = (name or "").lower()
+    return "bluez_output" in n or ("bluez_sink" in n and "a2dp" in n)
+
+
+def mac_in_sink_name(mac: str, sink_name: str) -> bool:
+    mac_u = _normalize_mac(mac).replace(":", "_")
+    return mac_u in (sink_name or "").upper().replace("-", "_")
+
+
+def list_pa_sink_names() -> list:
+    out = _run(PA_ENV + " pactl list sinks short 2>/dev/null", 4)
+    names = []
+    for line in (out or "").splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            names.append(parts[1])
+    return names
+
+
+def find_bt_sink_for_mac(mac: str = "", sink_names: list = None) -> str:
+    """BT-A2DP-Sink finden — PipeWire- und Legacy-PA-Namenskonvention."""
+    if sink_names is None:
+        sink_names = list_pa_sink_names()
+    if mac:
+        mac_u = _normalize_mac(mac).replace(":", "_")
+        legacy = f"bluez_sink.{mac_u}.a2dp_sink"
+        if legacy in sink_names:
+            return legacy
+        for name in sink_names:
+            if mac_in_sink_name(mac, name) and is_bt_a2dp_sink(name):
+                return name
+    for name in sink_names:
+        if is_bt_a2dp_sink(name):
+            return name
+    return ""
 
 
 def _valid_mac(mac: str) -> bool:

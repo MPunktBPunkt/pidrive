@@ -332,26 +332,28 @@ def invalidate_sink_cache():
 def get_bt_sink(retry: int = 1) -> str:
     """
     Gibt den BT A2DP Sink zurück.
-    Bei PipeWire: WirePlumber lädt BT automatisch.
-    Bei Legacy-PA: versucht module-bluetooth-discover nachzuladen.
+    Bei PipeWire: bluez_output.MAC.N — bei Legacy-PA: bluez_sink.MAC.a2dp_sink
     """
     import time as _t
+    from modules.bluetooth.bt_helpers import find_bt_sink_for_mac
     for attempt in range(max(1, retry)):
-        for s in _list_sinks():
-            if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
-                return s["name"]
+        sinks = _list_sinks(force=(attempt > 0))
+        found = find_bt_sink_for_mac("", [s["name"] for s in sinks])
+        if found:
+            return found
         if attempt < retry - 1:
             _t.sleep(1)
 
-    # Kein A2DP-Sink gefunden — versuche BT-Module nachzuladen
+    # Kein A2DP-Sink gefunden — versuche BT-Module nachzuladen (Legacy-PA)
     try:
         _pa = PA_ENV + " pactl load-module module-bluetooth-discover 2>/dev/null"
         subprocess.run(_pa, shell=True, capture_output=True, timeout=3)
         _t.sleep(1)
-        for s in _list_sinks():
-            if "bluez_sink." in s["name"] and ".a2dp_sink" in s["name"]:
-                log.info("[AUDIO] A2DP-Sink nach load-module gefunden (Legacy-PA)")
-                return s["name"]
+        invalidate_sink_cache()
+        found = find_bt_sink_for_mac("")
+        if found:
+            log.info("[AUDIO] A2DP-Sink nach load-module gefunden (Legacy-PA)")
+            return found
     except Exception:
         pass
     return ""
@@ -681,7 +683,8 @@ def set_output(mode: str, settings: dict):
 
     elif mode in ("bt", "bluetooth", "a2dp"):
         settings["audio_output"] = "bt"
-        sink = get_bt_sink()
+        invalidate_sink_cache()
+        sink = get_bt_sink(retry=3)
         if sink:
             set_default_sink(sink)
             _remember_decision("bt", "bt", "bt_requested", sink, "manual")
@@ -697,6 +700,12 @@ def set_output(mode: str, settings: dict):
         get_mpv_args(settings, source="set_output:auto")
         ipc.write_progress("Audio", "Auto gesetzt", color="green")
         log.info("[AUDIO] set_output -> auto")
+
+    try:
+        from settings import save_settings as _ss_out
+        _ss_out(settings)
+    except Exception:
+        pass
 
     time.sleep(1)
     ipc.clear_progress()

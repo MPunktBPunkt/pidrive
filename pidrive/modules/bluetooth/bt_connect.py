@@ -28,7 +28,7 @@ from modules.bluetooth.bt_devices import (
 from modules.bluetooth.bt_audio import (
     _ensure_a2dp_sink, _set_pulseaudio_sink, bt_audio_autoroute,
     _set_raspotify_device, get_bt_sink,
-    a2dp_stack_ready, try_recover_a2dp_stack, _is_a2dp_profile_error,
+    a2dp_stack_ready, wait_for_a2dp_stack, try_recover_a2dp_stack, _is_a2dp_profile_error,
 )
 import threading
 import subprocess
@@ -101,8 +101,19 @@ def _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS):
     if rc == 0 and _device_bluez_available(out):
         return True, out
 
-    # Kurzer Discovery ohne scan on/off — nur info abrufen
-    # scan on/off erzeugt viele D-Bus-Verbindungen → CPU-Last
+    # Gepairte Geräte (z. B. Kopfhörer) sind ohne Scan oft "not available"
+    if _bluez_is_paired(mac):
+        _btctl("scan on", timeout=4)
+        try:
+            end = time.time() + min(timeout, 15)
+            while time.time() < end:
+                ok, out = _device_seen_during_scan(mac)
+                if ok:
+                    return True, out
+                _sleep_s(2.0)
+        finally:
+            _btctl("scan off", timeout=4)
+
     end = time.time() + timeout
     while time.time() < end:
         rc, out = _btctl(f"info {mac}", timeout=5)
@@ -230,11 +241,14 @@ def _save_bt_last_device(settings, mac, name):
         pass
 
 
-def _ensure_a2dp_stack_or_recover(*, allow_bluetooth_restart=True):
+def _ensure_a2dp_stack_or_recover(*, allow_bluetooth_restart=False, wait_seconds=10):
     ready, reason = a2dp_stack_ready()
     if ready:
         return True
-    log.warn(f"BT connect: A2DP-Stack nicht bereit ({reason}) — Recovery")
+    log.info(f"BT connect: warte auf A2DP-Stack ({reason}) …")
+    if wait_for_a2dp_stack(timeout=wait_seconds):
+        return True
+    log.warn("BT connect: A2DP-Stack noch nicht bereit — WirePlumber-Recovery (ohne bluetooth)")
     return try_recover_a2dp_stack(include_bluetooth=allow_bluetooth_restart)
 
 
@@ -377,13 +391,6 @@ def connect_device(mac, S, settings):
         ipc.clear_progress()
         return False
 
-    # Watcher aufwecken (lazy import verhindert Circular-Import mit bt_watcher)
-    try:
-        from modules.bluetooth.bt_watcher import wake_auto_reconnect as _wake
-        _wake()
-    except Exception:
-        pass
-
     if not _bt_connect_lock.acquire(blocking=False):
         log.warn("BT connect: bereits ein Connect läuft — abgebrochen")
         ipc.write_progress("Bluetooth", "Verbindung läuft bereits...", color="orange")
@@ -392,7 +399,14 @@ def connect_device(mac, S, settings):
         return False
 
     try:
-        return _connect_device_inner(mac, S, settings)
+        ok = _connect_device_inner(mac, S, settings)
+        if ok:
+            try:
+                from modules.bluetooth.bt_watcher import wake_auto_reconnect as _wake
+                _wake()
+            except Exception:
+                pass
+        return ok
     finally:
         _bt_connect_lock.release()
 
@@ -503,7 +517,7 @@ def _connect_device_inner(mac, S, settings):
 
     visible, info = _ensure_device_visible(mac, timeout=VISIBILITY_WAIT_SECONDS)
     if not visible:
-        ipc.write_progress("Bluetooth", "Nicht gefunden — Gerät einschalten", color="red")
+        ipc.write_progress("Bluetooth", "Nicht gefunden — Gerät einschalten", color="orange")
         if _src_state:
             _src_state.set_bt_state("failed")
             _src_state.set_bt_link_state("failed")
@@ -516,9 +530,40 @@ def _connect_device_inner(mac, S, settings):
         S["menu_rev"] = S.get("menu_rev", 0) + 1
         return False
 
-    # verbundenen Restzustand vor Neuversuch trennen
-    _btctl(f"disconnect {mac}", timeout=8)
-    _sleep_s(1.0)
+    # Bereits verbunden + Sink da → schneller Erfolg ohne Disconnect
+    _, live_info = _btctl(f"info {mac}", timeout=6)
+    if _parse_bool_from_info(live_info, "connected"):
+        sink_ok, pa_sink = _ensure_a2dp_sink(mac, timeout=5)
+        if sink_ok:
+            _set_pulseaudio_sink(pa_sink)
+            settings["audio_output"] = "bt"
+            S["bt"] = True
+            S["bt_on"] = True
+            S["bt_device"] = name
+            S["bt_status"] = "verbunden"
+            S["bt_sink_mac"] = mac
+            S["bt_pa_sink"] = pa_sink
+            if _src_state:
+                _src_state.set_bt_state("connected")
+                _src_state.set_bt_link_state("connected")
+                _src_state.set_bt_audio_state("a2dp_ready")
+                try:
+                    from modules import audio as _aud_bt
+                    _aud_bt.invalidate_sink_cache()
+                    _dec = _aud_bt.decide_audio_route(settings, source="bt_reconnect")
+                    _aud_bt.apply_audio_route(_dec)
+                except Exception:
+                    pass
+            _mark_reconnect_success(mac)
+            ipc.clear_progress()
+            log.info(f"BT connect: bereits verbunden mit Sink mac={mac}")
+            return True
+
+    # Nur trennen wenn wirklich verbunden — sonst unnötiger Reconnect-Stress
+    _, pre_info = _btctl(f"info {mac}", timeout=6)
+    if _parse_bool_from_info(pre_info, "connected"):
+        _btctl(f"disconnect {mac}", timeout=8)
+        _sleep_s(1.0)
 
     # nur bei echtem Inkonsistenzfall remove
     _ensure_clean_bond_state(mac)
@@ -550,32 +595,32 @@ def _connect_device_inner(mac, S, settings):
         # kein harter Abbruch, nur Warnung
         log.warn(f"BT connect: trust nicht bestätigt mac={mac}")
 
-    if not _ensure_a2dp_stack_or_recover():
-        log.warn("BT connect: A2DP-Stack nicht bereit — sudo systemctl restart wireplumber")
+    # Stack vorbereiten — kein Abbruch: Connect kann Endpoints erst aktivieren
+    _ensure_a2dp_stack_or_recover(allow_bluetooth_restart=False, wait_seconds=8)
 
     connected_ok, conn_info = _ensure_connected(mac, retries=3)
     if not connected_ok:
         if _is_a2dp_profile_error(conn_info):
             ipc.write_progress(
                 "Bluetooth",
-                "A2DP fehlt — Audio-Stack neu starten (kein Pairing)",
+                "A2DP fehlt — WirePlumber neu starten (kein Pairing)",
                 color="orange",
             )
-            try_recover_a2dp_stack()
-            _mark_reconnect_failure(mac, "a2dp_unavailable")
-        else:
+            try_recover_a2dp_stack(include_bluetooth=False)
+            connected_ok, conn_info = _ensure_connected(mac, retries=2)
+        if not connected_ok:
             ipc.write_progress("Bluetooth", "Verbindung fehlgeschlagen", color="red")
             _mark_reconnect_failure(mac, "connect_failed")
-        if _src_state:
-            _src_state.set_bt_state("failed")
-            _src_state.set_bt_link_state("failed")
-            _src_state.set_bt_audio_state("no_sink")
-        _sleep_s(3)
-        ipc.clear_progress()
-        S["bt"] = False
-        S["bt_status"] = "getrennt"
-        S["menu_rev"] = S.get("menu_rev", 0) + 1
-        return False
+            if _src_state:
+                _src_state.set_bt_state("failed")
+                _src_state.set_bt_link_state("failed")
+                _src_state.set_bt_audio_state("no_sink")
+            _sleep_s(3)
+            ipc.clear_progress()
+            S["bt"] = False
+            S["bt_status"] = "getrennt"
+            S["menu_rev"] = S.get("menu_rev", 0) + 1
+            return False
 
     sink_ok, pa_sink = _ensure_a2dp_sink(mac, timeout=A2DP_WAIT_SECONDS)
     if not sink_ok:
