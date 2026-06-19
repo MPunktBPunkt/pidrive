@@ -147,13 +147,31 @@ def print_dab_status(data: dict):
     if not d:
         out("Kein DAB aktiv.")
         return
+    state   = d.get('dab_state', d.get('state', '')) or ''
+    sync_ok = d.get("sync_ok") or d.get("dab_sync_ok", False)
+    pcm     = d.get("dab_pcm_seen", d.get("pcm_seen", False))
+
+    # Menschlich lesbarer Gesamtstatus — pcm_only bedeutet: Audio läuft,
+    # auch wenn das volle Sync-Flag (noch) nicht gesetzt ist.
+    if pcm or state in ("locked", "pcm_only", "playing", "audio_ready"):
+        play_txt = GREEN + "spielt" + RESET + ("" if sync_ok else " (PCM-Decode)")
+    elif state == "partial_sync":
+        play_txt = YELLOW + "Empfang instabil" + RESET
+    elif state in ("no_lock", "failed", "error", "exception", "device_error"):
+        play_txt = RED + "kein Empfang" + RESET
+    elif state in ("starting", "attempting"):
+        play_txt = "startet …"
+    else:
+        play_txt = state or "-"
+
     out(_c("DAB Status:", BOLD))
     out(f"  Sender:        {d.get('name','-')}")
     out(f"  Kanal/SID:     {d.get('channel','-')} / {d.get('service_id','-')}")
-    out(f"  State:         {d.get('dab_state', d.get('state','-'))}")
-    sync_ok = d.get("sync_ok") or d.get("dab_sync_ok", False)
-    pcm     = d.get("dab_pcm_seen", d.get("pcm_seen", False))
-    out(f"  Sync OK:       {'ja' if sync_ok else 'nein'}")
+    out(f"  Wiedergabe:    {play_txt}")
+    out(f"  State:         {state or '-'}")
+    # Sync-Detail nur als technische Info; bei laufendem PCM nicht alarmierend
+    _sync_txt = "ja" if sync_ok else ("nein (PCM-Decode aktiv)" if pcm else "nein")
+    out(f"  Sync OK:       {_sync_txt}")
     out(f"  PCM:           {'ja' if pcm else 'nein'}")
     dls = d.get("last_dls_raw") or d.get("dls_text","")
     if dls:

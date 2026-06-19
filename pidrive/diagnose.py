@@ -509,8 +509,14 @@ def check_bluetooth():
     else:
         nfo("system.pa: nicht vorhanden (PipeWire-Mode, erwartet)")
 
+    pa_info    = run(PA + "pactl info 2>/dev/null")
+    is_pipewire = "PipeWire" in pa_info
     pa_modules = run(PA + "pactl list modules short 2>/dev/null")
-    if pa_modules:
+    if is_pipewire:
+        # Unter PipeWire gibt es die module-bluetooth-* nicht — WirePlumber macht das.
+        # Das Fehlen ist kein Fehler, daher keine Warnung.
+        ok("BT-Audio: PipeWire/WirePlumber übernimmt A2DP (module-bluetooth-* entfallen) ✓")
+    elif pa_modules:
         for mod in ["module-bluetooth-discover", "module-bluetooth-policy"]:
             loaded = mod in pa_modules
             (ok if loaded else warn)(
@@ -519,14 +525,17 @@ def check_bluetooth():
     else:
         warn("Audio: PA/PipeWire Modulliste nicht abrufbar")
 
-    paired = run("bluetoothctl paired-devices 2>/dev/null")
+    # Neuere BlueZ-Versionen: "devices Paired"; ältere: "paired-devices"
+    paired = (run("bluetoothctl devices Paired 2>/dev/null")
+              or run("bluetoothctl paired-devices 2>/dev/null"))
     if paired:
         ok(f"Gepaarte Geräte: {len(paired.splitlines())}")
         for l in paired.splitlines():
             nfo(f"  {l}")
     else:
-        warn("Keine gepaarten Geräte in BlueZ-Datenbank")
-        warn("  → Gerät muss neu gepairt werden (Kopfhörer in Pairing-Modus!)")
+        # Kein Widerspruch zur BlueZ-DB unten: 'bluetoothctl' meldet je nach Version
+        # nichts, obwohl ein Pairing-Key existiert. Daher nur Hinweis, keine Warnung.
+        nfo("Keine aktiv gemeldeten Pairings (bluetoothctl) — BlueZ-DB-Check folgt")
 
     try:
         sett = _read_json(os.path.join(os.path.dirname(__file__), "config", "settings.json"), {})
