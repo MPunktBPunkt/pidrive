@@ -267,16 +267,26 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                  type="info"),
     ])
 
-    # Bibliothek: music_dir aus settings.json + USB-Sticks dynamisch
+    # Bibliothek: music_dir aus settings.json + Unterordner + USB (nur Abspielen)
     _music_dir = settings.get("music_dir") or settings.get("music_path") or "/home/pidrive/Musik"
     _lib_name = os.path.basename(_music_dir.rstrip("/")) or "Musik"
     _lib_children = [
-        MenuNode(id="lib_play",    label=f"{_lib_name} abspielen",
+        MenuNode(id="lib_play",    label=f"Alle: {_lib_name}",
                  type="action", action=f"local_play:{_music_dir}"),
-        MenuNode(id="lib_shuffle", label="Zufaellig abspielen",
+        MenuNode(id="lib_shuffle", label="Alle zufaellig",
                  type="action", action=f"local_play:{_music_dir}|shuffle"),
-        MenuNode(id="lib_stop",    label="Stop", type="action", action="library_stop"),
     ]
+    try:
+        from modules.music_library import list_subfolders_for_menu as _lsfm
+        for _sf in _lsfm(settings):
+            _sid = "lib_" + _sf["name"].replace(" ", "_")[:20]
+            _lib_children.append(MenuNode(
+                id=_sid, label=f"Ordner: {_sf['name']} ({_sf['files']})",
+                type="action", action=f"local_play:{_sf['path']}",
+            ))
+    except Exception:
+        pass
+    _lib_children.append(MenuNode(id="lib_stop", label="Stop", type="action", action="library_stop"))
     try:
         from modules.usb_music import find_usb_sticks as _fus
         for _ui, _usb in enumerate(_fus()):

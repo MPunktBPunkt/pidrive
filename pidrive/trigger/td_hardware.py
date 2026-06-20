@@ -318,6 +318,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     dab.stop(S)
                     fm.stop(S)
                     scanner.stop(S)
+                    try:
+                        from modules import local_player as _lp_rs
+                        _lp_rs.stop(S)
+                    except Exception:
+                        pass
                     clear_playback_metadata(S)
                     S["radio_playing"] = False
                     S["radio_station"] = ""
@@ -332,6 +337,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 dab.stop(S)
                 fm.stop(S)
                 scanner.stop(S)
+                try:
+                    from modules import local_player as _lp_rs
+                    _lp_rs.stop(S)
+                except Exception:
+                    pass
                 clear_playback_metadata(S)
                 S["radio_playing"] = False
                 S["radio_station"] = ""
@@ -369,7 +379,13 @@ def handle(cmd, menu_state, store, S, settings, bg):
         threading.Thread(target=_radio_restart, daemon=True).start()
 
     elif cmd == "library_stop":
-        library.stop_playback(S)
+        from modules import local_player as _lp
+        from modules import source_state
+        _lp.stop(S)
+        S["radio_playing"] = False
+        S["radio_type"] = ""
+        S["control_context"] = "idle"
+        source_state.commit_source("idle")
 
     else:
         return False

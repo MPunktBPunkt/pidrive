@@ -406,14 +406,22 @@ def handle(cmd, menu_state, store, S, settings, bg):
             payload = payload[:-8]
         _clear_meta(S)
         try:
+            for _stop_fn in (webradio.stop, dab.stop, fm.stop, scanner.stop):
+                try:
+                    _stop_fn(S)
+                except Exception:
+                    pass
             from modules import local_player as _lp
-            _lp.play(payload, S, settings, shuffle=shuffle)
+            if not _lp.play(payload, S, settings, shuffle=shuffle):
+                log.warn(f"local_play: keine Dateien in {payload!r}")
+                return
             source_state.commit_source("local")
             try:
                 import os as _oslh
                 from mpv_meta import write_source_history as _wsh3
-                _wsh3("local", _oslh.path.basename(payload.rstrip("/")) or "Lokal", payload)
-            except Exception: pass
+                _wsh3("local", S.get("track") or _oslh.path.basename(payload.rstrip("/")) or "Lokal", payload)
+            except Exception:
+                pass
             log.info(f"local_play: {payload!r} shuffle={shuffle}")
         except Exception as _e:
             log.error(f"local_play Fehler: {_e}")

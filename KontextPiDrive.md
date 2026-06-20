@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.11.126
+# PiDrive — Kontext & Projektdokumentation v0.11.127
 
 > **Pflegehinweis:** Diese Datei ist der Entwicklungs-/Entscheidungsverlauf und wird
 > **nach jeder Session aktualisiert** (Changelog-Abschnitt unten + Funktionsstatus).
@@ -43,7 +43,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | AVRCP Phase 1 (Kontextmapping) | ✅ v0.8.6 |
 | MPRIS2 (BMW-Metadaten + Watchdog) | ✅ **v0.11.123 art_url-Bug gefixt** — Menü/Metadaten erscheinen wieder |
 | Spotify Connect (librespot/raspotify) | ✅ OAuth vorhanden; **als Favorit möglich** (v0.11.123) |
-| USB-Musik + lokale Wiedergabe (mp3/m3u) | ✅ v0.11.38 — `settings.music_dir`, im Menü Quellen→Bibliothek |
+| USB-Musik + lokale Wiedergabe (mp3/m3u) | ✅ `settings.music_dir`; Menü Quellen→Bibliothek; **WebUI `/music-admin`** (Upload, ID3) |
 | **Menü (iDrive-tauglich)** | ✅ v0.11.123 — Favoriten zuerst, „Zurueck"-Einträge, Bestätigungen |
 | **Audio-Stack: PipeWire System-Mode** | ✅ ersetzt System-PulseAudio |
 | **WirePlumber System-Mode (Trixie/Pi 4)** | ✅ v0.11.118/119 main-Profil, seat-monitoring aus |
@@ -68,6 +68,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | 0.11.124 | Scanner-Suchlauf mit Rückmeldung: `scan_next/prev` → `/tmp/pidrive_scan_result.json`; `pidrivectl scanner <band> scan` meldet gefunden/leer/Timeout |
 | 0.11.125 | Diagnose bereinigt (keine falschen PulseAudio-BT-Warnungen unter PipeWire, kein Pairing-Widerspruch); DAB-Status zeigt `pcm_only` als „spielt" statt „Sync OK: nein" |
 | 0.11.126 | `pidrivectl test bt` liest AVRCP-Version aus SDP und meldet Cover-Art-Fähigkeit (erst ab AVRCP 1.6) |
+| 0.11.127 | **WebUI Medienbibliothek** (`/music-admin`): Upload, Ordner, ID3-Tags; iDrive-Menü Unterordner (nur Abspielen); `library_stop`/`radio_stop` stoppen lokale mpv-Wiedergabe |
 
 ---
 

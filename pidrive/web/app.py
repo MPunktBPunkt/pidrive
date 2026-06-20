@@ -48,6 +48,7 @@ try:
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
     from web.api.routes_audio    import audio_bp;    app.register_blueprint(audio_bp)
     from web.api.routes_webradio import webradio_bp; app.register_blueprint(webradio_bp)
+    from web.api.routes_music   import music_bp;    app.register_blueprint(music_bp)
 except Exception as _bp_err:
     import log as _log
     _log.error(f"WebUI Blueprint-Import FEHLER: {_bp_err} — Betroffene API-Routen nicht verfügbar!")
@@ -151,6 +152,17 @@ def page_webradio_admin():
         _log.error(f"build_view_model webradio-admin.html: {_e}")
         vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("webradio-admin.html", vm=vm)
+
+@app.route("/music-admin")
+def page_music_admin():
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model music-admin.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
+    return render_template("music-admin.html", vm=vm)
 
 
 @app.route("/")
@@ -383,6 +395,7 @@ def api_cmd():
         "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
         "set_scanner_squelch:", "set_ppm:",
         "webradio_play:",
+        "local_play:",
         "play_dab:", "play_fm:", "play_web:",
         "favorites_play:",
         "vol_set:",

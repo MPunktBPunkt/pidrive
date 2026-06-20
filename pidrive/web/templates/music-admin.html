@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — Medienbibliothek{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-title">🎵 Medienbibliothek</div>
+  <div id="musicRoot" style="font-size:12px;color:var(--muted);margin-bottom:8px">…</div>
+  <div id="musicBreadcrumb" style="font-size:13px;margin-bottom:10px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="btn" onclick="musicUp()">⬆ Hoch</button>
+    <button class="btn primary" onclick="musicPlayCurrent(true)">▶ Ordner abspielen</button>
+    <button class="btn" onclick="musicPlayCurrent(false, true)">🔀 Zufällig</button>
+    <label class="btn" style="cursor:pointer">📤 Upload<input type="file" id="uploadInput" multiple accept="audio/*,.m3u" style="display:none" onchange="musicUpload(event)"></label>
+  </div>
+  <div id="musicListing" style="font-size:13px">Lade…</div>
+</div>
+<div class="card">
+  <div class="card-title">📁 Neuer Ordner</div>
+  <div style="display:flex;gap:8px;max-width:420px">
+    <input id="newFolderName" placeholder="Ordnername" style="flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:7px">
+    <button class="btn primary" onclick="musicMkdir()">Anlegen</button>
+  </div>
+</div>
+<div class="card" id="tagCard" style="display:none">
+  <div class="card-title">🏷 ID3-Tags bearbeiten</div>
+  <div id="tagFile" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
+  <div style="display:grid;grid-template-columns:100px 1fr;gap:6px;max-width:480px;font-size:13px">
+    <label>Titel</label><input id="tagTitle" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px">
+    <label>Interpret</label><input id="tagArtist" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px">
+    <label>Album</label><input id="tagAlbum" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px">
+    <label>Genre</label><input id="tagGenre" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px">
+    <label>Track #</label><input id="tagTrack" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px">
+    <label>Jahr</label><input id="tagDate" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:6px">
+  </div>
+  <div style="margin-top:10px;display:flex;gap:8px">
+    <button class="btn primary" onclick="musicSaveTags()">Tags speichern</button>
+    <button class="btn" onclick="musicPlayFile()">▶ Diese Datei</button>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let musicPath = '';
+let tagEditPath = '';
+
+function fmtBytes(n) {
+  if (!n) return '0 B';
+  const u = ['B','KB','MB','GB'];
+  let i = 0; while (n >= 1024 && i < 3) { n /= 1024; i++; }
+  return n.toFixed(i ? 1 : 0) + ' ' + u[i];
+}
+
+async function loadMusicInfo() {
+  try {
+    const r = await fetch('/api/music/info');
+    const j = await r.json();
+    if (j.ok) document.getElementById('musicRoot').textContent =
+      'Speicher: ' + j.root + ' · ' + fmtBytes(j.total_bytes);
+  } catch (e) {}
+}
+
+function renderBreadcrumb() {
+  const el = document.getElementById('musicBreadcrumb');
+  const parts = musicPath ? musicPath.split('/') : [];
+  let html = '<a href="#" onclick="musicGo(\'\');return false">Bibliothek</a>';
+  let acc = '';
+  for (const p of parts) {
+    acc = acc ? acc + '/' + p : p;
+    const cur = acc;
+    html += ' / <a href="#" onclick="musicGo(\'' + cur.replace(/'/g, "\\'") + '\');return false">' + p + '</a>';
+  }
+  el.innerHTML = html;
+}
+
+async function musicGo(path) {
+  musicPath = path || '';
+  renderBreadcrumb();
+  const el = document.getElementById('musicListing');
+  el.textContent = 'Lade…';
+  try {
+    const r = await fetch('/api/music/list?path=' + encodeURIComponent(musicPath));
+    const j = await r.json();
+    if (!j.ok) { el.textContent = j.error || 'Fehler'; return; }
+    let html = '';
+    for (const d of (j.dirs || [])) {
+      html += `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+        <span style="flex:1;cursor:pointer" onclick="musicGo('${d.path.replace(/'/g, "\\'")}')">📁 <b>${d.name}</b> <span style="color:var(--muted);font-size:11px">(${d.files} Titel)</span></span>
+        <button class="btn" onclick="musicPlayPath('${d.path.replace(/'/g, "\\'")}')">▶</button>
+        <button class="btn" onclick="musicDelete('${d.path.replace(/'/g, "\\'")}')" title="Nur leere Ordner">🗑</button>
+      </div>`;
+    }
+    for (const f of (j.files || [])) {
+      html += `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+        <span style="flex:1">🎵 ${f.name} <span style="color:var(--muted);font-size:11px">${fmtBytes(f.size)}</span></span>
+        <button class="btn" onclick="musicPlayPath('${f.path.replace(/'/g, "\\'")}')">▶</button>
+        <button class="btn" onclick="musicEditTags('${f.path.replace(/'/g, "\\'")}')">🏷</button>
+        <button class="btn" onclick="musicDelete('${f.path.replace(/'/g, "\\'")}')">🗑</button>
+      </div>`;
+    }
+    if (!html) html = '<span style="color:var(--muted)">Leer — Dateien hochladen oder Unterordner anlegen</span>';
+    el.innerHTML = html;
+  } catch (e) { el.textContent = String(e); }
+}
+
+function musicUp() {
+  if (!musicPath) return;
+  const parts = musicPath.split('/');
+  parts.pop();
+  musicGo(parts.join('/'));
+}
+
+async function musicPlayPath(rel, shuffle) {
+  await fetch('/api/music/play', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ path: rel, shuffle: !!shuffle }) });
+  showToast('Wiedergabe gestartet');
+}
+
+function musicPlayCurrent(shuffle, forceShuffle) {
+  if (!musicPath) { showToast('Ordner wählen oder in Unterordner wechseln'); return; }
+  musicPlayPath(musicPath, forceShuffle || shuffle);
+}
+
+async function musicMkdir() {
+  const name = document.getElementById('newFolderName').value.trim();
+  if (!name) return;
+  const r = await fetch('/api/music/mkdir', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ path: musicPath, name }) });
+  const j = await r.json();
+  if (j.ok) { document.getElementById('newFolderName').value = ''; showToast('Ordner angelegt'); musicGo(musicPath); }
+  else showToast(j.error || 'Fehler');
+}
+
+async function musicUpload(ev) {
+  const files = ev.target.files;
+  if (!files || !files.length) return;
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('path', musicPath);
+    const r = await fetch('/api/music/upload', { method:'POST', body: fd });
+    const j = await r.json();
+    if (!j.ok) showToast(file.name + ': ' + (j.error || 'Fehler'));
+  }
+  ev.target.value = '';
+  showToast('Upload fertig');
+  musicGo(musicPath);
+}
+
+async function musicDelete(rel) {
+  if (!confirm('Wirklich löschen?\n' + rel)) return;
+  const r = await fetch('/api/music/delete', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ path: rel }) });
+  const j = await r.json();
+  if (j.ok) { showToast('Gelöscht'); musicGo(musicPath); }
+  else showToast(j.error || 'Fehler');
+}
+
+async function musicEditTags(rel) {
+  tagEditPath = rel;
+  const r = await fetch('/api/music/tags?path=' + encodeURIComponent(rel));
+  const j = await r.json();
+  if (!j.ok) { showToast(j.error); return; }
+  const t = j.tags || {};
+  document.getElementById('tagCard').style.display = 'block';
+  document.getElementById('tagFile').textContent = rel;
+  document.getElementById('tagTitle').value = t.title || '';
+  document.getElementById('tagArtist').value = t.artist || '';
+  document.getElementById('tagAlbum').value = t.album || '';
+  document.getElementById('tagGenre').value = t.genre || '';
+  document.getElementById('tagTrack').value = t.tracknumber || '';
+  document.getElementById('tagDate').value = t.date || '';
+}
+
+async function musicSaveTags() {
+  if (!tagEditPath) return;
+  const body = {
+    path: tagEditPath,
+    title: document.getElementById('tagTitle').value,
+    artist: document.getElementById('tagArtist').value,
+    album: document.getElementById('tagAlbum').value,
+    genre: document.getElementById('tagGenre').value,
+    tracknumber: document.getElementById('tagTrack').value,
+    date: document.getElementById('tagDate').value,
+  };
+  const r = await fetch('/api/music/tags', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const j = await r.json();
+  showToast(j.ok ? 'Tags gespeichert' : (j.error || 'Fehler'));
+}
+
+function musicPlayFile() {
+  if (tagEditPath) musicPlayPath(tagEditPath);
+}
+
+loadMusicInfo();
+musicGo('');
+</script>
+{% endblock %}

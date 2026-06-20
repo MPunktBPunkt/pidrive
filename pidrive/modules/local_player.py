@@ -75,27 +75,30 @@ def play(path: str, S: dict, settings: dict,
     # source_current wird durch td_radio.commit_source("local") gesetzt — hier nur Metadaten
     S["radio_type"]    = "LOCAL"
     S["radio_playing"] = True
-    S["radio_name"]    = os.path.basename(files[_current_idx])
     S["radio_station"] = path
     S["metadata_unavailable"] = False
+    apply_tags_to_state(S, files[_current_idx], settings)
     log.info(f"local_player: {len(files)} Dateien ab {files[_current_idx]!r}")
     return True
 
 
 def _start_mpv(files: list, S: dict, settings: dict):
-    """Startet mpv mit der Dateiliste."""
+    """Startet mpv mit der Dateiliste (Audio-Route aus settings)."""
     global _player_proc
     from modules import audio as _audio
-    sink = _audio.get_bt_sink() or _audio.get_alsa_sink() or ""
+    decision = _audio.decide_audio_route(settings=settings, source="local")
+    mpv_args = _audio.build_player_args(decision, source="local")
     env = dict(os.environ, PULSE_SERVER="unix:/var/run/pulse/native")
-    if sink:
-        env["PULSE_SINK"] = sink
+    if mpv_args and mpv_args[0]:
+        for part in mpv_args[0].split():
+            if "=" in part:
+                k, v = part.split("=", 1)
+                env[k] = v
 
-    cmd = [
-        "mpv", "--no-video", "--really-quiet",
-        "--title=pidrive_local",
-        f"--audio-device=pulse/{sink}" if sink else "--ao=pulse",
-    ] + files
+    cmd = ["mpv", "--no-video", "--really-quiet", "--title=pidrive_local"]
+    if len(mpv_args) > 1:
+        cmd.extend(mpv_args[1:])
+    cmd.extend(files)
 
     with _proc_lock:
         _player_proc = subprocess.Popen(
@@ -114,13 +117,36 @@ def stop(S: dict):
             _player_proc = None
     _current_playlist = []
     S.pop("radio_playing", None)
-    # source_current → td_nav._stop_all_sources oder commit_source("idle")
+    S["library_playing"] = False
     S["radio_type"] = ""
 
 
 def is_playing() -> bool:
     with _proc_lock:
         return _player_proc is not None and _player_proc.poll() is None
+
+
+def current_file() -> str:
+    if _current_playlist and 0 <= _current_idx < len(_current_playlist):
+        return _current_playlist[_current_idx]
+    return ""
+
+
+def apply_tags_to_state(S: dict, filepath: str, settings: dict):
+    """ID3-Tags in Status-Dict für MPRIS2/now."""
+    try:
+        from modules.music_library import rel_from_abs, read_tags
+        rel = rel_from_abs(filepath, settings)
+        tags = read_tags(rel, settings)
+        S["track"] = tags.get("title") or os.path.basename(filepath)
+        S["artist"] = tags.get("artist") or ""
+        S["album"] = tags.get("album") or ""
+        S["library_track"] = S["track"]
+        S["library_playing"] = True
+        S["radio_name"] = S["track"]
+    except Exception:
+        S["track"] = os.path.basename(filepath)
+        S["radio_name"] = S["track"]
 
 
 def current_info() -> dict:

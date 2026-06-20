@@ -495,10 +495,11 @@ def update(status: dict, menu: dict):
             genre  = "Radio"
 
     # ── Bibliothek ───────────────────────────────────────────────────────────
-    elif status.get("library_playing", False):
-        title  = status.get("library_track", status.get("lib_track", "")) or "Bibliothek"
-        artist = "PiDrive"
-        album  = "Bibliothek"
+    elif status.get("library_playing", False) or str(status.get("radio_type", "")).upper() == "LOCAL":
+        title  = (status.get("library_track") or status.get("track")
+                  or status.get("lib_track", "") or "Bibliothek")
+        artist = status.get("artist") or "PiDrive"
+        album  = status.get("album") or "Bibliothek"
 
     # ── Menü-Navigation ──────────────────────────────────────────────────────
     else:
