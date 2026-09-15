@@ -360,6 +360,11 @@ Flags (vor dem Befehl angeben):
                         help="Bestehenden Snapshot ersetzen (CHANGES.md)")
     menu_sub.add_parser("verify", help="Baum gegen Golden Master prüfen")
     menu_sub.add_parser("lint", help="Statische Baum-Prüfungen")
+    p_cost = menu_sub.add_parser("cost", help="Tastendrücke bis Ziel (Skip-Only)")
+    p_cost.add_argument("path_id", help="z.B. sources/dab/dab_stations/dab_0xd411")
+    p_report = menu_sub.add_parser("report", help="Ergonomie-Kennzahlen aller Blätter")
+    p_report.add_argument("--write-doc", action="store_true",
+                          help="Baseline nach docs/menue/MENU-ERGONOMIE.md schreiben")
 
     # ── debug ─────────────────────────────────────────────────────────────
     # ── test ──────────────────────────────────────────────────────────────────
@@ -1442,7 +1447,7 @@ Flags (vor dem Befehl angeben):
         from menu import menu_golden as _mg
         mc = getattr(args, "menu_cmd", None)
         if not mc:
-            fmt.err("Unterbefehl fehlt: snapshot|verify|lint")
+            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report")
             sys.exit(EXIT_USAGE)
         if mc == "snapshot":
             sys.exit(_mg.cmd_snapshot(accept=getattr(args, "accept", False)))
@@ -1450,6 +1455,10 @@ Flags (vor dem Befehl angeben):
             sys.exit(_mg.cmd_verify())
         elif mc == "lint":
             sys.exit(_mg.cmd_lint())
+        elif mc == "cost":
+            sys.exit(_mg.cmd_cost(args.path_id))
+        elif mc == "report":
+            sys.exit(_mg.cmd_report(write_doc=getattr(args, "write_doc", False)))
         sys.exit(EXIT_USAGE)
 
     # debug

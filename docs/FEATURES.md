@@ -69,6 +69,8 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-060 | Menü-Lint | `pidrivectl menu lint` | Exit 0 (Warnungen OK) | Offline | ✅ |
 | F-061 | Menü-Verify | `pidrivectl menu verify` | Exit 0, keine Verluste | tests/golden/ | ✅ |
 | F-062 | Golden Master | `pidrivectl menu snapshot` | menu_tree.json | Offline | ✅ |
+| F-063 | Menü-Kosten | `pidrivectl menu cost sources/dab/...` | Zahl der Tastendrücke | Offline | ✅ |
+| F-064 | Ergonomie-Report | `pidrivectl menu report` | Median/Max/Über-20 | Offline | ✅ |
 
 ## Navigation / Trigger (AVRCP → Core)
 
