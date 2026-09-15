@@ -50,4 +50,24 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 
 ### Hardware-Verifikation (nach Deploy)
 
-*(Abschnitt wird nach Pi-Lauf ergänzt.)*
+| | |
+|---|---|
+| Commit auf Pi | `adf7e16` |
+| VERSION | `0.11.128` |
+| Deploy | `git reset --hard origin/main` + Service-Restart |
+| Log | `/tmp/hw_w01_2026-09-15_1234.log` |
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| `pidrivectl webui check` | Exit 1 — genau 3 V4-Treffer (`prev_station`, `next_station`, `/api/ppm_calibrate`) |
+| `pidrivectl webui selftest` | **0 Fehler** |
+| `pidrivectl menu verify` | OK — 287 Knoten, keine Verluste |
+| `pidrivectl test webui` | ✓ check + ✓ selftest |
+| **H2.1 C16** `radio_stop` / `spotify_toggle` | **kein** `cannot access free variable 'source_state'` mehr; `source_current` wird nach Toggle `spotify` |
+| **H2.6 S11** `/api/audio` | `sinks` nicht leer, `current_volume` z. B. `54%` (vorher dauerhaft leer) |
+| **H2.7 S12** `dab_scan_debug` / `spectrum_debug` | kein `name 'sys' is not defined` mehr |
+| **W1.3** `degraded_imports` in Status | sichtbar: `modules.rtlsdr` / `modules.spectrum` (erwartet bis W4/C2) |
+| H2.8 `processes` | weiterhin `[]` — gehört zu W2/S3 |
+| H2.13 `activate:1` | HTTP 400 „nicht erlaubt“ — bekannt, Menü-Trigger noch nicht in Whitelist |
+
+**Fazit für zweite Cursor-Instanz:** W0 und W1 sind auf HW `@adf7e16` verifiziert. Statuskette (W2), V4-Button-Fixes und RTL-SDR-Importbruch (W4) sind die nächsten Pakete. C16-Ausfall und S11/S12 sind behoben und am Pi nachweisbar.
