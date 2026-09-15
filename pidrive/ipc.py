@@ -106,15 +106,28 @@ def write_status(S, settings):
         "metadata_unavailable": S.get("metadata_unavailable", False),
         "degraded_imports":     _degraded_imports(),
         "processes":            S.get("processes", []),
-        "scanner":              S.get("scanner") or {
-            "active": str(S.get("radio_type", "")).upper() == "SCANNER",
-            "band": S.get("scanner_band", ""),
-            "freq": None,
-            "name": S.get("radio_station", ""),
-            "squelch": S.get("scanner_squelch"),
-        },
+        "scanner":              _scanner_status(S),
         "ts":        int(time.time()),
     })
+
+
+def _scanner_status(S):
+    sc = S.get("scanner")
+    if isinstance(sc, dict) and sc.get("active"):
+        return sc
+    active = str(S.get("radio_type", "")).upper() == "SCANNER"
+    if isinstance(sc, dict) and not active:
+        # inaktives Dict behalten, aber active aus radio_type ableiten
+        out = dict(sc)
+        out["active"] = False
+        return out
+    return {
+        "active": active,
+        "band": S.get("scanner_band", ""),
+        "freq": (sc or {}).get("freq") if isinstance(sc, dict) else None,
+        "name": S.get("radio_station", ""),
+        "squelch": S.get("scanner_squelch"),
+    }
 
 
 def _degraded_imports():

@@ -828,6 +828,7 @@ def _play_channel(band_id, idx, S, settings=None):
     ch = chs[idx]
     name = ch.get("name", f"K{ch.get('ch', idx+1):02d}")
     freq = ch.get("freq", "")
+    S["scanner_band"] = band_id
     S[f"scanner_{band_id}"] = f"{name}  {freq} MHz"
     play_freq(freq, name, BANDS[band_id]["bw"], S, settings=settings)
 
