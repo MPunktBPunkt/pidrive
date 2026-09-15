@@ -15,11 +15,13 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [KontextPiDrive.md](KontextPiDrive.md) | Entscheidungsverlauf, Changelog, Funktionsstatus | Entwickler, Planung | v0.11.127 |
 | [architektur/ARCHITECTURE.md](architektur/ARCHITECTURE.md) | Struktur, IPC, Services, CLI-Kurzreferenz | Entwickler | v0.11.127 |
 | [architektur/RUNTIME_FLOWS.md](architektur/RUNTIME_FLOWS.md) | Laufzeitpfade, Menü→Display | Entwickler | v0.11.127 |
+| [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, Transitionen, Sperrschichten — Ist-Zustand und Lücken Z1–Z10 | Entwickler | v0.11.127 |
 | [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code | Entwickler | v0.11.122 |
 | [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.122 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |
+| [auftraege/AUFTRAG-WEBUI-SANIERUNG.md](auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Arbeitsauftrag WebUI-Statuskette, Scanner, FastScan | Entwickler | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke (Baseline vor M4) | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |
 | [archiv/MIGRATION_BACKLOG.md](archiv/MIGRATION_BACKLOG.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
@@ -31,7 +33,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
 | Dokument | Arbeitspaket |
 |----------|--------------|
-| `ABNAHMEN.md` | 7.2 — Abnahmeprotokolle |
+| `ABNAHMEN.md` | 7.2 — Abnahmeprotokolle; W0/DoD der WebUI-Sanierung (Mess-Protokolle R6–R9) |
 | `fahrzeug/BMW-AVRCP-PROBE.md` | G1 — BMW-Browsing-Probe |
 | `fahrzeug/BMW-DISPLAY-PROBE.md` | G2 — Display-Pfad im Fahrzeug |
 
