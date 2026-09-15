@@ -156,9 +156,8 @@ def handle_trigger(cmd, menu_state, store, S, settings):
 
     log.trigger_received(cmd)
 
-    # Nur echte Menüstruktur-Änderungen brauchen rebuild_tree().
-    # Reine Navigation (up/down/enter/back/left/right) ändert MenuState direkt —
-    # ein sofortiger Rebuild danach setzt den Cursor auf 0 zurück!
+    # Menüstruktur-Änderungen → rebuild_tree(). Navigation ändert MenuState direkt.
+    # Cursor/Pfad werden seit M2 über path_id/uid gerettet (kein Reset auf 0 mehr).
     rebuild_cmds = {
         "dab_scan", "dab_scan_replace",
         "fm_scan",

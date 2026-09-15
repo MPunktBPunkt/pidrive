@@ -375,6 +375,17 @@ Flags (vor dem Befehl angeben):
     menu_sub.add_parser("path", help="Aktueller Pfad (Offline-Referenzbaum)")
     menu_sub.add_parser("rebuild", help="Offline-Rebuild-Test (Pfad/Cursor retten)")
 
+    # ── idrive (M6: AVRCP-Event-Ebene) ───────────────────────────────────────
+    p_idrive = sub.add_parser("idrive", help="BMW iDrive Events simulieren (Event-Ebene)")
+    p_idrive.add_argument("idrive_cmd", nargs="?", default=None,
+                          help="Event (next|play|…) oder script|event")
+    p_idrive.add_argument("idrive_arg", nargs="?", default=None,
+                          help="Skript-Datei oder Event-Name")
+    p_idrive.add_argument("--offline", action="store_true",
+                          help="Ohne Core: lokales MenuState + Menü-Kontext")
+    p_idrive.add_argument("--settle", type=float, default=0.35,
+                          help="Pause nach Live-Event (Skript)")
+
     # ── debug ─────────────────────────────────────────────────────────────
     # ── test ──────────────────────────────────────────────────────────────────
     p_test = sub.add_parser("test", help="System-Test (alle Quellen + Audio + BT)")
@@ -1480,6 +1491,29 @@ Flags (vor dem Befehl angeben):
         elif mc == "rebuild":
             sys.exit(_mg.cmd_rebuild_test())
         sys.exit(EXIT_USAGE)
+
+    # idrive
+    if args.cmd == "idrive":
+        from menu import idrive_sim as _id
+        offline = getattr(args, "offline", False)
+        cmd = getattr(args, "idrive_cmd", None)
+        arg = getattr(args, "idrive_arg", None)
+        if not cmd:
+            fmt.err("Nutzung: pidrivectl idrive <next|play|…> | script <datei> [--offline]")
+            sys.exit(EXIT_USAGE)
+        if cmd == "script":
+            if not arg:
+                fmt.err("Skript-Datei fehlt")
+                sys.exit(EXIT_USAGE)
+            sys.exit(_id.run_script(arg, offline=offline,
+                                    settle=getattr(args, "settle", 0.35)))
+        if cmd == "event":
+            if not arg:
+                fmt.err("Event-Name fehlt")
+                sys.exit(EXIT_USAGE)
+            sys.exit(_id.cmd_event(arg, offline=offline))
+        # Kurzform: pidrivectl idrive next
+        sys.exit(_id.cmd_event(cmd, offline=offline))
 
     # debug
     if args.cmd == "test":

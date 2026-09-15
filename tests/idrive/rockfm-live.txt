@@ -1,0 +1,55 @@
+# Live-Variante (Core + RTL-SDR): nach Navigation Wiedergabe prüfen
+# Voraussetzung: pidrive_core läuft, READY-Datei existiert
+#
+# Zuerst Offline-Navigation (oder denselben Pfad live):
+#   pidrivectl idrive script tests/idrive/rockfm.txt
+# Dann:
+#   expect radio_type=DAB
+#   expect station=ROCK FM
+#
+# Komplett live (Events gehen an den Core):
+
+reset
+next
+play
+sleep 1.5
+next
+next
+play
+sleep 1.5
+next
+play
+sleep 1.5
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+expect selected=ROCK FM
+play
+sleep 8
+expect radio_type=DAB
+expect station=ROCK FM

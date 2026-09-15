@@ -815,6 +815,21 @@ def test_menu():
         _p(FAIL, "menu rebuild", "Position nach Rebuild verloren", time.time() - t2)
     else:
         _p(PASS, "menu rebuild", elapsed=time.time() - t2)
+    t3 = time.time()
+    try:
+        from menu import idrive_sim as _id
+        import os as _os
+        _script = _os.path.join(_os.path.dirname(BASE_DIR), "tests", "idrive", "rockfm.txt")
+        if _os.path.exists(_script):
+            id_rc = _id.run_script(_script, offline=True)
+            if id_rc != 0:
+                _p(FAIL, "idrive script rockfm", "Offline-Skript fehlgeschlagen", time.time() - t3)
+            else:
+                _p(PASS, "idrive script rockfm", "offline → ROCK FM", time.time() - t3)
+        else:
+            _p(WARN, "idrive script", f"fehlt: {_script}")
+    except Exception as e:
+        _p(FAIL, "idrive script", str(e)[:60], time.time() - t3)
 
 
 def run_all():

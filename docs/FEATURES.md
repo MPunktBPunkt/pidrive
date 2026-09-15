@@ -75,6 +75,8 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-066 | Menü goto | `pidrivectl menu goto sources/dab/...` | Cursor auf Ziel | Offline | ✅ |
 | F-067 | Menü activate | `pidrivectl menu activate <uid>` | Knoten ausgewählt | Offline | ✅ |
 | F-068 | Rebuild hält Position | `pidrivectl menu rebuild` | Pfad+UID gleich | Offline | ✅ |
+| F-069 | iDrive-Event | `pidrivectl idrive next --offline` | Mapping + Menübewegung | Offline | ✅ |
+| F-070 | iDrive-Skript ROCK FM | `pidrivectl idrive script tests/idrive/rockfm.txt --offline` | activated=ROCK FM | Offline | ✅ |
 
 ## Navigation / Trigger (AVRCP → Core)
 
