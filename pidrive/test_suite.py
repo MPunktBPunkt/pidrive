@@ -159,12 +159,45 @@ def _stop_all_sources(wait_rtl=True, timeout=5.0):
             return True, None
         time.sleep(0.25)
     procs = _rtl_processes()
-    if procs:
-        detail = ", ".join(
-            f"{p.get('pid', '?')}:{(p.get('cmd') or '')[:40]}" for p in procs[:3]
+    if not procs:
+        return True, None
+    # Letzter Ausweg: Core neu starten (welle-cli läuft als root → pkill als pidrive wirkt nicht)
+    try:
+        r = subprocess.run(
+            ["sudo", "-n", "/bin/systemctl", "restart", "pidrive_core"],
+            capture_output=True, text=True, timeout=30,
         )
-        return False, f"RTL-Prozesse noch aktiv: {detail}"
-    return True, None
+        if r.returncode == 0:
+            time.sleep(2.5)
+            # Boot-Resume abfangen: erneut stoppen
+            for cmd in ("radio_stop", "scanner_stop", "stop"):
+                _write_trigger(cmd)
+                time.sleep(0.2)
+            time.sleep(1.0)
+            try:
+                subprocess.run(
+                    "pkill -f 'welle-cli|rtl_fm|rtl_sdr|rtl_test' 2>/dev/null || true",
+                    shell=True, timeout=5,
+                )
+            except Exception:
+                pass
+            time.sleep(0.5)
+            # Kurz warten bis Resume-welle ggf. wieder da ist, dann nochmal Trigger
+            for _ in range(8):
+                procs = _rtl_processes()
+                if not procs:
+                    return True, None
+                _write_trigger("radio_stop")
+                time.sleep(0.5)
+            procs = _rtl_processes()
+            if not procs:
+                return True, None
+    except Exception as e:
+        return False, f"RTL-Prozesse + Core-Restart fehlgeschlagen: {e}"
+    detail = ", ".join(
+        f"{p.get('pid', '?')}:{(p.get('cmd') or '')[:40]}" for p in (_rtl_processes() or [])[:3]
+    )
+    return False, f"RTL-Prozesse noch aktiv nach Restart: {detail}"
 
 def _wait_for_metadata(source_key, max_wait=20, poll=1.0):
     """Wartet bis Metadaten für eine Quelle vorhanden sind."""
@@ -1022,6 +1055,11 @@ def run_all():
     print(f"{BOLD}{M}{'═'*60}{RST}")
 
     _send_to_bmw("PiDrive System-Test", "startet...", "pidrivectl test all")
+
+    # Vor allen Abschnitten: Orphans/Boot-Resume wegräumen (TK-A)
+    _ok0, _why0 = _stop_all_sources(wait_rtl=True, timeout=8.0)
+    if not _ok0:
+        _p(WARN, "Start-Cleanup: RTL nicht frei", _why0 or "")
 
     test_menu()
     test_webui()
