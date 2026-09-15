@@ -1,6 +1,6 @@
 # Abnahmeprotokolle — PiDrive
 
-**Stand:** v0.11.129 · 2026-09-15
+**Stand:** v0.11.130 · 2026-09-15
 
 Ergebnis-Dokumente werden **ergänzt**, nicht überschrieben. Jede Messung nennt Commit-Hash.
 
@@ -95,3 +95,22 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | Import `modules.radio.fm/scanner/spectrum` | `_rtlsdr`/`_spectrum` gesetzt, `degraded_imports` leer |
 
 **HW ausstehend (wenn Pi wieder erreichbar):** H2.4 (Core stop → Banner), H2.8 (`processes` nicht leer), H2.3 (Throttling), H2.5 (`api-core.js` ohne SyntaxError), **R5** Quellenwechsel nach W4.
+
+---
+
+## 2026-09-15 — W7/Stufe 1 + W5 Teil (lokal, v0.11.130)
+
+| | |
+|---|---|
+| Code | lokal **v0.11.130** — Pi unreachable |
+| W7.1 Z2 | alle `begin_transition`-Aufrufer behandeln `False` → Progress „Blockiert“ |
+| W7.2 Z3 | `in_transition()` räumt Stale auf (Datei=Speicher) |
+| W7.3 Z3 | `check_stale_transition()` in Core-Loop (0.5 s) |
+| W7.4 Z10 | `history` Ringpuffer; `pidrivectl source state\|history` |
+| W5 C1/E3 | `scan_next`/`scan_prev`: Transition erst nach Treffer |
+| W5 C7 | kaputtes `reason=` entfernt; `stop()` beendet keine fremde Transition |
+| W5 C3 | Schmalband `-s` = max(48000, bw×4) — **[MESSEN] Vorher/Nachher auf Pi** |
+| W5 C4 | Detect-Timeout Default 1.5 s — **[MESSEN]** |
+| W5 C8/C9 | Freenet K5/K6; set_channel per `ch`; set_freq für Kanalbänder |
+
+**Offen in W5:** C5 Sweep-Beschleunigung, CB-AM, C12/C13/C14, check_hardware am Start.

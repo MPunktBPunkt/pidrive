@@ -40,15 +40,26 @@ STATE = {
     "stale_cleared":    0,        # v0.10.55: Zähler für automatisch abgeräumte Stale-Transitions
     "dab_playback_state": "idle",   # idle | starting | locked | no_lock | failed
     "playback_epoch": 0,
+    "history": [],               # W7/Z10: letzte Übergänge (Ringpuffer)
 }
+
+_HISTORY_MAX = 20
 
 
 # ── Stale-Transition-Watchdog ────────────────────────────────────────────────
 
+def _append_history(entry: dict):
+    """Ringpuffer der letzten Übergänge (W7/Z10)."""
+    hist = STATE.setdefault("history", [])
+    hist.append(entry)
+    if len(hist) > _HISTORY_MAX:
+        del hist[0:len(hist) - _HISTORY_MAX]
+
+
 def _check_stale_transition() -> bool:
     """
     v0.10.55: Räumt hängende Transition auf ohne auf begin_transition() zu warten.
-    Wird von commit_source() und end_transition() aufgerufen.
+    Wird von commit_source(), end_transition() und der Core-Hauptschleife aufgerufen.
     Gibt True zurück wenn eine Stale-Transition aufgeräumt wurde.
     """
     if not STATE["transition"]:
@@ -56,8 +67,10 @@ def _check_stale_transition() -> bool:
     age = time.time() - STATE["since"]
     if age < STALE_TIMEOUT_S:
         return False
+    owner = STATE["owner"]
+    target = STATE["source_target"]
     log.warn(
-        f"SOURCE stale-watchdog: transition von owner={STATE['owner']!r} "
+        f"SOURCE stale-watchdog: transition von owner={owner!r} "
         f"läuft seit {age:.1f}s — automatisch abgeräumt"
     )
     STATE["transition"]    = False
@@ -65,8 +78,21 @@ def _check_stale_transition() -> bool:
     STATE["source_target"] = ""
     STATE["since"]         = 0.0
     STATE["stale_cleared"] = STATE.get("stale_cleared", 0) + 1
+    _append_history({
+        "ts": time.time(),
+        "owner": owner,
+        "target": target,
+        "result": "stale_cleared",
+        "duration_s": round(age, 2),
+    })
     _write_state_file()
     return True
+
+
+def check_stale_transition() -> bool:
+    """Öffentlicher Einstieg für die Core-Hauptschleife (W7/Z3)."""
+    with _LOCK:
+        return _check_stale_transition()
 
 
 # ── Datei-I/O ────────────────────────────────────────────────────────────────
@@ -112,12 +138,28 @@ def begin_transition(owner: str, target: str, timeout_s: float = STALE_TIMEOUT_S
                     f"active={STATE['owner']!r} age={age:.1f}s — "
                     f"Aufrufer muss Rückgabewert False beachten!"
                 )
+                _append_history({
+                    "ts": time.time(),
+                    "owner": owner,
+                    "target": target,
+                    "result": "rejected",
+                    "blocked_by": STATE["owner"],
+                    "duration_s": 0,
+                })
+                _write_state_file()
                 return False
             log.warn(
                 f"SOURCE stale transition ({age:.1f}s) — "
                 f"override: {STATE['owner']!r} → {owner!r}"
             )
             STATE["stale_cleared"] = STATE.get("stale_cleared", 0) + 1
+            _append_history({
+                "ts": time.time(),
+                "owner": STATE["owner"],
+                "target": STATE["source_target"],
+                "result": "stale_override",
+                "duration_s": round(age, 2),
+            })
 
         STATE["transition"]      = True
         STATE["owner"]           = owner
@@ -139,30 +181,52 @@ def commit_source(source_name: str, auto_end: bool = False):
     with _LOCK:
         _check_stale_transition()
         old = STATE["source_current"]
+        owner = STATE["owner"]
+        since = STATE["since"]
         if old != source_name:
             STATE["source_previous"] = old
             STATE["playback_epoch"] = STATE.get("playback_epoch", 0) + 1
         STATE["source_current"] = source_name
         if auto_end and STATE["transition"]:
-            duration = time.time() - STATE["since"] if STATE["since"] else 0
+            duration = time.time() - since if since else 0
             STATE["source_target"] = ""
             STATE["transition"]    = False
             STATE["owner"]         = ""
             STATE["since"]         = 0.0
+            _append_history({
+                "ts": time.time(),
+                "owner": owner,
+                "target": source_name,
+                "result": "ok",
+                "from": old,
+                "duration_s": round(duration, 2),
+            })
             log.info(f"SOURCE commit+end: {old} → {source_name} dt={duration:.2f}s")
         else:
             log.info(f"SOURCE commit: {old} → {source_name}")
         _write_state_file()
         # Play-History wird von Quellmodulen mit echtem Sendernamen geschrieben
+
+
 def end_transition():
     """Schließt eine Transition ab."""
     with _LOCK:
         _check_stale_transition()
         duration = time.time() - STATE["since"] if STATE["since"] else 0
+        owner = STATE["owner"]
+        current = STATE["source_current"]
         log.info(
-            f"SOURCE end: owner={STATE['owner']} "
-            f"current={STATE['source_current']} dt={duration:.2f}s"
+            f"SOURCE end: owner={owner} "
+            f"current={current} dt={duration:.2f}s"
         )
+        if STATE["transition"] or owner:
+            _append_history({
+                "ts": time.time(),
+                "owner": owner,
+                "target": current,
+                "result": "ended",
+                "duration_s": round(duration, 2),
+            })
         STATE["source_target"] = ""
         STATE["transition"]    = False
         STATE["owner"]         = ""
@@ -258,13 +322,35 @@ def previous_source() -> str:
 
 def in_transition() -> bool:
     with _LOCK:
-        # v0.10.55: Stale-Transitions nicht als aktiv melden
         if not STATE["transition"]:
             return False
         age = time.time() - STATE["since"]
         if age >= STALE_TIMEOUT_S:
-            return False  # Stale → gilt als beendet
+            # W7/Z3: Speicher und Datei bereinigen — nicht nur False vortäuschen
+            _check_stale_transition()
+            return False
         return True
+
+
+def history(n: int = _HISTORY_MAX) -> list:
+    """Letzte n Übergänge (W7/Z10)."""
+    with _LOCK:
+        hist = list(STATE.get("history") or [])
+        return hist[-n:] if n else hist
+
+
+def memory_matches_file() -> bool:
+    """True wenn in_transition()-Sicht und Datei übereinstimmen (W7/Z3)."""
+    snap = load_snapshot_file()
+    with _LOCK:
+        mem_t = bool(STATE["transition"]) and (time.time() - STATE["since"]) < STALE_TIMEOUT_S
+    file_t = bool(snap.get("transition"))
+    if file_t and snap.get("since"):
+        try:
+            file_t = (time.time() - float(snap["since"])) < STALE_TIMEOUT_S
+        except Exception:
+            pass
+    return mem_t == file_t and STATE.get("source_current") == snap.get("source_current", STATE.get("source_current"))
 
 
 def bt_connected() -> bool:

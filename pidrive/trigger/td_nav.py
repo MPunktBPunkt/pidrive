@@ -164,9 +164,17 @@ def _execute_node(node, menu_state, store, S, settings):
             if not _source_switch_begin(owner=owner, blocking=False):
                 info = _source_switch_info()
                 log.warn(f"PLAY_STATION blocked by active switch owner={info.get('owner','?')}")
+                ipc.write_progress("Sender", "Blockiert", color="orange")
+                _time_mod.sleep(2)
+                ipc.clear_progress()
                 return
 
-            source_state.begin_transition(owner, node.source or "unknown")
+            if not source_state.begin_transition(owner, node.source or "unknown"):
+                ipc.write_progress("Sender", "Blockiert", color="orange")
+                _time_mod.sleep(2)
+                ipc.clear_progress()
+                _source_switch_end()
+                return
             try:
                 _stop_all_sources()
                 src = node.source

@@ -18,13 +18,18 @@ def handle(cmd, menu_state, store, S, settings, bg):
     if cmd == "lib_browse":
         # v0.10.55: source_state tracking + begin_transition
         def _lib_browse():
-            if source_state.begin_transition("lib_browse", "library"):
-                try:
-                    library.browse_and_play(S, load_settings())
-                    if S.get("library_playing"):
-                        source_state.commit_source("library")
-                finally:
-                    source_state.end_transition()
+            if not source_state.begin_transition("lib_browse", "library"):
+                ipc.write_progress("Bibliothek", "Blockiert", color="orange")
+                import time as _t
+                _t.sleep(2)
+                ipc.clear_progress()
+                return
+            try:
+                library.browse_and_play(S, load_settings())
+                if S.get("library_playing"):
+                    source_state.commit_source("library")
+            finally:
+                source_state.end_transition()
         bg(_lib_browse)
 
     elif cmd.startswith("fav_toggle:"):

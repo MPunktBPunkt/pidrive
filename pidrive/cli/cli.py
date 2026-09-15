@@ -382,6 +382,12 @@ Flags (vor dem Befehl angeben):
     webui_sub.add_parser("selftest", help="Import + Aufruf web.shared.*")
     webui_sub.add_parser("routes", help="Alle Flask-Routen listen")
 
+    # ── source (W7: Zustandsmaschine sichtbar) ───────────────────────────────
+    p_source = sub.add_parser("source", help="Quellen-/Transition-Zustand")
+    src_sub = p_source.add_subparsers(dest="source_cmd")
+    src_sub.add_parser("state", help="source_current, transition, owner, Datei vs Speicher")
+    src_sub.add_parser("history", help="Letzte 20 Übergänge")
+
     # ── idrive (M6: AVRCP-Event-Ebene) ───────────────────────────────────────
     p_idrive = sub.add_parser("idrive", help="BMW iDrive Events simulieren (Event-Ebene)")
     p_idrive.add_argument("idrive_cmd", nargs="?", default=None,
@@ -1512,6 +1518,66 @@ Flags (vor dem Befehl angeben):
             sys.exit(_wc.run_selftest())
         elif wc == "routes":
             sys.exit(_wc.cmd_routes())
+        sys.exit(EXIT_USAGE)
+
+    # source (W7)
+    if args.cmd == "source":
+        from modules import source_state as _ss
+        sc = getattr(args, "source_cmd", None) or "state"
+        import json as _sj
+        if sc == "state":
+            mem = _ss.snapshot()
+            disk = _ss.load_snapshot_file()
+            match = _ss.memory_matches_file()
+            age = None
+            if mem.get("since"):
+                import time as _t
+                age = round(_t.time() - float(mem["since"]), 1) if mem.get("transition") else None
+            out = {
+                "source_current": mem.get("source_current"),
+                "source_previous": mem.get("source_previous"),
+                "transition": mem.get("transition"),
+                "in_transition": _ss.in_transition(),
+                "owner": mem.get("owner"),
+                "source_target": mem.get("source_target"),
+                "age_s": age,
+                "memory_matches_file": match,
+                "file_transition": disk.get("transition"),
+                "file_owner": disk.get("owner"),
+                "stale_cleared": mem.get("stale_cleared"),
+                "transition_count": mem.get("transition_count"),
+            }
+            if use_json:
+                fmt.print_json(out)
+            else:
+                icon = "✓" if match else "⚠"
+                fmt.out(f"{icon} Quelle: {out['source_current']}  (vorher: {out['source_previous']})")
+                tr = "JA" if out["in_transition"] else "nein"
+                fmt.out(f"  Transition: {tr}  owner={out['owner'] or '–'}  target={out['source_target'] or '–'}")
+                if age is not None:
+                    fmt.out(f"  Alter: {age}s")
+                fmt.out(f"  Speicher↔Datei: {'übereinstimmend' if match else 'ABWEICHEND'}")
+                fmt.out(f"  Zähler: transitions={out['transition_count']} stale_cleared={out['stale_cleared']}")
+            sys.exit(EXIT_OK)
+        elif sc == "history":
+            hist = _ss.history(20)
+            if use_json:
+                fmt.print_json({"history": hist})
+            else:
+                if not hist:
+                    fmt.out("(keine Übergänge)")
+                for e in hist:
+                    import time as _t
+                    ts = e.get("ts")
+                    tstr = _t.strftime("%H:%M:%S", _t.localtime(ts)) if ts else "?"
+                    fmt.out(
+                        f"  {tstr}  {e.get('result','?'):16}  "
+                        f"owner={e.get('owner','–')} → {e.get('target','–')}  "
+                        f"dt={e.get('duration_s',0)}s"
+                        + (f"  blocked_by={e['blocked_by']}" if e.get("blocked_by") else "")
+                    )
+            sys.exit(EXIT_OK)
+        fmt.err("Unterbefehl fehlt: state|history")
         sys.exit(EXIT_USAGE)
 
     # idrive

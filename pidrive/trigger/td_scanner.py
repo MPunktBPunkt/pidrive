@@ -42,6 +42,13 @@ def _clear_scanner_metadata(S):
             S.pop(_sk, None)
 
 
+def _blocked(title="Scanner"):
+    """W7/Z2: Ablehnung sichtbar melden (Muster td_radio)."""
+    ipc.write_progress(title, "Blockiert", color="orange")
+    _time_mod.sleep(2)
+    ipc.clear_progress()
+
+
 def handle(cmd, menu_state, store, S, settings, bg):
     # ── Scanner ─────────────────────────────────────────────────────────────
     if cmd == "scanner_stop":
@@ -62,10 +69,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
             else: S.pop(_sk, None)
         def _scan_up(b=band):
             _stop_other_sources(S)
-            source_state.begin_transition(f"scan_up:{b}", "scanner")
+            if not source_state.begin_transition(f"scan_up:{b}", "scanner"):
+                _blocked()
+                return
             try:
                 scanner.channel_up(b, S)
-                S["scanner_band"] = b if "b" in dir() else band
+                S["scanner_band"] = b
                 source_state.commit_source("scanner")
             finally:
                 source_state.end_transition()
@@ -75,10 +84,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
         band = cmd.split(":", 1)[1]
         def _scan_down(b=band):
             _stop_other_sources(S)
-            source_state.begin_transition(f"scan_down:{b}", "scanner")
+            if not source_state.begin_transition(f"scan_down:{b}", "scanner"):
+                _blocked()
+                return
             try:
                 scanner.channel_down(b, S)
-                S["scanner_band"] = b if "b" in dir() else band
+                S["scanner_band"] = b
                 source_state.commit_source("scanner")
             finally:
                 source_state.end_transition()
@@ -91,26 +102,37 @@ def handle(cmd, menu_state, store, S, settings, bg):
             else: S.pop(_sk, None)
         def _scan_next(b=band):
             _stop_other_sources(S)
-            if source_state.begin_transition(f"scan_next:{b}", "scanner"):
+            # W5/E3: Transition erst NACH dem Scan — sonst bricht C1 ab
+            found = scanner.scan_next(b, S, settings)
+            if found:
+                if not source_state.begin_transition(f"scan_next:{b}", "scanner"):
+                    _blocked()
+                    return
                 try:
-                    scanner.scan_next(b, S, settings)
-                    S["scanner_band"] = b if "b" in dir() else band
+                    S["scanner_band"] = b
                     source_state.commit_source("scanner")
                 finally:
                     source_state.end_transition()
+            else:
+                log.info(f"scan_next:{b} — kein Treffer")
         bg(_scan_next)
 
     elif cmd.startswith("scan_prev:"):
         band = cmd.split(":", 1)[1]
         def _scan_prev(b=band):
             _stop_other_sources(S)
-            if source_state.begin_transition(f"scan_prev:{b}", "scanner"):
+            found = scanner.scan_prev(b, S, settings)
+            if found:
+                if not source_state.begin_transition(f"scan_prev:{b}", "scanner"):
+                    _blocked()
+                    return
                 try:
-                    scanner.scan_prev(b, S, settings)
-                    S["scanner_band"] = b if "b" in dir() else band
+                    S["scanner_band"] = b
                     source_state.commit_source("scanner")
                 finally:
                     source_state.end_transition()
+            else:
+                log.info(f"scan_prev:{b} — kein Treffer")
         bg(_scan_prev)
 
     elif cmd.startswith("scan_jump:"):
@@ -122,16 +144,17 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 delta = 0
             if delta:
-                # v0.10.55: settings durchreichen + begin_transition wrapper
                 def _scan_jump_fn(b=band, d=delta):
                     _stop_other_sources(S)
-                    if source_state.begin_transition(f"scan_jump:{b}", "scanner"):
-                        try:
-                            scanner.channel_jump(b, d, S, settings)
-                            S["scanner_band"] = b if "b" in dir() else band
-                            source_state.commit_source("scanner")
-                        finally:
-                            source_state.end_transition()
+                    if not source_state.begin_transition(f"scan_jump:{b}", "scanner"):
+                        _blocked()
+                        return
+                    try:
+                        scanner.channel_jump(b, d, S, settings)
+                        S["scanner_band"] = b
+                        source_state.commit_source("scanner")
+                    finally:
+                        source_state.end_transition()
                 bg(_scan_jump_fn)
 
     elif cmd.startswith("scan_step:"):
@@ -143,16 +166,17 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 delta = 0.0
             if delta:
-                # v0.10.55: begin_transition wrapper
                 def _scan_step_fn(b=band, d=delta):
                     _stop_other_sources(S)
-                    if source_state.begin_transition(f"scan_step:{b}", "scanner"):
-                        try:
-                            scanner.freq_step(b, d, S, settings)
-                            S["scanner_band"] = b if "b" in dir() else band
-                            source_state.commit_source("scanner")
-                        finally:
-                            source_state.end_transition()
+                    if not source_state.begin_transition(f"scan_step:{b}", "scanner"):
+                        _blocked()
+                        return
+                    try:
+                        scanner.freq_step(b, d, S, settings)
+                        S["scanner_band"] = b
+                        source_state.commit_source("scanner")
+                    finally:
+                        source_state.end_transition()
                 bg(_scan_step_fn)
 
     elif cmd.startswith("scan_setfreq:"):
@@ -164,17 +188,18 @@ def handle(cmd, menu_state, store, S, settings, bg):
             except Exception:
                 freq = 0.0
             if freq:
-                # v0.10.55: begin_transition wrapper
                 def _scan_setfreq_fn(b=band, f=freq):
                     _stop_other_sources(S)
                     _clear_scanner_metadata(S)
-                    if source_state.begin_transition(f"scan_setfreq:{b}", "scanner"):
-                        try:
-                            scanner.set_freq(b, f, S, settings)
-                            S["scanner_band"] = b if "b" in dir() else band
-                            source_state.commit_source("scanner")
-                        finally:
-                            source_state.end_transition()
+                    if not source_state.begin_transition(f"scan_setfreq:{b}", "scanner"):
+                        _blocked()
+                        return
+                    try:
+                        scanner.set_freq(b, f, S, settings)
+                        S["scanner_band"] = b
+                        source_state.commit_source("scanner")
+                    finally:
+                        source_state.end_transition()
                 bg(_scan_setfreq_fn)
 
     elif cmd.startswith("scan_setch:"):
@@ -188,31 +213,34 @@ def handle(cmd, menu_state, store, S, settings, bg):
             def _scan_setch_fn(b=band, c=ch_num):
                 _stop_other_sources(S)
                 _clear_scanner_metadata(S)
-                if source_state.begin_transition(f"scan_setch:{b}", "scanner"):
-                    try:
-                        scanner.set_channel(b, c, S, settings)
-                        S["scanner_band"] = b
-                        source_state.commit_source("scanner")
-                    finally:
-                        source_state.end_transition()
+                if not source_state.begin_transition(f"scan_setch:{b}", "scanner"):
+                    _blocked()
+                    return
+                try:
+                    scanner.set_channel(b, c, S, settings)
+                    S["scanner_band"] = b
+                    source_state.commit_source("scanner")
+                finally:
+                    source_state.end_transition()
             bg(_scan_setch_fn)
 
     elif cmd.startswith("scan_inputfreq:"):
         parts = cmd.split(":")
         if len(parts) >= 2:
             band = parts[1]
-            # v0.10.55: begin_transition wrapper
             def _input_and_set(b=band):
                 freq = scanner.freq_input_screen(b, settings)
                 if freq is not None:
                     _stop_other_sources(S)
-                    if source_state.begin_transition(f"scan_inputfreq:{b}", "scanner"):
-                        try:
-                            scanner.set_freq(b, freq, S, settings)
-                            S["scanner_band"] = b if "b" in dir() else band
-                            source_state.commit_source("scanner")
-                        finally:
-                            source_state.end_transition()
+                    if not source_state.begin_transition(f"scan_inputfreq:{b}", "scanner"):
+                        _blocked()
+                        return
+                    try:
+                        scanner.set_freq(b, freq, S, settings)
+                        S["scanner_band"] = b
+                        source_state.commit_source("scanner")
+                    finally:
+                        source_state.end_transition()
             bg(_input_and_set)
 
     elif cmd.startswith("set_scanner_squelch:"):

@@ -707,6 +707,11 @@ def main():
         _now = time.time()
         if _now - ipc_timer > 0.5:       # 2 Hz statt 10 Hz
             ipc.write_status(S, settings)
+            # W7/Z3: Stale-Transition auch ohne commit/end aufräumen
+            try:
+                source_state.check_stale_transition()
+            except Exception:
+                pass
             ipc_timer = _now
 
         # menu.json nur bei Änderung schreiben (rev-basiert)

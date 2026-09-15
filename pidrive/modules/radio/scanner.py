@@ -62,6 +62,8 @@ FREENET_CHANNELS = [
     {"ch": 2, "name": "Freenet K2", "freq": 149.03750},
     {"ch": 3, "name": "Freenet K3", "freq": 149.05000},
     {"ch": 4, "name": "Freenet K4", "freq": 149.08750},
+    {"ch": 5, "name": "Freenet K5", "freq": 149.10000},
+    {"ch": 6, "name": "Freenet K6", "freq": 149.11250},
 ]
 
 LPD433_CHANNELS = [
@@ -324,12 +326,8 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         S["radio_station"] = "RTL-SDR nicht gefunden"
         return
 
-    # v0.10.0: begin_transition für konsistente source_state-Integration
-    if _src_state:
-        try:
-            _src_state.begin_transition("scanner", reason="user_select")
-        except Exception:
-            pass
+    # Transition nur durch Aufrufer (td_scanner) — play_freq öffnet keine eigene.
+    # Früher: begin_transition(..., reason=) → TypeError, verschluckt (C7).
 
     stop(S)
 
@@ -366,8 +364,9 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
             _out_sr = 32000
             _modulation = "wbfm"
         else:
-            # Schmalband FM (PMR, VHF etc.)
-            _rtl_sr = max(200000, int(bandwidth_hz) * 4)
+            # Schmalband FM (PMR, VHF etc.) — Sample-Rate aus Kanalbandbreite (C3)
+            # Vorher: max(200000, …) → immer 200 kHz bei PMR446; jetzt bw*4, mind. 48 kHz
+            _rtl_sr = max(48000, int(bandwidth_hz) * 4)
             _out_sr = 32000
             _modulation = "fm"
 
@@ -467,12 +466,8 @@ def stop(S):
         S["radio_playing"] = False
         S["radio_station"] = ""
 
-    # v0.10.0: source_state konsistent zurücksetzen nach Scanner-Stop
-    if _src_state:
-        try:
-            _src_state.end_transition()
-        except Exception:
-            pass
+    # end_transition() gehört dem Aufrufer (td_scanner), nicht stop() —
+    # sonst beendet jedes Tunen (play_freq→stop) die äußere Transition (C7).
 
     time.sleep(0.2)
     log.info("Scanner stop: done")
@@ -480,7 +475,7 @@ def stop(S):
 
 # ── Fast/Confirm Detection ───────────────────────────────────────────────────
 
-def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=0.40, squelch=None, settings=None):
+def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=1.5, squelch=None, settings=None):
     freq_hz = int(float(freq_mhz) * 1e6)
     if squelch is None:
         squelch = max(5, _get_squelch(settings) // 2)
@@ -831,12 +826,20 @@ def _play_band_freq(band_id, freq, S, settings=None):
 
 
 def set_channel(band_id: str, ch_num: int, S: dict, settings=None):
-    """Direkt zu Kanal ch_num springen (1-basiert)."""
+    """Direkt zu Kanal ch_num springen (1-basiert, nach Feld 'ch')."""
     chs = _get_channels(band_id)
     if not chs:
         log.warn(f"Scanner: set_channel — kein Kanal-Band: {band_id}")
         return
-    idx = max(0, min(ch_num - 1, len(chs) - 1))
+    idx = None
+    for i, ch in enumerate(chs):
+        if int(ch.get("ch", -1)) == int(ch_num):
+            idx = i
+            break
+    if idx is None:
+        # Fallback: Listenindex (ältere Annahme)
+        idx = max(0, min(ch_num - 1, len(chs) - 1))
+        log.warn(f"Scanner set_channel: ch={ch_num} nicht gefunden, Fallback idx={idx}")
     _current_ch[band_id] = idx
     _play_channel(band_id, idx, S, settings=settings)
     log.info(f"Scanner set_channel band={band_id} ch={ch_num} idx={idx}")
@@ -887,8 +890,22 @@ def freq_step(band_id, delta_mhz, S, settings=None):
 
 
 def set_freq(band_id, freq_mhz, S, settings=None):
-    b = BANDS.get(band_id, {}).get("band", {})
+    entry = BANDS.get(band_id, {})
+    b = entry.get("band", {})
     if not b:
+        # C9: Kanalbänder (pmr446/freenet/lpd433/cb) haben kein band-Dict —
+        # Frequenz trotzdem mit Bandbreite des Kanals abspielen (Squelch-Reload)
+        if entry.get("channels") is not None or band_id in ("pmr446", "freenet", "lpd433", "cb"):
+            try:
+                freq = float(freq_mhz)
+            except Exception:
+                log.warn(f"Scanner: SET_FREQ ungueltig band={band_id} value={freq_mhz}")
+                return
+            bw = entry.get("bw", 12500)
+            name = f"{band_id.upper()} {freq:.5f} MHz"
+            _set_scanner_label(band_id, name, S)
+            play_freq(freq, name, bw, S, settings=settings)
+            return
         log.warn(f"Scanner: SET_FREQ kein Band-Range: {band_id}")
         return
 

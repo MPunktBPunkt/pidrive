@@ -199,7 +199,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
             _match = next((s for s in _stations if s.get("id") == _station_id), None)
             if _match and _match.get("enabled", True):
                 def _do_webradio_play(m=_match):
-                    source_state.begin_transition("webui", "webradio")
+                    if not source_state.begin_transition("webui", "webradio"):
+                        ipc.write_progress("Webradio", "Blockiert", color="orange")
+                        import time as _t
+                        _t.sleep(2)
+                        ipc.clear_progress()
+                        return
                     try:
                         # Alle laufenden Quellen stoppen (kein _stop_all_sources hier im Scope)
                         for _stopper in (dab.stop, fm.stop, scanner.stop):
