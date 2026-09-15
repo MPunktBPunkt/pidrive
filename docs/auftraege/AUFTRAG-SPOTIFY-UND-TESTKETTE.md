@@ -809,3 +809,191 @@ Gateway-Projekt Sinn ergibt.
 | 2026-09-15 | Pi @ **0.11.135**: nach Update kein „RTL-SDR belegt“ mehr im Suite-Log. Restprobleme: Core läuft als **root** → `welle-cli` orphan nach Boot-Resume nicht per User-`pkill` killbar; `radio_stop` kann in Transition hängen. Webradio/FM scheitern wenn Triggers nicht greifen. MPRIS2 ServiceUnknown separat. Nächster Hebel: zuverlässiges `dab.stop`/Resume-Sperre für Tests, nicht Core-Restart. |
 | 2026-09-15 | **TK-B Nachweis am Pi:** `play web "Rock Antenne"` startet **mpv**, aber `source_current` bleibt `idle` (vorher `scanner`). Suite meldet korrekt FAIL — alter Test hätte am Spiegel ggf. auch gehangen. Ursache: fehlendes `commit_source("webradio")` nach Stop-Kette / Boot-Resume. Separat: Zombie-`rtl_fm` filtert `_rtl_processes` ab v0.11.137. |
 | 2026-09-15 | **HW Abnahme** `fba2715`/v0.11.137: **21✓ 2✗ 2⊘** — Webradio+FM grün; DAB-Scan+Spotify SKIP; Scanner ✗ (Spiegel ohne rtl_fm, TK-B); MPRIS2 ✗. Details `docs/ABNAHMEN.md`. |
+
+---
+
+## 11. Nachtrag zum Stand v0.11.137
+
+Grundlage: Nutzerlauf vom 2026-09-15 20:00:16 am Fahrzeug-Pi, dazu zwei WebUI-Ausgaben
+(Spektrum-Snapshot, Audio-Debug-Cockpit) aus demselben Zeitfenster. Die Testkette TK-A…E
+wirkt — dieser Nachtrag betrifft ausschließlich Befunde, die **nach** ihrer Umsetzung
+sichtbar geworden sind.
+
+### 11.1 Der Spektrum-Snapshot des Nutzers war korrekt „belegt"
+
+Die 21 Fenster mit `"error": "RTL-SDR belegt"` sind in diesem Fall **kein Fehler**. Der
+Zeitstempel der Aufnahme lautet `ts: 1789495306`, der Testlauf begann um 20:00:16
+(= 1789495216). Die Aufnahme entstand also **90 Sekunden in den Testlauf hinein**, zwischen
+Abschnitt WEBRADIO und FM RADIO. Zu diesem Zeitpunkt hielt `rtl_fm` aus dem FM-Test das
+Gerät rechtmäßig.
+
+Das ist für die Auswertung wichtig, weil dieselbe Meldung im Abnahmebefund
+(`Spektrum-Snapshot … trotz Idle`) eine **andere** Ursache hat. Wer beide Fälle vermischt,
+sucht den Fehler an der falschen Stelle. Gegenprobe vor jeder weiteren Snapshot-Messung:
+
+```bash
+pgrep -a 'rtl_fm|rtl_sdr|welle-cli' ; pidrivectl now
+```
+
+Die drei **echten** Befunde in derselben Ausgabe bleiben unverändert offen und sind bereits
+im Funkpfad- bzw. WebUI-Auftrag geführt: `"mode": "fm_sweep"` statt Snapshot bei der
+eingegebenen Mitte, `"ok": true` bei `"windows_ok": 0`, und die fehlende Darstellung
+(`rf-tools.html` gibt ausschließlich `JSON.stringify` aus — ein Bild ist nie implementiert
+worden, es fehlt also keine Funktion, sondern sie existiert nicht).
+
+### 11.2 N1 — Der Zombie-Filter sitzt auf der Testseite statt im Modul  [BELEGT]
+
+`test_suite.py` entfernt seit v0.11.137 Zombie-Prozesse aus der Belegtprüfung:
+
+```python
+# test_suite.py:104-111
+    # Zombies zählen nicht als Belegung (TK-A Nachzug)
+    live = []
+    for p in procs:
+        cmd = (p.get("cmd") or "")
+        stat = (p.get("stat") or "")
+        if "<defunct>" in cmd or stat.startswith("Z"):
+            continue
+        live.append(p)
+```
+
+Im Modul fehlt dieser Filter:
+
+```python
+# modules/radio/rtlsdr.py:118-128
+def find_rtl_processes():
+    """Laufende RTL-Prozesse (ps — kein Device-Zugriff)."""
+    r = _sh(r"ps ax -o pid=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' "
+            r"| grep -v grep || true", timeout=3)
+```
+
+Zwei Folgen. Erstens läuft `is_busy()` (L281) über dasselbe ungefilterte
+`find_rtl_processes()`; sein `reap_process()` erntet nur den **selbst registrierten**
+Prozess, ein fremder oder verwaister `rtl_fm` zählt weiter als Belegung. Test und Produkt
+widersprechen sich damit konstruktiv — genau die Diskrepanz, die in `ABNAHMEN.md` steht
+(`RTL=[]` neben `Scanner: RTL-SDR belegt` im Log zur selben Sekunde).
+
+Zweitens ist das Feld `stat` im Testfilter auf dem Normalpfad **immer leer**, weil
+`find_rtl_processes()` nur `pid=,cmd=` abfragt. Es greift dort allein `"<defunct>" in cmd`.
+Der `stat.startswith("Z")`-Zweig wirkt ausschließlich im `except`-Fallback (L96), der
+`stat=` mitliefert. Das ist heute nicht falsch, aber es trägt nicht, sobald jemand den
+Fallback entfernt.
+
+### 11.3 N2 — Der Scanner gibt ohne Warten auf  [BELEGT]
+
+```python
+# modules/radio/scanner.py:409-413
+            if _rtlsdr.is_busy():
+                S["radio_type"]   = "SCANNER"
+                S["source_error"] = "RTL-SDR belegt"
+                log.warn("Scanner: RTL-SDR belegt")
+                return
+```
+
+Eine einzige Abfrage, null Toleranz. Das Modul hält für genau diesen Fall bereits das
+richtige Werkzeug bereit — `wait_until_free(timeout=2.5)` (L248-278) räumt in der Schleife
+`reap_process()` ab und löst veraltete Locks auf. Der Suchlauf wurde in W5 auf dieses Muster
+umgestellt, der Kanalwechsel nicht. Damit scheitert der Scanner an jedem Rennen direkt nach
+einem Quellenwechsel, unabhängig von N1.
+
+### 11.4 N3 — `commit_source` läuft auch dann, wenn der Scan ausgestiegen ist  [BELEGT]
+
+Das ist die **eigentliche Ursache** des Abnahmebefunds `Spiegel=scanner Gerät=False (RTL=[])`
+— und sie liegt nicht im Scanner, sondern im Aufrufer:
+
+```python
+# trigger/td_scanner.py:70-81
+        def _scan_up(b=band):
+            _stop_other_sources(S)
+            if not source_state.begin_transition(f"scan_up:{b}", "scanner"):
+                _blocked()
+                return
+            try:
+                scanner.channel_up(b, S)
+                S["scanner_band"] = b
+                source_state.commit_source("scanner")
+            finally:
+                source_state.end_transition()
+```
+
+`scanner.channel_up()` kehrt beim Ausstieg aus 11.3 **normal** zurück; es wirft nichts. Der
+Fehlschlag wird nur nach `S["source_error"]` geschrieben, und niemand liest das. Folglich
+läuft `commit_source("scanner")` unbedingt. Der Spiegel meldet eine Quelle, die kein Gerät
+hat.
+
+Dieses Muster wiederholt sich in `td_scanner.py` **zehnmal** identisch: `_scan_up`,
+`_scan_down`, `_scan_next`, `_scan_prev`, `_scan_jump_fn`, `_scan_step_fn`,
+`_scan_setfreq_fn`, `_scan_setch_fn`, `_input_and_set` und der Bandstart. Eine Korrektur an
+einer Stelle genügt nicht.
+
+Zusammenhang mit dem Webradio-Befund aus §10: dort fehlt `commit_source` obwohl mpv läuft,
+hier läuft `commit_source` obwohl nichts läuft. Beides ist dieselbe Wurzel — **der Spiegel
+wird gesetzt, ohne das Ergebnis zu prüfen**, in beide Richtungen. Das ist Z-Klasse aus
+`docs/architektur/ZUSTANDSMASCHINE.md`, nicht nur ein Scannerproblem.
+
+### 11.5 N4 — MPRIS2 `ServiceUnknown` gehört nach vorn  [BELEGT]
+
+Über beide Läufe unverändert: `ServiceUnknown: org.mpris.MediaPlayer2.pidrive`, der Watchdog
+meldet das Verschwinden des Dienstes. Im Testlauf des Nutzers ist der Test-Push scheinbar
+grün (`MPRIS2 GetAll: Metadaten lesbar`), der Fehler tritt also **später im Lauf** auf — der
+Dienst verschwindet unter Last oder bei Quellenwechsel, nicht von Anfang an.
+
+Bewertungsänderung gegenüber §9: dieser Punkt sollte **vor** allen SP-Paketen stehen. MPRIS2
+ist der einzige Pfad, auf dem PiDrive das BMW-Display erreicht. Fällt er im Betrieb aus, ist
+nicht eine Testzeile rot, sondern die Anzeige im Fahrzeug tot — und damit auch die
+Grundannahme des Gateway-Projekts, dass Ausbaustufe S1 (Metadaten über AVRCP) überhaupt
+trägt. Ein Zeitraffer-Nachweis ist nötig: wann genau verschwindet der Dienst, und korreliert
+das mit einem Quellenwechsel?
+
+### 11.6 N5 — Beobachtungen aus dem Audio-Debug-Cockpit  [ANALYSE]
+
+Die Routing-Entscheidung im Cockpit trägt `"source": "boot_audio_base"` mit
+`"ts": 1789494638` — etwa zehn Minuten **vor** dem Testlauf. Die Entscheidung wird also
+einmal gefällt und bei Quellenwechseln nicht erneuert. Das ist derselbe Befund wie SP-E,
+hier unabhängig von Spotify belegt.
+
+Offen und messbedürftig: `"sink_inputs": []` bei gleichzeitig `SUSPENDED`-Sink. Falls dieser
+Schnappschuss während der FM-Wiedergabe entstand, ginge **auch FM** nicht über PipeWire, und
+neben DAB und Spotify gäbe es einen dritten Bypass. Aus den Daten ist das nicht
+entscheidbar, weil das Cockpit keinen eigenen Zeitstempel mitliefert — nur die Entscheidung
+hat einen. Siehe Messung H7.
+
+Kleinbefund ohne Funktionsfehler: `"pulse_active": false` bei aktivem PipeWire-System-Mode
+ist irreführend benannt. Das Feld prüft einen PulseAudio-Server, der unter PipeWire
+korrekt fehlt, während `pipewire-pulse` die Anfragen bedient. Als Diagnosefeld in einem
+Cockpit lädt das zu Fehlschlüssen ein.
+
+### 11.7 Arbeitspakete
+
+| ID | Paket | DoD |
+|----|-------|-----|
+| **N-A** | Zombie-Filter nach `rtlsdr.py` ziehen: `find_rtl_processes()` fragt `ps ax -o pid=,stat=,cmd=` ab und verwirft `stat` beginnend mit `Z` bzw. `<defunct>` im `cmd`. Filter in `test_suite.py:104-111` danach als reine Rückfallebene belassen. | `is_busy()` liefert `False`, während ein Zombie-`rtl_fm` in `ps` steht. Test und Modul stimmen im selben Moment überein. |
+| **N-B** | `scanner.py:409` auf `wait_until_free()` umstellen, analog zum Suchlauf aus W5. Aufgeben erst nach Ablauf des Zeitfensters. | Kanalwechsel unmittelbar nach `radio_stop` gelingt; kein „belegt" mehr im Log bei freiem Gerät. |
+| **N-C** | Ergebnisprüfung in `td_scanner.py`: die Scan-Funktionen geben Erfolg zurück (oder `S["source_error"]` wird ausgewertet), `commit_source("scanner")` läuft nur bei Erfolg, sonst `commit_source("idle")`. Alle **zehn** Blöcke. Gleiche Prüfung für die Webradio-Lücke aus §10 gegenprüfen. | Scanner-Test: Spiegel und Gerät stimmen überein — entweder `scanner` **mit** `rtl_fm`, oder `idle` **ohne**. Kein Zustand dazwischen. |
+| **N-D** | MPRIS2-Verschwinden einkreisen: Dienstpräsenz im Sekundenraster gegen Quellenwechsel protokollieren, bis der Ausfallmoment reproduzierbar ist. Erst danach Ursachenfixierung. | Protokoll in `ABNAHMEN.md`, das den Ausfall einem Auslöser zuordnet. |
+
+### 11.8 Messungen
+
+| ID | Kommando | Prüft |
+|----|----------|-------|
+| **H7** | `pidrivectl play fm 104.4; sleep 5; date +%s; pactl list sink-inputs short; pgrep -a mpv` | N5 — geht FM über PipeWire? Leere Liste bei laufendem mpv = dritter Bypass. |
+| **H8** | `pgrep -a rtl_fm; ps ax -o pid=,stat=,cmd= \| grep rtl_fm; python3 -c "import sys;sys.path.insert(0,'/home/pidrive/pidrive');from modules.radio import rtlsdr;print(rtlsdr.is_busy())"` | N1 — Zombie im `ps`, aber `is_busy()` soll nach N-A `False` sagen. |
+| **H9** | `pidrivectl scan up pmr446; sleep 3; pidrivectl now; pgrep -a rtl_fm` | N3 — Spiegel gegen Gerät nach einem Kanalwechsel. |
+
+### 11.9 Einordnung in die Reihenfolge
+
+```text
+N-D  (MPRIS2 — Displaypfad, vor allem anderen)
+  ↓
+N-A → N-B → N-C  +  H8, H9        (Gerätearbitrierung und Spiegel geradeziehen)
+  ↓
+SP-A … SP-D                        (Spotify-Semantik, unverändert)
+  ↓
+H7 → SP-E → SP-F                   (Audio-Pfad; H7 kann FM als dritten Bypass aufdecken)
+  ↓
+MD-A → MD-B → MD-C → KB-A          (Menü-IDs und Kleinbefunde, unverändert)
+```
+
+N-A bis N-C sind zusammen zu nehmen: einzeln behoben verschiebt sich der Fehler nur. Ohne
+N-A widerspricht der Test weiter dem Produkt, ohne N-B scheitert der Scanner am Rennen, und
+ohne N-C lügt der Spiegel in beiden Fällen weiter.
