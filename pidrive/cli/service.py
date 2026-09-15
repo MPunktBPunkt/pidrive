@@ -68,6 +68,10 @@ class PiDriveService:
             "spotify":       s.get("spotify", False),
             "dab_attempting":  s.get("dab_attempting", False),
             "dab_play_state": s.get("dab_playback_state", ""),
+            "scanner":         s.get("scanner") or {},
+            "scanner_band":    s.get("scanner_band", ""),
+            "scanner_squelch": s.get("scanner_squelch"),
+            "processes":       s.get("processes") or [],
         }
 
     def get_now(self) -> dict:
