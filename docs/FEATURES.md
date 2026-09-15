@@ -71,6 +71,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-062 | Golden Master | `pidrivectl menu snapshot` | menu_tree.json | Offline | ✅ |
 | F-063 | Menü-Kosten | `pidrivectl menu cost sources/dab/...` | Zahl der Tastendrücke | Offline | ✅ |
 | F-064 | Ergonomie-Report | `pidrivectl menu report` | Median/Max/Über-20 | Offline | ✅ |
+| F-065 | Menübaum export | `pidrivectl menu tree --json` | volle UID-Baumstruktur | Offline | ✅ |
 
 ## Navigation / Trigger (AVRCP → Core)
 
