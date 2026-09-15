@@ -832,6 +832,33 @@ def test_menu():
         _p(FAIL, "idrive script", str(e)[:60], time.time() - t3)
 
 
+def test_webui():
+    """W0/W1: webui check (V4 sichtbar) und selftest (shared-Imports)."""
+    _section("WEBUI", "🌐")
+    from web import webui_check as _wc
+    t0 = time.time()
+    # Inventory mitschreiben
+    try:
+        _wc.write_routes_json()
+    except Exception as e:
+        _p(WARN, "routes.json", str(e)[:60])
+    rc = _wc.run_check(write_inventory=False)
+    if rc == 2:
+        _p(FAIL, "webui check", "erwartete V4-Treffer fehlen — Check unvollständig",
+           time.time() - t0)
+    elif rc == 1:
+        _p(PASS, "webui check", "bekannte Defekte sichtbar (W0)", time.time() - t0)
+    else:
+        _p(PASS, "webui check", "0 Treffer", time.time() - t0)
+
+    t1 = time.time()
+    rc2 = _wc.run_selftest()
+    if rc2 != 0:
+        _p(FAIL, "webui selftest", "Import/Aufruf-Fehler in web.shared", time.time() - t1)
+    else:
+        _p(PASS, "webui selftest", elapsed=time.time() - t1)
+
+
 def run_all():
     global _start_ts, _results, _passed, _failed, _warnings
     _start_ts = time.time()
@@ -847,6 +874,7 @@ def run_all():
     _send_to_bmw("PiDrive System-Test", "startet...", "pidrivectl test all")
 
     test_menu()
+    test_webui()
     test_system()
     test_audio()
     test_bluetooth()

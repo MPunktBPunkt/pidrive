@@ -5,6 +5,7 @@ import time
 from web.shared.constants import (
     CMD_FILE
 )
+from web.shared.errors import warn_once
 
 
 def read_json(path, default=None):
@@ -13,7 +14,10 @@ def read_json(path, default=None):
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        # Fehlende Datei ist Normalfall; nur defekte Dateien einmal warnen
+        if os.path.exists(path):
+            warn_once(f"files.read_json:{path}", f"web.shared.files.read_json({path}): {e}")
         return default
 
 def write_cmd(cmd):

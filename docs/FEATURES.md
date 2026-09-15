@@ -1,6 +1,6 @@
 # PiDrive — Funktions-Inventar
 
-**Stand:** v0.11.127 · 2026-09-15
+**Stand:** v0.11.128 · 2026-09-15
 
 Vertrag über garantierte Fähigkeiten. Jede Zeile ist per CLI prüfbar.
 Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
@@ -77,6 +77,27 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-068 | Rebuild hält Position | `pidrivectl menu rebuild` | Pfad+UID gleich | Offline | ✅ |
 | F-069 | iDrive-Event | `pidrivectl idrive next --offline` | Mapping + Menübewegung | Offline | ✅ |
 | F-070 | iDrive-Skript ROCK FM | `pidrivectl idrive script tests/idrive/rockfm.txt --offline` | activated=ROCK FM | Offline | ✅ |
+
+## WebUI (W0)
+
+| ID | Fähigkeit | CLI-Prüfung | Erwartung | Abhängigkeit | Stand |
+|----|-----------|-------------|-----------|--------------|-------|
+| F-080 | Seiten: Alltag `/` | Browser / `curl -s localhost:8080/` | HTML mit Player, Favoriten, Quellen | pidrive_web | 🟡 |
+| F-081 | Seiten: Bluetooth `/bluetooth` | `curl -s localhost:8080/bluetooth` | Geräteliste, Scan/Reconnect | pidrive_web | 🟡 |
+| F-082 | Seiten: Audio `/audio` | `curl -s localhost:8080/audio` | Route, Volume, Debug-Cockpit | pidrive_web | ⛔ S11 leert Audio-Debug |
+| F-083 | Seiten: RF/DAB `/rf-tools` | `curl -s localhost:8080/rf-tools` | PPM, RTL-SDR, Spektrum | pidrive_web | ⛔ S4 kein Refresh; F3 Watch |
+| F-084 | Seiten: Diagnose `/diagnostics` | `curl -s localhost:8080/diagnostics` | Logs, Ressourcen | pidrive_web | ⛔ S5/S8 Feldnamen |
+| F-085 | Seiten: AVRCP `/avrcp` | `curl -s localhost:8080/avrcp` | Event-Log | pidrive_web | ⛔ S4/S5 |
+| F-086 | Seiten: Webradio-Admin | `curl -s localhost:8080/webradio-admin` | Stationen CRUD | pidrive_web | 🟡 |
+| F-087 | Seiten: Medien-Admin | `curl -s localhost:8080/music-admin` | Upload/Ordner/ID3 | pidrive_web | 🟡 |
+| F-088 | Core-Polling `/api/core` | `curl -s localhost:8080/api/core` | status, menu, source_state, Ages | Core+Web | ⛔ S1/S2 Ages ungenutzt/falsch |
+| F-089 | Trigger `/api/cmd` | `curl -X POST …/api/cmd -d '{"cmd":"radio_stop"}'` | ok:true | Core | ✅ |
+| F-090 | prev/next Station-Buttons | UI `prev_station`/`next_station` | Senderwechsel | — | ⛔ V4 nicht in ALLOWED_COMMANDS |
+| F-091 | PPM Auto-Kalibrieren | RF-Tools Button | `/api/ppm_calibrate` | — | ⛔ V4 sendCmd mit URL-Pfad |
+| F-092 | WebUI-Check | `pidrivectl webui check` | V4-Treffer sichtbar bzw. 0 nach Fix | Offline | ✅ |
+| F-093 | WebUI-Selftest | `pidrivectl webui selftest` | 0 Fehler nach S11/S12-Fix | Offline | ✅ |
+| F-094 | Routen-Inventar | `pidrivectl webui routes` | Liste inkl. Blueprints | Offline | ✅ |
+| F-095 | Menü-Fernsteuerung | `/api/core` path/nodes + UI | wie `menu goto/activate` | Core | ⛔ V3 Oberfläche fehlt |
 
 ## Navigation / Trigger (AVRCP → Core)
 

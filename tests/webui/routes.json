@@ -1,0 +1,522 @@
+{
+  "version": 1,
+  "allowed_commands": [
+    "audio_all",
+    "audio_bt",
+    "audio_hdmi",
+    "audio_klinke",
+    "back",
+    "bt_backup",
+    "bt_disconnect",
+    "bt_off",
+    "bt_on",
+    "bt_reconnect_last",
+    "bt_restore",
+    "bt_scan",
+    "bt_toggle",
+    "dab_next",
+    "dab_prev",
+    "dab_scan",
+    "dab_scan_replace",
+    "down",
+    "enter",
+    "favorites_add",
+    "favorites_add_current",
+    "favorites_remove",
+    "fm_next",
+    "fm_prev",
+    "fm_scan",
+    "gain_dab_auto",
+    "gain_fm_auto",
+    "left",
+    "lib_browse",
+    "library_stop",
+    "radio_stop",
+    "reboot",
+    "right",
+    "rtlsdr_reset",
+    "scanner_stop",
+    "shutdown",
+    "spotify_off",
+    "spotify_on",
+    "spotify_toggle",
+    "sys_info",
+    "sys_version",
+    "up",
+    "update",
+    "vol_down",
+    "vol_set",
+    "vol_up",
+    "wifi_off",
+    "wifi_on",
+    "wifi_scan",
+    "wifi_toggle"
+  ],
+  "command_prefixes": [
+    "cat:",
+    "reload_stations:",
+    "scan_up:",
+    "scan_down:",
+    "scan_next:",
+    "scan_prev:",
+    "scan_jump:",
+    "scan_step:",
+    "scan_setfreq:",
+    "scan_setch:",
+    "scan_inputfreq:",
+    "dab_scan_channels:",
+    "bt_connect:",
+    "bt_forget:",
+    "wifi_connect:",
+    "bt_repair:",
+    "fm_gain:",
+    "dab_gain:",
+    "ppm:",
+    "squelch:",
+    "scanner_gain:",
+    "set_scanner_squelch:",
+    "set_ppm:",
+    "webradio_play:",
+    "webradio_toggle:",
+    "local_play:",
+    "play_dab:",
+    "play_fm:",
+    "play_web:",
+    "favorites_play:",
+    "vol_set:"
+  ],
+  "routes": [
+    {
+      "path": "/bluetooth",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/audio",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/rf-tools",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/diagnostics",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/avrcp",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/webradio-admin",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/music-admin",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/cover/<name>",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/ping",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/core",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/playlist",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/state",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/runtime",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/cmd",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/logs",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/diagnose",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/grep",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/rtlsdr",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/rtlsdr/refresh",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/rtlsdr/reset",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/rtlsdr/calibrate",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/ppm_calibrate",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/scanner/settings",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/spectrum/last",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/spectrum/capture",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/spectrum/stations",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/avrcp",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/service",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/debug/summary",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/diag/system",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/dab/errfile",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/system/resources",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/audio",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/gain",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/volume",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/bt/known",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_bt.py"
+    },
+    {
+      "path": "/api/bt/discovered",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_bt.py"
+    },
+    {
+      "path": "/api/bt/connect_known",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_bt.py"
+    },
+    {
+      "path": "/api/bt/agent",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_bt.py"
+    },
+    {
+      "path": "/api/bt/watcher",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_bt.py"
+    },
+    {
+      "path": "/api/bt/backup",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_bt.py"
+    },
+    {
+      "path": "/api/dab/diag",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/dab/diag/stop",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/dab/diag/status",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/dab/scan/settings",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/dab/scan/last",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/dab/status",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/music/info",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/list",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/mkdir",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/upload",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/delete",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/rename",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/tags",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/tags",
+      "methods": [
+        "PUT",
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/music/play",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_music.py"
+    },
+    {
+      "path": "/api/webradio/stations",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_webradio.py"
+    },
+    {
+      "path": "/api/webradio/add",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_webradio.py"
+    },
+    {
+      "path": "/api/webradio/delete",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_webradio.py"
+    },
+    {
+      "path": "/api/webradio/toggle",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_webradio.py"
+    }
+  ]
+}

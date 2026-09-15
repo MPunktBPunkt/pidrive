@@ -41,8 +41,11 @@ from web.shared import (
     read_json, write_cmd, file_age, get_ip, safe_run,
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
+from web.shared.constants import ALLOWED_COMMAND_PREFIXES
 
 # ── v0.10.55: Blueprints registrieren ─────────────────────────────────────────
+# Fehler werden geloggt UND in app.config gehalten (Banner auf jeder Seite, W1/V6)
+app.config["BLUEPRINT_IMPORT_ERROR"] = None
 try:
     from web.api.routes_dab      import dab_bp;      app.register_blueprint(dab_bp)
     from web.api.routes_bt       import bt_bp;       app.register_blueprint(bt_bp)
@@ -52,6 +55,14 @@ try:
 except Exception as _bp_err:
     import log as _log
     _log.error(f"WebUI Blueprint-Import FEHLER: {_bp_err} — Betroffene API-Routen nicht verfügbar!")
+    app.config["BLUEPRINT_IMPORT_ERROR"] = str(_bp_err)
+
+
+@app.context_processor
+def _inject_blueprint_warning():
+    return {
+        "blueprint_import_error": app.config.get("BLUEPRINT_IMPORT_ERROR"),
+    }
 
 # ── /api/* gibt immer JSON zurück, nie HTML-Fehlerseiten ─────────────────
 @app.errorhandler(404)
@@ -387,19 +398,7 @@ def api_cmd():
     if not cmd:
         return jsonify({"ok": False, "error": "Kein Befehl übergeben"}), 400
 
-    prefixes = (
-        "cat:", "reload_stations:",
-        "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
-        "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
-        "dab_scan_channels:", "bt_connect:", "bt_forget:", "wifi_connect:", "bt_repair:",
-        "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
-        "set_scanner_squelch:", "set_ppm:",
-        "webradio_play:",
-        "local_play:",
-        "play_dab:", "play_fm:", "play_web:",
-        "favorites_play:",
-        "vol_set:",
-    )
+    prefixes = ALLOWED_COMMAND_PREFIXES
     if not (cmd in ALLOWED_COMMANDS or any(cmd.startswith(p) for p in prefixes)):
         return jsonify({"ok": False, "error": f"Befehl nicht erlaubt: {cmd}"}), 400
 

@@ -51,3 +51,18 @@ ALLOWED_COMMANDS = {
     "scanner_stop",
     "favorites_add_current", "favorites_add", "favorites_remove",
 }
+
+# Präfixe für /api/cmd — Single Source of Truth (auch webui_check / app.py)
+ALLOWED_COMMAND_PREFIXES = (
+    "cat:", "reload_stations:",
+    "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
+    "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
+    "dab_scan_channels:", "bt_connect:", "bt_forget:", "wifi_connect:", "bt_repair:",
+    "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
+    "set_scanner_squelch:", "set_ppm:",
+    "webradio_play:", "webradio_toggle:",
+    "local_play:",
+    "play_dab:", "play_fm:", "play_web:",
+    "favorites_play:",
+    "vol_set:",
+)

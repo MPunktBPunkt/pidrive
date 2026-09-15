@@ -105,8 +105,17 @@ def write_status(S, settings):
         "dab_attempting":       S.get("dab_attempting", False),
         "dab_last_error":       S.get("dab_last_error", ""),
         "metadata_unavailable": S.get("metadata_unavailable", False),
+        "degraded_imports":     _degraded_imports(),
         "ts":        int(time.time()),
     })
+
+
+def _degraded_imports():
+    try:
+        from modules import degraded_imports as _deg
+        return _deg.list_degraded()
+    except Exception:
+        return []
 
 
 def write_menu(menu_state):

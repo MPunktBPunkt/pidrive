@@ -141,6 +141,12 @@
 
   <!-- Seiteninhalt -->
   <div class="page-content">
+    {% if blueprint_import_error %}
+    <div style="background:#5a1a1a;color:#ffb4b4;padding:10px 14px;margin:8px 0 16px;border:1px solid #a33;font-size:13px">
+      ⚠ Blueprint-Import fehlgeschlagen — API-Routen teilweise tot:
+      <code>{{ blueprint_import_error }}</code>
+    </div>
+    {% endif %}
     {% block content %}{% endblock %}
   </div>
 </div>

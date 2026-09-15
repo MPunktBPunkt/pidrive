@@ -15,7 +15,7 @@ from web.shared.constants import (  # noqa: F401
     RTLSDR_FILE, AVRCP_FILE, LIST_FILE, LOG_FILE,
     READY_FILE,     KNOWN_BT_FILE, BT_AGENT_FILE, WATCHER_STATE_FILE,
     DAB_DEBUG_FILE, STATIONS_FILE, DISC_BT_FILE,
-    PA_ENV, ALLOWED_COMMANDS,
+    PA_ENV, ALLOWED_COMMANDS, ALLOWED_COMMAND_PREFIXES,
 )
 
 # ── Datei-/IPC-Helfer ───────────────────────────────────────────────────

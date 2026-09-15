@@ -22,8 +22,13 @@ import subprocess
 
 try:
     from modules import rtlsdr as _rtlsdr
-except Exception:
+except Exception as _e:
     _rtlsdr = None
+    try:
+        from modules import degraded_imports as _deg
+        _deg.report("modules.rtlsdr", str(_e))
+    except Exception:
+        pass
 
 try:
     from modules import source_state as _src_state
@@ -32,8 +37,13 @@ except Exception:
 
 try:
     from modules import spectrum as _spectrum
-except Exception:
+except Exception as _e:
     _spectrum = None
+    try:
+        from modules import degraded_imports as _deg
+        _deg.report("modules.spectrum", str(_e))
+    except Exception:
+        pass
 
 import ipc
 import log

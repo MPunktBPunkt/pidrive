@@ -16,8 +16,13 @@ except ImportError:
 import subprocess
 try:
     from modules import rtlsdr as _rtlsdr
-except Exception:
+except Exception as _e:
     _rtlsdr = None
+    try:
+        from modules import degraded_imports as _deg
+        _deg.report("modules.rtlsdr", str(_e))
+    except Exception:
+        pass
 import os
 import json
 import time

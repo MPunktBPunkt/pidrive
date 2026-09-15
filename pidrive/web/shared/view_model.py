@@ -1,6 +1,7 @@
 """web/shared/view_model.py — ViewModel für Templates, DLS, DAB-Status"""
 import json
 import os
+import sys
 import time
 from web.shared.constants import (
     STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE, AVRCP_FILE,
@@ -12,6 +13,8 @@ from web.shared.system import get_version, get_ip  # noqa: F401
 from web.shared.audio import (                     # noqa: F401
     get_audio_debug, get_source_state_debug, _first_nonempty,
 )
+from web.shared.errors import warn_once
+
 
 def read_json(path, default=None):
     """Liest eine JSON-Datei sicher."""
@@ -20,7 +23,9 @@ def read_json(path, default=None):
     try:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        if os.path.exists(path):
+            warn_once(f"vm.read_json:{path}", f"web.shared.view_model.read_json({path}): {e}")
         return default
 
 def _compose_dls_text(artist: str, track: str, fallback_text: str = "") -> str:

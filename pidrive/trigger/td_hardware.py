@@ -380,7 +380,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
 
     elif cmd == "library_stop":
         from modules import local_player as _lp
-        from modules import source_state
+        # Kein erneuter Import von source_state — würde den Modulnamen
+        # für die gesamte handle()-Funktion lokal machen (C16).
         _lp.stop(S)
         S["radio_playing"] = False
         S["radio_type"] = ""

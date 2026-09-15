@@ -9,8 +9,13 @@ if _PIDRIVE not in _sys.path:
 import log, ipc
 try:
     from modules import rtlsdr as _rtlsdr
-except Exception:
+except Exception as _e:
     _rtlsdr = None
+    try:
+        from modules import degraded_imports as _deg
+        _deg.report("modules.rtlsdr", str(_e))
+    except Exception:
+        pass
 try:
     from modules import source_state as _src_state
 except Exception:

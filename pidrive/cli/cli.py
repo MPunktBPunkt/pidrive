@@ -375,6 +375,13 @@ Flags (vor dem Befehl angeben):
     menu_sub.add_parser("path", help="Aktueller Pfad (Offline-Referenzbaum)")
     menu_sub.add_parser("rebuild", help="Offline-Rebuild-Test (Pfad/Cursor retten)")
 
+    # ── webui (W0/W1: Check, Selftest, Routen) ───────────────────────────────
+    p_webui = sub.add_parser("webui", help="WebUI-Check und Selftest")
+    webui_sub = p_webui.add_subparsers(dest="webui_cmd")
+    webui_sub.add_parser("check", help="Statisch: sendCmd/fetch/Statusfelder")
+    webui_sub.add_parser("selftest", help="Import + Aufruf web.shared.*")
+    webui_sub.add_parser("routes", help="Alle Flask-Routen listen")
+
     # ── idrive (M6: AVRCP-Event-Ebene) ───────────────────────────────────────
     p_idrive = sub.add_parser("idrive", help="BMW iDrive Events simulieren (Event-Ebene)")
     p_idrive.add_argument("idrive_cmd", nargs="?", default=None,
@@ -392,7 +399,7 @@ Flags (vor dem Befehl angeben):
     p_test.add_argument("test_cmd", nargs="?", default="all",
                         choices=["all", "system", "audio", "bt", "mpris",
                                  "webradio", "fm", "scanner", "dab", "dabscan",
-                                 "spotify", "avrcp", "log", "menu"],
+                                 "spotify", "avrcp", "log", "menu", "webui"],
                         help="all=kompletter Test, oder einzelner Block")
 
     p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
@@ -1492,6 +1499,21 @@ Flags (vor dem Befehl angeben):
             sys.exit(_mg.cmd_rebuild_test())
         sys.exit(EXIT_USAGE)
 
+    # webui (W0/W1)
+    if args.cmd == "webui":
+        from web import webui_check as _wc
+        wc = getattr(args, "webui_cmd", None)
+        if not wc:
+            fmt.err("Unterbefehl fehlt: check|selftest|routes")
+            sys.exit(EXIT_USAGE)
+        if wc == "check":
+            sys.exit(_wc.run_check())
+        elif wc == "selftest":
+            sys.exit(_wc.run_selftest())
+        elif wc == "routes":
+            sys.exit(_wc.cmd_routes())
+        sys.exit(EXIT_USAGE)
+
     # idrive
     if args.cmd == "idrive":
         from menu import idrive_sim as _id
@@ -1535,6 +1557,7 @@ Flags (vor dem Befehl angeben):
         elif cmd == "avrcp":    _ts.test_avrcp_inject()
         elif cmd == "log":      _ts.test_log_summary()
         elif cmd == "menu":     _ts.test_menu()
+        elif cmd == "webui":    _ts.test_webui()
         sys.exit(EXIT_OK)
 
     if args.cmd == "debug":

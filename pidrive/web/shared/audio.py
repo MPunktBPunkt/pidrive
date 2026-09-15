@@ -5,6 +5,8 @@ import subprocess
 from web.shared.constants import (
     PA_ENV, STATUS_FILE, BASE_DIR
 )
+from web.shared.system import safe_run
+from web.shared.errors import warn_once
 
 
 
@@ -102,6 +104,7 @@ def get_volume_data() -> dict:
             "source": source_label
         }
     except Exception as e:
+        warn_once("audio.volume", f"web.shared.audio.get_volume_data: {e}")
         return {"ok": False, "error": str(e), "volume": "–"}
 
 def get_audio_debug() -> dict:
@@ -123,7 +126,8 @@ def get_audio_debug() -> dict:
             dec.get("requested") != dec.get("effective")
         )
         data["fallback_reason"] = dec.get("reason", "")
-    except Exception:
+    except Exception as e:
+        warn_once("audio.decision", f"web.shared.audio.get_audio_debug decision: {e}")
         data["decision"] = {}
         data["fallback_active"] = False
         data["fallback_reason"] = ""
@@ -139,7 +143,8 @@ def get_audio_debug() -> dict:
             data["pulse_active"] = True if pa_api_ok else "service_only"
         else:
             data["pulse_active"] = False
-    except Exception:
+    except Exception as e:
+        warn_once("audio.pulse", f"web.shared.audio.get_audio_debug pulse: {e}")
         data["pulse_active"] = False
 
     try:
