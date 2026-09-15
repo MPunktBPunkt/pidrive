@@ -51,6 +51,32 @@ def _back(prefix: str) -> MenuNode:
     return MenuNode(id=f"{prefix}_back", label="Zurueck", type="action", action="back")
 
 
+def _bucket_stations(nodes: list, prefix: str, threshold: int = 12) -> list:
+    """
+    Lange Senderlisten in A–M / N–Z (/ 0–9) aufteilen (M4 Skip-Only).
+    Kurze Listen bleiben flach.
+    """
+    if len(nodes) <= threshold:
+        return nodes
+    buckets = {"A-M": [], "N-Z": [], "0-9": []}
+    for n in nodes:
+        raw = (n.label or "").lstrip("*★ ").strip()
+        ch = raw[:1].upper() if raw else "?"
+        if ch.isdigit():
+            buckets["0-9"].append(n)
+        elif "A" <= ch <= "M":
+            buckets["A-M"].append(n)
+        else:
+            buckets["N-Z"].append(n)
+    out = []
+    for key, items in buckets.items():
+        if not items:
+            continue
+        bid = f"{prefix}_{key.replace('-', '').lower()}"
+        out.append(_folder(bid, f"Sender {key}", items))
+    return out or nodes
+
+
 def _folder(node_id: str, label: str, children: List[MenuNode],
             active: bool = False) -> MenuNode:
     """Ordner mit vorangestelltem Zurueck-Eintrag."""
@@ -201,28 +227,35 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     ))
 
     # ── 2. Quellen ──────────────────────────────────────────────────────────
-    fm_sender = _folder("fm_stations", "Sender", _station_nodes_fm(store.fm) or [
+    # M4: next/prev vor der Senderliste; lange Listen alphabetisch gebucketet
+    fm_sender = _folder("fm_stations", "Sender", _bucket_stations(
+        _station_nodes_fm(store.fm), "fm"
+    ) or [
         MenuNode(id="fm_empty", label="Kein Sender — Suchlauf starten", type="info")
     ])
     fm_node = _folder("fm", "FM Radio", [
-        fm_sender,
-        MenuNode(id="fm_scan",   label="Suchlauf starten",  type="action", action="fm_scan"),
         MenuNode(id="fm_next",   label="Naechster Sender",  type="action", action="fm_next"),
         MenuNode(id="fm_prev",   label="Vorheriger Sender", type="action", action="fm_prev"),
+        fm_sender,
+        MenuNode(id="fm_scan",   label="Suchlauf starten",  type="action", action="fm_scan"),
         MenuNode(id="fm_manual", label="Frequenz manuell",  type="action", action="fm_manual"),
     ])
 
-    dab_sender = _folder("dab_stations", "Sender", _station_nodes_dab(store.dab) or [
+    dab_sender = _folder("dab_stations", "Sender", _bucket_stations(
+        _station_nodes_dab(store.dab), "dab"
+    ) or [
         MenuNode(id="dab_empty", label="Kein Sender — Suchlauf starten", type="info")
     ])
     dab_node = _folder("dab", "DAB+", [
-        dab_sender,
-        MenuNode(id="dab_scan",  label="Suchlauf starten",  type="action", action="dab_scan"),
         MenuNode(id="dab_next",  label="Naechster Sender",  type="action", action="dab_next"),
         MenuNode(id="dab_prev",  label="Vorheriger Sender", type="action", action="dab_prev"),
+        dab_sender,
+        MenuNode(id="dab_scan",  label="Suchlauf starten",  type="action", action="dab_scan"),
     ])
 
-    web_sender = _folder("web_stations", "Sender", _station_nodes_web(store.web) or [
+    web_sender = _folder("web_stations", "Sender", _bucket_stations(
+        _station_nodes_web(store.web), "web"
+    ) or [
         MenuNode(id="web_empty", label="Keine Stationen", type="info")
     ])
     webradio_node = _folder("webradio", "Webradio", [

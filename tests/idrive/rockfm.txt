@@ -1,6 +1,6 @@
-# iDrive-Skript: Wurzel → ROCK FM (DAB) per Skip-Only
-# Zwischen play-Events ≥1.3s Pause (Double-Tap-Fenster 1.2s)
-# Offline: expect selected/activated=ROCK FM
+# iDrive: Wurzel → ROCK FM (DAB) nach M4-Alphabet-Buckets
+# Pfad: Quellen → DAB+ → Sender → Sender N-Z → ROCK FM
+# play-Pausen ≥1.3s (Double-Tap)
 
 reset
 next
@@ -13,31 +13,16 @@ play
 sleep 1.3
 expect path_contains=DAB
 next
+next
+next
 play
 sleep 1.3
 expect path_contains=Sender
 next
 next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
-next
+play
+sleep 1.3
+expect path_contains=N-Z
 next
 next
 next

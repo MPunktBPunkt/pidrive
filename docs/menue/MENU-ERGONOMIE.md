@@ -89,7 +89,25 @@ bis zum Ziel. „Zurueck“-Einträge zählen als normale Knoten.
 
 ```bash
 pidrivectl menu report
-pidrivectl menu cost sources/dab/dab_stations/<id>
+pidrivectl menu cost sources/dab/dab_stations/dab_nz/<id>
 ```
 
-Nach M4 hier einen Abschnitt **Nachher** ergänzen (nicht überschreiben).
+---
+
+## Nachher (M4 · 2026-09-15)
+
+Maßnahmen:
+1. Lange Senderlisten (DAB/FM/Webradio) in **Sender A–M** / **Sender N–Z** aufgeteilt
+2. **Naechster/Vorheriger Sender** in DAB/FM vor die Senderliste gezogen
+3. Double-Tap Play → `cat:0` (Menüanfang) bleibt AVRCP-Verhalten (1,2 s) — in iDrive-Skripten ≥1,3 s Pause zwischen `play`
+
+| Kennzahl | Vorher | Nachher | Δ |
+|----------|--------|---------|---|
+| Blätter | 171 | 178 | +7 (Bucket-Ordner) |
+| Median-Kosten | 15 | 15 | 0 |
+| Mittel | 16.1 | 15.4 | −0.7 |
+| Max-Kosten | 40 | 36 | −4 |
+| Kosten > 20 | 41 | 30 | −11 |
+| ROCK FM | 35 | **18** | **−17** |
+
+ROCK-FM-Pfad jetzt: `Quellen → DAB+ → Sender → Sender N-Z → ROCK FM`.
