@@ -282,6 +282,19 @@ und nach einem Neustart weg.
 
 ---
 
+### Z11 Belegter Ausfall am Fahrzeug-Pi `[BELEGT]` — kritisch
+
+Am 2026-09-15 auf echter Hardware nachgewiesen: `trigger/td_hardware.py:383` importiert
+`source_state` funktionslokal, obwohl Zeile 13 es modulweit tut. Da die Datei nur eine
+Funktion enthält, wird der Name für den gesamten Körper lokal — und damit sind
+`radio_stop` sowie beide Spotify-Pfade funktionslos.
+
+Das ist die praktische Bestätigung der Kernaussage dieses Dokuments: die Korrektheit
+liegt bei den Aufrufern, und dort bricht sie. Details und Korrektur als Befund C16 in
+[../auftraege/AUFTRAG-WEBUI-SANIERUNG.md](../auftraege/AUFTRAG-WEBUI-SANIERUNG.md).
+
+---
+
 ## 7. Was tragfähig ist
 
 Das Modul ist handwerklich sauberer als seine Nutzung:

@@ -451,6 +451,68 @@ driftet: `MIGRATION_BACKLOG.md:36` behauptet, die Datei sei gelöscht.
 
 Nicht zu verwechseln mit C2 — dort fehlen die Dateien wirklich.
 
+### C16 Lokaler Import legt `source_state` in `td_hardware` lahm `[BELEGT]` — kritisch
+
+**Am Fahrzeug-Pi nachgewiesen.** `pidrivectl test all` vom 2026-09-15 12:11 meldet:
+
+```
+✗ annot access free variable 'source_state' where it is not associated
+  with a value in enclosing scope
+```
+
+Ursache: `trigger/td_hardware.py` importiert `source_state` in Zeile 13 modulweit —
+und in **Zeile 383** ein zweites Mal *innerhalb* der Funktion:
+
+```python
+elif cmd == "library_stop":
+    from modules import local_player as _lp
+    from modules import source_state        # ← Zeile 383
+```
+
+Die Datei enthält genau **eine** Funktion, `handle()` in Zeile 20. Eine Zuweisung an
+`source_state` irgendwo in dieser Funktion macht den Namen für den **gesamten**
+Funktionskörper lokal. Der modulweite Import aus Zeile 13 ist damit unerreichbar.
+
+Betroffen sind alle Zugriffe in `handle()`:
+
+| Zeile | Kontext | Wirkung |
+|---|---|---|
+| 42 | in `_spotify_toggle()` | Spotify **aus** → Fehler, kein `commit_source("idle")` |
+| 73 | in `_spotify_toggle()` | Spotify **ein** → Fehler, Quelle wird nie `spotify`, `radio_playing` bleibt `False` |
+| 315, 332, 334, 351 | in `_radio_stop()` | `radio_stop` bricht in Zeile 315 ab — **nichts wird gestoppt** |
+| 388 | direkt in `handle()` | funktioniert, weil Zeile 383 unmittelbar davor läuft |
+
+**Sichtbare Fehlfunktion:** Der Stop-Befehl stoppt nicht. Webradio, DAB, FM und Scanner
+laufen weiter, die Metadaten werden nicht geleert, und die Quelle bleibt auf dem alten
+Wert stehen. Spotify startet, wird aber nie als aktive Quelle registriert. Da beides in
+`bg()`-Threads läuft, landet die Ausnahme im Log statt im Vordergrund — und dort sieht
+sie niemand.
+
+**Korrektur:** Zeile 383 löschen. Eine Zeile.
+
+**Vorgezogen:** Das gehört in W1, nicht in W5 — es ist ein akuter Funktionsausfall und
+zugleich der Beweis für die Kernaussage dieses Auftrags.
+
+**Die anderen lokalen Imports sind geprüft und unkritisch.** Entscheidend ist nicht, ob
+ein Modul doppelt importiert, sondern **welcher Name gebunden wird**:
+
+| Stelle | Anweisung | Gebundener Name | Bewertung |
+|---|---|---|---|
+| `trigger/td_hardware.py:383` | `from modules import source_state` | `source_state` | **fehlerhaft** — kollidiert mit Zeile 13 |
+| `trigger/td_radio.py:287` | `import modules.source_state as _sst_fm` | `_sst_fm` | unkritisch |
+| `modules/audio.py:97` | `… as _src_state` | `_src_state` | unkritisch |
+| `modules/webradio.py:109` | `… as _ss_wr` | `_ss_wr` | unkritisch |
+| `modules/radio/dab_helpers.py:15` | `… as _src_state` | `_src_state` | unkritisch |
+| `modules/radio/dab_play.py:170` | `… as _sst` | `_sst` | unkritisch |
+| `modules/radio/scanner.py:29` | `… as _src_state` | `_src_state` | unkritisch |
+| `diagnose.py:700` | `from modules.source_state import load_snapshot_file, snapshot` | nur die zwei Funktionen | unkritisch |
+
+Nur `td_hardware.py:383` bindet den nackten Namen `source_state` lokal. Als Regel für
+`pidrivectl webui check` bzw. einen Lint-Schritt: **ein funktionslokaler Import, der
+denselben Namen bindet wie ein modulweiter Import derselben Datei, ist immer ein
+Fehler.** Diese Prüfung ist statisch und billig — und sie hätte diesen Ausfall sofort
+gefunden.
+
 ---
 
 ## 6. Befunde — FastScan und Spektrum
@@ -868,6 +930,176 @@ Neue Befehle. Jeder Befund aus §3–§6 muss durch genau einen Test abgedeckt s
 R6 ist der erste sinnvolle Meilenstein: der Direktbetrieb ist **schon heute** der einzige
 funktionierende Pfad zum Lautsprecher (abgesehen von der Bandbreite). Damit lässt sich
 die Audiokette isoliert verifizieren, bevor der Suchlauf angefasst wird.
+
+---
+
+## 9.2 Hardware-Verifikation am Fahrzeug-Pi
+
+Ab 2026-09-15 steht ein echter Pi zur Verfügung. Jede Änderung wird **dort** verifiziert,
+nicht nur lokal.
+
+| | |
+|---|---|
+| Host | `192.168.178.105` |
+| Benutzer | `pidrive` |
+| Passwort | beim Eigentümer erfragen — **nicht** in dieses Repo schreiben |
+| Version bei Übernahme | `0.11.127`, `pidrivectl test all` = 20 bestanden / 2 Fehler / 29 Warnungen / 68,7 s |
+
+**Erste Maßnahme:** SSH-Schlüssel einrichten und Passwort-Anmeldung abschalten. Der Pi
+hängt im Heimnetz, und das WebUI auf Port 8080 hat keine Authentifizierung (Befund in
+§4). Ein triviales Passwort auf demselben Host ist damit die zweite offene Tür.
+
+### H0 Deploy-Gleichstand — blockierend, vor allem anderen
+
+**Der Pi läuft mit hoher Wahrscheinlichkeit nicht den Code aus dem Repo.**
+
+Beleg: `test_suite.py:849` ruft `test_menu()` als **ersten** Test in `run_all()` auf, und
+`test_menu()` gibt in Zeile 798 unbedingt `_section("MENU", "📋")` aus — der Import in
+Zeile 799 ist nicht in ein `try` gefasst, ein Importfehler würde also den ganzen Lauf
+abbrechen. In der Referenzausgabe vom 2026-09-15 12:11 fehlt der MENU-Abschnitt
+vollständig; die Ausgabe beginnt mit SYSTEM. Der Lauf ist aber vollständig
+durchgelaufen. Daraus folgt: das installierte `test_suite.py` kennt `test_menu()` nicht.
+
+Beide Seiten melden `0.11.127` — die Versionsdatei wurde bei der Menü-Arbeit (M0–M6)
+also nicht angehoben. Die Versionsnummer taugt damit **nicht** als Gleichstandsprüfung.
+
+Vor jeder Messung:
+
+```bash
+# auf dem Pi
+cd <pidrive-repo> && git rev-parse --short HEAD && git status --short
+grep -c "def test_menu" pidrive/test_suite.py     # muss 1 sein
+systemctl status pidrive_core pidrive_web --no-pager | head -5
+```
+
+Der Commit muss dem entsprechen, gegen den entwickelt wird. Ergebnis in
+`docs/ABNAHMEN.md` protokollieren — **jede** Messung nennt den Commit-Hash, sonst ist
+sie nicht zuordenbar.
+
+Zusätzlich: `VERSION` bei jeder funktionalen Änderung anheben, sonst wiederholt sich
+dieses Problem bei jeder Abnahme.
+
+### H1 Baseline vor der ersten Änderung
+
+```bash
+pidrivectl test all 2>&1 | tee /tmp/baseline_$(date +%F_%H%M).log
+cp /tmp/pidrive_test_results.json /tmp/baseline_results.json
+cp /tmp/pidrive_status.json /tmp/pidrive_source_state.json /tmp/pidrive_menu.json /tmp/baseline/
+```
+
+Ohne Baseline ist später nicht unterscheidbar, was die Änderung bewirkt hat und was
+vorher schon kaputt war. Die Referenzausgabe oben ist die Baseline **des alten Stands**
+und damit nur eingeschränkt verwendbar (siehe H0).
+
+### H2 Sofort verifizierbare Einzelbefunde
+
+Diese Befunde sind am Schreibtisch belegt und am Pi in Minuten nachweisbar. Sie sind
+der schnellste Weg, den statischen Befund gegen die Realität zu prüfen.
+
+| ID | Befund | Prüfung am Pi | Erwartung vor der Korrektur |
+|----|--------|---------------|------------------------------|
+| H2.1 | Closure-Fehler `source_state` (§5/C16) | `echo radio_stop > /tmp/pidrive_cmd`, dann `journalctl -u pidrive_core -n 30` | Fehler „cannot access free variable" **und** Radio spielt weiter |
+| H2.2 | dito, Spotify-Pfad | `echo spotify_toggle > /tmp/pidrive_cmd` | derselbe Fehler; `source_current` wird **nicht** `spotify` |
+| H2.3 | Throttling-Anzeige (S8) | `vcgencmd get_throttled` gegen die Karte „Systemressourcen" im WebUI | CLI meldet `0x50000`, WebUI meldet grün „OK" |
+| H2.4 | Statusalter (S1/S2) | `systemctl stop pidrive_core`, WebUI 60 s beobachten | „Core 0.0s", alte Werte bleiben als frisch stehen |
+| H2.5 | `api-core.js` (S10) | Browser-Konsole auf jeder Seite | `SyntaxError`, `PiDriveAPI` undefiniert |
+| H2.6 | Audio-Debug leer (S11) | `curl -s localhost:8080/api/audio` | `pulse_active:false`, `sinks:[]` trotz laufendem PipeWire |
+| H2.7 | DAB-Diagnose (S12) | `curl -s localhost:8080/api/dab/scan/last` | `{"error":"name 'sys' is not defined"}` |
+| H2.8 | Prozessliste (S3) | `curl -s localhost:8080/api/runtime \| grep processes` | leer, obwohl `welle-cli` läuft |
+| H2.9 | Scanner-Abbruch (C1) | `pidrivectl scanner pmr446 scan`, parallel `journalctl -f -u pidrive_core` | „Scanner scan-list: abgebrochen" in der **ersten** Iteration; kein `rtl_fm` in `ps` |
+| H2.10 | Bandbreite (C3) | `pidrivectl scanner pmr446 ch 1`, dann `ps aux \| grep rtl_fm` | `-s 200000` statt ≤ 25000 |
+| H2.11 | FastScan leer (F1) | `curl -s 'localhost:8080/api/spectrum/stations'` | immer `[]` |
+| H2.12 | Watch-Fehler (F3) | `curl -s -X POST 'localhost:8080/api/spectrum/capture?band=pmr446'` | `'DetectionResult' object has no attribute 'watch_seconds'` |
+| H2.13 | Menü-Trigger blockiert (§4) | `curl -s -X POST localhost:8080/api/cmd -H 'Content-Type: application/json' -d '{"cmd":"activate:1"}'` | HTTP 400 „Befehl nicht erlaubt", obwohl der Core es kann |
+| H2.14 | Webradio ignoriert Route | `pidrivectl audio route klinke` bei verbundenem BT, dann Webradio starten | spielt trotzdem über Bluetooth |
+| H2.15 | Settings-Reload (C10) | Squelch im WebUI ändern, `pidrivectl scanner status` | Wert wirkt erst nach Core-Neustart |
+| H2.16 | MPRIS nur bei Menü-`rev` | DAB spielen, Titelwechsel abwarten, BMW-Display beobachten | Display friert zwischen zwei Tastendrücken ein |
+
+H2.16 braucht das Fahrzeug. Alle anderen gehen am Schreibtisch.
+
+### H3 Was `pidrivectl test all` heute **nicht** abdeckt
+
+Vorhanden sind `test_menu`, `test_system`, `test_audio`, `test_bluetooth`,
+`test_mpris2_push`, `test_webradio`, `test_fm`, `test_scanner_fm`, `test_dab`,
+`test_dab_scan`, `test_spotify`, `test_avrcp_inject`, `test_log_summary`
+(`test_suite.py:122-833`).
+
+Nicht abgedeckt:
+
+| Lücke | Warum das zählt |
+|---|---|
+| **WebUI komplett** | Kein Routen-, Whitelist- oder Import-Test. Alle S-Befunde wären aufgefallen. → W0/W1 mit `webui check` und `webui selftest` |
+| **Scanner-Schmalband** | `test_scanner_fm("103.0")` prüft ausschließlich den WBFM-Pfad (`test_suite.py:486`). PMR446, Freenet, CB, LPD433, VHF, UHF sind ungetestet — genau die Bänder, um die es geht |
+| **Suchlauf** | Kein Test ruft `scan_next`. C1 wäre seit Wochen aufgefallen |
+| **Spektrum / FastScan** | Kein Test, kein CLI-Einstieg (F12) |
+| **Zustandsmaschine** | Keine Prüfung von Quellenwechseln, Transitionen, Ablehnungen. H2.1/H2.2 zeigen, was dadurch durchrutscht |
+| **Lautstärke** | `set_volume`, `volume_up/down` ungetestet |
+| **Audio-Route** | Kein Test schaltet `klinke`/`bt`/`hdmi` um und prüft, wo der Ton landet (H2.14) |
+| **Lokale Bibliothek / USB** | Keine Wiedergabeprüfung |
+| **Settings-Persistenz** | Kein Test für Schreiben, Neuladen, Wirksamkeit (C10) |
+| **Menü live** | `test_menu` prüft nur den Offline-Referenzbaum. Die Live-Navigation über `goto:`/`activate:` wird nicht geprüft |
+
+### H4 Qualitätsmängel der Testausgabe
+
+Die Ausgabe sieht gründlich aus, trägt aber wenig Entscheidungsinformation.
+
+1. **Ein Test, der nicht fehlschlagen kann.** `→ AVRCP-Inject: 0 Events verarbeitet
+   (erwartet ≥0)` — die Bedingung „≥ 0" ist immer wahr. Entweder eine echte
+   Mindestzahl fordern oder den Test ehrlich als „nicht abgedeckt" ausweisen.
+2. **29 Warnungen sind kein Signal.** Bei dieser Menge liest niemand mehr hin. Warnungen
+   müssen in zwei Klassen zerfallen: „Umgebung fehlt, Test nicht möglich" (BT nicht
+   gepairt, kein DAB-Signal) und „Funktion verhält sich falsch". Nur letztere dürfen
+   `⚠` heißen.
+3. **Abgeschnittene Logzeilen.** `annot access free variable …`, `-09-15 12:12:42 …`,
+   `] DAB DLS poller: …` — der Zeilenanfang wird weggeschnitten. Bei genau der Zeile,
+   die den einzigen echten Fehler enthält, kostet das die Diagnose. Feste
+   Zeichen-Offsets durch Feld-Parsing ersetzen.
+4. **Erfundenes Vokabular.** `state=pcm_ok` sieht wie ein Systemzustand aus, ist aber ein
+   Eigenbegriff des Tests (`test_suite.py:553`). Das echte `dab_playback_state` kennt
+   `pcm_ok` nicht. Damit ist die Ausgabe nicht mit Log und WebUI korrelierbar — und es
+   ist ein **drittes** Vokabular neben denen aus Befund S6.
+5. **„Hörtest" ist keine Prüfung.** `→ Scanner läuft (5s Hörtest)` besteht, sobald der
+   Prozess startet. Ersetzen durch eine objektive Größe: Bytes am `rtl_fm`-Ausgang,
+   RMS-Pegel oder `sink_input`-Existenz.
+6. **„Kein Signal" und „kaputt" sind nicht unterscheidbar.** `⚠ Kein mux.json nach 22s`
+   kann Empfangslage oder Defekt sein. Der Test braucht eine Gegenprobe auf einem
+   Kanal mit bekanntem Signal, sonst ist das Ergebnis wertlos.
+7. **Grün trotz fragwürdigem Zustand.** `✓ Sink: alsa_output.platform-fe00b840.mailbox…
+   SUSPENDED` — ein suspendierter Fallback-Sink wird als Erfolg gemeldet, ohne zu
+   prüfen, ob das das gewünschte Ziel ist.
+8. **Fehlerzählung nicht nachvollziehbar.** Die Zusammenfassung nennt 2 Fehler, der
+   Log-Abschnitt listet einen. Jeder gezählte Fehler braucht eine eindeutige,
+   auffindbare Zeile.
+9. **Kein Exit-Code-Vertrag dokumentiert.** Für `pidrivectl test all` in einer
+   Automatisierung muss gelten: 0 = alles grün, ≠ 0 = mindestens ein Fehler. Warnungen
+   beeinflussen den Code nicht.
+10. **Keine Umgebungsangabe im Kopf.** Commit-Hash, `git status`-Sauberkeit und
+    Laufzeitumgebung gehören in die erste Zeile jeder Ausgabe — sonst wiederholt sich
+    H0.
+
+### H5 Neue Tests, die mit den Arbeitspaketen entstehen
+
+Jedes Arbeitspaket liefert seinen Test mit. Keine Korrektur ohne zugehörige Prüfung.
+
+| Test | Paket | Prüft |
+|---|---|---|
+| `test_webui_check` | W0 | Routen, Whitelist, Statusfelder statisch (R1) |
+| `test_webui_selftest` | W1 | alle `web.shared`-Funktionen aufrufbar (R2) |
+| `test_status_staleness` | W2 | Core anhalten → Hinweis erscheint (R3, H2.4) |
+| `test_source_reject` | W7 | zweiter Wechsel wird sichtbar abgelehnt (R12) |
+| `test_source_recovery` | W7 | abgewürgte Transition wird aufgeräumt (R13) |
+| `test_source_history` | W7 | Historie lückenlos (R14) |
+| `test_scanner_narrowband` | W5 | PMR446 Kanal 1: Bandbreite, Bytes, Pegel (R6) |
+| `test_scanner_scan` | W5/W6 | Suchlauf prüft **alle** Kanäle (R7) |
+| `test_spectrum_sweep` | W8 | nicht-leere Kandidatenliste (R8) |
+| `test_spectrum_watch` | W8 | antwortet; keine Dauer-Aktivität auf PMR 4/5 (R9) |
+| `test_audio_route` | — | Route umschalten, Ziel-Sink prüfen (H2.14) |
+| `test_volume` | — | `set_volume` wirkt auf den aktiven Sink |
+| `test_settings_reload` | W10 | Änderung wirkt ohne Core-Neustart (H2.15) |
+
+Alle in `run_all()` aufnehmen — und zwar so, dass ein fehlender Test auffällt: `run_all()`
+prüft am Ende, dass jeder registrierte Test auch eine Ausgabezeile erzeugt hat. Genau
+das hätte H0 sofort sichtbar gemacht.
 
 ---
 
