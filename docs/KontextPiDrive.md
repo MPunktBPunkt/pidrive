@@ -20,7 +20,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | Komponente | Details |
 |---|---|
 | Primär (Entwicklung) | Fujitsu Futro S920 · Debian 13 · User `pidrive` |
-| Ziel (Fahrzeug / HW-Abnahme) | Raspberry Pi · Debian 13 · **192.168.178.105** · User `pidrive` |
+| Ziel (Fahrzeug / HW-Abnahme) | Raspberry Pi · Debian 13 · **192.168.178.107** (LAN; früher `.105`) · User `pidrive` |
 | RTL-SDR | RTL2838 DVB-T (ID 0bda:2838, Rafael Micro R820T) |
 | Bluetooth | Cambridge Silicon Radio Dongle |
 | BMW | 118d 2017, NBT EVO, AVRCP 1.4–1.5 |

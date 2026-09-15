@@ -10,7 +10,7 @@ Ergebnis-Dokumente werden **ergänzt**, nicht überschrieben. Jede Messung nennt
 
 | | |
 |---|---|
-| Host | `192.168.178.105` (Pidrive) |
+| Host | `192.168.178.107` (Pidrive, LAN; früher `.105`) |
 | Repo auf Pi | `/home/pidrive/pidrive` |
 | Commit Pi (vor Sync) | `20b312d` |
 | Commit Entwickler | `e86272e` (+ lokale W0/W1-Arbeit → `0.11.128`) |
@@ -79,7 +79,7 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | | |
 |---|---|
 | Code | lokal, **v0.11.129** (noch nicht auf Pi) |
-| Pi | `192.168.178.105` — SSH *No route to host* → HW-Abnahme ausstehend |
+| Pi | `192.168.178.107` — nach Stromausfall LAN; WLAN problematisch |
 
 | Paket | Status |
 |-------|--------|

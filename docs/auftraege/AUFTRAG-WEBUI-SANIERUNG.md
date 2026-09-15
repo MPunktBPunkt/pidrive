@@ -1168,7 +1168,7 @@ nicht nur lokal.
 
 | | |
 |---|---|
-| Host | `192.168.178.105` |
+| Host | `192.168.178.107` (LAN; früher `.105` WLAN) |
 | Benutzer | `pidrive` |
 | Passwort | beim Eigentümer erfragen — **nicht** in dieses Repo schreiben |
 | Version bei Übernahme | `0.11.127`, `pidrivectl test all` = 20 bestanden / 2 Fehler / 29 Warnungen / 68,7 s |
