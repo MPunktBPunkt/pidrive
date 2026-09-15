@@ -122,36 +122,49 @@ def _stop_all_sources(wait_rtl=True, timeout=5.0):
     Zentraler Quellenstopp vor RTL-/Wiedergabe-Tests (Auftrag TK-A).
     Returns (ok: bool, reason: str|None). Bei ok=False → folgender Test SKIP.
     """
-    for cmd in ("radio_stop", "scanner_stop", "webradio_stop", "stop"):
+    for cmd in ("radio_stop", "scanner_stop", "webradio_stop", "library_stop", "stop"):
         _write_trigger(cmd)
         time.sleep(0.25)
     time.sleep(0.8)
+    # Hart aufräumen (Boot-Resume / hängende rtl_*): Testkette braucht freien Stick
+    try:
+        subprocess.run(
+            "pkill -f 'welle-cli|rtl_fm|rtl_sdr|rtl_test' 2>/dev/null || true",
+            shell=True, timeout=5,
+        )
+    except Exception:
+        pass
+    time.sleep(0.6)
     try:
         from modules.radio import rtlsdr
-        if hasattr(rtlsdr, "clear_stale_lock"):
-            rtlsdr.clear_stale_lock()
-        if hasattr(rtlsdr, "reap_process"):
-            rtlsdr.reap_process()
+        try:
+            if hasattr(rtlsdr, "clear_stale_lock"):
+                rtlsdr.clear_stale_lock()
+        except OSError:
+            pass  # State-Datei oft root-owned nach Service
+        try:
+            if hasattr(rtlsdr, "reap_process"):
+                rtlsdr.reap_process()
+        except OSError:
+            pass
     except Exception:
         pass
     if not wait_rtl:
         return True, None
-    try:
-        from modules.radio import rtlsdr
-        freed = rtlsdr.wait_until_free(timeout=timeout)
-        if not freed:
-            procs = _rtl_processes()
-            detail = ", ".join(
-                f"{p.get('pid','?')}:{ (p.get('cmd') or '')[:40]}" for p in procs[:3]
-            ) or "unbekannt"
-            return False, f"RTL-SDR nicht frei ({detail})"
-        return True, None
-    except Exception as e:
-        # Ohne rtlsdr-Modul weiterlaufen — Prozessliste als Fallback
+    # Primär Prozessliste — wait_until_free kann an Lock-Rechten scheitern
+    deadline = time.time() + float(timeout)
+    while time.time() < deadline:
         procs = _rtl_processes()
-        if procs:
-            return False, f"RTL-Prozesse noch aktiv: {len(procs)} ({e})"
-        return True, None
+        if not procs:
+            return True, None
+        time.sleep(0.25)
+    procs = _rtl_processes()
+    if procs:
+        detail = ", ".join(
+            f"{p.get('pid', '?')}:{(p.get('cmd') or '')[:40]}" for p in procs[:3]
+        )
+        return False, f"RTL-Prozesse noch aktiv: {detail}"
+    return True, None
 
 def _wait_for_metadata(source_key, max_wait=20, poll=1.0):
     """Wartet bis Metadaten für eine Quelle vorhanden sind."""
@@ -515,9 +528,10 @@ def test_webradio():
         return None
 
     t0 = time.time()
-    ok_stop, why = _stop_all_sources(wait_rtl=False)
+    # Auch Webradio braucht freien Zustand (Boot-Resume kann DAB halten)
+    ok_stop, why = _stop_all_sources(wait_rtl=True, timeout=5.0)
     if not ok_stop:
-        _p(SKIP, "Webradio: Quellenstopp unvollständig", why or "")
+        _p(SKIP, "Webradio: RTL-SDR/Quellen nicht frei", why or "")
         return None
     _write_trigger("play_web:Rock Antenne")
     src_ok = _wait_for_source("webradio", max_wait=20)
@@ -627,18 +641,23 @@ def test_dab(sender_nr=22):
         _p(WARN, "welle-cli nicht verfügbar — DAB übersprungen")
         return None
 
-    # Senderliste lesen
+    # Senderliste lesen (TK-D)
     import json as _j
-    stations_path = os.path.abspath(os.path.join(BASE_DIR, "..", "dab_stations.json"))
-    if not os.path.isfile(stations_path):
-        # Fallback: neben Installationsroot
-        stations_path = os.path.abspath(os.path.join(BASE_DIR, "dab_stations.json"))
-    if not os.path.isfile(stations_path):
+    _cands = [
+        os.path.join(BASE_DIR, "config", "dab_stations.json"),
+        os.path.join(BASE_DIR, "..", "config", "dab_stations.json"),
+        os.path.join(BASE_DIR, "..", "dab_stations.json"),
+        os.path.join(BASE_DIR, "dab_stations.json"),
+    ]
+    stations_path = next((os.path.abspath(p) for p in _cands if os.path.isfile(p)), None)
+    if not stations_path:
         _p(FAIL, "DAB: dab_stations.json fehlt",
-           "Aufbaufehler — Senderliste nicht gefunden (TK-D)")
+           "Aufbaufehler — erwartet pidrive/config/dab_stations.json (TK-D)")
         return False
     try:
         stations = _j.load(open(stations_path))
+        if isinstance(stations, dict):
+            stations = stations.get("stations") or stations.get("services") or []
         sender = stations[sender_nr - 1] if len(stations) >= sender_nr else None
         if not sender:
             _p(FAIL, f"DAB: Sender #{sender_nr} nicht in Liste",
