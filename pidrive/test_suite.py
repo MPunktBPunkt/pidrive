@@ -161,43 +161,12 @@ def _stop_all_sources(wait_rtl=True, timeout=5.0):
     procs = _rtl_processes()
     if not procs:
         return True, None
-    # Letzter Ausweg: Core neu starten (welle-cli läuft als root → pkill als pidrive wirkt nicht)
-    try:
-        r = subprocess.run(
-            ["sudo", "-n", "/bin/systemctl", "restart", "pidrive_core"],
-            capture_output=True, text=True, timeout=30,
-        )
-        if r.returncode == 0:
-            time.sleep(2.5)
-            # Boot-Resume abfangen: erneut stoppen
-            for cmd in ("radio_stop", "scanner_stop", "stop"):
-                _write_trigger(cmd)
-                time.sleep(0.2)
-            time.sleep(1.0)
-            try:
-                subprocess.run(
-                    "pkill -f 'welle-cli|rtl_fm|rtl_sdr|rtl_test' 2>/dev/null || true",
-                    shell=True, timeout=5,
-                )
-            except Exception:
-                pass
-            time.sleep(0.5)
-            # Kurz warten bis Resume-welle ggf. wieder da ist, dann nochmal Trigger
-            for _ in range(8):
-                procs = _rtl_processes()
-                if not procs:
-                    return True, None
-                _write_trigger("radio_stop")
-                time.sleep(0.5)
-            procs = _rtl_processes()
-            if not procs:
-                return True, None
-    except Exception as e:
-        return False, f"RTL-Prozesse + Core-Restart fehlgeschlagen: {e}"
     detail = ", ".join(
-        f"{p.get('pid', '?')}:{(p.get('cmd') or '')[:40]}" for p in (_rtl_processes() or [])[:3]
+        f"{p.get('pid', '?')}:{(p.get('cmd') or '')[:40]}" for p in procs[:3]
     )
-    return False, f"RTL-Prozesse noch aktiv nach Restart: {detail}"
+    # Kein Core-Restart hier: Boot-Resume startet DAB sofort neu und blockiert die Suite.
+    # Caller soll SKIP melden (TK-A). Root-welle ist nur per radio_stop im Core killbar.
+    return False, f"RTL-Prozesse noch aktiv: {detail}"
 
 def _wait_for_metadata(source_key, max_wait=20, poll=1.0):
     """Wartet bis Metadaten für eine Quelle vorhanden sind."""
@@ -561,11 +530,11 @@ def test_webradio():
         return None
 
     t0 = time.time()
-    # Auch Webradio braucht freien Zustand (Boot-Resume kann DAB halten)
-    ok_stop, why = _stop_all_sources(wait_rtl=True, timeout=5.0)
+    ok_stop, why = _stop_all_sources(wait_rtl=False)
     if not ok_stop:
-        _p(SKIP, "Webradio: RTL-SDR/Quellen nicht frei", why or "")
+        _p(SKIP, "Webradio: Quellenstopp unvollständig", why or "")
         return None
+    time.sleep(1.0)
     _write_trigger("play_web:Rock Antenne")
     src_ok = _wait_for_source("webradio", max_wait=20)
     if not src_ok:
@@ -833,8 +802,9 @@ def test_dab_scan(channel="11B"):
     elapsed = time.time() - t0
 
     if not data:
-        _p(WARN, f"Kein mux.json nach {elapsed:.0f}s", "kein Signal auf " + channel)
-        return
+        _p(SKIP, f"kein DAB-Signal am Standort ({channel})",
+           f"kein mux.json nach {elapsed:.0f}s")
+        return None
 
     ens = data.get("ensemble",{}).get("label",{}).get("label","?")
     snr = data.get("demodulator",{}).get("snr", 0)
