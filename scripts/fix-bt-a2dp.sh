@@ -1,6 +1,6 @@
 #!/bin/bash
 # PiDrive: A2DP-Stack reparieren (br-connection-profile-unavailable)
-# Siehe BluetoothError.md / TROUBLESHOOTING.md
+# Siehe docs/betrieb/BluetoothError.md / docs/betrieb/TROUBLESHOOTING.md
 set -euo pipefail
 
 if [ "$(id -u)" -ne 0 ]; then

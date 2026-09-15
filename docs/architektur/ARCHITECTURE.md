@@ -263,7 +263,7 @@ pidrivectl test all            # Komplett-Systemtest
 pidrivectl debug mpris status  # MPRIS2 D-Bus prüfen
 ```
 
-Vollständige Referenz: `pidrivectl --help` sowie `KontextPiDrive.md`.
+Vollständige Referenz: `pidrivectl --help` sowie [`KontextPiDrive.md`](../KontextPiDrive.md).
 
 ---
 
@@ -296,8 +296,8 @@ Vollständige Referenz: `pidrivectl --help` sowie `KontextPiDrive.md`.
 
 ---
 
-*Weiterführend: `DEVELOPER_GUIDE.md` (Wo liegt der Code?), `RUNTIME_FLOWS.md`
-(Laufzeitpfade), `TROUBLESHOOTING.md` (Fehlerbehebung), `KontextPiDrive.md`
+*Weiterführend: [`DEVELOPER_GUIDE.md`](DEVELOPER_GUIDE.md) (Wo liegt der Code?), [`RUNTIME_FLOWS.md`](RUNTIME_FLOWS.md)
+(Laufzeitpfade), [`TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md) (Fehlerbehebung), [`KontextPiDrive.md`](../KontextPiDrive.md)
 (Entwicklungsverlauf & Entscheidungen).*
 
 *Zuletzt aktualisiert: v0.11.122*

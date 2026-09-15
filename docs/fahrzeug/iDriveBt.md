@@ -376,7 +376,7 @@ Socket (PA-kompatibel): /var/run/pulse/native  (pipewire-pulse)
 ```
 
 > Details und Stolperfallen des WirePlumber-System-Mode (Seat-Monitoring, `hfp_ag`,
-> D-Bus-Policy) stehen in `BluetoothError.md` und `KontextPiDrive.md`.
+> D-Bus-Policy) stehen in [`BluetoothError.md`](../betrieb/BluetoothError.md) und [`KontextPiDrive.md`](../KontextPiDrive.md).
 
 ---
 
@@ -617,7 +617,7 @@ rfkill unblock bluetooth
 | Problem | Ursache | Lösung |
 |---|---|---|
 | `br-connection-page-timeout` | BMW nicht in Reichweite | Normal, wird wiederholt |
-| `br-connection-profile-unavailable` | WirePlumber BT-Monitor inaktiv (Seat/`hfp_ag`) | siehe `BluetoothError.md` / `TROUBLESHOOTING.md` §3 |
+| `br-connection-profile-unavailable` | WirePlumber BT-Monitor inaktiv (Seat/`hfp_ag`) | siehe [`BluetoothError.md`](../betrieb/BluetoothError.md) / [`TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md) §3 |
 | `no A2DP-Sink nach Connect` | WirePlumber-Sink noch nicht da | 2–3 s warten; sonst `systemctl restart wireplumber` |
 | Sink verschwindet | bluetoothd/WirePlumber-Neustart | `systemctl restart wireplumber` (kein `bluetooth`-Restart bei verbundenem Gerät, v0.11.122) |
 | `AF_BLUETOOTH: not supported` | LXC-Container | Nur Entwicklung — Pi 4 kein Problem |
@@ -751,7 +751,7 @@ SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 | **`mpris:artUrl` / Cover-Art** — `update_metadata()` referenziert `art_url` ohne Parameter + `**{{…}}` (Set statt Dict) → `TypeError`, in `main_core` still verschluckt | `mpris2.py` | 🔴 fixen: `art_url=""`-Parameter ergänzen, `{{…}}` → `{…}` |
 | Zwei BMW-Empfangspfade mit **unterschiedlichem** Mapping (`avrcp_trigger.py` kontextabhängig vs. `mpris2.py` fest) | `mpris2.py`, `integration/avrcp_trigger.py` | 🟡 im Auto verifizieren, welcher Pfad bedient wird |
 | `monitor_bluetoothctl()` vorhanden, aber deaktiviert (CPU-Fix) | `integration/avrcp_trigger.py` | ℹ️ bewusst, nur dbus-monitor aktiv |
-| WirePlumber A2DP / DAB-Antenne / AVRCP-Tasten | — | 🟡 Feldtest im BMW ausstehend (s. `KontextPiDrive.md`) |
+| WirePlumber A2DP / DAB-Antenne / AVRCP-Tasten | — | 🟡 Feldtest im BMW ausstehend (s. [`KontextPiDrive.md`](../KontextPiDrive.md)) |
 
 ---
 

@@ -61,6 +61,49 @@ _LAST_NODE_EXEC_TS = 0.0
 _LAST_NODE_EXEC_ID = ""
 
 
+# ── Trigger-Erkennung (ohne Seiteneffekte, für menu lint) ─────────────────────
+
+_EXACT_TRIGGERS = frozenset({
+    "mpris_refresh",
+    "up", "down", "left", "right", "enter", "back",
+    "spotify_on", "spotify_off", "spotify_toggle", "play_spotify",
+    "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
+    "vol_up", "vol_down",
+    "wifi_on", "wifi_off", "wifi_toggle",
+    "bt_on", "bt_off", "bt_toggle",
+    "wifi_scan", "bt_scan",
+    "bt_disconnect", "bt_reconnect_last", "bt_backup", "bt_restore",
+    "rtlsdr_reset", "radio_stop", "radio_restart_on_bt", "library_stop",
+    "dab_scan", "dab_scan_replace", "fm_scan",
+    "web_next", "web_prev",
+    "fm_next", "fm_prev", "fm_manual", "dab_next", "dab_prev",
+    "scanner_stop",
+    "lib_browse", "favorites_add_current",
+    "reboot", "shutdown", "sys_info", "sys_version", "update", "audio_select",
+})
+
+_TRIGGER_PREFIXES = (
+    "mpris_push:", "cat:", "vol_set:",
+    "bt_connect:", "bt_forget:", "bt_repair:", "wifi_connect:",
+    "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
+    "dab_scan_channels:", "reload_stations:", "webradio_play:",
+    "play_dab:", "play_fm:", "play_web:", "favorites_play:", "local_play:",
+    "fav_toggle:",
+    "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
+    "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
+    "set_scanner_squelch:", "set_ppm:",
+)
+
+
+def would_handle(cmd: str) -> bool:
+    """Prüft ob handle_trigger() den Befehl behandeln würde (M0.3)."""
+    if not cmd:
+        return False
+    if cmd in _EXACT_TRIGGERS:
+        return True
+    return any(cmd.startswith(p) for p in _TRIGGER_PREFIXES)
+
+
 # ── Haupt-Dispatcher ──────────────────────────────────────────────────────────
 
 def handle_trigger(cmd, menu_state, store, S, settings):

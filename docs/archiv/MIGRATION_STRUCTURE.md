@@ -2,7 +2,7 @@
 
 ## Aktueller Stand: v0.11.96 (Übergangsphase)
 
-Die Zielstruktur ist dokumentiert in `ARCHITECTURE.md`.
+Die Zielstruktur ist dokumentiert in [`ARCHITECTURE.md`](../architektur/ARCHITECTURE.md).
 Dieser Plan zeigt den Migrationsstatus jeder Datei.
 
 ## Status-Legende

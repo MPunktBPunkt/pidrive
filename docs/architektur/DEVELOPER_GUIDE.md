@@ -242,4 +242,4 @@ Nur diese Dateien:
 
 ---
 
-*Weiterführend: `ARCHITECTURE.md`, `MIGRATION_BACKLOG.md`, `TROUBLESHOOTING.md`, `KontextPiDrive.md`*
+*Weiterführend: [`ARCHITECTURE.md`](ARCHITECTURE.md), [`MIGRATION_BACKLOG.md`](../archiv/MIGRATION_BACKLOG.md), [`TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md), [`KontextPiDrive.md`](../KontextPiDrive.md)*

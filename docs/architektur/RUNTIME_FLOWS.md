@@ -459,11 +459,11 @@ Verarbeitungskette: `enter`/`up`/`down`/`back` → `trigger/td_nav.py: handle()`
 > Zusätzlich: Doppel-Tipp Play (`cat:0`) springt an den Menüanfang; volle Bedienung
 > jederzeit über WebUI/CLI.
 >
-> **Zwei Empfangspfade beachten** (siehe `iDriveBt.md` §6.1): Der `mpris2.py`-Pfad mappt
+> **Zwei Empfangspfade beachten** (siehe [`iDriveBt.md`](../fahrzeug/iDriveBt.md) §6.1): Der `mpris2.py`-Pfad mappt
 > **fest** (Next→down, Stop→back …), der `avrcp_trigger.py`-Pfad **kontextabhängig**.
 > Im Menü-Kontext ergeben beide dasselbe; in Radio-/Scanner-Kontexten unterscheiden sie
 > sich (z. B. Next→`fm_next`).
 
 ---
 
-*Weiterführend: `TROUBLESHOOTING.md` (Was tun wenn etwas schiefgeht?), `DEVELOPER_GUIDE.md` (Wo liegt der Code?), `iDriveBt.md` (Bluetooth/AVRCP/MPRIS2-Details)*
+*Weiterführend: [`TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md) (Was tun wenn etwas schiefgeht?), [`DEVELOPER_GUIDE.md`](DEVELOPER_GUIDE.md) (Wo liegt der Code?), [`iDriveBt.md`](../fahrzeug/iDriveBt.md) (Bluetooth/AVRCP/MPRIS2-Details)*

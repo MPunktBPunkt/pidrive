@@ -163,7 +163,7 @@ PULSE_SERVER=unix:/var/run/pulse/native pactl list sinks short | grep bluez_outp
 
 > Pairing-/Reconnect-Robustheit wurde in v0.11.111–v0.11.116 deutlich verbessert
 > (Auto-Restore bekannter Geräte, Reconnect für Kopfhörer ohne Pairing-Modus,
-> Pause des Boot-Reconnects während eines aktiven Pairings). Siehe `KontextPiDrive.md`.
+> Pause des Boot-Reconnects während eines aktiven Pairings). Siehe [`KontextPiDrive.md`](../KontextPiDrive.md).
 
 ---
 
@@ -358,4 +358,4 @@ systemctl restart pipewire pipewire-pulse wireplumber
 
 ---
 
-*Weiterführend: `DEVELOPER_GUIDE.md`, `KontextPiDrive.md`*
+*Weiterführend: [`DEVELOPER_GUIDE.md`](../architektur/DEVELOPER_GUIDE.md), [`KontextPiDrive.md`](../KontextPiDrive.md)*

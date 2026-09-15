@@ -793,6 +793,24 @@ def test_log_summary():
 # MAIN RUNNER
 # ══════════════════════════════════════════════════════════════════════════════
 
+def test_menu():
+    """M0: Menü-Lint und Golden-Master-Verify (hardwarefrei)."""
+    _section("MENU", "📋")
+    from menu import menu_golden as _mg
+    t0 = time.time()
+    lint_rc = _mg.cmd_lint()
+    if lint_rc != 0:
+        _p(FAIL, "menu lint", "Fehler im Menübaum", time.time() - t0)
+    else:
+        _p(PASS, "menu lint", elapsed=time.time() - t0)
+    t1 = time.time()
+    verify_rc = _mg.cmd_verify()
+    if verify_rc != 0:
+        _p(FAIL, "menu verify", "Golden Master abweichend", time.time() - t1)
+    else:
+        _p(PASS, "menu verify", elapsed=time.time() - t1)
+
+
 def run_all():
     global _start_ts, _results, _passed, _failed, _warnings
     _start_ts = time.time()
@@ -807,6 +825,7 @@ def run_all():
 
     _send_to_bmw("PiDrive System-Test", "startet...", "pidrivectl test all")
 
+    test_menu()
     test_system()
     test_audio()
     test_bluetooth()

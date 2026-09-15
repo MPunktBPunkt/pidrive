@@ -352,13 +352,22 @@ Flags (vor dem Befehl angeben):
     p_log.add_argument("target", nargs="?", default="core",
                        choices=["core","app","display","avrcp"])
 
+    # ── menu (M0: Golden Master, Lint, Verify) ───────────────────────────────
+    p_menu = sub.add_parser("menu", help="Menübaum (Snapshot, Verify, Lint)")
+    menu_sub = p_menu.add_subparsers(dest="menu_cmd")
+    p_snap = menu_sub.add_parser("snapshot", help="Golden Master schreiben")
+    p_snap.add_argument("--accept", action="store_true",
+                        help="Bestehenden Snapshot ersetzen (CHANGES.md)")
+    menu_sub.add_parser("verify", help="Baum gegen Golden Master prüfen")
+    menu_sub.add_parser("lint", help="Statische Baum-Prüfungen")
+
     # ── debug ─────────────────────────────────────────────────────────────
     # ── test ──────────────────────────────────────────────────────────────────
     p_test = sub.add_parser("test", help="System-Test (alle Quellen + Audio + BT)")
     p_test.add_argument("test_cmd", nargs="?", default="all",
                         choices=["all", "system", "audio", "bt", "mpris",
                                  "webradio", "fm", "scanner", "dab", "dabscan",
-                                 "spotify", "avrcp", "log"],
+                                 "spotify", "avrcp", "log", "menu"],
                         help="all=kompletter Test, oder einzelner Block")
 
     p_dbg = sub.add_parser("debug", help="Debug-Informationen + Trigger-Inject")
@@ -1428,6 +1437,21 @@ Flags (vor dem Befehl angeben):
         fmt.out(log_txt)
         sys.exit(EXIT_OK)
 
+    # menu
+    if args.cmd == "menu":
+        from menu import menu_golden as _mg
+        mc = getattr(args, "menu_cmd", None)
+        if not mc:
+            fmt.err("Unterbefehl fehlt: snapshot|verify|lint")
+            sys.exit(EXIT_USAGE)
+        if mc == "snapshot":
+            sys.exit(_mg.cmd_snapshot(accept=getattr(args, "accept", False)))
+        elif mc == "verify":
+            sys.exit(_mg.cmd_verify())
+        elif mc == "lint":
+            sys.exit(_mg.cmd_lint())
+        sys.exit(EXIT_USAGE)
+
     # debug
     if args.cmd == "test":
         import test_suite as _ts
@@ -1447,6 +1471,7 @@ Flags (vor dem Befehl angeben):
         elif cmd == "spotify":  _ts.test_spotify()
         elif cmd == "avrcp":    _ts.test_avrcp_inject()
         elif cmd == "log":      _ts.test_log_summary()
+        elif cmd == "menu":     _ts.test_menu()
         sys.exit(EXIT_OK)
 
     if args.cmd == "debug":

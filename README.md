@@ -216,7 +216,7 @@ cat /tmp/pidrive_test_results.json | python3 -m json.tool
 | `/tmp/pidrive_dab_play_debug.json` | DAB-Debug (Session, Lock, welle-PID) |
 | `/tmp/pidrive_cmd` | Trigger-Queue |
 
-Weitere Docs: [KontextPiDrive.md](KontextPiDrive.md) · [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) · [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+Weitere Docs: [docs/README.md](docs/README.md) (Dokumentationsindex)
 
 ---
 

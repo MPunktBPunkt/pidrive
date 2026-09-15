@@ -418,7 +418,7 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
 - **Profil-Syntax:** `wireplumber.profiles = { main = { ... } }` — NICHT `wireplumber.profiles.main = { ... }` (korrekte 0.5.x-Syntax)
 - **D-Bus Policy in BEIDEN Verzeichnissen:** `/etc/dbus-1/system.d/` UND `/usr/share/dbus-1/system.d/` — Trixie lädt nicht immer beide
 - **`ReserveDevice1.*` Wildcard** nicht zuverlässig auf Trixie — explizite Namen `Audio0/1/2` verwenden
-- **Vollständige Fehlerdiagnose:** `BluetoothError.md` im Repo
+- **Vollständige Fehlerdiagnose:** [`betrieb/BluetoothError.md`](betrieb/BluetoothError.md)
 - **PipeWire BT-Sink:** `bluez_output.MAC.N` (nicht `bluez_sink.MAC.a2dp_sink`) — ab v0.11.121 via `find_bt_sink_for_mac()`
 - **A2DP-Recovery:** kein `bluetooth`-Restart bei verbundenem Gerät (v0.11.122)
 
