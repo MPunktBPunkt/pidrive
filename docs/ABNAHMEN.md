@@ -120,6 +120,28 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 
 ---
 
+## 2026-09-15 — Deploy + HW unter `192.168.178.107` (LAN)
+
+| | |
+|---|---|
+| Host | `192.168.178.107` (LAN nach Stromausfall; WLAN problematisch) |
+| Commit | `16586af` / **v0.11.131** (+ Scanner-Status-Fix nach Deploy) |
+| Vorher | `f749a42` / 0.11.128 |
+| Deploy | `git fetch` + `reset --hard origin/main`; Restart via `sudo -n /bin/systemctl restart pidrive_*` |
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| `webui check` / `selftest` | **0 Treffer / 0 Fehler** |
+| `source state` | Speicher↔Datei übereinstimmend |
+| H2.8 `processes` | **7–8 Einträge** (nicht mehr `[]`) |
+| H2.4 `status_age` | während Core-Restart: age 3.5s + `status_error=stale` ✅ |
+| R6 `pmr446 ch 1` | `rtl_fm … -s 50000` (C3) ✅; Kanal 446.00625 MHz |
+| `degraded_imports` | **[]** (W4) |
+
+Hinweis: NOPASSWD erlaubt nur `systemctl restart`, nicht `stop`/`start`. Host-Key für `.107` nach LAN-Wechsel erneuert.
+
+---
+
 ## 2026-09-15 — W5 Rest + W6 (lokal, v0.11.131)
 
 | | |
