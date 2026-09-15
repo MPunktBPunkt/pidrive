@@ -325,12 +325,15 @@ Flags (vor dem Befehl angeben):
     for _scb in ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]:
         _p = sc_sub.add_parser(_scb)
         _sc_sub2 = _p.add_subparsers(dest="sc_action")
-        _sc_sub2.add_parser("scan")
+        _p_scan = _sc_sub2.add_parser("scan")
+        _p_scan.add_argument("--verbose", "-v", action="store_true",
+                             help="pro Kanal Frequenz/Entscheidung ausgeben")
         _sc_sub2.add_parser("stop")
         _sc_sub2.add_parser("next")
         _sc_sub2.add_parser("prev")
         _p_ch  = _sc_sub2.add_parser("ch");   _p_ch.add_argument("n",  type=int)
         _p_fr  = _sc_sub2.add_parser("freq"); _p_fr.add_argument("f",  type=float)
+    sc_sub.add_parser("status", help="Aktives Band, Frequenz, Squelch")
     _p_sq = sc_sub.add_parser("squelch"); _p_sq.add_argument("level", type=int)
     _p_pp = sc_sub.add_parser("ppm");     _p_pp.add_argument("value", type=int)
     _p_st = sc_sub.add_parser("stop")
@@ -1308,13 +1311,18 @@ Flags (vor dem Befehl angeben):
 
         BANDS = ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]
 
-        if sc_cmd is None:
-            # scanner ohne Argument → Status
+        if sc_cmd is None or sc_cmd == "status":
+            # scanner / scanner status
             r = svc.get_status()
-            sc = r.get("scanner", {})
-            if sc.get("active"):
-                fmt.out(f"Scanner aktiv: Band={sc.get('band','?')}  Freq={sc.get('freq','?')} MHz  Kanal={sc.get('ch','?')}")
-                fmt.out(f"  Squelch={r.get('scanner_squelch', r.get('squelch','?'))}  PPM={r.get('ppm_correction','?')}")
+            sc = r.get("scanner") or {}
+            if not isinstance(sc, dict):
+                sc = {}
+            active = sc.get("active") or str(r.get("radio_type", "")).upper() == "SCANNER"
+            if active:
+                fmt.out(f"Scanner aktiv: Band={sc.get('band') or r.get('scanner_band','?')}  "
+                        f"Freq={sc.get('freq','?')} MHz  Name={sc.get('name') or r.get('radio_name','?')}")
+                fmt.out(f"  Squelch={sc.get('squelch', r.get('scanner_squelch', '?'))}  "
+                        f"bw={sc.get('bandwidth_hz','?')} Hz  -s={sc.get('sample_rate','?')}")
             else:
                 fmt.out("Scanner: inaktiv")
                 fmt.out(f"  Verfügbare Bänder: {', '.join(BANDS)}")
@@ -1339,10 +1347,13 @@ Flags (vor dem Befehl angeben):
         band = sc_cmd
         if band in BANDS:
             if sc_action == "scan":
+                verbose = bool(getattr(args, "verbose", False))
                 if use_json:
                     fmt.print_json(svc.send(f"scan_next:{band}"))
                 else:
                     fmt.out(f"  Scanner {band}: suche aktiven Kanal …")
+                    if verbose:
+                        fmt.out("  (--verbose: Core-Log parallel: journalctl -fu pidrive_core)")
                     def _sc_tick(elapsed, total):
                         print(f"  … scanne {band}  {elapsed}s", end="\r", flush=True)
                     res = svc.watch_scanner_scan(band, on_tick=_sc_tick)
@@ -1352,10 +1363,18 @@ Flags (vor dem Befehl angeben):
                         _fr  = res.get("freq")
                         _frs = f"  ({_fr} MHz)" if _fr else ""
                         fmt.out(f"  ✓ Aktiver Kanal: {res.get('name','?')}{_frs} — gewechselt")
+                        # Nach Treffer Statusfelder zeigen
+                        try:
+                            sc = svc.get_status().get("scanner") or {}
+                            if sc:
+                                fmt.out(f"  Status: bw={sc.get('bandwidth_hz')} Hz  -s={sc.get('sample_rate')}  "
+                                        f"sq={sc.get('squelch')}")
+                        except Exception:
+                            pass
                     elif st == "none":
                         fmt.out("  ✗ Kein aktiver Kanal gefunden")
                     else:
-                        fmt.out("  ⏳ Scan läuft noch — Status: pidrivectl now")
+                        fmt.out("  ⏳ Scan läuft noch — Status: pidrivectl scanner status")
             elif sc_action == "stop":
                 svc.send("scanner_stop")
                 fmt.out("  Scanner gestoppt")

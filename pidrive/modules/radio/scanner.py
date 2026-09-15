@@ -322,6 +322,11 @@ def check_hardware(screen=None):
 def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
     global _player_proc
 
+    if not check_hardware():
+        S["radio_station"] = "Scanner-Hardware fehlt"
+        S["scanner"] = {"active": False, "error": "hardware"}
+        return
+
     if _rtlsdr and not _rtlsdr.detect_usb()["present"]:
         S["radio_station"] = "RTL-SDR nicht gefunden"
         return
@@ -424,6 +429,15 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         S["radio_playing"] = True
         S["radio_station"] = f"{name} ({float(freq_mhz):.5g} MHz)"
         S["radio_type"] = "SCANNER"
+        S["scanner"] = {
+            "active": True,
+            "band": S.get("scanner_band", ""),
+            "freq": float(freq_mhz),
+            "name": name,
+            "squelch": _get_squelch(settings) if settings is not None else S.get("scanner_squelch"),
+            "bandwidth_hz": int(bandwidth_hz),
+            "sample_rate": int(_rtl_sr),
+        }
 
         if _src_state:
             try:
@@ -451,7 +465,8 @@ def stop(S):
 
     _bg("pkill -f pidrive_scanner 2>/dev/null")
     _bg("pkill -f rtl_fm 2>/dev/null")
-    _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_scanner' 2>/dev/null")
+    # C12: Muster an tatsächliche mpv-Kommandozeile anpassen (--no-terminal, nicht --really-quiet)
+    _bg("pkill -f 'mpv --no-video --no-terminal --title=pidrive_scanner' 2>/dev/null")
 
     if _player_proc:
         try:
@@ -465,6 +480,7 @@ def stop(S):
     if S.get("radio_type") == "SCANNER":
         S["radio_playing"] = False
         S["radio_station"] = ""
+        S["scanner"] = {"active": False}
 
     # end_transition() gehört dem Aufrufer (td_scanner), nicht stop() —
     # sonst beendet jedes Tunen (play_freq→stop) die äußere Transition (C7).
@@ -551,7 +567,8 @@ def _scan_bw_fast(band_id, default_bw):
     if band_id == "cb":
         return 20000
     if band_id in ("vhf", "uhf"):
-        return max(default_bw, 50000)
+        # C5: Schritt 0.1 MHz → fast_bw muss ≥ 100 kHz sein (sonst Abtastlücken)
+        return max(default_bw, 100000)
     return default_bw
 
 
@@ -628,7 +645,8 @@ def _scan_list(S, channels, bw, direction, band_id="", settings=None):
     if n == 0:
         return None
 
-    start_idx = _current_ch.get("scan_idx", _current_ch.get(band_id, 0))
+    start_idx = _current_ch.get(f"scan_idx:{band_id}" if band_id else "scan_idx",
+                                _current_ch.get(band_id, 0))
     idx = start_idx % n
     fast_bw = _scan_bw_fast(band_id, bw)
 
@@ -648,9 +666,11 @@ def _scan_list(S, channels, bw, direction, band_id="", settings=None):
             log.info(f"Scanner scan-list: CANDIDATE band={band_id} ch={name} freq={freq}")
             if _detect_signal_confirm(freq, bw, settings=settings):
                 log.action("Scanner", f"Signal: {name} @ {freq} MHz")
-                _current_ch["scan_idx"] = idx
                 if band_id:
+                    _current_ch[f"scan_idx:{band_id}"] = idx
                     _current_ch[band_id] = idx
+                else:
+                    _current_ch["scan_idx"] = idx
                 return ch
             else:
                 log.info(f"Scanner scan-list: FALSE_POSITIVE band={band_id} ch={name}")

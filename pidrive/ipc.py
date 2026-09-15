@@ -106,6 +106,13 @@ def write_status(S, settings):
         "metadata_unavailable": S.get("metadata_unavailable", False),
         "degraded_imports":     _degraded_imports(),
         "processes":            S.get("processes", []),
+        "scanner":              S.get("scanner") or {
+            "active": str(S.get("radio_type", "")).upper() == "SCANNER",
+            "band": S.get("scanner_band", ""),
+            "freq": None,
+            "name": S.get("radio_station", ""),
+            "squelch": S.get("scanner_squelch"),
+        },
         "ts":        int(time.time()),
     })
 

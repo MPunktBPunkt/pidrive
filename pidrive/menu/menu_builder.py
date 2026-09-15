@@ -268,8 +268,12 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         scanner_key = f"scanner_{band_id}"
         current_info = S.get(scanner_key, "")
         active = bool(
-            S.get("radio_type") == "SCANNER" and
-            band_id.upper() in S.get("radio_station", "").upper()
+            S.get("radio_type") == "SCANNER" and (
+                S.get("scanner_band") == band_id
+                or bool(S.get(scanner_key))
+                or band_id.upper() in S.get("radio_station", "").upper()
+                or band_id.upper().replace("446", "") in S.get("radio_station", "").upper()
+            )
         )
         if not current_info and BANDS.get(band_id, {}).get("band"):
             _b = BANDS[band_id]["band"]
@@ -281,6 +285,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
             MenuNode(id=f"{band_id}_down", label="Kanal -",      type="action", action=f"scan_down:{band_id}"),
             MenuNode(id=f"{band_id}_next", label="Scan weiter",  type="action", action=f"scan_next:{band_id}"),
             MenuNode(id=f"{band_id}_prev", label="Scan zurueck", type="action", action=f"scan_prev:{band_id}"),
+            MenuNode(id=f"{band_id}_stop", label="Scanner Stop", type="action", action="scanner_stop"),
         ], active=active)
 
     scanner_node = _folder("scanner", "Scanner", [

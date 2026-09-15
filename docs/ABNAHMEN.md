@@ -86,7 +86,10 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | **W2** Statuskette | ✅ S1–S9: `status_age` top-level, Offline-Banner, `read_json_meta`, READY_FILE-Cleanup, `processes` in `write_status`, Hooks/Snapshot (S4), Feldnamen S5–S8, `/api/lists` |
 | **W3** tote Schichten | ✅ `web/shared.py` gelöscht (E8), `api-core.js` Syntax, V5-Pfade, V4 prev/next+PPM; `page-index.js` **nicht** eingebunden |
 | **W4** RTL-SDR-Import | ✅ C2: Imports → `modules.radio.*`; `_rtlsdr`/`_spectrum` nicht mehr `None`; MIGRATION_BACKLOG korrigiert |
-| W5–W11 | ⬜ offen — nächster Schritt W7/Stufe 1, dann W5 |
+| **W7/Stufe 1** | ✅ Z2–Z3–Z10 lokal; `pidrivectl source state\|history` |
+| **W5** (Teil) | ✅ C1, C3, C4, C5(fast_bw), C7, C8, C9, C12–C14 — C5 Single-Prozess + CB-AM offen |
+| **W6** | ✅ scanner in Status; CLI status / `--verbose`; Menü Stop |
+| W8–W11 | ⬜ offen |
 
 | Prüfung lokal | Ergebnis |
 |---------------|----------|
@@ -94,7 +97,7 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | `pidrivectl webui selftest` | **0 Fehler** |
 | Import `modules.radio.fm/scanner/spectrum` | `_rtlsdr`/`_spectrum` gesetzt, `degraded_imports` leer |
 
-**HW ausstehend (wenn Pi wieder erreichbar):** H2.4 (Core stop → Banner), H2.8 (`processes` nicht leer), H2.3 (Throttling), H2.5 (`api-core.js` ohne SyntaxError), **R5** Quellenwechsel nach W4.
+**HW ausstehend (wenn Pi wieder erreichbar):** H2.4 (Core stop → Banner), H2.8 (`processes` nicht leer), H2.3 (Throttling), H2.5 (`api-core.js` ohne SyntaxError), **R5** Quellenwechsel nach W4, **R6/R7** Scanner PMR446, **R12–R14** Transitionen.
 
 ---
 
@@ -113,4 +116,16 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | W5 C4 | Detect-Timeout Default 1.5 s — **[MESSEN]** |
 | W5 C8/C9 | Freenet K5/K6; set_channel per `ch`; set_freq für Kanalbänder |
 
-**Offen in W5:** C5 Sweep-Beschleunigung, CB-AM, C12/C13/C14, check_hardware am Start.
+**Offen in W5:** C5 vollständiger Single-`rtl_fm`-Sweep (nur fast_bw-Lücke geschlossen), CB-AM.
+
+---
+
+## 2026-09-15 — W5 Rest + W6 (lokal, v0.11.131)
+
+| | |
+|---|---|
+| W5 C5 Teil | VHF/UHF `fast_bw` ≥ 100 kHz (Schrittabdeckung) |
+| W5 C12 | `check_hardware()` vor `play_freq`; pkill-Muster `--no-terminal` |
+| W5 C13 | Menü-Aktivmarkierung über `scanner_band` / Label |
+| W5 C14 | `scan_idx` bandgetrennt |
+| W6 | `scanner`-Schlüssel in `write_status`; `pidrivectl scanner status`; Scan `--verbose` Hinweis; Menü `scanner_stop` |
