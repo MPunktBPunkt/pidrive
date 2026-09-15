@@ -244,3 +244,42 @@ curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?mode=snapshot&center
 2. Legacy `capture_spectrum`: `cmd += ["-"]`; vor Busy `clear_stale_lock`/`reap`/`wait_until_free` wie Backend.
 3. `sweep_fm_band`: `ok = (windows_ok > 0)` o.ä.; Fehler aggregieren.
 4. W8 laut Auftrag: CLI `pidrivectl spectrum …`, Watch/F3, Stations-Pipeline.
+
+---
+
+## 2026-09-15 — HW `test all` nach TK-A…E (v0.11.137)
+
+| | |
+|---|---|
+| Host | `192.168.178.107` |
+| Commit | `fba2715` / **v0.11.137** |
+| Log | `/tmp/test_all_hw_20260915_194958.log` |
+| JSON | `/tmp/pidrive_test_results.json` |
+| Dauer | 132.5 s |
+| Ergebnis | **21 bestanden · 2 Fehler · 24 Warnungen · 2 übersprungen** |
+
+### Gegenüber Nutzer-Lauf @ v0.11.132 (19:25)
+
+| | Vorher (0.11.132) | Jetzt (0.11.137) |
+|---|---|---|
+| Webradio / FM | ✓ | ✓ |
+| Scanner | ✓ (falsch positiv möglich) | **✗** Spiegel=`scanner`, Gerät=kein `rtl_fm` (TK-B) |
+| DAB Scan | ✗ SNR/FIC als Fehler | **⊘ SKIP** kein Signal (SNR 4.0, FIC 2476) — TK-E |
+| Spotify | ⚠ | **⊘ SKIP** kein Dienst — TK-C |
+| MPRIS2 | ✗ | ✗ unverändert |
+| „RTL-SDR belegt“ in Suite-Stdout | ja (Log-Warnungen) | **0** Treffer in Suite-Stdout; in `pidrive.log` noch 3 Warnungen während Lauf |
+
+### Fehler (2)
+
+1. **MPRIS2** — `ServiceUnknown: org.mpris.MediaPlayer2.pidrive` (Watchdog meldet Verschwinden)
+2. **Scanner FM** — `Spiegel=scanner Gerät=False (RTL=[])` — Quelle im Spiegel gesetzt, kein `rtl_fm`; parallel `pidrive.log`: `Scanner: RTL-SDR belegt` → TK-B deckt den alten False-PASS auf
+
+### SKIP (2)
+
+- DAB Scan 11B: Standort ohne Signal (TK-E)
+- Spotify: weder librespot noch raspotify
+
+### Fazit
+
+Testkette TK-A/C/E wirkt: DAB/Spotify verdrehen den Exit-Status nicht mehr. TK-B zeigt einen echten Scanner-Pfad-Bug (commit ohne Gerät / Belegt trotz Stop). MPRIS2 und Scanner-Gerät sind die nächsten Fixes; SP-* noch offen. Auftrag: `docs/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md`.
+
