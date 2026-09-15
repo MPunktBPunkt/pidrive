@@ -415,7 +415,7 @@ Menü-Arbeit schon zu einem Konflikt, und sie wird während der laufenden Pakete
 angefasst. Vorschlag für die Zeile:
 
 ```
-| [auftraege/AUFTRAG-FUNKPFAD.md](auftraege/AUFTRAG-FUNKPFAD.md) | Arbeitsauftrag Funkpfad — Importpfade, Bandbreite, Suchlauf | Entwickler | 2026-09-15 |
+| AUFTRAG-FUNKPFAD.md | Arbeitsauftrag Funkpfad — Importpfade, Bandbreite, Suchlauf | Entwickler | 2026-09-15 |
 ```
 
 Gleiches gilt für `docs/architektur/ZUSTANDSMASCHINE.md`, wo C2 an den Stellen L114 und
@@ -459,3 +459,4 @@ L347 als „toter Code" geführt wird — richtig ist „unerreichbar wegen Impo
 | Datum | Änderung |
 |---|---|
 | 2026-09-15 | Angelegt. Befunde K1–K5 gegen v0.11.128 (`f749a42`) belegt. Anlass: Prüfung, was nach Abschluss von W0/W1 dringend offen ist. Als eigenes Dokument geführt, weil `AUFTRAG-WEBUI-SANIERUNG.md` parallel bearbeitet wird. |
+| 2026-09-15 | **Stand-Abgleich @ v0.11.132 (`62aa12b`):** K1 Importpfade bereits `from modules.radio import …` (W4); `degraded_imports=[]` am Pi belegt. K2 Untergrenze nicht mehr 200000, sondern `max(48000, bw*4)` (W5) — Zielmessung 12500 noch offen. K3 Suchlauf-Transition nach Treffer (W5/C1/E3). K4 `reason=` entfernt (W5/C7). **Rest offen:** K2 Messreihe Richtung Kanalbandbreite; Abnahme-Gegenprobe PMR. Parallel: Testkette TK-A…E in `AUFTRAG-SPOTIFY-UND-TESTKETTE.md` vorgezogen (Messinstrument). |

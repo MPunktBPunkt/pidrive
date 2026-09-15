@@ -19,6 +19,7 @@ C  = "\033[36m"; W  = "\033[37m"; M  = "\033[35m"; BOLD = "\033[1m"; RST = "\033
 DIM = "\033[2m"
 
 PASS = f"{G}✓{RST}"; FAIL = f"{R}✗{RST}"; WARN = f"{Y}⚠{RST}"; INFO = f"{B}→{RST}"
+SKIP = f"{C}⊘{RST}"
 
 # ── Ergebnis-Tracking ─────────────────────────────────────────────────────────
 _results = []
@@ -27,19 +28,29 @@ _total = 0
 _passed = 0
 _failed = 0
 _warnings = 0
+_skipped = 0
 _has_audio_sink = False
 
 def _p(symbol, label, detail="", elapsed=None):
-    global _passed, _failed, _warnings
+    global _passed, _failed, _warnings, _skipped
     t = f"  {DIM}({elapsed:.1f}s){RST}" if elapsed else ""
     d = f"  {DIM}{detail}{RST}" if detail else ""
     print(f"  {symbol} {label}{d}{t}")
+    if symbol == PASS:
+        status = "pass"
+    elif symbol == FAIL:
+        status = "fail"
+    elif symbol == SKIP:
+        status = "skip"
+    else:
+        status = "warn"
     entry = {"label": label, "detail": detail,
-             "status": "pass" if symbol == PASS else ("fail" if symbol == FAIL else "warn"),
+             "status": status,
              "elapsed": elapsed}
     _results.append(entry)
     if symbol == PASS: _passed += 1
     elif symbol == FAIL: _failed += 1
+    elif symbol == SKIP: _skipped += 1
     else: _warnings += 1
 
 def _section(name, icon=""):
@@ -77,6 +88,71 @@ def _current_source():
     ss = _read_json("/tmp/pidrive_source_state.json")
     return ss.get("source_current", "idle")
 
+def _rtl_processes():
+    try:
+        from modules.radio import rtlsdr
+        return rtlsdr.find_rtl_processes() or []
+    except Exception:
+        out = _run("ps ax -o pid=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' | grep -v grep || true")
+        return [{"cmd": ln} for ln in out.splitlines() if ln.strip()]
+
+def _mpv_running():
+    return bool(_run("pgrep -x mpv 2>/dev/null"))
+
+def _device_holds_source(source_key):
+    """Unabhängiger Gerätebefund (TK-B) — nicht nur source_state."""
+    procs = _rtl_processes()
+    cmds = " ".join((p.get("cmd") or "") for p in procs).lower()
+    if source_key in ("fm", "scanner"):
+        return "rtl_fm" in cmds
+    if source_key == "dab":
+        return "welle-cli" in cmds
+    if source_key in ("webradio", "local", "library"):
+        return _mpv_running()
+    if source_key == "spotify":
+        # TK-C: Dienst ≠ Sitzung — hier nur „Dienst aktiv“, Sitzung separat
+        for svc in ("librespot", "raspotify"):
+            if _run(f"systemctl is-active {svc} 2>/dev/null") == "active":
+                return True
+        return False
+    return True
+
+def _stop_all_sources(wait_rtl=True, timeout=5.0):
+    """
+    Zentraler Quellenstopp vor RTL-/Wiedergabe-Tests (Auftrag TK-A).
+    Returns (ok: bool, reason: str|None). Bei ok=False → folgender Test SKIP.
+    """
+    for cmd in ("radio_stop", "scanner_stop", "webradio_stop", "stop"):
+        _write_trigger(cmd)
+        time.sleep(0.25)
+    time.sleep(0.8)
+    try:
+        from modules.radio import rtlsdr
+        if hasattr(rtlsdr, "clear_stale_lock"):
+            rtlsdr.clear_stale_lock()
+        if hasattr(rtlsdr, "reap_process"):
+            rtlsdr.reap_process()
+    except Exception:
+        pass
+    if not wait_rtl:
+        return True, None
+    try:
+        from modules.radio import rtlsdr
+        freed = rtlsdr.wait_until_free(timeout=timeout)
+        if not freed:
+            procs = _rtl_processes()
+            detail = ", ".join(
+                f"{p.get('pid','?')}:{ (p.get('cmd') or '')[:40]}" for p in procs[:3]
+            ) or "unbekannt"
+            return False, f"RTL-SDR nicht frei ({detail})"
+        return True, None
+    except Exception as e:
+        # Ohne rtlsdr-Modul weiterlaufen — Prozessliste als Fallback
+        procs = _rtl_processes()
+        if procs:
+            return False, f"RTL-Prozesse noch aktiv: {len(procs)} ({e})"
+        return True, None
+
 def _wait_for_metadata(source_key, max_wait=20, poll=1.0):
     """Wartet bis Metadaten für eine Quelle vorhanden sind."""
     deadline = time.time() + max_wait
@@ -89,20 +165,43 @@ def _wait_for_metadata(source_key, max_wait=20, poll=1.0):
         time.sleep(poll)
     return None
 
-def _wait_for_source(source_key, max_wait=15):
-    """Wartet bis source_key aktiv ist (source_state.json, nicht status.json)."""
+_last_wait_detail = None
+
+def _wait_for_source(source_key, max_wait=15, require_device=True):
+    """
+    Wartet bis source_key aktiv ist.
+    TK-B: Spiegel (source_state) UND Gerätebefund müssen passen.
+    TK-C: Spotify-Abkürzung über status.spotify entfernt.
+    Bei Spiegel≠Gerät: False und _last_wait_detail gesetzt.
+    """
+    global _last_wait_detail
+    _last_wait_detail = None
     ctx_map = {"webradio": "radio_web", "fm": "radio_fm", "dab": "radio_dab"}
     deadline = time.time() + max_wait
+    last_mirror = None
+    last_device = None
     while time.time() < deadline:
         cur = _current_source()
-        if cur == source_key:
-            return True
         s = _read_json("/tmp/pidrive_status.json")
-        if s.get("control_context") == ctx_map.get(source_key):
+        mirror_ok = (cur == source_key) or (
+            s.get("control_context") == ctx_map.get(source_key)
+        )
+        last_mirror = cur
+        if not mirror_ok:
+            time.sleep(0.5)
+            continue
+        if not require_device:
             return True
-        if source_key == "spotify" and s.get("spotify"):
+        device_ok = _device_holds_source(source_key)
+        last_device = device_ok
+        if device_ok:
             return True
         time.sleep(0.5)
+    if require_device and last_mirror == source_key and last_device is False:
+        _last_wait_detail = (
+            f"Spiegel={last_mirror} Gerät=False "
+            f"(RTL={[p.get('cmd','')[:50] for p in _rtl_processes()]})"
+        )
     return False
 
 def _send_to_bmw(title, artist="PiDrive Test", album="System Test"):
@@ -416,8 +515,10 @@ def test_webradio():
         return None
 
     t0 = time.time()
-    _write_trigger("radio_stop")  # laufende Quelle stoppen
-    import time as _twb; _twb.sleep(2.0)
+    ok_stop, why = _stop_all_sources(wait_rtl=False)
+    if not ok_stop:
+        _p(SKIP, "Webradio: Quellenstopp unvollständig", why or "")
+        return None
     _write_trigger("play_web:Rock Antenne")
     src_ok = _wait_for_source("webradio", max_wait=20)
     if not src_ok:
@@ -427,7 +528,8 @@ def test_webradio():
         if not _has_audio_sink and not _any_sink:
             _p(WARN, "Webradio: kein Audio-Sink (BT verbinden) — übersprungen")
             return None
-        _p(FAIL, f"Webradio: Quelle nicht aktiv nach {max_wait}s")
+        detail = _last_wait_detail or f"nach {20}s"
+        _p(FAIL, f"Webradio: Quelle nicht aktiv", detail)
         return False
     _p(PASS, "Webradio: gestartet", f"{time.time()-t0:.1f}s")
 
@@ -456,10 +558,10 @@ def test_fm(freq="104.4"):
         return None
 
     t0 = time.time()
-    _write_trigger("stop")
-    time.sleep(0.5)
-    _write_trigger("radio_stop")  # laufende Quelle stoppen
-    import time as _tfm; _tfm.sleep(1.5)
+    ok_stop, why = _stop_all_sources(wait_rtl=True, timeout=5.0)
+    if not ok_stop:
+        _p(SKIP, f"FM {freq}: RTL-SDR nicht frei — übersprungen", why or "")
+        return None
     _write_trigger(f"play_fm:{freq}")
     src_ok = _wait_for_source("fm", max_wait=20)
     elapsed = time.time() - t0
@@ -478,7 +580,8 @@ def test_fm(freq="104.4"):
         else:
             _p(INFO, "FM: kein RDS/Metadaten (normal ohne RDS-Signal)")
     else:
-        _p(FAIL, f"FM {freq}: Quelle nicht aktiv", f"{elapsed:.1f}s")
+        detail = _last_wait_detail or f"{elapsed:.1f}s"
+        _p(FAIL, f"FM {freq}: Quelle nicht aktiv", detail)
 
     return src_ok
 
@@ -495,10 +598,10 @@ def test_scanner_fm(freq="103.0"):
         return None
 
     t0 = time.time()
-    _write_trigger("stop")
-    time.sleep(0.5)
-    _write_trigger("scanner_stop")  # laufende Quelle stoppen
-    import time as _tsc; _tsc.sleep(1.5)
+    ok_stop, why = _stop_all_sources(wait_rtl=True, timeout=5.0)
+    if not ok_stop:
+        _p(SKIP, f"Scanner FM {freq}: RTL-SDR nicht frei — übersprungen", why or "")
+        return None
     _write_trigger(f"scan_setfreq:fm:{freq}")
     src_ok = _wait_for_source("scanner", max_wait=20)
     elapsed = time.time() - t0
@@ -508,7 +611,8 @@ def test_scanner_fm(freq="103.0"):
         _p(INFO, "Scanner läuft (5s Hörtest)")
         _send_to_bmw(f"Scanner {freq} MHz", "FM Scanner", "✓")
     else:
-        _p(WARN, f"Scanner FM {freq}: nicht gestartet (RTL-SDR belegt?)", f"{elapsed:.1f}s")
+        detail = _last_wait_detail or f"{elapsed:.1f}s"
+        _p(FAIL, f"Scanner FM {freq}: nicht gestartet", detail)
 
     return src_ok
 
@@ -525,21 +629,31 @@ def test_dab(sender_nr=22):
 
     # Senderliste lesen
     import json as _j
-    stations_path = os.path.join(BASE_DIR, "..", "dab_stations.json")
+    stations_path = os.path.abspath(os.path.join(BASE_DIR, "..", "dab_stations.json"))
+    if not os.path.isfile(stations_path):
+        # Fallback: neben Installationsroot
+        stations_path = os.path.abspath(os.path.join(BASE_DIR, "dab_stations.json"))
+    if not os.path.isfile(stations_path):
+        _p(FAIL, "DAB: dab_stations.json fehlt",
+           "Aufbaufehler — Senderliste nicht gefunden (TK-D)")
+        return False
     try:
         stations = _j.load(open(stations_path))
         sender = stations[sender_nr - 1] if len(stations) >= sender_nr else None
-        name = sender.get("name","?") if sender else f"Sender #{sender_nr}"
-    except Exception:
-        name = f"Sender #{sender_nr}"
+        if not sender:
+            _p(FAIL, f"DAB: Sender #{sender_nr} nicht in Liste",
+               f"{len(stations)} Einträge in {stations_path}")
+            return False
+        name = sender.get("name") or "?"
+    except Exception as e:
+        _p(FAIL, "DAB: dab_stations.json unlesbar", str(e)[:80])
+        return False
 
     t0 = time.time()
-    # Sicherstellen dass kein welle-cli mehr läuft
-    import subprocess as _sp3
-    _sp3.run("pkill -f welle-cli 2>/dev/null", shell=True)
-    time.sleep(0.5)
-    _write_trigger("stop")
-    time.sleep(0.5)
+    ok_stop, why = _stop_all_sources(wait_rtl=True, timeout=5.0)
+    if not ok_stop:
+        _p(SKIP, "DAB: RTL-SDR nicht frei — übersprungen", why or "")
+        return None
     _write_trigger(f"play_dab:{name}")
     _send_to_bmw(f"DAB: {name}", "Warte auf Lock...", "max 30s")
 
@@ -635,6 +749,10 @@ def test_dab_scan(channel="11B"):
 
     port = 7981
     t0 = time.time()
+    ok_stop, why = _stop_all_sources(wait_rtl=True, timeout=5.0)
+    if not ok_stop:
+        _p(SKIP, f"DAB Scan {channel}: RTL-SDR nicht frei", why or "")
+        return None
     _p(INFO, f"Starte welle-cli auf {channel} ({freq_mhz} MHz, Port {port})...")
 
     # welle-cli im Hintergrund für 25s
@@ -671,8 +789,24 @@ def test_dab_scan(channel="11B"):
     fic_err = data.get("demodulator",{}).get("fic",{}).get("numcrcerrors",0)
     services = data.get("services",[])
 
-    snr_sym = PASS if snr > 10 else (WARN if snr > 5 else FAIL)
-    _p(snr_sym, f"SNR: {snr:.1f} dB", f"FIC-Fehler: {fic_err}  Ensemble: {ens}")
+    # TK-E: kein Empfang am Standort ≠ Softwarefehler
+    try:
+        snr_f = float(snr)
+    except (TypeError, ValueError):
+        snr_f = 0.0
+    try:
+        fic_i = int(fic_err)
+    except (TypeError, ValueError):
+        fic_i = 0
+    if snr_f < 6.0 or fic_i > 500:
+        _p(SKIP,
+           f"kein DAB-Signal am Standort ({channel})",
+           f"SNR={snr_f:.1f} dB  FIC-Fehler={fic_i}  Ensemble={ens}")
+        _send_to_bmw(f"DAB {channel}: kein Signal", f"SNR {snr_f:.0f}dB", "SKIP")
+        return None
+
+    snr_sym = PASS if snr_f > 10 else (WARN if snr_f > 5 else FAIL)
+    _p(snr_sym, f"SNR: {snr_f:.1f} dB", f"FIC-Fehler: {fic_i}  Ensemble: {ens}")
 
     if services:
         _p(PASS, f"{len(services)} Sender gefunden auf {channel}:")
@@ -696,47 +830,44 @@ def test_dab_scan(channel="11B"):
 
 
 def test_spotify():
-    """9. Spotify."""
+    """9. Spotify (TK-C: Dienst ≠ Sitzung ≠ PASS)."""
     _section("SPOTIFY CONNECT", "🎵")
     _send_to_bmw("9/9: Spotify-Test", "librespot · Connect")
 
-    # Service aktiv?
+    svc_active = None
     for svc in ("librespot", "raspotify"):
         st = _run(f"systemctl is-active {svc} 2>/dev/null")
         if st == "active":
-            _p(PASS, f"{svc}: aktiv")
+            svc_active = svc
+            _p(PASS, f"{svc}: Dienst aktiv")
             creds = "/var/cache/librespot/credentials.json"
             if os.path.exists(creds):
                 _p(PASS, "OAuth-Token: vorhanden", creds)
             else:
                 _p(WARN, "OAuth-Token fehlt", "pidrivectl system spotify-oauth")
             break
-    else:
-        _p(WARN, "Weder librespot noch raspotify aktiv")
-        return
+    if not svc_active:
+        _p(SKIP, "Spotify: weder librespot noch raspotify aktiv",
+           "Dienst starten oder oauth — kein FAIL")
+        return None
 
-    # Spotify aktivieren
     t0 = time.time()
-    _write_trigger("stop")
-    time.sleep(0.3)
+    ok_stop, why = _stop_all_sources(wait_rtl=False)
+    if not ok_stop:
+        _p(SKIP, "Spotify: Quellenstopp unvollständig", why or "")
+        return None
     _write_trigger("spotify_on")
-    src_ok = _wait_for_source("spotify", max_wait=10)
-    if src_ok:
-        _p(PASS, "Spotify Connect: aktiviert", f"{time.time()-t0:.1f}s")
-        _p(INFO, "→ In Spotify-App PiDrive auswählen und abspielen")
-        time.sleep(5)
-        s = _read_json("/tmp/pidrive_status.json")
-        track = s.get("track","")
-        if track:
-            _p(PASS, f"Spotify-Metadaten: '{track[:50]}'")
-            _send_to_bmw(track[:45], s.get("artist","Spotify")[:35], "Spotify ✓")
-        else:
-            _p(INFO, "Noch kein Titel (Abspielen in App nötig)")
-    else:
-        if not _has_audio_sink:
-            _p(INFO, "Spotify aktiviert — kein Audio-Sink (BT verbinden)")
-        else:
-            _p(WARN, "Spotify: source nicht aktiv nach 10s (Audio-Sink vorhanden?)")
+    time.sleep(1.5)
+    s = _read_json("/tmp/pidrive_status.json")
+    track = (s.get("track") or "").strip()
+    # Ohne Connect-Client: SKIP statt PASS (TK-C)
+    if not track:
+        _p(SKIP, "Spotify: kein Connect-Client verbunden",
+           "in der App PiDrive wählen und Titel starten")
+        return None
+    _p(PASS, f"Spotify-Sitzung: '{track[:50]}'", f"{time.time()-t0:.1f}s")
+    _send_to_bmw(track[:45], s.get("artist", "Spotify")[:35], "Spotify ✓")
+    return True
 
 
 def test_avrcp_inject():
@@ -860,9 +991,9 @@ def test_webui():
 
 
 def run_all():
-    global _start_ts, _results, _passed, _failed, _warnings
+    global _start_ts, _results, _passed, _failed, _warnings, _skipped
     _start_ts = time.time()
-    _results = []; _passed = 0; _failed = 0; _warnings = 0
+    _results = []; _passed = 0; _failed = 0; _warnings = 0; _skipped = 0
     global _has_audio_sink
     _has_audio_sink = False
 
@@ -896,7 +1027,7 @@ def run_all():
     test_avrcp_inject()
 
     # Stop + Cleanup
-    _write_trigger("stop")
+    _stop_all_sources(wait_rtl=True, timeout=3.0)
     import subprocess as _sp4
     _sp4.run("pkill -f welle-cli 2>/dev/null", shell=True)
     time.sleep(0.5)
@@ -909,11 +1040,12 @@ def run_all():
     print(f"{BOLD}  ERGEBNIS  {RST}  {elapsed:.1f}s")
     print(f"  {G}{BOLD}{_passed} bestanden{RST}   "
           f"{R}{BOLD}{_failed} Fehler{RST}   "
-          f"{Y}{BOLD}{_warnings} Warnungen{RST}")
+          f"{Y}{BOLD}{_warnings} Warnungen{RST}   "
+          f"{C}{BOLD}{_skipped} übersprungen{RST}")
     print(f"{BOLD}{M}{'═'*60}{RST}\n")
 
     # BMW-Display: Ergebnis
-    result_str = f"✓{_passed}  ✗{_failed}  ⚠{_warnings}"
+    result_str = f"✓{_passed}  ✗{_failed}  ⚠{_warnings}  ⊘{_skipped}"
     _send_to_bmw("Test abgeschlossen", result_str, f"{elapsed:.0f}s")
 
     # JSON speichern
@@ -921,6 +1053,7 @@ def run_all():
         "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
         "elapsed": elapsed,
         "passed": _passed, "failed": _failed, "warnings": _warnings,
+        "skipped": _skipped,
         "results": _results,
     }
     try:

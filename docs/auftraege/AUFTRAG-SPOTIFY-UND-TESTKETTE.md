@@ -797,3 +797,12 @@ KB-A                                    (Kleinbefunde)
 SP-E hat Fernwirkung: Spotify ist neben DAB der zweite Pfad, der die zentrale
 Audio-Politik umgeht. Beide müssen angebunden sein, bevor `audio_output=gateway` im
 Gateway-Projekt Sinn ergibt.
+
+---
+
+## 10. Fortschritt (diese Instanz)
+
+| Datum | Stand |
+|-------|--------|
+| 2026-09-15 | Nutzer-Lauf am Pi `62aa12b` / v0.11.132: **22 bestanden, 2 Fehler, 29 Warnungen** — bestätigt TK1/TK2 (RTL-SDR belegt nach Scanner→DAB), TK-E (DAB Scan FAIL bei SNR~3), MPRIS2 ServiceUnknown, Spotify ohne Dienst. |
+| 2026-09-15 | **TK-A…E umgesetzt** in `test_suite.py` (+ Traceback in `td_radio` play_dab): `_stop_all_sources`, Geräteprüfung in `_wait_for_source`, Spotify SKIP ohne Client/Dienst, DAB-Scan SKIP bei SNR&lt;6 oder FIC&gt;500, `dab_stations.json` Pflicht. Version **0.11.133**. SP-* noch offen. |

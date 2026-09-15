@@ -253,7 +253,9 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 else:
                     log.warn(f"CLI play_dab: Exception — kein commit {_query!r}")
             except Exception as e:
-                log.error(f"CLI play_dab Fehler: {e}")
+                import traceback as _tb
+                log.error(f"CLI play_dab Fehler: {type(e).__name__}: {e}")
+                log.error(f"CLI play_dab Traceback:\n{_tb.format_exc()}")
 
         bg(_run_cli_dab)
 
