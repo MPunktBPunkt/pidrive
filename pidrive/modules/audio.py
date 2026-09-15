@@ -56,7 +56,7 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
                                kein PA-Routing — ALSA-direkt
     FM          ALSA hw:{_get_headphone_card()},0    rtl_fm | mpv --ao=alsa --alsa-device=hw:{_get_headphone_card()},0
                                kein PA-Routing — raw PCM direkt
-    Scanner     ALSA hw:N,0    rtl_fm | mpv --ao=alsa
+    Scanner     PipeWire-Pulse rtl_fm | mpv --ao=pulse
     Webradio    PipeWire-Pulse mpv --ao=pulse PULSE_SERVER=...
     Spotify     PipeWire-Pulse librespot --device pulse
     BT (A2DP)   PipeWire       WirePlumber → bluez_sink.* automatisch

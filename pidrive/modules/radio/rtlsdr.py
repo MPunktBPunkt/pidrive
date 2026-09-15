@@ -14,7 +14,7 @@ Zentrale RTL-SDR Verwaltung:
 
 Verwendung:
     # Passiv (kein Device-Zugriff):
-    from modules import rtlsdr
+    from modules.radio import rtlsdr
     rtlsdr.log_startup_check(log)
 
     # Exklusiver Zugriff:
@@ -22,8 +22,8 @@ Verwendung:
         subprocess.Popen(["rtl_fm", ...])
 
     # Diagnose-CLI:
-    python3 modules/rtlsdr.py
-    python3 modules/rtlsdr.py --active
+    python3 -m modules.radio.rtlsdr
+    python3 -m modules.radio.rtlsdr --active
 """
 
 import argparse

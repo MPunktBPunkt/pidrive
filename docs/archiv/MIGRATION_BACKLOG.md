@@ -31,7 +31,14 @@
 - `modules/bt_agent.py`, `bt_audio.py`, `bt_backup.py`, `bt_connect.py`
 - `modules/bt_devices.py`, `bt_helpers.py`, `bt_watcher.py`, `bluetooth.py`
 - `modules/dab.py`, `dab_dls.py`, `dab_helpers.py`, `dab_play.py`, `dab_scan.py`
-- `modules/fm.py`, `rtlsdr.py`, `scanner.py`, `spectrum.py`
+- `modules/fm.py`, `rtlsdr.py`, ~~`scanner.py`~~, `spectrum.py`
+
+> **Korrektur v0.11.129 (W4/C2/C15):** Die Behauptung „abgeschlossen“ war unvollständig.
+> `modules/rtlsdr.py` und `modules/spectrum.py` existierten nicht mehr, aber sechs Stellen
+> in `modules/radio/*` importierten weiter `from modules import rtlsdr|spectrum` und
+> schluckten den Fehler — Lock/Busy-Check und Spektrum-Pfad waren tot.
+> `modules/scanner.py` ist **nicht** gelöscht (5-Zeilen-Compat-Shim, C15).
+> Behoben in W4: Imports auf `modules.radio.*`.
 
 **Toter Code (keine Importer):**
 - `modules/bluetooth_impl.py` — 3 Zeilen, nie genutzt

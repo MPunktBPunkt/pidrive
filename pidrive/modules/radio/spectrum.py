@@ -30,12 +30,12 @@ except ImportError:
     np = None
 
 try:
-    from modules import rtlsdr as _rtlsdr
+    from modules.radio import rtlsdr as _rtlsdr
 except Exception as _e:
     _rtlsdr = None
     try:
         from modules import degraded_imports as _deg
-        _deg.report("modules.rtlsdr", str(_e))
+        _deg.report("modules.radio.rtlsdr", str(_e))
     except Exception:
         pass
 

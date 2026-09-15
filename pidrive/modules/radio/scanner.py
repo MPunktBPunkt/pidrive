@@ -21,12 +21,12 @@ import time
 import subprocess
 
 try:
-    from modules import rtlsdr as _rtlsdr
+    from modules.radio import rtlsdr as _rtlsdr
 except Exception as _e:
     _rtlsdr = None
     try:
         from modules import degraded_imports as _deg
-        _deg.report("modules.rtlsdr", str(_e))
+        _deg.report("modules.radio.rtlsdr", str(_e))
     except Exception:
         pass
 
@@ -36,12 +36,12 @@ except Exception:
     _src_state = None
 
 try:
-    from modules import spectrum as _spectrum
+    from modules.radio import spectrum as _spectrum
 except Exception as _e:
     _spectrum = None
     try:
         from modules import degraded_imports as _deg
-        _deg.report("modules.spectrum", str(_e))
+        _deg.report("modules.radio.spectrum", str(_e))
     except Exception:
         pass
 
