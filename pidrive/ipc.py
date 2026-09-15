@@ -101,11 +101,11 @@ def write_status(S, settings):
         "dab_audio_ready":      S.get("dab_audio_ready", False),
         "dab_pcm_seen":         S.get("dab_pcm_seen", False),
         "dab_superframe_seen":  S.get("dab_superframe_seen", False),
-        "dab_sync_seen":        S.get("dab_sync_seen", False),
         "dab_attempting":       S.get("dab_attempting", False),
         "dab_last_error":       S.get("dab_last_error", ""),
         "metadata_unavailable": S.get("metadata_unavailable", False),
         "degraded_imports":     _degraded_imports(),
+        "processes":            S.get("processes", []),
         "ts":        int(time.time()),
     })
 

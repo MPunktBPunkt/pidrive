@@ -1,6 +1,6 @@
 # Abnahmeprotokolle — PiDrive
 
-**Stand:** v0.11.128 · 2026-09-15
+**Stand:** v0.11.129 · 2026-09-15
 
 Ergebnis-Dokumente werden **ergänzt**, nicht überschrieben. Jede Messung nennt Commit-Hash.
 
@@ -71,3 +71,27 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | H2.13 `activate:1` | HTTP 400 „nicht erlaubt“ — bekannt, Menü-Trigger noch nicht in Whitelist |
 
 **Fazit für zweite Cursor-Instanz:** W0 und W1 sind auf HW `@adf7e16` verifiziert. Statuskette (W2), V4-Button-Fixes und RTL-SDR-Importbruch (W4) sind die nächsten Pakete. C16-Ausfall und S11/S12 sind behoben und am Pi nachweisbar.
+
+---
+
+## 2026-09-15 — W2 Statuskette + W3 tote Schichten (lokal)
+
+| | |
+|---|---|
+| Code | lokal, **v0.11.129** (noch nicht auf Pi) |
+| Pi | `192.168.178.105` — SSH *No route to host* → HW-Abnahme ausstehend |
+
+| Paket | Status |
+|-------|--------|
+| **W2** Statuskette | ✅ S1–S9: `status_age` top-level, Offline-Banner, `read_json_meta`, READY_FILE-Cleanup, `processes` in `write_status`, Hooks/Snapshot (S4), Feldnamen S5–S8, `/api/lists` |
+| **W3** tote Schichten | ✅ `web/shared.py` gelöscht (E8), `api-core.js` Syntax, V5-Pfade, V4 prev/next+PPM; `page-index.js` **nicht** eingebunden |
+| **W4** RTL-SDR-Import | ✅ C2: Imports → `modules.radio.*`; `_rtlsdr`/`_spectrum` nicht mehr `None`; MIGRATION_BACKLOG korrigiert |
+| W5–W11 | ⬜ offen — nächster Schritt W7/Stufe 1, dann W5 |
+
+| Prüfung lokal | Ergebnis |
+|---------------|----------|
+| `pidrivectl webui check` | **0 Treffer** |
+| `pidrivectl webui selftest` | **0 Fehler** |
+| Import `modules.radio.fm/scanner/spectrum` | `_rtlsdr`/`_spectrum` gesetzt, `degraded_imports` leer |
+
+**HW ausstehend (wenn Pi wieder erreichbar):** H2.4 (Core stop → Banner), H2.8 (`processes` nicht leer), H2.3 (Throttling), H2.5 (`api-core.js` ohne SyntaxError), **R5** Quellenwechsel nach W4.

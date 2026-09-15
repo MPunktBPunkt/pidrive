@@ -1,6 +1,6 @@
 # PiDrive — Funktions-Inventar
 
-**Stand:** v0.11.128 · 2026-09-15
+**Stand:** v0.11.129 · 2026-09-15
 
 Vertrag über garantierte Fähigkeiten. Jede Zeile ist per CLI prüfbar.
 Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
@@ -84,20 +84,22 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 |----|-----------|-------------|-----------|--------------|-------|
 | F-080 | Seiten: Alltag `/` | Browser / `curl -s localhost:8080/` | HTML mit Player, Favoriten, Quellen | pidrive_web | 🟡 |
 | F-081 | Seiten: Bluetooth `/bluetooth` | `curl -s localhost:8080/bluetooth` | Geräteliste, Scan/Reconnect | pidrive_web | 🟡 |
-| F-082 | Seiten: Audio `/audio` | `curl -s localhost:8080/audio` | Route, Volume, Debug-Cockpit | pidrive_web | ⛔ S11 leert Audio-Debug |
-| F-083 | Seiten: RF/DAB `/rf-tools` | `curl -s localhost:8080/rf-tools` | PPM, RTL-SDR, Spektrum | pidrive_web | ⛔ S4 kein Refresh; F3 Watch |
-| F-084 | Seiten: Diagnose `/diagnostics` | `curl -s localhost:8080/diagnostics` | Logs, Ressourcen | pidrive_web | ⛔ S5/S8 Feldnamen |
-| F-085 | Seiten: AVRCP `/avrcp` | `curl -s localhost:8080/avrcp` | Event-Log | pidrive_web | ⛔ S4/S5 |
+| F-082 | Seiten: Audio `/audio` | `curl -s localhost:8080/audio` | Route, Volume, Debug-Cockpit | pidrive_web | ✅ S11 behoben |
+| F-083 | Seiten: RF/DAB `/rf-tools` | `curl -s localhost:8080/rf-tools` | PPM, RTL-SDR, Spektrum | pidrive_web | 🟡 S4 Hook da; F3 Watch offen |
+| F-084 | Seiten: Diagnose `/diagnostics` | `curl -s localhost:8080/diagnostics` | Logs, Ressourcen | pidrive_web | ✅ S5/S8 Feldnamen |
+| F-085 | Seiten: AVRCP `/avrcp` | `curl -s localhost:8080/avrcp` | Event-Log | pidrive_web | ✅ S4/S5 |
 | F-086 | Seiten: Webradio-Admin | `curl -s localhost:8080/webradio-admin` | Stationen CRUD | pidrive_web | 🟡 |
 | F-087 | Seiten: Medien-Admin | `curl -s localhost:8080/music-admin` | Upload/Ordner/ID3 | pidrive_web | 🟡 |
-| F-088 | Core-Polling `/api/core` | `curl -s localhost:8080/api/core` | status, menu, source_state, Ages | Core+Web | ⛔ S1/S2 Ages ungenutzt/falsch |
+| F-088 | Core-Polling `/api/core` | `curl -s localhost:8080/api/core` | status_age/menu_age top-level; Banner bei >3s | Core+Web | ✅ W2/S1/S2 |
 | F-089 | Trigger `/api/cmd` | `curl -X POST …/api/cmd -d '{"cmd":"radio_stop"}'` | ok:true | Core | ✅ |
-| F-090 | prev/next Station-Buttons | UI `prev_station`/`next_station` | Senderwechsel | — | ⛔ V4 nicht in ALLOWED_COMMANDS |
-| F-091 | PPM Auto-Kalibrieren | RF-Tools Button | `/api/ppm_calibrate` | — | ⛔ V4 sendCmd mit URL-Pfad |
-| F-092 | WebUI-Check | `pidrivectl webui check` | V4-Treffer sichtbar bzw. 0 nach Fix | Offline | ✅ |
-| F-093 | WebUI-Selftest | `pidrivectl webui selftest` | 0 Fehler nach S11/S12-Fix | Offline | ✅ |
+| F-090 | prev/next Station-Buttons | UI → `dab_prev`/`fm_prev` etc. | Senderwechsel | — | ✅ W3/V4 |
+| F-091 | PPM Auto-Kalibrieren | RF-Tools → `fetch /api/ppm_calibrate` | PPM-Wert | — | ✅ W3/V4 |
+| F-092 | WebUI-Check | `pidrivectl webui check` | 0 Treffer | Offline | ✅ |
+| F-093 | WebUI-Selftest | `pidrivectl webui selftest` | 0 Fehler | Offline | ✅ |
 | F-094 | Routen-Inventar | `pidrivectl webui routes` | Liste inkl. Blueprints | Offline | ✅ |
 | F-095 | Menü-Fernsteuerung | `/api/core` path/nodes + UI | wie `menu goto/activate` | Core | ⛔ V3 Oberfläche fehlt |
+| F-096 | Billige Listen | `curl -s localhost:8080/api/lists` | dab/web/fm/favorites ohne pactl | Web | ✅ W2/S9 |
+| F-097 | processes in Status | `/api/core` → `status.processes` | nicht-leer wenn mpv/welle läuft | Core | ✅ W2/S3 |
 
 ## Navigation / Trigger (AVRCP → Core)
 

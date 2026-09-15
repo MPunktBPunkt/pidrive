@@ -178,6 +178,20 @@
       "file": "pidrive/web/app.py"
     },
     {
+      "path": "/api/lists",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/favorites",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
       "path": "/api/runtime",
       "methods": [
         "GET"

@@ -2,7 +2,9 @@
 {% block title %}PiDrive — Medienbibliothek{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">🎵 Medienbibliothek</div>
+  <div class="card-title">🎵 Medienbibliothek
+    <span id="snapMusic" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
+  </div>
   <div id="musicRoot" style="font-size:12px;color:var(--muted);margin-bottom:8px">…</div>
   <div id="musicBreadcrumb" style="font-size:13px;margin-bottom:10px"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
@@ -190,7 +192,16 @@ function musicPlayFile() {
   if (tagEditPath) musicPlayPath(tagEditPath);
 }
 
+function onBaseRefresh() {
+  // Pfad-Listing ist keine Live-Anzeige — nur Kennzeichnung (S4)
+  const s = document.getElementById('snapMusic');
+  if (s && !s.dataset.stamped) {
+    s.textContent = '· Momentaufnahme ' + new Date().toLocaleTimeString();
+    s.dataset.stamped = '1';
+  }
+}
 loadMusicInfo();
 musicGo('');
+onBaseRefresh();
 </script>
 {% endblock %}

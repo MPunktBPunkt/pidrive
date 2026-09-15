@@ -2,7 +2,9 @@
 {% block title %}PiDrive — Webradio Verwaltung{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">📶 Webradio-Sender</div>
+  <div class="card-title">📶 Webradio-Sender
+    <span id="snapWr" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
+  </div>
   <div id="stationList" style="font-size:13px">Lade…</div>
 </div>
 <div class="card">
@@ -20,6 +22,8 @@ async function loadStations() {
   try{const r=await fetch('/api/webradio/stations');const j=await r.json();
     const stations=(j.stations)||((j.data&&j.data.stations))||[];
     const el=document.getElementById('stationList');
+    const snap=document.getElementById('snapWr');
+    if (snap) snap.textContent = '· Stand ' + new Date().toLocaleTimeString();
     if(!stations.length){el.innerHTML='<span style="color:var(--muted)">Keine Sender</span>';return;}
     el.innerHTML=stations.map(s=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
       <span style="flex:1"><b>${s.name}</b><br><span style="color:var(--muted);font-size:11px">${(s.url||'').substring(0,50)}</span></span>
@@ -33,6 +37,11 @@ async function addStation() {
   if(!name||!url){showToast('Name und URL nötig');return;}
   try{await fetch('/api/webradio/add',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({name,url})});showToast('Sender hinzugefügt');loadStations();}catch(e){}
+}
+let _wrTick = 0;
+function onBaseRefresh() {
+  _wrTick++;
+  if (_wrTick % 5 === 1) loadStations();
 }
 loadStations();
 </script>{% endblock %}

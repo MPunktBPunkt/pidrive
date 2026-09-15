@@ -2,7 +2,9 @@
 {% block title %}PiDrive — RF / DAB Tools{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">📻 DAB+ Status</div>
+  <div class="card-title">📻 DAB+ Status
+    <span id="snapRf" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
+  </div>
   <div id="dabStatusBlock" style="font-size:13px">Lade…</div>
   <div class="btn-row" style="margin-top:8px">
     <button class="btn" onclick="loadDabStatus()">Aktualisieren</button>
@@ -32,10 +34,11 @@
 <div class="card">
   <div class="card-title">🎛 PPM Kalibrierung</div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <input id="ppmVal" type="number" value="{{ (vm.get('settings') or {}).get('ppm', (vm.get('settings') or {}).get('ppm_correction', 49)) }}" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px">
+    <input id="ppmVal" type="number" value="49" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px">
     <button class="btn" onclick="sendCmd('ppm:'+document.getElementById('ppmVal').value)">PPM setzen</button>
-    <button class="btn" onclick="sendCmd('/api/ppm_calibrate')">Auto-Kalibrieren</button>
+    <button class="btn" onclick="ppmCalibrate()">Auto-Kalibrieren</button>
   </div>
+  <div id="ppmHint" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
 </div>
 <div class="card">
   <div class="card-title">📊 DAB Scan Diagnose</div>
@@ -54,6 +57,8 @@ async function loadDabStatus() {
       ${d.dab_attempting?'<span style="color:var(--yellow)">⏳ welle-cli läuft, kein stabiler Lock</span>':''}<br>
       <b>DLS:</b> ${d.last_dls_raw||d.dls_text||'–'} | Lines: ${d.dls_lines_seen??'–'}<br>
       <b>Fehler:</b> <span style="color:var(--red)">${d.last_error_line||d.dab_last_error||'–'}</span>`;
+    const s=document.getElementById('snapRf');
+    if (s) s.textContent = '· Stand ' + new Date().toLocaleTimeString();
   }catch(e){document.getElementById('dabStatusBlock').textContent='Fehler: '+e;}
 }
 async function loadRtlsdr() {
@@ -78,5 +83,25 @@ async function loadDabScan() {
   try{const r=await fetch('/api/dab/scan/last');const j=await r.json();
     document.getElementById('dabScanBlock').innerHTML='<pre style="font-size:11px;white-space:pre-wrap">'+JSON.stringify(j,null,2)+'</pre>';}catch(e){}
 }
-loadDabStatus(); loadRtlsdr();
+async function loadPpmFromRuntime() {
+  try{
+    const r=await fetch('/api/runtime'); const j=await r.json();
+    const ppm = j.settings && j.settings.ppm_correction;
+    if (ppm != null && ppm !== '-') document.getElementById('ppmVal').value = ppm;
+  }catch(e){}
+}
+async function ppmCalibrate() {
+  const hint = document.getElementById('ppmHint');
+  if (hint) hint.textContent = 'Kalibriere…';
+  try{
+    const r = await fetch('/api/ppm_calibrate', {method:'POST'});
+    const j = await r.json();
+    if (!j.ok) { showToast('PPM: '+(j.error||'Fehler')); return; }
+    if (hint) hint.textContent = (j.ppm_found || j.hint || j.raw || 'fertig').toString().substring(0,120);
+    const m = (j.ppm_found||'').match(/([-+]?\d+\.?\d*)/);
+    if (m) document.getElementById('ppmVal').value = m[1];
+  }catch(e){ if (hint) hint.textContent = 'Fehler: '+e; }
+}
+function onBaseRefresh() { loadDabStatus(); }
+loadDabStatus(); loadRtlsdr(); loadPpmFromRuntime();
 </script>{% endblock %}

@@ -2,7 +2,9 @@
 {% block title %}PiDrive — AVRCP Debug{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">🚗 AVRCP Status (BMW iDrive)</div>
+  <div class="card-title">🚗 AVRCP Status (BMW iDrive)
+    <span id="snapAvrcp" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
+  </div>
   <div id="avrcpBlock" style="font-size:13px">Lade…</div>
   <button class="btn" onclick="loadAvrcp()" style="margin-top:8px">Aktualisieren</button>
 </div>
@@ -14,13 +16,24 @@
 {% endblock %}
 {% block extra_js %}
 <script src="/static/js/page-avrcp.js"></script><script>
+function _logText(j) {
+  if (typeof j.stdout === 'string' && j.stdout.length) return j.stdout;
+  if (Array.isArray(j.lines)) return j.lines.join('\n');
+  if (typeof j.log === 'string') return j.log;
+  return JSON.stringify(j, null, 2);
+}
 async function loadAvrcp() {
-  try{const r=await fetch('/api/avrcp');const j=await r.json();
-    document.getElementById('avrcpBlock').innerHTML='<pre style="font-size:11px">'+JSON.stringify(j,null,2)+'</pre>';}catch(e){}
+  try{
+    const r=await fetch('/api/avrcp');const j=await r.json();
+    document.getElementById('avrcpBlock').innerHTML='<pre style="font-size:11px">'+JSON.stringify(j,null,2)+'</pre>';
+    const s=document.getElementById('snapAvrcp');
+    if (s) s.textContent = '· Stand ' + new Date().toLocaleTimeString();
+  }catch(e){}
 }
 async function loadAvrcpLog() {
   try{const r=await fetch('/api/logs?target=avrcp');const j=await r.json();
-    document.getElementById('avrcpLog').textContent=(j.lines||j.log||[]).join('\n');}catch(e){}
+    document.getElementById('avrcpLog').textContent=_logText(j);}catch(e){}
 }
+function onBaseRefresh() { loadAvrcp(); }
 loadAvrcp();
 </script>{% endblock %}

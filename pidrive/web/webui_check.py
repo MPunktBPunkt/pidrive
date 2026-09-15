@@ -35,8 +35,8 @@ def _cmd_prefixes():
 
 CMD_PREFIXES = None  # lazy; see _cmd_prefixes()
 
-# Bekannte Defekte aus AUFTRAG V4 — check muss sie finden, solange unbehoben
-EXPECTED_BAD_CMDS = {"prev_station", "next_station", "/api/ppm_calibrate"}
+# Bekannte Defekte aus AUFTRAG V4 — nach Fix leer; Check muss 0 Treffer melden
+EXPECTED_BAD_CMDS = set()
 
 
 def _ensure_path():
@@ -190,7 +190,6 @@ def run_check(write_inventory: bool = True) -> int:
             if not hit and "?" in url:
                 hit = url.split("?", 1)[0] in route_paths
             if not hit:
-                # /api/favorites existiert laut V4 nicht
                 bad_fetches.append((rel, url))
 
         for field in _STATUS_FIELD_RE.findall(text):
@@ -199,8 +198,9 @@ def run_check(write_inventory: bool = True) -> int:
                 continue
             if status_written and field not in status_written:
                 # Nur Felder melden, die klar Status sind und fehlen
-                if field in ("processes", "lines", "log", "text", "output",
-                             "disk_total", "throttled", "bt_on"):
+                # disk_total/throttled kommen aus /api/system/resources (S8), nicht status
+                # lines/log/text/output = Log-API (S5), nicht status
+                if field in ("processes", "bt_on"):
                     bad_fields.append((rel, field))
 
     # Dedup

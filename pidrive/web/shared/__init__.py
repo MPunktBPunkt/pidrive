@@ -20,7 +20,7 @@ from web.shared.constants import (  # noqa: F401
 
 # ── Datei-/IPC-Helfer ───────────────────────────────────────────────────
 from web.shared.files import (  # noqa: F401
-    read_json, write_cmd, file_age,
+    read_json, read_json_meta, write_cmd, file_age,
 )
 
 # ── System-/Shell-Helfer ────────────────────────────────────────────────

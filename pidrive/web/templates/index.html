@@ -183,8 +183,8 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
     <div class="vol-audio-route" id="volRoute">Ausgang: –</div>
 
     <div class="transport">
-      <button class="tbtn" onclick="sendCmd('prev_station')">⏮</button>
-      <button class="tbtn" onclick="sendCmd('next_station')">⏭</button>
+      <button class="tbtn" onclick="prevStation()">⏮</button>
+      <button class="tbtn" onclick="nextStation()">⏭</button>
       <button class="tbtn stop" onclick="sendCmd('radio_stop')">⏹</button>
       <button class="tbtn mute-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
     </div>
@@ -389,7 +389,7 @@ function scanFm() {
 
 async function loadDABStations() {
   if (_dabStations.length) { renderDABStations(); return; }
-  try { const j = await (await fetch('/api/state')).json(); _dabStations = j.dab_stations || []; renderDABStations(); } catch(e) {}
+  try { const j = await (await fetch('/api/lists')).json(); _dabStations = j.dab_stations || []; renderDABStations(); } catch(e) {}
 }
 function renderDABStations() {
   const el = document.getElementById('dabStationList');
@@ -400,7 +400,7 @@ function renderDABStations() {
 }
 async function loadWebStations() {
   if (_webStations.length) { renderWebStations(); return; }
-  try { const j = await (await fetch('/api/state')).json(); _webStations = j.web_stations || []; renderWebStations(); } catch(e) {}
+  try { const j = await (await fetch('/api/lists')).json(); _webStations = j.web_stations || []; renderWebStations(); } catch(e) {}
 }
 function renderWebStations() {
   const el = document.getElementById('webStationList');
@@ -410,7 +410,7 @@ function renderWebStations() {
 }
 async function loadFMStations() {
   try {
-    const j = await (await fetch('/api/state')).json();
+    const j = await (await fetch('/api/lists')).json();
     const fm = j.fm_stations || [];
     document.getElementById('fmStationList').innerHTML = fm.map(s =>
       `<div class="station-item" onclick="document.getElementById('fmFreqInput').value='${s.freq||''}'">${s.name}</div>`
@@ -422,7 +422,7 @@ function playWeb(n) { sendCmd('play_web:' + n); hideStations(); showToast('Web: 
 
 async function loadFavorites() {
   try {
-    const j = await (await fetch('/api/state')).json();
+    const j = await (await fetch('/api/lists')).json();
     const favs = j.favorites || [];
     const favEl = document.getElementById('favList');
     favEl.innerHTML = favs.length ? favs.map((f,i) =>
@@ -440,6 +440,20 @@ function playFav(f) {
   else if (s==='webradio'||s==='web') sendCmd('play_web:'+f.name);
   else if (s==='fm') sendCmd('play_fm:'+(f.freq||f.name));
   showToast('▶ '+f.name);
+}
+
+// V4: prev/next auf echte Kommandos je Quelle abbilden
+function prevStation() {
+  const src = _currentSource || 'idle';
+  if (src === 'dab') sendCmd('dab_prev');
+  else if (src === 'fm') sendCmd('fm_prev');
+  else showToast(src === 'scanner' ? 'Scanner: Scan über Menü' : 'Kein Sender aktiv');
+}
+function nextStation() {
+  const src = _currentSource || 'idle';
+  if (src === 'dab') sendCmd('dab_next');
+  else if (src === 'fm') sendCmd('fm_next');
+  else showToast(src === 'scanner' ? 'Scanner: Scan über Menü' : 'Kein Sender aktiv');
 }
 
 const SRC_TILE = { dab:'tileDAB', fm:'tileFM', webradio:'tileWeb', web:'tileWeb',
@@ -477,7 +491,8 @@ function onBaseRefresh(j, st, ss, now) {
 
   const dabState = st.dab_playback_state || '';
   const dabEl = document.getElementById('pDabState');
-  if (src === 'dab' && dabState && !['playing','locked','pcm_seen'].includes(dabState)) {
+  // idle = Normal-Leerlauf, nicht anzeigen; Fehlerzustände sichtbar (S6)
+  if (src === 'dab' && dabState && dabState !== 'idle' && dabState !== 'locked') {
     dabEl.textContent = dabState;
     dabEl.style.display = '';
   } else { dabEl.style.display = 'none'; }

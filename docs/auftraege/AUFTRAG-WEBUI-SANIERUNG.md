@@ -1412,6 +1412,9 @@ einem Band ohne Referenzsender als erledigt gelten.
 |-------|--------|
 | **W0** Sicherheitsnetz | ✅ `webui check` findet V4; `routes.json`; FEATURES WebUI; in `test all` |
 | **W1** Fehler sichtbar | ✅ selftest; C16 behoben; S11/S12 Imports; `degraded_imports`; Blueprint-Banner |
-| W2–W11 | ⬜ offen — Reihenfolge laut §7 / E1 |
+| **W2** Statuskette | ✅ lokal v0.11.129 — HW-Abnahme ausstehend (Pi unreachable) |
+| **W3** tote Schichten | ✅ lokal — V4=0 Treffer in `webui check`; shared.py entfernt |
+| **W4** RTL-SDR-Import | ✅ lokal — `_rtlsdr`/`_spectrum` laden; Lock-Schicht aktiv (R5 auf HW nötig) |
+| W5–W11 | ⬜ offen — als Nächstes W7/Stufe 1 (vor W5) |
 
 Detailmessungen und H2-Tabelle: [../ABNAHMEN.md](../ABNAHMEN.md).

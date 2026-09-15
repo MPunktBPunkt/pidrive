@@ -744,3 +744,9 @@ if __name__ == "__main__":
             bluetooth.stop_agent_session()
         except Exception:
             pass
+        # READY_FILE darf nach Core-Ende nicht als Lebendigkeitssignal stehen bleiben (W2/S1)
+        try:
+            if os.path.exists(ipc.READY_FILE):
+                os.unlink(ipc.READY_FILE)
+        except Exception:
+            pass

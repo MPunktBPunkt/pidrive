@@ -1,6 +1,6 @@
 # PiDrive — Dokumentationsindex
 
-**Stand:** v0.11.128 · 2026-09-15
+**Stand:** v0.11.129 · 2026-09-15
 
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).

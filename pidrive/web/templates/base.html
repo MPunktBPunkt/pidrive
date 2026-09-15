@@ -114,6 +114,11 @@
     <div id="topDebug" style="font-size:11px;color:var(--muted);font-family:monospace"></div>
   </div>
 
+  <!-- Core-Offline-Banner (W2/S1) -->
+  <div id="coreOfflineBanner" style="display:none;background:#5a2a00;color:#ffd080;padding:10px 14px;border:1px solid #a60;border-top:none;font-size:13px">
+    ⚠ <span id="coreOfflineText">Core antwortet nicht</span>
+  </div>
+
   <!-- Schnellstatus -->
   <div class="quick-status" id="quickStatus">
     <div class="qs-item"><span class="qs-label">Quelle:</span><span class="qs-val" id="qsSource">–</span></div>
@@ -189,10 +194,28 @@ async function refreshBase() {
     const ss = j.source_state || {};
     const now = j.now || {};
 
-    // Topbar Flags
+    // Lebendigkeit aus Dateialter (W2/S1/S2) — nie Browser-Uhr gegen j.ts
+    const statusAge = j.status_age;
+    const statusErr = j.status_error;
+    const coreStale = (statusAge == null) || statusAge > 3 || statusErr === 'missing' || statusErr === 'corrupt';
+    const ban = el('coreOfflineBanner');
+    const banTxt = el('coreOfflineText');
+    const qs = el('quickStatus');
+    if (ban) {
+      ban.style.display = coreStale ? '' : 'none';
+      if (banTxt) {
+        if (statusErr === 'missing') banTxt.textContent = 'Core antwortet nicht (kein Status)';
+        else if (statusErr === 'corrupt') banTxt.textContent = 'Core-Status defekt';
+        else if (statusAge == null) banTxt.textContent = 'Core antwortet nicht (kein Statusalter)';
+        else banTxt.textContent = `Core antwortet nicht (letzter Stand vor ${statusAge}s)`;
+      }
+    }
+    if (qs) qs.style.opacity = coreStale ? '0.45' : '1';
+
+    // Topbar Flags — dreistufig: verbunden / Adapter an / aus (S7)
     const btEl = el('bTopBt'), wlEl = el('bTopWifi'), spEl = el('bTopSpot');
     if (btEl) {
-      btEl.className = 'flag ' + (st.bt ? (st.bt_device ? 'bt-connected' : 'bt-on') : 'off');
+      btEl.className = 'flag ' + (st.bt ? 'bt-connected' : (st.bt_on ? 'bt-on' : 'off'));
     }
     if (wlEl) wlEl.className = 'flag ' + (st.wifi ? 'on' : 'off');
     if (spEl) spEl.className = 'flag ' + (st.spotify ? 'on' : 'off');
@@ -200,9 +223,8 @@ async function refreshBase() {
     const dbEl = el('topDebug');
     if (dbEl) {
       const rev = j.rev || '–';
-      const path = (j.path||[]).join(' › ') || '–';
-      const age = j.ts ? ((Date.now()/1000 - j.ts).toFixed(1) + 's') : '–';
-      dbEl.textContent = `Core ${age} | Rev=${rev} | ${ss.source_current||'idle'}`;
+      const ageStr = (statusAge != null) ? (statusAge.toFixed ? statusAge.toFixed(1) : statusAge) + 's' : '–';
+      dbEl.textContent = `Core ${ageStr}${coreStale ? ' ⚠' : ''} | Rev=${rev} | ${ss.source_current||'idle'}`;
     }
 
     const src = ss.source_current || 'idle';
@@ -212,18 +234,19 @@ async function refreshBase() {
     setText('qsTitle',  String(title).substring(0, 35));
     setText('qsVol',    (st.volume != null ? st.volume : '–') + '%');
     setText('qsAudio',  st.audio_effective || '–');
-    const btInfo = st.bt ? (st.bt_device||'verbunden') : 'aus';
+    const btInfo = st.bt ? (st.bt_device||'verbunden') : (st.bt_on ? 'Adapter an' : 'aus');
     setText('qsBt', btInfo);
 
-    // DAB-Chip
+    // DAB-Chip — geschriebene Zustände anzeigen (S6); idle nicht als Warnung
     const dabState = st.dab_playback_state || '';
     const dabEl = el('dabStatusChip');
     if (dabEl) {
-      const showDab = ['no_lock','partial_sync','starting','locked','pcm_only'].includes(dabState);
+      const showDab = ['no_lock','partial_sync','starting','locked','pcm_only','pcm_error','exception'].includes(dabState);
       dabEl.style.display = showDab ? '' : 'none';
       const stateMap = {
         'no_lock': '⚠ kein Lock', 'partial_sync': '📡 Partiell',
-        'starting': '⏳ suche…', 'locked': '🔒 Lock', 'pcm_only': '🔊 PCM'
+        'starting': '⏳ suche…', 'locked': '🔒 Lock', 'pcm_only': '🔊 PCM',
+        'pcm_error': '⚠ PCM-Fehler', 'exception': '⚠ Fehler'
       };
       setText('qsDabState', stateMap[dabState] || dabState);
     }
@@ -243,7 +266,14 @@ async function refreshBase() {
 
     // Seiten-spezifischer Hook
     if (typeof onBaseRefresh === 'function') onBaseRefresh(j, st, ss, now);
-  } catch(e) { /* Core offline — kein Crash */ }
+  } catch(e) {
+    const ban = el('coreOfflineBanner');
+    const banTxt = el('coreOfflineText');
+    if (ban) ban.style.display = '';
+    if (banTxt) banTxt.textContent = 'Core antwortet nicht (WebUI-API nicht erreichbar)';
+    const qs = el('quickStatus');
+    if (qs) qs.style.opacity = '0.45';
+  }
 }
 
 // Core-Poll alle 1.2s

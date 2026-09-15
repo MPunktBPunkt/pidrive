@@ -2,7 +2,7 @@
 {% block title %}PiDrive — Diagnose{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">📋 Logs</div>
+  <div class="card-title">📋 Logs <span id="snapLogs" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span></div>
   <div class="btn-row" style="margin-bottom:8px">
     <button class="btn" onclick="loadLog('core')">Core Log</button>
     <button class="btn" onclick="loadLog('display')">Display Log</button>
@@ -36,28 +36,54 @@
 {% endblock %}
 {% block extra_js %}
 <script src="/static/js/page-diagnostics.js"></script><script>
+function _logText(j) {
+  // safe_run liefert stdout (S5) — kein lines/log/text/output
+  if (typeof j.stdout === 'string' && j.stdout.length) return j.stdout;
+  if (Array.isArray(j.lines)) return j.lines.join('\n');
+  if (typeof j.log === 'string') return j.log;
+  if (typeof j.text === 'string') return j.text;
+  if (typeof j.output === 'string') return j.output;
+  return JSON.stringify(j, null, 2);
+}
+function _stamp(id) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  const d = new Date();
+  e.textContent = '· Momentaufnahme ' + d.toLocaleTimeString();
+}
 async function loadLog(target) {
   const pre=document.getElementById('logPre');
   if(!pre) return;
   pre.textContent='Lade…';
   try {
     const r=await fetch('/api/logs?target='+target); const j=await r.json();
-    pre.textContent=(j.lines||j.log||[]).join('\n') || j.text || JSON.stringify(j,null,2);
+    pre.textContent=_logText(j);
+    _stamp('snapLogs');
   } catch(e){pre.textContent='Fehler: '+e;}
 }
 async function loadGrep() {
   const pre=document.getElementById('grepPre');
   if(!pre) return;
-  try{const r=await fetch('/api/grep');const j=await r.json();pre.textContent=j.output||j.text||JSON.stringify(j);}catch(e){pre.textContent='Fehler: '+e;}
+  try{const r=await fetch('/api/grep');const j=await r.json();pre.textContent=_logText(j);}catch(e){pre.textContent='Fehler: '+e;}
 }
 async function loadSysRes() {
   try{const r=await fetch('/api/system/resources');const j=await r.json();
     const d=j.data||j;
+    const thr = d.throttled;
+    let thrHtml;
+    if (thr == null || thr === '') {
+      // S8: ohne Wert kein grünes „OK“
+      thrHtml = '<span style="color:var(--muted)">nicht verfügbar</span>';
+    } else if (thr !== '0x0' && thr !== '0x00000') {
+      thrHtml = `<span style="color:var(--yellow)">${thr}</span>`;
+    } else {
+      thrHtml = `<span style="color:var(--green)">${thr}</span>`;
+    }
     document.getElementById('sysRes').innerHTML=`
       <b>RAM:</b> ${d.ram_used_mb||'–'} MB / ${d.ram_total_mb||'–'} MB<br>
       <b>Speicher:</b> ${d.disk_used||'–'} / ${d.disk_total||'–'} (${d.disk_pct||'–'})<br>
       <b>Uptime:</b> ${d.uptime||'–'}<br>
-      <b>Throttled:</b> <span style="color:${d.throttled&&d.throttled!='0x0'?'var(--yellow)':'var(--green)'}">${d.throttled||'OK'}</span>`;
+      <b>Throttled:</b> ${thrHtml}`;
   }catch(e){}
 }
 async function runDiag() {
@@ -65,11 +91,27 @@ async function runDiag() {
   if(!pre) return;
   pre.style.display='block'; pre.textContent='Läuft…';
   try{const r=await fetch('/api/diagnose');const j=await r.json();
-    pre.textContent=j.output||JSON.stringify(j,null,2);}catch(e){pre.textContent='Fehler: '+e;}
+    pre.textContent=_logText(j);}catch(e){pre.textContent='Fehler: '+e;}
 }
 async function loadSourceState() {
-  try{const r=await fetch('/api/state');const j=await r.json();
-    document.getElementById('sourceStatePre').textContent=JSON.stringify(j,null,2);}catch(e){}
+  try{
+    // /api/core ist billig; /api/state startet pactl (S9)
+    const r=await fetch('/api/core');const j=await r.json();
+    document.getElementById('sourceStatePre').textContent=JSON.stringify({
+      source_state: j.source_state,
+      status_age: j.status_age,
+      status_error: j.status_error,
+      core_ready: j.core_ready,
+      processes: (j.status||{}).processes || [],
+    },null,2);
+  }catch(e){}
+}
+let _sysTick = 0;
+function onBaseRefresh() {
+  // Systemressourcen max. alle ~6s (5 Polls), Source-State bei jedem Poll
+  _sysTick++;
+  if (_sysTick % 5 === 1) loadSysRes();
+  loadSourceState();
 }
 loadLog('core'); loadSysRes(); loadSourceState();
 </script>{% endblock %}

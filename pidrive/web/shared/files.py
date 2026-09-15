@@ -9,16 +9,35 @@ from web.shared.errors import warn_once
 
 
 def read_json(path, default=None):
+    """Liest JSON; bei Fehler/fehlender Datei default (stumm für Aufrufer)."""
+    data, _meta = read_json_meta(path, default=default)
+    return data
+
+
+def read_json_meta(path, default=None, stale_after_s=None):
+    """Liest JSON und liefert (data, meta).
+
+    meta:
+      ok      — True wenn Datei gelesen und geparst
+      reason  — None | "missing" | "corrupt" | "stale"
+      age     — Sekunden seit mtime, oder None
+    """
     if default is None:
         default = {}
+    age = file_age(path)
+    if not os.path.exists(path):
+        return default, {"ok": False, "reason": "missing", "age": None}
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception as e:
-        # Fehlende Datei ist Normalfall; nur defekte Dateien einmal warnen
-        if os.path.exists(path):
-            warn_once(f"files.read_json:{path}", f"web.shared.files.read_json({path}): {e}")
-        return default
+        warn_once(f"files.read_json:{path}", f"web.shared.files.read_json({path}): {e}")
+        return default, {"ok": False, "reason": "corrupt", "age": age}
+    reason = None
+    if stale_after_s is not None and age is not None and age > stale_after_s:
+        reason = "stale"
+    return data, {"ok": True, "reason": reason, "age": age}
+
 
 def write_cmd(cmd):
     """Queue-kompatibel: append statt overwrite."""

@@ -38,7 +38,7 @@ from web.shared import (
     CMD_FILE, STATUS_FILE, MENU_FILE, PROGRESS_FILE, RTLSDR_FILE,
     AVRCP_FILE, LIST_FILE, LOG_FILE, READY_FILE, KNOWN_BT_FILE,
     BT_AGENT_FILE, DAB_DEBUG_FILE, ALLOWED_COMMANDS, PA_ENV,
-    read_json, write_cmd, file_age, get_ip, safe_run,
+    read_json, read_json_meta, write_cmd, file_age, get_ip, safe_run,
     build_view_model, get_dab_status_debug, get_audio_debug,
 )
 from web.shared.constants import ALLOWED_COMMAND_PREFIXES
@@ -240,14 +240,18 @@ def api_core():
     """
     Leichter Endpoint fuer Fast-Poll (~1.2s).
     status.json + menu.json + source_state.json
+    status_age/menu_age kommen aus Dateialter (W2/S1/S2), nicht aus Request-Zeit.
     """
-    status = read_json(STATUS_FILE, {})
-    menu   = read_json(MENU_FILE, {})
+    status, status_meta = read_json_meta(STATUS_FILE, {}, stale_after_s=3.0)
+    menu, menu_meta = read_json_meta(MENU_FILE, {})
     prog   = read_json(PROGRESS_FILE, {})
     list_d = read_json(LIST_FILE, {})
     nodes  = menu.get("nodes", [])
     cursor = menu.get("cursor", 0)
     sel    = nodes[cursor] if nodes and cursor < len(nodes) else {}
+    status_age = status_meta.get("age")
+    menu_age = menu_meta.get("age")
+    core_ready = os.path.exists(READY_FILE)
     try:
         from modules.source_state import load_snapshot_file
         source_state = load_snapshot_file()
@@ -276,6 +280,12 @@ def api_core():
         "list_title":       list_d.get("title", ""),
         "list_items":         list_d.get("items", []),
         "list_selected":      list_d.get("selected", 0),
+        # Lebendigkeit aus Dateialter — nicht Request-Zeit (S2)
+        "core_ready":   core_ready,
+        "status_age":   status_age,
+        "menu_age":     menu_age,
+        "status_error": status_meta.get("reason"),  # missing|corrupt|stale|None
+        "menu_error":   menu_meta.get("reason"),
         "ts":           time.time(),
         "debug": {
             "rev":            menu.get("rev", 0),
@@ -286,9 +296,10 @@ def api_core():
             "selected_label": sel.get("label", "") if isinstance(sel, dict) else str(sel),
             "selected_type":  sel.get("type", "")  if isinstance(sel, dict) else "",
             "node_count":     len(nodes),
-            "core_ready":     os.path.exists(READY_FILE),
-            "status_age":     file_age(STATUS_FILE),
-            "menu_age":       file_age(MENU_FILE),
+            "core_ready":     core_ready,
+            "status_age":     status_age,
+            "menu_age":       menu_age,
+            "status_error":   status_meta.get("reason"),
         },
     })
 
@@ -323,29 +334,46 @@ def api_playlist():
 
 @app.route("/api/state")
 def api_state():
+    """ViewModel für Debug/Diagnose. Senderlisten: /api/lists (W2/S9)."""
     try:
         vm = build_view_model()
         vm = _sanitize_floats(vm)
-        # Senderlisten für WebUI Player
-        import json as _j, os as _os
-        _cfg = os.path.join(str(_PKG_ROOT), "config")
-        def _load(fname, key="stations"):
-            try: return _j.load(open(os.path.join(_cfg, fname))).get(key, [])
-            except Exception: return []
-        vm["dab_stations"] = _load("dab_stations.json", "stations")
-        vm["web_stations"] = _load("stations.json", "stations")
-        vm["fm_stations"]  = _load("fm_stations.json", "stations")
-        # Favoriten
-        try:
-            _favpath = os.path.join(_cfg, "favorites.json")
-            _fav = _j.load(open(_favpath))
-            vm["favorites"] = _fav.get("favorites", _fav) if isinstance(_fav, dict) else _fav
-        except Exception: vm["favorites"] = []
         return jsonify(vm)
     except Exception as e:
         import log as _log
         _log.error(f"api_state: {e}")
         return jsonify({"error": str(e), "ok": False}), 500
+
+
+def _load_config_list(fname, key="stations"):
+    """Billiger JSON-Listen-Lader aus config/."""
+    path = os.path.join(str(_PKG_ROOT), "config", fname)
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return data.get(key, data.get("favorites", []))
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+@app.route("/api/lists")
+def api_lists():
+    """Billige Sender-/Favoritenlisten ohne pactl/ViewModel (W2/S9)."""
+    return jsonify({
+        "ok": True,
+        "dab_stations": _load_config_list("dab_stations.json", "stations"),
+        "web_stations": _load_config_list("stations.json", "stations"),
+        "fm_stations":  _load_config_list("fm_stations.json", "stations"),
+        "favorites":    _load_config_list("favorites.json", "favorites"),
+    })
+
+
+@app.route("/api/favorites")
+def api_favorites():
+    """Favoritenliste (V4/W2 — ersetzt fehlende Route für page-index.js)."""
+    return jsonify({"ok": True, "favorites": _load_config_list("favorites.json", "favorites")})
 
 
 @app.route("/api/runtime")
@@ -455,7 +483,16 @@ def api_diagnose():
 @app.route("/api/grep")
 def api_grep():
     import shlex
-    target = str(BASE_DIR / "pidrive")
+    # BASE_DIR ist pidrive/web — Paketwurzel ist _PKG_ROOT (V5)
+    target = str(_PKG_ROOT)
+    if not os.path.isdir(target):
+        return jsonify({
+            "ok": False,
+            "code": 1,
+            "stdout": "",
+            "stderr": f"Pfad nicht gefunden: {target}",
+            "cmd": "grep",
+        })
     cmd = 'grep -Ern ' + shlex.quote('ERROR|WARNING|Fehler') + ' ' + shlex.quote(target)
     return jsonify(safe_run(cmd))
 
@@ -474,9 +511,26 @@ def api_rtlsdr():
 @app.route("/api/rtlsdr/refresh")
 def api_rtlsdr_refresh():
     import subprocess as _sp, sys as _sys
+    _rtl_py = _PKG_ROOT / "modules" / "radio" / "rtlsdr.py"
+    if not _rtl_py.is_file():
+        return jsonify({
+            "ok": False,
+            "error": f"rtlsdr.py nicht gefunden: {_rtl_py}",
+            "data": read_json(RTLSDR_FILE, {}),
+            "file_exists": os.path.exists(RTLSDR_FILE),
+        })
     try:
-        _rtl_py = str(BASE_DIR / "modules" / "rtlsdr.py")
-        _sp.run([_sys.executable, _rtl_py, "--json"], timeout=10, capture_output=True)
+        r = _sp.run(
+            [_sys.executable, str(_rtl_py), "--json"],
+            timeout=10, capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            return jsonify({
+                "ok": False,
+                "error": (r.stderr or r.stdout or f"exit {r.returncode}")[:400],
+                "data": read_json(RTLSDR_FILE, {}),
+                "file_exists": os.path.exists(RTLSDR_FILE),
+            })
     except Exception as _e:
         return jsonify({
             "ok": False,
@@ -933,6 +987,7 @@ def api_system_resources():
                 pct_int = int(p[4].rstrip('%')) if p[4].rstrip('%').isdigit() else 0
                 data.update({
                     "disk_used": p[2],
+                    "disk_total": p[1],
                     "disk_avail": p[3],
                     "disk_pct": p[4],
                     "disk_warn": pct_int > 80
@@ -956,6 +1011,18 @@ def api_system_resources():
                                   capture_output=True, text=True).stdout.strip()
     except Exception:
         pass
+    # Throttling (S8) — fehlt → UI darf nicht „OK“ vortäuschen
+    try:
+        thr = _sp2.run("vcgencmd get_throttled 2>/dev/null", shell=True,
+                       capture_output=True, text=True).stdout.strip()
+        if "=" in thr:
+            data["throttled"] = thr.split("=", 1)[1].strip()
+        elif thr:
+            data["throttled"] = thr
+        else:
+            data["throttled"] = None
+    except Exception:
+        data["throttled"] = None
     logs = {}
     for lf in ["pidrive.log", "core.log", "display.log"]:
         lp = f"/var/log/pidrive/{lf}"
