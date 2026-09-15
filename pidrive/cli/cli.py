@@ -365,6 +365,9 @@ Flags (vor dem Befehl angeben):
     p_report = menu_sub.add_parser("report", help="Ergonomie-Kennzahlen aller Blätter")
     p_report.add_argument("--write-doc", action="store_true",
                           help="Baseline nach docs/menue/MENU-ERGONOMIE.md schreiben")
+    p_tree = menu_sub.add_parser("tree", help="Vollständigen Menübaum anzeigen")
+    p_tree.add_argument("--json", action="store_true", help="JSON-Ausgabe")
+    p_tree.add_argument("--depth", type=int, default=0, help="Max. Tiefe (0=alle)")
 
     # ── debug ─────────────────────────────────────────────────────────────
     # ── test ──────────────────────────────────────────────────────────────────
@@ -1447,7 +1450,7 @@ Flags (vor dem Befehl angeben):
         from menu import menu_golden as _mg
         mc = getattr(args, "menu_cmd", None)
         if not mc:
-            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report")
+            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report|tree")
             sys.exit(EXIT_USAGE)
         if mc == "snapshot":
             sys.exit(_mg.cmd_snapshot(accept=getattr(args, "accept", False)))
@@ -1459,6 +1462,9 @@ Flags (vor dem Befehl angeben):
             sys.exit(_mg.cmd_cost(args.path_id))
         elif mc == "report":
             sys.exit(_mg.cmd_report(write_doc=getattr(args, "write_doc", False)))
+        elif mc == "tree":
+            sys.exit(_mg.cmd_tree(as_json=getattr(args, "json", False),
+                                  depth=getattr(args, "depth", 0) or 0))
         sys.exit(EXIT_USAGE)
 
     # debug

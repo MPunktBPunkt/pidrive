@@ -377,6 +377,12 @@ def rebuild_tree(menu_state, store, S, settings):
 
     menu_state.clamp_cursors()
     menu_state.rev += 1
+    try:
+        from menu.menu_annotate import collect_uid_set
+        if menu_state.note_uid_set(collect_uid_set(new_root)):
+            ipc.write_menu_tree(menu_state.export_tree())
+    except Exception as _e:
+        log.warn(f"MENU_TREE write: {_e}")
     log.info(f"MENU_REBUILD path={'/'.join(menu_state.path)} cursor={menu_state.cursor}")
 
 
@@ -617,6 +623,10 @@ def main():
 
     root = build_tree(store, S, settings)
     menu_state = MenuState(root)
+    try:
+        ipc.write_menu_tree(menu_state.export_tree())
+    except Exception as _e:
+        log.warn(f"MENU_TREE initial write: {_e}")
 
     stat_timer  = time.time()
     ipc_timer   = time.time()

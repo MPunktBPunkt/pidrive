@@ -18,6 +18,7 @@ CHANGES_FILE = os.path.join(GOLDEN_DIR, "CHANGES.md")
 sys.path.insert(0, BASE_DIR)
 
 from menu.menu_builder import build_tree
+from menu.menu_annotate import annotate_tree
 from menu.menu_state import MenuNode
 from menu.station_store import StationStore
 from settings import CONFIG_DIR, load_settings
@@ -30,7 +31,7 @@ def build_reference_tree() -> MenuNode:
     settings = load_settings()
     store = StationStore(CONFIG_DIR)
     store.load_all()
-    return build_tree(store, S, settings)
+    return annotate_tree(build_tree(store, S, settings))
 
 
 def mask_label(label: str) -> str:
@@ -67,6 +68,9 @@ def node_to_dict(node: MenuNode, path: str) -> dict:
         "type": node.type,
         "action": node.action,
         "label": mask_label(node.label),
+        "path_id": getattr(node, "path_id", "") or path,
+        "uid": getattr(node, "uid", 0),
+        "skip_on_nav": getattr(node, "skip_on_nav", False),
     }
 
 
@@ -115,7 +119,7 @@ def lint_tree(nodes: List[dict]) -> Tuple[List[str], List[str]]:
             if n["path"] != "root" and direct_children and not _folder_has_back_from_nodes(n, by_path):
                 errors.append(f"Kein Rückweg: {n['path']}")
 
-        if n["type"] == "info":
+        if n["type"] == "info" and not n.get("skip_on_nav"):
             warnings.append(f"Info-Knoten (skip_on_nav fehlt): {n['path']}")
 
         label = n.get("label") or ""
@@ -218,6 +222,16 @@ def cmd_verify() -> int:
 def cmd_lint() -> int:
     nodes = walk_tree(build_reference_tree())
     errors, warnings = lint_tree(nodes)
+    # UID-Eindeutigkeit (M1)
+    root = build_reference_tree()
+    uids = []
+    def _u(n):
+        uids.append(n.uid)
+        for c in n.children:
+            _u(c)
+    _u(root)
+    if len(uids) != len(set(uids)):
+        errors.append(f"UID nicht eindeutig: {len(uids)} Knoten, {len(set(uids))} unique")
     for w in warnings:
         print(f"WARNUNG: {w}")
     for e in errors:
@@ -225,7 +239,46 @@ def cmd_lint() -> int:
     if errors:
         print(f"--- {len(errors)} Fehler, {len(warnings)} Warnungen")
         return 1
-    print(f"OK: {len(nodes)} Knoten, {len(warnings)} Warnungen")
+    print(f"OK: {len(nodes)} Knoten, {len(warnings)} Warnungen, UIDs eindeutig")
+    return 0
+
+
+def cmd_tree(as_json: bool = False, depth: int = 0) -> int:
+    from menu.menu_state import MenuState
+    root = build_reference_tree()
+    state = MenuState(root)
+    data = state.export_tree()
+
+    def _trim(node: dict, d: int):
+        if depth and d >= depth:
+            node = dict(node)
+            node["children"] = []
+            node["truncated"] = True
+            return node
+        out = dict(node)
+        out["children"] = [_trim(c, d + 1) for c in node.get("children", [])]
+        return out
+
+    tree = data["tree"] if not depth else _trim(data["tree"], 0)
+    payload = {"uid_counter": data["uid_counter"], "rev": data["rev"], "tree": tree}
+
+    if as_json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+
+    def _print(node: dict, indent: int = 0):
+        pad = "  " * indent
+        skip = " [skip]" if node.get("skip_on_nav") else ""
+        act = f" action={node.get('action')}" if node.get("action") else ""
+        print(f"{pad}{node.get('type','?'):7} uid={node.get('uid')} {node.get('path_id')}  {node.get('label')!r}{skip}{act}")
+        if node.get("truncated"):
+            print(f"{pad}  …")
+            return
+        for c in node.get("children", []):
+            _print(c, indent + 1)
+
+    print(f"uid_counter={payload['uid_counter']}")
+    _print(payload["tree"])
     return 0
 
 

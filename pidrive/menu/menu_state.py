@@ -30,6 +30,10 @@ class MenuNode:
     playable:  bool = False
     active:    bool = False
     meta:      Dict[str, Any] = field(default_factory=dict)
+    # M1: stabile Adressierung (nach annotate_tree gesetzt)
+    path_id:   str = ""
+    uid:       int = 0
+    skip_on_nav: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -41,6 +45,9 @@ class MenuNode:
             "playable": self.playable,
             "active":   self.active,
             "meta":     self.meta,
+            "path_id":  self.path_id,
+            "uid":      self.uid,
+            "skip_on_nav": self.skip_on_nav,
             "has_children": len(self.children) > 0,
         }
 
@@ -55,6 +62,13 @@ class MenuState:
         self._stack:   List[MenuNode] = [root]
         self._cursors: List[int]      = [0]
         self.rev: int = 0
+        self.uid_counter: int = 1
+        self._last_uid_set: set = set()
+        try:
+            from menu.menu_annotate import collect_uid_set
+            self._last_uid_set = collect_uid_set(root)
+        except Exception:
+            pass
 
     @property
     def current(self) -> MenuNode:
@@ -177,7 +191,7 @@ class MenuState:
             "cursor":    cursor,
             "can_back":  self.depth > 1,
             "nodes":     [n.to_dict() for n in nodes],
-            # Compat
+            # Compat (deprecated — entfernen nach WebUI-Umstellung)
             "cat":        0,
             "cat_label":  self._stack[1].label if len(self._stack) > 1 else self.root.label,
             "item":       cursor,
@@ -186,5 +200,19 @@ class MenuState:
             "items":      [n.label for n in nodes],
         }
 
+    def note_uid_set(self, uids: set) -> bool:
+        """uid_counter erhöhen wenn sich die UID-Menge geändert hat. Returns True bei Änderung."""
+        if uids != self._last_uid_set:
+            self.uid_counter += 1
+            self._last_uid_set = set(uids)
+            return True
+        return False
 
+    def export_tree(self) -> dict:
+        from menu.menu_annotate import export_node_tree
+        return {
+            "uid_counter": self.uid_counter,
+            "rev": self.rev,
+            "tree": export_node_tree(self.root),
+        }
 

@@ -11,6 +11,7 @@ import os, json, time
 CMD_FILE      = "/tmp/pidrive_cmd"
 STATUS_FILE   = "/tmp/pidrive_status.json"
 MENU_FILE     = "/tmp/pidrive_menu.json"
+MENU_TREE_FILE = "/tmp/pidrive_menu_tree.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 LIST_FILE     = "/tmp/pidrive_list.json"
 READY_FILE    = "/tmp/pidrive_ready"
@@ -111,6 +112,11 @@ def write_status(S, settings):
 def write_menu(menu_state):
     """Menüzustand schreiben. Erwartet MenuState.export() dict."""
     write_json(MENU_FILE, menu_state)
+
+
+def write_menu_tree(tree_export: dict):
+    """Vollständigen Menübaum schreiben (nur bei uid_counter-Änderung)."""
+    write_json(MENU_TREE_FILE, tree_export)
 
 
 def write_progress(title, message="", pct=None, lines=None, color="blue"):
