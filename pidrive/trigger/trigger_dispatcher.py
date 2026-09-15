@@ -83,7 +83,7 @@ _EXACT_TRIGGERS = frozenset({
 })
 
 _TRIGGER_PREFIXES = (
-    "mpris_push:", "cat:", "vol_set:",
+    "mpris_push:", "cat:", "goto:", "activate:", "vol_set:",
     "bt_connect:", "bt_forget:", "bt_repair:", "wifi_connect:",
     "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
     "dab_scan_channels:", "reload_stations:", "webradio_play:",

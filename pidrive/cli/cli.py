@@ -368,6 +368,12 @@ Flags (vor dem Befehl angeben):
     p_tree = menu_sub.add_parser("tree", help="Vollständigen Menübaum anzeigen")
     p_tree.add_argument("--json", action="store_true", help="JSON-Ausgabe")
     p_tree.add_argument("--depth", type=int, default=0, help="Max. Tiefe (0=alle)")
+    p_goto = menu_sub.add_parser("goto", help="Zu path_id navigieren")
+    p_goto.add_argument("path_id", help="z.B. sources/dab/dab_stations")
+    p_act = menu_sub.add_parser("activate", help="Knoten per UID auslösen")
+    p_act.add_argument("uid", type=lambda x: int(x, 0), help="64-bit UID (dezimal oder 0x…)")
+    menu_sub.add_parser("path", help="Aktueller Pfad (Offline-Referenzbaum)")
+    menu_sub.add_parser("rebuild", help="Offline-Rebuild-Test (Pfad/Cursor retten)")
 
     # ── debug ─────────────────────────────────────────────────────────────
     # ── test ──────────────────────────────────────────────────────────────────
@@ -1450,7 +1456,7 @@ Flags (vor dem Befehl angeben):
         from menu import menu_golden as _mg
         mc = getattr(args, "menu_cmd", None)
         if not mc:
-            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report|tree")
+            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report|tree|goto|activate|path|rebuild")
             sys.exit(EXIT_USAGE)
         if mc == "snapshot":
             sys.exit(_mg.cmd_snapshot(accept=getattr(args, "accept", False)))
@@ -1465,6 +1471,14 @@ Flags (vor dem Befehl angeben):
         elif mc == "tree":
             sys.exit(_mg.cmd_tree(as_json=getattr(args, "json", False),
                                   depth=getattr(args, "depth", 0) or 0))
+        elif mc == "goto":
+            sys.exit(_mg.cmd_goto(args.path_id))
+        elif mc == "activate":
+            sys.exit(_mg.cmd_activate(args.uid))
+        elif mc == "path":
+            sys.exit(_mg.cmd_path())
+        elif mc == "rebuild":
+            sys.exit(_mg.cmd_rebuild_test())
         sys.exit(EXIT_USAGE)
 
     # debug

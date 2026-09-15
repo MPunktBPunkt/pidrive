@@ -282,6 +282,70 @@ def cmd_tree(as_json: bool = False, depth: int = 0) -> int:
     return 0
 
 
+def cmd_goto(path_id: str) -> int:
+    from menu.menu_state import MenuState
+    state = MenuState(build_reference_tree())
+    if not state.goto(path_id):
+        print(f"FEHLER: Pfad nicht gefunden: {path_id}")
+        return 1
+    sel = state.selected
+    print(f"Pfad:   {' / '.join(state.path)}")
+    print(f"path_ids: {' > '.join(state.path_ids)}")
+    print(f"Cursor: {state.cursor}")
+    if sel:
+        print(f"Markiert: {sel.label!r} type={sel.type} uid={sel.uid} path_id={sel.path_id}")
+    return 0
+
+
+def cmd_activate(uid: int) -> int:
+    from menu.menu_state import MenuState
+    state = MenuState(build_reference_tree())
+    node = state.activate(uid)
+    if node is None:
+        print(f"FEHLER: UID nicht gefunden: {uid}")
+        return 1
+    print(f"Aktiviert: {node.label!r} type={node.type} action={node.action} path_id={node.path_id}")
+    print(f"Pfad jetzt: {' / '.join(state.path)}")
+    return 0
+
+
+def cmd_path() -> int:
+    from menu.menu_state import MenuState
+    state = MenuState(build_reference_tree())
+    sel = state.selected
+    print(f"Pfad: {' / '.join(state.path)}")
+    if sel:
+        print(f"Markiert: {sel.label!r} uid={sel.uid}")
+    return 0
+
+
+def cmd_rebuild_test() -> int:
+    """Offline: goto tief, rebuild, prüfen ob Position hält."""
+    from menu.menu_state import MenuState
+    root = build_reference_tree()
+    state = MenuState(root)
+    target = "sources/dab/dab_stations"
+    if not state.goto(target):
+        # fallback first station list that exists
+        print(f"FEHLER: {target} nicht erreichbar")
+        return 1
+    for _ in range(5):
+        state.key_down()
+    before_path = list(state.path_ids)
+    before_uid = state.selected.uid if state.selected else None
+    before_label = state.selected.label if state.selected else None
+    # rebuild same tree (simulates menu_rev without content change)
+    state.rebuild(build_reference_tree())
+    after_uid = state.selected.uid if state.selected else None
+    print(f"Vorher:  path={before_path} uid={before_uid} label={before_label!r}")
+    print(f"Nachher: path={state.path_ids} uid={after_uid} label={(state.selected.label if state.selected else None)!r}")
+    if before_path == state.path_ids and before_uid == after_uid:
+        print("OK: Pfad und Cursor überstehen Rebuild")
+        return 0
+    print("FEHLER: Position nicht erhalten")
+    return 1
+
+
 def _normalize_path_id(path_id: str) -> List[str]:
     parts = [p for p in path_id.strip("/").split("/") if p]
     if parts and parts[0] == "root":

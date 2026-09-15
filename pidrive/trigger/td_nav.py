@@ -76,6 +76,18 @@ def handle(cmd, menu_state, store, S, settings, bg):
         val = cmd[4:]
         menu_state.navigate_to(val)
 
+    elif cmd.startswith("goto:"):
+        menu_state.goto(cmd[5:])
+
+    elif cmd.startswith("activate:"):
+        try:
+            uid = int(cmd.split(":", 1)[1].strip())
+        except (ValueError, IndexError):
+            return False
+        node = menu_state.activate(uid)
+        if node and node.type in ("station", "action", "toggle"):
+            _execute_node(node, menu_state, store, S, settings)
+
     else:
         return False
     return True

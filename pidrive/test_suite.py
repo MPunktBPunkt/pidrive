@@ -794,7 +794,7 @@ def test_log_summary():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def test_menu():
-    """M0: Menü-Lint und Golden-Master-Verify (hardwarefrei)."""
+    """M0/M2: Menü-Lint, Golden-Master-Verify, Rebuild-Robustheit (hardwarefrei)."""
     _section("MENU", "📋")
     from menu import menu_golden as _mg
     t0 = time.time()
@@ -809,6 +809,12 @@ def test_menu():
         _p(FAIL, "menu verify", "Golden Master abweichend", time.time() - t1)
     else:
         _p(PASS, "menu verify", elapsed=time.time() - t1)
+    t2 = time.time()
+    rebuild_rc = _mg.cmd_rebuild_test()
+    if rebuild_rc != 0:
+        _p(FAIL, "menu rebuild", "Position nach Rebuild verloren", time.time() - t2)
+    else:
+        _p(PASS, "menu rebuild", elapsed=time.time() - t2)
 
 
 def run_all():

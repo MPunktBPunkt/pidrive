@@ -72,6 +72,9 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-063 | Menü-Kosten | `pidrivectl menu cost sources/dab/...` | Zahl der Tastendrücke | Offline | ✅ |
 | F-064 | Ergonomie-Report | `pidrivectl menu report` | Median/Max/Über-20 | Offline | ✅ |
 | F-065 | Menübaum export | `pidrivectl menu tree --json` | volle UID-Baumstruktur | Offline | ✅ |
+| F-066 | Menü goto | `pidrivectl menu goto sources/dab/...` | Cursor auf Ziel | Offline | ✅ |
+| F-067 | Menü activate | `pidrivectl menu activate <uid>` | Knoten ausgewählt | Offline | ✅ |
+| F-068 | Rebuild hält Position | `pidrivectl menu rebuild` | Pfad+UID gleich | Offline | ✅ |
 
 ## Navigation / Trigger (AVRCP → Core)
 

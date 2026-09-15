@@ -61,10 +61,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     log.info(f"SCAN_DONE source=dab count={count}")
                     ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
                     _time_mod.sleep(2)
-                    new_root = build_tree(store, S, settings)
-                    menu_state.root = new_root
-                    menu_state.clamp_cursors()
-                    menu_state.rev += 1
+                    menu_state.rebuild(build_tree(store, S, settings))
                 else:
                     log.warn("SCAN_DONE source=dab count=0 — bestehende Liste bleibt")
                     ipc.write_progress("DAB+ Suchlauf", "0 Sender — Liste bleibt erhalten", color="orange")
@@ -114,10 +111,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                         store.save_dab(results)
                         source_state.commit_source("dab")
                         ipc.write_progress("DAB+ Suchlauf", f"{count} Sender gefunden", color="green")
-                        new_root = build_tree(store, S, settings)
-                        menu_state.root = new_root
-                        menu_state.clamp_cursors()
-                        menu_state.rev += 1
+                        menu_state.rebuild(build_tree(store, S, settings))
                     else:
                         source_state.commit_source("idle")
                         ipc.write_progress("DAB+ Suchlauf", "0 Sender — Liste bleibt", color="orange")
@@ -163,10 +157,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 _time_mod.sleep(2)
 
                 if count > 0:
-                    new_root = build_tree(store, S, settings)
-                    menu_state.root = new_root
-                    menu_state.clamp_cursors()
-                    menu_state.rev += 1
+                    menu_state.rebuild(build_tree(store, S, settings))
             except Exception as e:
                 log.error(f"SCAN_FAIL source=fm error={e}")
                 ipc.write_progress("FM Fehler", str(e)[:48], color="red")

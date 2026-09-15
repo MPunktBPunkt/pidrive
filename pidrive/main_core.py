@@ -358,31 +358,13 @@ def system_check():
 # ── Menü neu bauen nach Scan/Reload ────────────────────────────────────────
 
 def rebuild_tree(menu_state, store, S, settings):
-    old_path = menu_state.path[:]
     new_root = build_tree(store, S, settings)
-    menu_state.root = new_root
-
-    menu_state._stack   = [new_root]
-    menu_state._cursors = [0]
-    for label in old_path[1:]:
-        found = False
-        for i, child in enumerate(menu_state.current.children):
-            if child.label == label:
-                menu_state._stack.append(child)
-                menu_state._cursors.append(0)
-                found = True
-                break
-        if not found:
-            break
-
-    menu_state.clamp_cursors()
-    menu_state.rev += 1
-    try:
-        from menu.menu_annotate import collect_uid_set
-        if menu_state.note_uid_set(collect_uid_set(new_root)):
+    uid_changed = menu_state.rebuild(new_root)
+    if uid_changed:
+        try:
             ipc.write_menu_tree(menu_state.export_tree())
-    except Exception as _e:
-        log.warn(f"MENU_TREE write: {_e}")
+        except Exception as _e:
+            log.warn(f"MENU_TREE write: {_e}")
     log.info(f"MENU_REBUILD path={'/'.join(menu_state.path)} cursor={menu_state.cursor}")
 
 
