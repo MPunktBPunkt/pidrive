@@ -1167,3 +1167,22 @@ einem Band ohne Referenzsender als erledigt gelten.
 - C6 bleibt offen und ist kein Abnahmekriterium (E2).
 - `docs/FEATURES.md` auf Ist-Stand; dieses Dokument mit Abnahmeergebnissen ergänzt.
 - Kein neues `except: pass` ohne Begründung im Diff.
+
+---
+
+## 13. Abnahmefortschritt (Ergänzung, nicht überschreiben)
+
+### 2026-09-15 — W0 + W1 auf HW (`192.168.178.105`)
+
+| | |
+|---|---|
+| Code | `adf7e16` / **v0.11.128** (Protokoll: `2be2621` → `docs/ABNAHMEN.md`) |
+| Pi vorher | `20b312d` ohne `test_menu` (H0 bestätigt) |
+
+| Paket | Status |
+|-------|--------|
+| **W0** Sicherheitsnetz | ✅ `webui check` findet V4; `routes.json`; FEATURES WebUI; in `test all` |
+| **W1** Fehler sichtbar | ✅ selftest; C16 behoben; S11/S12 Imports; `degraded_imports`; Blueprint-Banner |
+| W2–W11 | ⬜ offen — Reihenfolge laut §7 / E1 |
+
+Detailmessungen und H2-Tabelle: [../ABNAHMEN.md](../ABNAHMEN.md).

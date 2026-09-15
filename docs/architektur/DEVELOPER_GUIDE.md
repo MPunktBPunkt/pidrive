@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand v0.11.122**
+**Stand:** v0.11.128 · 2026-09-15
 
 ---
 
@@ -59,6 +59,8 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 | Web-API Endpunkte | `web/api/routes_*.py` |
 | WebUI HTML | `web/templates/*.html` |
 | Flask App | `web/app.py` |
+| WebUI-Check / Selftest (W0/W1) | `web/webui_check.py` → `pidrivectl webui check\|selftest\|routes` |
+| Web shared helpers | `web/shared/*.py` (nicht die tote `web/shared.py`) |
 | MPRIS2 D-Bus (BMW-Metadaten) | `mpris2.py` |
 | MPRIS2 Debug / IP-Announcement | `mpris2.py: announce_wifi_ip(), push_test_metadata()` |
 | mpv IPC / Now-Playing-Metadaten | `mpv_meta.py` |

@@ -4,7 +4,7 @@
 
 Spotify Connect · Webradio · DAB+ · FM · Funk-Scanner · Bluetooth A2DP · lokale Musik — gesteuert über Lenkrad (AVRCP), WebUI oder CLI. Kein Display nötig.
 
-[![Version](https://img.shields.io/badge/version-0.11.127-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.128-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.11%2B-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20OS%20%7C%20Debian-lightgrey.svg)](https://www.debian.org/)
@@ -45,7 +45,7 @@ pidrivectl play web 1       # Webradio Rock Antenne
 pidrivectl play dab 22      # DAB+ (Sender nach Scan/Nummer)
 ```
 
-**WebUI:** `http://<Pi-IP>:8080`
+**WebUI:** `http://<Pi-IP>:8080` (Flask lauscht auf **8080**, nicht auf Port 80)
 
 ---
 

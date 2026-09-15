@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.11.127
+# PiDrive — Kontext & Projektdokumentation v0.11.128
 
 > **Pflegehinweis:** Diese Datei ist der Entwicklungs-/Entscheidungsverlauf und wird
 > **nach jeder Session aktualisiert** (Changelog-Abschnitt unten + Funktionsstatus).
@@ -6,11 +6,12 @@
 ## Projektbeschreibung
 
 **PiDrive** ist ein Raspberry Pi / Debian-basiertes Car-Infotainment-System für BMW iDrive (NBT EVO).  
-Steuerung über BMW iDrive AVRCP, WebUI (Port 8080) und `pidrivectl` CLI.  
+Steuerung über BMW iDrive AVRCP, WebUI (**Port 8080**) und `pidrivectl` CLI.  
 Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 **GitHub:** https://github.com/MPunktBPunkt/pidrive  
-**Install:** `curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | bash`
+**Install:** `curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | bash`  
+**WebUI:** `http://<Pi-IP>:8080` (nicht Port 80)
 
 ---
 
@@ -18,8 +19,8 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 | Komponente | Details |
 |---|---|
-| Primär (Entwicklung) | Fujitsu Futro S920 · Debian 13 · IP 192.168.178.100 · User `pidrive` |
-| Ziel (Fahrzeug) | Raspberry Pi 4 · Raspberry Pi OS · Kühlkörper auf CPU/RAM/USB |
+| Primär (Entwicklung) | Fujitsu Futro S920 · Debian 13 · User `pidrive` |
+| Ziel (Fahrzeug / HW-Abnahme) | Raspberry Pi · Debian 13 · **192.168.178.105** · User `pidrive` |
 | RTL-SDR | RTL2838 DVB-T (ID 0bda:2838, Rafael Micro R820T) |
 | Bluetooth | Cambridge Silicon Radio Dongle |
 | BMW | 118d 2017, NBT EVO, AVRCP 1.4–1.5 |
@@ -28,7 +29,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 ---
 
-## Funktionsstatus v0.11.126
+## Funktionsstatus v0.11.128
 
 | Feature | Status |
 |---|---|
@@ -39,21 +40,22 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | BT A2DP (PipeWire `bluez_output.*`) | ✅ v0.11.121 `find_bt_sink_for_mac`; v0.11.122 kein BT-Restart bei Recovery |
 | BT Pairing/Reconnect | ✅ v0.11.111–116 Auto-Restore, Reconnect, Pause während Pairing |
 | Metadata (now/playlist) | ✅ via mpv IPC Socket |
-| Scanner CLI (pmr446/vhf/uhf/cb/fm) | ✅ stabil; **Scan mit Rückmeldung** (v0.11.124) |
+| Scanner CLI (pmr446/vhf/uhf/cb/fm) | 🟡 CLI da; **Suchlauf/C1 und RTL-Import C2 noch offen** (Auftrag WebUI-Sanierung) |
 | AVRCP Phase 1 (Kontextmapping) | ✅ v0.8.6 |
 | MPRIS2 (BMW-Metadaten + Watchdog) | ✅ **v0.11.123 art_url-Bug gefixt** — Menü/Metadaten erscheinen wieder |
 | Spotify Connect (librespot/raspotify) | ✅ OAuth vorhanden; **als Favorit möglich** (v0.11.123) |
 | USB-Musik + lokale Wiedergabe (mp3/m3u) | ✅ `settings.music_dir`; Menü Quellen→Bibliothek; **WebUI `/music-admin`** (Upload, ID3) |
-| **Menü (iDrive-tauglich)** | ✅ v0.11.123 — Favoriten zuerst, „Zurueck"-Einträge, Bestätigungen |
+| **Menü (iDrive-tauglich)** | ✅ M0–M6 (Lint/Verify/goto/activate/idrive); Golden Master |
+| **WebUI Statuskette** | 🟡 W0/W1 erledigt (v0.11.128); **W2–W11 offen** — siehe `docs/ABNAHMEN.md` |
 | **Audio-Stack: PipeWire System-Mode** | ✅ ersetzt System-PulseAudio |
 | **WirePlumber System-Mode (Trixie/Pi 4)** | ✅ v0.11.118/119 main-Profil, seat-monitoring aus |
-| pidrivectl test all | ✅ Komplett-Systemtest; **AVRCP-Version/Cover-Art-Check** (v0.11.126) |
+| pidrivectl test all | ✅ inkl. `menu` + **`webui`** (W0/W1); AVRCP-Version/Cover-Art-Check |
 | **BMW iDrive Feldtest (Display/Tasten)** | 🟡 MPRIS-Fix drin, Anzeige im Auto noch zu bestätigen |
 | Boot-Restore | ✅ teilweise |
 
 ---
 
-## Changelog v0.11.97 – v0.11.126 (Kurzüberblick)
+## Changelog v0.11.97 – v0.11.128 (Kurzüberblick)
 
 | Version | Änderung |
 |---|---|
@@ -68,7 +70,8 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | 0.11.124 | Scanner-Suchlauf mit Rückmeldung: `scan_next/prev` → `/tmp/pidrive_scan_result.json`; `pidrivectl scanner <band> scan` meldet gefunden/leer/Timeout |
 | 0.11.125 | Diagnose bereinigt (keine falschen PulseAudio-BT-Warnungen unter PipeWire, kein Pairing-Widerspruch); DAB-Status zeigt `pcm_only` als „spielt" statt „Sync OK: nein" |
 | 0.11.126 | `pidrivectl test bt` liest AVRCP-Version aus SDP und meldet Cover-Art-Fähigkeit (erst ab AVRCP 1.6) |
-| 0.11.127 | **WebUI Medienbibliothek** (`/music-admin`): Upload, Ordner, ID3-Tags; iDrive-Menü Unterordner (nur Abspielen); `library_stop`/`radio_stop` stoppen lokale mpv-Wiedergabe |
+| 0.11.127 | **WebUI Medienbibliothek** (`/music-admin`): Upload, Ordner, ID3-Tags; iDrive-Menü Unterordner (nur Abspielen); `library_stop`/`radio_stop` stoppen lokale mpv-Wiedergabe; Menü M0–M6 |
+| 0.11.128 | **WebUI-Sanierung W0/W1:** `pidrivectl webui check|selftest|routes`; C16 `source_state`-Closure in `td_hardware` behoben; S11/S12 (`safe_run`/`sys`-Imports); `degraded_imports` im Status; Blueprint-Warnbanner; HW-Abnahme auf 192.168.178.105 → `docs/ABNAHMEN.md` |
 
 ---
 
@@ -354,9 +357,18 @@ pidrivectl debug mpris status            # MPRIS2 D-Bus Check
 pidrivectl debug mpris push --title "T"  # Test-Metadaten ans BMW senden
 pidrivectl debug inject <trigger>        # Beliebigen Trigger auslösen
 
+# Menü (M0–M6)
+pidrivectl menu lint|verify|snapshot|tree|goto|activate|rebuild|cost|report
+pidrivectl idrive next|script <datei> [--offline]
+
+# WebUI (W0/W1)
+pidrivectl webui check                   # sendCmd/fetch vs. Whitelist/Routen
+pidrivectl webui selftest                # web.shared.* Import + Aufruf
+pidrivectl webui routes                  # Flask-Routen listen
+
 # System-Test (komplett)
-pidrivectl test all                      # Alle Quellen + Audio + BT + AVRCP
-pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
+pidrivectl test all                      # inkl. menu + webui + Quellen + Audio + BT
+pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log|menu|webui
 ```
 
 ---
@@ -365,6 +377,9 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log
 
 | Thema | Status |
 |---|---|
+| **WebUI-Sanierung W2–W11** | 🟡 Auftrag `AUFTRAG-WEBUI-SANIERUNG.md`; W0/W1 @ v0.11.128 abgenommen (`docs/ABNAHMEN.md`). Als Nächstes: Statuskette (W2), V4-Buttons, RTL-Import (W4), Scanner |
+| **WebUI Buttons `prev_station`/`next_station`** | ⛔ V4 — nicht in `ALLOWED_COMMANDS` (`webui check` findet sie) |
+| **RTL-SDR Importbruch C2** | ⛔ `degraded_imports` meldet `modules.rtlsdr`/`spectrum` — Fix = W4 |
 | **BMW iDrive Display-Feldtest** | 🟡 MPRIS2-`art_url`-Bug gefixt (v0.11.123) → markierter Menüeintrag/Metadaten sollten erscheinen; im Auto bestätigen |
 | **AVRCP „Zurueck" im Auto** | 🟡 BMW sendet Stop oft nicht; Workaround: „Zurueck"-Einträge per enter. Prüfen ob Knopf-links ein AVRCP-Event liefert (`/var/log/pidrive/avrcp_raw.log`) |
 | **Cover Art auf iDrive** | 🔴 NBT Evo AVRCP 1.4/1.5 → kein BT-Cover-Art (erst ab 1.6); via `pidrivectl test bt` verifizierbar. Logos nur in WebUI sinnvoll |

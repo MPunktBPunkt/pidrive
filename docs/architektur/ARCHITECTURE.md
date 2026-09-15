@@ -1,6 +1,6 @@
 # PiDrive — Architektur & Verzeichnisstruktur
 
-**Stand:** v0.11.127 · 2026-09-15
+**Stand:** v0.11.128 · 2026-09-15
 
 ## Übersicht
 
