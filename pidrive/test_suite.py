@@ -91,10 +91,25 @@ def _current_source():
 def _rtl_processes():
     try:
         from modules.radio import rtlsdr
-        return rtlsdr.find_rtl_processes() or []
+        procs = rtlsdr.find_rtl_processes() or []
     except Exception:
-        out = _run("ps ax -o pid=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' | grep -v grep || true")
-        return [{"cmd": ln} for ln in out.splitlines() if ln.strip()]
+        out = _run("ps ax -o pid=,stat=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' | grep -v grep || true")
+        procs = []
+        for ln in out.splitlines():
+            parts = ln.split(None, 2)
+            if len(parts) >= 3:
+                procs.append({"pid": parts[0], "stat": parts[1], "cmd": parts[2]})
+            elif ln.strip():
+                procs.append({"cmd": ln})
+    # Zombies zählen nicht als Belegung (TK-A Nachzug)
+    live = []
+    for p in procs:
+        cmd = (p.get("cmd") or "")
+        stat = (p.get("stat") or "")
+        if "<defunct>" in cmd or stat.startswith("Z"):
+            continue
+        live.append(p)
+    return live
 
 def _mpv_running():
     return bool(_run("pgrep -x mpv 2>/dev/null"))
