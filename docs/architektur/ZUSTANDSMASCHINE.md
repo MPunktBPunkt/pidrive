@@ -111,7 +111,17 @@ Historisch gewachsen. Keine ist maßgeblich, keiner der Pfade nutzt alle.
 | 1 — Transition | `source_state.py:100` | Hinweisflag in Datei, 12s Verfall | 15 |
 | 2 — Scan-Sperre | `main_core.py:40-58` | echtes `threading.Lock` | 3 (`td_radio`: DAB×2, FM) |
 | 3 — Source-Switch | `main_core.py:70-96` | echtes `threading.Lock`, `blocking=False` | 1 (`td_nav.py:164`) |
-| 4 — RTL-SDR-`flock` | `modules/radio/rtlsdr.py:300-415` | Dateisperre | **0 — toter Code** |
+| 4 — RTL-SDR-`flock` | `modules/radio/rtlsdr.py:300-415` | Dateisperre | **0 — unerreichbar** |
+
+**Zu Schicht 4 (Nachtrag 2026-09-15):** Sie ist nicht unfertig, sondern **durch einen
+Importfehler unerreichbar**. `acquire_runtime_lock()`, `release_runtime_lock()`,
+`acquire_lock()` und `start_process()`/`stop_process()` sind vollständig implementiert.
+Es fehlen die Kompatibilitäts-Shims `modules/rtlsdr.py` und `modules/spectrum.py`,
+weshalb `_rtlsdr` bei allen Konsumenten `None` ist und jede Nutzung hinter `if _rtlsdr:`
+übersprungen wird. Ursache, Wirkung und Behebung als Befund C2 / Paket **W4** in
+[../auftraege/AUFTRAG-WEBUI-SANIERUNG.md](../auftraege/AUFTRAG-WEBUI-SANIERUNG.md) —
+dort auch der Beleg, dass dadurch ein DAB-Scan bei laufender Wiedergabe fälschlich
+„kein Signal" meldet.
 
 Dazu als fünfte Zeitschranke die Trigger-Entprellung (`main_core.py:104`) und als
 zweiter Zustandsspiegel `status.S` → `/tmp/pidrive_status.json`.

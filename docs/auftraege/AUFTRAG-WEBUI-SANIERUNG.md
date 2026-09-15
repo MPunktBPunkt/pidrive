@@ -197,6 +197,141 @@ ist zusätzlich eine Wartungsfalle: ihr `ALLOWED_COMMANDS` ist älter und kennt
 `vol_set`, `scanner_stop`, `favorites_play`, `favorites_add` nicht. Wer dort etwas
 korrigiert, ändert nichts am laufenden System.
 
+### S14 Der Rückmeldekanal für Aktionen endet vor dem Fahrzeug `[BELEGT]` — hoch
+
+**Aufgefallen am 2026-09-15 bei der Mockup-Arbeit am iDrive-Menü.** Der Eigentümer
+bemerkte, dass die Menüeinträge „System-Info" und „Version" am BMW nichts bewirken. Die
+Ursache ist allgemeiner als diese zwei Einträge.
+
+Beide Aktionen landen über `trigger/td_system.py:101-104` in `modules/system.py:27-51`
+und melden ihr Ergebnis ausschließlich über `ipc.write_progress()`:
+
+```
+ipc.py:15    PROGRESS_FILE = "/tmp/pidrive_progress.json"
+ipc.py:131   def write_progress(title, message="", pct=None, lines=None, color="blue"):
+ipc.py:132       write_json(PROGRESS_FILE, { … })
+```
+
+Diese Datei wird gelesen von `cli/adapters.py`, `cli/cli.py`, `cli/service.py` und
+`web/shared/constants.py` — also **nur von CLI und WebUI**. Gegenprobe: weder `mpris2.py`
+noch `main_core.py` enthalten das Wort `progress`. Der Fortschritts- und Ergebniskanal
+erreicht das BMW-Display damit **nie**.
+
+**Ein Push findet dabei durchaus statt** — das ist wichtig für die Fehlersuche und wurde
+bei der ersten Fassung dieses Befunds falsch dargestellt. `check_trigger()`
+(`main_core.py:177-209`) gibt für jedes behandelte Kommando `True` zurück, daraufhin läuft
+`rebuild_tree()` (`main_core.py:630-631`) und erhöht über `menu_state.rebuild()` den
+Revisionszähler (`menu_state.py:290`). Der Push geht also raus, er trägt nur nichts Neues,
+weil die Nutzlast im Overlay steckt. Wer am Display debuggt, sieht deshalb einen
+Aktualisierungszyklus ohne sichtbare Wirkung — nicht das Ausbleiben eines Zyklus.
+
+**Umfang:** `ipc.write_progress()` hat **104 Aufrufstellen** (ohne `ipc.py` selbst):
+
+| Modul | Stellen | Was dort gemeldet wird |
+|---|--:|---|
+| `modules/bluetooth/bt_connect.py` | 19 | Kopplung, Verbindungsaufbau, Fehlerursachen |
+| `trigger/td_radio.py` | 16 | Quellenwechsel, Suchlauf |
+| `trigger/td_hardware.py` | 15 | Spotify, Radio-Stop, Bibliothek |
+| `modules/update.py` | 12 | Update-Fortschritt |
+| `modules/audio.py` | 9 | Routenwechsel |
+| `modules/radio/scanner.py` | 8 | Scan-Fortschritt, Kanalwechsel |
+| `modules/wifi.py` | 7 | Netzwerk-Scan, Verbindung |
+| übrige | 18 | DAB-Scan, Favoriten, System, FM |
+
+Im Fahrzeug ist damit **kein** Fortschritt und **keine** Fehlermeldung sichtbar — weder
+„Gerät verbunden" noch „Suchlauf 7/38" noch „RTL-SDR belegt".
+
+**Nicht zu verwechseln mit S1.** Dort ist der Empfänger das WebUI und der Weg kurz. Hier
+ist der Empfänger das Fahrzeugdisplay, und der einzige Kanal dorthin sind die drei
+AVRCP-Metadatenfelder. Ein Fortschrittsbalken lässt sich darüber nicht abbilden, eine
+Textzeile schon. Wie das aussehen soll, ist eine Entscheidung und keine Reparatur —
+siehe **E11** in Abschnitt 11. Für das Gateway ist derselbe Befund als **P-F6** in
+`esp32.bt-gateway/docs/planung/AUFTRAG-CURSOR-4.md` vermerkt.
+
+**Abgrenzung.** S14 betrifft nur Aktionen, deren Ergebnis *ausschließlich* im Overlay
+lebt — nachgewiesen für `sys_info` und `sys_version`. Radio- und Favoritenaktionen sind ein
+**anderer** Fall (S15), „Frequenz manuell" ein dritter (S16). Die drei nicht
+zusammenwerfen; die Korrekturen sind verschieden.
+
+### S15 Der Push kommt vor der Wirkung — Radioaktionen erscheinen verspätet `[BELEGT]` — hoch
+
+**Dies ist die Ursache des „Display friert zwischen zwei Tastendrücken ein".**
+
+Bei „Nächster Sender", „Suchlauf starten" und „Aktuellen Sender merken" wirkt die Aktion,
+aber das Display zeigt weiter den alten Zustand. Die Kette läuft in falscher Reihenfolge:
+
+1. `check_trigger()` behandelt das Kommando und gibt `True` zurück (`main_core.py:209`).
+2. Die Aktion selbst wird über `bg(...)` in einen **Hintergrundthread** gegeben, zum
+   Beispiel `td_radio.py:420-425` für `fm_next` und `fm_manual`. Der Aufruf kehrt sofort
+   zurück.
+3. `main_core.py:630-631` ruft daraufhin `rebuild_tree()` — der Revisionszähler steigt,
+   der Metadaten-Push geht raus. **In `S` steht zu diesem Zeitpunkt noch der alte Sender.**
+4. Der Hintergrundthread stellt danach den neuen Sender ein. Ein zweiter Push müsste über
+   `S["menu_rev"]` angestoßen werden (`main_core.py:633-637`).
+
+Genau Schritt 4 fehlt. Gegenprobe über alle Schreibzugriffe auf `S["menu_rev"]`:
+
+| Modul | Bumps | |
+|---|--:|---|
+| `modules/bluetooth/bt_connect.py` | 12 | macht es richtig |
+| `modules/wifi.py` | 3 | macht es richtig |
+| `trigger/td_nav.py` | 2 | macht es richtig |
+| `trigger/td_hardware.py` | 2 | macht es richtig |
+| `modules/bluetooth/bt_devices.py` | 1 | macht es richtig |
+| `modules/radio/fm.py` | **0** | |
+| `modules/radio/dab_play.py` | **0** | |
+| `modules/radio/scanner.py` | **0** | |
+| `modules/webradio.py` | **0** | |
+| `modules/favorites.py` | **0** | |
+
+Der neue Sender erscheint deshalb erst beim nächsten unabhängigen Ereignis: einem weiteren
+Tastendruck, einem Bluetooth-Ereignis, oder dem 10-Sekunden-Takt von
+`store.reload_if_changed()` (`main_core.py:647`) — letzteres nur, wenn sich die
+Senderdatei geändert hat, was bei `fm_next` nicht der Fall ist.
+
+**Korrektur:** eine Zeile `S["menu_rev"] = S.get("menu_rev", 0) + 1` am Ende der jeweiligen
+Aktion. Das Muster steht bereits zwölfmal in `bt_connect.py` — **kein neues erfinden.**
+Im WebUI fällt derselbe Fehler weniger auf, weil dort im 2-Hz-Takt gepollt wird; am BMW
+gibt es kein Polling, nur den Push.
+
+Dieser Befund ist **nicht** identisch mit P-F1 (`mpris2.update()` nur bei
+Revisionsänderung). P-F1 beschreibt die Kopplung, S15 die verpasste Gelegenheit, sie
+auszulösen. Beide müssen behoben werden, sonst bleibt der DLS-Titelwechsel weiterhin aus.
+
+### S16 „Frequenz manuell" friert das Menü ein und stiehlt Tastendrücke `[BELEGT]` — kritisch
+
+Der Menüeintrag `fm_manual` (`menu_builder.py:241`) führt über `td_nav.py:238-241` zu
+`fm.freq_input_screen()` (`fm.py:360-389`). Diese Funktion läuft **bis zu 60 Sekunden** in
+einer Schleife und liest darin alle 0,15 s die Kommandodatei **direkt**:
+
+```
+fm.py:370       if not os.path.exists(ipc.CMD_FILE):
+fm.py:374       cmd = open(ipc.CMD_FILE).read().strip()
+fm.py:375       os.remove(ipc.CMD_FILE)
+```
+
+Drei Folgen, jede für sich ein Fehler:
+
+1. **Die Schleife umgeht `ipc.drain_triggers()`** und nimmt der Hauptschleife die
+   Tastendrücke weg. Für genau diesen Zweck existiert der `LIST_FILE`-Mechanismus, den
+   `main_core.py:181-193` auswertet und `local_player.py:47` korrekt benutzt —
+   `freq_input_screen()` meldet sich dort **nicht** an.
+2. **Beide Seiten lesen und löschen dieselbe Datei.** `main_core.py:188-190` und
+   `fm.py:370-375` konkurrieren ohne Sperre. Wer einen Tastendruck bekommt, ist
+   nichtdeterministisch — die Frequenzeingabe verliert Tasten an das Menü und umgekehrt.
+3. **Der Fahrer sieht nichts.** Der eingestellte Wert steht ausschließlich im
+   Fortschritts-Overlay (`fm.py:365-369`), erreicht also das BMW nicht (S14). Er drückt
+   Tasten, verstimmt unsichtbar den Empfänger, und nach 60 s bricht die Schleife stumm ab.
+
+**Dasselbe Muster dreifach:** `fm.py:370-375`, `scanner.py:718-723` (`_freq_input`) und
+`scanner.py:761-767` (`freq_input_screen`).
+
+Die Bewertung „kritisch" begründet sich nicht über den Funktionsverlust, sondern über den
+Kontext: eine bis zu 60 Sekunden nicht bedienbare Anlage ohne jede Anzeige, warum, ist
+während der Fahrt eine Ablenkungsquelle. Falls eine schnelle Entschärfung nötig ist, vor
+der eigentlichen Korrektur: den Eintrag `fm_manual` aus dem Menübaum nehmen und die
+Frequenzeingabe dem WebUI überlassen, wo sie funktioniert.
+
 ---
 
 ## 4. Befunde — verlorene Funktionen und tote Schichten
@@ -299,16 +434,22 @@ vollständige Erklärung für „konnte ich nicht mehr verifizieren".
 nur `modules/radio/rtlsdr.py` und `modules/radio/spectrum.py`. Sechs Stellen importieren
 trotzdem den alten Pfad und verschlucken den Fehler:
 
-| Datei | Zeile |
-|---|---|
-| `modules/radio/dab_helpers.py` | 11 |
-| `modules/radio/fm.py` | 18 |
-| `modules/radio/rtlsdr.py` | 17 |
-| `modules/radio/scanner.py` | 24, 34 |
-| `modules/radio/spectrum.py` | 33 |
+| Datei | Zeile | Anmerkung |
+|---|---|---|
+| `modules/radio/dab_helpers.py` | 11 | Code |
+| `modules/radio/fm.py` | 18 | Code |
+| `modules/radio/scanner.py` | 24, 39 | Code — `rtlsdr` **und** `spectrum` |
+| `modules/radio/spectrum.py` | 33 | Code |
+| `modules/radio/rtlsdr.py` | 17, 24–25 | **kein Code** — veraltetes Beispiel im Docstring |
 
 `from modules.radio import rtlsdr` setzt das Attribut auf dem Paket `modules.radio`,
 nicht auf `modules` — der alte Import kann also nie gelingen.
+
+**Nachtrag 2026-09-15:** Der eigentliche Grund ist eine unvollständige Migration. Für
+`dab`, `fm` und `scanner` existieren Kompatibilitäts-Shims (`modules/dab.py`,
+`modules/fm.py`, `modules/scanner.py` mit
+`sys.modules[__name__] = sys.modules["modules.radio.X"]`); für `rtlsdr` und `spectrum`
+wurden sie vergessen. Vollständige Neubewertung und Arbeitsschritte in **W4**.
 
 **Folge:** `_rtlsdr` und `_spectrum` sind immer `None`. Damit entfallen: USB-Prüfung
 (`scanner.py:313`), **Busy-Check und flock-Lock** (`:389-399`), `stop_process()`
@@ -317,7 +458,8 @@ nicht auf `modules` — der alte Import kann also nie gelingen.
 Haltezeit nach Signalende implementiert. Der WebUI-Schalter `scanner_use_spectrum` ist
 wirkungslos.
 
-Die gesamte Lock-Infrastruktur in `rtlsdr.py:300-415` ist toter Code. DAB, FM und
+Die gesamte Lock-Infrastruktur in `rtlsdr.py:300-415` ist **unerreichbar** — sie ist
+vollständig implementiert, aber kein Konsument bekommt das Modul. DAB, FM und
 Scanner konkurrieren unkoordiniert um den einen Stick; als einziger Schutz bleibt
 `pkill -f rtl_fm`. `docs/archiv/MIGRATION_BACKLOG.md:51-56` behauptet, diese Umstellung
 sei abgeschlossen.
@@ -654,10 +796,20 @@ In `cli/cli.py` existiert kein `spectrum`-Parser; `modules/radio/spectrum.py` ha
 
 Reihenfolge ist verbindlich. W0 und W1 sind blockierend.
 
-**Eine Abweichung von der Nummerierung:** Die Punkte 1–3 aus W7 (Zustandsmaschine,
-Stufe 1) werden **vor W5** gezogen, weil die Scanner-Korrekturen C1 und C7 genau in
-diesem Modul sitzen. Tatsächliche Reihenfolge: W0 → W1 → W2 → W3 → W4 → W7/Stufe 1 →
-W5 → W6 → W7/Rest → W8 …
+**Zwei Abweichungen von der Nummerierung.**
+
+**W4 wird nach vorn gezogen** (Entscheidung des Eigentümers, 2026-09-15). Begründung in
+W4: die Geräte-Arbitrierung ist durch zwei fehlende Shim-Dateien vollständig stillgelegt,
+und die Behebung ist der kleinste Eingriff mit der größten Wirkung — sie reaktiviert
+Arbitrierung, `flock` und den Spektrum-Suchlauf für `pmr446`/`freenet` in einem Schritt.
+Solange sie fehlt, messen W5 und W6 ein System ohne Gerätekoordination, und jedes
+Ergebnis aus R6–R9 wäre danach zu wiederholen.
+
+**Die Punkte 1–3 aus W7** (Zustandsmaschine, Stufe 1) werden **vor W5** gezogen, weil die
+Scanner-Korrekturen C1 und C7 genau in diesem Modul sitzen.
+
+Tatsächliche Reihenfolge: W0 → W1 → **W4** → W2 → W3 → W7/Stufe 1 → W5 → W6 →
+W7/Rest → W8 …
 
 ### W0 Sicherheitsnetz — blockierend, vor jeder Änderung
 
@@ -735,18 +887,93 @@ Behebung. Erst dann W2 beginnen.
    abbilden, PPM-Feld an `/api/runtime` hängen, „Auto-Kalibrieren" auf die Route statt
    auf `sendCmd` legen, `/api/favorites` entweder anlegen oder den Aufruf entfernen.
 
-### W4 Importbruch RTL-SDR — eigener Commit
+### W4 Importbruch RTL-SDR — **vorgezogen**, eigener Commit
 
-Die sechs Stellen aus C2 auf `modules.radio` umstellen. **Jede Stelle einzeln prüfen**
-— `modules/radio/rtlsdr.py:17` importiert aus demselben Paket und ist gesondert zu
-betrachten.
+**Neu bewertet am 2026-09-15 gegen `f749a42`.** Der Befund wurde durch das
+`degraded_imports`-Instrument aus W1 sichtbar (`ABNAHMEN.md:69`) und ist erheblich
+größer als „sechs Importzeilen umstellen". Er wird deshalb **vor W2** gezogen.
 
-Danach zwingend R5 (Quellenwechsel) fahren. Wird die Sperre scharf und blockiert
-legitime Wechsel, ist das ein **neuer** Fehler in der Sperrlogik und keine Regression
-dieses Auftrags — aber er muss vor W5 behoben sein.
+#### C2 neu gefasst — Ursache, Wirkung, Beleg
 
-`MIGRATION_BACKLOG.md:36/51-56/80-81` und `modules/audio.py:59` (behauptet
-`--ao=alsa`, tatsächlich `--ao=pulse`) im selben Commit korrigieren.
+**Ursache: zwei fehlende Shim-Dateien.** `[BELEGT]` Beim Umzug nach `modules/radio/`
+wurden Kompatibilitäts-Shims angelegt — `modules/dab.py`, `modules/fm.py` und
+`modules/scanner.py` enthalten je ein
+`sys.modules[__name__] = sys.modules["modules.radio.X"]`. Für **`rtlsdr` und `spectrum`
+fehlen sie**. Deshalb scheitert `from modules import …` in fünf Modulen:
+
+| Stelle | Import | Folge |
+|---|---|---|
+| `modules/radio/fm.py:18` | `rtlsdr` | `_rtlsdr = None` |
+| `modules/radio/scanner.py:24` | `rtlsdr` | `_rtlsdr = None` |
+| `modules/radio/scanner.py:39` | `spectrum` | `_spectrum = None` |
+| `modules/radio/spectrum.py:33` | `rtlsdr` | `_rtlsdr = None` |
+| `modules/radio/dab_helpers.py:11` | `rtlsdr` | `_rtlsdr = None` |
+
+**Wirkung: stillgelegt, nicht abgestürzt.** `[BELEGT]` Jede Nutzung ist mit
+`if _rtlsdr:` geschützt (`fm.py:187`, `scanner.py:399`, `spectrum.py:289`). Es fliegt
+keine Ausnahme — die gesamte Geräte-Arbitrierung wird übersprungen: kein
+`detect_usb()`, kein `is_busy()`, kein `wait_until_free()`, kein Aufräumen verwaister
+`rtl_fm`/`welle-cli`/`aplay`-Prozesse, kein `flock`. **Das ist der Grund, warum FM,
+Scanner und DAB im Test grün sind, obwohl die Koordination fehlt.**
+
+**Damit ist C2 keine „tote vierte Sperrschicht".** `modules/radio/rtlsdr.py`
+implementiert `acquire_runtime_lock()` (L300), `release_runtime_lock()` (L337),
+`acquire_lock()` (L343) und `start_process()`/`stop_process()` vollständig. Die Schicht
+ist **unerreichbar**, nicht unfertig. Befund C2 in
+[../architektur/ZUSTANDSMASCHINE.md](../architektur/ZUSTANDSMASCHINE.md) entsprechend
+korrigieren: aus „tot" wird „durch Importfehler unerreichbar".
+
+**Spektrum-Suchlauf ist genau in den Zielbändern tot.** `[BELEGT]`
+`scanner.py:572` und `:587` kehren bei `not _spectrum` sofort zurück. Aufgerufen wird
+der Pfad nur für `pmr446` und `freenet` (`scanner.py:924,958`) — die beiden
+Walkie-Talkie-Bänder, die Anlass dieses Auftrags sind. Die Einstellung
+`scanner_use_spectrum` ist ohne Wirkung. **Das ist die Ursache, nicht F1.** Der
+WebUI-Pfad ist davon unberührt, weil `web/app.py:669,725` und
+`web/shared/view_model.py:162` korrekt `from modules.radio import spectrum` benutzen —
+dort gilt weiter F3.
+
+**Beleg aus dem Lauf vom 2026-09-15 12:59 (v0.11.128):** Der DAB-Scan-Test meldete
+`Kein mux.json nach 22s — kein Signal auf 11B`. Das ist **sachlich falsch**:
+
+| Zeitpunkt | Beobachtung |
+|---|---|
+| vor dem Lauf | `pidrivectl dab status` → Kanal **11B**, `state=locked`, `Sync OK=ja`, `PCM=ja` |
+| 13:00:31 (Log) | `DAB DLS-Thread starten: station='DIE NEUE 107.7'` — 11B spielt |
+| danach | Scan-Test: „kein Signal auf 11B" |
+
+`test_suite.py:641` startet ein **zweites** `welle-cli` auf 11B, ohne die laufende
+Wiedergabe zu stoppen, ohne `is_busy()`-Prüfung und ohne Lock. Der Stick lässt sich nur
+einmal öffnen. Die Fehlerausgabe geht nach `/tmp/welle_scan_test.err` und wird **nie
+gelesen** — deshalb wird ein Gerätekonflikt als Empfangsproblem gemeldet. Ein Test, der
+ein funktionierendes System als defekt ausweist, ist schädlicher als kein Test.
+
+#### Arbeitsschritte
+
+1. **`modules/rtlsdr.py` und `modules/spectrum.py` als Shims anlegen**, nach dem Muster
+   von `modules/fm.py`. Kleinster Eingriff, stellt Arbitrierung, `flock` und
+   Spektrum-Suchlauf in einem Schritt wieder her. **Alternativ** die fünf Importzeilen
+   auf `from modules.radio import …` umstellen — dann aber **alle fünf**, sonst bleibt
+   der Zustand gemischt. Eine der beiden Wege wählen, nicht beide.
+2. **Nach der Reaktivierung mit scharfer Sperre messen.** Die Arbitrierung war nie
+   aktiv; niemand weiß, ob sie legitime Wechsel blockiert. Wird sie zu scharf, ist das
+   ein **neuer** Fehler in der Sperrlogik und keine Regression dieses Auftrags — er
+   muss aber vor W5 behoben sein. R5 (Quellenwechsel) zwingend fahren.
+3. **`test_dab_scan` gerätesicher machen** (`test_suite.py:610-654`): laufende
+   Wiedergabe stoppen bzw. `is_busy()` prüfen, `/tmp/welle_scan_test.err` auswerten und
+   im Ergebnis zwischen *Gerät belegt*, *kein Signal* und *welle-cli-Fehler*
+   unterscheiden. Erfüllt gleichzeitig H4.6.
+4. **Docstring in `modules/radio/rtlsdr.py` korrigieren.** Die Zeilen 17 und 24–25 sind
+   **kein** Code, sondern ein veraltetes Nutzungsbeispiel (`from modules import rtlsdr`,
+   `python3 modules/rtlsdr.py`). Es hat die Fehlannahme gestützt, es gäbe ein Modul
+   `modules/rtlsdr.py`. Auf `modules.radio` umschreiben.
+5. `MIGRATION_BACKLOG.md:36/51-56/80-81` und `modules/audio.py:59` (behauptet
+   `--ao=alsa`, tatsächlich `--ao=pulse`) im selben Commit korrigieren.
+
+**Abnahme:** `pidrivectl test all` zeigt **keine** `degraded_import`-Warnung mehr.
+`pidrivectl scanner pmr446 scan` mit `scanner_use_spectrum=true` erreicht den
+Spektrum-Pfad (Nachweis über `scanner_spectrum_debug`). `pidrivectl test dab_scan`
+unterscheidet Gerätekonflikt von Signalmangel — nachzuweisen **beide Fälle**: einmal
+mit laufender Wiedergabe, einmal ohne.
 
 ### W5 Scanner hörbar machen
 
@@ -798,7 +1025,8 @@ Kernaussage der Analyse: `modules/source_state.py` ist laut eigenem Kopfkommenta
 **Zustandsspiegel, kein Regler** — es gibt keine Übergangstabelle und keine Validierung.
 Die Korrektheit liegt bei rund 50 Aufrufstellen. Dazu existieren **drei parallele
 Sperrschichten** (`source_state.transition`, `main_core._SCAN_LOCK`,
-`main_core._SOURCE_SWITCH_LOCK`) und eine vierte, tote (RTL-SDR-`flock`, Befund C2).
+`main_core._SOURCE_SWITCH_LOCK`) und eine vierte, die durch einen Importfehler
+unerreichbar ist (RTL-SDR-`flock`, Befund C2 — behoben in W4).
 
 #### Stufe 1 — Sichtbarkeit und Wahrheit
 
@@ -1148,6 +1376,7 @@ einem Band ohne Referenzsender als erledigt gelten.
 | E6 | Welche der ~18 verlorenen Funktionen kommen zurück, in welcher Reihenfolge? | Empfehlung: Menü-Fernsteuerung zuerst (V3, Backend fertig, Nutzen für das Gateway). Entscheidung erst nach W3 nötig. |
 | E7 | Ist das WebUI im Fahrzeug bedienbar oder nur Werkstatt-Werkzeug? | Bestimmt, wie viel Aufwand in Touch-Bedienung und Ladezeiten fließt. |
 | E8 | Darf `pidrive/web/shared.py` gelöscht werden? | Toter Code (S13), aber die Löschung ist unumkehrbar. Empfehlung: löschen, Historie bleibt in git. |
+| E11 | Soll der Rückmeldekanal zum Fahrzeugdisplay jetzt gebaut werden oder mit dem Gateway? | Befund S14: 104 `write_progress()`-Aufrufe erreichen das BMW nie. Über AVRCP sind nur drei Textfelder verfügbar, ein Fortschrittsbalken ist nicht abbildbar. Vorschlag: **jetzt nur die Fehlermeldungen** durchschleifen (`color="red"` oder `"orange"`), Fortschritt weglassen — das deckt „Gerät nicht verbunden" und „RTL-SDR belegt" ab, also die Fälle, in denen der Fahrer sonst ratlos bleibt. Die vollständige Lösung braucht den Menükanal des Gateways (P-F6). Entscheidung erst nötig, wenn die MPRIS-Kopplung aus P-F1 angefasst wird. |
 
 ---
 
