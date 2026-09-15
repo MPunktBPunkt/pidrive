@@ -1416,7 +1416,8 @@ einem Band ohne Referenzsender als erledigt gelten.
 | **W3** tote Schichten | ✅ lokal — V4=0 Treffer in `webui check`; shared.py entfernt |
 | **W4** RTL-SDR-Import | ✅ lokal — `_rtlsdr`/`_spectrum` laden; Lock-Schicht aktiv (R5 auf HW nötig) |
 | **W7/Stufe 1** | ✅ lokal v0.11.130 — False→Blockiert, in_transition räumt auf, Stale in Core-Loop, `pidrivectl source state\|history` |
-| **W5** (Teil) | ✅ C1 Transition nach Scan; C7 play_freq/stop; C3 Bandbreite; C4 Detect 1.5s; C8 Freenet+CB-Lookup; C9 set_freq Kanalbänder |
-| W5 Rest / W6–W11 | ⬜ offen |
+| **W5** (Teil) | ✅ C1, C3–C5(teil), C7–C9, C12–C14 — Single-`rtl_fm`-Sweep + CB-AM offen |
+| **W6** | ✅ Statusschlüssel + CLI status/`--verbose`; Menü Stop |
+| W8–W11 | ⬜ offen |
 
 Detailmessungen und H2-Tabelle: [../ABNAHMEN.md](../ABNAHMEN.md).
