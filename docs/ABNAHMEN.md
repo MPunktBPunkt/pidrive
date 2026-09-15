@@ -1,6 +1,6 @@
 # Abnahmeprotokolle — PiDrive
 
-**Stand:** v0.11.130 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-15
 
 Ergebnis-Dokumente werden **ergänzt**, nicht überschrieben. Jede Messung nennt Commit-Hash.
 
@@ -151,3 +151,96 @@ Hinweis: NOPASSWD erlaubt nur `systemctl restart`, nicht `stop`/`start`. Host-Ke
 | W5 C13 | Menü-Aktivmarkierung über `scanner_band` / Label |
 | W5 C14 | `scan_idx` bandgetrennt |
 | W6 | `scanner`-Schlüssel in `write_status`; `pidrivectl scanner status`; Scan `--verbose` Hinweis; Menü `scanner_stop` |
+
+---
+
+## 2026-09-15 — Spektrum-Snapshot WebUI: JSON statt Bild + „RTL-SDR belegt“ trotz Idle
+
+**Für Analyse in zweiter Cursor-Instanz** (W8/FastScan / RF-Tools). Kein Fix in diesem Commit — nur Befund.
+
+| | |
+|---|---|
+| Host | `192.168.178.107` · User `pidrive` · Commit Pi `0801f4f` / v0.11.132 |
+| Nutzer-Kontext | **Nichts abgespielt** (`pidrivectl now` → idle). Stick soll frei sein. |
+| UI | WebUI → RF / DAB Tools → „📡 Snapshot“ / „Letztes“ |
+| Erwartung Nutzer | Spektrum-**Bild** (FFT Leistung vs. Frequenz) |
+| Ist | Roh-JSON in `<pre id="specPre">` — **kein Canvas/Chart** (`web/templates/rf-tools.html`) |
+
+### Nutzer-Ergebnis (`GET /api/spectrum/last`, gekürzt)
+
+- Outer: `"ok": true`, `"exists": true`, `mode: "fm_sweep"`, `windows_total: 21`, **`windows_ok: 0`**
+- `candidates: []`, `candidates_all_count: 0`
+- Jedes Fenster 87.5…107.5 MHz: `"ok": false`, **`"error": "RTL-SDR belegt"`**
+- Parameter: `ppm: 49`, `gain: -1`, `sample_rate_hz: 2048000`, `sample_count: 131072`, `step_mhz: 1`
+
+### Reproduktion (UI-Pfad)
+
+```bash
+# Button ruft faktisch (ohne mode=snapshot):
+curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?center=446.1&ppm=49&gain=-1'
+# Default mode=fm_sweep — Feld „Mitte MHz“ wird IGNORIERT (Query-Key center ≠ center_mhz)
+curl -s 'http://127.0.0.1:8080/api/spectrum/last' | python3 -m json.tool
+```
+
+### Bekannte Code-Ursachen (Auftrag F7 + Folgefehler)
+
+| ID | Befund | Ort |
+|----|--------|-----|
+| **F7** | Button „Snapshot“ setzt weder `mode=snapshot` noch `center_mhz` → Default **`fm_sweep`** (21 Fenster FM-Band) | `rf-tools.html` `captureSpectrum()`; `app.py` `api_spectrum_capture` Default `mode=fm_sweep` |
+| **UI** | Kein Spektrum-Plot — nur `JSON.stringify` | `rf-tools.html` `loadSpectrumLast()` |
+| **ok-Lüge** | `sweep_fm_band` setzt Ergebnis immer `"ok": true`, auch wenn **alle** Fenster fehlschlagen | `modules/radio/spectrum.py` `sweep_fm_band` |
+| **Busy-Check** | Legacy `capture_spectrum` bricht bei `_rtlsdr.is_busy()` sofort mit `"RTL-SDR belegt"` ab — **ohne** `clear_stale_lock()` / `reap_process()` / `wait_until_free()` | `spectrum.py` ~840–841 vs. `RTLSDRBackend.capture_iq` (wartet bis 4 s) |
+| **`is_busy`** | `True` wenn `find_rtl_processes()` **oder** `STATE_FILE.locked` | `rtlsdr.py`: `STATE_FILE=/tmp/pidrive_rtlsdr_state.json`, `LOCK_FILE=/tmp/pidrive_rtlsdr.lock` |
+| **stdout-Bug** | Legacy `capture_spectrum` startet `rtl_sdr … -n N` **ohne** Dateiname `"-"` → Binary druckt Usage, stdout leer → `"keine IQ-Daten"`. `RTLSDRBackend` hat `cmd += ["-"]` korrekt | `spectrum.py` `capture_spectrum` vs. `RTLSDRBackend.capture_iq` |
+
+Auftrag-Kontext: `docs/auftraege/AUFTRAG-WEBUI-SANIERUNG.md` Abschnitte **F6–F9**, DoD W8, H2.11/H2.12.
+
+### Nachmessung am Pi (Idle, ~17:56 UTC+2, gleiche Session)
+
+Nach Nutzer-Report, als Core idle und **keine** `rtl_*`/`welle`/`mpv`-Prozesse:
+
+| Check | Ergebnis |
+|-------|----------|
+| `pidrivectl now` | Nichts läuft |
+| `pidrivectl source state` | `idle`, keine Transition |
+| `rtlsdr.is_busy()` | **`False`** |
+| `/tmp/pidrive_rtlsdr_state.json` | **fehlt** |
+| `/tmp/pidrive_rtlsdr.lock` | existiert; Inhalt enthält noch Meta `owner: "dab_play"`, `pid: 26030` (Stale-Spur nach früherem DAB) |
+| `capture_spectrum(446.1, …)` direkt | **`ok: false`, `error: "keine IQ-Daten"`**, stderr = **Usage** von `rtl_sdr` (fehlendes `"-"`) |
+| UI-äquivalenter POST (fm_sweep) | `mode=fm_sweep`, `ok: true`, `windows_ok: 0`, Fehler pro Fenster: **`keine IQ-Daten`** (nicht mehr „belegt“) |
+
+**Interpretation für die Analyse-Instanz:**
+
+1. Nutzer-JSON mit durchgängig **„RTL-SDR belegt“** trotz Idle → vermutlich **stale Lock/State oder Busy-Semantik**, nicht aktive Wiedergabe. `capture_spectrum` ruft vor `is_busy()` kein `clear_stale_lock()`. Früherer Owner laut Lock-Datei-Rest: **`dab_play`**.
+2. Sobald Busy=false, scheitert derselbe Legacy-Pfad am **fehlenden `"-"`** → Measurement tot, auch bei freiem Stick.
+3. UI/Mode-Bug (F7) erklärt, warum kein Einzel-Snapshot bei 446,1 MHz und warum 21 FM-Fenster erscheinen.
+4. Selbst bei Erfolg käme `spectrum_db` (bis ~131k Floats) als JSON — **kein Bild**, bis RF-Tools gerendert wird (Auftrag F8 zu Antwortgröße beachten).
+
+### Diagnose-Befehle für die andere Instanz
+
+```bash
+ssh pidrive@192.168.178.107
+pidrivectl now; pidrivectl source state
+pgrep -a 'rtl_|welle|mpv' || echo idle-procs
+python3 - <<'PY'
+import sys; sys.path.insert(0,"/home/pidrive/pidrive/pidrive")
+from modules.radio import rtlsdr
+print("busy", rtlsdr.is_busy())
+print("procs", rtlsdr.find_rtl_processes())
+print("state", rtlsdr._read_state())
+PY
+ls -la /tmp/pidrive_rtlsdr* /tmp/pidrive_spectrum.json
+# Referenz-Capture MIT stdout-Dateiname (sollte Bytes liefern):
+timeout 5 rtl_sdr -f 98000000 -s 2048000 -n 8192 - 2>/tmp/rtl_err | wc -c
+# API wie UI:
+curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?center=446.1&ppm=49&gain=-1' | head -c 400
+# API wie Label „Snapshot“ eigentlich meint:
+curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?mode=snapshot&center_mhz=446.1&ppm=49&gain=-1' | head -c 400
+```
+
+### Erwartete Fix-Richtung (nicht umgesetzt)
+
+1. UI: `mode=snapshot&center_mhz=…`; optional Canvas aus downsampled `spectrum_db`.
+2. Legacy `capture_spectrum`: `cmd += ["-"]`; vor Busy `clear_stale_lock`/`reap`/`wait_until_free` wie Backend.
+3. `sweep_fm_band`: `ok = (windows_ok > 0)` o.ä.; Fehler aggregieren.
+4. W8 laut Auftrag: CLI `pidrivectl spectrum …`, Watch/F3, Stations-Pipeline.

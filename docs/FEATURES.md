@@ -1,6 +1,6 @@
 # PiDrive — Funktions-Inventar
 
-**Stand:** v0.11.129 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-15
 
 Vertrag über garantierte Fähigkeiten. Jede Zeile ist per CLI prüfbar.
 Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
@@ -61,6 +61,10 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-051 | Schnellübersicht | `pidrivectl now` | Aktuelle Quelle + Titel | Core | ✅ |
 | F-052 | Diagnose | `pidrivectl system diagnose` | Keine kritischen Fehler | — | 🟡 |
 | F-053 | System-Info | Trigger `sys_info` | Log/Status | Core | ✅ |
+| F-054 | OTA-Update prüfen | `pidrivectl update --check` | Lokal/GitHub-Version + Commit; „aktuell“ oder Diff | git, Netzwerk | ✅ |
+| F-055 | OTA-Update einspielen | `pidrivectl update --yes` | `VERSION`/`HEAD` = `origin/main`; Services active | git, sudo restart | ✅ |
+| F-056 | Quellen-Zustand | `pidrivectl source state` | current/transition/Datei↔Speicher | Core | ✅ |
+| F-057 | Transition-Historie | `pidrivectl source history` | letzte Übergänge | Core (W7) | ✅ |
 
 ## Menü (M0)
 

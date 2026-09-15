@@ -1,6 +1,6 @@
 # PiDrive — Troubleshooting-Runbook
 
-**Stand v0.11.122 · Plattform: Debian 13 (x86) / Raspberry Pi OS (Pi 4)**
+**Stand:** v0.11.132 · Plattform: Debian 13 (x86) / Raspberry Pi OS (Pi 4)
 
 > Pfad-Hinweis: Das Installationsverzeichnis (`INSTALL_DIR`) ist
 > `/home/<user>/pidrive` (bei Installation als User) oder `/opt/pidrive` (als root).
@@ -298,6 +298,15 @@ sleep 2
 pidrivectl scanner pmr446 ch 1
 ```
 
+### Spektrum-Snapshot zeigt JSON / „RTL-SDR belegt“ trotz Idle
+
+Bekannter WebUI-/Legacy-Pfad — **Analyse & Fix = W8**. Protokoll mit Repro und
+Codehinweisen: [`../ABNAHMEN.md`](../ABNAHMEN.md) (Abschnitt 2026-09-15 Spektrum-Snapshot).
+
+Kurz:
+- Button startet `fm_sweep`, nicht Einzel-Snapshot (`mode`/`center_mhz` fehlen).
+- Anzeige ist JSON, kein Spektrum-Bild.
+- Busy-Check ohne Stale-Cleanup; Legacy-`rtl_sdr`-Aufruf ohne stdout-`"-"` .
 ---
 
 ## 7. MPRIS2 / D-Bus
@@ -319,6 +328,21 @@ In `mpris2.py` ist das ab v0.11.96 korrekt — beim Import, nicht in `start_mpri
 ---
 
 ## 8. Installer / Deployment
+
+### OTA-Update (`pidrivectl update`)
+
+```bash
+pidrivectl update --check          # Lokal vs. origin/main
+pidrivectl update                  # mit Bestätigung
+# Nach Update:
+pidrivectl version
+systemctl is-active pidrive_core pidrive_web
+```
+
+Nur bei Commits hinter `origin/main` (`behind > 0`). Braucht Netzwerk + git;
+Service-Restart per `sudo -n /bin/systemctl restart …` (NOPASSWD nur `restart`).
+
+`git fetch` fehlgeschlagen → Fehlermeldung; Fallback nur VERSION-Vergleich via raw.githubusercontent.
 
 ### Installer bricht ab — Core startet nicht
 

@@ -1,6 +1,6 @@
 # PiDrive — Dokumentationsindex
 
-**Stand:** v0.11.129 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-15
 
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
@@ -11,13 +11,13 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
 | Dokument | Zweck | Zielgruppe | Stand |
 |----------|-------|------------|-------|
-| [FEATURES.md](FEATURES.md) | Funktions-Inventar mit CLI-Prüfungen (M0/W0) | Entwickler, QA | v0.11.128 |
-| [KontextPiDrive.md](KontextPiDrive.md) | Entscheidungsverlauf, Changelog, Funktionsstatus | Entwickler, Planung | v0.11.128 |
-| [architektur/ARCHITECTURE.md](architektur/ARCHITECTURE.md) | Struktur, IPC, Services, CLI-Kurzreferenz | Entwickler | v0.11.128 |
+| [FEATURES.md](FEATURES.md) | Funktions-Inventar mit CLI-Prüfungen (M0/W0) | Entwickler, QA | v0.11.132 |
+| [KontextPiDrive.md](KontextPiDrive.md) | Entscheidungsverlauf, Changelog, Funktionsstatus | Entwickler, Planung | v0.11.132 |
+| [architektur/ARCHITECTURE.md](architektur/ARCHITECTURE.md) | Struktur, IPC, Services, CLI-Kurzreferenz | Entwickler | v0.11.132 |
 | [architektur/RUNTIME_FLOWS.md](architektur/RUNTIME_FLOWS.md) | Laufzeitpfade, Menü→Display | Entwickler | v0.11.127 |
-| [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, Transitionen, Sperrschichten — Ist-Zustand und Lücken Z1–Z10 | Entwickler | v0.11.127 |
-| [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code | Entwickler | v0.11.128 |
-| [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.122 |
+| [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, Transitionen, Sperrschichten — Ist-Zustand und Lücken Z1–Z10 | Entwickler | v0.11.132 |
+| [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code; OTA / source CLI | Entwickler | v0.11.132 |
+| [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.132 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |

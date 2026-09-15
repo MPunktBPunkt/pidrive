@@ -1,13 +1,15 @@
 # Zustandsmaschine — Quellenwechsel und Transitionen
 
-**Stand:** v0.11.127 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-15
 
 Referenz für `modules/source_state.py` und die daran hängenden Koordinierungsschichten.
 Dieses Dokument beschreibt den **Ist-Zustand**, benennt die Lücken und definiert ein
 gestuftes Zielbild. Die Arbeitspakete dazu stehen in
 [../auftraege/AUFTRAG-WEBUI-SANIERUNG.md](../auftraege/AUFTRAG-WEBUI-SANIERUNG.md), W7.
 
-Alle Zeilenangaben auf Stand v0.11.127.
+CLI-Diagnose: `pidrivectl source state` · `pidrivectl source history`.
+
+Zeilenangaben unten teils noch auf Stand v0.11.127; bei Abweichung Code lesen.
 
 ---
 
@@ -40,7 +42,7 @@ entstand an dieser Nahtstelle, nicht im Modul selbst.
 | `source_current` | `commit_source()` | UI, `menu_builder`, Trigger | 8 mögliche Werte, nicht validiert |
 | `source_previous` | `commit_source()` automatisch | `previous_source()` | für Rückkehr nach Fehler |
 | `source_target` | `begin_transition()` | UI (`index.html:474`) | während der Transition |
-| `transition` | `begin/end/force_end` | UI, `in_transition()` | siehe Lücke Z3 |
+| `transition` | `begin/end/force_end` | UI, `in_transition()` | Stale: Z3 behoben (Stufe 1) |
 | `owner` | `begin_transition()` | Log, UI | keine Namenskonvention (Z6) |
 | `since` | `begin_transition()` | Stale-Berechnung | — |
 | `audio_route` | `set_audio_route()` | UI, `diagnose.py:734` | — |
@@ -178,37 +180,19 @@ unter anderem das defekte dreistufige BT-Icon. `previous_source()` kann nach ein
 BT-Abbruch nicht sinnvoll zurückkehren. Und: **`esp32.bt-gateway` wird eine Quelle
 sein — es gibt derzeit keinen Platz dafür.**
 
-### Z2 Abgelehnte Wechsel verschwinden stumm `[BELEGT]` — kritisch für die Bedienung
+### Z2 Abgelehnte Wechsel verschwinden stumm `[BEHOBEN v0.11.130 / Stufe 1]`
 
-17 von 19 Aufrufstellen ignorieren `begin_transition() == False`. Kein `else`, keine
-Meldung, kein Log, keine Wiederholung, keine Warteschlange.
+**War:** Aufrufer ignorierten `begin_transition() == False` → stumme Ablehnung.
+**Jetzt:** Aufrufer melden Blockade (Progress/UI); `pidrivectl source state` zeigt
+laufende Transition. Historischer Befund bleibt relevant für Regressionstests (R12).
 
-**Folge:** Bis zu zwölf Sekunden nach jedem Quellenwechsel ist das System stumm
-ablehnend. Das ist die Erklärung für „Buttons gehen manchmal einfach nicht" — und sie
-ist unabhängig von den WebUI-Befunden.
+### Z3 Der Watchdog läuft nicht, und `in_transition()` repariert nicht `[BEHOBEN v0.11.130 / Stufe 1]`
 
-### Z3 Der Watchdog läuft nicht, und `in_transition()` repariert nicht `[BELEGT]` — kritisch
+**War:** `_check_stale_transition()` nur aus commit/end; `in_transition()` gab nach
+Timeout `False` ohne Datei zu bereinigen → Speicher ≠ WebUI-Datei.
 
-Der Kopfkommentar (Zeile 8) verspricht einen „Stale-Transition-Watchdog, räumt
-hängendes `transition=True` automatisch auf". `_check_stale_transition()` (Zeile 48)
-wird aber **ausschließlich** aus `commit_source()` (Z. 140) und `end_transition()`
-(Z. 160) gerufen. Es gibt keinen periodischen Aufruf — auch nicht aus der
-Core-Hauptschleife. Stirbt der Eigentümer einer Transition, ruft niemand mehr commit
-oder end; der Watchdog läuft also genau im Krisenfall nie.
-
-Verschärfend: `in_transition()` (Z. 259-267) gibt nach Ablauf der Zeitschranke `False`
-zurück, **ohne den Zustand zu bereinigen**:
-
-```python
-age = time.time() - STATE["since"]
-if age >= STALE_TIMEOUT_S:
-    return False  # Stale → gilt als beendet
-```
-
-**Folge:** Python meldet „keine Transition", während in
-`/tmp/pidrive_source_state.json` weiter `transition: true` steht — und das ist die
-Datei, die das WebUI liest (`index.html:474`). Zwei Wahrheiten über denselben
-Sachverhalt, unbegrenzt lange.
+**Jetzt:** `in_transition()` räumt Stale auf (Datei=Speicher); periodischer
+`check_stale_transition()` in der Core-Hauptschleife (~0,5 s).
 
 ### Z4 `end_transition()` prüft den Eigentümer nicht `[BELEGT]` — hoch
 
@@ -236,15 +220,11 @@ treffen kann.
 | `td_radio.py:202` | `webui` | Herkunft der Anforderung |
 | `td_hardware.py:315` | `trigger:radio_stop` | Präfix + Kommando |
 | `td_nav.py:169` | Variable | wechselnd |
-| `scanner.py:320` | `scanner` | Subsystem — **und mit ungültigem Schlüsselwort `reason`** |
+| `scanner.py` | `scanner` | Subsystem — früher ungültiges `reason=` (C7/W5 behoben) |
 
-`scanner.py:320` ruft `begin_transition("scanner", reason="user_select")`; die Signatur
-ist `begin_transition(owner, target, timeout_s)`. Der `TypeError` wird in Zeile 321-322
-verschluckt — die Transition wird also **nie** geöffnet, und der folgende Code läuft
-ungeschützt.
-
-**Das ist der Grund, warum die Eigentümerprüfung aus Z4 nicht einfach nachgerüstet
-werden kann:** es gibt keine verlässliche Identität, gegen die zu prüfen wäre.
+Früher öffnete `play_freq` die Transition wegen `TypeError` nie; das ist behoben.
+Eigentümerstrings bleiben uneinheitlich — deshalb ist die Eigentümerprüfung (Z4)
+weiterhin Stufe-3-Material.
 
 ### Z7 `dab_playback_state` ist ein totes Feld mit falschem Vertrag `[BELEGT]` — mittel
 
@@ -283,25 +263,18 @@ die Kollision, die sie verhindern soll.
   liest nur die Datei.
 - Jeder `set_*`-Aufruf schreibt die komplette JSON-Datei neu; keine Entprellung.
 
-### Z10 Keine Übergangshistorie `[BELEGT]` — größter Diagnosehebel
+### Z10 Keine Übergangshistorie `[BEHOBEN v0.11.130 / Stufe 1]`
 
-Es gibt `transition_count` und `stale_cleared` als Zähler, aber keine Aufzeichnung,
-**welche** Übergänge stattgefunden haben. Für Fehler, die einmal pro Fahrt auftreten,
-ist das die fehlende Information — die Logzeilen sind über die ganze Laufzeit verstreut
-und nach einem Neustart weg.
+Ringpuffer der letzten Übergänge in `STATE` / Statusdatei;
+`pidrivectl source history` listet sie. Zähler `transition_count` / `stale_cleared`
+bleiben.
 
 ---
 
-### Z11 Belegter Ausfall am Fahrzeug-Pi `[BELEGT]` — kritisch
+### Z11 Belegter Ausfall am Fahrzeug-Pi `[BEHOBEN v0.11.128 / C16]`
 
-Am 2026-09-15 auf echter Hardware nachgewiesen: `trigger/td_hardware.py:383` importiert
-`source_state` funktionslokal, obwohl Zeile 13 es modulweit tut. Da die Datei nur eine
-Funktion enthält, wird der Name für den gesamten Körper lokal — und damit sind
-`radio_stop` sowie beide Spotify-Pfade funktionslos.
-
-Das ist die praktische Bestätigung der Kernaussage dieses Dokuments: die Korrektheit
-liegt bei den Aufrufern, und dort bricht sie. Details und Korrektur als Befund C16 in
-[../auftraege/AUFTRAG-WEBUI-SANIERUNG.md](../auftraege/AUFTRAG-WEBUI-SANIERUNG.md).
+**War:** `td_hardware.py` Shadowing von `source_state` → `radio_stop`/Spotify tot.
+**Jetzt:** Closure behoben; Abnahme in `docs/ABNAHMEN.md`.
 
 ---
 
@@ -323,20 +296,15 @@ Das Modul ist handwerklich sauberer als seine Nutzung:
 Entscheidung des Eigentümers (2026-09-15): **gestuftes Vorgehen.** Stufe 1 und 2 werden
 umgesetzt, Stufe 3 später entschieden.
 
-### Stufe 1 — Sichtbarkeit und Wahrheit (Z2, Z3, Z10)
+### Stufe 1 — Sichtbarkeit und Wahrheit (Z2, Z3, Z10) — ✅ erledigt v0.11.130
 
-1. Jede der 17 Aufrufstellen behandelt `begin_transition() == False` nach dem Muster
-   aus `td_radio.py:96`: Meldung an den Nutzer, Aufräumen, Abbruch.
-2. `in_transition()` bereinigt einen abgelaufenen Zustand, statt ihn nur zu
-   überstimmen — Speicher und Datei sagen danach dasselbe.
-3. Periodischer Stale-Check in der Core-Hauptschleife, damit der Watchdog auch dann
-   greift, wenn der Eigentümer gestorben ist.
-4. Ringpuffer der letzten 20 Übergänge (Eigentümer, Ziel, Ergebnis, Dauer) in `STATE`
-   und in der Statusdatei. Etwa 30 Zeilen, und der wirksamste Einzelhebel für
-   Fehler, die nur im Fahrzeug auftreten.
+1. Aufrufstellen behandeln `begin_transition() == False` (Progress „Blockiert“).
+2. `in_transition()` bereinigt abgelaufenen Zustand — Speicher und Datei gleich.
+3. Periodischer Stale-Check in der Core-Hauptschleife.
+4. Ringpuffer + `pidrivectl source state|history`.
 
 Stufe 1 ändert **keine** Semantik der Quellenwechsel — sie macht nur sichtbar, was
-passiert. Sie ist damit ohne Fahrzeugtest abnehmbar.
+passiert. Abnahme: `docs/ABNAHMEN.md`.
 
 ### Stufe 2 — Bluetooth als Quelle (Z1)
 
