@@ -204,6 +204,9 @@ def main():
   pidrivectl system              System-Info + Spotify-Status
   pidrivectl system resources    RAM, Speicher, Uptime, Throttling
   pidrivectl system diagnose     Vollstaendige Systemdiagnose
+  pidrivectl update              Update von GitHub prüfen (mit Bestätigung)
+  pidrivectl update --check      Nur prüfen, nichts einspielen
+  pidrivectl update --yes        Einspielen ohne Nachfrage
 
   pidrivectl log                 Core-Log (letzte 40 Eintraege)
   pidrivectl log display         Display-Log
@@ -347,6 +350,13 @@ Flags (vor dem Befehl angeben):
     sys_sub.add_parser("shutdown")
     sys_sub.add_parser("diagnose")
     sys_sub.add_parser("spotify-oauth", help="Spotify OAuth einmalig einrichten")
+
+    # ── update (GitHub OTA mit Bestätigung) ─────────────────────────────────
+    p_upd = sub.add_parser("update", help="Update von GitHub prüfen / einspielen")
+    p_upd.add_argument("--check", action="store_true",
+                       help="Nur prüfen, nichts einspielen")
+    p_upd.add_argument("--yes", "-y", action="store_true",
+                       help="Ohne Nachfrage einspielen")
 
     # ── log ───────────────────────────────────────────────────────────────
     p_playlist = sub.add_parser("playlist", help="Wiedergabe-History")
@@ -1393,6 +1403,71 @@ Flags (vor dem Befehl angeben):
             else:
                 fmt.err(f"Unbekannte Aktion. Nutze: scan | ch N | freq F | next | prev | stop")
             sys.exit(EXIT_OK)
+        sys.exit(EXIT_OK)
+
+    # update (GitHub OTA)
+    if args.cmd == "update":
+        from modules import update as _upd
+        info = _upd.check_for_update(fetch=True)
+        if use_json:
+            fmt.print_json(info)
+            if not info.get("ok"):
+                sys.exit(EXIT_ERROR)
+            if getattr(args, "check", False) or not info.get("available"):
+                sys.exit(EXIT_OK)
+            # --json + apply nur mit --yes
+            if not getattr(args, "yes", False):
+                fmt.err("JSON-Modus: Update einspielen braucht --yes")
+                sys.exit(EXIT_USAGE)
+            res = _upd.apply_update(restart=True)
+            fmt.print_json(res)
+            sys.exit(EXIT_OK if res.get("ok") else EXIT_ERROR)
+
+        if not info.get("ok"):
+            fmt.err(info.get("error") or "Update-Prüfung fehlgeschlagen")
+            sys.exit(EXIT_ERROR)
+
+        lv = info.get("local_version", "?")
+        rv = info.get("remote_version") or "?"
+        lc = info.get("local_commit", "?")
+        rc = info.get("remote_commit") or "?"
+        fmt.out(f"PiDrive Update — {info.get('install_dir')}")
+        fmt.out(f"  Lokal:  v{lv}  ({lc})")
+        fmt.out(f"  GitHub: v{rv}  ({rc})  [origin/{info.get('branch','main')}]")
+
+        if info.get("ahead", 0) > 0:
+            fmt.out(f"  ⚠ Lokal {info['ahead']} Commit(s) voraus (werden bei Update verworfen)")
+
+        if not info.get("available"):
+            fmt.out("  ✓ Bereits aktuell — kein Update nötig")
+            sys.exit(EXIT_OK)
+
+        fmt.out(f"  → Update verfügbar ({info.get('behind', '?')} Commit(s) hinterher)")
+        for line in (info.get("commits") or [])[:12]:
+            fmt.out(f"      {line}")
+        if len(info.get("commits") or []) > 12:
+            fmt.out("      …")
+
+        if getattr(args, "check", False):
+            sys.exit(EXIT_OK)
+
+        if not getattr(args, "yes", False):
+            try:
+                ans = input("Update jetzt einspielen und Services neu starten? [j/N] ").strip().lower()
+            except EOFError:
+                ans = ""
+            if ans not in ("j", "ja", "y", "yes"):
+                fmt.out("Abgebrochen.")
+                sys.exit(EXIT_OK)
+
+        fmt.out("Spiele Update ein…")
+        res = _upd.apply_update(restart=True)
+        if not res.get("ok"):
+            fmt.err(res.get("error") or "Update fehlgeschlagen")
+            sys.exit(EXIT_ERROR)
+        fmt.out(f"✓ Update ok: v{res.get('before_version')} → v{res.get('after_version')}  "
+                f"({res.get('before_commit')} → {res.get('after_commit')})")
+        fmt.out("  Services neu gestartet (pidrive_core / pidrive_web)")
         sys.exit(EXIT_OK)
 
     # system
