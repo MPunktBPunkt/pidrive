@@ -23,6 +23,7 @@ Erstellt auf Basis von Quellcode-Analyse, BlueZ-Dokumentation und Felderfahrung.
 8. [Pairing-Prozess](#8-pairing-prozess)
 9. [Bekannte Probleme und Workarounds](#9-bekannte-probleme-und-workarounds)
 10. [Diagnosebefehle](#10-diagnosebefehle)
+11. [Fahrzeug-Screenshots](#11-fahrzeug-screenshots)
 
 ---
 
@@ -729,6 +730,24 @@ dbus-send --system --print-reply --dest=org.bluez \
   string:org.bluez.MediaTransport1
 # → Codec: 0x00 (SBC), Config: [Bitpool, Freq, Channels...]
 ```
+
+---
+
+## 11. Fahrzeug-Screenshots
+
+Stand 2026-09-15. Die Bilder liegen neben diesem Dokument unter `docs/fahrzeug/`.
+
+### PiDrive-Wurzelmenü (iDrive-Stil)
+
+Favoriten stehen vorn; sechs Einträge (`1/6`): Favoriten, Quellen, Stop, Audio, Verbindungen, System. Entspricht dem Baum in [`RUNTIME_FLOWS.md`](../architektur/RUNTIME_FLOWS.md) Abschnitt I.2.
+
+![PiDrive-Wurzelmenü mit Favoriten als erstem Eintrag](pidrive-wurzelmenue-favoriten.png)
+
+### BMW iDrive — Bluetooth Audio → Favoriten
+
+Das Fahrzeug listet **PiDrive** und **PiDrive Menü**. Letzteres entspricht dem MPRIS2-Albumfeld im Menü-Kontext (`xesam:album = "PiDrive Menü"`, siehe Abschnitt I.3 in [`RUNTIME_FLOWS.md`](../architektur/RUNTIME_FLOWS.md)).
+
+![BMW Bluetooth Audio Favoriten: PiDrive und PiDrive Menü](bmw-bluetooth-audio-favoriten.png)
 
 ---
 

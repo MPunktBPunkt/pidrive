@@ -120,6 +120,17 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 
 ---
 
+## 2026-09-15 — iDrive-/Menü-Screenshots ins Repo
+
+Zwei UI-Screenshots unter `docs/fahrzeug/`, eingebunden in [`fahrzeug/iDriveBt.md`](fahrzeug/iDriveBt.md) §11 und [`architektur/RUNTIME_FLOWS.md`](architektur/RUNTIME_FLOWS.md) I.2:
+
+| Datei | Inhalt |
+|-------|--------|
+| `docs/fahrzeug/pidrive-wurzelmenue-favoriten.png` | PiDrive-Wurzelmenü, Favoriten zuerst (`1/6`) |
+| `docs/fahrzeug/bmw-bluetooth-audio-favoriten.png` | BMW Bluetooth Audio → Favoriten: PiDrive, PiDrive Menü |
+
+---
+
 ## 2026-09-15 — Deploy + HW unter `192.168.178.107` (LAN)
 
 | | |

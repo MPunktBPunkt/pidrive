@@ -382,6 +382,12 @@ PiDrive  (root)
 └── System             IP (live) · System-Info · Version · Neustart* · Ausschalten* · Update*
 ```
 
+![PiDrive-Wurzelmenü: Favoriten zuerst, 1/6](../fahrzeug/pidrive-wurzelmenue-favoriten.png)
+
+BMW-Seite (Bluetooth Audio → Favoriten): Gerät **PiDrive**, Einträge **PiDrive** und **PiDrive Menü** — siehe [`iDriveBt.md`](../fahrzeug/iDriveBt.md) §11.
+
+![BMW Bluetooth Audio Favoriten mit PiDrive](../fahrzeug/bmw-bluetooth-audio-favoriten.png)
+
 `*` = Aktion mit **Bestätigungs-Ebene** (erster Unterpunkt „Abbrechen", danach
 „Ja, …"). Schützt vor versehentlichem Auslösen per Skip+Play und — bei „Bluetooth
 trennen/aus" — vor dem Verlust der iDrive-Steuerung.
