@@ -13,15 +13,17 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 |----------|-------|------------|-------|
 | [FEATURES.md](FEATURES.md) | Funktions-Inventar mit CLI-Prüfungen (M0) | Entwickler, QA | v0.11.127 |
 | [KontextPiDrive.md](KontextPiDrive.md) | Entscheidungsverlauf, Changelog, Funktionsstatus | Entwickler, Planung | v0.11.127 |
-| [architektur/ARCHITECTURE.md](architektur/ARCHITECTURE.md) | Struktur, IPC, Services, CLI-Kurzreferenz | Entwickler | v0.11.122 |
-| [architektur/RUNTIME_FLOWS.md](architektur/RUNTIME_FLOWS.md) | Laufzeitpfade, Menü→Display | Entwickler | v0.11.122 |
+| [architektur/ARCHITECTURE.md](architektur/ARCHITECTURE.md) | Struktur, IPC, Services, CLI-Kurzreferenz | Entwickler | v0.11.127 |
+| [architektur/RUNTIME_FLOWS.md](architektur/RUNTIME_FLOWS.md) | Laufzeitpfade, Menü→Display | Entwickler | v0.11.127 |
 | [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code | Entwickler | v0.11.122 |
 | [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.122 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |
-| [archiv/MIGRATION_BACKLOG.md](archiv/MIGRATION_BACKLOG.md) | Historischer Migrations-Backlog (teils erledigt) | Archiv | — |
-| [archiv/MIGRATION_STRUCTURE.md](archiv/MIGRATION_STRUCTURE.md) | Historische Zielstruktur (Stand v0.11.96, veraltet) | Archiv | v0.11.96 |
+| [archiv/MIGRATION_BACKLOG.md](archiv/MIGRATION_BACKLOG.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
+| [archiv/MIGRATION_STRUCTURE.md](archiv/MIGRATION_STRUCTURE.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
+
+> Index-Regel: Stempel älter als zehn Patch-Versionen hinter `VERSION` → im Index mit ⚠ markieren.
 
 ### Geplant (noch nicht vorhanden)
 
@@ -61,12 +63,15 @@ Jedes gepflegte Dokument beginnt mit `**Stand:** vX.Y.Z · <Datum>`. Wer ein Ver
 ändert, zieht den Stempel im betroffenen Dokument nach. Dokumente mit Stempel älter als
 zehn Patch-Versionen gelten als prüfbedürftig und werden im Index markiert.
 
-### Neue Dokumente
+### Neue Dokumente (verbindlich, D5)
 
 - Immer unter `docs/<kategorie>/` anlegen — nie ins Repo-Wurzelverzeichnis.
+  Passt keine Kategorie, wird eine angelegt und hier begründet.
 - Dateinamen: `KEBAB-CASE.md`, deutsch, sprechend (z. B. `BMW-AVRCP-PROBE.md`).
+  Kein `camelCase`, kein `SCREAMING_SNAKE` mehr für neue Dateien.
 - Im selben Commit in dieser Index-Datei eintragen (sonst schlägt `tools/check_docs.sh` fehl).
-- Ergebnis-Dokumente (Messungen, Abnahmen) werden ergänzt, nicht überschrieben.
+- Ergebnis-Dokumente (Messungen, Abnahmen) tragen Datum und Version im Kopf und werden
+  **nicht** überschrieben, sondern ergänzt; Wiederholungsmessungen als neuer Abschnitt.
 
 ### Link-Prüfung
 

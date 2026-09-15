@@ -1,5 +1,8 @@
 # PiDrive — Migration Backlog
 
+> **Historisch, Stand v0.11.96, nicht mehr gepflegt.** Für aktuellen Stand siehe
+> [`KontextPiDrive.md`](../KontextPiDrive.md) und [`ARCHITECTURE.md`](../architektur/ARCHITECTURE.md).
+
 **Stand v0.11.96**
 
 ---

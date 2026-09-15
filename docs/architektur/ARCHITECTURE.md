@@ -1,6 +1,6 @@
 # PiDrive — Architektur & Verzeichnisstruktur
 
-**Stand v0.11.122**
+**Stand:** v0.11.127 · 2026-09-15
 
 ## Übersicht
 
@@ -17,8 +17,9 @@ PiDrive
 ├── WebUI (Flask API + Frontend)         web/ (Entry-Shim: webui.py)
 ├── CLI (pidrivectl)                      cli/
 ├── IPC / Status / Einstellungen          ipc.py, status.py, settings.py
-├── AVRCP / MPRIS2 (BMW-Integration)      integration/avrcp_trigger.py, mpris2.py
-├── Menü-Modell                           menu/
+├── AVRCP (BMW-Integration)               integration/avrcp_trigger.py
+├── MPRIS2 (BMW-Display)                  mpris2.py (Root, nicht unter integration/)
+├── Menü-Modell                           menu/ (menu_builder / menu_state / menu_model)
 └── Konfiguration                         config/
 ```
 

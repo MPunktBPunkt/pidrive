@@ -4,7 +4,7 @@
 
 Spotify Connect · Webradio · DAB+ · FM · Funk-Scanner · Bluetooth A2DP · lokale Musik — gesteuert über Lenkrad (AVRCP), WebUI oder CLI. Kein Display nötig.
 
-[![Version](https://img.shields.io/badge/version-0.11.126-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/pidrive/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.127-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.11%2B-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20OS%20%7C%20Debian-lightgrey.svg)](https://www.debian.org/)
@@ -22,8 +22,6 @@ Spotify Connect · Webradio · DAB+ · FM · Funk-Scanner · Bluetooth A2DP · l
 | **BMW iDrive** | AVRCP-Steuerung + MPRIS2-Metadaten auf dem Display |
 | **Audio** | PipeWire System-Mode — Klinke, HDMI oder BT A2DP |
 
-> **v0.11.104:** DAB State-Machine vereinheitlicht; Spotify-Trigger und librespot-Status gefixt.
-
 ---
 
 ## Schnellstart
@@ -40,7 +38,7 @@ Als `root` ausführen. Der Installer erkennt Raspberry Pi und x86 automatisch.
 ### Erste Schritte nach dem Boot
 
 ```bash
-pidrivectl version          # Version prüfen (sollte 0.11.103 sein)
+pidrivectl version          # Version prüfen (siehe Datei VERSION)
 pidrivectl status           # System-Status
 pidrivectl test all         # Komplett-Test aller Quellen
 pidrivectl play web 1       # Webradio Rock Antenne
@@ -222,11 +220,8 @@ Weitere Docs: [docs/README.md](docs/README.md) (Dokumentationsindex)
 
 ## Versionierung
 
-Aktuelle Version: **0.11.104** — definiert in:
-
-- `VERSION` und `pidrive/VERSION`
-- `install.sh` → `PIDRIVE_VERSION`
-- Badge oben in dieser README
+Aktuelle Version steht **nur** in der Datei [`VERSION`](VERSION) (Spiegel: `pidrive/VERSION`,
+`install.sh` → `PIDRIVE_VERSION`, Badge oben). Keine Prosa-Versionsnummer in dieser README.
 
 ---
 

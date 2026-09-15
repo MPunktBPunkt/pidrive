@@ -1,5 +1,10 @@
 # PiDrive — Migrationsstatus Verzeichnisstruktur
 
+> **Historisch, Stand v0.11.96, nicht mehr gepflegt.** Inhalt kann von der aktuellen
+> Codebasis abweichen (z. B. `menu_*.py` liegen längst in `menu/`, `mpris2.py` weiter
+> unter `pidrive/mpris2.py`). Aktuelle Struktur: [`ARCHITECTURE.md`](../architektur/ARCHITECTURE.md).
+> Ob der Shim-Abbauplan neu geschrieben wird, entscheidet der Eigentümer (Auftrag E8).
+
 ## Aktueller Stand: v0.11.96 (Übergangsphase)
 
 Die Zielstruktur ist dokumentiert in [`ARCHITECTURE.md`](../architektur/ARCHITECTURE.md).
