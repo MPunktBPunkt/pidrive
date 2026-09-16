@@ -50,7 +50,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | **Audio-Stack: PipeWire System-Mode** | ✅ ersetzt System-PulseAudio |
 | **WirePlumber System-Mode (Trixie/Pi 4)** | ✅ v0.11.118/119 main-Profil, seat-monitoring aus |
 | pidrivectl test all | ✅ inkl. `menu` + **`webui`** (W0/W1); AVRCP-Version/Cover-Art-Check |
-| **BMW iDrive Feldtest (Display/Tasten)** | 🟡 MPRIS-Fix drin, Anzeige im Auto noch zu bestätigen |
+| **BMW iDrive Feldtest (Display/Tasten)** | 🟡 Pairing + Now Playing Spotify/Webradio **2026-09-16 bestätigt**; Menü auf CID und AVRCP-Tasten noch offen — [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 | Boot-Restore | ✅ teilweise |
 
 ---
@@ -72,6 +72,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | 0.11.126 | `pidrivectl test bt` liest AVRCP-Version aus SDP und meldet Cover-Art-Fähigkeit (erst ab AVRCP 1.6) |
 | 0.11.127 | **WebUI Medienbibliothek** (`/music-admin`): Upload, Ordner, ID3-Tags; iDrive-Menü Unterordner (nur Abspielen); `library_stop`/`radio_stop` stoppen lokale mpv-Wiedergabe; Menü M0–M6 |
 | 0.11.128 | **WebUI-Sanierung W0/W1:** `pidrivectl webui check|selftest|routes`; C16 `source_state`-Closure in `td_hardware` behoben; S11/S12 (`safe_run`/`sys`-Imports); `degraded_imports` im Status; Blueprint-Warnbanner; HW-Abnahme auf 192.168.178.105 → `docs/ABNAHMEN.md` |
+| 0.11.132 (docs) | Erster BMW-iDrive-BT-Feldtest: Pairing SSP-Zahl, Now Playing Spotify + Webradio; Fotos in [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 
 ---
 
@@ -380,7 +381,7 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log|
 | **WebUI-Sanierung W2–W11** | 🟡 Auftrag `AUFTRAG-WEBUI-SANIERUNG.md`; W0/W1 @ v0.11.128 abgenommen (`docs/ABNAHMEN.md`). Als Nächstes: Statuskette (W2), V4-Buttons, RTL-Import (W4), Scanner |
 | **WebUI Buttons `prev_station`/`next_station`** | ⛔ V4 — nicht in `ALLOWED_COMMANDS` (`webui check` findet sie) |
 | **RTL-SDR Importbruch C2** | ⛔ `degraded_imports` meldet `modules.rtlsdr`/`spectrum` — Fix = W4 |
-| **BMW iDrive Display-Feldtest** | 🟡 MPRIS2-`art_url`-Bug gefixt (v0.11.123) → markierter Menüeintrag/Metadaten sollten erscheinen; im Auto bestätigen |
+| **BMW iDrive Display-Feldtest** | 🟡 Now-Playing-Metadaten Spotify/Webradio 2026-09-16 bestätigt; Menü-Zeilen und `display-probe` (G2) noch offen — [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 | **AVRCP „Zurueck" im Auto** | 🟡 BMW sendet Stop oft nicht; Workaround: „Zurueck"-Einträge per enter. Prüfen ob Knopf-links ein AVRCP-Event liefert (`/var/log/pidrive/avrcp_raw.log`) |
 | **Cover Art auf iDrive** | 🔴 NBT Evo AVRCP 1.4/1.5 → kein BT-Cover-Art (erst ab 1.6); via `pidrivectl test bt` verifizierbar. Logos nur in WebUI sinnvoll |
 | DAB-Slides (MOT SLS) für WebUI | ⬜ optional: `welle-cli -w` → `/slide/<sid>` liefert Bilder; nicht implementiert |

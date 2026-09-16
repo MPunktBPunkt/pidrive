@@ -1,6 +1,6 @@
 # Abnahmeprotokolle — PiDrive
 
-**Stand:** v0.11.130 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-16
 
 Ergebnis-Dokumente werden **ergänzt**, nicht überschrieben. Jede Messung nennt Commit-Hash.
 
@@ -162,3 +162,25 @@ Hinweis: NOPASSWD erlaubt nur `systemctl restart`, nicht `stop`/`start`. Host-Ke
 | W5 C13 | Menü-Aktivmarkierung über `scanner_band` / Label |
 | W5 C14 | `scan_idx` bandgetrennt |
 | W6 | `scanner`-Schlüssel in `write_status`; `pidrivectl scanner status`; Scan `--verbose` Hinweis; Menü `scanner_stop` |
+
+---
+
+## 2026-09-16 — Erster BMW-iDrive-Bluetooth-Feldtest
+
+Bericht und Fotos: [`fahrzeug/BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md)  
+Rohbilder: `docs/fahrzeug/bt-idrive-test-2026-09-16/`
+
+| | |
+|---|---|
+| Fahrzeug | BMW 118d F20/F21 LCI 2017 · NBT Evo · BT-Name `BMW 38304` |
+| Gerät im iDrive | `PiDrive` |
+| Uhr (CID) | 19:18 Pairing → 19:24 gekoppelt → 19:26 Spotify → 19:35 Webradio |
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| Pairing | ✅ SSP-Zahlenvergleich `376726` (nicht Just Works) |
+| Geräteliste | ✅ PiDrive → Bluetooth-Audio / trennen / löschen |
+| Now Playing Spotify | ✅ `Spotify Connect` / `PiDrive` / `Spotify` |
+| Now Playing Webradio | ✅ `Webradio Rock Ant` · RHCP · `Rock Antenne Live` |
+| Cover Art | ❌ BMW-Bluetooth-Icon (AVRCP 1.4, erwartet) |
+| Menü auf CID / AVRCP-Tasten / G2-Probe | ⬜ nicht Teil dieses Tests |

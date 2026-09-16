@@ -1,6 +1,6 @@
 # PiDrive — Funktions-Inventar
 
-**Stand:** v0.11.129 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-16
 
 Vertrag über garantierte Fähigkeiten. Jede Zeile ist per CLI prüfbar.
 Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
@@ -118,7 +118,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-900 | `dab_scan_replace` | — | Kein Dispatcher-Handler | ⛔ |
 | F-901 | `favorites_add:{name}` | `pidrivectl favorites add Name` | Nur `_current` implementiert | ⛔ |
 | F-902 | `ppm_calibrate` | `pidrivectl ppm calibrate` | Nur WebUI, nicht Dispatcher | ⛔ |
-| F-903 | BMW 3-Zeilen-Display | `pidrivectl now` + iDrive | Metadaten sichtbar | 🟡 |
+| F-903 | BMW 3-Zeilen-Display | `pidrivectl now` + iDrive | Metadaten sichtbar | ✅ 2026-09-16 Spotify+Webradio; Menü-Zeilen ⬜ |
 | F-904 | Menü-ID-Eindeutigkeit | `pidrivectl menu lint` | 3 doppelte IDs (B3) | ⛔ |
 
 ---

@@ -549,13 +549,14 @@ PiDrive-Implementierung:
 3. PiDrive (bluetoothd): antwortet auf Page
 4. SDP Discovery: BMW liest PiDrive SDP Records
    → findet 0x110A (A2DP Source) + 0x110C (AVRCP Target)
-5. PIN/Passkey: normalerweise automatisch (Just Works)
-   → SSP (Secure Simple Pairing) falls BT 2.1+
+5. PIN/Passkey: SSP Numeric Comparison (nicht Just Works)
 6. Link Key wird gespeichert (trusted)
 7. BMW verbindet A2DP + AVRCP
 8. WirePlumber: erstellt neuen A2DP-Sink (`bluez_output.<MAC>.<N>`)
 9. PiDrive: avrcp_trigger.py erkennt Connected-Event (PropertiesChanged /org/bluez/hci0)
 ```
+
+**Feldtest 2026-09-16:** Fahrzeugname `BMW 38304`, Zahlenvergleich `376726`, Bestätigung OK im iDrive. PiDrive-Agent `DisplayYesNo` muss `Request confirmation` mit `yes` beantworten. Fotos: [`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md).
 
 ### 8.2 PiDrive Pairing-Befehle
 
@@ -749,6 +750,11 @@ Das Fahrzeug listet **PiDrive** und **PiDrive Menü**. Letzteres entspricht dem 
 
 ![BMW Bluetooth Audio Favoriten: PiDrive und PiDrive Menü](bmw-bluetooth-audio-favoriten.png)
 
+### Erster Feldtest im Fahrzeug (2026-09-16)
+
+Pairing (SSP-Zahl), Geräteliste und Now Playing (Spotify + Webradio):  
+[`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md)
+
 ---
 
 ## Anhang: BMW NBT Evo Software-Versionen
@@ -770,7 +776,7 @@ SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 | **`mpris:artUrl` / Cover-Art** — `update_metadata()` referenziert `art_url` ohne Parameter + `**{{…}}` (Set statt Dict) → `TypeError`, in `main_core` still verschluckt | `mpris2.py` | 🔴 fixen: `art_url=""`-Parameter ergänzen, `{{…}}` → `{…}` |
 | Zwei BMW-Empfangspfade mit **unterschiedlichem** Mapping (`avrcp_trigger.py` kontextabhängig vs. `mpris2.py` fest) | `mpris2.py`, `integration/avrcp_trigger.py` | 🟡 im Auto verifizieren, welcher Pfad bedient wird |
 | `monitor_bluetoothctl()` vorhanden, aber deaktiviert (CPU-Fix) | `integration/avrcp_trigger.py` | ℹ️ bewusst, nur dbus-monitor aktiv |
-| WirePlumber A2DP / DAB-Antenne / AVRCP-Tasten | — | 🟡 Feldtest im BMW ausstehend (s. [`KontextPiDrive.md`](../KontextPiDrive.md)) |
+| WirePlumber A2DP / DAB-Antenne / AVRCP-Tasten | — | 🟡 Tasten und Menü auf CID noch offen; Pairing + Now Playing 2026-09-16 bestätigt ([`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md)) |
 
 ---
 
