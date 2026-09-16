@@ -104,6 +104,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-095 | Menü-Fernsteuerung | `/api/core` path/nodes + UI | wie `menu goto/activate` | Core | ⛔ V3 Oberfläche fehlt |
 | F-096 | Billige Listen | `curl -s localhost:8080/api/lists` | dab/web/fm/favorites ohne pactl | Web | ✅ W2/S9 |
 | F-097 | processes in Status | `/api/core` → `status.processes` | nicht-leer wenn mpv/welle läuft | Core | ✅ W2/S3 |
+| F-098 | Offline-CI | `bash tools/ci_offline.sh` / GHA | Exit 0, pytest Unit+Verträge | Offline | ✅ |
 
 ## Navigation / Trigger (AVRCP → Core)
 

@@ -88,6 +88,18 @@ def _current_source():
     ss = _read_json("/tmp/pidrive_source_state.json")
     return ss.get("source_current", "idle")
 
+def filter_live_rtl_procs(procs):
+    """Zombies zählen nicht als Belegung (TK-A) — rein, testbar ohne Hardware."""
+    live = []
+    for p in procs or []:
+        cmd = (p.get("cmd") or "")
+        stat = (p.get("stat") or "")
+        if "<defunct>" in cmd or str(stat).startswith("Z"):
+            continue
+        live.append(p)
+    return live
+
+
 def _rtl_processes():
     try:
         from modules.radio import rtlsdr
@@ -101,15 +113,7 @@ def _rtl_processes():
                 procs.append({"pid": parts[0], "stat": parts[1], "cmd": parts[2]})
             elif ln.strip():
                 procs.append({"cmd": ln})
-    # Zombies zählen nicht als Belegung (TK-A Nachzug)
-    live = []
-    for p in procs:
-        cmd = (p.get("cmd") or "")
-        stat = (p.get("stat") or "")
-        if "<defunct>" in cmd or stat.startswith("Z"):
-            continue
-        live.append(p)
-    return live
+    return filter_live_rtl_procs(procs)
 
 def _mpv_running():
     return bool(_run("pgrep -x mpv 2>/dev/null"))

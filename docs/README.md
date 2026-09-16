@@ -28,6 +28,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen (W0/DoD) | Entwickler, QA | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke (Baseline vor M4) | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |
+| [../tests/README.md](../tests/README.md) | Testübersicht Offline-CI vs HW-Suite | Entwickler, QA | 2026-09-16 |
 | [archiv/MIGRATION_BACKLOG.md](archiv/MIGRATION_BACKLOG.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
 | [archiv/MIGRATION_STRUCTURE.md](archiv/MIGRATION_STRUCTURE.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
 
@@ -86,3 +87,15 @@ tools/check_docs.sh
 ```
 
 Prüft relative Markdown-Links und meldet Dokumente ohne eingehenden Verweis (Waisen).
+
+### Offline-CI (GitHub Actions)
+
+```bash
+bash tools/ci_offline.sh
+```
+
+Läuft auf jedem Push/PR (`.github/workflows/ci.yml`): Docs-Links, Shell-Syntax,
+`compileall`, pytest (Imports, ipc/status, Scanner-BW, source_state, Menü-Verify,
+WebUI-Check/Selftest, iDrive-Offline-Skript, Routen-Inventar, VERSION-Sync).
+
+HW-Suite `pidrivectl test all` bleibt am Raspberry Pi (RTL/BT/Audio).

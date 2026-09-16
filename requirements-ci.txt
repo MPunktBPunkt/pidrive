@@ -1,0 +1,3 @@
+# Dependencies for GitHub Actions / tools/ci_offline.sh (not needed on the Pi).
+pytest>=8.0,<9
+flask>=3.0,<4

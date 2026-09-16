@@ -207,6 +207,12 @@ pidrivectl test all
 cat /tmp/pidrive_test_results.json | python3 -m json.tool
 ```
 
+**Offline-CI** (lokal wie GitHub Actions — ohne Pi/RTL/BT):
+
+```bash
+bash tools/ci_offline.sh
+```
+
 | Datei | Inhalt |
 |-------|--------|
 | `/tmp/pidrive_status.json` | Laufzeit-Status (Quelle, DAB-State, Metadaten) |
