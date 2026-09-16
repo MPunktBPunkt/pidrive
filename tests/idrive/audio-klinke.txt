@@ -1,0 +1,18 @@
+# iDrive: Audio → Klinke (AUX)
+# play-Pausen ≥1.3s (Double-Tap = cat:0)
+
+reset
+next
+next
+next
+expect selected=Audio
+play
+sleep 1.3
+expect path_contains=Audio
+next
+next
+next
+expect selected=Klinke (AUX)
+play
+sleep 0.3
+expect activated=Klinke (AUX)

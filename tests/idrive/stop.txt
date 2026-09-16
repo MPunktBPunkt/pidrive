@@ -1,0 +1,9 @@
+# iDrive: Wurzel → Stop aktivieren
+
+reset
+next
+next
+expect selected=Stop
+play
+sleep 0.3
+expect activated=Stop

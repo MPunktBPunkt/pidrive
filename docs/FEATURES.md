@@ -81,6 +81,8 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-068 | Rebuild hält Position | `pidrivectl menu rebuild` | Pfad+UID gleich | Offline | ✅ |
 | F-069 | iDrive-Event | `pidrivectl idrive next --offline` | Mapping + Menübewegung | Offline | ✅ |
 | F-070 | iDrive-Skript ROCK FM | `pidrivectl idrive script tests/idrive/rockfm.txt --offline` | activated=ROCK FM | Offline | ✅ |
+| F-071 | Menü-Walk | `pidrivectl menu walk` | alle Ordner+Blätter erreichbar | Offline | ✅ |
+| F-072 | iDrive Stop/Audio/BT | `tests/idrive/{stop,audio-klinke,bt-scan}.txt` | activated erwartet | Offline | ✅ |
 
 ## WebUI (W0)
 

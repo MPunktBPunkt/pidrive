@@ -123,7 +123,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                 S.get("radio_type") == "FM" and
                 S.get("radio_station", "").startswith(name[:10])
             )
-            _fid = f"fm_{str(freq).replace('.', '_')}"
+            _fid = s.get("id") or f"fm_{str(freq).replace('.', '_')}"
             _meta_fm = {"freq": str(freq), "name": name, "favorite": s.get("favorite", False)}
 
             nodes.append(MenuNode(
@@ -148,7 +148,11 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                 S.get("radio_type") == "DAB" and
                 (S.get("radio_station", "") == name or S.get("radio_name", "") == name)
             )
-            _did = f"dab_{sid or name.lower().replace(' ','_')}"
+            # Config-id bevorzugen — gleicher service_id auf mehreren Kanälen sonst doppelt
+            _did = (s.get("id") or "").strip() or (
+                f"dab_{sid}_{ch.lower()}" if sid and ch else
+                f"dab_{sid or name.lower().replace(' ', '_')}"
+            )
             _meta = {"ensemble": ens, "service_id": sid, "channel": ch,
                      "url_mp3": s.get("url_mp3", ""), "name": name,
                      "favorite": s.get("favorite", False)}
@@ -176,7 +180,10 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                 S.get("radio_type") == "WEB" and
                 S.get("radio_station", "") == name
             )
-            _wid = f"web_{name.lower().replace(' ', '_')[:20]}"
+            # Config-id bevorzugen — gekürzte Namen kollidieren sonst (Heavy Metal)
+            _wid = (s.get("id") or "").strip() or (
+                f"web_{name.lower().replace(' ', '_')[:20]}"
+            )
             _meta_web = {
                 "url": s.get("url", ""),
                 "genre": genre,

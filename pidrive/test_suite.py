@@ -966,7 +966,7 @@ def test_log_summary():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def test_menu():
-    """M0/M2: Menü-Lint, Golden-Master-Verify, Rebuild-Robustheit (hardwarefrei)."""
+    """M0/M2: Menü-Lint, Walk, Golden-Master-Verify, Rebuild (hardwarefrei)."""
     _section("MENU", "📋")
     from menu import menu_golden as _mg
     t0 = time.time()
@@ -975,6 +975,12 @@ def test_menu():
         _p(FAIL, "menu lint", "Fehler im Menübaum", time.time() - t0)
     else:
         _p(PASS, "menu lint", elapsed=time.time() - t0)
+    t0w = time.time()
+    walk_rc = _mg.cmd_walk()
+    if walk_rc != 0:
+        _p(FAIL, "menu walk", "tote Ordner/Blätter", time.time() - t0w)
+    else:
+        _p(PASS, "menu walk", elapsed=time.time() - t0w)
     t1 = time.time()
     verify_rc = _mg.cmd_verify()
     if verify_rc != 0:
@@ -991,15 +997,18 @@ def test_menu():
     try:
         from menu import idrive_sim as _id
         import os as _os
-        _script = _os.path.join(_os.path.dirname(BASE_DIR), "tests", "idrive", "rockfm.txt")
-        if _os.path.exists(_script):
+        _scripts_dir = _os.path.join(_os.path.dirname(BASE_DIR), "tests", "idrive")
+        for _name in ("rockfm.txt", "stop.txt", "audio-klinke.txt", "bt-scan.txt"):
+            _script = _os.path.join(_scripts_dir, _name)
+            if not _os.path.exists(_script):
+                _p(WARN, f"idrive {_name}", "fehlt")
+                continue
             id_rc = _id.run_script(_script, offline=True)
             if id_rc != 0:
-                _p(FAIL, "idrive script rockfm", "Offline-Skript fehlgeschlagen", time.time() - t3)
+                _p(FAIL, f"idrive {_name}", "Offline-Skript fehlgeschlagen", time.time() - t3)
             else:
-                _p(PASS, "idrive script rockfm", "offline → ROCK FM", time.time() - t3)
-        else:
-            _p(WARN, "idrive script", f"fehlt: {_script}")
+                _p(PASS, f"idrive {_name}", "offline OK", time.time() - t3)
+            t3 = time.time()
     except Exception as e:
         _p(FAIL, "idrive script", str(e)[:60], time.time() - t3)
 

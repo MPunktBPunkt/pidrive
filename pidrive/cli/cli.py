@@ -373,6 +373,7 @@ Flags (vor dem Befehl angeben):
                         help="Bestehenden Snapshot ersetzen (CHANGES.md)")
     menu_sub.add_parser("verify", help="Baum gegen Golden Master prüfen")
     menu_sub.add_parser("lint", help="Statische Baum-Prüfungen")
+    menu_sub.add_parser("walk", help="Alle Ordner+Blätter auf Erreichbarkeit prüfen")
     p_cost = menu_sub.add_parser("cost", help="Tastendrücke bis Ziel (Skip-Only)")
     p_cost.add_argument("path_id", help="z.B. sources/dab/dab_stations/dab_0xd411")
     p_report = menu_sub.add_parser("report", help="Ergonomie-Kennzahlen aller Blätter")
@@ -1574,7 +1575,7 @@ Flags (vor dem Befehl angeben):
         from menu import menu_golden as _mg
         mc = getattr(args, "menu_cmd", None)
         if not mc:
-            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report|tree|goto|activate|path|rebuild")
+            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|walk|cost|report|tree|goto|activate|path|rebuild")
             sys.exit(EXIT_USAGE)
         if mc == "snapshot":
             sys.exit(_mg.cmd_snapshot(accept=getattr(args, "accept", False)))
@@ -1582,6 +1583,8 @@ Flags (vor dem Befehl angeben):
             sys.exit(_mg.cmd_verify())
         elif mc == "lint":
             sys.exit(_mg.cmd_lint())
+        elif mc == "walk":
+            sys.exit(_mg.cmd_walk())
         elif mc == "cost":
             sys.exit(_mg.cmd_cost(args.path_id))
         elif mc == "report":

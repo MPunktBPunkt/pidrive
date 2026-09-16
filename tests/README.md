@@ -5,6 +5,7 @@
 | Offline-CI | `bash tools/ci_offline.sh` / GitHub Actions | ohne Hardware |
 | Unit + Verträge | `tests/unit/` (pytest) | CI |
 | WebUI-Oberfläche | `tests/webui/required_surface.json` + Flask-Smoke | CI — Seiten/APIs/sendCmd |
+| Menü tot/Walk | `pidrivectl menu lint\|walk` + iDrive-Skripte | CI — leere Actions, doppelte IDs, activate |
 | Golden Menü | `tests/golden/menu_tree.json` | CI + `pidrivectl menu verify` |
 | WebUI-Inventar | `tests/webui/routes.json` | CI + `pidrivectl webui check` |
 | iDrive-Skripte | `tests/idrive/*.txt` | CI offline / Pi live |
