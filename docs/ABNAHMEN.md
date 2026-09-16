@@ -313,17 +313,24 @@ Nach Schlüssel in §6: `NRestarts` unverändert bei früherem `ServiceUnknown` 
 
 | | |
 |---|---|
-| Commit | folgt nach Push |
+| Commit | `e999c2b` |
+| Host | `192.168.178.107` |
 | VERSION | **v0.11.139** |
 | Scope | D-Bus-Agent, dauerhafte Sichtbarkeit, CLI-Protokoll, BlueZ RegisterPlayer, alte Agent-Sitzung stillgelegt, Docs |
 
-### HB0 (Werkbank)
+### HB0 (Werkbank) — gemessen am Pi
 
 | Prüfung | Ergebnis |
 |---------|----------|
-| `python3 modules/bluetooth/bt_agent_dbus.py --selftest` | **bestanden** (lokal + CI) |
-| Alte `bluetoothctl`-Sitzung im Core | **stillgelegt** (`start_agent_session` no-op) |
-| `install.sh` installiert `pidrive_btagent` + `main.conf` Timeouts=0 | **eingebaut** |
+| Offline-CI | **131 passed** |
+| `bt_agent_dbus.py --selftest` | **bestanden** |
+| `pidrive_btagent` | **active**, `Agent registriert … DisplayYesNo regel=always` |
+| Adapter | `alias=PiDrive discoverable=on pairable=on timeout=0` |
+| `DiscoverableTimeout` / `PairableTimeout` | **0** (btmgmt/busctl) |
+| Core | erkennt `kind=dbus` Agent; bluetoothctl-Sitzung **stillgelegt** |
+| `RegisterPlayer` | Log: **bei BlueZ angemeldet** |
+| `org.mpris.MediaPlayer2.pidrive` auf SystemBus | **fehlt weiterhin** (ServiceUnknown) — getrennt von BF; eher M-D/Watchdog |
+| `NRestarts` | **0** |
 
 ### HB1–HB6
 
