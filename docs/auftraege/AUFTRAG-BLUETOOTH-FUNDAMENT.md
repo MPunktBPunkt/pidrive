@@ -593,3 +593,184 @@ Menüarbeit mit Anschauung statt Modell.
 |-------|--------|
 | 2026-09-16 | Angelegt. BT1–BT8 belegt/analysiert; Pakete BF-A…BF-F; Stufen HB0–HB6. |
 | 2026-09-16 | **BF-A…BF-F eingebaut** (v0.11.139): D-Bus-Agent-Dienst in `install.sh`, BlueZ `main.conf` Timeouts=0, alte bluetoothctl-Sitzung stillgelegt, CLI `bt pair`/`agent`/`pair-window`, `Media1.RegisterPlayer`, Docs korrigiert. HB0 Selftest; HB1–HB6 am Fahrzeug offen. |
+| 2026-09-16 | Gegenprüfung des Einbaus → **§11 Nachtrag**: BF-G bis BF-J. BF-G und BF-H sind **vor** der Fahrt zu erledigen. |
+
+---
+
+## 11. Nachtrag nach Gegenprüfung des Einbaus (v0.11.139)
+
+Der Einbau ist inhaltlich richtig und HB0 ist bestanden. Bei der Durchsicht von
+`e999c2b` sind vier Punkte aufgefallen. Die ersten zwei entscheiden, ob die
+Fahrzeugmessung überhaupt auswertbar ist — **sie gehören vor HB1**, nicht danach.
+
+### BF-G — Fehlschluss in `pidrivectl bt pair` (ohne Adresse) `[BELEGT]` · **vor der Fahrt**
+
+`cli.py`, BMW-initiierter Zweig:
+
+```python
+last_id = 0
+try:
+    ev0 = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
+    evs = ev0.get("events") or []
+    if evs:
+        last_id = int(evs[-1].get("id", 0))      # ← schon > 0 vor der Schleife
+except Exception:
+    pass
+...
+    r = _sp.run("bluetoothctl devices Paired ...")
+    if r.stdout.strip() and "Device " in r.stdout:   # ← Sennheiser genügt
+        if last_id > 0:
+            paired = True
+            break
+```
+
+Beide Bedingungen sind **bereits im ersten Schleifendurchlauf** erfüllt, sobald
+
+- irgendein Gerät gekoppelt ist — der Sennheiser aus `BluetoothError.md` ist es, und
+- irgendwann ein Agent-Ereignis stattfand — `_watch_pairing` trägt auch `Connected`
+  ein, also genügt ein sich verbindender Kopfhörer.
+
+Ergebnis: nach 0,4 Sekunden steht „✓ Gekoppelt", **ohne dass der BMW etwas getan hat**.
+Das ist kein Wettlauf, sondern ein sofortiger Fehlschluss.
+
+**Warum das vor der Fahrt muss:** HB2 ist die wichtigste Stufe des ganzen Dokuments. Mit
+diesem Fehler protokolliert sie eine Kopplung, die nie stattfand — und die Fahrt ist
+umsonst.
+
+**Abhilfe.** Auf das Ereignis triggern, das `_watch_pairing` ohnehin einträgt, statt auf
+„irgendein Gerät ist gekoppelt":
+
+```python
+# in der Ereignisschleife, wo die Zeilen ausgegeben werden:
+if e.get("method") == "Paired":
+    paired = True
+    paired_dev = e.get("device", "")
+```
+
+Zusätzlich die Gerätemenge vor der Schleife merken und nur ein **neues** Gerät als Erfolg
+werten. Und die Adresse mit ausgeben — bei HB2 willst du sehen, *welches* Gerät koppelte.
+
+### BF-H — hält die Spieler-Anmeldung ohne den bekannten Namen? `[MESSEN]` · **vor der Fahrt**
+
+Das Protokoll in `ABNAHMEN.md` enthält zwei Zeilen, die sich widersprechen:
+
+| Prüfung | Ergebnis |
+|---|---|
+| `RegisterPlayer` | Log: bei BlueZ angemeldet |
+| `org.mpris.MediaPlayer2.pidrive` auf SystemBus | fehlt weiterhin (ServiceUnknown) |
+
+Dort als „getrennt von BF, eher M-D" eingeordnet. **Das ist zu früh abgeräumt** — an
+dieser Frage hängt HB5.
+
+Was sich aus dem Code ableiten lässt: `register_with_bluez` wird erst **nach**
+erfolgreichem `dbus.service.BusName(...)` erreicht (`mpris2.py:307`). Scheitert die
+Namensübernahme, fliegt `start_mpris2()` vorher heraus. Der Name existierte also bei der
+Anmeldung und ging **danach** verloren.
+
+Ob das die Anmeldung entwertet, hängt daran, was BlueZ sich merkt: den **eindeutigen**
+Verbindungsnamen des Aufrufers oder den bekannten. Merkt es den eindeutigen — was zu
+erwarten ist —, überlebt die Anmeldung den Verlust. Der Objektpfad passt jedenfalls:
+`mpris2.py:54` exportiert `/org/mpris/MediaPlayer2`, und `register_with_bluez` meldet
+genau diesen Pfad.
+
+**Das ist eine Erwartung, kein Befund.** Zu messen, ohne Fahrzeug:
+
+```bash
+# 1. Steht ein Spielerobjekt bei BlueZ?
+busctl --system tree org.bluez | grep -i player
+
+# 2. Falls ja: kann BlueZ die Properties lesen?
+#    (Pfad aus Schritt 1 einsetzen)
+busctl --system introspect org.bluez /org/bluez/hci0/player0
+
+# 3. Wem gehört der MPRIS-Name gerade?
+busctl --system list | grep -i mpris
+```
+
+Bestanden, wenn Schritt 1 ein Objekt zeigt. Dann ist HB5 nicht durch den Namensverlust
+gefährdet und M-D bleibt ein eigenständiges, nachrangiges Thema.
+
+Zeigt Schritt 1 **nichts**, ist BF-D wirkungslos und muss vor der Fahrt nachgebessert
+werden — sonst scheitert HB5 mit zwei möglichen Ursachen und du kannst sie nicht
+unterscheiden.
+
+### BF-I — Rückfallweg in `pair_with_agent` ist toter Code `[BELEGT]`
+
+```python
+try:
+    dev = bus.get_object("org.bluez", path)
+except Exception:
+    # Fallback: bluetoothctl pair
+    ...
+```
+
+`bus.get_object()` prüft in dbus-python **nicht**, ob das Objekt existiert — es erzeugt
+nur einen Stellvertreter. Der `except`-Zweig greift daher nie. Stattdessen wirft
+`iface.Pair()` bei einem nie gescannten Gerät `UnknownObject`; das wird als Warnung
+geloggt, und die Schleife läuft in den Zeitablauf.
+
+Praktische Folge: `pidrivectl bt pair <MAC>` funktioniert nur, wenn der Pi das Gerät
+vorher gesehen hat. Für die Fahrt nicht kritisch — dort ist der BMW-initiierte Weg
+vorgesehen —, aber die Fehlermeldung führt in die Irre.
+
+**Abhilfe:** vor `Pair()` prüfen, ob das Objekt bei BlueZ bekannt ist (über
+`org.freedesktop.DBus.ObjectManager.GetManagedObjects` am Pfad `/`), und andernfalls
+entweder kurz scannen oder verständlich abbrechen: „Gerät nicht bekannt —
+`pidrivectl bt scan`".
+
+### BF-J — Lebendigkeit des Agenten und Zeilenenden `[BELEGT]`
+
+**Lebendigkeit.** `main_core.py` `_start_bt_agent_early()` glaubt der Zustandsdatei:
+
+```python
+if st.get("kind") == "dbus" and st.get("ready"):
+    log.info("BT Agent: D-Bus-Dienst bereit (pidrive_btagent)")
+```
+
+Der Agent schreibt aber **immer** `running: True` und frischt lediglich `ts` alle fünf
+Sekunden auf (`bt_agent_dbus.py`, `GLib.timeout_add_seconds(5, …)`). Den Zeitstempel
+ignoriert der Kern. Stirbt der Agent, bleibt eine Datei mit `ready: true` liegen, und der
+Kern meldet Bereitschaft.
+
+Abhilfe: `ts` prüfen und älter als 30 Sekunden als „nicht bereit" behandeln. Dieselbe
+Prüfung gehört in `agent_healthcheck()` in `bt_agent.py`, das heute nur
+`ready or kind=="dbus"` auswertet — letzteres ist immer wahr, sobald die Datei einmal
+existierte.
+
+**Zeilenenden.** `bt_agent_dbus.py` (533×) und `pidrive_btagent.service` (39×) liegen als
+CRLF im Repo, `install.sh`, `mpris2.py` und `bt_agent.py` als LF. Ursache ist der Upload
+der Vorlagen, nicht der Einbau.
+
+Heute schadet es nicht: systemd entfernt `\r` beim Einlesen, Python liest Quelltext mit
+universellen Zeilenenden. Ein echter Fehler entsteht erst, wenn die Python-Datei
+ausführbar gemacht und über die Shebang-Zeile gestartet wird — dann sucht der Kernel
+einen Interpreter namens `python3\r`. Auf LF umstellen, wie es für die `.sh`-Dateien
+schon gilt.
+
+**Nebenbei aufgeräumt:** in `bt_agent.py` sind `select` und `subprocess` nach BF-E
+unbenutzt, und `_AGENT_LOCK` wird nirgends mehr genommen (bleibt aber über
+`bluetooth.py:37` reexportiert — also nur den Import entfernen, nicht das Symbol).
+
+### Reihenfolge
+
+1. **BF-G** — sonst lügt HB2
+2. **BF-H** — sonst hat ein Scheitern von HB5 zwei Verdächtige
+3. **HB1 … HB6** in einer Fahrt, mit `tools/bmw_avrcp_probe.sh` im selben Durchlauf
+4. **BF-I**, **BF-J** — danach, in Ruhe
+5. **TK-B** — der letzte FAIL im Testlauf, siehe unten
+
+### Anmerkung zum Testlauf v0.11.139
+
+Der einzige FAIL — `Scanner FM 103.0 · Spiegel=scanner Gerät=False (RTL=[])` — ist
+belegbar `td_scanner.py:76–78`: `scanner.channel_up(b, S)` wird gerufen, danach
+`source_state.commit_source("scanner")` **unbedingt**, auch wenn das Gerät nicht
+erlangt wurde. Der Zustandsspiegel behauptet dann „scanner", während kein RTL-Prozess
+existiert.
+
+Dass der Test das jetzt zuverlässig aufdeckt, ist die Testkette, die ihre Arbeit tut.
+K1 ist mit den korrigierten Importpfaden (`scanner.py:24`, `fm.py:18`) erledigt, damit
+ist das der letzte offene Punkt dieser Kette.
+
+**Einschränkung:** der Lauf fand **ohne Antenne** statt. Die DAB-Übersprünge und das
+„FM startet trotzdem" sagen nichts über den Empfang. Vor RF-Schlüssen ein Lauf mit
+angeschlossener Antenne.
