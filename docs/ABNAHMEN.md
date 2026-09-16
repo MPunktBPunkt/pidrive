@@ -1,6 +1,6 @@
 # Abnahmeprotokolle — PiDrive
 
-**Stand:** v0.11.132 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-16
 
 Ergebnis-Dokumente werden **ergänzt**, nicht überschrieben. Jede Messung nennt Commit-Hash.
 
@@ -117,6 +117,17 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | W5 C8/C9 | Freenet K5/K6; set_channel per `ch`; set_freq für Kanalbänder |
 
 **Offen in W5:** C5 vollständiger Single-`rtl_fm`-Sweep (nur fast_bw-Lücke geschlossen), CB-AM.
+
+---
+
+## 2026-09-15 — iDrive-/Menü-Screenshots ins Repo
+
+Zwei UI-Screenshots unter `docs/fahrzeug/`, eingebunden in [`fahrzeug/iDriveBt.md`](fahrzeug/iDriveBt.md) §11 und [`architektur/RUNTIME_FLOWS.md`](architektur/RUNTIME_FLOWS.md) I.2:
+
+| Datei | Inhalt |
+|-------|--------|
+| `docs/fahrzeug/pidrive-wurzelmenue-favoriten.png` | PiDrive-Wurzelmenü, Favoriten zuerst (`1/6`) |
+| `docs/fahrzeug/bmw-bluetooth-audio-favoriten.png` | BMW Bluetooth Audio → Favoriten: PiDrive, PiDrive Menü |
 
 ---
 
@@ -447,6 +458,28 @@ DA-B…DA-C warten auf Antenne / Messreihe.
 
 ---
 
+## 2026-09-16 — Erster BMW-iDrive-Bluetooth-Feldtest
+
+Bericht und Fotos: [`fahrzeug/BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md)  
+Rohbilder: `docs/fahrzeug/bt-idrive-test-2026-09-16/`
+
+| | |
+|---|---|
+| Fahrzeug | BMW 118d F20/F21 LCI 2017 · NBT Evo · BT-Name `BMW 38304` |
+| Gerät im iDrive | `PiDrive` |
+| Uhr (CID) | 19:18 Pairing → 19:24 gekoppelt → 19:26 Spotify → 19:35 Webradio |
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| Pairing | ✅ SSP-Zahlenvergleich `376726` (nicht Just Works) |
+| Geräteliste | ✅ PiDrive → Bluetooth-Audio / trennen / löschen |
+| Now Playing Spotify | ✅ `Spotify Connect` / `PiDrive` / `Spotify` |
+| Now Playing Webradio | ✅ `Webradio Rock Ant` · RHCP · `Rock Antenne Live` |
+| Cover Art | ❌ BMW-Bluetooth-Icon (AVRCP 1.4, erwartet) |
+| Menü auf CID / AVRCP-Tasten / G2-Probe | ⬜ nicht Teil dieses Tests |
+
+---
+
 ## 2026-09-16 — Erster BMW-Test im Fahrzeug (v0.11.141)
 
 | | |
@@ -470,4 +503,3 @@ DA-B…DA-C warten auf Antenne / Messreihe.
 | Browsing PSM 0x001B | nicht beobachtet |
 
 Nach Zündung aus: Paired ja, Connected nein.
-

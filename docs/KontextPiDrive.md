@@ -51,7 +51,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | **Audio-Stack: PipeWire System-Mode** | ✅ ersetzt System-PulseAudio |
 | **WirePlumber System-Mode (Trixie/Pi 4)** | ✅ v0.11.118/119 main-Profil, seat-monitoring aus |
 | pidrivectl test all | ✅ inkl. `menu` + **`webui`** (W0/W1); AVRCP-Version/Cover-Art-Check |
-| **BMW iDrive Feldtest (Display/Tasten)** | 🟡 MPRIS-Fix drin, Anzeige im Auto noch zu bestätigen |
+| **BMW iDrive Feldtest (Display/Tasten)** | 🟡 Pairing + Now Playing Spotify/Webradio **2026-09-16 bestätigt**; Menü auf CID und AVRCP-Tasten noch offen — [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 | Boot-Restore | ✅ teilweise |
 
 ---
@@ -76,6 +76,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | 0.11.129–0.11.130 | WebUI W2–W4 + W7/Stufe 1: Statuskette, V4-Buttons, RTL-Import `modules.radio.*`, Transition-False sichtbar, Stale-Cleanup, `pidrivectl source state\|history` |
 | 0.11.131 | Scanner W5(Teil)+W6: C1/C3/C7/C12–C14, Statusfelder in CLI; HW-Deploy **192.168.178.107** (LAN) |
 | 0.11.132 | **`pidrivectl update`:** prüft GitHub (`origin/main`), zeigt Diff, Bestätigung bzw. `--yes`; Update nur bei `behind>0` |
+| 0.11.132 (docs) | Erster BMW-iDrive-BT-Feldtest: Pairing SSP-Zahl, Now Playing Spotify + Webradio; Fotos in [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 
 ---
 
@@ -396,7 +397,7 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log|
 | **WebUI-Sanierung W8–W11** | 🟡 Auftrag `AUFTRAG-WEBUI-SANIERUNG.md`; W0–W7/Stufe1 + W5(Teil) + W6 @ v0.11.131–132 (`docs/ABNAHMEN.md`). Als Nächstes: FastScan (W8) |
 | **Scanner Single-Sweep / CB-AM** | 🟡 W5 Rest — C5 vollständiger Single-`rtl_fm`-Sweep + CB-AM offen |
 | **Spektrum-Snapshot RF-Tools** | ⛔ Befund `docs/ABNAHMEN.md` 2026-09-15: UI=JSON; F7 fm_sweep; „belegt“ trotz Idle; Legacy `rtl_sdr` ohne `"-"` → Analyse W8 |
-| **BMW iDrive Display-Feldtest** | 🟡 MPRIS2-`art_url`-Bug gefixt (v0.11.123) → markierter Menüeintrag/Metadaten sollten erscheinen; im Auto bestätigen |
+| **BMW iDrive Display-Feldtest** | 🟡 Now-Playing-Metadaten Spotify/Webradio 2026-09-16 bestätigt; Menü-Zeilen und `display-probe` (G2) noch offen — [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 | **AVRCP „Zurueck" im Auto** | 🟡 BMW sendet Stop oft nicht; Workaround: „Zurueck"-Einträge per enter. Prüfen ob Knopf-links ein AVRCP-Event liefert (`/var/log/pidrive/avrcp_raw.log`) |
 | **Cover Art auf iDrive** | 🔴 NBT Evo AVRCP 1.4/1.5 → kein BT-Cover-Art (erst ab 1.6); via `pidrivectl test bt` verifizierbar. Logos nur in WebUI sinnvoll |
 | DAB-Slides (MOT SLS) für WebUI | ⬜ optional: `welle-cli -w` → `/slide/<sid>` liefert Bilder; nicht implementiert |
