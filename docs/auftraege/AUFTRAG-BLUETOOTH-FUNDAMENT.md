@@ -487,6 +487,13 @@ Webradio starten. Bestanden, wenn Ton kommt **und** `pactl list sinks short` ein
 `bluez_output.<MAC>.<N>` zeigt. Erwartet nach BT7 stabil, weil dieser Pfad der einzige
 ist, der bereits geprüft wurde.
 
+> **Mit DAB scheitert HB4 heute zwangsläufig** — und zwar nicht wegen Bluetooth.
+> `dab_play.py:363–390` entzieht `welle-cli` die PipeWire-Umgebung und legt die
+> ALSA-Vorgabe auf die Klinke. Eine A2DP-Senke ist in ALSA nicht vorhanden, der Ton kann
+> dort also nicht ankommen. Prüfe HB4 deshalb **mit Webradio**; DAB nur als eigener
+> Messpunkt zur Bestätigung dieses Befundes (E-BT5). Ursache und Abhilfe:
+> [AUFTRAG-DAB-AUDIOWEG.md](AUFTRAG-DAB-AUDIOWEG.md).
+
 Nebenbei die Warnung aus der Architekturanalyse gegenprüfen: **DAB umgeht PipeWire und
 geht direkt auf ALSA** (`dab_play.py:367`). DAB wird auf dieser Stufe also
 wahrscheinlich **nicht** über Bluetooth laufen. Getrennt protokollieren, nicht als
@@ -566,7 +573,7 @@ Menüarbeit mit Anschauung statt Modell.
 | E-BT2 | Danach dauerhaft `always` und dauerhaft sichtbar? | Nach bestandenem HB2 auf `window` härten. Dann kann sich fremd nichts mehr anmelden, und `pidrivectl bt pair-window 300` öffnet bei Bedarf |
 | E-BT3 | Adapter-Alias: „PiDrive" oder etwas, das der BMW als Audiogerät einsortiert? | „PiDrive" beginnen. Falls HB1 scheitert, ist die Geräteklasse der nächste Verdacht, nicht der Name |
 | E-BT4 | `bt_agent.py` nach BF-E löschen oder als Rückfallebene behalten? | zwei Fahrten behalten, dann löschen |
-| E-BT5 | Soll DAB auf HB4 mitgeprüft werden, obwohl der ALSA-Umweg bekannt ist? | ja, aber als eigener Punkt — es ist die erste echte Messung dieses bekannten Problems |
+| E-BT5 | Soll DAB auf HB4 mitgeprüft werden, obwohl der ALSA-Umweg bekannt ist? | ja, aber als eigener Punkt und mit erwartetem Fehlschlag — es ist die erste echte Messung eines belegten Fehlers, nicht eines Umwegs. Siehe [AUFTRAG-DAB-AUDIOWEG.md](AUFTRAG-DAB-AUDIOWEG.md) |
 | E-BT6 | Soll die andere Instanz BF-A einbauen, oder willst du den Dienst zuerst von Hand starten? | von Hand starten. Schritt 2 aus BF-A zeigt in zehn Sekunden, ob BlueZ den Agenten annimmt — ohne Installation, ohne Commit |
 
 ---
