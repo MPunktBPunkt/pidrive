@@ -366,6 +366,34 @@ systemctl restart pipewire pipewire-pulse wireplumber
 
 ---
 
+## 6. Netzwerk / WLAN
+
+### Nach Stromausfall: nur LAN erreichbar, WLAN tot
+
+Bekanntes Muster: `eth0` hat IP (z. B. `.107`), `wlan0` ohne SSID/IPv4. Credentials liegen im OS (`wpa_supplicant` / NetworkManager) — oft hängt nur der Stack.
+
+```bash
+# Status
+ip -4 addr show wlan0 eth0
+iwgetid -r
+rfkill list wifi
+
+# Einmalig reparieren
+sudo bash ~/pidrive/scripts/wifi-recover.sh
+# oder:
+sudo systemctl start pidrive-wifi-recover.service
+journalctl -u pidrive-wifi-recover -b --no-pager
+```
+
+Ab Install: **Boot-Service** (`pidrive-wifi-recover.service`) läuft bei jedem Start (~30 s nach `network-online`); der Timer macht Nachversuche.
+
+```bash
+systemctl is-enabled pidrive-wifi-recover.service
+systemctl status pidrive-wifi-recover.timer
+```
+
+---
+
 ## Log-Pfade
 
 | Quelle | Befehl |
