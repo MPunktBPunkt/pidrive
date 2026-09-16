@@ -6,7 +6,8 @@
 **Messablage:** `/var/log/pidrive/bmw_hb_messung_20260916_193414/`  
 **Verwandt:** [BMW-AVRCP-PROBE.md](BMW-AVRCP-PROBE.md) · [AUFTRAG-BLUETOOTH-FUNDAMENT.md](../auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) · [iDriveBt.md](iDriveBt.md)
 
-Nach Zündung aus (Berichtzeitpunkt): **Paired/Bonded/Trusted = ja**, **Connected = nein** — erwartbar.
+Nach Zündung aus: Agent **19:39:19** `Connected … connected=False`; danach wiederholt `avdtp … Host is down`.  
+**Ist-Zustand jetzt:** Paired/Bonded/Trusted = **ja**, Connected = **nein** — erwartbar.
 
 ---
 
@@ -39,16 +40,19 @@ Das ist der **erste belegte End-to-End-Erfolg** von Pairing + A2DP-Ton. Steuerun
 | ~19:28 | A2DP wieder da; MPRIS zeigt u. a. ICY-Titel (z. B. Sk8er boy / Rock Antenne) |
 | 19:32–19:36 | Nutzer hört Rock Antenne; Display zeitweise „Spotify Connect“ / „Unbekannt…“ |
 | **19:34–19:36** | Strukturierte Messung (btmon + MPRIS-Snapshots + AVRCP-Watch) |
-| ~19:39+ | Zündung aus → wiederholte `avdtp … Host is down`; Connected=no |
+| **19:39:19** | Zündung aus → Agent `connected=False`; danach `Host is down` bis ≥19:46 |
 
-Agent-Ereignisse (Auszug `/tmp/pidrive_bt_agent_events.json`):
+Agent-Ereignisse (Journal `pidrive_btagent`, Auszug):
 
 ```
 19:21:31 Connected              connected=True
 19:21:31 RequestConfirmation    passkey=376726 → ja (Regel always)
 19:21:52 Paired
-19:21:53 Connected              connected=True / False (Flap)
-19:22:58 Connected              connected=True
+19:21:53 Connected              True → False (Flap)
+19:22:34…19:24:32             weitere Connect-Flaps
+19:27:45–49                   btagent Restart (Deploy MPRIS-Fix)
+19:28:42 Connected              connected=True   ← stabile A2DP-Phase
+19:39:19 Connected              connected=False  ← Zündung aus
 ```
 
 ---
@@ -110,6 +114,16 @@ Während der Messung (Snapshots 19:34–19:35), durchgängig Connected + A2DP RU
 | D-Bus-Name | `org.mpris.MediaPlayer2.pidrive` (root / pidrive_core) |
 
 `RegisterPlayer` war laut Statusdatei erfolgreich.
+
+**Baseline `status.json` zur gleichen Zeit (wichtig für HB5):**
+
+```
+radio=False, radio_playing=None, radio_type='WEB', radio_name='Rock Antenne',
+track='Jack and Diane', artist='John Cougar', album='',
+spotify=True, bt=True, bt_device='BMW 38304'
+```
+
+Das erklärt die fälschliche „Spotify Connect“-Anzeige: Spotify-Flag aktiv, Radio-Flag aus, Album leer — trotz laufendem WEB und hörbarem Ton.
 
 ### 5.2 Was am iDrive beobachtet wurde (Sitzung)
 
