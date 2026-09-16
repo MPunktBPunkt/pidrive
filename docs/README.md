@@ -27,6 +27,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) | Spotify-Semantik + Testkette TK-A…E; §11 N1–N5, §12 WLAN/Version/Menü-IDs | Entwickler | 2026-09-16 |
 | [auftraege/AUFTRAG-MPRIS2-STABILITAET.md](auftraege/AUFTRAG-MPRIS2-STABILITAET.md) | **Vorrang** — MPRIS2 SIGABRT, Core-Absturz-Hypothese (M1–M3, M-A…M-F) | Entwickler | 2026-09-16 |
 | [auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md](auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md) | Menüvorrang beendet Blindnavigation (Q-K…Q-N, **zuerst**); FM-Rasterschritte statt modaler Eingabe, behebt D3/FM (Q-G…Q-J); Quellenordner startet letzten Sender (Q-A…Q-E); Suchlauf aufs BMW-Display (Q-F, gesperrt bis M-C) | Entwickler | 2026-09-16 |
+| [auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md](auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) | **Vorrang vor allem** — Kopplung scheitert am fehlenden Antwort-Agenten, Display am fehlenden Spieler (BT1–BT8, BF-A…BF-F, Stufenabnahme HB0–HB6) | Entwickler | 2026-09-16 |
+| [auftraege/AUFTRAG-SPEKTRUM-UND-AVRCP.md](auftraege/AUFTRAG-SPEKTRUM-UND-AVRCP.md) | Spektrumanzeige zurückholen (SA1–SA7, SA-A…SA-F); AVRCP-Tab als Messbühne für die BMW-Rückgaben (AV1–AV8, AV-A…AV-F) | Entwickler | 2026-09-16 |
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen (W0/DoD) | Entwickler, QA | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke (Baseline vor M4) | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |
