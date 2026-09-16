@@ -332,6 +332,26 @@ Nach Schlüssel in §6: `NRestarts` unverändert bei früherem `ServiceUnknown` 
 | `org.mpris.MediaPlayer2.pidrive` auf SystemBus | **fehlt weiterhin** (ServiceUnknown) — getrennt von BF; eher M-D/Watchdog |
 | `NRestarts` | **0** |
 
+### CPU-Last / Temperatur (Werkbank, Idle+Dienste)
+
+| | |
+|---|---|
+| Zeitpunkt | 2026-09-16 15:43 CEST |
+| Commit auf Pi | `e999c2b` / v0.11.139 |
+| Dienste | `pidrive_core`, `pidrive_web`, `pidrive_btagent` = active |
+
+| Messwert | Ergebnis |
+|----------|----------|
+| Load average (1/5/15) | **0.64 / 0.44 / 0.20** |
+| CPU busy (5‑s-Mittel) | **3.3 %** |
+| `pidrive_core` CPU (5 s) | **0.4 %** einer Kernzeit (≈1.7 % Momentanwert, RSS 44 MB) |
+| `pidrive_btagent` | ~0.1 % CPU, RSS 26 MB |
+| RAM | **17.4 %** genutzt · 1524 MB frei / 1845 MB |
+| SoC-Temperatur | **69.1 °C** (`vcgencmd` / thermal_zone0) |
+| Throttle (`get_throttled`) | **0x0** — kein Under-Voltage / kein Thermal-Throttle |
+
+Hinweis: zum Messzeitpunkt lief zusätzlich `welle-cli` mit ~53 % CPU (vermutlich Rest von DAB-Test); die Core-/Agent-Last blieb trotzdem niedrig.
+
 ### HB1–HB6
 
 Am Fahrzeug — noch offen (Kopplung/Display). Siehe Auftrag §5.
