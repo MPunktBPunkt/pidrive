@@ -1,0 +1,65 @@
+{
+  "pages": {
+    "/": {"markers": ["sendCmd", "radio_stop", "spotify_toggle", "onBaseRefresh"]},
+    "/bluetooth": {"markers": ["bt_scan", "bt_reconnect_last", "bt_disconnect"]},
+    "/audio": {"markers": ["audio_klinke", "audio_hdmi", "vol_up"]},
+    "/rf-tools": {"markers": ["dab_scan", "ppm:", "rtlsdr_reset"]},
+    "/diagnostics": {"markers": ["/api/system/resources", "fetch"]},
+    "/avrcp": {"markers": ["/api/avrcp", "fetch"]},
+    "/webradio-admin": {"markers": ["/api/webradio", "play_web:"]},
+    "/music-admin": {"markers": ["/api/music", "fetch"]}
+  },
+  "apis_get": [
+    "/api/ping",
+    "/api/core",
+    "/api/lists",
+    "/api/favorites",
+    "/api/audio",
+    "/api/bt/known",
+    "/api/bt/discovered",
+    "/api/dab/status",
+    "/api/system/resources",
+    "/api/ppm_calibrate",
+    "/api/rtlsdr",
+    "/api/avrcp",
+    "/api/webradio/stations",
+    "/api/music/info",
+    "/api/music/list",
+    "/api/spectrum/last",
+    "/api/scanner/settings"
+  ],
+  "core_keys": [
+    "status",
+    "source_state",
+    "status_age",
+    "menu_age",
+    "path",
+    "nodes",
+    "rev"
+  ],
+  "required_cmds": [
+    "radio_stop",
+    "vol_up",
+    "vol_down",
+    "spotify_toggle",
+    "bt_scan",
+    "bt_reconnect_last",
+    "bt_disconnect",
+    "bt_on",
+    "bt_off",
+    "bt_backup",
+    "bt_restore",
+    "dab_scan",
+    "dab_prev",
+    "dab_next",
+    "fm_prev",
+    "fm_next",
+    "scanner_stop",
+    "rtlsdr_reset",
+    "audio_klinke",
+    "audio_hdmi"
+  ],
+  "forbidden_script_srcs": [
+    "page-index.js"
+  ]
+}

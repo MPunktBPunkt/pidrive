@@ -19,6 +19,21 @@ def test_routes_json_covers_collected(repo_root: Path):
         + "\n  ".join(sorted(lost))
         + "\n→ In pidrive/: python3 -c \"from web.webui_check import write_routes_json; write_routes_json()\""
     )
+    # Schrumpfung: Inventar hatte Routen, Code nicht mehr — oft versehentlich gelöscht
+    # (Pflicht-Oberfläche zusätzlich in test_webui_surface / required_surface.json)
+    removed = inv_paths - current
+    # Parameter-Routen / leichte Regex-Differenzen ignorieren wenn Prefix matcht
+    real_removed = []
+    for p in removed:
+        base = p.split("<")[0]
+        if any(c == p or c.startswith(base) for c in current):
+            continue
+        real_removed.append(p)
+    assert not real_removed, (
+        "Routen aus dem Code verschwunden (Inventar noch vorhanden):\n  "
+        + "\n  ".join(sorted(real_removed))
+        + "\n→ Absichtlich? Inventar neu schreiben und required_surface.json prüfen."
+    )
 
 
 def test_routes_inventory_not_empty(repo_root: Path):

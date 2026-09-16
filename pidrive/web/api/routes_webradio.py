@@ -15,8 +15,28 @@ sys.path.insert(0, BASE_DIR_API)
 
 from flask import Blueprint, jsonify, request
 from web.shared import *  # noqa: F401,F403
+from web.shared.constants import STATIONS_FILE
 
 webradio_bp = Blueprint("webradio_bp", __name__)
+
+
+def _load_stations_file():
+    """stations.json lesen. Gibt dict mit 'stations'-Liste zurück."""
+    try:
+        with open(STATIONS_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"version": 1, "stations": []}
+
+
+def _save_stations_file(data: dict):
+    """stations.json atomar schreiben."""
+    data["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    tmp = STATIONS_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, STATIONS_FILE)
+
 
 # Routen: app.route → webradio_bp.route
 @webradio_bp.route("/api/webradio/stations")
