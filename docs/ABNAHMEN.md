@@ -356,3 +356,50 @@ Hinweis: zum Messzeitpunkt lief zusätzlich `welle-cli` mit ~53 % CPU (vermutl
 
 Am Fahrzeug — noch offen (Kopplung/Display). Siehe Auftrag §5.
 
+---
+
+## 2026-09-16 — HW `test all` nach BF (v0.11.139, ohne Antenne)
+
+| | |
+|---|---|
+| Host | `192.168.178.107` |
+| Commit | `fc16ead` / **v0.11.139** |
+| Randbedingung | **Antenne nicht angeschlossen** |
+| Log | `/tmp/test_all_hw_20260916_154539.log` |
+| JSON | `/tmp/pidrive_test_results.json` |
+| Dauer | 136.4 s |
+| Ergebnis | **26 bestanden · 1 Fehler · 25 Warnungen · 2 übersprungen** |
+| `NRestarts` vor/nach | **0 / 0** |
+| Temp nach Lauf | 67.2 °C · Load 0.28 / 0.36 / 0.22 |
+
+### Gegenüber Lauf @ v0.11.138 (14:52, mit vorherigem Stick-Zustand)
+
+| | v0.11.138 | v0.11.139 (ohne Antenne) |
+|---|---|---|
+| Bestanden / Fehler | 26 / 1 | **26 / 1** |
+| MPRIS2 GetAll | ✓ | ✓ |
+| Webradio / FM Start | ✓ / ✓ | ✓ / ✓ |
+| Scanner | ✗ TK-B | ✗ unverändert |
+| DAB Play | ⚠ Wait for sync | ⚠ + Log „RTL-SDR belegt“ |
+| DAB Scan 11B | ⊘ kein Signal | ⊘ SNR=0 (Antenne fehlt — erwartet) |
+| Spotify | ⊘ | ⊘ |
+
+### Fehler (1)
+
+1. **Scanner FM 103.0** — `Spiegel=scanner Gerät=False (RTL=[])` — bekannter TK-B-Pfad (Commit ohne Gerät), unabhängig von der Antenne.
+
+### SKIP (2)
+
+- DAB Scan 11B: kein Signal (SNR 0) — **durch fehlende Antenne erklärt**
+- Spotify: kein librespot/raspotify
+
+### Warnungen mit Substanz
+
+- DAB Play: `RTL-SDR belegt` vor Start → Folge des Scanner-Fails / Stick-Leak (nicht Antenne)
+- BT nicht verbunden → kein A2DP-Live-Test
+- FM startet trotz fehlender Antenne (Pipeline/Metadaten ok; Empfang nicht bewertbar)
+
+### Fazit
+
+Software-Pfad Menü/WebUI/MPRIS/Webradio/FM-Start unverändert grün. RF-abhängige DAB-Scan-SKIP ist mit abgezogener Antenne erwartbar. Einziger FAIL bleibt Scanner/RTL-Belegt (TK-B), nicht die Antenne.
+
