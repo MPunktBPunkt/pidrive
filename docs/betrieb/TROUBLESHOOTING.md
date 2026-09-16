@@ -366,7 +366,81 @@ systemctl restart pipewire pipewire-pulse wireplumber
 
 ---
 
-## 6. Netzwerk / WLAN
+## 9. Netzwerk / WLAN
+
+### Handy-Hotspot im Fahrzeug einrichten
+
+Im Fahrzeug ist normalerweise kein WLAN verfügbar. Für Webradio wird bei Bedarf ein
+Hotspot am Handy eingeschaltet — damit der Pi sich dann von selbst verbindet, muss das
+Netz einmalig als Konfiguration angelegt werden.
+
+**Am Handy** einrichten (Android: *Einstellungen → Hotspot*, iOS: *Persönlicher Hotspot*):
+
+| | |
+|---|---|
+| SSID / Netzwerkname | `pidrive` |
+| Sicherheit | WPA2-PSK |
+| Band | 2,4 GHz — der Pi-Funkchip ist dort zuverlässiger, und die Reichweite im Auto genügt |
+
+> **Passwortlänge:** WPA2-PSK verlangt **8 bis 63 Zeichen**. Das ist eine Grenze des
+> Standards, keine Einstellung. Kürzere Passwörter — etwa `pidrive` mit sieben Zeichen —
+> lehnen sowohl Android/iOS als auch `wpa_passphrase` ab.
+
+**Am Pi** anlegen:
+
+```bash
+sudo bash ~/pidrive/scripts/wifi-add-network.sh pidrive
+# Passwort wird abgefragt (nicht als Argument übergeben — sonst steht es in der History)
+```
+
+Das Skript erkennt den Stack selbst (NetworkManager oder `wpa_supplicant`), ist
+wiederholbar ohne Duplikate anzulegen, sichert `wpa_supplicant.conf` vorher, und schreibt
+dort nur den Hash statt des Klartextpassworts.
+
+Das Passwort steht **absichtlich nicht im Repository**. Wer es dauerhaft festhalten will,
+legt es außerhalb des Repos ab — nicht in `docs/`.
+
+**Priorität:** der Hotspot wird mit `autoconnect-priority -10` niedriger eingestuft als das
+Heimnetz (Standard `0`). Damit nimmt der Pi zu Hause das Heim-WLAN, auch wenn das Handy mit
+aktivem Hotspot in der Nähe liegt — sonst würde er unbemerkt Mobildaten verbrauchen.
+
+Gegenprobe mit eingeschaltetem Hotspot:
+
+```bash
+iwgetid -r                      # muss 'pidrive' zeigen
+ip -4 addr show wlan0           # muss eine IPv4 haben
+nmcli -t -f NAME,AUTOCONNECT,AUTOCONNECT-PRIORITY connection show | grep pidrive
+# bzw. bei wpa_supplicant:
+sudo wpa_cli -i wlan0 list_networks
+```
+
+### Recovery läuft im Fahrzeug alle 5 Minuten ins Leere
+
+Bekannt und **noch nicht behoben** — siehe Paket W-A in
+[../auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](../auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) §12.1.
+
+`wlan_ok()` in `scripts/wifi-recover.sh` fragt nur, ob eine SSID anliegt. Im Fahrzeug ohne
+eingeschalteten Hotspot ist das dauerhaft falsch, und der Timer (`OnUnitActiveSec=5min`)
+startet die vollständige Prozedur immer wieder — bis hin zum Neuladen von `brcmfmac`.
+
+Das Anlegen des Hotspot-Netzes allein behebt das **nicht**: solange der Hotspot aus ist,
+liegt weiterhin keine SSID an. Erst wenn die Vorbedingung auf *„ist ein konfiguriertes Netz
+im Scan sichtbar?"* umgestellt ist (W-A), unterscheidet die Automatik Normalzustand von
+Störung.
+
+Zwischenlösung, falls die Leerläufe im Journal stören:
+
+```bash
+sudo systemctl stop pidrive-wifi-recover.timer
+sudo systemctl disable pidrive-wifi-recover.timer
+# Boot-Service bleibt aktiv — der reicht für den Stromausfall-Fall
+```
+
+Häufigkeit der Leerläufe nach einer Fahrt zählen (Messung H11):
+
+```bash
+journalctl -u pidrive-wifi-recover -b | grep -c 'Recovery starten'
+```
 
 ### Nach Stromausfall: nur LAN erreichbar, WLAN tot
 

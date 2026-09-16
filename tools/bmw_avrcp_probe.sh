@@ -227,7 +227,11 @@ schritt 2 "verbinden" \
 schritt 3 "multimedia_menu" \
     "Am iDrive: Multimedia -> Bluetooth oeffnen."
 schritt 4 "titelliste" \
-    "Medienliste / Titelliste im iDrive oeffnen.  << WICHTIGSTER SCHRITT >>"
+    "Bei LAUFENDER Wiedergabe das iDrive-Steuerrad drehen, so dass die Liste
+        erscheint (die Geste, die bei Radio/USB die Senderliste zeigt).
+        Falls keine Liste kommt: Medienliste / Titelliste im Menue oeffnen.
+        << WICHTIGSTER SCHRITT >>  Bitte notieren, WAS auf dem Schirm erschien:
+        Liste mit Eintraegen / leere Liste / nichts aenderte sich."
 schritt 5 "tasten" \
     "Skip vor, Skip zurueck, Play/Pause am Lenkrad druecken."
 schritt 6 "quellenwechsel" \

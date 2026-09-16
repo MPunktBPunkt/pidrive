@@ -997,3 +997,216 @@ MD-A → MD-B → MD-C → KB-A          (Menü-IDs und Kleinbefunde, unverände
 N-A bis N-C sind zusammen zu nehmen: einzeln behoben verschiebt sich der Fehler nur. Ohne
 N-A widerspricht der Test weiter dem Produkt, ohne N-B scheitert der Scanner am Rennen, und
 ohne N-C lügt der Spiegel in beiden Fällen weiter.
+
+---
+
+## 12. Nachtrag zum Stand `9db988b`
+
+Grundlage: Pull vom 2026-09-16, fünf Commits — Offline-CI, WLAN-Wiederherstellung nach
+Stromausfall, Menüarbeit. Der Stand hat sich substanziell verbessert; die Menü-Duplikate
+MD1/MD2 sind an der Wurzel gelöst (Config-`id` bevorzugt, DAB kanalqualifiziert), und die
+48 Unit-Tests sind das Sicherheitsnetz, das dem Projekt gefehlt hat. Dieser Nachtrag
+behandelt ausschließlich, was dabei in die falsche Richtung läuft.
+
+**Vorab:** MPRIS2 ist aus diesem Dokument herausgelöst und hat einen eigenen Auftrag —
+[AUFTRAG-MPRIS2-STABILITAET.md](AUFTRAG-MPRIS2-STABILITAET.md). Grund: der Verdacht, dass
+der Core während des Testlaufs abstürzt und damit mehrere der hier geführten Befunde
+miterzeugt. Das ist vor allen Einzelfixes zu messen.
+
+### 12.1 W1 — Die WLAN-Wiederherstellung läuft im Fahrzeug dauerhaft ins Leere  [BELEGT]
+
+Das Skript selbst ist sauber gebaut, und der hartkodierte Pfad im Unit wird vom Installer
+umgeschrieben (`install.sh:451`) — kein Fehler. Das Problem ist die Auslösebedingung.
+
+```bash
+# scripts/wifi-recover.sh:35-40
+wlan_ok() {
+    local ip ssid
+    ip=$(wlan_ipv4)
+    ssid=$(wlan_ssid)
+    [ -n "$ip" ] && [ -n "$ssid" ]
+}
+```
+
+Dazu ein Timer ohne jede Einschränkung — kein `Condition*`, keine Abbruchbedingung:
+
+```ini
+# systemd/pidrive-wifi-recover.timer:4-9
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+```
+
+Zu Hause mit funktionierendem WLAN steigt das Skript nach zwei Zeilen aus (L50-53), dort
+ist der Kommentar „Script exit 0 sofort, wenn WLAN ok" korrekt.
+
+Laut Eigentümer ist im Fahrzeug aber **normalerweise kein WLAN verfügbar** — nur gelegentlich
+ein Telefon-Hotspot, um Webradio zu nutzen; die Häufigkeit ist offen. Damit ist `wlan_ok`
+den Großteil der Fahrzeit falsch, und die vollständige Prozedur läuft **alle fünf Minuten**:
+Link ab und auf, `rfkill unblock all`, acht Sekunden warten, dann `modprobe -r brcmfmac`
+samt Neuladen (L110-127), weitere acht Sekunden, schließlich `exit 1` mit Warnung ins
+Journal. Ein Treiberzyklus alle fünf Minuten für ein Netz, das dort nicht existiert.
+
+**Der Denkfehler ist die Unterscheidung.** Gefragt wird „habe ich eine SSID?", gemeint ist
+aber „ist ein Netz da, mit dem ich mich verbinden könnte, und es klappt nicht?". Erst die
+zweite Frage trennt Störung von Normalzustand:
+
+| Lage | `wlan_ok` heute | Richtige Reaktion |
+|------|-----------------|-------------------|
+| Fahrzeug, kein Hotspot | falsch → volle Recovery | **nichts tun**, stiller `exit 0` |
+| Fahrzeug, Hotspot an, verbunden | wahr → Ausstieg | nichts tun ✓ |
+| Fahrzeug, Hotspot an, **nicht** assoziiert | falsch → volle Recovery | genau hier gehört sie hin ✓ |
+| Zuhause nach Stromausfall, Router da | falsch → volle Recovery | genau hier gehört sie hin ✓ |
+
+Die Unterscheidung ist messbar: ein bekanntes Netz muss im Scan sichtbar sein. Etwa über
+`nmcli -t -f SSID dev wifi list` gegen `nmcli -t -f NAME connection show` beziehungsweise
+`wpa_cli list_networks` gegen `wpa_cli scan_results`. Ist kein **konfiguriertes** Netz in
+Reichweite, ist der Zustand normal und nicht zu reparieren.
+
+### 12.2 W2 — `nmcli networking off` schaltet alles ab, nicht nur WLAN  [BELEGT]
+
+```bash
+# scripts/wifi-recover.sh:72-79
+    # Falls Connect scheitert: kurzer Networking-Reset nur für WiFi
+    if ! wlan_ok; then
+        nmcli networking off 2>/dev/null || true
+        sleep 2
+        nmcli networking on 2>/dev/null || true
+```
+
+Der Kommentar behauptet „nur für WiFi", das Kommando ist global und nimmt `eth0` mit
+herunter. Das ist besonders unglücklich, weil genau dieser Zweig den Stromausfall-Fall
+bedienen soll — und in dem war LAN der einzige verbleibende Zugang. Wer per LAN eingeloggt
+ist und die Wiederherstellung auslöst, verliert die Sitzung; über den Timer alle fünf
+Minuten erneut. Richtig wäre `nmcli radio wifi off/on`, das bereits weiter oben (L69)
+verwendet wird.
+
+### 12.3 W3 — Eine Wiederherstellung darf den Stream nicht zerreißen, dem sie dient  [ANALYSE]
+
+Der Hotspot wird laut Eigentümer für **Webradio** eingeschaltet. Reißt die Verbindung kurz
+ab, würde `wlan_ok` falsch, und die Wiederherstellung greift zum Treiberneuladen. Das
+garantiert einen längeren Ausfall als schlichtes Abwarten, denn `wpa_supplicant` und
+NetworkManager reassoziieren von selbst innerhalb von Sekunden. Die Reparatur wäre dann
+schädlicher als der Fehler.
+
+PiDrive kennt seinen Zustand. Läuft eine netzabhängige Quelle — `source_current` gleich
+`webradio` —, sollte die Wiederherstellung frühestens nach einer deutlich längeren Karenz
+eingreifen und den Treiberzyklus gar nicht verwenden.
+
+### 12.4 W4 — Kollision mit der Gateway-Strecke  [ANALYSE]
+
+Die Verbindung zum künftigen `esp32.bt-gateway` läuft laut PDAP **über WLAN**. Eine
+Automatik, die alle fünf Minuten „keine SSID, also Stack neu laden" entscheidet, muss mit
+dieser Verbindung koexistieren können. Ob der Betrieb als Zugangspunkt betroffen wäre, ist
+hier **nicht** behauptbar: `iwgetid -r` verhält sich im AP-Modus je nach Treiber
+unterschiedlich. Zu klären ist es, bevor die Gateway-Strecke existiert — siehe Messung H10.
+
+### 12.5 N-A wurde umgesetzt, aber auf der falschen Seite festgeschrieben  [BELEGT]
+
+Der Befund aus §11.2 ist aufgegriffen worden — im Test statt im Modul. Der Filter ist jetzt
+eine benannte Funktion `filter_live_rtl_procs` in `test_suite.py:91`/`:116`, abgesichert
+durch drei Tests:
+
+```python
+# tests/unit/test_rtl_zombie.py:1-4
+"""TK-A: Zombie-rtl_fm zählt nicht als Geräte-Belegung."""
+from __future__ import annotations
+
+from test_suite import filter_live_rtl_procs
+```
+
+In `modules/radio/rtlsdr.py` gibt es weiterhin **keinen** Zombie-Filter, und
+`find_rtl_processes()` fragt unverändert nur `pid=,cmd=` ab. Benutzt wird die neue Funktion
+ausschließlich innerhalb von `test_suite.py`.
+
+Damit hat sich die Lage verschlechtert. Vorher war die Asymmetrie ein Versehen, jetzt ist
+sie **spezifiziert**: der Test sagt „Gerät frei", das Produkt sagt „belegt", und drei grüne
+Tests bestätigen, dass es so bleiben soll. Paket **N-A** bleibt offen und bekommt einen
+Zusatz: nach der Verlagerung in `rtlsdr.py` muss `test_rtl_zombie.py` gegen die
+Modulfunktion prüfen, nicht gegen die Testfunktion.
+
+`pidrive/modules/radio/` und `pidrive/trigger/` sind seit `b2981b2` unverändert — **N-B und
+N-C sind unangetastet.** Der Scanner gibt weiter ohne Warten auf, und
+`commit_source("scanner")` läuft in allen zehn Blöcken weiter unbedingt.
+
+### 12.6 V1 — Die Version steht seit fünf Commits still  [BELEGT]
+
+`VERSION` und `pidrive/VERSION` stehen über CI-Einführung, WLAN-Wiederherstellung und
+Menüumbau hinweg unverändert bei **0.11.137**. Es gibt einen Test dafür, aber er prüft die
+falsche Eigenschaft:
+
+```python
+# tests/unit/test_version_and_scripts.py:1
+"""VERSION-Dateien und install.sh müssen synchron sein."""
+```
+
+Synchronität zwischen den Dateien, nicht Fortschritt. Der Pi meldet vor und nach diesen
+Änderungen dieselbe Version — damit ist der Auslieferungszustand wieder nicht feststellbar.
+Das ist genau das Problem, das als H0 schon einmal eine vollständige Diagnoserunde gekostet
+hat, weil `test_menu()` am Pi fehlte, obwohl die Versionszeichenkette passte.
+
+### 12.7 MD4 — Die DAB-Kennungen haben sich geändert, eine Migration fehlt  [ANALYSE]
+
+Die Korrektur aus `9db988b` ist richtig, hat aber eine Nebenwirkung:
+
+```python
+# pidrive/menu/menu_builder.py
++            _did = (s.get("id") or "").strip() or (
++                f"dab_{sid}_{ch.lower()}" if sid and ch else
+```
+
+Aus `dab_0x1014` wird `dab_0x1014_11b`. Alles, was alte Kennungen dauerhaft speichert —
+Favoriten, gemerkte Einstellungen, abgelegte `goto:`-Ziele — löst nach dem Update nicht mehr
+auf. Der Golden Master wurde neu erzeugt (3229 geänderte Zeilen in `tests/golden/menu_tree.json`),
+für Nutzerdaten sehe ich keine Umstellung. Zu prüfen ist, ob Favoriten nach dem Update noch
+auflösen, und falls nicht, ob eine einmalige Umschlüsselung oder ein Rückfall auf das alte
+Namensschema nötig ist.
+
+### 12.8 Kleinbefund
+
+`tests/golden/CHANGES.md` enthält den Eintrag vom 2026-09-16 doppelt — einmal mit drei
+Details, einmal leer. Kosmetisch, aber der Vergleichsstand ist das Dokument, an dem später
+Verluste nachgewiesen werden; dort sollte nichts doppelt stehen.
+
+### 12.9 Arbeitspakete
+
+| ID | Paket | DoD |
+|----|-------|-----|
+| **W-A** | Vorbedingung in `wifi-recover.sh`: ist ein **konfiguriertes** Netz im Scan sichtbar? Wenn nein, stiller `exit 0` ohne Logwarnung und ohne Eingriff. Beide Stacks bedienen (NetworkManager und `wpa_cli`). Prüffall ist das Hotspot-Netz `pidrive`, das mit `scripts/wifi-add-network.sh` angelegt wird — Einrichtung siehe [TROUBLESHOOTING §9](../betrieb/TROUBLESHOOTING.md). | Im Fahrzeug ohne Hotspot bleibt das Journal über eine Stunde frei von Recovery-Meldungen; kein `modprobe`-Zyklus. Mit eingeschaltetem Hotspot, aber getrennter Assoziation, greift die Recovery weiterhin. |
+| **W-B** | `nmcli networking off/on` (L74-76) durch `nmcli radio wifi off/on` ersetzen. | Eine laufende SSH-Sitzung über `eth0` übersteht einen erzwungenen Recovery-Lauf. |
+| **W-C** | Karenz für netzabhängige Quellen: bei `source_current == "webradio"` frühestens nach deutlich längerer Wartezeit eingreifen, Treiberzyklus dort ausschließen. Zusätzlich Ratenbegrenzung für `modprobe -r brcmfmac` — höchstens einmal je Startvorgang. | Ein kurzer Hotspot-Aussetzer während Webradio führt nicht zum Treiberneuladen; der Stream läuft nach Reassoziation weiter. |
+| **W-D** | Timer entschärfen: nach mehreren erfolglosen Versuchen Abstand vergrößern statt starr alle fünf Minuten. | Journal zeigt wachsende Abstände statt Dauertakt. |
+| **V-A** | CI-Regel: Änderungen unter `pidrive/` ohne Anhebung von `VERSION` machen den Lauf rot. `test_version_and_scripts.py` um diese Prüfung erweitern (Vergleich gegen den Basis-Commit). | Ein Commit, der Code ändert und die Version stehen lässt, scheitert in der Offline-CI. |
+| **MD-D** | Auflösung alter DAB-Kennungen prüfen und, falls nötig, einmalige Umschlüsselung gespeicherter Favoriten. | Favoriten, die vor dem Update gesetzt wurden, wählen nach dem Update denselben Sender. |
+| **KB-B** | Doppelten Eintrag in `tests/golden/CHANGES.md` zusammenführen. | Ein Eintrag je Datum und Version. |
+
+### 12.10 Messungen
+
+| ID | Kommando | Prüft |
+|----|----------|-------|
+| **H10** | Am Pi mit aktivem Hotspot: `iwgetid -r; nmcli -t -f SSID dev wifi list \| head; systemctl status pidrive-wifi-recover.timer` — dann Hotspot aus und nach 6 min `journalctl -u pidrive-wifi-recover -b --no-pager \| tail -30` | W1 — läuft die Recovery ohne Netz tatsächlich alle fünf Minuten durch, und wie weit kommt sie? |
+| **H11** | `journalctl -u pidrive-wifi-recover -b \| grep -c 'Recovery starten'` nach einer Fahrt | W1 — Anzahl der Leerläufe im Betrieb, als Gegenprobe zur Schätzung. |
+| **H12** | Favorit auf einen DAB-Sender setzen, Update einspielen, Favorit aufrufen | MD4 — lösen alte Kennungen noch auf? |
+
+### 12.11 Geänderte Reihenfolge
+
+```text
+M-A                                (MPRIS2: messen, ob der Core abstürzt — eigener Auftrag)
+  ↓
+M-B → M-C → M-D → M-E → M-F        (nur falls M-A den Absturz belegt: zuerst hierher)
+  ↓
+W-A → W-B → W-C → W-D  +  H10      (WLAN, vor jeder Gateway-Arbeit)
+  ↓
+N-A → N-B → N-C  +  H8, H9         (Zombie-Asymmetrie und Scanner-Kette, zusammen)
+  ↓
+SP-A … SP-D                        (Spotify-Semantik)
+  ↓
+H7 → SP-E → SP-F                   (Audio-Pfad)
+  ↓
+MD-D, V-A, KB-A, KB-B              (Migration, CI-Regel, Kleinbefunde)
+```
+
+M-A steht vorn, weil es billig ist und die Bewertung mehrerer anderer Befunde verändern
+kann. Träfe die Absturz-Hypothese zu, wären Teile von N-C und der §10-Webradio-Lücke
+Symptombehandlung. Es wäre unwirtschaftlich, sie vorher einzeln zu reparieren.

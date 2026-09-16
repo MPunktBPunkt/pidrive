@@ -24,7 +24,9 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [auftraege/AUFTRAG-WEBUI-SANIERUNG.md](auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Arbeitsauftrag WebUI-Statuskette, Scanner, FastScan | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-FUNKPFAD.md](auftraege/AUFTRAG-FUNKPFAD.md) | Funkpfad K1–K5 (Import, Bandbreite, Suchlauf) | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md](auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md) | Rückmeldung ans BMW-Display (D1–D3) | Entwickler | 2026-09-15 |
-| [auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) | Spotify-Semantik + Testkette TK-A…E | Entwickler | 2026-09-15 |
+| [auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) | Spotify-Semantik + Testkette TK-A…E; §11 N1–N5, §12 WLAN/Version/Menü-IDs | Entwickler | 2026-09-16 |
+| [auftraege/AUFTRAG-MPRIS2-STABILITAET.md](auftraege/AUFTRAG-MPRIS2-STABILITAET.md) | **Vorrang** — MPRIS2 SIGABRT, Core-Absturz-Hypothese (M1–M3, M-A…M-F) | Entwickler | 2026-09-16 |
+| [auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md](auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md) | Menüvorrang beendet Blindnavigation (Q-K…Q-N, **zuerst**); FM-Rasterschritte statt modaler Eingabe, behebt D3/FM (Q-G…Q-J); Quellenordner startet letzten Sender (Q-A…Q-E); Suchlauf aufs BMW-Display (Q-F, gesperrt bis M-C) | Entwickler | 2026-09-16 |
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen (W0/DoD) | Entwickler, QA | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke (Baseline vor M4) | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |
