@@ -307,3 +307,25 @@ Testkette TK-A/C/E wirkt: DAB/Spotify verdrehen den Exit-Status nicht mehr. TK-B
 
 Nach Schlüssel in §6: `NRestarts` unverändert bei früherem `ServiceUnknown` → eher **Namensverlust ohne Absturz** (Hebel **M-D**), nicht zwingend Thread-Abort (M-B/M-C). Teil D (Menüvorrang Q-K…) darf nach Auftragslogik weiterlaufen; M-B/M-C nur bei später reproduzierbarem Abort.
 
+---
+
+## 2026-09-16 — BF-A…BF-F Bluetooth-Fundament (v0.11.139)
+
+| | |
+|---|---|
+| Commit | folgt nach Push |
+| VERSION | **v0.11.139** |
+| Scope | D-Bus-Agent, dauerhafte Sichtbarkeit, CLI-Protokoll, BlueZ RegisterPlayer, alte Agent-Sitzung stillgelegt, Docs |
+
+### HB0 (Werkbank)
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| `python3 modules/bluetooth/bt_agent_dbus.py --selftest` | **bestanden** (lokal + CI) |
+| Alte `bluetoothctl`-Sitzung im Core | **stillgelegt** (`start_agent_session` no-op) |
+| `install.sh` installiert `pidrive_btagent` + `main.conf` Timeouts=0 | **eingebaut** |
+
+### HB1–HB6
+
+Am Fahrzeug — noch offen (Kopplung/Display). Siehe Auftrag §5.
+

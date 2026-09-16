@@ -583,3 +583,13 @@ Menüarbeit mit Anschauung statt Modell.
 | [AUFTRAG-FUNKPFAD.md](AUFTRAG-FUNKPFAD.md) | unabhängig, weiter uneingeschränkt sinnvoll |
 | `tools/bmw_avrcp_probe.sh` | auf derselben Fahrt wie HB6 mitlaufen lassen |
 | `esp32.bt-gateway` · `OFFENE-PUNKTE.md` | A17, A18, R19 und R28 hängen an HB2 und HB6. **Die dortige Annahme „NBT Evo" ist zu prüfen** — die Bedieneinheit hat fünf Tasten, was gegen NBT Evo Professional spricht |
+
+
+---
+
+## 10. Fortschritt
+
+| Datum | Stand |
+|-------|--------|
+| 2026-09-16 | Angelegt. BT1–BT8 belegt/analysiert; Pakete BF-A…BF-F; Stufen HB0–HB6. |
+| 2026-09-16 | **BF-A…BF-F eingebaut** (v0.11.139): D-Bus-Agent-Dienst in `install.sh`, BlueZ `main.conf` Timeouts=0, alte bluetoothctl-Sitzung stillgelegt, CLI `bt pair`/`agent`/`pair-window`, `Media1.RegisterPlayer`, Docs korrigiert. HB0 Selftest; HB1–HB6 am Fahrzeug offen. |

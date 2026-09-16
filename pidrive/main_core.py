@@ -127,17 +127,25 @@ def _debounced(cmd: str) -> bool:
 # ── BT-Agent früh starten ────────────────────────────────────────────────────
 
 def _start_bt_agent_early():
+    """BF-E: keine bluetoothctl-Sitzung — D-Bus-Agent läuft als pidrive_btagent."""
     if not CAPS.get("bluetooth") and not CAPS.get("bluetoothctl"):
         log.info("BT Agent: kein Bluetooth-Adapter — uebersprungen")
         return False
     try:
-        if bluetooth.start_agent_session():
-            log.info("BT agent startup: OK")
+        import json as _json
+        st = {}
+        try:
+            st = _json.load(open("/tmp/pidrive_bt_agent.json"))
+        except Exception:
+            pass
+        if st.get("kind") == "dbus" and st.get("ready"):
+            log.info("BT Agent: D-Bus-Dienst bereit (pidrive_btagent)")
         else:
-            log.warn("BT agent startup: failed")
-        bluetooth.start_agent_health_thread()
+            log.warn("BT Agent: pidrive_btagent nicht bereit — "
+                     "systemctl status pidrive_btagent prüfen")
+        # Alte bluetoothctl-Sitzung bewusst NICHT starten (BT8)
     except Exception as e:
-        log.warn("BT agent startup: " + str(e))
+        log.warn("BT Agent check: " + str(e))
 
 
 # ── Trigger-Handling ─────────────────────────────────────────────────────────
@@ -766,10 +774,7 @@ if __name__ == "__main__":
     try:
         main()
     finally:
-        try:
-            bluetooth.stop_agent_session()
-        except Exception:
-            pass
+        # BF-E: D-Bus-Agent ist eigener Dienst — nicht hier stoppen
         # READY_FILE darf nach Core-Ende nicht als Lebendigkeitssignal stehen bleiben (W2/S1)
         try:
             if os.path.exists(ipc.READY_FILE):

@@ -251,6 +251,42 @@ def _write_trigger(cmd: str):
         log.error(f"mpris2 trigger: {e}")
 
 
+def register_with_bluez(bus, adapter="hci0",
+                        object_path="/org/mpris/MediaPlayer2") -> bool:
+    """
+    BF-D: BlueZ liest MPRIS-Properties NICHT von selbst — Anmeldung nötig.
+    """
+    if not DBUS_OK:
+        return False
+    media = dbus.Interface(
+        bus.get_object("org.bluez", f"/org/bluez/{adapter}"),
+        "org.bluez.Media1")
+    try:
+        media.RegisterPlayer(object_path, dbus.Dictionary({}, signature="sv"))
+        log.info(f"MPRIS2: bei BlueZ angemeldet ({adapter} → {object_path})")
+        return True
+    except Exception as e:
+        msg = str(e)
+        if "AlreadyExists" in msg or "already" in msg.lower():
+            log.info("MPRIS2: BlueZ RegisterPlayer bereits gesetzt")
+            return True
+        raise
+
+
+def unregister_from_bluez(bus, adapter="hci0",
+                          object_path="/org/mpris/MediaPlayer2") -> None:
+    if not DBUS_OK:
+        return
+    try:
+        media = dbus.Interface(
+            bus.get_object("org.bluez", f"/org/bluez/{adapter}"),
+            "org.bluez.Media1")
+        media.UnregisterPlayer(object_path)
+        log.info("MPRIS2: BlueZ UnregisterPlayer OK")
+    except Exception as e:
+        log.warn(f"MPRIS2 UnregisterPlayer: {e}")
+
+
 def start_mpris2():
     """MPRIS2 D-Bus Service starten (in eigenem Thread)."""
     global _player, _loop
@@ -283,6 +319,12 @@ def start_mpris2():
         t = threading.Thread(target=_loop.run, daemon=True, name="mpris2-glib")
         t.start()
 
+        # BF-D: Spieler bei BlueZ anmelden (sonst keine Metadaten im Fahrzeug)
+        try:
+            register_with_bluez(bus)
+        except Exception as _re:
+            log.warn(f"MPRIS2 BlueZ RegisterPlayer: {_re}")
+
         # Watchdog: prüft ob GLib-Loop noch läuft, startet bei Bedarf neu
         def _watchdog():
             global _loop, _player
@@ -312,6 +354,10 @@ def start_mpris2():
                                                    name="mpris2-glib-restart")
                             nt.start()
                             log.info("MPRIS2 Watchdog: Service neu gestartet")
+                            try:
+                                register_with_bluez(bus)
+                            except Exception as _re:
+                                log.warn(f"MPRIS2 Watchdog RegisterPlayer: {_re}")
                         except Exception as _we:
                             log.error(f"MPRIS2 Watchdog Neustart: {_we}")
                 except Exception as _we:

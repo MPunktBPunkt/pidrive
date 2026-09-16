@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.138"
+PIDRIVE_VERSION="0.11.139"
 
 # ============================================================
 # PiDrive Install Script
@@ -425,6 +425,15 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_avrcp.service" ]; then
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_avrcp.service"
 fi
 
+# BF-A: D-Bus Bluetooth-Pairing-Agent (vor Core, eigener Dienst)
+if [ -f "$INSTALL_DIR/systemd/pidrive_btagent.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive_btagent.service" "$SERVICE_DIR/pidrive_btagent.service"
+    # Unit enthält /home/pidrive/pidrive — auf INSTALL_DIR begradigen
+    sed -i "s|/home/pidrive/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_btagent.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_btagent.service"
+    ok "pidrive_btagent.service vorbereitet"
+fi
+
 # v0.6.0: kein monolithischer pidrive.service mehr
 
 # rfkill-unblock.service
@@ -462,6 +471,10 @@ systemctl enable pidrive_core rfkill-unblock 2>/dev/null || true
 ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 [ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
 [ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
+if [ -f "$SERVICE_DIR/pidrive_btagent.service" ]; then
+    systemctl enable --now pidrive_btagent 2>/dev/null || true
+    ok "BT-Agent: pidrive_btagent aktiv (D-Bus Pairing)"
+fi
 if [ -f "$SERVICE_DIR/pidrive-wifi-recover.service" ]; then
     systemctl enable pidrive-wifi-recover.service 2>/dev/null || true
     ok "WLAN-Recovery: bei jedem Boot aktiv"
@@ -485,6 +498,8 @@ if command -v sudo >/dev/null 2>&1; then
 # PiDrive: ausgewaehlte Befehle ohne Passwort fuer Benutzer ${REAL_USER}
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_btagent
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_btagent
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire-pulse
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart wireplumber
@@ -721,6 +736,32 @@ WPEOF
 # 10-no-reserve-pidrive.conf überschreibt sonst main ohne inherits → hardware.bluetooth fehlt.
 rm -f /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf
 ok "WirePlumber: BT A2DP konfiguriert"
+
+# BF-B: BlueZ dauerhaft sichtbar/pairable (auch ohne laufenden Agenten)
+if [ -f /etc/bluetooth/main.conf ]; then
+    _btconf=/etc/bluetooth/main.conf
+    # Werte setzen/aktualisieren ohne Datei blind zu überschreiben
+    for _kv in "DiscoverableTimeout = 0" "PairableTimeout = 0" "Name = PiDrive"; do
+        _key=$(echo "$_kv" | cut -d= -f1 | sed 's/ *$//')
+        if grep -qE "^[[:space:]]*${_key}[[:space:]]*=" "$_btconf" 2>/dev/null; then
+            sed -i -E "s|^[[:space:]]*${_key}[[:space:]]*=.*|${_kv}|" "$_btconf"
+        else
+            # hinter [General] einfügen falls vorhanden
+            if grep -q '^\[General\]' "$_btconf"; then
+                sed -i "/^\[General\]/a ${_kv}" "$_btconf"
+            else
+                printf '\n[General]\n%s\n' "$_kv" >> "$_btconf"
+            fi
+        fi
+    done
+    if ! grep -q '^\[Policy\]' "$_btconf"; then
+        printf '\n[Policy]\nAutoEnable = true\n' >> "$_btconf"
+    elif ! grep -qE '^[[:space:]]*AutoEnable[[:space:]]*=' "$_btconf"; then
+        sed -i '/^\[Policy\]/a AutoEnable = true' "$_btconf"
+    fi
+    ok "BlueZ main.conf: DiscoverableTimeout/PairableTimeout=0, Name=PiDrive"
+    systemctl try-reload-or-restart bluetooth 2>/dev/null || true
+fi
 
 # PiDrive: bluez.lua patchen — seat_monitoring=false für System-Mode
 # WirePlumber sucht Scripts zuerst in /etc/wireplumber/scripts/
