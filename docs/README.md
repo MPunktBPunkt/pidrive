@@ -20,6 +20,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.132 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
+| [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | **Erster erfolgreicher Connect** BMW 38304 — HB1–HB6, Logs, AVRCP-Probe | Abnahme / Entwickler | 2026-09-16 |
+| [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe (Phase −1), Mitschnitt 2026-09-16 | Entwickler | 2026-09-16 |
 | [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-WEBUI-SANIERUNG.md](auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Arbeitsauftrag WebUI-Statuskette, Scanner, FastScan | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-FUNKPFAD.md](auftraege/AUFTRAG-FUNKPFAD.md) | Funkpfad K1–K5 (Import, Bandbreite, Suchlauf) | Entwickler | 2026-09-15 |

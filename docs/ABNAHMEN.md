@@ -445,3 +445,29 @@ Messung am Pi (`192.168.178.107`, Core PID 150674 / v0.11.139):
 
 DA-B…DA-C warten auf Antenne / Messreihe.
 
+---
+
+## 2026-09-16 — Erster BMW-Test im Fahrzeug (v0.11.141)
+
+| | |
+|---|---|
+| Fahrzeug | **BMW 38304** `D4:36:39:CF:E1:B5` |
+| Pi | `192.168.178.105` · VERSION **0.11.141** |
+| Bericht | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) |
+| Rohdaten | `/var/log/pidrive/bmw_hb_messung_20260916_193414/` |
+| AVRCP-Probe | [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) |
+
+### HB-Kurzstatus
+
+| HB | Ergebnis |
+|----|----------|
+| HB1 Geräteliste | **bestanden** |
+| HB2 Pairing (Passkey `376726`) | **bestanden** |
+| HB3 Zündung-Reconnect | teilweise |
+| HB4 Ton Webradio/A2DP | **bestanden** |
+| HB5 Display drei Zeilen | teilweise (Spotify-Flag-Bug behoben; „Unbekannt“ weiter beobachten) |
+| HB6 Drehrad/Tasten | **nicht** — 0 AVRCP-Events |
+| Browsing PSM 0x001B | nicht beobachtet |
+
+Nach Zündung aus: Paired ja, Connected nein.
+

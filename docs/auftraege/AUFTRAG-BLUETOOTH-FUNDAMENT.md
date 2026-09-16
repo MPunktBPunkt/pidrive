@@ -790,3 +790,8 @@ angeschlossener Antenne.
 | BF-H | **gemessen** — `RegisterPlayer` ok; leerer `org.bluez`-Player-Baum ist *kein* Fehlschlag (lokaler Pfad). Details `ABNAHMEN.md` |
 | BF-I | **erledigt** — ObjectManager vor `Pair()` |
 | BF-J | **erledigt** — `ts`<30 s; CRLF→LF Agent/Unit |
+
+### Fortschritt Fahrt 2026-09-16 (erster Connect)
+
+Siehe [BMW-ERSTER-TEST-2026-09-16.md](../fahrzeug/BMW-ERSTER-TEST-2026-09-16.md).  
+HB1/HB2/HB4 bestanden; HB5 teilweise; HB6 und Browsing offen/negativ.
