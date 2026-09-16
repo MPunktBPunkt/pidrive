@@ -503,3 +503,11 @@ Rohbilder: `docs/fahrzeug/bt-idrive-test-2026-09-16/`
 | Browsing PSM 0x001B | nicht beobachtet |
 
 Nach Zündung aus: Paired ja, Connected nein.
+
+---
+
+## 2026-09-16 — BT Reconnect-Hygiene (v0.11.142)
+
+Nach Feldtest: Watcher page’t nicht mehr blind auf BlueZ-Namen; Reconnect ohne `Pair()`;
+`bt_last` folgt dem verbundenen Fahrzeug; Pause nach Host-down/Page-Timeout (180 s).
+MPRIS: `radio_type` allein schaltet Radio-Zweig; Album-Label „Menü“ statt „PiDrive Menü“.

@@ -80,6 +80,21 @@ def _do_refresh():
 
         if bt_adapter_up:
             settings = load_settings()
+            # Agent-Hinweis: gerade verbundenes Gerät → bt_last forcen
+            try:
+                import json as _json
+                with open("/tmp/pidrive_bt_prefer_mac.json", "r", encoding="utf-8") as _f:
+                    pref = _json.load(_f) or {}
+                pmac = (pref.get("mac") or "").strip().upper().replace("-", ":")
+                pts = int(pref.get("ts", 0) or 0)
+                if pmac and pts and (time.time() - pts) < 600:
+                    if pmac != (settings.get("bt_last_mac") or "").strip().upper().replace("-", ":"):
+                        settings["bt_last_mac"] = pmac
+                        settings["bt_last_name"] = pref.get("name") or pmac
+                        from settings import save_settings as _ss
+                        _ss(settings)
+            except Exception:
+                pass
             last_mac = settings.get("bt_last_mac", "").strip()
             last_name = settings.get("bt_last_name", "").strip()
 
@@ -125,14 +140,15 @@ def _do_refresh():
                                 new["bt"]        = True
                                 new["bt_device"] = found_name or found_mac
                                 new["bt_status"] = "verbunden"
-                                # MAC für nächstes Mal speichern
-                                if not last_mac and found_mac:
-                                    try:
+                                # Immer bt_last auf verbundenes Gerät (BMW schlägt Headphones)
+                                try:
+                                    if found_mac.upper() != (last_mac or "").upper():
                                         settings["bt_last_mac"]  = found_mac
                                         settings["bt_last_name"] = found_name
                                         from settings import save_settings as _ss
                                         _ss(settings)
-                                    except Exception: pass
+                                except Exception:
+                                    pass
                 except Exception:
                     pass
 

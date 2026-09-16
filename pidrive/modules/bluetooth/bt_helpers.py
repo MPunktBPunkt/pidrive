@@ -42,10 +42,40 @@ VISIBLE_TTL_SECONDS = 45          # Gerät gilt für UI kurz als "frisch sichtba
 RECENT_SEEN_SECONDS = 7 * 24 * 3600
 RECONNECT_COOLDOWN = 45
 RECONNECT_FAIL_SOFT_LIMIT = 3
+# Nach Zündung aus / Page-Timeout: Watcher nicht stürmen (Feldtest 2026-09-16)
+HOST_DOWN_PAUSE_SECONDS = 180
+RECONNECT_OPPORTUNISTIC_SECONDS = 90
+LAST_LINK_FILE = "/tmp/pidrive_bt_last_link.json"
 
 A2DP_WAIT_SECONDS = 10
 VISIBILITY_WAIT_SECONDS = 20
 PAIR_TIMEOUT_SECONDS = 45
+
+
+def _is_unreachable_bt_error(text: str) -> bool:
+    """True bei Host-down / Page-Timeout (Gerät aus / nicht pagebar)."""
+    low = (text or "").lower()
+    return any(x in low for x in (
+        "host is down",
+        "page timeout",
+        "page-timeout",
+        "br-connection-page-timeout",
+        "connection timed out",
+        "host is down (112)",
+    ))
+
+
+def _info_has_rf_hint(info: str) -> bool:
+    """
+    BlueZ-Objekt mit Name ≠ Funkreichweite (Feldtest: gepaarter HD ohne RF).
+    RF-Hinweis nur bei Connected oder RSSI (Werbung/Page-Antwort).
+    """
+    low = (info or "").lower()
+    if "connected: yes" in low:
+        return True
+    if "rssi:" in low or "tx power:" in low:
+        return True
+    return False
 
 _bt_connect_lock = threading.Lock()
 _scan_lock = threading.Lock()

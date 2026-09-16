@@ -503,7 +503,12 @@ def update(status: dict, menu: dict, view: str = "auto"):
         return
 
     radio_type = (status.get("radio_type", "") or "").upper()
-    radio_on   = bool(status.get("radio_playing") or status.get("radio"))
+    # radio_type allein reicht: Feldtest hatte radio=False trotz WEB + hörbarem Stream
+    radio_on   = bool(
+        status.get("radio_playing")
+        or status.get("radio")
+        or radio_type in ("WEB", "FM", "DAB", "SCANNER")
+    )
     playing    = (radio_on
                   or status.get("spotify", False)
                   or status.get("library_playing", False))
@@ -518,7 +523,7 @@ def update(status: dict, menu: dict, view: str = "auto"):
     # ── Menüvorrang (Q-K): während Navigation Menü zeigen, Stream nicht pausieren
     if force_menu:
         title, artist = _menu_fields(menu)
-        album = _now_playing_label(status) if playing else "PiDrive Menü"
+        album = _now_playing_label(status) if playing else "Menü"
         genre = "Menü"
         # Q-M: Tracknummer konstant → 300-ms-Ratenbegrenzung greift
         track_nr = 1
@@ -598,7 +603,7 @@ def update(status: dict, menu: dict, view: str = "auto"):
     # ── Menü-Navigation (nur wenn nichts spielt) ─────────────────────────────
     else:
         title, artist = _menu_fields(menu)
-        album   = "PiDrive Menü"
+        album   = "Menü"
         playing = False
 
     # artUrl: Web-Server auf Pi liefert Cover-Icon (im selben Netz abrufbar)

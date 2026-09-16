@@ -357,9 +357,52 @@ class AgentService:
                                 "—", "von BlueZ gemeldet")
                 self.trust_device(str(path or ""))
             elif "Connected" in changed:
-                self.push_event("Connected", str(path or ""),
-                                f"connected={bool(changed['Connected'])}",
+                connected = bool(changed["Connected"])
+                path_s = str(path or "")
+                self.push_event("Connected", path_s,
+                                f"connected={connected}",
                                 "—", "von BlueZ gemeldet")
+                # Link-Event für Watcher-Pause / bt_last (Feldtest-Hygiene)
+                try:
+                    mac = ""
+                    if "dev_" in path_s:
+                        mac = path_s.rsplit("dev_", 1)[-1].replace("_", ":")
+                    name = ""
+                    try:
+                        import dbus as _dbus
+                        obj = self.bus.get_object("org.bluez", path_s)
+                        props = _dbus.Interface(
+                            obj, "org.freedesktop.DBus.Properties")
+                        name = str(props.Get("org.bluez.Device1", "Alias")
+                                   or props.Get("org.bluez.Device1", "Name")
+                                   or "")
+                    except Exception:
+                        pass
+                    # Datei ohne Projektimporte (Agent läuft standalone)
+                    import json as _json
+                    link = {
+                        "mac": mac,
+                        "name": name,
+                        "connected": connected,
+                        "reason": "agent_connected" if connected else "agent_disconnected",
+                        "ts": int(time.time()),
+                    }
+                    tmp = "/tmp/pidrive_bt_last_link.json.tmp"
+                    with open(tmp, "w", encoding="utf-8") as f:
+                        _json.dump(link, f)
+                    os.replace(tmp, "/tmp/pidrive_bt_last_link.json")
+                    if connected and mac:
+                        # bt_last-Hinweis für Core (status liest Settings; Datei als Bridge)
+                        hint = {
+                            "mac": mac, "name": name,
+                            "ts": int(time.time()),
+                        }
+                        tmp2 = "/tmp/pidrive_bt_prefer_mac.json.tmp"
+                        with open(tmp2, "w", encoding="utf-8") as f:
+                            _json.dump(hint, f)
+                        os.replace(tmp2, "/tmp/pidrive_bt_prefer_mac.json")
+                except Exception as e:
+                    _log(f"Link-Event schreiben: {e}")
 
         self.bus.add_signal_receiver(
             on_props,
