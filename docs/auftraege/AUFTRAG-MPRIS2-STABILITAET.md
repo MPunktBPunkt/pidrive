@@ -238,3 +238,4 @@ Steigt `NRestarts`, ist die Ursache eingekreist und M-B/M-C sind die richtigen P
 | Datum | Stand |
 |-------|--------|
 | 2026-09-16 | Angelegt. M1/M2 gegen `9db988b` belegt, M3 als Hypothese mit Messplan M-A. Auslöser: `ServiceUnknown` über zwei HW-Läufe unverändert, plus der Workaround-Kommentar in `test_suite.py:658`, der SIGABRT ausdrücklich benennt. |
+| 2026-09-16 | **M-A gemessen** am Pi `192.168.178.107` (@ `9db988b`/v0.11.137): Gegenprobe 30+30+50 `mpris_push` (Web + DAB-Versuch + Stress). **`NRestarts` unverändert (0)**, kein `SIGABRT`/`Main process exited` im Journal, MPRIS-Name am Bus präsent. **M3 in diesem Lauf nicht bestätigt.** Deutung laut §6: Namensverlust ohne Absturz → Hebel eher **M-D** als M-B; M-B/M-C bleiben optional bis reproduzierbarer Abort. Teil D (Q-K…) darf weiter. |

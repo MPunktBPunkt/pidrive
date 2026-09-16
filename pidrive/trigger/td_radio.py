@@ -428,8 +428,13 @@ def handle(cmd, menu_state, store, S, settings, bg):
         bg(lambda: fm.play_next(S, store.fm))
     elif cmd == "fm_prev":
         bg(lambda: fm.play_prev(S, store.fm))
-    elif cmd == "fm_manual":
-        bg(lambda: _fm_manual(S, settings))
+    elif cmd.startswith("fm_step:"):
+        try:
+            _delta = float(cmd.split(":", 1)[1])
+        except Exception:
+            log.warn(f"fm_step: ungültig {cmd!r}")
+            return True
+        bg(lambda d=_delta: fm.step_freq(S, settings, d))
 
     # ── DAB Next/Prev ───────────────────────────────────────────────────────
     elif cmd == "dab_next":

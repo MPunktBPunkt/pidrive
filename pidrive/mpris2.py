@@ -411,10 +411,21 @@ def push_test_metadata(title: str = "Testradio",
         log.warn(f"MPRIS2: push_test_metadata Fehler: {e}")
 
 
-def update(status: dict, menu: dict):
+def _menu_fields(menu: dict) -> tuple:
+    from modules.mpris_labels import menu_fields
+    return menu_fields(menu)
+
+
+def _now_playing_label(status: dict) -> str:
+    from modules.mpris_labels import now_playing_label
+    return now_playing_label(status)
+
+
+def update(status: dict, menu: dict, view: str = "auto"):
     """
     Status-Daten → MPRIS2 Metadaten → BMW-Display.
-    Differenzierte Anzeige je Quelle.
+    view="auto": heutige Verzweigung (Menü nur wenn nichts spielt).
+    view="menu": Menütext, Wiedergabezustand aus echter Lage (Q-K).
     """
     if _player is None:
         return
@@ -428,9 +439,19 @@ def update(status: dict, menu: dict):
     artist = ""
     album  = "PiDrive"
     genre  = ""
+    track_nr = 1
+    force_menu = (view == "menu")
 
+    # ── Menüvorrang (Q-K): während Navigation Menü zeigen, Stream nicht pausieren
+    if force_menu:
+        title, artist = _menu_fields(menu)
+        album = _now_playing_label(status) if playing else "PiDrive Menü"
+        genre = "Menü"
+        # Q-M: Tracknummer konstant → 300-ms-Ratenbegrenzung greift
+        track_nr = 1
+        # playing bleibt True, wenn wirklich etwas läuft (§2c.6)
     # ── Spotify ──────────────────────────────────────────────────────────────
-    if status.get("spotify"):
+    elif status.get("spotify"):
         title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
         artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
         album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
@@ -501,19 +522,9 @@ def update(status: dict, menu: dict):
         artist = status.get("artist") or "PiDrive"
         album  = status.get("album") or "Bibliothek"
 
-    # ── Menü-Navigation ──────────────────────────────────────────────────────
+    # ── Menü-Navigation (nur wenn nichts spielt) ─────────────────────────────
     else:
-        path     = menu.get("path", [])
-        cursor   = menu.get("cursor", 0)
-        nodes    = menu.get("nodes", [])
-        selected = ""
-        if isinstance(nodes, list) and nodes and 0 <= cursor < len(nodes):
-            try:
-                selected = nodes[cursor].get("label", "")
-            except Exception:
-                pass
-        title   = selected or (path[-1] if path else "PiDrive")
-        artist  = " › ".join(path[1:]) if len(path) > 1 else "PiDrive"
+        title, artist = _menu_fields(menu)
         album   = "PiDrive Menü"
         playing = False
 
@@ -530,4 +541,5 @@ def update(status: dict, menu: dict):
         pass
 
     _player.set_status(playing)
-    _player.update_metadata(title, artist, album, genre=genre, art_url=_art)
+    _player.update_metadata(title, artist, album, track_nr=track_nr,
+                            genre=genre, art_url=_art)

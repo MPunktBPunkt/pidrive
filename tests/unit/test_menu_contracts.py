@@ -117,6 +117,13 @@ def test_idrive_rockfm_offline(repo_root: Path):
     assert idrive_sim.run_script(str(script), offline=True) == 0
 
 
+def test_idrive_fm_freeze_green_after_qi(repo_root: Path):
+    """Q-G/Q-I: Raster ersetzt Modal — Skript muss grün sein."""
+    script = repo_root / "tests" / "idrive" / "fm-manual-freeze.txt"
+    assert script.is_file()
+    assert idrive_sim.run_script(str(script), offline=True) == 0
+
+
 def test_idrive_stop_offline(repo_root: Path):
     script = repo_root / "tests" / "idrive" / "stop.txt"
     assert script.is_file()

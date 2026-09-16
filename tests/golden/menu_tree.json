@@ -101,7 +101,8 @@
     "path_id": "root/sources/fm",
     "uid": 16911468023234866628,
     "skip_on_nav": false,
-    "playable": false
+    "playable": false,
+    "enter_action": "autoplay:fm"
   },
   {
     "path": "root/sources/fm/fm_back",
@@ -954,15 +955,54 @@
     "playable": false
   },
   {
-    "path": "root/sources/fm/fm_manual",
-    "id": "fm_manual",
+    "path": "root/sources/fm/fm_step_p01",
+    "id": "fm_step_p01",
     "type": "action",
-    "action": "fm_manual",
+    "action": "fm_step:+0.1",
     "source": null,
     "meta": {},
-    "label": "Frequenz manuell",
-    "path_id": "root/sources/fm/fm_manual",
-    "uid": 14101110432157337939,
+    "label": "+ 0.1 MHz",
+    "path_id": "root/sources/fm/fm_step_p01",
+    "uid": 18339641579200987139,
+    "skip_on_nav": false,
+    "playable": false
+  },
+  {
+    "path": "root/sources/fm/fm_step_m01",
+    "id": "fm_step_m01",
+    "type": "action",
+    "action": "fm_step:-0.1",
+    "source": null,
+    "meta": {},
+    "label": "− 0.1 MHz",
+    "path_id": "root/sources/fm/fm_step_m01",
+    "uid": 16528364397484247772,
+    "skip_on_nav": false,
+    "playable": false
+  },
+  {
+    "path": "root/sources/fm/fm_step_p10",
+    "id": "fm_step_p10",
+    "type": "action",
+    "action": "fm_step:+1.0",
+    "source": null,
+    "meta": {},
+    "label": "+ 1.0 MHz",
+    "path_id": "root/sources/fm/fm_step_p10",
+    "uid": 18340491501689405017,
+    "skip_on_nav": false,
+    "playable": false
+  },
+  {
+    "path": "root/sources/fm/fm_step_m10",
+    "id": "fm_step_m10",
+    "type": "action",
+    "action": "fm_step:-1.0",
+    "source": null,
+    "meta": {},
+    "label": "− 1.0 MHz",
+    "path_id": "root/sources/fm/fm_step_m10",
+    "uid": 16527373737507418886,
     "skip_on_nav": false,
     "playable": false
   },
@@ -977,7 +1017,8 @@
     "path_id": "root/sources/dab",
     "uid": 359171257049235588,
     "skip_on_nav": false,
-    "playable": false
+    "playable": false,
+    "enter_action": "autoplay:dab"
   },
   {
     "path": "root/sources/dab/dab_back",
@@ -2176,7 +2217,8 @@
     "path_id": "root/sources/webradio",
     "uid": 17774605694269713088,
     "skip_on_nav": false,
-    "playable": false
+    "playable": false,
+    "enter_action": "autoplay:webradio"
   },
   {
     "path": "root/sources/webradio/webradio_back",

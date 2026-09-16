@@ -25,9 +25,11 @@ class MenuNode:
     path_id:   str = ""
     uid:       int = 0
     skip_on_nav: bool = False
+    # Q-A: beim Betreten per enter/right (nicht activate/goto)
+    enter_action: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "id":       self.id,
             "label":    self.label,
             "type":     self.type,
@@ -41,6 +43,9 @@ class MenuNode:
             "skip_on_nav": self.skip_on_nav,
             "has_children": len(self.children) > 0,
         }
+        if self.enter_action:
+            d["enter_action"] = self.enter_action
+        return d
 
 
 # ── MenuState ─────────────────────────────────────────────────────────────────

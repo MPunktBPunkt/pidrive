@@ -21,7 +21,7 @@ from settings import save_settings
 
 from trigger import td_nav, td_hardware, td_radio, td_scanner, td_system
 
-from trigger.td_nav import _execute_node, _fm_manual
+from trigger.td_nav import _execute_node
 
 
 # ── Guards (von main_core initialisiert) ─────────────────────────────────────
@@ -76,7 +76,8 @@ _EXACT_TRIGGERS = frozenset({
     "rtlsdr_reset", "radio_stop", "radio_restart_on_bt", "library_stop",
     "dab_scan", "dab_scan_replace", "fm_scan",
     "web_next", "web_prev",
-    "fm_next", "fm_prev", "fm_manual", "dab_next", "dab_prev",
+    "fm_next", "fm_prev", "dab_next", "dab_prev",
+    "fm_step:+0.1", "fm_step:-0.1", "fm_step:+1.0", "fm_step:-1.0",
     "scanner_stop",
     "lib_browse", "favorites_add_current",
     "reboot", "shutdown", "sys_info", "sys_version", "update", "audio_select",
@@ -89,6 +90,7 @@ _TRIGGER_PREFIXES = (
     "dab_scan_channels:", "reload_stations:", "webradio_play:",
     "play_dab:", "play_fm:", "play_web:", "favorites_play:", "local_play:",
     "fav_toggle:",
+    "fm_step:",
     "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
     "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
     "set_scanner_squelch:", "set_ppm:",

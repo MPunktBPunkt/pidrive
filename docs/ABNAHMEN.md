@@ -283,3 +283,27 @@ curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?mode=snapshot&center
 
 Testkette TK-A/C/E wirkt: DAB/Spotify verdrehen den Exit-Status nicht mehr. TK-B zeigt einen echten Scanner-Pfad-Bug (commit ohne Gerät / Belegt trotz Stop). MPRIS2 und Scanner-Gerät sind die nächsten Fixes; SP-* noch offen. Auftrag: `docs/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md`.
 
+---
+
+## 2026-09-16 — M-A MPRIS2 Core-Absturz-Messung
+
+| | |
+|---|---|
+| Host | `192.168.178.107` |
+| Commit / VERSION | `9db988b` / **v0.11.137** (vor Teil-D-Code) |
+| Methode | Auftrag `AUFTRAG-MPRIS2-STABILITAET.md` §6 Gegenprobe + Stress |
+
+### Ergebnis
+
+| Prüfung | Wert |
+|---------|------|
+| `NRestarts` vor / nach | **0 / 0** (unverändert) |
+| Journal `SIGABRT` / `Main process exited` / `Scheduled restart` | **keine Treffer** im Messfenster |
+| `mpris_push` Last | 30 (Web-Pfad) + 30 (DAB-Versuch) + 50 Stress ≈ **110** |
+| D-Bus-Name `org.mpris.MediaPlayer2.pidrive` | **präsent** nach den Pushes |
+| M3 (Core-Absturz durch Push) | **nicht bestätigt** in diesem Lauf |
+
+### Deutung
+
+Nach Schlüssel in §6: `NRestarts` unverändert bei früherem `ServiceUnknown` → eher **Namensverlust ohne Absturz** (Hebel **M-D**), nicht zwingend Thread-Abort (M-B/M-C). Teil D (Menüvorrang Q-K…) darf nach Auftragslogik weiterlaufen; M-B/M-C nur bei später reproduzierbarem Abort.
+

@@ -18,3 +18,11 @@ Jede Snapshot-Aktualisierung über `pidrivectl menu snapshot --accept` braucht e
 
 ## 2026-09-16 · v0.11.137
 - Golden Master aktualisiert von ci-menu-dead-items
+
+## 2026-09-16 · v0.11.138
+- Golden Master aktualisiert von Q-H/Q-I raster
+- Golden Master aktualisiert von Q-A enter_action
+- FM: Raster ±0.1/±1.0 statt Frequenz manuell; enter_action an FM/DAB/Webradio
+
+## 2026-09-16 · v0.11.138
+- Golden Master aktualisiert von Q-A enter_action

@@ -61,6 +61,8 @@ _DEFAULTS = {
                            "service_id": "0xd30e", "ensemble": "OAS BW",
                            "url_mp3": ""},
     "last_web_station":   None,
+    # Menüvorrang am BMW (Q-L): Sekunden Menüanzeige nach Navigation
+    "menu_view_window_s": 3.5,
 }
 
 

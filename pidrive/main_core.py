@@ -144,7 +144,7 @@ def _start_bt_agent_early():
 
 # ── Trigger-Dispatcher (ausgelagert v0.10.55) ─────────────────────────────────
 from trigger.trigger_dispatcher import (
-    handle_trigger, _execute_node, _fm_manual,
+    handle_trigger, _execute_node,
     _set_guards, _debounced,
 )
 
@@ -620,6 +620,10 @@ def main():
 
     _ready_written = False
     _last_menu_rev  = -1   # für change-only menu.json Schreibung
+    # Q-L: Menüvorrang mit Zeitfenster
+    from modules.menu_priority import MenuPriorityState, decide_view
+    _menu_prio = MenuPriorityState()
+    _menu_view = "auto"
     import threading as _thr
     _thr.Thread(target=startup_tasks, args=(S_module.S, settings), daemon=True).start()
 
@@ -716,15 +720,11 @@ def main():
 
         # menu.json nur bei Änderung schreiben (rev-basiert)
         _cur_rev = menu_state.rev
-        if _cur_rev != _last_menu_rev:
+        _rev_changed = _cur_rev != _last_menu_rev
+        if _rev_changed:
             exported = menu_state.export()
             ipc.write_menu(exported)
             _last_menu_rev = _cur_rev
-            if _mpris2:
-                try:
-                    _mpris2.update(S, exported)
-                except Exception:
-                    pass
             if not _ready_written:
                 try:
                     open(ipc.READY_FILE, "w").write("1")
@@ -732,6 +732,27 @@ def main():
                     log.info("IPC ready — /tmp/pidrive_ready geschrieben")
                 except Exception:
                     pass
+
+        # Q-L/Q-K: Menüvorrang — Event aus td_nav + Zeitfenster → MPRIS view
+        _ev = S.pop("_menu_priority_event", "none") or "none"
+        if _ev not in ("nav", "leaf", "none"):
+            _ev = "none"
+        _win = float(settings.get("menu_view_window_s", 3.5) or 3.5)
+        _view, _menu_prio, _push = decide_view(
+            now=time.time(),
+            menu_rev=menu_state.rev,
+            state=_menu_prio,
+            window_s=_win,
+            event=_ev,
+        )
+        if _view != _menu_view:
+            _menu_view = _view
+        _force = bool(S.pop("_mpris_force_push", False))
+        if _mpris2 and (_push or _rev_changed or _force):
+            try:
+                _mpris2.update(S, menu_state.export(), view=_view)
+            except Exception:
+                pass
 
         if time.time() - stat_timer > 60:
             log.status_update(S["wifi"], S["bt"], S["spotify"],

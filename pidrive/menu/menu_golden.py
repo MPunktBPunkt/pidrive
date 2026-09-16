@@ -62,7 +62,7 @@ def mask_label(label: str) -> str:
 
 
 def node_to_dict(node: MenuNode, path: str) -> dict:
-    return {
+    d = {
         "path": path,
         "id": node.id,
         "type": node.type,
@@ -75,6 +75,10 @@ def node_to_dict(node: MenuNode, path: str) -> dict:
         "skip_on_nav": getattr(node, "skip_on_nav", False),
         "playable": bool(getattr(node, "playable", False)),
     }
+    ea = getattr(node, "enter_action", None)
+    if ea:
+        d["enter_action"] = ea
+    return d
 
 
 def walk_tree(root: MenuNode) -> List[dict]:

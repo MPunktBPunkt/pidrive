@@ -78,9 +78,10 @@ def _bucket_stations(nodes: list, prefix: str, threshold: int = 12) -> list:
 
 
 def _folder(node_id: str, label: str, children: List[MenuNode],
-            active: bool = False) -> MenuNode:
+            active: bool = False, enter_action: Optional[str] = None) -> MenuNode:
     """Ordner mit vorangestelltem Zurueck-Eintrag."""
     return MenuNode(id=node_id, label=label, type="folder", active=active,
+                    enter_action=enter_action,
                     children=[_back(node_id)] + list(children))
 
 
@@ -245,8 +246,12 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         MenuNode(id="fm_prev",   label="Vorheriger Sender", type="action", action="fm_prev"),
         fm_sender,
         MenuNode(id="fm_scan",   label="Suchlauf starten",  type="action", action="fm_scan"),
-        MenuNode(id="fm_manual", label="Frequenz manuell",  type="action", action="fm_manual"),
-    ])
+        # Q-H: Raster statt modaler Frequenzeingabe (D3)
+        MenuNode(id="fm_step_p01", label="+ 0.1 MHz", type="action", action="fm_step:+0.1"),
+        MenuNode(id="fm_step_m01", label="\u2212 0.1 MHz", type="action", action="fm_step:-0.1"),
+        MenuNode(id="fm_step_p10", label="+ 1.0 MHz", type="action", action="fm_step:+1.0"),
+        MenuNode(id="fm_step_m10", label="\u2212 1.0 MHz", type="action", action="fm_step:-1.0"),
+    ], enter_action="autoplay:fm")
 
     dab_sender = _folder("dab_stations", "Sender", _bucket_stations(
         _station_nodes_dab(store.dab), "dab"
@@ -258,7 +263,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         MenuNode(id="dab_prev",  label="Vorheriger Sender", type="action", action="dab_prev"),
         dab_sender,
         MenuNode(id="dab_scan",  label="Suchlauf starten",  type="action", action="dab_scan"),
-    ])
+    ], enter_action="autoplay:dab")
 
     web_sender = _folder("web_stations", "Sender", _bucket_stations(
         _station_nodes_web(store.web), "web"
@@ -269,7 +274,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         web_sender,
         MenuNode(id="web_reload", label="Sender neu laden", type="action",
                  action="reload_stations:webradio"),
-    ])
+    ], enter_action="autoplay:webradio")
 
     def _scanner_band(band_id, label):
         scanner_key = f"scanner_{band_id}"
