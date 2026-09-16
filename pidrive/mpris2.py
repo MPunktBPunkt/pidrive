@@ -503,7 +503,8 @@ def update(status: dict, menu: dict, view: str = "auto"):
         return
 
     radio_type = (status.get("radio_type", "") or "").upper()
-    playing    = (status.get("radio_playing", status.get("radio", False))
+    radio_on   = bool(status.get("radio_playing") or status.get("radio"))
+    playing    = (radio_on
                   or status.get("spotify", False)
                   or status.get("library_playing", False))
 
@@ -522,15 +523,8 @@ def update(status: dict, menu: dict, view: str = "auto"):
         # Q-M: Tracknummer konstant → 300-ms-Ratenbegrenzung greift
         track_nr = 1
         # playing bleibt True, wenn wirklich etwas läuft (§2c.6)
-    # ── Spotify ──────────────────────────────────────────────────────────────
-    elif status.get("spotify"):
-        title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
-        artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
-        album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
-        genre  = "Streaming"
-
-    # ── Radio ────────────────────────────────────────────────────────────────
-    elif status.get("radio_playing", status.get("radio", False)):
+    # ── Radio / Webradio / FM / DAB (VOR Spotify — flag spotify=True heißt oft nur Dienst bereit)
+    elif radio_on:
         station    = status.get("radio_station", status.get("radio_name", "")) or ""
         radio_name = status.get("radio_name", "") or station
 
@@ -586,6 +580,13 @@ def update(status: dict, menu: dict, view: str = "auto"):
             artist = "Radio"
             album  = "PiDrive Radio"
             genre  = "Radio"
+
+    # ── Spotify (nur wenn wirklich Spotify-Wiedergabe, nicht nur Dienst aktiv)
+    elif status.get("spotify") and str(status.get("radio_type", "")).upper() in ("", "SPOTIFY"):
+        title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
+        artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
+        album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
+        genre  = "Streaming"
 
     # ── Bibliothek ───────────────────────────────────────────────────────────
     elif status.get("library_playing", False) or str(status.get("radio_type", "")).upper() == "LOCAL":
