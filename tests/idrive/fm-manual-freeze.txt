@@ -1,0 +1,25 @@
+# D3-Regression: nach Q-I darf Aktivierung keinen Tastendruck schlucken (Q-G→grün)
+# FM-Radio-Kinder (nach Zurueck): next, prev, Sender, Suchlauf,
+#   +0.1, −0.1, +1.0, −1.0 → acht next bis zum letzten Eintrag.
+# Menü wrappt nicht — deshalb previous statt next nach Aktivierung.
+reset
+next
+play
+sleep 1.3
+expect path_contains=Quellen
+next
+play
+sleep 1.3
+expect path_contains=FM
+next
+next
+next
+next
+next
+next
+next
+next
+play
+sleep 0.5
+previous
+expect selected=+ 1.0 MHz

@@ -251,6 +251,68 @@ def _write_trigger(cmd: str):
         log.error(f"mpris2 trigger: {e}")
 
 
+def register_with_bluez(bus, adapter="hci0",
+                        object_path="/org/mpris/MediaPlayer2") -> bool:
+    """
+    BF-D/H: BlueZ liest MPRIS-Properties NICHT von selbst — Anmeldung nötig.
+
+    Hinweis (BF-H): RegisterPlayer erzeugt KEIN Objekt unter org.bluez
+    (busctl tree … | grep player bleibt leer). Der Spieler bleibt auf der
+    Verbindung des Aufrufers (/org/mpris/MediaPlayer2). Erfolg → Log + Statusdatei.
+    """
+    if not DBUS_OK:
+        return False
+    media = dbus.Interface(
+        bus.get_object("org.bluez", f"/org/bluez/{adapter}"),
+        "org.bluez.Media1")
+    try:
+        media.RegisterPlayer(object_path, dbus.Dictionary({}, signature="sv"))
+        log.info(f"MPRIS2: bei BlueZ angemeldet ({adapter} → {object_path})")
+        _write_bluez_player_status(True, adapter, object_path, "ok")
+        return True
+    except Exception as e:
+        msg = str(e)
+        if "AlreadyExists" in msg or "already" in msg.lower():
+            log.info("MPRIS2: BlueZ RegisterPlayer bereits gesetzt")
+            _write_bluez_player_status(True, adapter, object_path, "already")
+            return True
+        _write_bluez_player_status(False, adapter, object_path, msg)
+        raise
+
+
+def _write_bluez_player_status(ok, adapter, object_path, detail=""):
+    """BF-H: messbare Statusdatei (Journal zeigt INFO nicht)."""
+    try:
+        import json as _json, time as _t, os as _os
+        path = "/tmp/pidrive_mpris_bluez.json"
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
+            _json.dump({
+                "ok": bool(ok),
+                "adapter": adapter,
+                "object_path": object_path,
+                "detail": str(detail)[:200],
+                "ts": _t.time(),
+            }, f)
+        _os.replace(tmp, path)
+    except Exception:
+        pass
+
+
+def unregister_from_bluez(bus, adapter="hci0",
+                          object_path="/org/mpris/MediaPlayer2") -> None:
+    if not DBUS_OK:
+        return
+    try:
+        media = dbus.Interface(
+            bus.get_object("org.bluez", f"/org/bluez/{adapter}"),
+            "org.bluez.Media1")
+        media.UnregisterPlayer(object_path)
+        log.info("MPRIS2: BlueZ UnregisterPlayer OK")
+    except Exception as e:
+        log.warn(f"MPRIS2 UnregisterPlayer: {e}")
+
+
 def start_mpris2():
     """MPRIS2 D-Bus Service starten (in eigenem Thread)."""
     global _player, _loop
@@ -283,6 +345,12 @@ def start_mpris2():
         t = threading.Thread(target=_loop.run, daemon=True, name="mpris2-glib")
         t.start()
 
+        # BF-D: Spieler bei BlueZ anmelden (sonst keine Metadaten im Fahrzeug)
+        try:
+            register_with_bluez(bus)
+        except Exception as _re:
+            log.warn(f"MPRIS2 BlueZ RegisterPlayer: {_re}")
+
         # Watchdog: prüft ob GLib-Loop noch läuft, startet bei Bedarf neu
         def _watchdog():
             global _loop, _player
@@ -312,6 +380,10 @@ def start_mpris2():
                                                    name="mpris2-glib-restart")
                             nt.start()
                             log.info("MPRIS2 Watchdog: Service neu gestartet")
+                            try:
+                                register_with_bluez(bus)
+                            except Exception as _re:
+                                log.warn(f"MPRIS2 Watchdog RegisterPlayer: {_re}")
                         except Exception as _we:
                             log.error(f"MPRIS2 Watchdog Neustart: {_we}")
                 except Exception as _we:
@@ -411,16 +483,28 @@ def push_test_metadata(title: str = "Testradio",
         log.warn(f"MPRIS2: push_test_metadata Fehler: {e}")
 
 
-def update(status: dict, menu: dict):
+def _menu_fields(menu: dict) -> tuple:
+    from modules.mpris_labels import menu_fields
+    return menu_fields(menu)
+
+
+def _now_playing_label(status: dict) -> str:
+    from modules.mpris_labels import now_playing_label
+    return now_playing_label(status)
+
+
+def update(status: dict, menu: dict, view: str = "auto"):
     """
     Status-Daten → MPRIS2 Metadaten → BMW-Display.
-    Differenzierte Anzeige je Quelle.
+    view="auto": heutige Verzweigung (Menü nur wenn nichts spielt).
+    view="menu": Menütext, Wiedergabezustand aus echter Lage (Q-K).
     """
     if _player is None:
         return
 
     radio_type = (status.get("radio_type", "") or "").upper()
-    playing    = (status.get("radio_playing", status.get("radio", False))
+    radio_on   = bool(status.get("radio_playing") or status.get("radio"))
+    playing    = (radio_on
                   or status.get("spotify", False)
                   or status.get("library_playing", False))
 
@@ -428,16 +512,19 @@ def update(status: dict, menu: dict):
     artist = ""
     album  = "PiDrive"
     genre  = ""
+    track_nr = 1
+    force_menu = (view == "menu")
 
-    # ── Spotify ──────────────────────────────────────────────────────────────
-    if status.get("spotify"):
-        title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
-        artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
-        album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
-        genre  = "Streaming"
-
-    # ── Radio ────────────────────────────────────────────────────────────────
-    elif status.get("radio_playing", status.get("radio", False)):
+    # ── Menüvorrang (Q-K): während Navigation Menü zeigen, Stream nicht pausieren
+    if force_menu:
+        title, artist = _menu_fields(menu)
+        album = _now_playing_label(status) if playing else "PiDrive Menü"
+        genre = "Menü"
+        # Q-M: Tracknummer konstant → 300-ms-Ratenbegrenzung greift
+        track_nr = 1
+        # playing bleibt True, wenn wirklich etwas läuft (§2c.6)
+    # ── Radio / Webradio / FM / DAB (VOR Spotify — flag spotify=True heißt oft nur Dienst bereit)
+    elif radio_on:
         station    = status.get("radio_station", status.get("radio_name", "")) or ""
         radio_name = status.get("radio_name", "") or station
 
@@ -494,6 +581,13 @@ def update(status: dict, menu: dict):
             album  = "PiDrive Radio"
             genre  = "Radio"
 
+    # ── Spotify (nur wenn wirklich Spotify-Wiedergabe, nicht nur Dienst aktiv)
+    elif status.get("spotify") and str(status.get("radio_type", "")).upper() in ("", "SPOTIFY"):
+        title  = status.get("track",  status.get("spotify_track",  "")) or "Spotify"
+        artist = status.get("artist", status.get("spotify_artist", "")) or "PiDrive"
+        album  = status.get("album",  status.get("spotify_album",  "")) or "Spotify Connect"
+        genre  = "Streaming"
+
     # ── Bibliothek ───────────────────────────────────────────────────────────
     elif status.get("library_playing", False) or str(status.get("radio_type", "")).upper() == "LOCAL":
         title  = (status.get("library_track") or status.get("track")
@@ -501,19 +595,9 @@ def update(status: dict, menu: dict):
         artist = status.get("artist") or "PiDrive"
         album  = status.get("album") or "Bibliothek"
 
-    # ── Menü-Navigation ──────────────────────────────────────────────────────
+    # ── Menü-Navigation (nur wenn nichts spielt) ─────────────────────────────
     else:
-        path     = menu.get("path", [])
-        cursor   = menu.get("cursor", 0)
-        nodes    = menu.get("nodes", [])
-        selected = ""
-        if isinstance(nodes, list) and nodes and 0 <= cursor < len(nodes):
-            try:
-                selected = nodes[cursor].get("label", "")
-            except Exception:
-                pass
-        title   = selected or (path[-1] if path else "PiDrive")
-        artist  = " › ".join(path[1:]) if len(path) > 1 else "PiDrive"
+        title, artist = _menu_fields(menu)
         album   = "PiDrive Menü"
         playing = False
 
@@ -530,4 +614,5 @@ def update(status: dict, menu: dict):
         pass
 
     _player.set_status(playing)
-    _player.update_metadata(title, artist, album, genre=genre, art_url=_art)
+    _player.update_metadata(title, artist, album, track_nr=track_nr,
+                            genre=genre, art_url=_art)

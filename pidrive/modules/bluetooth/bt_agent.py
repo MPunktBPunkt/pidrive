@@ -11,14 +11,12 @@ from modules.bluetooth.bt_helpers import (
     AGENT_STATE_FILE, PAIRING_BACKUP_FILE, PAIR_TIMEOUT_SECONDS,
 )
 import threading
-import select
-import subprocess
 import time
 import log
 
-# Agent-Prozess und Lock (lokal in diesem Modul)
+# Agent-Prozess (lokal; D-Bus-Agent läuft als pidrive_btagent)
 _AGENT_PROC = None
-_AGENT_LOCK = threading.Lock()
+_AGENT_LOCK = threading.Lock()  # reexportiert über bluetooth.py — Symbol behalten
 
 def _write_agent_state(running=False, ready=False, pid=0, last_error="",
                        started_ts=0, health_ok=False):
@@ -48,137 +46,57 @@ def agent_is_alive():
 
 
 def start_agent_session():
-    """
-    Persistente bluetoothctl-Agent-Session.
-    """
+    """BF-E: stillgelegt — Pairing über pidrive_btagent (D-Bus)."""
     global _AGENT_PROC
-    with _AGENT_LOCK:
-        if agent_is_alive():
-            st = read_agent_state()
-            _write_agent_state(
-                running=True,
-                ready=st.get("ready", True),
-                pid=_AGENT_PROC.pid,
-                last_error=st.get("last_error", ""),
-                started_ts=st.get("started_ts", _now()),
-                health_ok=True
-            )
-            return True
-
-        try:
-            _AGENT_PROC = subprocess.Popen(
-                ["bluetoothctl"],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1
-            )
-
-            # Agent initialisieren
-            # DisplayYesNo: Pi bestätigt Passkeys automatisch
-            # Nötig für BMW Numeric Comparison (Request confirmation)
-            _AGENT_PROC.stdin.write("agent DisplayYesNo\n")
-            _AGENT_PROC.stdin.write("default-agent\n")
-            _AGENT_PROC.stdin.flush()
-            _sleep_s(0.5)
-            # Pi discoverable + pairable machen (BMW muss Pi finden können)
-            _AGENT_PROC.stdin.write("discoverable on\n")
-            _AGENT_PROC.stdin.write("pairable on\n")
-            _AGENT_PROC.stdin.flush()
-            _sleep_s(0.5)
-            log.info("BT Agent: discoverable=on pairable=on")
-
-            _write_agent_state(
-                running=True,
-                ready=True,
-                pid=_AGENT_PROC.pid,
-                last_error="",
-                started_ts=_now(),
-                health_ok=True
-            )
-            log.info(f"BT agent: persistent session ready pid={_AGENT_PROC.pid}")
-            return True
-
-        except Exception as e:
-            _AGENT_PROC = None
-            _write_agent_state(
-                running=False,
-                ready=False,
-                pid=0,
-                last_error=str(e),
-                started_ts=0,
-                health_ok=False
-            )
-            log.warn("BT agent start: " + str(e))
-            return False
+    log.info("BT Agent: bluetoothctl-Sitzung stillgelegt (BF-E) — nutze pidrive_btagent")
+    # Falls alte Sitzung noch läuft: hart beenden (sonst Streit um DefaultAgent)
+    try:
+        if _AGENT_PROC is not None and _AGENT_PROC.poll() is None:
+            _AGENT_PROC.terminate()
+            try:
+                _AGENT_PROC.wait(timeout=2)
+            except Exception:
+                _AGENT_PROC.kill()
+    except Exception:
+        pass
+    _AGENT_PROC = None
+    return True
 
 
 def stop_agent_session():
+    """BF-E: no-op (D-Bus-Agent läuft als eigener Dienst)."""
     global _AGENT_PROC
-    with _AGENT_LOCK:
-        if _AGENT_PROC:
+    try:
+        if _AGENT_PROC is not None and _AGENT_PROC.poll() is None:
+            _AGENT_PROC.terminate()
             try:
-                _AGENT_PROC.terminate()
-                _AGENT_PROC.wait(timeout=3)
+                _AGENT_PROC.wait(timeout=2)
             except Exception:
-                try:
-                    _AGENT_PROC.kill()
-                except Exception:
-                    pass
-            _AGENT_PROC = None
-
-        _write_agent_state(
-            running=False,
-            ready=False,
-            pid=0,
-            last_error="",
-            started_ts=0,
-            health_ok=False
-        )
-        log.info("BT agent: session stopped")
-
-
-def agent_healthcheck():
-    alive = agent_is_alive()
-    st = read_agent_state()
-
-    if alive:
-        _write_agent_state(
-            running=True,
-            ready=st.get("ready", True),
-            pid=_AGENT_PROC.pid if _AGENT_PROC else st.get("pid", 0),
-            last_error=st.get("last_error", ""),
-            started_ts=st.get("started_ts", _now()),
-            health_ok=True
-        )
-        return True
-
-    _write_agent_state(
-        running=False,
-        ready=False,
-        pid=0,
-        last_error=st.get("last_error", "agent_dead"),
-        started_ts=0,
-        health_ok=False
-    )
-    return False
+                _AGENT_PROC.kill()
+    except Exception:
+        pass
+    _AGENT_PROC = None
+    return True
 
 
 def start_agent_health_thread():
-    import threading as _th
+    """BF-E: stillgelegt — Health übernimmt systemd für pidrive_btagent."""
+    log.info("BT Agent health: stillgelegt (BF-E)")
+    return None
 
-    def _loop():
-        while True:
-            try:
-                if not agent_healthcheck():
-                    log.warn("BT agent health: dead — restart")
-                    start_agent_session()
-            except Exception as e:
-                log.warn("BT agent health: " + str(e))
-            time.sleep(20)
 
-    _th.Thread(target=_loop, daemon=True, name="bt_agent_health").start()
+def agent_healthcheck():
+    """BF-J: D-Bus-Agent lebendig nur wenn Zustandsdatei frisch ist."""
+    st = read_agent_state()
+    if st.get("kind") != "dbus":
+        return False
+    if not st.get("ready"):
+        return False
+    try:
+        age = _now() - float(st.get("ts") or 0)
+    except Exception:
+        return False
+    return age < 30.0
 
 
 def _ensure_agent():
@@ -186,163 +104,90 @@ def _ensure_agent():
 
 
 def _drain_agent_stdout(max_lines=80):
-    """
-    Alte Agent-Ausgaben abräumen, damit pair_with_agent()
-    nicht auf stale stdout-Zeilen reinfällt.
-
-    v0.10.55: select.select() für echtes non-blocking I/O statt
-    blindem readline(), das bei stale stdout dauerhaft blockieren kann.
-    """
-    global _AGENT_PROC
-    if not agent_is_alive():
-        return
-    try:
-        if _AGENT_PROC.stdout is None:
-            return
-        drained = 0
-        start = time.time()
-        fd = _AGENT_PROC.stdout.fileno()
-        while drained < max_lines and (time.time() - start) < 0.8:
-            if _AGENT_PROC.poll() is not None:
-                break
-            # select mit 50 ms Timeout → kein Blockieren
-            ready, _, _ = select.select([fd], [], [], 0.05)
-            if not ready:
-                break  # nichts mehr verfügbar
-            try:
-                line = _AGENT_PROC.stdout.readline()
-            except Exception:
-                break
-            if not line:
-                break
-            drained += 1
-        if drained:
-            log.info(f"BT agent: stdout drained lines={drained} (non-blocking)")
-    except Exception:
-        pass
+    """BF-E: no-op — kein bluetoothctl-Stdout mehr."""
+    return
 
 
 def pair_with_agent(mac, timeout=PAIR_TIMEOUT_SECONDS):
     """
-    Pairing über persistente Agent-Session.
+    BF-E/I: Pairing über BlueZ Device1.Pair(); Bestätigung durch pidrive_btagent.
     """
-    global _AGENT_PROC
-
     mac = _normalize_mac(mac)
     if not _valid_mac(mac):
         return False, "invalid_mac"
 
-    if not start_agent_session():
-        return False, "agent_start_failed"
+    start_agent_session()  # stellt nur sicher, dass alte Sitzung tot ist
 
-    _drain_agent_stdout()
-
-    lines = []
     try:
-        _AGENT_PROC.stdin.write(f"pair {mac}\n")
-        _AGENT_PROC.stdin.flush()
+        from modules.bluetooth import bt_agent_dbus as _dab
+        _dab.open_pair_window(int(timeout) + 60)
+    except Exception:
+        pass
 
-        end = time.time() + timeout
+    events = []
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+        path = "/org/bluez/hci0/dev_" + mac.replace(":", "_").upper()
+
+        # BF-I: ObjectManager prüfen — get_object() wirft nie UnknownObject
+        known = False
+        try:
+            om = dbus.Interface(bus.get_object("org.bluez", "/"),
+                               "org.freedesktop.DBus.ObjectManager")
+            objs = om.GetManagedObjects()
+            known = path in objs
+        except Exception as e:
+            log.warn(f"BT ObjectManager: {e}")
+
+        if not known:
+            msg = (f"Gerät {mac} unbekannt bei BlueZ — zuerst "
+                   f"'pidrivectl bt scan' (oder BMW-initiiert: 'pidrivectl bt pair')")
+            log.warn(msg)
+            _write_json_atomic(PAIRING_BACKUP_FILE, {
+                "mac": mac, "ok": False, "via": "dbus",
+                "error": "unknown_object", "ts": _now(),
+            })
+            return False, msg
+
+        dev = bus.get_object("org.bluez", path)
+        iface = dbus.Interface(dev, "org.bluez.Device1")
+        end = time.time() + float(timeout)
+        try:
+            iface.Pair()
+        except Exception as e:
+            err = str(e)
+            if "AlreadyExists" in err or "Already Paired" in err:
+                _write_json_atomic(PAIRING_BACKUP_FILE, {
+                    "mac": mac, "ok": True, "via": "dbus",
+                    "lines": [err], "ts": _now(),
+                })
+                return True, err
+            log.warn(f"BT Device1.Pair: {e}")
+
         while time.time() < end:
-            line = _AGENT_PROC.stdout.readline()
-            if not line:
-                _sleep_s(0.2)
-                continue
-
-            s = line.strip()
-            lines.append(s)
-            low = s.lower()
-
-            # Auto-Bestätigung: Passkey/Confirm/Authorize
-            if "request confirmation" in low or "confirm passkey" in low:
-                log.info(f"BT agent: Passkey-Bestätigung → yes ({s[:60]})")
-                _AGENT_PROC.stdin.write("yes\n")
-                _AGENT_PROC.stdin.flush()
-                continue
-            if "request passkey" in low or "enter passkey" in low:
-                log.info(f"BT agent: Passkey-Eingabe → 000000 ({s[:60]})")
-                _AGENT_PROC.stdin.write("000000\n")
-                _AGENT_PROC.stdin.flush()
-                continue
-            if "authorize service" in low:
-                log.info(f"BT agent: Service autorisiert → yes ({s[:60]})")
-                _AGENT_PROC.stdin.write("yes\n")
-                _AGENT_PROC.stdin.flush()
-                continue
-
-            if (
-                "pairing successful" in low or
-                "device has been paired" in low or
-                "already paired" in low or
-                "already exists" in low or
-                ("paired" in low and "successful" in low)
-            ):
-                _write_agent_state(
-                    running=True,
-                    ready=True,
-                    pid=_AGENT_PROC.pid,
-                    last_error="",
-                    started_ts=read_agent_state().get("started_ts", _now()),
-                    health_ok=True
-                )
+            _, info = _btctl(f"info {mac}", timeout=6)
+            if _parse_bool_from_info(info, "paired"):
+                try:
+                    ev = _read_json("/tmp/pidrive_bt_agent_events.json", {})
+                    events = (ev.get("events") or [])[-30:]
+                except Exception:
+                    events = []
                 _write_json_atomic(PAIRING_BACKUP_FILE, {
-                    "mac": mac,
-                    "ok": True,
-                    "lines": lines[-30:],
-                    "ts": _now(),
+                    "mac": mac, "ok": True, "via": "dbus",
+                    "events": events, "ts": _now(),
                 })
-                return True, "\n".join(lines[-30:])
+                return True, "paired"
+            _sleep_s(0.5)
 
-            if (
-                "authenticationfailed" in low or
-                "authentication failed" in low or
-                "failed" in low or
-                "not available" in low or
-                "canceled" in low
-            ):
-                _write_agent_state(
-                    running=True,
-                    ready=False,
-                    pid=_AGENT_PROC.pid,
-                    last_error=s,
-                    started_ts=read_agent_state().get("started_ts", _now()),
-                    health_ok=False
-                )
-                _write_json_atomic(PAIRING_BACKUP_FILE, {
-                    "mac": mac,
-                    "ok": False,
-                    "lines": lines[-30:],
-                    "ts": _now(),
-                })
-                return False, "\n".join(lines[-30:])
-
-        _write_agent_state(
-            running=True,
-            ready=False,
-            pid=_AGENT_PROC.pid,
-            last_error="pair_timeout",
-            started_ts=read_agent_state().get("started_ts", _now()),
-            health_ok=False
-        )
         _write_json_atomic(PAIRING_BACKUP_FILE, {
-            "mac": mac,
-            "ok": False,
-            "timeout": True,
-            "lines": lines[-30:],
-            "ts": _now(),
+            "mac": mac, "ok": False, "timeout": True,
+            "via": "dbus", "events": events, "ts": _now(),
         })
-        return False, "\n".join(lines[-30:])
-
+        return False, "pair_timeout"
     except Exception as e:
-        _write_agent_state(
-            running=False,
-            ready=False,
-            pid=0,
-            last_error=str(e),
-            started_ts=0,
-            health_ok=False
-        )
+        _write_json_atomic(PAIRING_BACKUP_FILE, {
+            "mac": mac, "ok": False, "error": str(e), "ts": _now(),
+        })
         return False, str(e)
-
-
 

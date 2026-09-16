@@ -1,0 +1,39 @@
+[Unit]
+# PiDrive BlueZ-Pairing-Agent (D-Bus)
+#
+# Absichtlich ein eigener Dienst und nicht Teil von pidrive_core:
+#   - überlebt Kern-Neustarts, das Pairing-Fenster bleibt offen
+#   - läuft, bevor der Kern bereit ist (BMW verbindet ~30 s nach Zündung)
+#   - berührt die GLib-Hauptschleife von mpris2.py nicht
+#
+# Wichtig: die alte bluetoothctl-Sitzung in bt_agent.py muss abgeschaltet
+# sein (Paket BF-E). Sonst streiten sich beide um RequestDefaultAgent.
+Description=PiDrive Bluetooth Pairing Agent
+Documentation=file:///home/pidrive/pidrive/docs/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md
+After=bluetooth.service dbus.service
+Wants=bluetooth.service
+PartOf=bluetooth.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pidrive/pidrive/pidrive
+# Bestätigungsregel: always | window | never  (siehe bt_agent_dbus.py)
+Environment=PIDRIVE_BT_CONFIRM=always
+Environment=PYTHONUNBUFFERED=1
+# ExecStartPre: BlueZ braucht nach dem Start einen Moment, bis
+# org.bluez.AgentManager1 auf dem Bus ist.
+ExecStartPre=/bin/sleep 3
+# Absichtlich als Skriptpfad und NICHT als "python3 -m modules.bluetooth...":
+# modules/bluetooth/__init__.py zieht über "from ...bluetooth import *" das
+# gesamte Subsystem herein und braucht dafür die Importumgebung des Kerns.
+# bt_agent_dbus.py ist bewusst ohne Projektimporte gebaut und läuft damit
+# eigenständig — auch bevor der Kern bereit ist.
+ExecStart=/usr/bin/python3 modules/bluetooth/bt_agent_dbus.py --foreground
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.127"
+PIDRIVE_VERSION="0.11.141"
 
 # ============================================================
 # PiDrive Install Script
@@ -425,6 +425,15 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_avrcp.service" ]; then
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_avrcp.service"
 fi
 
+# BF-A: D-Bus Bluetooth-Pairing-Agent (vor Core, eigener Dienst)
+if [ -f "$INSTALL_DIR/systemd/pidrive_btagent.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive_btagent.service" "$SERVICE_DIR/pidrive_btagent.service"
+    # Unit enthält /home/pidrive/pidrive — auf INSTALL_DIR begradigen
+    sed -i "s|/home/pidrive/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_btagent.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_btagent.service"
+    ok "pidrive_btagent.service vorbereitet"
+fi
+
 # v0.6.0: kein monolithischer pidrive.service mehr
 
 # rfkill-unblock.service
@@ -442,11 +451,38 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
+# WLAN-Recovery nach Stromausfall (wlan0 down, eth0 ok)
+if [ -f "$INSTALL_DIR/systemd/pidrive-wifi-recover.service" ] \
+   && [ -f "$INSTALL_DIR/scripts/wifi-recover.sh" ]; then
+    chmod +x "$INSTALL_DIR/scripts/wifi-recover.sh"
+    cp "$INSTALL_DIR/systemd/pidrive-wifi-recover.service" \
+       "$SERVICE_DIR/pidrive-wifi-recover.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" \
+        "$SERVICE_DIR/pidrive-wifi-recover.service"
+    if [ -f "$INSTALL_DIR/systemd/pidrive-wifi-recover.timer" ]; then
+        cp "$INSTALL_DIR/systemd/pidrive-wifi-recover.timer" \
+           "$SERVICE_DIR/pidrive-wifi-recover.timer"
+    fi
+    ok "WLAN-Recovery: Service + Timer vorbereitet"
+fi
+
 systemctl daemon-reload
 systemctl enable pidrive_core rfkill-unblock 2>/dev/null || true
 ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 [ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
 [ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
+if [ -f "$SERVICE_DIR/pidrive_btagent.service" ]; then
+    systemctl enable --now pidrive_btagent 2>/dev/null || true
+    ok "BT-Agent: pidrive_btagent aktiv (D-Bus Pairing)"
+fi
+if [ -f "$SERVICE_DIR/pidrive-wifi-recover.service" ]; then
+    systemctl enable pidrive-wifi-recover.service 2>/dev/null || true
+    ok "WLAN-Recovery: bei jedem Boot aktiv"
+fi
+if [ -f "$SERVICE_DIR/pidrive-wifi-recover.timer" ]; then
+    systemctl enable --now pidrive-wifi-recover.timer 2>/dev/null || true
+    ok "WLAN-Recovery-Timer: Nachversuche (3 Min nach Boot, dann alle 5 Min)"
+fi
 
 # SSH
 systemctl enable ssh 2>/dev/null && systemctl start ssh 2>/dev/null || true
@@ -462,6 +498,8 @@ if command -v sudo >/dev/null 2>&1; then
 # PiDrive: ausgewaehlte Befehle ohne Passwort fuer Benutzer ${REAL_USER}
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_core
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_web
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pidrive_btagent
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status pidrive_btagent
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart pipewire-pulse
 ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart wireplumber
@@ -698,6 +736,32 @@ WPEOF
 # 10-no-reserve-pidrive.conf überschreibt sonst main ohne inherits → hardware.bluetooth fehlt.
 rm -f /etc/wireplumber/wireplumber.conf.d/10-no-reserve-pidrive.conf
 ok "WirePlumber: BT A2DP konfiguriert"
+
+# BF-B: BlueZ dauerhaft sichtbar/pairable (auch ohne laufenden Agenten)
+if [ -f /etc/bluetooth/main.conf ]; then
+    _btconf=/etc/bluetooth/main.conf
+    # Werte setzen/aktualisieren ohne Datei blind zu überschreiben
+    for _kv in "DiscoverableTimeout = 0" "PairableTimeout = 0" "Name = PiDrive"; do
+        _key=$(echo "$_kv" | cut -d= -f1 | sed 's/ *$//')
+        if grep -qE "^[[:space:]]*${_key}[[:space:]]*=" "$_btconf" 2>/dev/null; then
+            sed -i -E "s|^[[:space:]]*${_key}[[:space:]]*=.*|${_kv}|" "$_btconf"
+        else
+            # hinter [General] einfügen falls vorhanden
+            if grep -q '^\[General\]' "$_btconf"; then
+                sed -i "/^\[General\]/a ${_kv}" "$_btconf"
+            else
+                printf '\n[General]\n%s\n' "$_kv" >> "$_btconf"
+            fi
+        fi
+    done
+    if ! grep -q '^\[Policy\]' "$_btconf"; then
+        printf '\n[Policy]\nAutoEnable = true\n' >> "$_btconf"
+    elif ! grep -qE '^[[:space:]]*AutoEnable[[:space:]]*=' "$_btconf"; then
+        sed -i '/^\[Policy\]/a AutoEnable = true' "$_btconf"
+    fi
+    ok "BlueZ main.conf: DiscoverableTimeout/PairableTimeout=0, Name=PiDrive"
+    systemctl try-reload-or-restart bluetooth 2>/dev/null || true
+fi
 
 # PiDrive: bluez.lua patchen — seat_monitoring=false für System-Mode
 # WirePlumber sucht Scripts zuerst in /etc/wireplumber/scripts/
@@ -1236,6 +1300,42 @@ if [ -f "$INSTALL_DIR/pidrive/diagnose.py" ]; then
     python3 "$INSTALL_DIR/pidrive/diagnose.py" 2>/dev/null || true
 else
     warn "diagnose.py nicht gefunden"
+fi
+
+# WLAN-Prüfung + optional Recovery (Stromausfall: eth ok, wlan tot)
+info "WLAN-Prüfung..."
+_WLAN_IF="wlan0"
+if [ -d "/sys/class/net/$_WLAN_IF" ]; then
+    _WLAN_IP=$(ip -4 -o addr show dev "$_WLAN_IF" 2>/dev/null | awk '{print $4}' | head -1)
+    _WLAN_SSID=$(iwgetid -r "$_WLAN_IF" 2>/dev/null || true)
+    _ETH_UP=0
+    for _e in /sys/class/net/eth*; do
+        [ -e "$_e" ] || continue
+        _en=$(basename "$_e")
+        ip -4 -o addr show dev "$_en" 2>/dev/null | grep -q 'inet ' && _ETH_UP=1 && break
+    done
+    if [ -n "$_WLAN_IP" ] && [ -n "$_WLAN_SSID" ]; then
+        ok "WLAN ok: $_WLAN_SSID ($_WLAN_IP)"
+    else
+        warn "WLAN nicht verbunden (ssid=${_WLAN_SSID:--} ipv4=${_WLAN_IP:--})"
+        if [ "$_ETH_UP" = "1" ]; then
+            info "LAN aktiv, WLAN down — starte wifi-recover einmalig..."
+            if [ -f "$SERVICE_DIR/pidrive-wifi-recover.service" ]; then
+                systemctl start pidrive-wifi-recover.service 2>/dev/null || true
+            elif [ -f "$INSTALL_DIR/scripts/wifi-recover.sh" ]; then
+                bash "$INSTALL_DIR/scripts/wifi-recover.sh" || true
+            fi
+            _WLAN_IP=$(ip -4 -o addr show dev "$_WLAN_IF" 2>/dev/null | awk '{print $4}' | head -1)
+            _WLAN_SSID=$(iwgetid -r "$_WLAN_IF" 2>/dev/null || true)
+            if [ -n "$_WLAN_IP" ] && [ -n "$_WLAN_SSID" ]; then
+                ok "WLAN nach Recovery: $_WLAN_SSID ($_WLAN_IP)"
+            else
+                warn "WLAN Recovery ohne Erfolg — journalctl -u pidrive-wifi-recover -b"
+            fi
+        fi
+    fi
+else
+    info "Kein $_WLAN_IF — WLAN-Prüfung übersprungen"
 fi
 
 # ══════════════════════════════════════════════════════════════

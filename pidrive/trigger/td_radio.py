@@ -253,7 +253,9 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 else:
                     log.warn(f"CLI play_dab: Exception — kein commit {_query!r}")
             except Exception as e:
-                log.error(f"CLI play_dab Fehler: {e}")
+                import traceback as _tb
+                log.error(f"CLI play_dab Fehler: {type(e).__name__}: {e}")
+                log.error(f"CLI play_dab Traceback:\n{_tb.format_exc()}")
 
         bg(_run_cli_dab)
 
@@ -426,8 +428,13 @@ def handle(cmd, menu_state, store, S, settings, bg):
         bg(lambda: fm.play_next(S, store.fm))
     elif cmd == "fm_prev":
         bg(lambda: fm.play_prev(S, store.fm))
-    elif cmd == "fm_manual":
-        bg(lambda: _fm_manual(S, settings))
+    elif cmd.startswith("fm_step:"):
+        try:
+            _delta = float(cmd.split(":", 1)[1])
+        except Exception:
+            log.warn(f"fm_step: ungültig {cmd!r}")
+            return True
+        bg(lambda d=_delta: fm.step_freq(S, settings, d))
 
     # ── DAB Next/Prev ───────────────────────────────────────────────────────
     elif cmd == "dab_next":

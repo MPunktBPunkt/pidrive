@@ -4,7 +4,7 @@
 
 Spotify Connect · Webradio · DAB+ · FM · Funk-Scanner · Bluetooth A2DP · lokale Musik — gesteuert über Lenkrad (AVRCP), WebUI oder CLI. Kein Display nötig.
 
-[![Version](https://img.shields.io/badge/version-0.11.128-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/VERSION)
+[![Version](https://img.shields.io/badge/version-0.11.141-orange.svg)](https://github.com/MPunktBPunkt/pidrive/blob/main/VERSION)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3](https://img.shields.io/badge/python-3.11%2B-green.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi%20OS%20%7C%20Debian-lightgrey.svg)](https://www.debian.org/)
@@ -205,6 +205,12 @@ printf "play_dab:DIE NEUE 107.7\n" >> /tmp/pidrive_cmd   # Trigger direkt
 tail -f /var/log/pidrive/pidrive.log
 pidrivectl test all
 cat /tmp/pidrive_test_results.json | python3 -m json.tool
+```
+
+**Offline-CI** (lokal wie GitHub Actions — ohne Pi/RTL/BT):
+
+```bash
+bash tools/ci_offline.sh
 ```
 
 | Datei | Inhalt |

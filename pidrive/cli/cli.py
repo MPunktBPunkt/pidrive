@@ -273,8 +273,13 @@ Flags (vor dem Befehl angeben):
     bt_sub.add_parser("known")
     p_btc = bt_sub.add_parser("connect")
     p_btc.add_argument("query", help="MAC-Adresse oder Name")
-    p_btp = bt_sub.add_parser("pair", help="Pairen + verbinden (Gerät muss im Pairing-Modus sein)")
-    p_btp.add_argument("query", help="MAC-Adresse oder Name")
+    p_btp = bt_sub.add_parser("pair", help="Pairen (ohne Adresse: auf BMW warten)")
+    p_btp.add_argument("query", nargs="?", default=None,
+                       help="MAC/Name optional — fehlt: BMW-initiiert")
+    bt_sub.add_parser("agent", help="D-Bus-Agent-Zustand + letzte Anfragen (BF-C)")
+    p_btw = bt_sub.add_parser("pair-window", help="Pairing-Fenster öffnen (Regel window)")
+    p_btw.add_argument("seconds", nargs="?", default="300",
+                       help="Dauer in Sekunden (Vorgabe 300)")
     bt_sub.add_parser("disconnect")
     bt_sub.add_parser("reconnect")
     bt_sub.add_parser("on")
@@ -373,6 +378,7 @@ Flags (vor dem Befehl angeben):
                         help="Bestehenden Snapshot ersetzen (CHANGES.md)")
     menu_sub.add_parser("verify", help="Baum gegen Golden Master prüfen")
     menu_sub.add_parser("lint", help="Statische Baum-Prüfungen")
+    menu_sub.add_parser("walk", help="Alle Ordner+Blätter auf Erreichbarkeit prüfen")
     p_cost = menu_sub.add_parser("cost", help="Tastendrücke bis Ziel (Skip-Only)")
     p_cost.add_argument("path_id", help="z.B. sources/dab/dab_stations/dab_0xd411")
     p_report = menu_sub.add_parser("report", help="Ergonomie-Kennzahlen aller Blätter")
@@ -835,29 +841,163 @@ Flags (vor dem Befehl angeben):
                 else:
                     fmt.out("✗ Timeout — kein Verbindungsaufbau nach 20s")
         elif args.bt_cmd == "pair":
-            dev = svc.bt_resolve(args.query)
-            mac  = dev["mac"] if dev else args.query.strip()
+            query = getattr(args, "query", None)
+            # BF-C: ohne Adresse auf Fahrzeug warten (BMW-initiiert)
+            if not query:
+                fmt.out("Pairing (BMW-initiiert) — warte auf Anfragen …")
+                agent = svc.ipc.read_json("/tmp/pidrive_bt_agent.json", {})
+                mode = agent.get("mode", "?")
+                kind = agent.get("kind", "bluetoothctl?")
+                fmt.out(f"Agent: {kind}, Regel={mode}, sichtbar=dauerhaft")
+                try:
+                    from modules.bluetooth.bt_agent_dbus import open_pair_window
+                    open_pair_window(300)
+                    fmt.out("Pairing-Fenster 300s geöffnet")
+                except Exception:
+                    pass
+                # BF-G: Ausgangsmenge merken — nur NEUES Paired-Ereignis zählt
+                def _paired_set():
+                    try:
+                        import subprocess as _sp
+                        r = _sp.run("bluetoothctl devices Paired 2>/dev/null",
+                                    shell=True, capture_output=True, text=True, timeout=3)
+                        out = set()
+                        for line in (r.stdout or "").splitlines():
+                            parts = line.split()
+                            if len(parts) >= 2 and parts[0] == "Device":
+                                out.add(parts[1].upper())
+                        return out
+                    except Exception:
+                        return set()
+
+                before = _paired_set()
+                last_id = 0
+                try:
+                    ev0 = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
+                    evs = ev0.get("events") or []
+                    if evs:
+                        last_id = int(evs[-1].get("id", 0))
+                except Exception:
+                    pass
+                t0 = __import__("time").time()
+                paired = False
+                paired_dev = ""
+                while __import__("time").time() - t0 < 120:
+                    __import__("time").sleep(0.4)
+                    ev = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
+                    for e in (ev.get("events") or []):
+                        eid = int(e.get("id", 0))
+                        if eid <= last_id:
+                            continue
+                        last_id = eid
+                        elapsed = int(__import__("time").time() - t0)
+                        detail = e.get("detail") or ""
+                        ans = e.get("answer") or "—"
+                        reason = e.get("reason") or ""
+                        line = f"  [{elapsed:2d}s] {e.get('method','?'):20s} {detail}  → {ans}"
+                        if reason:
+                            line += f"  ({reason})"
+                        fmt.out(line)
+                        if e.get("method") == "RequestConfirmation" and "passkey=" in detail:
+                            fmt.out("        ↳ Zahl am iDrive vergleichen und dort bestätigen")
+                        # BF-G: Erfolg nur bei Agent-Ereignis "Paired" (nicht alter Kopfhörer)
+                        if e.get("method") == "Paired":
+                            paired = True
+                            paired_dev = (e.get("device") or "").replace("_", ":")
+                    if paired:
+                        break
+                    # Zusatz: neues Gerät in Paired-Liste (falls Event verpasst)
+                    now_set = _paired_set()
+                    neu = now_set - before
+                    if neu:
+                        paired = True
+                        paired_dev = sorted(neu)[0]
+                        elapsed = int(__import__("time").time() - t0)
+                        fmt.out(f"  [{elapsed:2d}s] Paired                → {paired_dev}  (neu in BlueZ)")
+                        break
+                fmt.out("")
+                if paired:
+                    who = paired_dev or "?"
+                    fmt.out(fmt.GREEN + f"✓ Gekoppelt: {who}" + fmt.RESET)
+                else:
+                    fmt.out("Timeout — kein neues Paired-Ereignis (pidrivectl bt agent)")
+                sys.exit(EXIT_OK)
+
+            dev = svc.bt_resolve(query)
+            mac  = dev["mac"] if dev else query.strip()
             name = dev.get("name","") if dev else mac
             if use_json:
                 svc.send("bt_repair:" + mac)
                 fmt.print_json({"ok": True, "mac": mac, "action": "bt_repair"})
             else:
                 fmt.out("Pairing mit " + (name + " (" + mac + ")" if name and name != mac else mac))
-                fmt.out("  → Geraet jetzt in Pairing-Modus bringen!")
-                fmt.out("  → Warte auf Pairing (bis 90s)…")
+                agent = svc.ipc.read_json("/tmp/pidrive_bt_agent.json", {})
+                fmt.out(f"Agent: {agent.get('kind','?')}, Regel={agent.get('mode','?')}, sichtbar=dauerhaft")
+                fmt.out("Warte auf Anfragen des Fahrzeugs …")
+
+                last_id = 0
+                try:
+                    ev0 = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
+                    evs = ev0.get("events") or []
+                    if evs:
+                        last_id = int(evs[-1].get("id", 0))
+                except Exception:
+                    pass
+                t0 = __import__("time").time()
 
                 def _on_pair(d):
-                    fmt.out("  [" + str(d["elapsed"]).rjust(2) + "s] " + d["state"])
+                    # Agent-Events seit letztem Stand
+                    nonlocal last_id
+                    ev = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
+                    for e in (ev.get("events") or []):
+                        eid = int(e.get("id", 0))
+                        if eid <= last_id:
+                            continue
+                        last_id = eid
+                        detail = e.get("detail") or ""
+                        ans = e.get("answer") or "—"
+                        reason = e.get("reason") or ""
+                        line = f"  [{d['elapsed']:2d}s] {e.get('method','?'):20s} {detail}  → {ans}"
+                        if reason:
+                            line += f"  ({reason})"
+                        fmt.out(line)
+                        if e.get("method") == "RequestConfirmation" and "passkey=" in detail:
+                            fmt.out("        ↳ Zahl am iDrive vergleichen und dort bestätigen")
+                    fmt.out(f"  [{d['elapsed']:2d}s] state={d['state']}")
 
                 result = svc.watch_bt_pair(mac, timeout=90, on_status=_on_pair)
                 fmt.out("")
                 if result == "paired":
-                    fmt.out(fmt.GREEN + "✓ Gepairt: " + (name if name != mac else mac) + fmt.RESET)
+                    fmt.out(fmt.GREEN + "✓ Gekoppelt und verbunden" + fmt.RESET)
                     fmt.out("  Verbinden: pidrivectl bt connect " + mac)
                 elif result == "failed":
-                    fmt.out(fmt.RED + "✗ Pairing fehlgeschlagen — Pairing-Modus pruefen" + fmt.RESET)
+                    fmt.out(fmt.RED + "✗ Pairing fehlgeschlagen — pidrivectl bt agent" + fmt.RESET)
                 else:
-                    fmt.out("✗ Timeout — Scan zeigt Geraet? pidrivectl bt scan")
+                    fmt.out("✗ Timeout — pidrivectl bt agent / bt scan")
+        elif args.bt_cmd == "agent":
+            agent = svc.ipc.read_json("/tmp/pidrive_bt_agent.json", {})
+            ev = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
+            if use_json:
+                fmt.print_json({"agent": agent, "events": (ev.get("events") or [])[-20:]})
+            else:
+                fmt.out(f"Agent: kind={agent.get('kind','?')} ready={agent.get('ready')} "
+                        f"mode={agent.get('mode','?')} window={agent.get('pair_window_s',0)}s "
+                        f"events={agent.get('event_count',0)}")
+                for e in (ev.get("events") or [])[-15:]:
+                    fmt.out(f"  [{e.get('ts_human','')}] {e.get('method')} "
+                            f"{e.get('detail','')} → {e.get('answer','—')} ({e.get('reason','')})")
+        elif args.bt_cmd == "pair-window":
+            try:
+                secs = int(getattr(args, "seconds", 300) or 300)
+            except Exception:
+                secs = 300
+            try:
+                from modules.bluetooth.bt_agent_dbus import open_pair_window, pair_window_remaining
+                until = open_pair_window(secs)
+                rem = pair_window_remaining()
+                fmt.out(f"Pairing-Fenster {secs}s geöffnet (noch {int(rem)}s)")
+            except Exception as e:
+                fmt.err(str(e)); sys.exit(EXIT_ERROR)
         elif args.bt_cmd == "status":
             d = svc.get_status()
             # Fallback: wenn IPC "getrennt" sagt, direkt BlueZ prüfen
@@ -1574,7 +1714,7 @@ Flags (vor dem Befehl angeben):
         from menu import menu_golden as _mg
         mc = getattr(args, "menu_cmd", None)
         if not mc:
-            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|cost|report|tree|goto|activate|path|rebuild")
+            fmt.err("Unterbefehl fehlt: snapshot|verify|lint|walk|cost|report|tree|goto|activate|path|rebuild")
             sys.exit(EXIT_USAGE)
         if mc == "snapshot":
             sys.exit(_mg.cmd_snapshot(accept=getattr(args, "accept", False)))
@@ -1582,6 +1722,8 @@ Flags (vor dem Befehl angeben):
             sys.exit(_mg.cmd_verify())
         elif mc == "lint":
             sys.exit(_mg.cmd_lint())
+        elif mc == "walk":
+            sys.exit(_mg.cmd_walk())
         elif mc == "cost":
             sys.exit(_mg.cmd_cost(args.path_id))
         elif mc == "report":

@@ -458,16 +458,21 @@ Der parallele `mpris2.py`-Pfad nutzt dagegen das feste Mapping aus Abschnitt 6.1
 
 ### 7.1 Warum MPRIS2?
 
-BlueZ 5.x nutzt MPRIS2 als Abstraktionsschicht zwischen Linux-Playern und AVRCP.  
-PiDrive publiziert `org.mpris.MediaPlayer2.pidrive` auf dem D-Bus → BlueZ übersetzt das in AVRCP-Responses gegenüber BMW.
+BlueZ 5.x nutzt MPRIS2 als Abstraktionsschicht zwischen Linux-Playern und AVRCP.
+PiDrive publiziert `org.mpris.MediaPlayer2.pidrive` auf dem **Systembus**. BlueZ liest
+diese Properties **nicht von selbst** — der Spieler muss über
+`org.bluez.Media1.RegisterPlayer` angemeldet werden (BF-D / BT5). Erst danach beantwortet
+`bluetoothd` `GetElementAttributes` gegenüber dem Fahrzeug.
 
 ```
 PiDrive mpris2.py
-    → D-Bus: org.mpris.MediaPlayer2.pidrive
-    → org.mpris.MediaPlayer2.Player (Properties)
-    → BlueZ liest diese Properties
+    → D-Bus SystemBus: org.mpris.MediaPlayer2.pidrive
+    → Media1.RegisterPlayer(/org/mpris/MediaPlayer2)
+    → BlueZ liest Properties vom angemeldeten Pfad
     → AVRCP GetElementAttributes Response an BMW
 ```
+
+`mpris-proxy` ist hier das falsche Werkzeug: es sucht Spieler auf dem Sitzungsbus.
 
 ### 7.2 Publizierte Properties
 
@@ -546,14 +551,14 @@ PiDrive-Implementierung:
 ```
 1. BMW: Bluetooth Settings → Neues Gerät
 2. BMW: sendet Inquiry / Page Scan
-3. PiDrive (bluetoothd): antwortet auf Page
+3. PiDrive (bluetoothd): antwortet auf Page (DiscoverableTimeout=0)
 4. SDP Discovery: BMW liest PiDrive SDP Records
    → findet 0x110A (A2DP Source) + 0x110C (AVRCP Target)
-5. PIN/Passkey: SSP Numeric Comparison (nicht Just Works)
-6. Link Key wird gespeichert (trusted)
-7. BMW verbindet A2DP + AVRCP
+5. Numeric Comparison: BMW zeigt Passkey, BlueZ ruft RequestConfirmation
+   → pidrive_btagent (D-Bus Agent, DisplayYesNo) bestätigt nach Regel always/window
+6. Link Key wird gespeichert; Agent setzt Trusted=True7. BMW verbindet A2DP + AVRCP
 8. WirePlumber: erstellt neuen A2DP-Sink (`bluez_output.<MAC>.<N>`)
-9. PiDrive: avrcp_trigger.py erkennt Connected-Event (PropertiesChanged /org/bluez/hci0)
+9. PiDrive: avrcp_trigger.py erkennt Connected-Event
 ```
 
 **Feldtest 2026-09-16:** Fahrzeugname `BMW 38304`, Zahlenvergleich `376726`, Bestätigung OK im iDrive. PiDrive-Agent `DisplayYesNo` muss `Request confirmation` mit `yes` beantworten. Fotos: [`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md).
@@ -561,18 +566,19 @@ PiDrive-Implementierung:
 ### 8.2 PiDrive Pairing-Befehle
 
 ```bash
-# Voraussetzung: PiDrive als discoverable setzen
-bluetoothctl discoverable on
-bluetoothctl pairable on
+# Agent-Dienst muss laufen (install.sh aktiviert ihn)
+systemctl status pidrive_btagent
 
-# BMW soll nun PiDrive finden und pairen
-# Nach Pairing:
-bluetoothctl trust <BMW-MAC>
+# BMW-initiiert (empfohlen): Fenster öffnen und auf Fahrzeug warten
+pidrivectl bt pair-window 300
+pidrivectl bt pair
+# → Passkey erscheint in der CLI; Zahl am iDrive vergleichen und dort bestätigen
 
-# Manuell verbinden (falls Auto-Connect fehlt)
+# Agent-Protokoll jederzeit
+pidrivectl bt agent
+
+# Nach Pairing verbinden / Status
 pidrivectl bt connect <BMW-MAC>
-
-# Status prüfen
 pidrivectl bt status
 ```
 

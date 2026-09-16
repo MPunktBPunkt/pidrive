@@ -17,21 +17,29 @@ def handle(cmd, menu_state, store, S, settings, bg):
     # ── Navigation ────────────────────────────────────────────────────────
     if   cmd == "up":
         menu_state.key_up()
+        S["_menu_priority_event"] = "nav"
     elif cmd == "down":
         menu_state.key_down()
+        S["_menu_priority_event"] = "nav"
     elif cmd == "left":
         menu_state.key_left()
+        S["_menu_priority_event"] = "nav"
     elif cmd == "back":
         # v0.9.21: BT-Geräteliste verlassen → Scan stoppen
         _leaving_node = menu_state.selected_folder
         menu_state.key_back()
+        S["_menu_priority_event"] = "nav"
         if _leaving_node and getattr(_leaving_node, "id", "") == "bt_geraete":
             log.info("MENU bt_geraete: Auto-Scan gestoppt (back)")
             bg(lambda: bluetooth.stop_scan())
     elif cmd == "enter":
         node = menu_state.key_enter()
         if node and node.type in ("station", "action", "toggle"):
+            S["_menu_priority_event"] = "leaf"  # Q-L: Aktivierung beendet Menüansicht
             _execute_node(node, menu_state, store, S, settings)
+        elif node and node.type == "folder":
+            S["_menu_priority_event"] = "nav"
+            _maybe_enter_action(node, menu_state, store, S, settings, bg)
         # v0.9.21: BT-Geräteliste betreten → Scan automatisch starten
         if node and node.type == "folder" and node.id == "bt_geraete":
             log.info("MENU bt_geraete: Auto-Scan gestartet")
@@ -53,7 +61,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd == "right":
         node = menu_state.key_right()
         if node and node.type in ("station", "action", "toggle"):
+            S["_menu_priority_event"] = "leaf"
             _execute_node(node, menu_state, store, S, settings)
+        elif node and node.type == "folder":
+            S["_menu_priority_event"] = "nav"
+            _maybe_enter_action(node, menu_state, store, S, settings, bg)
         if node and node.type == "folder" and node.id == "bt_geraete":
             log.info("MENU bt_geraete: Auto-Scan gestartet (right)")
             def _bt_geraete_right():
@@ -75,9 +87,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
     elif cmd.startswith("cat:"):
         val = cmd[4:]
         menu_state.navigate_to(val)
+        S["_menu_priority_event"] = "nav"
 
     elif cmd.startswith("goto:"):
         menu_state.goto(cmd[5:])
+        S["_menu_priority_event"] = "nav"
 
     elif cmd.startswith("activate:"):
         try:
@@ -86,7 +100,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
             return False
         node = menu_state.activate(uid)
         if node and node.type in ("station", "action", "toggle"):
+            S["_menu_priority_event"] = "leaf"
             _execute_node(node, menu_state, store, S, settings)
+        elif node and node.type == "folder":
+            S["_menu_priority_event"] = "nav"
 
     else:
         return False
@@ -111,6 +128,56 @@ _LAST_NODE_EXEC_TS = 0.0
 _LAST_NODE_EXEC_ID = ""
 
 
+def _stop_all_sources_now(S):
+    try:
+        webradio.stop(S)
+    except Exception as e:
+        log.warn(f"stop_all_sources: webradio.stop: {e}")
+    try:
+        dab.stop(S)
+    except Exception as e:
+        log.warn(f"stop_all_sources: dab.stop: {e}")
+    try:
+        fm.stop(S)
+    except Exception as e:
+        log.warn(f"stop_all_sources: fm.stop: {e}")
+    try:
+        scanner.stop(S)
+    except Exception as e:
+        log.warn(f"stop_all_sources: scanner.stop: {e}")
+
+    S["radio_playing"] = False
+    S["radio_station"] = ""
+    S["radio_name"] = ""
+    S["radio_type"] = ""
+    S["control_context"] = "idle"
+    for _k in ("track", "artist", "album", "dls_text", "metadata_unavailable",
+               "dab_lock", "dab_sync", "dab_state", "_last_hist_track", "source_error"):
+        S.pop(_k, None)
+    source_state.commit_source("idle")
+    _time_mod.sleep(0.10)
+
+
+def _maybe_enter_action(node, menu_state, store, S, settings, bg):
+    """Q-A: enter_action nur bei enter/right — nie bei activate/goto/walk."""
+    ea = getattr(node, "enter_action", None) or ""
+    if not ea.startswith("autoplay:"):
+        return
+    src = ea.split(":", 1)[1].strip()
+    log.info(f"MENU enter_action autoplay:{src} id={node.id}")
+
+    def _run():
+        from modules import source_autoplay as _ap
+        _ap.run_autoplay(
+            src, S, settings, store,
+            stop_all=lambda: _stop_all_sources_now(S),
+            begin_guard=_source_switch_begin,
+            end_guard=_source_switch_end,
+        )
+
+    bg(_run)
+
+
 def _execute_node(node, menu_state, store, S, settings):
     global _LAST_NODE_EXEC_TS, _LAST_NODE_EXEC_ID
     import threading
@@ -127,34 +194,7 @@ def _execute_node(node, menu_state, store, S, settings):
         threading.Thread(target=fn, daemon=True).start()
 
     def _stop_all_sources():
-        try:
-            webradio.stop(S)
-        except Exception as e:
-            log.warn(f"stop_all_sources: webradio.stop: {e}")
-        try:
-            dab.stop(S)
-        except Exception as e:
-            log.warn(f"stop_all_sources: dab.stop: {e}")
-        try:
-            fm.stop(S)
-        except Exception as e:
-            log.warn(f"stop_all_sources: fm.stop: {e}")
-        try:
-            scanner.stop(S)
-        except Exception as e:
-            log.warn(f"stop_all_sources: scanner.stop: {e}")
-
-        S["radio_playing"] = False
-        S["radio_station"] = ""
-        S["radio_name"] = ""
-        S["radio_type"] = ""
-        S["control_context"] = "idle"
-        # Metadaten vollständig löschen beim Quellwechsel
-        for _k in ("track", "artist", "album", "dls_text", "metadata_unavailable",
-                   "dab_lock", "dab_sync", "dab_state", "_last_hist_track", "source_error"):
-            S.pop(_k, None)
-        source_state.commit_source("idle")
-        _time_mod.sleep(0.10)
+        _stop_all_sources_now(S)
 
     if node.type == "station":
         log.info(f"PLAY_STATION label={node.label!r} source={node.source} meta={node.meta}")
@@ -243,10 +283,7 @@ def _execute_node(node, menu_state, store, S, settings):
 
 
 
-def _fm_manual(S, settings):
-    freq_str = fm.freq_input_screen()
-    if freq_str:
-        fm.play_station({"name": f"{freq_str} MHz", "freq": freq_str}, S)
+
 
 
 

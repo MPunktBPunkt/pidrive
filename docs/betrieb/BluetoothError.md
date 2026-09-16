@@ -1,5 +1,10 @@
 # PiDrive — Bluetooth A2DP Fehleranalyse
 
+> **Geltungsbereich (BF-F):** Dieses Dokument gilt für **A2DP gegen Kopfhörer**
+> (Sennheiser HD 4.40BT) und den PipeWire/WirePlumber-Audiopfad. Es deckt **nicht** die
+> Fahrzeugkopplung ab (BMW Numeric Comparison, D-Bus-Agent, MPRIS-Anmeldung). Dafür:
+> [`../auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md`](../auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md).
+
 **Zeitraum:** ca. 2026-05-31 – 2026-06-05  
 **Versionen:** v0.11.71 → v0.11.96  
 **Plattform:** Raspberry Pi 4, Raspberry Pi OS (Debian Trixie), Kernel 6.18.33+rpt-rpi-v8  

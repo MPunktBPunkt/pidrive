@@ -1,6 +1,6 @@
 # PiDrive — Architektur & Verzeichnisstruktur
 
-**Stand:** v0.11.128 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-15
 
 ## Übersicht
 
@@ -95,7 +95,7 @@ pidrive/
 │   ├── playback_meta.py    ← Metadaten-Reset bei Quellwechsel
 │   ├── source_state.py     ← Source-State-Machine (boot_phase, aktive Quelle)
 │   ├── system.py           ← System-Infos (RAM, Temp, throttled)
-│   ├── update.py           ← OTA-Update-Mechanismus
+│   ├── update.py           ← OTA von GitHub (pidrivectl update)
 │   ├── webradio.py         ← mpv-basiertes Webradio (IPC-Socket-Metadaten)
 │   ├── platform.py         ← Plattformerkennung + CAPS-Dictionary
 │   │
@@ -260,6 +260,9 @@ pidrivectl bt scan / pair / connect / known / status
 pidrivectl audio route bt|klinke|hdmi|auto
 pidrivectl volume up / down / set 70
 pidrivectl dab scan / status / live / stop
+pidrivectl update [--check|--yes]  # OTA von origin/main
+pidrivectl source state|history    # Transition-Diagnose (W7)
+pidrivectl webui check|selftest|routes
 pidrivectl test all            # Komplett-Systemtest
 pidrivectl debug mpris status  # MPRIS2 D-Bus prüfen
 ```

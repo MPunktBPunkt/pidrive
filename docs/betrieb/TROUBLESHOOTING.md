@@ -1,6 +1,6 @@
 # PiDrive — Troubleshooting-Runbook
 
-**Stand v0.11.122 · Plattform: Debian 13 (x86) / Raspberry Pi OS (Pi 4)**
+**Stand:** v0.11.132 · Plattform: Debian 13 (x86) / Raspberry Pi OS (Pi 4)
 
 > Pfad-Hinweis: Das Installationsverzeichnis (`INSTALL_DIR`) ist
 > `/home/<user>/pidrive` (bei Installation als User) oder `/opt/pidrive` (als root).
@@ -112,6 +112,23 @@ pidrivectl bt connect <MAC>
 > **A2DP-Recovery (ab v0.11.122):** Bei einem bereits verbundenen Gerät startet PiDrive
 > den `bluetooth`-Dienst während der Recovery **nicht** neu — ein Neustart hatte zuvor
 > die Verbindung abreißen lassen. Hilfsskript: `scripts/fix-bt-a2dp.sh`.
+
+---
+
+### DAB im Fahrzeug stumm, Webradio hörbar
+
+**Kein Bluetooth-Fehler.** DAB (`welle-cli`) schreibt heute **direkt auf ALSA/Klinke** und
+umgeht PipeWire — A2DP bleibt unerreichbar. Webradio/FM/Spotify laufen über `mpv` →
+PipeWire und sind am Fahrzeug hörbar.
+
+Messung / Umbau: [AUFTRAG-DAB-AUDIOWEG.md](../auftraege/AUFTRAG-DAB-AUDIOWEG.md)
+(DA1–DA5, Ziel: `welle-cli -w` + `mpv`).
+
+Schnellcheck am Pi (Klinke vs. BT):
+```bash
+pidrivectl play dab "…"     # Ton an der Klinke?
+pidrivectl play webradio …  # Ton am Fahrzeug?
+```
 
 ---
 
@@ -298,6 +315,15 @@ sleep 2
 pidrivectl scanner pmr446 ch 1
 ```
 
+### Spektrum-Snapshot zeigt JSON / „RTL-SDR belegt“ trotz Idle
+
+Bekannter WebUI-/Legacy-Pfad — **Analyse & Fix = W8**. Protokoll mit Repro und
+Codehinweisen: [`../ABNAHMEN.md`](../ABNAHMEN.md) (Abschnitt 2026-09-15 Spektrum-Snapshot).
+
+Kurz:
+- Button startet `fm_sweep`, nicht Einzel-Snapshot (`mode`/`center_mhz` fehlen).
+- Anzeige ist JSON, kein Spektrum-Bild.
+- Busy-Check ohne Stale-Cleanup; Legacy-`rtl_sdr`-Aufruf ohne stdout-`"-"` .
 ---
 
 ## 7. MPRIS2 / D-Bus
@@ -320,6 +346,21 @@ In `mpris2.py` ist das ab v0.11.96 korrekt — beim Import, nicht in `start_mpri
 
 ## 8. Installer / Deployment
 
+### OTA-Update (`pidrivectl update`)
+
+```bash
+pidrivectl update --check          # Lokal vs. origin/main
+pidrivectl update                  # mit Bestätigung
+# Nach Update:
+pidrivectl version
+systemctl is-active pidrive_core pidrive_web
+```
+
+Nur bei Commits hinter `origin/main` (`behind > 0`). Braucht Netzwerk + git;
+Service-Restart per `sudo -n /bin/systemctl restart …` (NOPASSWD nur `restart`).
+
+`git fetch` fehlgeschlagen → Fehlermeldung; Fallback nur VERSION-Vergleich via raw.githubusercontent.
+
 ### Installer bricht ab — Core startet nicht
 
 ```bash
@@ -338,6 +379,108 @@ journalctl -u pipewire -u pipewire-pulse -u wireplumber --no-pager | tail -30
 groups pulse
 usermod -aG audio,bluetooth pulse
 systemctl restart pipewire pipewire-pulse wireplumber
+```
+
+---
+
+## 9. Netzwerk / WLAN
+
+### Handy-Hotspot im Fahrzeug einrichten
+
+Im Fahrzeug ist normalerweise kein WLAN verfügbar. Für Webradio wird bei Bedarf ein
+Hotspot am Handy eingeschaltet — damit der Pi sich dann von selbst verbindet, muss das
+Netz einmalig als Konfiguration angelegt werden.
+
+**Am Handy** einrichten (Android: *Einstellungen → Hotspot*, iOS: *Persönlicher Hotspot*):
+
+| | |
+|---|---|
+| SSID / Netzwerkname | `pidrive` |
+| Sicherheit | WPA2-PSK |
+| Band | 2,4 GHz — der Pi-Funkchip ist dort zuverlässiger, und die Reichweite im Auto genügt |
+
+> **Passwortlänge:** WPA2-PSK verlangt **8 bis 63 Zeichen**. Das ist eine Grenze des
+> Standards, keine Einstellung. Kürzere Passwörter — etwa `pidrive` mit sieben Zeichen —
+> lehnen sowohl Android/iOS als auch `wpa_passphrase` ab.
+
+**Am Pi** anlegen:
+
+```bash
+sudo bash ~/pidrive/scripts/wifi-add-network.sh pidrive
+# Passwort wird abgefragt (nicht als Argument übergeben — sonst steht es in der History)
+```
+
+Das Skript erkennt den Stack selbst (NetworkManager oder `wpa_supplicant`), ist
+wiederholbar ohne Duplikate anzulegen, sichert `wpa_supplicant.conf` vorher, und schreibt
+dort nur den Hash statt des Klartextpassworts.
+
+Das Passwort steht **absichtlich nicht im Repository**. Wer es dauerhaft festhalten will,
+legt es außerhalb des Repos ab — nicht in `docs/`.
+
+**Priorität:** der Hotspot wird mit `autoconnect-priority -10` niedriger eingestuft als das
+Heimnetz (Standard `0`). Damit nimmt der Pi zu Hause das Heim-WLAN, auch wenn das Handy mit
+aktivem Hotspot in der Nähe liegt — sonst würde er unbemerkt Mobildaten verbrauchen.
+
+Gegenprobe mit eingeschaltetem Hotspot:
+
+```bash
+iwgetid -r                      # muss 'pidrive' zeigen
+ip -4 addr show wlan0           # muss eine IPv4 haben
+nmcli -t -f NAME,AUTOCONNECT,AUTOCONNECT-PRIORITY connection show | grep pidrive
+# bzw. bei wpa_supplicant:
+sudo wpa_cli -i wlan0 list_networks
+```
+
+### Recovery läuft im Fahrzeug alle 5 Minuten ins Leere
+
+Bekannt und **noch nicht behoben** — siehe Paket W-A in
+[../auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](../auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) §12.1.
+
+`wlan_ok()` in `scripts/wifi-recover.sh` fragt nur, ob eine SSID anliegt. Im Fahrzeug ohne
+eingeschalteten Hotspot ist das dauerhaft falsch, und der Timer (`OnUnitActiveSec=5min`)
+startet die vollständige Prozedur immer wieder — bis hin zum Neuladen von `brcmfmac`.
+
+Das Anlegen des Hotspot-Netzes allein behebt das **nicht**: solange der Hotspot aus ist,
+liegt weiterhin keine SSID an. Erst wenn die Vorbedingung auf *„ist ein konfiguriertes Netz
+im Scan sichtbar?"* umgestellt ist (W-A), unterscheidet die Automatik Normalzustand von
+Störung.
+
+Zwischenlösung, falls die Leerläufe im Journal stören:
+
+```bash
+sudo systemctl stop pidrive-wifi-recover.timer
+sudo systemctl disable pidrive-wifi-recover.timer
+# Boot-Service bleibt aktiv — der reicht für den Stromausfall-Fall
+```
+
+Häufigkeit der Leerläufe nach einer Fahrt zählen (Messung H11):
+
+```bash
+journalctl -u pidrive-wifi-recover -b | grep -c 'Recovery starten'
+```
+
+### Nach Stromausfall: nur LAN erreichbar, WLAN tot
+
+Bekanntes Muster: `eth0` hat IP (z. B. `.107`), `wlan0` ohne SSID/IPv4. Credentials liegen im OS (`wpa_supplicant` / NetworkManager) — oft hängt nur der Stack.
+
+```bash
+# Status
+ip -4 addr show wlan0 eth0
+iwgetid -r
+rfkill list wifi
+
+# Einmalig reparieren
+sudo bash ~/pidrive/scripts/wifi-recover.sh
+# oder:
+sudo systemctl start pidrive-wifi-recover.service
+journalctl -u pidrive-wifi-recover -b --no-pager
+```
+
+Ab Install: **Boot-Service** (`pidrive-wifi-recover.service`) läuft bei jedem Start (~30 s nach `network-online`); der Timer macht Nachversuche.
+
+```bash
+systemctl is-enabled pidrive-wifi-recover.service
+systemctl status pidrive-wifi-recover.timer
 ```
 
 ---

@@ -25,9 +25,11 @@ class MenuNode:
     path_id:   str = ""
     uid:       int = 0
     skip_on_nav: bool = False
+    # Q-A: beim Betreten per enter/right (nicht activate/goto)
+    enter_action: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "id":       self.id,
             "label":    self.label,
             "type":     self.type,
@@ -41,6 +43,9 @@ class MenuNode:
             "skip_on_nav": self.skip_on_nav,
             "has_children": len(self.children) > 0,
         }
+        if self.enter_action:
+            d["enter_action"] = self.enter_action
+        return d
 
 
 # ── MenuState ─────────────────────────────────────────────────────────────────
@@ -199,9 +204,20 @@ class MenuState:
         parent_cursors: List[int] = []
 
         for part in parts:
+            # Kollisions-Suffix aus annotate (#1) für id-Match entfernen
+            want = part.split("#", 1)[0]
             found = None
             for i, child in enumerate(node.children):
-                if child.id == part:
+                cid = child.id
+                # voller path_id-Tail oder id (+ optional #n aus annotate)
+                if cid == part or cid == want:
+                    found = (child, i)
+                    break
+                if child.path_id and (
+                    child.path_id == path_id
+                    or child.path_id.endswith("/" + part)
+                    or child.path_id.split("/")[-1] == part
+                ):
                     found = (child, i)
                     break
             if found is None:
@@ -222,15 +238,45 @@ class MenuState:
         node = self._find_node_by_uid(self.root, uid)
         if node is None:
             return None
-        if not self.goto(node.path_id):
+        chain = self._chain_to_uid(uid)
+        if not chain:
             return None
+        # chain: [root, …, node]
+        if len(chain) == 1:
+            self._stack = [self.root]
+            self._cursors = [self._first_selectable(self.root.children)]
+        else:
+            self._stack = chain[:-1]
+            cursors: List[int] = []
+            for depth in range(len(chain) - 1):
+                parent = chain[depth]
+                child = chain[depth + 1]
+                idx = next(
+                    (i for i, c in enumerate(parent.children) if c.uid == child.uid),
+                    0,
+                )
+                cursors.append(idx)
+            self._cursors = cursors
+        self.rev += 1
         if node.type == "folder" and node.children:
             self.key_enter()
             return node
-        if node.type in ("station", "action", "toggle", "info"):
-            self.rev += 1
-            return node
         return node
+
+    def _chain_to_uid(self, uid: int) -> Optional[List[MenuNode]]:
+        """Pfad root→…→Knoten mit uid."""
+
+        def _dfs(current: MenuNode, path: List[MenuNode]) -> Optional[List[MenuNode]]:
+            here = path + [current]
+            if current.uid == uid:
+                return here
+            for child in current.children:
+                hit = _dfs(child, here)
+                if hit is not None:
+                    return hit
+            return None
+
+        return _dfs(self.root, [])
 
     def _find_node_by_uid(self, node: MenuNode, uid: int) -> Optional[MenuNode]:
         if node.uid == uid:

@@ -34,6 +34,8 @@ VALID_EVENTS = sorted(set(_EVENT_ALIASES) | set(_EVENT_ALIASES.values()))
 
 _offline_state = None  # MenuState
 _offline_last_enter = 0.0
+# Q-G: simuliert D3 — fm_manual klaut Tastendrücke (freq_input_screen)
+_offline_modal = False
 
 
 def normalize_event(name: str) -> str:
@@ -44,9 +46,10 @@ def normalize_event(name: str) -> str:
 
 
 def reset_offline_state():
-    global _offline_state, _offline_last_enter
+    global _offline_state, _offline_last_enter, _offline_modal
     _offline_state = None
     _offline_last_enter = 0.0
+    _offline_modal = False
 
 
 def _get_offline_state():
@@ -82,12 +85,32 @@ def inject_event(event: str, source: str = "idrive_sim", require_ready: bool = T
 
 def offline_apply(event: str, source: str = "idrive_offline") -> dict:
     """Ohne Core: map_event im Menü-Kontext + lokales MenuState."""
-    global _offline_last_enter
+    global _offline_last_enter, _offline_modal
     from integration.avrcp_trigger import map_event
 
     state = _get_offline_state()
     ctx = {"context": "menu", "status": {}, "menu": state.export(), "list": {}, "band": ""}
     canon = normalize_event(event)
+
+    # D3-Nachbildung: modale FM-Frequenzeingabe schluckt Events (kein Menü-Cursor)
+    if _offline_modal:
+        sel = state.selected
+        return {
+            "ok": True,
+            "offline": True,
+            "event": canon,
+            "context": "menu",
+            "trigger": "modal_swallowed",
+            "applied": "modal_swallowed",
+            "menu_path": list(state.path),
+            "selected": sel.label if sel else None,
+            "selected_path_id": sel.path_id if sel else None,
+            "selected_type": sel.type if sel else None,
+            "activated_id": None,
+            "activated_label": None,
+            "source": source,
+        }
+
     now = time.time()
     trigger = None
     if canon in ("play", "pause", "play_pause"):
@@ -112,6 +135,9 @@ def offline_apply(event: str, source: str = "idrive_offline") -> dict:
         if node and node.type in ("station", "action", "toggle"):
             activated = node
             applied = f"activate:{node.id}"
+            # Q-G: fm_manual startet freq_input_screen → Events gehen verloren
+            if getattr(node, "id", "") == "fm_manual" or getattr(node, "action", "") == "fm_manual":
+                _offline_modal = True
     elif trigger == "back":
         state.key_back(); applied = "back"
     elif trigger == "cat:0":
@@ -181,7 +207,10 @@ def check_expect(expr: str, offline_result: Optional[dict] = None) -> Tuple[bool
     menu = _read_menu()
 
     if offline_result and offline_result.get("offline"):
-        if key in ("selected", "station", "activated"):
+        if key == "selected":
+            got = offline_result.get("selected") or ""
+            return val.lower() in got.lower(), f"got={got!r}"
+        if key in ("station", "activated"):
             got = offline_result.get("activated_label") or offline_result.get("selected") or ""
             return val.lower() in got.lower(), f"got={got!r}"
         if key == "path_contains":

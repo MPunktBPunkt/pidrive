@@ -275,6 +275,8 @@ def play_station(station, S, settings=None):
         _last_station_key   = cur_key
         # v0.9.26: RDS-Hook — aktuell No-Op (rtl_fm liefert kein RDS)
         update_rds_metadata(name, S)
+        # Q-J / D2: zweiter Metadaten-Push nachdem Abstimmung fertig ist
+        S["_mpris_force_push"] = True
         log.action("FM", f"Wiedergabe: {name} ({freq_f:.1f} MHz)")
         return True
 
@@ -357,36 +359,40 @@ def play_prev(S, stations):
     play_station(stations[idx], S)
 
 
-def freq_input_screen(screen=None):
-    """Headless Frequenz-Eingabe via File-Trigger. Gibt Frequenz-String zurück."""
-    freq = 87.5
-    deadline = time.time() + 60
-    while time.time() < deadline:
-        ipc.write_progress(
-            "FM Frequenz",
-            f"{freq:.1f} MHz  (↑↓ 0.1  ←→ 1.0  Enter=OK  Back=Abbruch)",
-            color="blue"
-        )
-        if not os.path.exists(ipc.CMD_FILE):
-            time.sleep(0.15)
+def _current_freq_mhz(S, settings=None) -> float:
+    """Aktuelle FM-Frequenz aus Status oder last_fm_station, sonst 87.5."""
+    for src in (
+        (S or {}).get("radio_station"),
+        ((settings or {}).get("last_fm_station") or {}).get("freq"),
+    ):
+        if src is None:
             continue
+        text = str(src)
+        # "FM: Name (99.4 MHz)" oder "99.4"
         try:
-            cmd = open(ipc.CMD_FILE).read().strip()
-            os.remove(ipc.CMD_FILE)
+            if "(" in text and "mhz" in text.lower():
+                part = text.split("(")[-1].replace(")", "").lower().replace("mhz", "").strip()
+                return float(part)
+            return float(text.replace("MHz", "").replace("mhz", "").strip())
         except Exception:
             continue
-        if   cmd == "up":    freq = min(108.0, round(freq + 0.1, 1))
-        elif cmd == "down":  freq = max(87.5,  round(freq - 0.1, 1))
-        elif cmd == "right": freq = min(108.0, round(freq + 1.0, 1))
-        elif cmd == "left":  freq = max(87.5,  round(freq - 1.0, 1))
-        elif cmd == "enter":
-            ipc.clear_progress()
-            return f"{freq:.1f}"
-        elif cmd == "back":
-            ipc.clear_progress()
-            return None
-    ipc.clear_progress()
-    return None
+    return 87.5
+
+
+def step_freq(S, settings, delta_mhz: float) -> bool:
+    """
+    FM-Rasterschritt (Q-H): ±0.1 / ±1.0 MHz, Grenzen 87.5–108.0, kein Umlauf.
+    """
+    cur = _current_freq_mhz(S, settings)
+    try:
+        delta = float(delta_mhz)
+    except Exception:
+        return False
+    new = round(cur + delta, 1)
+    new = max(87.5, min(108.0, new))
+    name = f"{new:.1f} MHz"
+    log.info(f"FM step: {cur:.1f} {delta:+.1f} → {new:.1f}")
+    return bool(play_station({"name": name, "freq": f"{new:.1f}"}, S, settings))
 
 
 def scan_stations(S):

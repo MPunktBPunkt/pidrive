@@ -820,26 +820,8 @@ def api_debug_summary():
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Webradio API
+# Webradio-API liegt in web.api.routes_webradio (Blueprint)
 # ──────────────────────────────────────────────────────────────────────────────
-
-def _load_stations_file():
-    """stations.json lesen. Gibt dict mit 'stations'-Liste zurück."""
-    try:
-        with open(STATIONS_FILE, encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {"version": 1, "stations": []}
-
-
-def _save_stations_file(data: dict):
-    """stations.json atomar schreiben."""
-    import time as _t
-    data["updated_at"] = _t.strftime("%Y-%m-%dT%H:%M:%S")
-    tmp = STATIONS_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    os.replace(tmp, STATIONS_FILE)
 
 
 @app.route("/api/diag/system")

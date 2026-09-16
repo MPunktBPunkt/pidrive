@@ -62,16 +62,23 @@ def mask_label(label: str) -> str:
 
 
 def node_to_dict(node: MenuNode, path: str) -> dict:
-    return {
+    d = {
         "path": path,
         "id": node.id,
         "type": node.type,
         "action": node.action,
+        "source": node.source,
+        "meta": dict(node.meta or {}),
         "label": mask_label(node.label),
         "path_id": getattr(node, "path_id", "") or path,
         "uid": getattr(node, "uid", 0),
         "skip_on_nav": getattr(node, "skip_on_nav", False),
+        "playable": bool(getattr(node, "playable", False)),
     }
+    ea = getattr(node, "enter_action", None)
+    if ea:
+        d["enter_action"] = ea
+    return d
 
 
 def walk_tree(root: MenuNode) -> List[dict]:
@@ -99,16 +106,36 @@ def lint_tree(nodes: List[dict]) -> Tuple[List[str], List[str]]:
     for n in nodes:
         nid = n["id"]
         if nid in ids_seen:
-            # B3: baumweite Eindeutigkeit — bis M1 als Warnung (nicht blockierend)
-            warnings.append(f"ID doppelt: {nid!r} ({ids_seen[nid]} und {n['path']})")
+            # Doppelte IDs → goto/activate/iDrive bricht (B3) — Fehler, nicht Warnung
+            errors.append(f"ID doppelt: {nid!r} ({ids_seen[nid]} und {n['path']})")
         else:
             ids_seen[nid] = n["path"]
 
+        ntype = n["type"]
         action = n.get("action")
-        if action and not would_handle(action):
+
+        # Action/Toggle ohne action = Enter tut nichts (td_nav silent return)
+        if ntype in ("action", "toggle") and not action:
+            errors.append(f"Action leer (ohne Funktion): {n['path']}")
+        elif action and not would_handle(action):
             errors.append(f"Action nicht behandelt: {action!r} ({n['path']})")
 
-        if n["type"] == "folder":
+        # Stationen brauchen source + Meta zum Abspielen
+        if ntype == "station":
+            src = (n.get("source") or "").strip()
+            meta = n.get("meta") or {}
+            if not src:
+                errors.append(f"Station ohne source: {n['path']}")
+            elif src == "fm" and not meta.get("freq"):
+                errors.append(f"FM-Station ohne freq: {n['path']}")
+            elif src == "webradio" and not (meta.get("url") or meta.get("id")):
+                errors.append(f"Webradio-Station ohne url: {n['path']}")
+            elif src == "dab" and not (
+                meta.get("name") or meta.get("service_id") or (n.get("label") or "").strip()
+            ):
+                errors.append(f"DAB-Station ohne name/service_id: {n['path']}")
+
+        if ntype == "folder":
             child_prefix = n["path"] + "/"
             direct_children = [
                 p for p in by_path
@@ -118,9 +145,22 @@ def lint_tree(nodes: List[dict]) -> Tuple[List[str], List[str]]:
                 errors.append(f"Leerer Ordner: {n['path']}")
             if n["path"] != "root" and direct_children and not _folder_has_back_from_nodes(n, by_path):
                 errors.append(f"Kein Rückweg: {n['path']}")
+            # Mindestens ein anwählbarer Eintrag (nicht nur Info/skip)
+            if n["path"] != "root" and direct_children:
+                selectable = [
+                    p for p in direct_children
+                    if not by_path[p].get("skip_on_nav")
+                ]
+                if not selectable:
+                    errors.append(f"Ordner ohne anwählbaren Eintrag: {n['path']}")
 
-        if n["type"] == "info" and not n.get("skip_on_nav"):
-            warnings.append(f"Info-Knoten (skip_on_nav fehlt): {n['path']}")
+        if ntype == "info" and not n.get("skip_on_nav"):
+            errors.append(f"Info-Knoten ohne skip_on_nav (Enter blind): {n['path']}")
+
+        # Annotate-Kollisions-Suffix bedeutet doppelte id im Elternordner
+        path_id = n.get("path_id") or ""
+        if "#" in path_id.split("/")[-1]:
+            errors.append(f"path_id mit Kollisions-Suffix (ID-Konflikt): {path_id}")
 
         label = n.get("label") or ""
         if len(label) > 64:
@@ -359,9 +399,13 @@ def find_node_by_path(root: MenuNode, path_id: str) -> Optional[Tuple[MenuNode, 
     trail: List[Tuple[MenuNode, int]] = []
     node = root
     for part in parts:
+        want = part.split("#", 1)[0]
         found = None
         for i, child in enumerate(node.children):
-            if child.id == part:
+            if child.id == part or child.id == want:
+                found = (child, i)
+                break
+            if child.path_id and child.path_id.split("/")[-1] == part:
                 found = (child, i)
                 break
         if found is None:
@@ -370,6 +414,56 @@ def find_node_by_path(root: MenuNode, path_id: str) -> Optional[Tuple[MenuNode, 
         trail.append((node, idx))
         node = child
     return node, trail
+
+
+def cmd_walk() -> int:
+    """
+    R3: jeden Ordner per goto öffnen, Rückweg prüfen; jedes action/toggle/station
+    per activate(uid) erreichbar — fängt tote Menüpunkte offline.
+    """
+    from menu.menu_state import MenuState
+
+    root = build_reference_tree()
+    nodes = walk_tree(root)
+    errors: List[str] = []
+    folders = 0
+    leaves = 0
+
+    for n in nodes:
+        if n["type"] != "folder" or n["path"] == "root":
+            continue
+        folders += 1
+        state = MenuState(root)
+        pid = n.get("path_id") or n["path"]
+        if not state.goto(pid):
+            errors.append(f"Ordner nicht erreichbar: {pid}")
+            continue
+        if not _folder_has_back_from_nodes(n, {x["path"]: x for x in nodes}):
+            errors.append(f"Ordner ohne Rückweg: {pid}")
+
+    state = MenuState(root)
+    for n in nodes:
+        if n["type"] not in ("station", "action", "toggle"):
+            continue
+        leaves += 1
+        got = state.activate(n["uid"])
+        if got is None:
+            errors.append(f"activate tot: {n.get('path_id') or n['path']} uid={n['uid']}")
+        elif got.uid != n["uid"]:
+            errors.append(f"activate falscher Knoten: {n['path']} → {got.path_id}")
+
+    lint_errs, lint_warns = lint_tree(nodes)
+    errors.extend(lint_errs)
+
+    for w in lint_warns:
+        print(f"WARNUNG: {w}")
+    for e in errors:
+        print(f"FEHLER: {e}")
+    if errors:
+        print(f"--- walk: {len(errors)} Fehler ({folders} Ordner, {leaves} Blätter)")
+        return 1
+    print(f"OK: walk {folders} Ordner + {leaves} Blätter, lint sauber")
+    return 0
 
 
 def skip_only_cost(root: MenuNode, path_id: str) -> Optional[dict]:

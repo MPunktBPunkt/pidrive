@@ -61,6 +61,10 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-051 | Schnellübersicht | `pidrivectl now` | Aktuelle Quelle + Titel | Core | ✅ |
 | F-052 | Diagnose | `pidrivectl system diagnose` | Keine kritischen Fehler | — | 🟡 |
 | F-053 | System-Info | Trigger `sys_info` | Log/Status | Core | ✅ |
+| F-054 | OTA-Update prüfen | `pidrivectl update --check` | Lokal/GitHub-Version + Commit; „aktuell“ oder Diff | git, Netzwerk | ✅ |
+| F-055 | OTA-Update einspielen | `pidrivectl update --yes` | `VERSION`/`HEAD` = `origin/main`; Services active | git, sudo restart | ✅ |
+| F-056 | Quellen-Zustand | `pidrivectl source state` | current/transition/Datei↔Speicher | Core | ✅ |
+| F-057 | Transition-Historie | `pidrivectl source history` | letzte Übergänge | Core (W7) | ✅ |
 
 ## Menü (M0)
 
@@ -77,6 +81,8 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-068 | Rebuild hält Position | `pidrivectl menu rebuild` | Pfad+UID gleich | Offline | ✅ |
 | F-069 | iDrive-Event | `pidrivectl idrive next --offline` | Mapping + Menübewegung | Offline | ✅ |
 | F-070 | iDrive-Skript ROCK FM | `pidrivectl idrive script tests/idrive/rockfm.txt --offline` | activated=ROCK FM | Offline | ✅ |
+| F-071 | Menü-Walk | `pidrivectl menu walk` | alle Ordner+Blätter erreichbar | Offline | ✅ |
+| F-072 | iDrive Stop/Audio/BT | `tests/idrive/{stop,audio-klinke,bt-scan}.txt` | activated erwartet | Offline | ✅ |
 
 ## WebUI (W0)
 
@@ -100,6 +106,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-095 | Menü-Fernsteuerung | `/api/core` path/nodes + UI | wie `menu goto/activate` | Core | ⛔ V3 Oberfläche fehlt |
 | F-096 | Billige Listen | `curl -s localhost:8080/api/lists` | dab/web/fm/favorites ohne pactl | Web | ✅ W2/S9 |
 | F-097 | processes in Status | `/api/core` → `status.processes` | nicht-leer wenn mpv/welle läuft | Core | ✅ W2/S3 |
+| F-098 | Offline-CI | `bash tools/ci_offline.sh` / GHA | Exit 0, pytest Unit+Verträge | Offline | ✅ |
 
 ## Navigation / Trigger (AVRCP → Core)
 

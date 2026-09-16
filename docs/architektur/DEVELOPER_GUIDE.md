@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand:** v0.11.128 · 2026-09-15
+**Stand:** v0.11.132 · 2026-09-15
 
 ---
 
@@ -79,7 +79,8 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 | Favoriten | `modules/favorites.py` |
 | WiFi | `modules/wifi.py` |
 | System-Infos (RAM/Temp/throttled) | `modules/system.py` |
-| OTA-Update | `modules/update.py` |
+| OTA-Update (GitHub) | `modules/update.py` → `pidrivectl update` |
+| Quellen-/Transition-Zustand | `modules/source_state.py` → `pidrivectl source state\|history` |
 | System-Test | `test_suite.py` |
 | Core-Loop | `main_core.py` |
 | IPC-Queue / Status | `ipc.py` |
@@ -166,10 +167,42 @@ dbus-send --system --print-reply \
 
 ## F. Neuen Trigger ergänzen
 
-1. `web/shared/constants.py` und `web/shared.py`: Whitelist erweitern
+1. `web/shared/constants.py` (Whitelist `ALLOWED_COMMANDS`) erweitern — **nicht** die tote `web/shared.py`
 2. `trigger/trigger_dispatcher.py`: welcher `td_*`-Handler?
 3. Im passenden `trigger/td_*.py`: `elif cmd == "mein_trigger":` ergänzen
 4. Rückgabe: `True` wenn Menü-Rebuild nötig
+
+---
+
+## F2. OTA-Update vom Pi (`pidrivectl update`)
+
+Prüft `origin/main` per `git fetch`, zeigt Diff, spielt nach Bestätigung ein
+(`git reset --hard origin/main`), startet `pidrive_core` / `pidrive_web` neu
+(NOPASSWD: `/bin/systemctl restart …`).
+
+```bash
+pidrivectl update --check   # nur prüfen
+pidrivectl update           # prüfen + Nachfrage [j/N]
+pidrivectl update --yes     # ohne Nachfrage
+```
+
+**Semantik:** „Update verfügbar“ nur wenn `behind > 0` (Commits hinter `origin/main`).
+Lokaler Vorsprung (`ahead`) allein zählt nicht. Runtime-Config unter `pidrive/config/`
+wird vor dem Reset gestasht, falls dirty.
+
+Implementierung: `modules/update.py` (`check_for_update`, `apply_update`, `do_update`
+für Menü/Trigger mit eigener Confirm-UI).
+
+---
+
+## F3. Quellen-/Transition-Diagnose
+
+```bash
+pidrivectl source state     # current/previous, transition, owner, Datei↔Speicher
+pidrivectl source history   # letzte Übergänge (Ringpuffer, W7/Z10)
+```
+
+Details: [`ZUSTANDSMASCHINE.md`](ZUSTANDSMASCHINE.md).
 
 ---
 

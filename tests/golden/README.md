@@ -30,7 +30,7 @@ pidrivectl menu lint              # statische Prüfungen
 | `Alle: …` | `Alle: <LIB_NAME>` |
 | `★ …` / Favoriten-Präfix | `<FAV_PREFIX>…` |
 
-## Bekannte Lint-Warnungen (M0, Behebung in M1/M2)
+## Bekannte Lint-Warnungen
 
-- **Info-Knoten ohne `skip_on_nav`** (B5) — 16 Knoten
-- **Doppelte IDs** in DAB/Webradio-Config (B3) — `dab_0x1014`, `dab_0x1b2e`, `web_rock_antenne_heavy_m`
+Keine (Stand 2026-09-16): doppelte Station-IDs behoben (Config-`id`), leere Actions und
+`path_id#N`-Kollisionen sind Lint-**Fehler**.

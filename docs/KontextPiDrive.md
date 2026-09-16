@@ -1,4 +1,4 @@
-# PiDrive — Kontext & Projektdokumentation v0.11.128
+# PiDrive — Kontext & Projektdokumentation v0.11.132
 
 > **Pflegehinweis:** Diese Datei ist der Entwicklungs-/Entscheidungsverlauf und wird
 > **nach jeder Session aktualisiert** (Changelog-Abschnitt unten + Funktionsstatus).
@@ -29,7 +29,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 ---
 
-## Funktionsstatus v0.11.128
+## Funktionsstatus v0.11.132
 
 | Feature | Status |
 |---|---|
@@ -40,13 +40,14 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | BT A2DP (PipeWire `bluez_output.*`) | ✅ v0.11.121 `find_bt_sink_for_mac`; v0.11.122 kein BT-Restart bei Recovery |
 | BT Pairing/Reconnect | ✅ v0.11.111–116 Auto-Restore, Reconnect, Pause während Pairing |
 | Metadata (now/playlist) | ✅ via mpv IPC Socket |
-| Scanner CLI (pmr446/vhf/uhf/cb/fm) | 🟡 CLI da; **Suchlauf/C1 und RTL-Import C2 noch offen** (Auftrag WebUI-Sanierung) |
+| Scanner CLI (pmr446/vhf/uhf/cb/fm) | 🟡 C1/C3/C7/C12–C14 + Status in CLI; Single-`rtl_fm`-Sweep + CB-AM + FastScan (W8) offen |
 | AVRCP Phase 1 (Kontextmapping) | ✅ v0.8.6 |
 | MPRIS2 (BMW-Metadaten + Watchdog) | ✅ **v0.11.123 art_url-Bug gefixt** — Menü/Metadaten erscheinen wieder |
 | Spotify Connect (librespot/raspotify) | ✅ OAuth vorhanden; **als Favorit möglich** (v0.11.123) |
 | USB-Musik + lokale Wiedergabe (mp3/m3u) | ✅ `settings.music_dir`; Menü Quellen→Bibliothek; **WebUI `/music-admin`** (Upload, ID3) |
 | **Menü (iDrive-tauglich)** | ✅ M0–M6 (Lint/Verify/goto/activate/idrive); Golden Master |
-| **WebUI Statuskette** | 🟡 W0/W1 erledigt (v0.11.128); **W2–W11 offen** — siehe `docs/ABNAHMEN.md` |
+| **WebUI Statuskette** | 🟡 W0–W7/Stufe1 + W5(Teil) + W6 erledigt; **W8–W11 offen** — `docs/ABNAHMEN.md` |
+| **OTA-Update** | ✅ `pidrivectl update [--check|--yes]` prüft GitHub, bestätigt, `reset --hard origin/main` |
 | **Audio-Stack: PipeWire System-Mode** | ✅ ersetzt System-PulseAudio |
 | **WirePlumber System-Mode (Trixie/Pi 4)** | ✅ v0.11.118/119 main-Profil, seat-monitoring aus |
 | pidrivectl test all | ✅ inkl. `menu` + **`webui`** (W0/W1); AVRCP-Version/Cover-Art-Check |
@@ -55,7 +56,7 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 
 ---
 
-## Changelog v0.11.97 – v0.11.128 (Kurzüberblick)
+## Changelog v0.11.97 – v0.11.132 (Kurzüberblick)
 
 | Version | Änderung |
 |---|---|
@@ -72,6 +73,9 @@ Kein TFT-Display — GUI-los, vollständig über SSH / WebUI bedienbar.
 | 0.11.126 | `pidrivectl test bt` liest AVRCP-Version aus SDP und meldet Cover-Art-Fähigkeit (erst ab AVRCP 1.6) |
 | 0.11.127 | **WebUI Medienbibliothek** (`/music-admin`): Upload, Ordner, ID3-Tags; iDrive-Menü Unterordner (nur Abspielen); `library_stop`/`radio_stop` stoppen lokale mpv-Wiedergabe; Menü M0–M6 |
 | 0.11.128 | **WebUI-Sanierung W0/W1:** `pidrivectl webui check|selftest|routes`; C16 `source_state`-Closure in `td_hardware` behoben; S11/S12 (`safe_run`/`sys`-Imports); `degraded_imports` im Status; Blueprint-Warnbanner; HW-Abnahme auf 192.168.178.105 → `docs/ABNAHMEN.md` |
+| 0.11.129–0.11.130 | WebUI W2–W4 + W7/Stufe 1: Statuskette, V4-Buttons, RTL-Import `modules.radio.*`, Transition-False sichtbar, Stale-Cleanup, `pidrivectl source state\|history` |
+| 0.11.131 | Scanner W5(Teil)+W6: C1/C3/C7/C12–C14, Statusfelder in CLI; HW-Deploy **192.168.178.107** (LAN) |
+| 0.11.132 | **`pidrivectl update`:** prüft GitHub (`origin/main`), zeigt Diff, Bestätigung bzw. `--yes`; Update nur bei `behind>0` |
 | 0.11.132 (docs) | Erster BMW-iDrive-BT-Feldtest: Pairing SSP-Zahl, Now Playing Spotify + Webradio; Fotos in [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 
 ---
@@ -170,7 +174,10 @@ PipeWire (System-Mode) / Socket: /var/run/pulse/native
 ```
 
 **mpv:** `--ao=pulse --audio-device=pulse/<sink>` explizit nötig.  
-**welle-cli:** ALSA via PipeWire-ALSA-Plugin (PULSE_SERVER wird gesetzt).  
+**welle-cli (DAB-Wiedergabe):** schreibt **direkt auf ALSA-Hardware (Klinke)** —
+`PULSE_SERVER` / PipeWire-Umgebung werden für den Prozess absichtlich entfernt.
+Bluetooth/A2DP ist damit **nicht** erreichbar. Umbau geplant: siehe
+[AUFTRAG-DAB-AUDIOWEG.md](auftraege/AUFTRAG-DAB-AUDIOWEG.md).  
 **librespot:** `--device pulse` → PipeWire-Pulse-Compat-Layer.
 
 ---
@@ -182,7 +189,7 @@ PipeWire (System-Mode) / Socket: /var/run/pulse/native
 | Webradio | `mpv` mit `Popen(list, env=dict)` | IPC-Socket für Metadaten |
 | FM Radio | `rtl_fm \| mpv` via `shell=True` | `--demuxer=rawaudio --rate=32000` |
 | FM Scanner | `rtl_fm \| mpv` via `shell=True` | `-M wbfm` Broadcast, `-M fm` Schmalband |
-| DAB+ | `welle-cli` mit PULSE_SERVER | ALSA → PipeWire-Plugin → BT/Klinke |
+| DAB+ | `welle-cli` **ohne** PULSE_SERVER | **ALSA → Klinke** (BT unerreichbar; DA1) |
 | Scanner (PMR/VHF) | `rtl_fm \| mpv` | `-M fm`, Output-Rate 32000 |
 | Spotify | `librespot`/`raspotify` | `--device pulse` → PipeWire |
 | Lokal | `mpv` mit `Popen(list)` | `--audio-device=pulse/<sink>` |
@@ -367,6 +374,15 @@ pidrivectl webui check                   # sendCmd/fetch vs. Whitelist/Routen
 pidrivectl webui selftest                # web.shared.* Import + Aufruf
 pidrivectl webui routes                  # Flask-Routen listen
 
+# Quelle / Transition (W7)
+pidrivectl source state                  # current, transition, Datei↔Speicher
+pidrivectl source history                # letzte Übergänge
+
+# OTA (GitHub origin/main)
+pidrivectl update --check                # nur prüfen
+pidrivectl update                        # prüfen + Nachfrage
+pidrivectl update --yes                  # einspielen + Services restart
+
 # System-Test (komplett)
 pidrivectl test all                      # inkl. menu + webui + Quellen + Audio + BT
 pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log|menu|webui
@@ -378,9 +394,9 @@ pidrivectl test system|audio|bt|mpris|webradio|fm|dab|dabscan|spotify|avrcp|log|
 
 | Thema | Status |
 |---|---|
-| **WebUI-Sanierung W2–W11** | 🟡 Auftrag `AUFTRAG-WEBUI-SANIERUNG.md`; W0/W1 @ v0.11.128 abgenommen (`docs/ABNAHMEN.md`). Als Nächstes: Statuskette (W2), V4-Buttons, RTL-Import (W4), Scanner |
-| **WebUI Buttons `prev_station`/`next_station`** | ⛔ V4 — nicht in `ALLOWED_COMMANDS` (`webui check` findet sie) |
-| **RTL-SDR Importbruch C2** | ⛔ `degraded_imports` meldet `modules.rtlsdr`/`spectrum` — Fix = W4 |
+| **WebUI-Sanierung W8–W11** | 🟡 Auftrag `AUFTRAG-WEBUI-SANIERUNG.md`; W0–W7/Stufe1 + W5(Teil) + W6 @ v0.11.131–132 (`docs/ABNAHMEN.md`). Als Nächstes: FastScan (W8) |
+| **Scanner Single-Sweep / CB-AM** | 🟡 W5 Rest — C5 vollständiger Single-`rtl_fm`-Sweep + CB-AM offen |
+| **Spektrum-Snapshot RF-Tools** | ⛔ Befund `docs/ABNAHMEN.md` 2026-09-15: UI=JSON; F7 fm_sweep; „belegt“ trotz Idle; Legacy `rtl_sdr` ohne `"-"` → Analyse W8 |
 | **BMW iDrive Display-Feldtest** | 🟡 Now-Playing-Metadaten Spotify/Webradio 2026-09-16 bestätigt; Menü-Zeilen und `display-probe` (G2) noch offen — [`BMW-BT-FELDTEST-2026-09-16.md`](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) |
 | **AVRCP „Zurueck" im Auto** | 🟡 BMW sendet Stop oft nicht; Workaround: „Zurueck"-Einträge per enter. Prüfen ob Knopf-links ein AVRCP-Event liefert (`/var/log/pidrive/avrcp_raw.log`) |
 | **Cover Art auf iDrive** | 🔴 NBT Evo AVRCP 1.4/1.5 → kein BT-Cover-Art (erst ab 1.6); via `pidrivectl test bt` verifizierbar. Logos nur in WebUI sinnvoll |
