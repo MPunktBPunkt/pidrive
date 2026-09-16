@@ -254,7 +254,11 @@ def _write_trigger(cmd: str):
 def register_with_bluez(bus, adapter="hci0",
                         object_path="/org/mpris/MediaPlayer2") -> bool:
     """
-    BF-D: BlueZ liest MPRIS-Properties NICHT von selbst — Anmeldung nötig.
+    BF-D/H: BlueZ liest MPRIS-Properties NICHT von selbst — Anmeldung nötig.
+
+    Hinweis (BF-H): RegisterPlayer erzeugt KEIN Objekt unter org.bluez
+    (busctl tree … | grep player bleibt leer). Der Spieler bleibt auf der
+    Verbindung des Aufrufers (/org/mpris/MediaPlayer2). Erfolg → Log + Statusdatei.
     """
     if not DBUS_OK:
         return False
@@ -264,13 +268,35 @@ def register_with_bluez(bus, adapter="hci0",
     try:
         media.RegisterPlayer(object_path, dbus.Dictionary({}, signature="sv"))
         log.info(f"MPRIS2: bei BlueZ angemeldet ({adapter} → {object_path})")
+        _write_bluez_player_status(True, adapter, object_path, "ok")
         return True
     except Exception as e:
         msg = str(e)
         if "AlreadyExists" in msg or "already" in msg.lower():
             log.info("MPRIS2: BlueZ RegisterPlayer bereits gesetzt")
+            _write_bluez_player_status(True, adapter, object_path, "already")
             return True
+        _write_bluez_player_status(False, adapter, object_path, msg)
         raise
+
+
+def _write_bluez_player_status(ok, adapter, object_path, detail=""):
+    """BF-H: messbare Statusdatei (Journal zeigt INFO nicht)."""
+    try:
+        import json as _json, time as _t, os as _os
+        path = "/tmp/pidrive_mpris_bluez.json"
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
+            _json.dump({
+                "ok": bool(ok),
+                "adapter": adapter,
+                "object_path": object_path,
+                "detail": str(detail)[:200],
+                "ts": _t.time(),
+            }, f)
+        _os.replace(tmp, path)
+    except Exception:
+        pass
 
 
 def unregister_from_bluez(bus, adapter="hci0",

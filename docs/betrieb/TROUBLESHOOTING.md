@@ -115,6 +115,23 @@ pidrivectl bt connect <MAC>
 
 ---
 
+### DAB im Fahrzeug stumm, Webradio hörbar
+
+**Kein Bluetooth-Fehler.** DAB (`welle-cli`) schreibt heute **direkt auf ALSA/Klinke** und
+umgeht PipeWire — A2DP bleibt unerreichbar. Webradio/FM/Spotify laufen über `mpv` →
+PipeWire und sind am Fahrzeug hörbar.
+
+Messung / Umbau: [AUFTRAG-DAB-AUDIOWEG.md](../auftraege/AUFTRAG-DAB-AUDIOWEG.md)
+(DA1–DA5, Ziel: `welle-cli -w` + `mpv`).
+
+Schnellcheck am Pi (Klinke vs. BT):
+```bash
+pidrivectl play dab "…"     # Ton an der Klinke?
+pidrivectl play webradio …  # Ton am Fahrzeug?
+```
+
+---
+
 ### CPU-Throttling / Überhitzung
 
 ```bash

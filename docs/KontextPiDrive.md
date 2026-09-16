@@ -173,7 +173,10 @@ PipeWire (System-Mode) / Socket: /var/run/pulse/native
 ```
 
 **mpv:** `--ao=pulse --audio-device=pulse/<sink>` explizit nötig.  
-**welle-cli:** ALSA via PipeWire-ALSA-Plugin (PULSE_SERVER wird gesetzt).  
+**welle-cli (DAB-Wiedergabe):** schreibt **direkt auf ALSA-Hardware (Klinke)** —
+`PULSE_SERVER` / PipeWire-Umgebung werden für den Prozess absichtlich entfernt.
+Bluetooth/A2DP ist damit **nicht** erreichbar. Umbau geplant: siehe
+[AUFTRAG-DAB-AUDIOWEG.md](auftraege/AUFTRAG-DAB-AUDIOWEG.md).  
 **librespot:** `--device pulse` → PipeWire-Pulse-Compat-Layer.
 
 ---
@@ -185,7 +188,7 @@ PipeWire (System-Mode) / Socket: /var/run/pulse/native
 | Webradio | `mpv` mit `Popen(list, env=dict)` | IPC-Socket für Metadaten |
 | FM Radio | `rtl_fm \| mpv` via `shell=True` | `--demuxer=rawaudio --rate=32000` |
 | FM Scanner | `rtl_fm \| mpv` via `shell=True` | `-M wbfm` Broadcast, `-M fm` Schmalband |
-| DAB+ | `welle-cli` mit PULSE_SERVER | ALSA → PipeWire-Plugin → BT/Klinke |
+| DAB+ | `welle-cli` **ohne** PULSE_SERVER | **ALSA → Klinke** (BT unerreichbar; DA1) |
 | Scanner (PMR/VHF) | `rtl_fm \| mpv` | `-M fm`, Output-Rate 32000 |
 | Spotify | `librespot`/`raspotify` | `--device pulse` → PipeWire |
 | Lokal | `mpv` mit `Popen(list)` | `--audio-device=pulse/<sink>` |

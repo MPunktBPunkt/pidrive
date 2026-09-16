@@ -855,6 +855,22 @@ Flags (vor dem Befehl angeben):
                     fmt.out("Pairing-Fenster 300s geöffnet")
                 except Exception:
                     pass
+                # BF-G: Ausgangsmenge merken — nur NEUES Paired-Ereignis zählt
+                def _paired_set():
+                    try:
+                        import subprocess as _sp
+                        r = _sp.run("bluetoothctl devices Paired 2>/dev/null",
+                                    shell=True, capture_output=True, text=True, timeout=3)
+                        out = set()
+                        for line in (r.stdout or "").splitlines():
+                            parts = line.split()
+                            if len(parts) >= 2 and parts[0] == "Device":
+                                out.add(parts[1].upper())
+                        return out
+                    except Exception:
+                        return set()
+
+                before = _paired_set()
                 last_id = 0
                 try:
                     ev0 = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
@@ -865,6 +881,7 @@ Flags (vor dem Befehl angeben):
                     pass
                 t0 = __import__("time").time()
                 paired = False
+                paired_dev = ""
                 while __import__("time").time() - t0 < 120:
                     __import__("time").sleep(0.4)
                     ev = svc.ipc.read_json("/tmp/pidrive_bt_agent_events.json", {})
@@ -883,23 +900,27 @@ Flags (vor dem Befehl angeben):
                         fmt.out(line)
                         if e.get("method") == "RequestConfirmation" and "passkey=" in detail:
                             fmt.out("        ↳ Zahl am iDrive vergleichen und dort bestätigen")
-                    # paired?
-                    try:
-                        import subprocess as _sp
-                        r = _sp.run("bluetoothctl devices Paired 2>/dev/null",
-                                    shell=True, capture_output=True, text=True, timeout=3)
-                        if r.stdout.strip() and "Device " in r.stdout:
-                            # any new paired is enough for BMW-initiated
-                            if last_id > 0:
-                                paired = True
-                                break
-                    except Exception:
-                        pass
+                        # BF-G: Erfolg nur bei Agent-Ereignis "Paired" (nicht alter Kopfhörer)
+                        if e.get("method") == "Paired":
+                            paired = True
+                            paired_dev = (e.get("device") or "").replace("_", ":")
+                    if paired:
+                        break
+                    # Zusatz: neues Gerät in Paired-Liste (falls Event verpasst)
+                    now_set = _paired_set()
+                    neu = now_set - before
+                    if neu:
+                        paired = True
+                        paired_dev = sorted(neu)[0]
+                        elapsed = int(__import__("time").time() - t0)
+                        fmt.out(f"  [{elapsed:2d}s] Paired                → {paired_dev}  (neu in BlueZ)")
+                        break
                 fmt.out("")
                 if paired:
-                    fmt.out(fmt.GREEN + "✓ Gekoppelt (siehe Agent-Protokoll)" + fmt.RESET)
+                    who = paired_dev or "?"
+                    fmt.out(fmt.GREEN + f"✓ Gekoppelt: {who}" + fmt.RESET)
                 else:
-                    fmt.out("Timeout — Agent-Events: pidrivectl bt agent")
+                    fmt.out("Timeout — kein neues Paired-Ereignis (pidrivectl bt agent)")
                 sys.exit(EXIT_OK)
 
             dev = svc.bt_resolve(query)

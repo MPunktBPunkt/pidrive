@@ -781,3 +781,12 @@ ist das der letzte offene Punkt dieser Kette.
 **Einschränkung:** der Lauf fand **ohne Antenne** statt. Die DAB-Übersprünge und das
 „FM startet trotzdem" sagen nichts über den Empfang. Vor RF-Schlüssen ein Lauf mit
 angeschlossener Antenne.
+
+### Fortschritt §11 (2026-09-16, v0.11.140)
+
+| ID | Stand |
+|----|-------|
+| BF-G | **erledigt** — Erfolg nur `Paired`-Event oder neues Gerät in der Paired-Menge |
+| BF-H | **gemessen** — `RegisterPlayer` ok; leerer `org.bluez`-Player-Baum ist *kein* Fehlschlag (lokaler Pfad). Details `ABNAHMEN.md` |
+| BF-I | **erledigt** — ObjectManager vor `Pair()` |
+| BF-J | **erledigt** — `ts`<30 s; CRLF→LF Agent/Unit |

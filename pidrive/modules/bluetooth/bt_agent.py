@@ -11,14 +11,12 @@ from modules.bluetooth.bt_helpers import (
     AGENT_STATE_FILE, PAIRING_BACKUP_FILE, PAIR_TIMEOUT_SECONDS,
 )
 import threading
-import select
-import subprocess
 import time
 import log
 
-# Agent-Prozess und Lock (lokal in diesem Modul)
+# Agent-Prozess (lokal; D-Bus-Agent läuft als pidrive_btagent)
 _AGENT_PROC = None
-_AGENT_LOCK = threading.Lock()
+_AGENT_LOCK = threading.Lock()  # reexportiert über bluetooth.py — Symbol behalten
 
 def _write_agent_state(running=False, ready=False, pid=0, last_error="",
                        started_ts=0, health_ok=False):
@@ -88,9 +86,17 @@ def start_agent_health_thread():
 
 
 def agent_healthcheck():
-    """BF-E: Status aus D-Bus-Agent-Zustandsdatei."""
+    """BF-J: D-Bus-Agent lebendig nur wenn Zustandsdatei frisch ist."""
     st = read_agent_state()
-    return bool(st.get("ready") or st.get("kind") == "dbus")
+    if st.get("kind") != "dbus":
+        return False
+    if not st.get("ready"):
+        return False
+    try:
+        age = _now() - float(st.get("ts") or 0)
+    except Exception:
+        return False
+    return age < 30.0
 
 
 def _ensure_agent():
@@ -104,7 +110,7 @@ def _drain_agent_stdout(max_lines=80):
 
 def pair_with_agent(mac, timeout=PAIR_TIMEOUT_SECONDS):
     """
-    BF-E: Pairing über BlueZ Device1.Pair(); Bestätigung durch pidrive_btagent.
+    BF-E/I: Pairing über BlueZ Device1.Pair(); Bestätigung durch pidrive_btagent.
     """
     mac = _normalize_mac(mac)
     if not _valid_mac(mac):
@@ -123,20 +129,28 @@ def pair_with_agent(mac, timeout=PAIR_TIMEOUT_SECONDS):
         import dbus
         bus = dbus.SystemBus()
         path = "/org/bluez/hci0/dev_" + mac.replace(":", "_").upper()
-        # Gerät ggf. zuerst scan/discover — Pair braucht Objekt
-        try:
-            dev = bus.get_object("org.bluez", path)
-        except Exception:
-            # Fallback: bluetoothctl pair (Agent antwortet auf D-Bus)
-            rc, out = _btctl(f"pair {mac}", timeout=timeout)
-            low = (out or "").lower()
-            ok = rc == 0 or "already paired" in low or "pairing successful" in low
-            _write_json_atomic(PAIRING_BACKUP_FILE, {
-                "mac": mac, "ok": ok, "via": "bluetoothctl",
-                "lines": (out or "").splitlines()[-30:], "ts": _now(),
-            })
-            return ok, out or ""
 
+        # BF-I: ObjectManager prüfen — get_object() wirft nie UnknownObject
+        known = False
+        try:
+            om = dbus.Interface(bus.get_object("org.bluez", "/"),
+                               "org.freedesktop.DBus.ObjectManager")
+            objs = om.GetManagedObjects()
+            known = path in objs
+        except Exception as e:
+            log.warn(f"BT ObjectManager: {e}")
+
+        if not known:
+            msg = (f"Gerät {mac} unbekannt bei BlueZ — zuerst "
+                   f"'pidrivectl bt scan' (oder BMW-initiiert: 'pidrivectl bt pair')")
+            log.warn(msg)
+            _write_json_atomic(PAIRING_BACKUP_FILE, {
+                "mac": mac, "ok": False, "via": "dbus",
+                "error": "unknown_object", "ts": _now(),
+            })
+            return False, msg
+
+        dev = bus.get_object("org.bluez", path)
         iface = dbus.Interface(dev, "org.bluez.Device1")
         end = time.time() + float(timeout)
         try:
@@ -149,7 +163,6 @@ def pair_with_agent(mac, timeout=PAIR_TIMEOUT_SECONDS):
                     "lines": [err], "ts": _now(),
                 })
                 return True, err
-            # Pair kann asynchron laufen / Agent ablehnen
             log.warn(f"BT Device1.Pair: {e}")
 
         while time.time() < end:

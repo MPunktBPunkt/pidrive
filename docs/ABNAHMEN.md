@@ -403,3 +403,45 @@ Am Fahrzeug — noch offen (Kopplung/Display). Siehe Auftrag §5.
 
 Software-Pfad Menü/WebUI/MPRIS/Webradio/FM-Start unverändert grün. RF-abhängige DAB-Scan-SKIP ist mit abgezogener Antenne erwartbar. Einziger FAIL bleibt Scanner/RTL-Belegt (TK-B), nicht die Antenne.
 
+---
+
+## 2026-09-16 — BF-G…J + DA-A (v0.11.140) · vor der Fahrt
+
+| | |
+|---|---|
+| VERSION | **v0.11.140** |
+| Scope | Fehlschluss `bt pair` ohne Adresse; BF-H Messung; ObjectManager vor Pair; Agent-ts; CRLF→LF; DAB-Audioweg dokumentiert |
+
+### BF-G — `pidrivectl bt pair` (ohne Adresse)
+
+| Vorher | Nachher |
+|--------|---------|
+| Erfolg wenn *irgendein* Paired-Gerät + `last_id>0` | Erfolg nur bei Agent-Event `method=="Paired"` **oder** neuem MAC in der Paired-Menge |
+
+### BF-H — Spieler-Anmeldung ohne bekannten Namen `[MESSEN]`
+
+Messung am Pi (`192.168.178.107`, Core PID 150674 / v0.11.139):
+
+| Schritt (Auftrag) | Ergebnis | Deutung |
+|-------------------|----------|---------|
+| `busctl tree org.bluez \| grep -i player` | **leer** | **erwartet** — lokales `RegisterPlayer` legt kein Objekt unter `org.bluez` an (BlueZ behält den Pfad auf der Sender-Verbindung; vgl. bluez#23 / media-api) |
+| `busctl list \| grep mpris` | `org.mpris.MediaPlayer2.pidrive` **präsent** (root / pidrive_core) | Name da |
+| Objekt `/org/mpris/MediaPlayer2` | Properties lesbar (Metadata, PlaybackStatus) | MPRIS export ok |
+| `/var/log/pidrive/core.log` | `MPRIS2: bei BlueZ angemeldet (hci0 → /org/mpris/MediaPlayer2)` u. a. 15:36, 15:37, **15:38:54 nach Watchdog** | RegisterPlayer hält / wird nach Namensverlust erneut gesetzt |
+
+**Fazit BF-H:** BF-D wirkt. HB5 ist nicht durch den Namensverlust allein gefährdet; M-D bleibt nachrangig. Ab v0.11.140 zusätzlich `/tmp/pidrive_mpris_bluez.json` als messbarer Marker (Journal zeigt INFO nicht).
+
+### BF-I / BF-J
+
+| ID | Änderung |
+|----|----------|
+| BF-I | `pair_with_agent`: ObjectManager-Prüfung vor `Pair()`; verständlicher Abbruch statt Timeout |
+| BF-J | `agent_healthcheck` + `_start_bt_agent_early`: `ts` jünger als 30 s; CRLF→LF in `bt_agent_dbus.py` + `pidrive_btagent.service`; tote Imports entfernt |
+
+### DA-A — DAB-Audioweg dokumentiert
+
+- `docs/KontextPiDrive.md`: DAB = ALSA/Klinke, BT unerreichbar
+- `docs/betrieb/TROUBLESHOOTING.md`: „DAB im Fahrzeug stumm, Webradio hörbar“ → AUFTRAG-DAB-AUDIOWEG
+
+DA-B…DA-C warten auf Antenne / Messreihe.
+

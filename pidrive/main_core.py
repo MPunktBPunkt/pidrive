@@ -127,23 +127,26 @@ def _debounced(cmd: str) -> bool:
 # ── BT-Agent früh starten ────────────────────────────────────────────────────
 
 def _start_bt_agent_early():
-    """BF-E: keine bluetoothctl-Sitzung — D-Bus-Agent läuft als pidrive_btagent."""
+    """BF-E/J: D-Bus-Agent via pidrive_btagent — Zustandsdatei muss frisch sein."""
     if not CAPS.get("bluetooth") and not CAPS.get("bluetoothctl"):
         log.info("BT Agent: kein Bluetooth-Adapter — uebersprungen")
         return False
     try:
         import json as _json
+        import time as _t
         st = {}
         try:
             st = _json.load(open("/tmp/pidrive_bt_agent.json"))
         except Exception:
             pass
-        if st.get("kind") == "dbus" and st.get("ready"):
-            log.info("BT Agent: D-Bus-Dienst bereit (pidrive_btagent)")
+        age = _t.time() - float(st.get("ts") or 0)
+        fresh = st.get("kind") == "dbus" and st.get("ready") and age < 30.0
+        if fresh:
+            log.info(f"BT Agent: D-Bus-Dienst bereit (pidrive_btagent, age={age:.0f}s)")
         else:
-            log.warn("BT Agent: pidrive_btagent nicht bereit — "
+            log.warn("BT Agent: pidrive_btagent nicht bereit "
+                     f"(kind={st.get('kind')!r} ready={st.get('ready')} age={age:.0f}s) — "
                      "systemctl status pidrive_btagent prüfen")
-        # Alte bluetoothctl-Sitzung bewusst NICHT starten (BT8)
     except Exception as e:
         log.warn("BT Agent check: " + str(e))
 

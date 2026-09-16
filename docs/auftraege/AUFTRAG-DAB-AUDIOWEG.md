@@ -479,3 +479,4 @@ umgekehrt wäre es fahrlässig, HD6 zu versuchen, solange HD2 nicht steht.
 |-------|-------|
 | 2026-09-16 | Angelegt. DA1–DA5 belegt, Pendelgeschichte aus `adfc240` rekonstruiert, Messreihe und Pakete DA-A…DA-F festgelegt. Nichts davon umgesetzt. |
 | 2026-09-16 | welle.io-Quellcodereferenz eingearbeitet (`../referenz/WELLE-CLI.md`). §5 neu als DA-P1…DA-P5: Audio-Endpunkt und MP3-Vorgabe geklärt, Adressierung über SID statt Name, **`-C` für die Wiedergabe als falsch erkannt**, `-T`/`-F` unkritisch, Gain-Umrechnung als bereits richtig bestätigt. Messreihe von fünf auf vier Punkte verkürzt. §7 Nebengewinne ergänzt. |
+| 2026-09-16 | **DA-A erledigt** (v0.11.140): `KontextPiDrive.md` + `TROUBLESHOOTING.md` berichtigen DAB→ALSA/Klinke. DA-B wartet auf Antenne. |
