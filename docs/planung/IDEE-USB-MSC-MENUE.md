@@ -9,6 +9,7 @@
 - [../menue/MENU-ERGONOMIE.md](../menue/MENU-ERGONOMIE.md) — Skip-only-Kosten des heutigen Menüs
 - Schwesterprojekt `esp32.bt-gateway` — Classic-ESP32 für A2DP/AVRCP; **bewusst kein** ESP32-S3
 - Referenzprodukt: [Dension DAB+U](https://www.ars24.com/dab-nachruestung/16605/dension-dab-u-interface-zum-nachruesten-von-dab-am-werks-autoradio-per-usb) (virtuelle MP3 über USB)
+- **Weiter zur Spec:** [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) — Pflichtenheft-Skizze `esp32.pidrive` + PiDrive-Umbauplan
 
 ---
 
@@ -141,11 +142,45 @@ Ohne diese Voraussetzungen ist die Idee eher Spielerei als Produktpfad. Als Chec
 | ID | Prio | Voraussetzung |
 |----|------|----------------|
 | P-H1 | P | USB **Device**-Port zur BMW-Buchse (Kabel A–A / werksseitig), stromversorgt (Bus oder 5 V). |
-| W-H2 | W | Dediziertes Gadget (ESP32-S3 oder anderer MCU mit native USB) **oder** Pi-Gadget — Konflikt mit RTL-SDR/BT-Dongle am Pi klären. |
-| W-H3 | W | Ausreichend CPU/RAM für MP3-Encode + MSC + Link zum Pi (WLAN/UART/USB-Host-nebenbei). |
-| O-H4 | O | Bypass/zweite USB-Buchse wie Dension Connector Port (Stick weiter nutzbar). |
+| P-H2 | P | Unter der Vorgabe „Pi-4-**USB-C nur Versorgung**“: **zusätzliche** Device-Hardware (siehe §4.5.1) — die vier USB-A des Pi 4 reichen **nicht**. |
+| W-H3 | W | Ausreichend CPU/RAM für MSC + Vorpuffer; Encode auf Pi **oder** ESP (Entscheidung im Pflichtenheft). |
+| W-H4 | W | Link Pi ↔ Gadget: WLAN, UART oder USB-Host→ESP (nicht der BMW-Port). |
+| O-H5 | O | Bypass/zweite USB-Buchse wie Dension Connector Port (Stick weiter nutzbar). |
 
-**Chip-Hinweis:** ESP32-S3 eignet sich für USB-OTG; Classic-BT-Gateway bleibt separates Gerät. Zwei Rollen nicht auf einen S3 zwingen.
+Arbeitsname für die Device-Firmware: **`esp32.pidrive`** (ESP32-S3, USB-OTG). Classic-BT-Gateway (`esp32.bt-gateway`) bleibt getrennt — kein Classic-BT auf dem S3. Weg zum Pflichtenheft: [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md).
+
+#### 4.5.1 Raspberry Pi 4 — reicht die vorhandene Hardware?
+
+**Randbedingung (Ist):** USB-C = nur Netzteil (5 V / 3 A). USB-A belegt u. a. CSR-BT-Dongle und RTL-SDR (Host).
+
+| Anschluss Pi 4 | Controller / Rolle | Als virtueller Stick zum BMW? |
+|----------------|--------------------|-------------------------------|
+| **4× USB-A** | xHCI / Hub, **nur Host** | **Nein** — kein Device-/Gadget-Mode (auch nicht durch Treibertricks) |
+| **USB-C** | SoC-OTG (`dwc2`), Strom **oder** Gadget | **Nur wenn** der Port nicht „nur Versorgung“ bleibt |
+
+Folgerung:
+
+1. **Pi 4 allein + USB-C nur Power → kein MSC-Gadget zum Auto.** Die A-Buchsen können dem NBT Evo keinen Stick vortäuschen.
+2. **Pi-4-Gadget wäre nur möglich**, wenn USB-C zum BMW geht und der Pi über **GPIO 5 V** (o. Ä.) versorgt wird — im Fahrzeug unpraktisch und stromseitig riskant (Pi zieht oft mehr als die HU-Buchse stabil liefert). Unter der gesetzten Randbedingung **verworfen**.
+3. **Zusatz-HW nötig** für Device-Mode zur Headunit. Empfehlung: **ESP32-S3** (natives USB-OTG, TinyUSB MSC) als `esp32.pidrive`. Alternativen: anderer USB-Device-MCU; Pi Zero 2 W nur als Gadget-Satellit (mehr Platinen).
+4. **Encode-Ort** ist unabhängig von P-H2: PCM→MP3 kann auf dem Pi (Frames zum ESP) oder auf dem S3 laufen — ändert nicht die Notwendigkeit eines Device-Ports.
+5. **Stick-Spike** braucht weiterhin **keine** neue HW (normaler Stick in die BMW-Buchse).
+
+```
+                    ┌──────────────┐
+  Netzteil 5 V ────►│ Pi 4 USB-C   │  (nur Power — unverändert)
+                    │             │
+  CSR / RTL-SDR ───►│ Pi 4 USB-A  │  (Host — unverändert)
+                    │  PiDrive    │
+                    └──────┬───────┘
+                           │ WLAN / UART / …
+                           ▼
+                    ┌──────────────┐         ┌─────────────┐
+                    │ esp32.pidrive│ USB-Dev │ BMW NBT Evo │
+                    │ ESP32-S3    ├────────►│ USB-Host    │
+                    │ MSC+MP3     │         │ Medien-UI   │
+                    └──────────────┘         └─────────────┘
+```
 
 ### 4.6 Software-Vertrag PiDrive
 
@@ -187,9 +222,9 @@ Sinnvoll als Risikominimierung.
 
 Echter Stick mit Ordnern + kurzen echten MP3s → misst P-V1–P-V5 ohne Firmware.
 
-### Variante E — Gadget am Pi
+### Variante E — Gadget am Raspberry Pi 4 — **unter Ist-Randbedingung verworfen**
 
-Möglich, aber Host-Device-Konflikt und Strom am USB-C des Pi prüfen.
+Die vier USB-A sind Host-only. Gadget nur über USB-C — der ist aber für Versorgung reserviert. Siehe §4.5.1. Ohne Stromkonzept-Wechsel (GPIO-Power + USB-C zum BMW) kein Pi-only-Pfad.
 
 ### Variante F — Dension kaufen / nachbauen als Messgerät — **optional**
 
@@ -207,7 +242,7 @@ Ein DAB+U am eigenen NBT Evo zeigt Bufferzeiten, Dateibaum-UX und ob „Gerätes
 | U4 | Quellumschaltung | (für Variante A) — eher obsolet wenn B Pflicht ist |
 | U5 | On-the-fly-Encoder | CBR-MP3, Bitrate, Latenz, CPU auf S3 vs. Encode auf Pi |
 | U6 | Kabel / Buchse | Armlehne, Strombudget |
-| U7 | Rollentrennung | S3-Gadget vs. Pi-Gadget vs. Classic-ESP BT |
+| U7 | Rollentrennung | **Erledigt unter Ist-HW:** Pi 4 allein nein → `esp32.pidrive` (S3); BT-Gateway separat |
 | U8 | Menüvertrag | UID-API → FAT-Export |
 | U9 | Alternativen | Display, WebUI, 3-Zeilen |
 | U10 | **HU-Tuning** | Welche Timing-/Descriptor-Parameter braucht *unser* NBT Evo? (Dension-K61/DBU3P211-Äquivalent) |
@@ -252,7 +287,8 @@ Ergebnis: `docs/fahrzeug/BMW-USB-MSC-PROBE.md` (anzulegen nach Messung).
 |-------|--------|
 | 2026-09-17 | Idee dokumentiert |
 | 2026-09-17 | Ausarbeitung: Dension-Analyse, Voraussetzungskatalog P/W/O, Variante B als Zielbild, Stick-Spike als Gate |
-| — | Nächste Aktion: Stick-Spike am Fahrzeug **oder** bewusste Zurückstellung |
+| 2026-09-17 | HW: Pi 4 mit USB-C-only-Power **kein** Gadget; Device-HW (`esp32.pidrive`) Pflicht. Pfad zum Pflichtenheft: [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) |
+| — | Nächste Aktion: Stick-Spike am Fahrzeug **oder** bewusste Zurückstellung; Owner-Fragen Q-USB-1/4 |
 
 **Arbeitshypothese:** Gelingen ist möglich, *wenn* wir denselben Vertrag wie Dension eingehen — **USB = Ton + UI**, Puffer und HU-Tuning ernst nehmen, Scope zuerst klein (Sender/Favoriten) halten. Scheitert der Stick-Spike an P-V1–P-V3, ist die Idee für dieses Fahrzeug tot; Scheitert nur der tiefe Menübaum, bleibt ein dension-artiger Radio-MVP denkbar.
 
