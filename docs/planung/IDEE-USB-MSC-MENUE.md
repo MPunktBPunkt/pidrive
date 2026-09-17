@@ -10,6 +10,7 @@
 - Schwesterprojekt `esp32.bt-gateway` — Classic-ESP32 für A2DP/AVRCP; **bewusst kein** ESP32-S3
 - Referenzprodukt: [Dension DAB+U](https://www.ars24.com/dab-nachruestung/16605/dension-dab-u-interface-zum-nachruesten-von-dab-am-werks-autoradio-per-usb) (virtuelle MP3 über USB)
 - **Weiter zur Spec:** [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) — Pflichtenheft-Skizze `esp32.pidrive` + PiDrive-Umbauplan
+- **Konzept (ausgearbeitet):** [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md) — Architektur, PUMP, FAT-MVP, Parallel-BT
 
 ---
 
@@ -296,6 +297,7 @@ Ergebnis: `docs/fahrzeug/BMW-USB-MSC-PROBE.md` (anzulegen nach Messung).
 | 2026-09-17 | Ausarbeitung: Dension-Analyse, Voraussetzungskatalog P/W/O, Variante B als Zielbild, Stick-Spike als Gate |
 | 2026-09-17 | HW: Pi 4 mit USB-C-only-Power **kein** Gadget; Device-HW (`esp32.pidrive`) Pflicht. Pfad zum Pflichtenheft: [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) |
 | 2026-09-17 | BT-Pfad bleibt parallel; PUMP V1 über zweiten ESP-USB (UART/CDC), WLAN optional; BLE nicht für Audio |
+| 2026-09-17 | Konzept V0.2: [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md) |
 | — | Nächste Aktion: Stick-Spike am Fahrzeug **oder** bewusste Zurückstellung; Owner-OK zu Q-USB-1/4 |
 
 **Arbeitshypothese:** Gelingen ist möglich, *wenn* wir denselben Vertrag wie Dension eingehen — **USB = Ton + UI**, Puffer und HU-Tuning ernst nehmen, Scope zuerst klein (Sender/Favoriten) halten. Scheitert der Stick-Spike an P-V1–P-V3, ist die Idee für dieses Fahrzeug tot; Scheitert nur der tiefe Menübaum, bleibt ein dension-artiger Radio-MVP denkbar.

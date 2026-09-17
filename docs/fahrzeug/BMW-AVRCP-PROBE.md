@@ -17,7 +17,7 @@
 
 **Folge fuer das Gateway:** S3 gestrichen, S1 bleibt Zielbild. A17 entspannt sich.
 
-**Alternative (Untersuchung, kein Auftrag):** Listen-UI ueber USB-MSC / virtuellen Stick (ESP32-S3 OTG oder Pi-Gadget, optional on-the-fly-MP3) — siehe [../planung/IDEE-USB-MSC-MENUE.md](../planung/IDEE-USB-MSC-MENUE.md).
+**Alternative (Untersuchung, kein Auftrag):** Listen-UI ueber USB-MSC / virtuellen Stick (ESP32-S3 OTG oder Pi-Gadget, optional on-the-fly-MP3) — siehe [../planung/IDEE-USB-MSC-MENUE.md](../planung/IDEE-USB-MSC-MENUE.md), Konzept [../planung/KONZEPT-USB-MSC.md](../planung/KONZEPT-USB-MSC.md).
 
 > Ein negatives Ergebnis ist **wertvoll**, nicht enttaeuschend. Es spart im
 > Gateway-Repo die Entscheidung fuer einen aufwendigen Stackwechsel.

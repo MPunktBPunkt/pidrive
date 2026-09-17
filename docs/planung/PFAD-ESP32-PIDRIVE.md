@@ -3,6 +3,7 @@
 **Status:** Planungsskizze — noch **kein** verbindliches Pflichtenheft, noch **kein** Implementierungsauftrag  
 **Stand:** 2026-09-17  
 **Idee (Voraussetzung):** [IDEE-USB-MSC-MENUE.md](IDEE-USB-MSC-MENUE.md)  
+**Konzept (Architektur):** [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md)  
 **Vorbild Dokumentenladder:** `esp32.bt-gateway` (`PFLICHTENHEFT.md`, `OFFENE-PUNKTE.md`, `PHASE-0-MESSPLAN.md`, `PIDRIVE-INTEGRATION.md`)  
 **Zielrepos:** neu `esp32.pidrive` (ESP-IDF, ESP32-S3) · Umbau in `pidrive`
 
@@ -164,13 +165,16 @@ Byte-Layout und Framing: später Pflichtenheft Kap. 8 — hier nur die Transport
 Nicht alles auf einmal. Reihenfolge:
 
 ```
-IDEE-USB-MSC-MENUE.md          ← erledigt (Idee + Dension + HW)
+IDEE-USB-MSC-MENUE.md          ← Idee + Dension + HW-Voraussetzungen
+        │
+        ▼
+KONZEPT-USB-MSC.md             ← Architektur, PUMP, FAT-MVP, Parallel-BT
         │
         ▼
 Stick-Spike / BMW-USB-MSC-PROBE.md   ← Gate Fahrzeug (P-V1…P-V3)
         │
         ▼
-PFAD-ESP32-PIDRIVE.md (dieses Doc)   ← Skizze Pflichtenheft + Umbauplan
+PFAD-ESP32-PIDRIVE.md (dieses Doc)   ← Gates, Pflichtenheft-TOC, Umbaupakete
         │
         ├──────────────────────────────┐
         ▼                              ▼
@@ -308,5 +312,6 @@ Später eigenes Dokument unter `docs/planung/`. Arbeitspakete (Vorschlag):
 |-------|--------|
 | 2026-09-17 | Pfad skizziert: HW-Pflicht S3, Dokumentenladder, Pflichtenheft-TOC, Umbaupakete U0–U8, Gates G-USB-0…4, Owner-Fragen |
 | 2026-09-17 | §1.1 Parallel-BT; §2a PUMP-Transport (UART/CDC V1, WLAN optional, BLE nicht für Audio); Q-USB-1/2/3 Tendenzen |
+| 2026-09-17 | Konzept ausgearbeitet: [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md) |
 
 Nächstes Dokument nach Messung: `BMW-USB-MSC-PROBE.md`. Nächstes Spec-Dokument nach G-USB-0/1: `esp32.pidrive/docs/planung/PFLICHTENHEFT.md` (neues Repo).
