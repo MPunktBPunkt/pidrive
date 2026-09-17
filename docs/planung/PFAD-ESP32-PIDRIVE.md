@@ -166,7 +166,7 @@ Byte-Layout und Framing: kanonisch in [`esp32.pidrive` PUMP.md](https://github.c
 | Firmware | `esp32.pidrive` **0.3.1-dev** SoftAP + MSC + PUMP |
 | Bridge | `tools/pump_bridge.py` → `/tmp/pidrive_menu.json` / `/tmp/pidrive_cmd` |
 | Menü | aktuelle Seite, max. 4 MSC-Slots; Navigation per activate |
-| Audio USB | noch nicht — BT/Klinke unverändert |
+| Audio USB | **gemessen Nein** (2026-09-17) — MSC = Demo-MP3 (~1,6 s); Webradio nur Pi/`mpv` |
 | Pi-Paket | `usb_pump_client` / `audio_output=usb_gadget` noch offen |
 
 ---
