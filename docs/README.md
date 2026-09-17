@@ -23,6 +23,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest (Pairing + Now Playing, Fotos) | Betrieb, QA | 2026-09-16 |
 | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | **Erster erfolgreicher Connect** BMW 38304 — HB1–HB6, Logs, AVRCP-Probe | Abnahme / Entwickler | 2026-09-16 |
 | [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe (Phase −1), Mitschnitt 2026-09-16 | Entwickler | 2026-09-16 |
+| [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | **Idee** — USB-Stick/OTG-Menü (ESP32-S3, virtuelle/on-the-fly-MP3) als Alternative zu AVRCP-Browsing | Planung | 2026-09-17 |
 | [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-WEBUI-SANIERUNG.md](auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Arbeitsauftrag WebUI-Statuskette, Scanner, FastScan | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-FUNKPFAD.md](auftraege/AUFTRAG-FUNKPFAD.md) | Funkpfad K1–K5 (Import, Bandbreite, Suchlauf) | Entwickler | 2026-09-15 |
@@ -47,8 +48,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
 | Dokument | Arbeitspaket |
 |----------|--------------|
-| `fahrzeug/BMW-AVRCP-PROBE.md` | G1 — BMW-Browsing-Probe |
 | `fahrzeug/BMW-DISPLAY-PROBE.md` | G2 — Display-Pfad im Fahrzeug |
+| `fahrzeug/BMW-USB-MSC-PROBE.md` | Messung zur Idee USB-MSC-Menü (nach Stick-Spike) |
 
 ---
 

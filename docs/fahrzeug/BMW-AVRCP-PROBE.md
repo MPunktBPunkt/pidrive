@@ -13,9 +13,11 @@
 
 **Beleg:** Kein Connection Request und kein Datenverkehr auf PSM 27 (0x001b) im gesamten Mitschnitt.
 
-**Bedeutung:** Browsing ist am NBT Evo nicht nutzbar. Ein echtes Listen-Menue faellt weg, der 3-Zeilen-Pfad bleibt Zielbild.
+**Bedeutung:** Browsing ist am NBT Evo nicht nutzbar. Ein echtes Listen-Menue faellt weg, der 3-Zeilen-Pfad bleibt Zielbild **fuer Bluetooth**.
 
 **Folge fuer das Gateway:** S3 gestrichen, S1 bleibt Zielbild. A17 entspannt sich.
+
+**Alternative (Untersuchung, kein Auftrag):** Listen-UI ueber USB-MSC / virtuellen Stick (ESP32-S3 OTG oder Pi-Gadget, optional on-the-fly-MP3) — siehe [../planung/IDEE-USB-MSC-MENUE.md](../planung/IDEE-USB-MSC-MENUE.md).
 
 > Ein negatives Ergebnis ist **wertvoll**, nicht enttaeuschend. Es spart im
 > Gateway-Repo die Entscheidung fuer einen aufwendigen Stackwechsel.

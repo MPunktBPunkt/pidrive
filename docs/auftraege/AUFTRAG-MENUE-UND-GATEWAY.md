@@ -452,7 +452,7 @@ Interpretationsschlüssel — **vorher festschreiben**, damit das Ergebnis einde
 
 | Beobachtung | Bedeutung |
 |---|---|
-| BMW öffnet L2CAP PSM 0x001B **nicht** | Browsing ist am NBT Evo nicht nutzbar → echtes Listen-Menü fällt weg, 3-Zeilen-Pfad bleibt Zielbild |
+| BMW öffnet L2CAP PSM 0x001B **nicht** | Browsing ist am NBT Evo nicht nutzbar → echtes Listen-Menü über BT fällt weg, 3-Zeilen-Pfad bleibt BT-Zielbild. Alternative Untersuchung: USB-MSC-Menü — [../planung/IDEE-USB-MSC-MENUE.md](../planung/IDEE-USB-MSC-MENUE.md) |
 | BMW öffnet den Kanal, fragt nur `GetFolderItems(scope=0x00)` | Es prüft nur die Player-Liste; noch kein Beweis für nutzbares Browsing |
 | BMW sendet `SetBrowsedPlayer` (BlueZ antwortet ablehnend) | **Grünes Licht** — das Auto *will* browsen, BlueZ kann es nur nicht. Genau diese Lücke füllt ein eigener AVRCP-Target-Stack auf dem ESP32 |
 | BMW sendet `GetFolderItems(scope=0x01)` oder `ChangePath` | Starkes grünes Licht, inkl. Hinweis auf erwartete Attributliste und Seitengröße |
