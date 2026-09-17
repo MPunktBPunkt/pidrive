@@ -1,11 +1,12 @@
 # Pfad: von der USB-MSC-Idee zu `esp32.pidrive` + PiDrive-Umbau
 
-**Status:** Planungsskizze — noch **kein** verbindliches Pflichtenheft, noch **kein** Implementierungsauftrag  
+**Status:** Firmware-Lab läuft — **PUMP Menü+Activate** in [`esp32.pidrive` 0.3.1-dev](https://github.com/MPunktBPunkt/esp32.pidrive); Pi-Umbau (`usb_gadget`) noch offen  
 **Stand:** 2026-09-17  
 **Idee (Voraussetzung):** [IDEE-USB-MSC-MENUE.md](IDEE-USB-MSC-MENUE.md)  
 **Konzept (Architektur):** [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md)  
+**Firmware-Repo / PUMP-Doku:** [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) · [PUMP.md](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/PUMP.md)  
 **Vorbild Dokumentenladder:** `esp32.bt-gateway` (`PFLICHTENHEFT.md`, `OFFENE-PUNKTE.md`, `PHASE-0-MESSPLAN.md`, `PIDRIVE-INTEGRATION.md`)  
-**Zielrepos:** neu `esp32.pidrive` (ESP-IDF, ESP32-S3) · Umbau in `pidrive`
+**Zielrepos:** `esp32.pidrive` (PlatformIO/Arduino auf S3) · Umbau in `pidrive`
 
 ---
 
@@ -29,7 +30,7 @@ ohne vor den Fahrzeug-Gates Code oder Repo-Skeleton zu erzwingen.
 | Pi-Link | PDAP über WLAN | **PUMP** — V1 über zweiten USB (UART/CDC), optional WLAN; nicht BLE-Audio |
 | UI am BMW | 3 Zeilen (Browsing tot) | USB-Medienliste (Ordner/Dateien) |
 | Ton zum BMW | SBC über A2DP | MP3-Sektoren über MSC |
-| Status | Planung weit fortgeschritten | Idee + dieser Pfad |
+| Status | Planung weit fortgeschritten | **Firmware 0.3.1-dev Lab** (MSC + SoftAP + PUMP Menü) |
 
 **Produktentscheidung (Tendenz, 2026-09-17):** USB-Pfad **neben** dem bestehenden Bluetooth-Pfad — BlueZ/A2DP/AVRCP bleiben; neuer `audio_output=usb_gadget`. Je Sitzung genau **ein** aktiver Hörpfad zum BMW. Details: §1.1 und §2a.
 
@@ -156,7 +157,17 @@ Kabellos-Variante: UART-Link entfällt; Pi und ESP über WLAN; nur noch ESP-OTG�
 | Pi → ESP | Stream starten/stoppen; MP3- oder PCM-Frames; optional Directory-Snapshot / Station-Liste; Heartbeat |
 | ESP → Pi | Buffer-Füllstand; aktive Datei / vermutete UID; USB enumerated ja/nein; Fehler; Action-MP3 getroffen |
 
-Byte-Layout und Framing: später Pflichtenheft Kap. 8 — hier nur die Transportwahl.
+Byte-Layout und Framing: kanonisch in [`esp32.pidrive` PUMP.md](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/PUMP.md) (V0.3 line-JSON). Live-MP3-Frames noch offen.
+
+### Lab-Ist (2026-09-17)
+
+| Thema | Stand |
+|-------|--------|
+| Firmware | `esp32.pidrive` **0.3.1-dev** SoftAP + MSC + PUMP |
+| Bridge | `tools/pump_bridge.py` → `/tmp/pidrive_menu.json` / `/tmp/pidrive_cmd` |
+| Menü | aktuelle Seite, max. 4 MSC-Slots; Navigation per activate |
+| Audio USB | noch nicht — BT/Klinke unverändert |
+| Pi-Paket | `usb_pump_client` / `audio_output=usb_gadget` noch offen |
 
 ---
 
