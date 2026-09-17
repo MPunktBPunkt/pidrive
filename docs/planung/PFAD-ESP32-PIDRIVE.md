@@ -166,7 +166,7 @@ Byte-Layout und Framing: kanonisch in [`esp32.pidrive` PUMP.md](https://github.c
 | Firmware | `esp32.pidrive` **0.3.1-dev** SoftAP + MSC + PUMP |
 | Bridge | `tools/pump_bridge.py` → `/tmp/pidrive_menu.json` / `/tmp/pidrive_cmd` |
 | Menü | aktuelle Seite, max. 4 MSC-Slots; Navigation per activate |
-| Audio USB | **0.4.0-dev Lab:** Live-MP3 im ESP-Puffer (48 kbit/s); Sample `GET /api/lab/stream` OK — Stick-Player am Host noch Feldtest |
+| Audio USB | **0.4.2-dev:** Live-MP3 + sticky ID3/APIC (PC-ffprobe OK); Cover-Assets [`assets/usb-msc-covers`](../../assets/usb-msc-covers/README.md); NBT-Feldtest offen |
 | Pi-Paket | `usb_pump_client` / `audio_output=usb_gadget` noch offen |
 
 ---
