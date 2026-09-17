@@ -295,9 +295,9 @@ Später eigenes Dokument unter `docs/planung/`. Arbeitspakete (Vorschlag):
 
 1. **Jetzt (pidrive-Repo):** Idee + dieser Pfad gepflegt halten; keine Firmware.  
 2. **Nächste Fahrzeugsitzung:** Stick-Spike → `docs/fahrzeug/BMW-USB-MSC-PROBE.md` (G-USB-0).  
-3. **Owner:** Q-USB-1 und Q-USB-4 beantworten.  
+3. **Owner:** Q-USB-1 („neben“ bestätigen) und Q-USB-4; Q-USB-3 Tendenz UART/CDC vs. WLAN nach Einbauplan.  
 4. **Bei grünem Gate:** Repo `esp32.pidrive` anlegen, Pflichtenheft-Skeleton mit `[ENTWURF]`-Kapiteln aus §4.1, `OFFENE-PUNKTE` mit Q-USB-*.  
-5. **Parallel in pidrive:** `UMBAU-USB-MSC.md` aus §6 ausformulieren — aber U1+ erst nach G-USB-1.  
+5. **Parallel in pidrive:** `UMBAU-USB-MSC.md` aus §6 — U1 = Route additiv, BT unangetastet.  
 6. **Menü-UID-API** weiter wie geplant (nützt USB und Nicht-USB).
 
 ---
