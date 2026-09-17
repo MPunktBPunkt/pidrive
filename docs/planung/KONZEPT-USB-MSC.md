@@ -2,7 +2,7 @@
 
 **Dokumentstatus:** Entwurf V0.2 (Konzept, kein Pflichtenheft)  
 **Stand:** 2026-09-17  
-**Repo (Planung hier):** `pidrive` · **Firmware-Repo (später):** `esp32.pidrive`  
+**Firmware-Repo:** [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) (ESP-IDF, Hub-Verteilung) · Planung dort unter `docs/planung/`  
 **Idee / Voraussetzungen:** [IDEE-USB-MSC-MENUE.md](IDEE-USB-MSC-MENUE.md)  
 **Pfad zu Spec & Umbau:** [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md)  
 **Referenzprodukt:** Dension DAB+U (virtuelle MP3 über USB-MSC)  

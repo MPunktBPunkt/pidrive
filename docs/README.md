@@ -24,8 +24,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | **Erster erfolgreicher Connect** BMW 38304 — HB1–HB6, Logs, AVRCP-Probe | Abnahme / Entwickler | 2026-09-16 |
 | [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe (Phase −1), Mitschnitt 2026-09-16 | Entwickler | 2026-09-16 |
 | [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | **Idee** — USB-MSC-Menü / on-the-fly-MP3; Dension; HW Pi4 vs. ESP32-S3 | Planung | 2026-09-17 |
-| [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | **Konzept** — Architektur `esp32.pidrive`, PUMP, FAT-MVP, Parallel-BT | Planung | 2026-09-17 |
-| [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → Pflichtenheft/Umbau; Gates; Transport-Empfehlung | Planung | 2026-09-17 |
+| [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | **Konzept** — Architektur USB-MSC; kanonisch auch in [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) | Planung | 2026-09-17 |
+| [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → Pflichtenheft/Umbau; Firmware-Repo: [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) | Planung | 2026-09-17 |
 | [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-WEBUI-SANIERUNG.md](auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Arbeitsauftrag WebUI-Statuskette, Scanner, FastScan | Entwickler | 2026-09-15 |
 | [auftraege/AUFTRAG-FUNKPFAD.md](auftraege/AUFTRAG-FUNKPFAD.md) | Funkpfad K1–K5 (Import, Bandbreite, Suchlauf) | Entwickler | 2026-09-15 |
@@ -53,7 +53,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | `fahrzeug/BMW-DISPLAY-PROBE.md` | G2 — Display-Pfad im Fahrzeug |
 | `fahrzeug/BMW-USB-MSC-PROBE.md` | Messung zur Idee USB-MSC-Menü (nach Stick-Spike) |
 | `planung/UMBAU-USB-MSC.md` | PiDrive-Arbeitspakete U0–U8 (nach G-USB-1; Skizze in PFAD-ESP32-PIDRIVE) |
-| `esp32.pidrive` (neues Repo) | Pflichtenheft nach G-USB-0/1 — siehe PFAD-ESP32-PIDRIVE |
+| ~~`esp32.pidrive`~~ | **angelegt:** https://github.com/MPunktBPunkt/esp32.pidrive — Planung/Hub dort; Firmware folgt |
 
 ---
 

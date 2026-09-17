@@ -312,6 +312,6 @@ Später eigenes Dokument unter `docs/planung/`. Arbeitspakete (Vorschlag):
 |-------|--------|
 | 2026-09-17 | Pfad skizziert: HW-Pflicht S3, Dokumentenladder, Pflichtenheft-TOC, Umbaupakete U0–U8, Gates G-USB-0…4, Owner-Fragen |
 | 2026-09-17 | §1.1 Parallel-BT; §2a PUMP-Transport (UART/CDC V1, WLAN optional, BLE nicht für Audio); Q-USB-1/2/3 Tendenzen |
-| 2026-09-17 | Konzept ausgearbeitet: [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md) |
+| 2026-09-17 | Konzept V0.2; **Repo [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) angelegt** (Hub-Pflicht, Lab-Plan) |
 
-Nächstes Dokument nach Messung: `BMW-USB-MSC-PROBE.md`. Nächstes Spec-Dokument nach G-USB-0/1: `esp32.pidrive/docs/planung/PFLICHTENHEFT.md` (neues Repo).
+Nächstes Dokument nach Messung: `BMW-USB-MSC-PROBE.md`. Spec: `esp32.pidrive/docs/planung/PFLICHTENHEFT.md`.
