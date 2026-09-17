@@ -144,7 +144,7 @@ Ohne diese Voraussetzungen ist die Idee eher Spielerei als Produktpfad. Als Chec
 | P-H1 | P | USB **Device**-Port zur BMW-Buchse (Kabel A–A / werksseitig), stromversorgt (Bus oder 5 V). |
 | P-H2 | P | Unter der Vorgabe „Pi-4-**USB-C nur Versorgung**“: **zusätzliche** Device-Hardware (siehe §4.5.1) — die vier USB-A des Pi 4 reichen **nicht**. |
 | W-H3 | W | Ausreichend CPU/RAM für MSC + Vorpuffer; Encode auf Pi **oder** ESP (Entscheidung im Pflichtenheft). |
-| W-H4 | W | Link Pi ↔ Gadget: WLAN, UART oder USB-Host→ESP (nicht der BMW-Port). |
+| W-H4 | W | Link Pi ↔ Gadget: **PUMP** über zweiten ESP-USB (UART/CDC) und/oder WLAN — **nicht** BLE für Audio; siehe [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) §2a |
 | O-H5 | O | Bypass/zweite USB-Buchse wie Dension Connector Port (Stick weiter nutzbar). |
 
 Arbeitsname für die Device-Firmware: **`esp32.pidrive`** (ESP32-S3, USB-OTG). Classic-BT-Gateway (`esp32.bt-gateway`) bleibt getrennt — kein Classic-BT auf dem S3. Weg zum Pflichtenheft: [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md).
@@ -165,22 +165,29 @@ Folgerung:
 3. **Zusatz-HW nötig** für Device-Mode zur Headunit. Empfehlung: **ESP32-S3** (natives USB-OTG, TinyUSB MSC) als `esp32.pidrive`. Alternativen: anderer USB-Device-MCU; Pi Zero 2 W nur als Gadget-Satellit (mehr Platinen).
 4. **Encode-Ort** ist unabhängig von P-H2: PCM→MP3 kann auf dem Pi (Frames zum ESP) oder auf dem S3 laufen — ändert nicht die Notwendigkeit eines Device-Ports.
 5. **Stick-Spike** braucht weiterhin **keine** neue HW (normaler Stick in die BMW-Buchse).
+6. **Pi↔ESP** ist ein **anderer** Kanal als ESP↔BMW: BMW = native OTG/MSC; Pi = typisch zweite Board-Buchse (USB-UART) oder WLAN. Bluetooth Classic zum ESP entfällt (S3 hat keins); BLE eignet sich nicht für den Hörstream. Details und Empfehlung: [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) §1.1 / §2a.
 
 ```
                     ┌──────────────┐
   Netzteil 5 V ────►│ Pi 4 USB-C   │  (nur Power — unverändert)
                     │             │
-  CSR / RTL-SDR ───►│ Pi 4 USB-A  │  (Host — unverändert)
+  CSR / RTL-SDR ───►│ Pi 4 USB-A  │  (Host)
+  PUMP UART/CDC ───►│ Pi 4 USB-A  │──────► ESP „UART“-USB
                     │  PiDrive    │
-                    └──────┬───────┘
-                           │ WLAN / UART / …
+                    │ audio_out=  │
+                    │  bt | usb…  │── bt ──► BMW A2DP (unverändert)
+                    └─────────────┘
+                           │
+                           │ (wenn audio_output=usb_gadget)
                            ▼
                     ┌──────────────┐         ┌─────────────┐
-                    │ esp32.pidrive│ USB-Dev │ BMW NBT Evo │
+                    │ esp32.pidrive│ OTG Dev │ BMW NBT Evo │
                     │ ESP32-S3    ├────────►│ USB-Host    │
                     │ MSC+MP3     │         │ Medien-UI   │
                     └──────────────┘         └─────────────┘
 ```
+
+Alternativ ohne PUMP-Kabel: gleicher ESP-OTG→BMW, Pi↔ESP über **WLAN**.
 
 ### 4.6 Software-Vertrag PiDrive
 
@@ -288,7 +295,8 @@ Ergebnis: `docs/fahrzeug/BMW-USB-MSC-PROBE.md` (anzulegen nach Messung).
 | 2026-09-17 | Idee dokumentiert |
 | 2026-09-17 | Ausarbeitung: Dension-Analyse, Voraussetzungskatalog P/W/O, Variante B als Zielbild, Stick-Spike als Gate |
 | 2026-09-17 | HW: Pi 4 mit USB-C-only-Power **kein** Gadget; Device-HW (`esp32.pidrive`) Pflicht. Pfad zum Pflichtenheft: [PFAD-ESP32-PIDRIVE.md](PFAD-ESP32-PIDRIVE.md) |
-| — | Nächste Aktion: Stick-Spike am Fahrzeug **oder** bewusste Zurückstellung; Owner-Fragen Q-USB-1/4 |
+| 2026-09-17 | BT-Pfad bleibt parallel; PUMP V1 über zweiten ESP-USB (UART/CDC), WLAN optional; BLE nicht für Audio |
+| — | Nächste Aktion: Stick-Spike am Fahrzeug **oder** bewusste Zurückstellung; Owner-OK zu Q-USB-1/4 |
 
 **Arbeitshypothese:** Gelingen ist möglich, *wenn* wir denselben Vertrag wie Dension eingehen — **USB = Ton + UI**, Puffer und HU-Tuning ernst nehmen, Scope zuerst klein (Sender/Favoriten) halten. Scheitert der Stick-Spike an P-V1–P-V3, ist die Idee für dieses Fahrzeug tot; Scheitert nur der tiefe Menübaum, bleibt ein dension-artiger Radio-MVP denkbar.
 
