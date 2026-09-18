@@ -30,20 +30,72 @@ from menu.station_store import StationStore
 
 # ── Hilfsfunktionen ───────────────────────────────────────────────────────────
 
-def _local_ip() -> str:
-    """Aktuelle IP für die Anzeige im System-Menü."""
+def _local_ips() -> list[str]:
+    """Nicht-loopback IPv4-Adressen (wlan bevorzugt) für System-Menü / Hotspot."""
+    found: list[str] = []
+    # 1) Kernel-Interfaces via /sys + ioctl-frei: `ip -4 -o addr`
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(0.3)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
+        import subprocess
+        out = subprocess.check_output(
+            ["ip", "-4", "-o", "addr", "show", "up"],
+            text=True,
+            timeout=1.5,
+        )
+        # prefer wlan*/wl*/ap0/hotspot-like names first
+        rows: list[tuple[int, str]] = []
+        for line in out.splitlines():
+            parts = line.split()
+            if len(parts) < 4:
+                continue
+            iface = parts[1].rstrip(":")
+            if iface == "lo" or iface.startswith("docker") or iface.startswith("veth"):
+                continue
+            # format: 2: wlan0    inet 192.168.43.12/24 ...
+            try:
+                idx = parts.index("inet")
+                cidr = parts[idx + 1]
+                ip = cidr.split("/")[0]
+            except (ValueError, IndexError):
+                continue
+            if not ip or ip.startswith("127."):
+                continue
+            prio = 0
+            low = iface.lower()
+            if low.startswith("wl") or "wlan" in low or low in ("ap0", "hotspot", "uap0"):
+                prio = -10
+            elif low.startswith("en") or low.startswith("eth"):
+                prio = -5
+            rows.append((prio, ip))
+        rows.sort(key=lambda x: (x[0], x[1]))
+        for _, ip in rows:
+            if ip not in found:
+                found.append(ip)
     except Exception:
+        pass
+    # 2) Fallback: UDP-Trick (Default-Route)
+    if not found:
         try:
-            return socket.gethostbyname(socket.gethostname())
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0.3)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            if ip and not ip.startswith("127."):
+                found.append(ip)
         except Exception:
-            return "?"
+            pass
+    return found
+
+
+def _local_ip() -> str:
+    """Erste sinnvolle IP für die Anzeige im System-Menü."""
+    ips = _local_ips()
+    if ips:
+        return ips[0]
+    try:
+        return socket.gethostbyname(socket.gethostname())
+    except Exception:
+        return "?"
 
 
 def _back(prefix: str) -> MenuNode:
@@ -467,8 +519,21 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
     ])
 
     # ── 5. System (folgenreiche Aktionen mit Rückfrage) ─────────────────────
-    system = _folder("system", "System", [
-        MenuNode(id="sys_ip",      label="IP: " + _local_ip(), type="info"),
+    # IP/Status als type=info → Bridge zeigt sie als MSC-Dateinamen (kein Ton).
+    _ips = _local_ips() or [_local_ip()]
+    _ip_nodes = [
+        MenuNode(id="sys_ip", label="IP: " + _ips[0], type="info"),
+    ]
+    for _i, _ip in enumerate(_ips[1:3], start=2):
+        _ip_nodes.append(
+            MenuNode(id=f"sys_ip{_i}", label="IP: " + _ip, type="info")
+        )
+    _ssid = (S.get("wifi_ssid", "") or "").strip()
+    if _ssid:
+        _ip_nodes.append(
+            MenuNode(id="sys_ssid", label="WLAN: " + _ssid[:28], type="info")
+        )
+    system = _folder("system", "System", _ip_nodes + [
         MenuNode(id="sys_info",    label="System-Info", type="action", action="sys_info"),
         MenuNode(id="sys_version", label="Version",     type="action", action="sys_version"),
         _confirm("sys_reboot", "Neustart",    "Ja, neu starten", "reboot"),
