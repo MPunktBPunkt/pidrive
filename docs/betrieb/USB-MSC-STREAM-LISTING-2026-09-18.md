@@ -12,6 +12,8 @@
 
 **Fix ab 0.4.12-dev:** FAT/Dir/Sizes/Chains sind **immutable** nach Geometrie-Setup. Stream setzt nur `streamSlot_` und liefert den Ringbuffer als **Payload-Overlay** derselben virtuellen MP3. Writes → read-only (`tud_msc_is_writable_cb=false`, WRITE reject). Kein Remount mehr bei Stream.
 
+**0.4.13-dev:** `mediaPresent` erst nach `menu_set`, sofort bei NVS-Restore, sonst Timeout **7 s** (letztes/Demo-Menü). Menü in NVS (`pdmenu`). Slot-Namen idempotent.
+
 **Noch offen (Problem B):** Handy-Cache / kein zuverlässiges `play.guess` → oft nur Demo-Testton. Separater Selection-Detector.
 
 **Limit:** virtuelle Dateien ~64 KiB (512-Sektoren-Image) — Dauer-Wiedergabe braucht später größere virtuelle Kapazität.
