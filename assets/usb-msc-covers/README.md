@@ -22,12 +22,12 @@ Lab 2026-09-18: Billy-Talent embedded APIC + Webradio sticky ID3 inkl. APIC am P
 | Ort | Sieht Cover? | Quelle | Hinweis |
 |-----|--------------|--------|---------|
 | **BMW NBT / USB-Medien** | Ziel | sticky ID3 APIC am Dateianfang der virtuellen `.MP3` | Feldtest offen; HU cached oft stark |
-| **ESP SoftAP Web-UI** | **nein** | — | zeigt Menü/Stream-Metriken; kein `<img>` / kein `/api/lab/cover` |
+| **ESP SoftAP Web-UI** | **ja** (ab 0.4.4) | sticky ID3 APIC via `/api/lab/cover` | Tab Auto-Test · Now Playing |
 | **`GET /api/lab/stream`** | Rohdaten | kompletter sticky Tag + Audio-Head | für `ffprobe`/mutagen; Header `X-Stream-Id3` |
 | **`GET /api/lab/listen`** | nein | nur Ring-Audio | ID3 wird übersprungen |
 | **PiDrive WebUI** | eigene UI | Library/Webradio-Admin | unabhängig vom MSC-APIC |
 
-Kurz: Cover stecken im **Stream zum Radio** (und im Lab-Download), nicht im ESP-Webinterface.
+Kurz: Cover stecken im **Stream zum Radio** und (ab 0.4.4) auch in der SoftAP-UI.
 
 ---
 
