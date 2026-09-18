@@ -74,17 +74,18 @@ assets/usb-msc-covers/stations/web_lautfm_deutschrock.jpg
 Neuen Webradio-Sender in `stations.json` mit `"id": "web_mein_sender"` angelegt?  
 → Cover-Datei: `stations/web_mein_sender.jpg`.
 
-### Status-Bilder (noch nicht von der Bridge geladen)
+### Status-Bilder (`status/*.jpg`)
 
-Vorbereitet für später — Dateien kannst du schon erzeugen, Wirkung kommt erst wenn verdrahtet:
+Werden von der Bridge bei **Stop / Idle / kein Stream** als sticky APIC gesetzt (`src=status`):
 
-| Geplant | Datei |
-|---------|-------|
-| WLAN | `status/wifi.jpg` |
-| BT verbunden | `status/bt_connected.jpg` |
-| BT getrennt | `status/bt_disconnected.jpg` |
-| DAB-Scan | `status/dab_scan.jpg` |
-| Idle | `status/idle.jpg` |
+| Datei | Wann |
+|-------|------|
+| `status/idle.jpg` | Stop / kein aktiver Stream |
+| `status/wifi.jpg` | optional (WLAN-Hinweise) |
+| `status/bt_connected.jpg` | BT verbunden (Status) |
+| `status/bt_disconnected.jpg` | BT getrennt |
+| `status/dab_scan.jpg` | DAB-Scan |
+| `status/no_pi.jpg` | Fallback ohne Pi-Status |
 
 ### Nicht nötig
 
@@ -158,7 +159,7 @@ Nach jedem Stream schreibt die Bridge:
 |-------|--------|--------|
 | Sender / Webradio / Library-Fallback | `stations/*.jpg` | **aktiv** |
 | Globales Fallback | **`default.jpg`** | **aktiv** |
-| WiFi / BT / DAB-Scan Platzhalter | `status/*.jpg` | Spec vorbereitet, Bridge **nutzt sie noch nicht** |
+| WiFi / BT / DAB-Scan / Idle Platzhalter | `status/*.jpg` | **aktiv** (bei Stop/Idle) |
 | Lab-Beispiele | `examples/` | nur Referenz, nicht Produktion |
 
 Menü-Einträge wie „Zurueck“, „Mehr…“, „Seite 1“ brauchen **kein** Cover (kein Live-Stream).
@@ -173,7 +174,7 @@ assets/usb-msc-covers/
 ├── default.jpg        ← IMMER Fallback, wenn kein stations/-Treffer
 ├── stations/          ← ein JPEG pro Sender (von dir)
 │   └── web_….jpg
-├── status/            ← geplant (wifi, bt, …) — noch ungenutzt
+├── status/            ← Idle/BT/WLAN/DAB Status-Cover (aktiv)
 └── examples/          ← Spec/Lab-Referenz
 ```
 

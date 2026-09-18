@@ -1,0 +1,23 @@
+[Unit]
+Description=PiDrive PUMP Bridge (UART ↔ esp32.pidrive Live-MP3 + Menü)
+After=network-online.target pidrive_core.service
+Wants=network-online.target
+# Belegt /dev/ttyACM0 — nicht parallel zu minicom/screen
+
+[Service]
+UMask=0000
+Type=simple
+User=pidrive
+Group=dialout
+SupplementaryGroups=disk
+WorkingDirectory=/home/pidrive
+Environment=PYTHONPATH=/home/pidrive/pidrive/pidrive
+# Deploy: esp32.pidrive/tools/pump_bridge.py → /home/pidrive/pump_bridge.py
+ExecStart=/usr/bin/python3 -u /home/pidrive/pump_bridge.py --port /dev/ttyACM0 --interval 0.5 --bitrate 48k
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
