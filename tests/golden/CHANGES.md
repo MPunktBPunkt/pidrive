@@ -26,3 +26,6 @@ Jede Snapshot-Aktualisierung über `pidrivectl menu snapshot --accept` braucht e
 
 ## 2026-09-16 · v0.11.138
 - Golden Master aktualisiert von Q-A enter_action
+
+## 2026-09-18 · v0.11.142
+- Golden Master aktualisiert von u1-u2-usb

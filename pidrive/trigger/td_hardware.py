@@ -93,6 +93,8 @@ def handle(cmd, menu_state, store, S, settings, bg):
         bg(lambda: audio.set_output("bt", settings))
     elif cmd == "audio_all":
         bg(lambda: audio.set_output("all", settings))
+    elif cmd == "audio_usb_gadget":
+        bg(lambda: audio.set_output("usb_gadget", settings))
     elif cmd == "vol_up":
         bg(lambda: audio.volume_up(settings))
     elif cmd == "vol_down":

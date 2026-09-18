@@ -1,0 +1,20 @@
+[Unit]
+Description=PiDrive USB/ESP PUMP Presence (SoftAP status poll)
+After=network-online.target
+Wants=network-online.target
+# UART bleibt bei pump_bridge — dieser Dienst pollt nur HTTP + Serial-Nodes
+
+[Service]
+UMask=0000
+Type=simple
+User=root
+WorkingDirectory=/home/pidrive/pidrive/pidrive
+Environment=PYTHONPATH=/home/pidrive/pidrive/pidrive
+ExecStart=/usr/bin/python3 /home/pidrive/pidrive/pidrive/integration/usb_pump_client.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

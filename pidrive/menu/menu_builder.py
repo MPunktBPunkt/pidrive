@@ -370,6 +370,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         MenuNode(id="ao_bt",     label="Bluetooth",     type="action", action="audio_bt"),
         MenuNode(id="ao_klinke", label="Klinke (AUX)",  type="action", action="audio_klinke"),
         MenuNode(id="ao_hdmi",   label="HDMI",          type="action", action="audio_hdmi"),
+        MenuNode(id="ao_usb",    label="USB (ESP)",     type="action", action="audio_usb_gadget"),
         MenuNode(id="ao_volup",  label="Lauter",        type="action", action="vol_up"),
         MenuNode(id="ao_voldown",label="Leiser",        type="action", action="vol_down"),
     ])

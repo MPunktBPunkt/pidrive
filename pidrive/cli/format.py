@@ -55,6 +55,25 @@ def print_status(d: dict):
     out(f"  Spotify:      {sp}")
     wifi_info = (d.get("wifi_ssid") or "-") if d.get("wifi") else "aus"
     out(f"  WiFi:         {wifi_info}")
+    usb = d.get("usb") or {}
+    if isinstance(usb, dict) and (usb.get("online") is not None or usb.get("fw") or usb.get("serial_present")):
+        out()
+        out(_c("ESP / USB-Gadget", BOLD))
+        if usb.get("online"):
+            fw = usb.get("fw") or "-"
+            out(_c(f"  ESP:          online ({fw})", GREEN))
+        else:
+            out("  ESP:          offline")
+        flags = []
+        flags.append("OTG●" if usb.get("otg_up") else "OTG○")
+        flags.append("PUMP●" if usb.get("pump_up") else "PUMP○")
+        flags.append("UART●" if usb.get("uart_up") else "UART○")
+        flags.append("MSC●" if usb.get("msc_ready") else "MSC○")
+        out(f"  Links:        {' '.join(flags)}")
+        if usb.get("serial_ports"):
+            out(f"  Serial:       {', '.join(usb.get('serial_ports')[:3])}")
+        if usb.get("playing_name"):
+            out(f"  Playing:      {usb.get('playing_name')}")
 
 def print_now(d: dict):
     src    = d.get("source", "")

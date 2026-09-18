@@ -167,7 +167,7 @@ Byte-Layout und Framing: kanonisch in [`esp32.pidrive` PUMP.md](https://github.c
 | Bridge | `tools/pump_bridge.py` → `/tmp/pidrive_menu.json` / `/tmp/pidrive_cmd` |
 | Menü | aktuelle Seite, max. 4 MSC-Slots; Navigation per activate |
 | Audio USB | **0.4.3-dev:** Soft-Paging + Live-MP3 + sticky ID3; **APIC aus lokaler MP3** Lab-OK; Cover-Assets [`assets/usb-msc-covers`](../../assets/usb-msc-covers/README.md); NBT-Feldtest offen |
-| Pi-Paket | `usb_pump_client` / `audio_output=usb_gadget` noch offen |
+| Pi-Paket | **U1/U2:** `audio_output=usb_gadget` + `integration/usb_pump_client.py` → Status `usb.*` / `pidrivectl usb status` / WebUI Audio; Encode-Stream (U3) noch offen |
 
 ---
 
@@ -277,8 +277,8 @@ Später eigenes Dokument unter `docs/planung/`. Arbeitspakete (Vorschlag):
 | Paket | Ziel | Abhängigkeit |
 |-------|------|--------------|
 | **U0** | Sicherheitsnetz: FEATURES-Zeilen, CLI-Hooks, keine Regression BT/Klinke | vor jedem Umbau |
-| **U1** | `audio_output=usb_gadget` **neben** `bt`/`klinke`/`hdmi` — BT-Code unverändert; nie zwei Hörpfade parallel zum BMW | G-USB-1 |
-| **U2** | PUMP-Client (Status, connect, buffer KPIs) | G-USB-4 |
+| **U1** | `audio_output=usb_gadget` **neben** `bt`/`klinke`/`hdmi` — BT-Code unverändert; nie zwei Hörpfade parallel zum BMW | **teilweise ✓** (Route/CLI/WebUI/Menü; Stream U3 offen) |
+| **U2** | PUMP-Client (Status, connect, buffer KPIs) | **teilweise ✓** (`usb_pump_client` SoftAP+Serial → `usb.*`; UART bleibt bei Bridge) |
 | **U3** | Audio-Pfad: Capture/Resample → PCM oder MP3 → PUMP | Encode-Entscheidung |
 | **U4** | Menü-Renderer „USB-FAT-Export“ (UID→Pfad/Dateiname, paginiert/flach) | UID-API (Menü-Auftrag) |
 | **U5** | Activate von Gadget-Events (`play_uid`, Action-MP3s) → Trigger-Dispatcher | U2+U4 |

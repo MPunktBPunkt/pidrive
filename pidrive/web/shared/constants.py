@@ -39,7 +39,7 @@ ALLOWED_COMMANDS = {
     "bt_disconnect", "bt_reconnect_last",
     "spotify_on", "spotify_off", "spotify_toggle",
     "radio_stop", "library_stop",
-    "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
+    "audio_klinke", "audio_hdmi", "audio_bt", "audio_all", "audio_usb_gadget",
     "vol_up", "vol_set", "vol_down",
     "gain_fm_auto", "gain_dab_auto",
     "dab_scan", "dab_scan_replace", "fm_scan",

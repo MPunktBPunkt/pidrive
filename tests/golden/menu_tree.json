@@ -3842,6 +3842,19 @@
     "playable": false
   },
   {
+    "path": "root/audio_out/ao_usb",
+    "id": "ao_usb",
+    "type": "action",
+    "action": "audio_usb_gadget",
+    "source": null,
+    "meta": {},
+    "label": "USB (ESP)",
+    "path_id": "root/audio_out/ao_usb",
+    "uid": 5095794003146169661,
+    "skip_on_nav": false,
+    "playable": false
+  },
+  {
     "path": "root/audio_out/ao_volup",
     "id": "ao_volup",
     "type": "action",

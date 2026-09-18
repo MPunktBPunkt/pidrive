@@ -1,2 +1,2 @@
-"""integration/ — Externe Protokolladapter (BMW AVRCP, MPRIS2, mpv)
+"""integration/ — Externe Protokolladapter (BMW AVRCP, MPRIS2, mpv, USB/ESP PUMP)
 """

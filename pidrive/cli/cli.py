@@ -33,8 +33,11 @@ Befehle:
   volume down             Leiser (-5%)
   volume set <0-100>      Lautstärke setzen
 
-  audio route klinke|bt|hdmi|auto   Audio-Ausgang wählen
+  audio route klinke|bt|hdmi|usb_gadget|auto   Audio-Ausgang wählen
   audio status            Audio-Status
+
+  usb status              ESP / USB-Gadget Presence (PUMP)
+  usb probe               Einmal SoftAP+Serial prüfen
 
   dab status              DAB+-Status (Lock, PCM, DLS)
   dab scan                DAB-Sendersuchlauf starten
@@ -306,9 +309,15 @@ Flags (vor dem Befehl angeben):
     p_audio = sub.add_parser("audio", help="Audio-Ausgang")
     audio_sub = p_audio.add_subparsers(dest="audio_cmd")
     p_route = audio_sub.add_parser("route")
-    p_route.add_argument("mode", choices=["klinke","bt","hdmi","auto"])
+    p_route.add_argument("mode", choices=["klinke", "bt", "hdmi", "auto", "usb_gadget", "usb"])
     audio_sub.add_parser("status")
     audio_sub.add_parser("test", help="Testton abspielen (3s)")
+
+    # ── usb / ESP ─────────────────────────────────────────────────────────
+    p_usb = sub.add_parser("usb", help="ESP32 USB-MSC / PUMP")
+    usb_sub = p_usb.add_subparsers(dest="usb_cmd")
+    usb_sub.add_parser("status", help="Presence aus Status-IPC")
+    usb_sub.add_parser("probe", help="Sofort SoftAP+Serial pollen")
 
     # ── dab ───────────────────────────────────────────────────────────────
     p_dab = sub.add_parser("dab", help="DAB+")
@@ -1117,7 +1126,14 @@ Flags (vor dem Befehl angeben):
             sys.exit(EXIT_OK)
         svc.require_online()
         if args.audio_cmd == "route":
-            trig = {"klinke": "audio_klinke","bt":"audio_bt","hdmi":"audio_hdmi","auto":"audio_all"}[args.mode]
+            mode = "usb_gadget" if args.mode in ("usb", "usb_gadget") else args.mode
+            trig = {
+                "klinke": "audio_klinke",
+                "bt": "audio_bt",
+                "hdmi": "audio_hdmi",
+                "auto": "audio_all",
+                "usb_gadget": "audio_usb_gadget",
+            }[mode]
             r = svc.send(trig)
             if use_json:
                 fmt.print_json(r)
@@ -1129,19 +1145,21 @@ Flags (vor dem Befehl angeben):
                 _ad = _rld()
             except Exception:
                 _ad = {}
-            new_out = _ad.get("effective") or svc.get_status().get("audio_effective") or args.mode
+            new_out = _ad.get("effective") or svc.get_status().get("audio_effective") or mode
             sink = _ad.get("sink") or ""
             reason = _ad.get("reason") or ""
-            ok = new_out == args.mode or (args.mode == "auto" and new_out not in ("none", "", "–"))
+            ok = new_out == mode or (mode == "auto" and new_out not in ("none", "", "–"))
             if ok:
                 fmt.out("Audio-Ausgang: " + fmt.GREEN + new_out + " ✓" + fmt.RESET)
                 if sink:
                     fmt.out("  Sink: " + sink[:60])
+                if mode == "usb_gadget":
+                    fmt.out("  Hinweis: BMW-Ton über ESP/PUMP — Bridge muss laufen")
             else:
-                fmt.out(fmt.RED + f"Audio-Ausgang: {args.mode} fehlgeschlagen" + fmt.RESET)
+                fmt.out(fmt.RED + f"Audio-Ausgang: {mode} fehlgeschlagen" + fmt.RESET)
                 if reason:
                     fmt.out("  Grund: " + reason)
-                if args.mode == "bt":
+                if mode == "bt":
                     fmt.out("  Tipp: pidrivectl bt connect <MAC>  dann erneut versuchen")
             sys.exit(EXIT_OK)
         elif args.audio_cmd == "test":
@@ -1360,6 +1378,57 @@ Flags (vor dem Befehl angeben):
                 if _snk: fmt.out(f"Sink:      {_snk[:55]}")
                 fmt.out(f"Bluetooth: {_bt}")
             sys.exit(EXIT_OK)
+
+    # usb / ESP
+    if args.cmd == "usb":
+        if not args.usb_cmd or args.usb_cmd == "status":
+            d = svc.get_status()
+            usb = d.get("usb") or {}
+            if use_json:
+                fmt.print_json(usb)
+            else:
+                if usb.get("online"):
+                    fmt.out(fmt.GREEN + "ESP: online" + fmt.RESET + (f"  FW {usb.get('fw')}" if usb.get("fw") else ""))
+                else:
+                    fmt.out("ESP: offline")
+                fmt.out(
+                    f"  OTG {'●' if usb.get('otg_up') else '○'}  "
+                    f"PUMP {'●' if usb.get('pump_up') else '○'}  "
+                    f"UART {'●' if usb.get('uart_up') else '○'}  "
+                    f"MSC {'●' if usb.get('msc_ready') else '○'}"
+                )
+                if usb.get("serial_ports"):
+                    fmt.out("  Serial: " + ", ".join(usb.get("serial_ports")[:4]))
+                if usb.get("esp_host"):
+                    fmt.out(f"  Host:   {usb.get('esp_host')}")
+                if usb.get("playing_name"):
+                    fmt.out(f"  Play:   {usb.get('playing_name')}")
+                if usb.get("stream_cap"):
+                    fmt.out(
+                        f"  Stream: {usb.get('stream_bytes', 0)}/{usb.get('stream_cap')} B"
+                        f"  ID3 {usb.get('id3_len', 0)} B"
+                    )
+                if usb.get("age_s") is not None:
+                    fmt.out(f"  Age:    {usb.get('age_s')} s")
+                if not usb:
+                    fmt.out("  (kein usb-Status — usb_pump_client starten)")
+            sys.exit(EXIT_OK)
+        if args.usb_cmd == "probe":
+            try:
+                from integration.usb_pump_client import poll_once
+                snap = poll_once(try_uart=False)
+            except Exception as e:
+                _exit_err(str(e))
+            if use_json:
+                fmt.print_json(snap)
+            else:
+                fmt.out("Probe geschrieben → /tmp/pidrive_usb_status.json")
+                fmt.out(
+                    ("online" if snap.get("online") else "offline")
+                    + f"  http={snap.get('http_ok')} serial={snap.get('serial_present')}"
+                    + (f"  fw={snap.get('fw')}" if snap.get("fw") else "")
+                )
+            sys.exit(EXIT_OK if snap.get("online") else EXIT_ERROR)
 
     # dab
     if args.cmd == "dab":

@@ -14,6 +14,7 @@ REQUIRED_KEYS = {
     "processes",
     "degraded_imports",
     "scanner",
+    "usb",
     "control_context",
     "dab_sync_seen",
     "volume",

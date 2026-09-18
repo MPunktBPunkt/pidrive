@@ -15,6 +15,7 @@ MENU_TREE_FILE = "/tmp/pidrive_menu_tree.json"
 PROGRESS_FILE = "/tmp/pidrive_progress.json"
 LIST_FILE     = "/tmp/pidrive_list.json"
 READY_FILE    = "/tmp/pidrive_ready"
+USB_STATUS_FILE = "/tmp/pidrive_usb_status.json"
 # DEBUG_FILE: entfernt v0.11.96 (Display deaktiviert)
 
 
@@ -129,8 +130,47 @@ def write_status(S, settings):
         "degraded_imports":     _degraded_imports(),
         "processes":            S.get("processes", []),
         "scanner":              _scanner_status(S),
+        "usb":                  _usb_status(),
         "ts":        int(time.time()),
     })
+
+
+def _usb_status():
+    """ESP / PUMP Presence aus usb_pump_client (/tmp/pidrive_usb_status.json)."""
+    raw = read_json(USB_STATUS_FILE, {})
+    if not isinstance(raw, dict):
+        raw = {}
+    online = bool(raw.get("online"))
+    # stale: älter als 15 s ohne Update → offline markieren
+    try:
+        age = int(time.time()) - int(raw.get("ts") or 0)
+    except (TypeError, ValueError):
+        age = 9999
+    if online and age > 15:
+        online = False
+    return {
+        "online": online,
+        "http_ok": bool(raw.get("http_ok")),
+        "serial_present": bool(raw.get("serial_present")),
+        "serial_ports": raw.get("serial_ports") or [],
+        "port": raw.get("port") or "",
+        "esp_host": raw.get("esp_host") or "",
+        "fw": raw.get("fw") or "",
+        "pump_up": bool(raw.get("pump_up")),
+        "otg_up": bool(raw.get("otg_up")),
+        "otg_suspended": bool(raw.get("otg_suspended")),
+        "uart_up": bool(raw.get("uart_up")),
+        "msc_ready": bool(raw.get("msc_ready")),
+        "playing_name": raw.get("playing_name") or "",
+        "playing_uid": raw.get("playing_uid") or "",
+        "id3_len": int(raw.get("id3_len") or 0),
+        "stream_active": bool(raw.get("stream_active")),
+        "stream_bytes": int(raw.get("stream_bytes") or 0),
+        "stream_cap": int(raw.get("stream_cap") or 0),
+        "buffer_ms": int(raw.get("buffer_ms") or 0),
+        "source": raw.get("source") or "none",
+        "age_s": age if raw.get("ts") else None,
+    }
 
 
 def _scanner_status(S):

@@ -8,8 +8,13 @@
     <button class="btn primary" onclick="sendCmd('audio_klinke')">Klinke</button>
     <button class="btn" onclick="sendCmd('audio_bt')">Bluetooth</button>
     <button class="btn" onclick="sendCmd('audio_hdmi')">HDMI</button>
+    <button class="btn" onclick="sendCmd('audio_usb_gadget')">USB (ESP)</button>
     <button class="btn" onclick="sendCmd('audio_all')">Auto</button>
   </div>
+</div>
+<div class="card">
+  <div class="card-title">🔌 ESP / USB-Gadget</div>
+  <div id="usbBlock" style="font-size:13px">Lade…</div>
 </div>
 <div class="card">
   <div class="card-title">🔉 Lautstärke</div>
@@ -32,6 +37,19 @@ function onBaseRefresh(j, st) {
   if(e('volBlock')) e('volBlock').textContent=(st.volume??'–')+'%';
   if(e('audioRoute')) e('audioRoute').innerHTML=`
     <b>Effektiv:</b> ${st.audio_effective||'–'} | <b>Angefordert:</b> ${st.audio_out||'–'}`;
+  const u=st.usb||{};
+  if(e('usbBlock')){
+    const on=!!u.online;
+    e('usbBlock').innerHTML=`
+      <b>ESP:</b> ${on?'🟢 online':'⚪ offline'}
+      ${u.fw?(' · FW '+u.fw):''}<br>
+      OTG ${u.otg_up?'●':'○'} · PUMP ${u.pump_up?'●':'○'} · UART ${u.uart_up?'●':'○'} · MSC ${u.msc_ready?'●':'○'}<br>
+      Serial ${u.serial_present?'ja':'nein'}${u.port?(' · '+u.port):''}
+      ${u.esp_host?(' · HTTP '+u.esp_host):''}<br>
+      ${u.playing_name?('Playing: '+u.playing_name+'<br>'):''}
+      Stream ${u.stream_active?'aktiv':'–'} · ID3 ${u.id3_len||0} B · Buffer ${u.stream_bytes||0}/${u.stream_cap||0} B
+      ${u.age_s!=null?(' · age '+u.age_s+'s'):''}`;
+  }
 }
 async function loadAudioDebug() {
   try{const r=await fetch('/api/audio');const j=await r.json();

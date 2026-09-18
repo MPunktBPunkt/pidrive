@@ -67,7 +67,7 @@ _EXACT_TRIGGERS = frozenset({
     "mpris_refresh",
     "up", "down", "left", "right", "enter", "back",
     "spotify_on", "spotify_off", "spotify_toggle", "play_spotify",
-    "audio_klinke", "audio_hdmi", "audio_bt", "audio_all",
+    "audio_klinke", "audio_hdmi", "audio_bt", "audio_all", "audio_usb_gadget",
     "vol_up", "vol_down",
     "wifi_on", "wifi_off", "wifi_toggle",
     "bt_on", "bt_off", "bt_toggle",

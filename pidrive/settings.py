@@ -25,10 +25,16 @@ _DEFAULTS = {
     # Audio
     "music_path":         os.path.expanduser("~/Musik"),  # legacy
     "music_dir":          "/home/pidrive/Musik",           # kanonisch
-    "audio_output":       "auto",        # auto | klinke | bt | hdmi
+    "audio_output":       "auto",        # auto | klinke | bt | hdmi | usb_gadget
     "audio_sink_name":    "",            # Leer = automatisch erkennen
     "audio_card_index":   -1,            # -1 = automatisch
     "volume":             90,
+    # USB-MSC / esp32.pidrive (U1/U2 — Status-Poll; UART bleibt bei pump_bridge)
+    "usb_esp_host":       "192.168.178.89",
+    "usb_esp_port":       80,
+    "usb_pump_port":      "/dev/ttyACM0",
+    "usb_pump_baud":      115200,
+    "usb_poll_s":         2.0,
     # FM
     "fm_freq":            "98.5",
     "fm_gain":            -1,            # -1 = Auto AGC, 0–49 = dB

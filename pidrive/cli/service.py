@@ -72,6 +72,7 @@ class PiDriveService:
             "scanner_band":    s.get("scanner_band", ""),
             "scanner_squelch": s.get("scanner_squelch"),
             "processes":       s.get("processes") or [],
+            "usb":             s.get("usb") or {},
         }
 
     def get_now(self) -> dict:

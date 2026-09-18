@@ -521,6 +521,19 @@ def decide_audio_route(settings=None, source: str = "") -> dict:
             settings = {}
 
     requested = settings.get("audio_output", "auto")
+    if requested in ("usb", "esp", "usb_gadget"):
+        requested = "usb_gadget"
+
+    # USB-Gadget → PUMP → ESP → BMW: kein lokaler PipeWire-Sink nötig
+    if requested == "usb_gadget":
+        return {
+            "requested": "usb_gadget",
+            "effective": "usb_gadget",
+            "reason": "usb_gadget_requested",
+            "sink": "",
+            "source": source,
+            "pa_ok": True,
+        }
 
     if not _pa_ok():
         return {
@@ -590,7 +603,10 @@ def apply_audio_route(decision: dict):
     sink      = decision.get("sink", "")
     source    = decision.get("source", "")
 
-    if sink:
+    if effective == "usb_gadget":
+        # Kein PA-Default-Sink für BMW-Pfad; lokale Quellen weiter über Bridge/PUMP
+        pass
+    elif sink:
         set_default_sink(sink)
 
     if effective == "klinke":
@@ -607,8 +623,8 @@ def apply_audio_route(decision: dict):
     src_tag = ("source=" + source).ljust(17) if source else "source=-         "
     log.info(
         "[AUDIO] " + src_tag
-        + " requested=" + decision.get("requested", "?").ljust(6)
-        + " effective=" + effective.ljust(7)
+        + " requested=" + decision.get("requested", "?").ljust(11)
+        + " effective=" + effective.ljust(11)
         + " reason="    + decision.get("reason", "?")
         + " sink="      + (sink or "-")
     )
@@ -700,6 +716,13 @@ def set_output(mode: str, settings: dict):
         get_mpv_args(settings, source="set_output:auto")
         ipc.write_progress("Audio", "Auto gesetzt", color="green")
         log.info("[AUDIO] set_output -> auto")
+
+    elif mode in ("usb_gadget", "usb", "esp"):
+        settings["audio_output"] = "usb_gadget"
+        d = decide_audio_route(settings=settings, source="manual")
+        apply_audio_route(d)
+        ipc.write_progress("Audio", "USB/ESP (Gadget)", color="green")
+        log.info("[AUDIO] set_output -> usb_gadget")
 
     try:
         from settings import save_settings as _ss_out
