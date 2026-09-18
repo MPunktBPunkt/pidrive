@@ -1,7 +1,7 @@
 # Pfad: von der USB-MSC-Idee zu `esp32.pidrive` + PiDrive-Umbau
 
-**Status:** Firmware-Lab läuft — **PUMP Menü+Activate** in [`esp32.pidrive` 0.3.1-dev](https://github.com/MPunktBPunkt/esp32.pidrive); Pi-Umbau (`usb_gadget`) noch offen  
-**Stand:** 2026-09-17  
+**Status:** Firmware-Lab — [`esp32.pidrive` **0.4.3-dev**](https://github.com/MPunktBPunkt/esp32.pidrive): Soft-Paging + embedded APIC; Pi-Umbau (`usb_gadget`) noch offen  
+**Stand:** 2026-09-18  
 **Idee (Voraussetzung):** [IDEE-USB-MSC-MENUE.md](IDEE-USB-MSC-MENUE.md)  
 **Konzept (Architektur):** [KONZEPT-USB-MSC.md](KONZEPT-USB-MSC.md)  
 **Firmware-Repo / PUMP-Doku:** [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) · [PUMP.md](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/PUMP.md)  
@@ -166,7 +166,7 @@ Byte-Layout und Framing: kanonisch in [`esp32.pidrive` PUMP.md](https://github.c
 | Firmware | `esp32.pidrive` **0.3.1-dev** SoftAP + MSC + PUMP |
 | Bridge | `tools/pump_bridge.py` → `/tmp/pidrive_menu.json` / `/tmp/pidrive_cmd` |
 | Menü | aktuelle Seite, max. 4 MSC-Slots; Navigation per activate |
-| Audio USB | **0.4.2-dev:** Live-MP3 + sticky ID3/APIC (PC-ffprobe OK); Cover-Assets [`assets/usb-msc-covers`](../../assets/usb-msc-covers/README.md); NBT-Feldtest offen |
+| Audio USB | **0.4.3-dev:** Soft-Paging + Live-MP3 + sticky ID3; **APIC aus lokaler MP3** Lab-OK; Cover-Assets [`assets/usb-msc-covers`](../../assets/usb-msc-covers/README.md); NBT-Feldtest offen |
 | Pi-Paket | `usb_pump_client` / `audio_output=usb_gadget` noch offen |
 
 ---

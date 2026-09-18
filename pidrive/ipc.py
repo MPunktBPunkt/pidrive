@@ -67,7 +67,28 @@ def _dls_for_status(S: dict) -> str:
     return ""
 
 
+def _library_file_for_status(S):
+    """Absoluter Pfad der aktuellen Bibliotheks-Datei (für PUMP-Cover/APIC)."""
+    path = S.get("library_file") or ""
+    if path:
+        return path
+    try:
+        from modules import local_player
+        return local_player.current_file() or ""
+    except Exception:
+        return ""
+
+
 def write_status(S, settings):
+    # keep library_file in S fresh for consumers (PUMP bridge, WebUI)
+    try:
+        from modules import local_player
+        if local_player.is_playing():
+            S["library_file"] = local_player.current_file() or S.get("library_file", "")
+        elif not S.get("library_playing"):
+            S.pop("library_file", None)
+    except Exception:
+        pass
     write_json(STATUS_FILE, {
         "wifi":      S.get("wifi",    False),
         "wifi_ssid": S.get("wifi_ssid", ""),
@@ -86,6 +107,7 @@ def write_status(S, settings):
         "dls_raw":   S.get("dls_raw", ""),
         "library":   S.get("library_playing", False),
         "lib_track": S.get("library_track", S.get("lib_track", "")),
+        "library_file": _library_file_for_status(S),
         "audio_out": settings.get("audio_output", "auto"),
         "audio_effective": _get_audio_effective() or settings.get("audio_output","auto"),
         "volume":  settings.get("volume", None),

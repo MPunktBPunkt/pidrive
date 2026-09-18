@@ -143,6 +143,7 @@ def apply_tags_to_state(S: dict, filepath: str, settings: dict):
         S["album"] = tags.get("album") or ""
         S["library_track"] = S["track"]
         S["library_playing"] = True
+        S["library_file"] = filepath
         S["radio_name"] = S["track"]
     except Exception:
         S["track"] = os.path.basename(filepath)

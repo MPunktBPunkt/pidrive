@@ -3,7 +3,13 @@
 **Stand:** 2026-09-17 · Firmware [`esp32.pidrive` 0.4.2-dev](https://github.com/MPunktBPunkt/esp32.pidrive)  
 **Zweck:** JPEG-Cover, die als **ID3v2 APIC** in den Live-MP3-Stream eingebettet werden und am Werksradio (NBT/iDrive USB-Medien) als Albumcover erscheinen können.
 
-Die Bridge (`esp32.pidrive/tools/pump_bridge.py`) erzeugt derzeit ein **Fallback-Cover** (Text: Sender / Track / BT·WiFi). Eigene Bilder aus diesem Ordner haben Vorrang, sobald die Dateinamen-Konvention greift.
+Die Bridge (`esp32.pidrive/tools/pump_bridge.py`, ab **0.4.3**) wählt Cover so:
+
+1. **APIC** aus lokaler MP3 (`local_play` / `status.library_file`) — skaliert auf 320×320  
+2. JPEG aus diesem Ordner (`stations/…`)  
+3. Fallback-Textcover (Sender / Track / BT·WiFi)
+
+Lab 2026-09-18: eingebettetes Cover einer Billy-Talent-MP3 wurde am ESP-Stream verifiziert.
 
 ---
 
