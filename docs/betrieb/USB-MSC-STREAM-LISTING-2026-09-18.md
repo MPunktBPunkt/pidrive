@@ -1,16 +1,20 @@
 # USB-MSC: Listing vs. Live-Stream — Lab 2026-09-18
 
 **Scope:** ESP32-S3 MSC-Gadget (`esp32.pidrive`) + Pi `pump_bridge` + Android-OTG / BMW-USB  
-**Firmware-Kontext:** `0.4.9` → `0.4.10-dev` (Menü-LFN) → **`0.4.11-dev`** (längere FAT-Ketten, Remount-Puls)  
+**Firmware-Kontext:** `0.4.9` → `0.4.10` → `0.4.11` → **`0.4.12-dev` (static FAT)**  
 **Repos:** Lab (Pi + SoftAP/STA + Handy-OTG); Verhalten deckungsgleich mit Autoradio-Beobachtung
 
 ---
 
 ## Kurzfazit
 
-Das System kann aus Host-Sicht **entweder** ein stabiles Dateimenü **oder** einen Live-Stream zuverlässig zeigen. Läuft der Stream (blaue Daten-LED blinkt), wird der Stick-Inhalt oft **leer**. Stream stoppen → Dateien erscheinen wieder. Das gilt für **Handy und Autoradio**.
+**Ursache (bestätigt):** `startStream` hat FAT/Directory/Size/Clusterkette verändert → Host-Listing bricht.
 
-Zusätzlich: Datei antippen am Handy liefert oft nur den **Demo-Testton**, weil Android den Stub cached und kein `play.guess` auslöst — obwohl die Bridge bereits Webradio zum ESP schieben kann.
+**Fix ab 0.4.12-dev:** FAT/Dir/Sizes/Chains sind **immutable** nach Geometrie-Setup. Stream setzt nur `streamSlot_` und liefert den Ringbuffer als **Payload-Overlay** derselben virtuellen MP3. Writes → read-only (`tud_msc_is_writable_cb=false`, WRITE reject). Kein Remount mehr bei Stream.
+
+**Noch offen (Problem B):** Handy-Cache / kein zuverlässiges `play.guess` → oft nur Demo-Testton. Separater Selection-Detector.
+
+**Limit:** virtuelle Dateien ~64 KiB (512-Sektoren-Image) — Dauer-Wiedergabe braucht später größere virtuelle Kapazität.
 
 ---
 
