@@ -63,11 +63,32 @@ async function loadDabStatus() {
   }catch(e){document.getElementById('dabStatusBlock').textContent='Fehler: '+e;}
 }
 async function loadRtlsdr() {
-  try{const r=await fetch('/api/rtlsdr');const j=await r.json();
-    document.getElementById('rtlsdrBlock').innerHTML=`<b>OK:</b> ${j.ok} | <b>USB ID:</b> ${j.usb_id||'–'}<br><pre style="font-size:10px">${JSON.stringify(j.data||{},null,2)}</pre>`;}catch(e){}
+  try{
+    const r=await fetch('/api/rtlsdr');
+    const j=await r.json();
+    const usb=(j.data&&j.data.usb)||{};
+    const present=j.present!=null?j.present:!!usb.present;
+    const usbId=j.usb_id||'–';
+    const tools=Object.entries((j.data&&j.data.tools)||{}).map(([k,v])=>`${k}:${v?'✓':'✗'}`).join(' ');
+    const hint=j.hint?`<div style="color:var(--yellow);margin-top:4px">${j.hint}</div>`:'';
+    const err=j.error?`<div style="color:var(--red)">${j.error}</div>`:'';
+    document.getElementById('rtlsdrBlock').innerHTML=
+      `<b>Diagnose:</b> ${j.ok?'ok':'Fehler'} | <b>Stick:</b> ${present?'gefunden':'nicht gefunden'} | <b>USB ID:</b> ${usbId||'–'}<br>`+
+      `<span style="color:var(--muted);font-size:11px">Tools: ${tools||'–'} · busy=${(j.data&&j.data.busy)?'ja':'nein'}</span>`+
+      hint+err+
+      `<pre style="font-size:10px;margin-top:6px">${JSON.stringify(j.data||{},null,2)}</pre>`;
+  }catch(e){
+    document.getElementById('rtlsdrBlock').textContent='Fehler: '+e;
+  }
 }
 async function resetRtlsdr(){await sendCmd('rtlsdr_reset');showToast('Reset gesendet');}
-async function refreshRtlsdr(){try{await fetch('/api/rtlsdr/refresh');loadRtlsdr();}catch(e){}}
+async function refreshRtlsdr(){
+  try{
+    document.getElementById('rtlsdrBlock').textContent='Aktualisiere…';
+    await fetch('/api/rtlsdr/refresh');
+    await loadRtlsdr();
+  }catch(e){document.getElementById('rtlsdrBlock').textContent='Fehler: '+e;}
+}
 async function captureSpectrum() {
   const c=document.getElementById('specCenter').value;
   const p=document.getElementById('specPpm').value;

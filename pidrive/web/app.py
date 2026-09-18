@@ -499,52 +499,75 @@ def api_grep():
 
 @app.route("/api/rtlsdr")
 def api_rtlsdr():
+    """RTL-SDR Status. Bei fehlender/staler Diagnose automatisch neu erheben."""
     data = read_json(RTLSDR_FILE, {})
+    age = file_age(RTLSDR_FILE)
+    stale = (not data) or (age is None) or (isinstance(age, (int, float)) and age > 60)
+    if stale:
+        try:
+            from modules.radio import rtlsdr as _rtl
+            data = _rtl.diagnose(active_tests=False) or {}
+            age = file_age(RTLSDR_FILE)
+        except Exception as e:
+            usb = (data or {}).get("usb") or {}
+            return jsonify({
+                "ok": False,
+                "error": str(e),
+                "present": bool(usb.get("present")),
+                "usb_id": _rtlsdr_usb_id(usb),
+                "data": data or {},
+                "exists": os.path.exists(RTLSDR_FILE),
+                "age": age,
+            })
+    usb = (data or {}).get("usb") or {}
+    present = bool(usb.get("present"))
     return jsonify({
-        "ok": bool(data),
+        "ok": True,
+        "present": present,
+        "usb_id": _rtlsdr_usb_id(usb),
         "data": data,
         "exists": os.path.exists(RTLSDR_FILE),
-        "age": file_age(RTLSDR_FILE)
+        "age": age,
+        "hint": None if present else "Kein RTL-SDR per lsusb — Stick am Pi anstecken",
     })
+
+
+def _rtlsdr_usb_id(usb: dict) -> str:
+    matches = usb.get("matches") or []
+    if not matches:
+        return ""
+    # "Bus 001 Device 004: ID 0bda:2838 Realtek ..." → "0bda:2838"
+    import re as _re
+    m = _re.search(r"ID\s+([0-9a-fA-F]{4}:[0-9a-fA-F]{4})", matches[0])
+    return m.group(1) if m else matches[0][:60]
 
 
 @app.route("/api/rtlsdr/refresh")
 def api_rtlsdr_refresh():
-    import subprocess as _sp, sys as _sys
-    _rtl_py = _PKG_ROOT / "modules" / "radio" / "rtlsdr.py"
-    if not _rtl_py.is_file():
-        return jsonify({
-            "ok": False,
-            "error": f"rtlsdr.py nicht gefunden: {_rtl_py}",
-            "data": read_json(RTLSDR_FILE, {}),
-            "file_exists": os.path.exists(RTLSDR_FILE),
-        })
     try:
-        r = _sp.run(
-            [_sys.executable, str(_rtl_py), "--json"],
-            timeout=10, capture_output=True, text=True,
-        )
-        if r.returncode != 0:
-            return jsonify({
-                "ok": False,
-                "error": (r.stderr or r.stdout or f"exit {r.returncode}")[:400],
-                "data": read_json(RTLSDR_FILE, {}),
-                "file_exists": os.path.exists(RTLSDR_FILE),
-            })
+        from modules.radio import rtlsdr as _rtl
+        data = _rtl.diagnose(active_tests=False) or {}
     except Exception as _e:
+        data = read_json(RTLSDR_FILE, {})
+        usb = (data or {}).get("usb") or {}
         return jsonify({
             "ok": False,
             "error": str(_e),
-            "data": read_json(RTLSDR_FILE, {}),
-            "file_exists": os.path.exists(RTLSDR_FILE)
+            "present": bool(usb.get("present")),
+            "usb_id": _rtlsdr_usb_id(usb),
+            "data": data,
+            "file_exists": os.path.exists(RTLSDR_FILE),
         })
-    data = read_json(RTLSDR_FILE, {})
+    usb = (data or {}).get("usb") or {}
+    present = bool(usb.get("present"))
     return jsonify({
         "ok": True,
+        "present": present,
+        "usb_id": _rtlsdr_usb_id(usb),
         "data": data,
-        "file_exists": os.path.exists(RTLSDR_FILE)
+        "file_exists": os.path.exists(RTLSDR_FILE),
+        "hint": None if present else "Kein RTL-SDR per lsusb — Stick am Pi anstecken",
     })
-
 
 @app.route("/api/rtlsdr/reset", methods=["POST"])
 def api_rtlsdr_reset():
