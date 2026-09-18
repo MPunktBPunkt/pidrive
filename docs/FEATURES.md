@@ -91,14 +91,14 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-080 | Seiten: Alltag `/` | Browser / `curl -s localhost:8080/` | HTML mit Player, Favoriten, Quellen | pidrive_web | 🟡 |
 | F-081 | Seiten: Bluetooth `/bluetooth` | `curl -s localhost:8080/bluetooth` | Geräteliste, Scan/Reconnect | pidrive_web | 🟡 |
 | F-082 | Seiten: Audio `/audio` | `curl -s localhost:8080/audio` | Route, Volume, Debug-Cockpit | pidrive_web | ✅ S11 behoben |
-| F-083 | Seiten: RF/DAB `/rf-tools` | `curl -s localhost:8080/rf-tools` | PPM, RTL-SDR, Spektrum | pidrive_web | 🟡 S4 Hook da; F3 Watch offen |
+| F-083 | Seiten: RF/DAB `/rf-tools` | `curl -s localhost:8080/rf-tools` | PPM, RTL-SDR, Spektrum | pidrive_web | ✅ Snapshot mode+stdout (Review 2026-09-18); Plot minimal |
 | F-084 | Seiten: Diagnose `/diagnostics` | `curl -s localhost:8080/diagnostics` | Logs, Ressourcen | pidrive_web | ✅ S5/S8 Feldnamen |
 | F-085 | Seiten: AVRCP `/avrcp` | `curl -s localhost:8080/avrcp` | Event-Log | pidrive_web | ✅ S4/S5 |
-| F-086 | Seiten: Webradio-Admin | `curl -s localhost:8080/webradio-admin` | Stationen CRUD | pidrive_web | 🟡 |
-| F-087 | Seiten: Medien-Admin | `curl -s localhost:8080/music-admin` | Upload/Ordner/ID3 | pidrive_web | 🟡 |
+| F-086 | Seiten: Webradio-Admin | `curl -s localhost:8080/webradio-admin` | Stationen CRUD | pidrive_web | ✅ Toggle/Delete via API (Review 2026-09-18) |
+| F-087 | Seiten: Medien-Admin | `curl -s localhost:8080/music-admin` | Upload/Ordner/ID3 | pidrive_web | ✅ Rename-UI (Review 2026-09-18) |
 | F-088 | Core-Polling `/api/core` | `curl -s localhost:8080/api/core` | status_age/menu_age top-level; Banner bei >3s | Core+Web | ✅ W2/S1/S2 |
 | F-089 | Trigger `/api/cmd` | `curl -X POST …/api/cmd -d '{"cmd":"radio_stop"}'` | ok:true | Core | ✅ |
-| F-090 | prev/next Station-Buttons | UI → `dab_prev`/`fm_prev` etc. | Senderwechsel | — | ✅ W3/V4 |
+| F-090 | prev/next Station-Buttons | UI → `dab_prev`/`fm_prev`/`web_prev` etc. | Senderwechsel | — | ✅ +Webradio (Review 2026-09-18) |
 | F-091 | PPM Auto-Kalibrieren | RF-Tools → `fetch /api/ppm_calibrate` | PPM-Wert | — | ✅ W3/V4 |
 | F-092 | WebUI-Check | `pidrivectl webui check` | 0 Treffer | Offline | ✅ |
 | F-093 | WebUI-Selftest | `pidrivectl webui selftest` | 0 Fehler | Offline | ✅ |
@@ -122,7 +122,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 
 | ID | Fähigkeit | CLI-Prüfung | Erwartung | Stand |
 |----|-----------|-------------|-----------|-------|
-| F-900 | `dab_scan_replace` | — | Kein Dispatcher-Handler | ⛔ |
+| F-900 | `dab_scan_replace` | `pidrivectl` / WebUI cmd | `store.replace_dab` | ✅ Review 2026-09-18 |
 | F-901 | `favorites_add:{name}` | `pidrivectl favorites add Name` | Nur `_current` implementiert | ⛔ |
 | F-902 | `ppm_calibrate` | `pidrivectl ppm calibrate` | Nur WebUI, nicht Dispatcher | ⛔ |
 | F-903 | BMW 3-Zeilen-Display | `pidrivectl now` + iDrive | Metadaten sichtbar | ✅ 2026-09-16 Spotify+Webradio; Menü-Zeilen ⬜ |

@@ -1,7 +1,9 @@
 [Unit]
 Description=PiDrive Web UI (Debug/Remote)
-After=network-online.target
-Wants=network-online.target
+# network.target reicht: bindet 0.0.0.0:8080 lokal.
+# network-online wartet oft 1–2 Min. (wait-online / WLAN) — unnötig für die WebUI.
+After=network.target
+Wants=network.target
 # KEIN After=pidrive_core — erzeugt Ordering-Cycle beim Shutdown
 # Web läuft unabhängig und zeigt "Core offline" wenn nötig
 StartLimitIntervalSec=120

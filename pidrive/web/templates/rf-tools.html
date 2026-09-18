@@ -29,6 +29,7 @@
     <button class="btn primary" onclick="captureSpectrum()">📡 Snapshot</button>
     <button class="btn" onclick="loadSpectrumLast()">Letztes</button>
   </div>
+  <canvas id="specCanvas" width="640" height="160" style="width:100%;max-width:640px;height:160px;background:#050d1a;border:1px solid var(--line-soft);display:none;margin-bottom:8px"></canvas>
   <pre id="specPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:250px;overflow:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
 </div>
 <div class="card">
@@ -71,13 +72,85 @@ async function captureSpectrum() {
   const c=document.getElementById('specCenter').value;
   const p=document.getElementById('specPpm').value;
   const g=document.getElementById('specGain').value;
-  document.getElementById('specPre').textContent='Erfasse…';
-  try{await fetch(`/api/spectrum/capture?center=${c}&ppm=${p}&gain=${g}`,{method:'POST'});
-    setTimeout(loadSpectrumLast, 8000);}catch(e){}
+  const pre=document.getElementById('specPre');
+  pre.textContent='Erfasse Snapshot…';
+  try{
+    const url=`/api/spectrum/capture?mode=snapshot&center_mhz=${encodeURIComponent(c)}&ppm=${encodeURIComponent(p)}&gain=${encodeURIComponent(g)}`;
+    const r=await fetch(url,{method:'POST'});
+    const j=await r.json();
+    renderSpectrumResult(j);
+    if(!j.ok) showToast('Spektrum: '+(j.error||'Fehler'));
+    else showToast('Snapshot ok · '+(j.mode||''));
+  }catch(e){ pre.textContent='Fehler: '+e; showToast('Spektrum-Fehler'); }
+}
+function downsampleSpectrum(arr, maxPts) {
+  if (!arr || !arr.length) return [];
+  if (arr.length <= maxPts) return arr.slice();
+  const out=[]; const step=arr.length/maxPts;
+  for (let i=0;i<maxPts;i++) {
+    const a=Math.floor(i*step), b=Math.min(arr.length, Math.floor((i+1)*step));
+    let m=-1e9; for (let j=a;j<b;j++) if (arr[j]>m) m=arr[j];
+    out.push(m);
+  }
+  return out;
+}
+function drawSpectrumCanvas(specDb, peaks, centerMhz, binHz) {
+  const cv=document.getElementById('specCanvas');
+  if (!cv || !specDb || !specDb.length) { if (cv) cv.style.display='none'; return; }
+  cv.style.display='block';
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.fillStyle='#050d1a'; ctx.fillRect(0,0,W,H);
+  const pts=downsampleSpectrum(specDb, W);
+  let mn=Infinity, mx=-Infinity;
+  for (const v of pts) { if (v<mn) mn=v; if (v>mx) mx=v; }
+  if (!(mx>mn)) { mn-=1; mx+=1; }
+  ctx.strokeStyle='#3a8fd4'; ctx.lineWidth=1; ctx.beginPath();
+  for (let i=0;i<pts.length;i++) {
+    const y=H-4-((pts[i]-mn)/(mx-mn))*(H-8);
+    if (i===0) ctx.moveTo(i,y); else ctx.lineTo(i,y);
+  }
+  ctx.stroke();
+  if (peaks && peaks.length && centerMhz!=null && binHz) {
+    ctx.fillStyle='#e8b84a';
+    const n=specDb.length;
+    const f0=centerMhz - (n/2)*binHz/1e6;
+    for (const pk of peaks.slice(0,12)) {
+      const f=pk.freq_mhz!=null?pk.freq_mhz:pk.freq;
+      if (f==null) continue;
+      const idx=(f-f0)/(binHz/1e6);
+      const x=Math.round(idx/n*W);
+      if (x>=0 && x<W) { ctx.fillRect(x,2,2,H-4); }
+    }
+  }
+}
+function renderSpectrumResult(j) {
+  const data = (j && j.data) ? j.data : j;
+  const pre=document.getElementById('specPre');
+  const mode=data && data.mode;
+  const ok=data && data.ok;
+  const peaks=(data && data.peaks) || [];
+  const summary={
+    ok: !!ok,
+    mode: mode||'–',
+    center_mhz: data && data.center_mhz,
+    ppm: data && data.ppm,
+    gain: data && data.gain,
+    peak_count: peaks.length,
+    top_peaks: peaks.slice(0,8),
+    windows_ok: data && data.windows_ok,
+    windows_total: data && data.windows_total,
+    candidates: data && (data.candidates||[]).slice(0,10),
+    error: data && data.error,
+  };
+  pre.textContent=JSON.stringify(summary,null,2);
+  drawSpectrumCanvas(data && data.spectrum_db, peaks, data && data.center_mhz, data && data.bin_hz);
 }
 async function loadSpectrumLast() {
   try{const r=await fetch('/api/spectrum/last');const j=await r.json();
-    document.getElementById('specPre').textContent=JSON.stringify(j,null,2);}catch(e){}
+    const data = j.data || j;
+    renderSpectrumResult(data);
+  }catch(e){document.getElementById('specPre').textContent='Fehler: '+e;}
 }
 async function loadDabScan() {
   try{const r=await fetch('/api/dab/scan/last');const j=await r.json();

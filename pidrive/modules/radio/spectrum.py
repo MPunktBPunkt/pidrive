@@ -837,8 +837,21 @@ def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=262144,
         usb = _rtlsdr.detect_usb()
         if not usb.get("present"):
             return {"ok": False, "error": "RTL-SDR nicht erkannt"}
+        # Stale Locks aufräumen; kurz auf Freigabe warten (wie RTLSDRBackend)
+        if hasattr(_rtlsdr, "clear_stale_lock"):
+            try:
+                _rtlsdr.clear_stale_lock()
+            except Exception:
+                pass
         if _rtlsdr.is_busy():
-            return {"ok": False, "error": "RTL-SDR belegt"}
+            freed = False
+            if hasattr(_rtlsdr, "wait_until_free"):
+                try:
+                    freed = bool(_rtlsdr.wait_until_free(timeout=4.0, interval=0.2))
+                except Exception:
+                    freed = False
+            if not freed and _rtlsdr.is_busy():
+                return {"ok": False, "error": "RTL-SDR belegt"}
 
     center_hz = int(float(center_mhz) * 1e6)
     cmd = ["rtl_sdr", "-f", str(center_hz),
@@ -849,6 +862,7 @@ def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=262144,
         cmd += ["-p", str(int(ppm))]
     if int(gain) >= 0:
         cmd += ["-g", str(int(gain))]
+    cmd += ["-"]  # stdout — ohne Argument nur Usage / leere IQ-Daten
 
     try:
         cp = subprocess.run(cmd, capture_output=True, timeout=25)
@@ -919,8 +933,9 @@ def sweep_fm_band(start_mhz=87.5, stop_mhz=108.0, step_mhz=1.0,
     confirmed = [c for c in fm_candidates if c.get("hits", 1) >= min_hits]
     unconfirmed = [c for c in fm_candidates if c.get("hits", 1) < min_hits]
 
+    windows_ok = sum(1 for w in sweep if w.get("ok"))
     result = {
-        "ok": True,
+        "ok": windows_ok > 0,
         "mode": "fm_sweep",
         "start_mhz": float(start_mhz),
         "stop_mhz": float(stop_mhz),
@@ -931,7 +946,7 @@ def sweep_fm_band(start_mhz=87.5, stop_mhz=108.0, step_mhz=1.0,
         "gain": int(gain),
         "min_hits": min_hits,
         "windows_total": len(centers),
-        "windows_ok": sum(1 for w in sweep if w.get("ok")),
+        "windows_ok": windows_ok,
         "windows": sweep,
         "candidates": confirmed[:40],
         "candidates_weak": unconfirmed[:20],

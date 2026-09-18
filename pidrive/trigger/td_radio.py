@@ -79,6 +79,46 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 ipc.clear_progress()
         bg(_dab_scan)
 
+    elif cmd == "dab_scan_replace":
+        def _dab_scan_replace():
+            if not _scan_begin("dab"):
+                info = _scan_info()
+                log.warn("SCAN_BLOCKED source=dab replace running=" + info.get("source", "?"))
+                ipc.write_progress("DAB+ Suchlauf",
+                    "Schon aktiv: " + info.get("source", "?").upper(), color="orange")
+                _time_mod.sleep(2)
+                ipc.clear_progress()
+                return
+
+            ipc.write_progress("DAB+ Suchlauf", "Ersetze Liste …", color="blue")
+            log.info("SCAN_START source=dab mode=replace")
+
+            try:
+                results = dab.scan_dab_channels(settings=settings)
+                count = len(results)
+                store.replace_dab(results)
+                log.info(f"SCAN_DONE source=dab mode=replace count={count}")
+                if count > 0:
+                    ipc.write_progress("DAB+ Suchlauf",
+                        f"{count} Sender — Liste ersetzt", color="green")
+                else:
+                    ipc.write_progress("DAB+ Suchlauf",
+                        "0 Sender — Liste geleert", color="orange")
+                _time_mod.sleep(2)
+                menu_state.rebuild(build_tree(store, S, settings))
+            except Exception as e:
+                log.error(f"SCAN_FAIL source=dab replace error={e}")
+                ipc.write_progress("DAB+ Fehler", str(e)[:48], color="red")
+                source_state.commit_source("idle")
+                _time_mod.sleep(3)
+            finally:
+                if not S.get("radio_playing"):
+                    S["control_context"] = "idle"
+                source_state.end_transition()
+                _scan_end()
+                ipc.clear_progress()
+        bg(_dab_scan_replace)
+
     elif cmd.startswith("dab_scan_channels:"):
         parts = cmd.split(":", 1)
         if len(parts) == 2:

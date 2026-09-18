@@ -249,12 +249,14 @@ curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?center=446.1&ppm=49&
 curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?mode=snapshot&center_mhz=446.1&ppm=49&gain=-1' | head -c 400
 ```
 
-### Erwartete Fix-Richtung (nicht umgesetzt)
+### Erwartete Fix-Richtung
 
-1. UI: `mode=snapshot&center_mhz=…`; optional Canvas aus downsampled `spectrum_db`.
-2. Legacy `capture_spectrum`: `cmd += ["-"]`; vor Busy `clear_stale_lock`/`reap`/`wait_until_free` wie Backend.
-3. `sweep_fm_band`: `ok = (windows_ok > 0)` o.ä.; Fehler aggregieren.
-4. W8 laut Auftrag: CLI `pidrivectl spectrum …`, Watch/F3, Stations-Pipeline.
+**Umgesetzt 2026-09-18** — siehe [`betrieb/WEBUI-REVIEW-2026-09-18.md`](betrieb/WEBUI-REVIEW-2026-09-18.md) (R1–R3, R12/R13):
+
+1. UI: `mode=snapshot&center_mhz=…`; Summary + einfacher Canvas aus downsampled `spectrum_db`.
+2. Legacy `capture_spectrum`: `cmd += ["-"]`; vor Busy `clear_stale_lock` / `wait_until_free`.
+3. `sweep_fm_band`: `ok = (windows_ok > 0)`.
+4. Offen bleibt W8-Rest: CLI `pidrivectl spectrum …`, Watch/F3, Stations-Pipeline.
 
 ---
 

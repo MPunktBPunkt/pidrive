@@ -87,6 +87,7 @@ async function musicGo(path) {
       html += `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
         <span style="flex:1;cursor:pointer" onclick="musicGo('${d.path.replace(/'/g, "\\'")}')">📁 <b>${d.name}</b> <span style="color:var(--muted);font-size:11px">(${d.files} Titel)</span></span>
         <button class="btn" onclick="musicPlayPath('${d.path.replace(/'/g, "\\'")}')">▶</button>
+        <button class="btn" onclick="musicRename('${d.path.replace(/'/g, "\\'")}', '${d.name.replace(/'/g, "\\'")}')">✎</button>
         <button class="btn" onclick="musicDelete('${d.path.replace(/'/g, "\\'")}')" title="Nur leere Ordner">🗑</button>
       </div>`;
     }
@@ -95,6 +96,7 @@ async function musicGo(path) {
         <span style="flex:1">🎵 ${f.name} <span style="color:var(--muted);font-size:11px">${fmtBytes(f.size)}</span></span>
         <button class="btn" onclick="musicPlayPath('${f.path.replace(/'/g, "\\'")}')">▶</button>
         <button class="btn" onclick="musicEditTags('${f.path.replace(/'/g, "\\'")}')">🏷</button>
+        <button class="btn" onclick="musicRename('${f.path.replace(/'/g, "\\'")}', '${f.name.replace(/'/g, "\\'")}')">✎</button>
         <button class="btn" onclick="musicDelete('${f.path.replace(/'/g, "\\'")}')">🗑</button>
       </div>`;
     }
@@ -154,6 +156,16 @@ async function musicDelete(rel) {
   const j = await r.json();
   if (j.ok) { showToast('Gelöscht'); musicGo(musicPath); }
   else showToast(j.error || 'Fehler');
+}
+
+async function musicRename(rel, oldName) {
+  const nn = prompt('Neuer Name:', oldName || '');
+  if (!nn || nn === oldName) return;
+  const r = await fetch('/api/music/rename', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ path: rel, new_name: nn }) });
+  const j = await r.json();
+  if (j.ok) { showToast('Umbenannt'); musicGo(musicPath); }
+  else showToast(j.error || 'Rename fehlgeschlagen');
 }
 
 async function musicEditTags(rel) {

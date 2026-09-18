@@ -18,6 +18,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, Transitionen, Sperrschichten — Ist-Zustand und Lücken Z1–Z10 | Entwickler | v0.11.132 |
 | [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code; OTA / source CLI | Entwickler | v0.11.132 |
 | [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.132 |
+| [betrieb/WEBUI-REVIEW-2026-09-18.md](betrieb/WEBUI-REVIEW-2026-09-18.md) | WebUI-Code-Review: Funde R1–R13 + Fixes | Entwickler, QA | 2026-09-18 |
+| [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream (Handy/Auto) | Betrieb, ESP/USB | 2026-09-18 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest (Pairing + Now Playing, Fotos) | Betrieb, QA | 2026-09-16 |

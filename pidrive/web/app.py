@@ -715,7 +715,7 @@ def api_spectrum_capture():
         args = {k: v for k, v in request.args.items()}
 
     band = args.get("band", "")
-    mode = args.get("mode", "fm_sweep")
+    mode = (args.get("mode") or "fm_sweep").strip().lower()
     try:
         _base = str(BASE_DIR)
         if _base not in sys.path:
@@ -757,17 +757,21 @@ def api_spectrum_capture():
                 },
             })
 
-        # Legacy paths
-        if mode == "fm_sweep":
+        # Legacy paths — snapshot/single = Einzelmessung; fm_sweep = Band
+        if mode in ("snapshot", "single"):
+            # UI sendete früher nur "center" — Alias akzeptieren
+            center_raw = args.get("center_mhz", args.get("center", 98.0))
+            center = float(center_raw)
+            result = spectrum.capture_spectrum(center_mhz=center, ppm=ppm, gain=gain)
+            if result.get("ok") and result.get("mode") == "single":
+                result["mode"] = "snapshot"
+        else:
             start = float(args.get("start_mhz", 87.5))
             stop  = float(args.get("stop_mhz", 108.0))
             step  = float(args.get("step_mhz", 1.0))
             result = spectrum.sweep_fm_band(
                 start_mhz=start, stop_mhz=stop, step_mhz=step,
                 ppm=ppm, gain=gain)
-        else:
-            center = float(args.get("center_mhz", 98.0))
-            result = spectrum.capture_spectrum(center_mhz=center, ppm=ppm, gain=gain)
         return jsonify(result)
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})

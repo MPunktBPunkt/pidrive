@@ -25,18 +25,53 @@ async function loadStations() {
     const snap=document.getElementById('snapWr');
     if (snap) snap.textContent = '· Stand ' + new Date().toLocaleTimeString();
     if(!stations.length){el.innerHTML='<span style="color:var(--muted)">Keine Sender</span>';return;}
-    el.innerHTML=stations.map(s=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
-      <span style="flex:1"><b>${s.name}</b><br><span style="color:var(--muted);font-size:11px">${(s.url||'').substring(0,50)}</span></span>
-      <button class="btn" onclick="sendCmd('play_web:${s.name}')">▶ Play</button>
-      <button class="btn" onclick="sendCmd('webradio_toggle:${s.id||s.name}')">Toggle</button>
-    </div>`).join('');}catch(e){}
+    el.innerHTML=stations.map(s=>{
+      const id=(s.id||'').replace(/'/g,"\\'");
+      const en=s.enabled!==false;
+      return `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-soft)">
+      <span style="flex:1;opacity:${en?1:0.45}"><b>${s.name}</b>${en?'':' <span style="color:var(--muted)">(aus)</span>'}<br><span style="color:var(--muted);font-size:11px">${(s.url||'').substring(0,50)}</span></span>
+      <button class="btn" onclick="sendCmd('play_web:${(s.name||'').replace(/'/g,"\\'")}')">▶ Play</button>
+      <button class="btn" onclick="toggleStation('${id}')">${en?'Disable':'Enable'}</button>
+      <button class="btn" onclick="deleteStation('${id}')">🗑</button>
+    </div>`;}).join('');}catch(e){showToast('Webradio laden fehlgeschlagen');}
+}
+async function toggleStation(id) {
+  if (!id) { showToast('Keine Station-ID'); return; }
+  try{
+    const r=await fetch('/api/webradio/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})});
+    const j=await r.json();
+    if (!j.ok) { showToast(j.error||'Toggle fehlgeschlagen'); return; }
+    showToast(j.enabled ? 'Aktiviert' : 'Deaktiviert');
+    loadStations();
+  }catch(e){showToast('Toggle-Fehler');}
+}
+async function deleteStation(id) {
+  if (!id) return;
+  if (!confirm('Sender wirklich löschen?\n'+id)) return;
+  try{
+    const r=await fetch('/api/webradio/delete',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})});
+    const j=await r.json();
+    if (!j.ok) { showToast(j.error||'Löschen fehlgeschlagen'); return; }
+    showToast('Gelöscht');
+    loadStations();
+  }catch(e){showToast('Delete-Fehler');}
 }
 async function addStation() {
   const name=document.getElementById('addName').value;
   const url=document.getElementById('addUrl').value;
   if(!name||!url){showToast('Name und URL nötig');return;}
-  try{await fetch('/api/webradio/add',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name,url})});showToast('Sender hinzugefügt');loadStations();}catch(e){}
+  try{
+    const r=await fetch('/api/webradio/add',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,url})});
+    const j=await r.json();
+    if (!j.ok) { showToast(j.error||'Hinzufügen fehlgeschlagen'); return; }
+    showToast('Sender hinzugefügt');
+    document.getElementById('addName').value='';
+    document.getElementById('addUrl').value='';
+    loadStations();
+  }catch(e){showToast('Add-Fehler');}
 }
 let _wrTick = 0;
 function onBaseRefresh() {

@@ -250,7 +250,10 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
     </div>
   </div>
 
-  <div style="font-size:11px;color:#3a6090;text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px">Favoriten</div>
+  <div style="font-size:11px;color:#3a6090;text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;display:flex;align-items:center;gap:8px">
+    <span>Favoriten</span>
+    <button class="btn" style="font-size:10px;padding:2px 8px;text-transform:none;letter-spacing:0" onclick="sendCmd('favorites_add_current');showToast('Favorit merken…');setTimeout(loadFavs,800)">★ Merken</button>
+  </div>
   <div id="favList"><div style="color:#3a5070;font-size:12px">Lade...</div></div>
 </div>
 
@@ -439,6 +442,9 @@ function playFav(f) {
   if (s==='dab') sendCmd('play_dab:'+f.name);
   else if (s==='webradio'||s==='web') sendCmd('play_web:'+f.name);
   else if (s==='fm') sendCmd('play_fm:'+(f.freq||f.name));
+  else if (s==='spotify') sendCmd('play_spotify');
+  else if (s==='scanner') { showToast('Scanner-Favorit: über Scanner-Tab'); return; }
+  else { showToast('Unbekannte Quelle: '+(f.source||'?')); return; }
   showToast('▶ '+f.name);
 }
 
@@ -447,12 +453,14 @@ function prevStation() {
   const src = _currentSource || 'idle';
   if (src === 'dab') sendCmd('dab_prev');
   else if (src === 'fm') sendCmd('fm_prev');
+  else if (src === 'webradio' || src === 'web') sendCmd('web_prev');
   else showToast(src === 'scanner' ? 'Scanner: Scan über Menü' : 'Kein Sender aktiv');
 }
 function nextStation() {
   const src = _currentSource || 'idle';
   if (src === 'dab') sendCmd('dab_next');
   else if (src === 'fm') sendCmd('fm_next');
+  else if (src === 'webradio' || src === 'web') sendCmd('web_next');
   else showToast(src === 'scanner' ? 'Scanner: Scan über Menü' : 'Kein Sender aktiv');
 }
 

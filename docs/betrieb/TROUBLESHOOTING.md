@@ -115,6 +115,24 @@ pidrivectl bt connect <MAC>
 
 ---
 
+### WebUI startet erst nach 1–2 Minuten
+
+**Ursache:** `pidrive_web.service` hing an `network-online.target`. Das wartet oft auf
+`systemd-networkd-wait-online` / WLAN (~2 Min.), obwohl die UI nur `0.0.0.0:8080` braucht.
+
+**Fix (ab Repo):** `After=`/`Wants=` → `network.target`. Auf dem Pi anwenden:
+
+```bash
+sudo cp ~/pidrive/systemd/pidrive_web.service /etc/systemd/system/pidrive_web.service
+# Install-Pfade ggf. anpassen, dann:
+sudo systemctl daemon-reload
+sudo systemctl restart pidrive_web
+```
+
+Oder: `bash ~/apply-web-fast-boot.sh` (legt die Unit und startet neu).
+
+---
+
 ### DAB im Fahrzeug stumm, Webradio hörbar
 
 **Kein Bluetooth-Fehler.** DAB (`welle-cli`) schreibt heute **direkt auf ALSA/Klinke** und
@@ -317,13 +335,15 @@ pidrivectl scanner pmr446 ch 1
 
 ### Spektrum-Snapshot zeigt JSON / „RTL-SDR belegt“ trotz Idle
 
-Bekannter WebUI-/Legacy-Pfad — **Analyse & Fix = W8**. Protokoll mit Repro und
-Codehinweisen: [`../ABNAHMEN.md`](../ABNAHMEN.md) (Abschnitt 2026-09-15 Spektrum-Snapshot).
+**Stand 2026-09-18:** Snapshot-Pfad gefixt (siehe [`WEBUI-REVIEW-2026-09-18.md`](WEBUI-REVIEW-2026-09-18.md) R1–R3).
+Historisches Protokoll: [`../ABNAHMEN.md`](../ABNAHMEN.md) (2026-09-15 Spektrum-Snapshot).
 
-Kurz:
-- Button startet `fm_sweep`, nicht Einzel-Snapshot (`mode`/`center_mhz` fehlen).
-- Anzeige ist JSON, kein Spektrum-Bild.
-- Busy-Check ohne Stale-Cleanup; Legacy-`rtl_sdr`-Aufruf ohne stdout-`"-"` .
+Erwartung nach Fix:
+- Button sendet `mode=snapshot&center_mhz=…`
+- `rtl_sdr … -` (stdout); Stale-Lock-Cleanup vor Busy-Check
+- UI: Summary + einfacher Canvas (kein voller Band-Plot)
+
+Falls weiterhin „belegt“: `pidrivectl stop`, RTL-Prozesse prüfen, Lock `/tmp/pidrive_rtlsdr*`.
 ---
 
 ## 7. MPRIS2 / D-Bus

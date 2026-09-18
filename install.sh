@@ -511,6 +511,8 @@ ${REAL_USER} ALL=(ALL) NOPASSWD: /bin/journalctl
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/reboot
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/poweroff
 ${REAL_USER} ALL=(ALL) NOPASSWD: /sbin/shutdown
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/bash /home/${REAL_USER}/apply-web-fast-boot.sh
+${REAL_USER} ALL=(ALL) NOPASSWD: /bin/systemctl daemon-reload
 SUDOEOF
     chmod 440 /etc/sudoers.d/pidrive
 else
