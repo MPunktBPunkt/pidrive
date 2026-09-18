@@ -40,8 +40,10 @@ function onBaseRefresh(j, st) {
   const u=st.usb||{};
   if(e('usbBlock')){
     const on=!!u.online;
+    const stale=!on && (u.pump_up||u.otg_up||u.serial_present);
+    const label=on?'🟢 online':(stale?'🟡 stale (Poll)':'⚪ offline');
     e('usbBlock').innerHTML=`
-      <b>ESP:</b> ${on?'🟢 online':'⚪ offline'}
+      <b>ESP:</b> ${label}
       ${u.fw?(' · FW '+u.fw):''}<br>
       OTG ${u.otg_up?'●':'○'} · PUMP ${u.pump_up?'●':'○'} · UART ${u.uart_up?'●':'○'} · MSC ${u.msc_ready?'●':'○'}<br>
       Serial ${u.serial_present?'ja':'nein'}${u.port?(' · '+u.port):''}

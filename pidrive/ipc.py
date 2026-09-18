@@ -141,13 +141,16 @@ def _usb_status():
     if not isinstance(raw, dict):
         raw = {}
     online = bool(raw.get("online"))
-    # stale: älter als 15 s ohne Update → offline markieren
     try:
         age = int(time.time()) - int(raw.get("ts") or 0)
     except (TypeError, ValueError):
         age = 9999
-    if online and age > 15:
+    # Stale ohne Poll → offline. Etwas Spielraum (Poll 2s, kurze Hänger).
+    if online and age > 30:
         online = False
+    # Wenn Poll hängt, aber letzte Snapshot klar „ESP da“ war und Serial noch da:
+    # nicht als tot anzeigen nur wegen age — UI zeigt age_s separat.
+    # (Online bleibt False bei age>30; FW/OTG-Felder bleiben sichtbar.)
     return {
         "online": online,
         "http_ok": bool(raw.get("http_ok")),

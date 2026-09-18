@@ -42,15 +42,46 @@ def _load_settings() -> dict:
 
 
 def _write_status(data: dict) -> None:
-    tmp = USB_STATUS_FILE + ".tmp"
+    """Write /tmp/pidrive_usb_status.json.
+
+    /tmp is typically sticky (1777): os.replace fails if the existing file is
+    owned by another uid. Fall back to unlink + rewrite / in-place truncate.
+    """
     payload = dict(data)
     payload["ts"] = int(time.time())
+    text = json.dumps(payload, ensure_ascii=False)
+    path = USB_STATUS_FILE
+    tmp = path + ".tmp"
     try:
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False)
+            f.write(text)
             f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, USB_STATUS_FILE)
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+        try:
+            os.replace(tmp, path)
+        except OSError:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            try:
+                os.replace(tmp, path)
+            except OSError:
+                # sticky /tmp or immutable dest — overwrite in place
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(text)
+                    f.flush()
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
+        try:
+            os.chmod(path, 0o666)
+        except OSError:
+            pass
     except Exception:
         pass
 
