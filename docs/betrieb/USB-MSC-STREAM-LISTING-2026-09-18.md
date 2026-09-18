@@ -16,6 +16,16 @@
 
 **Limit:** virtuelle Dateien ~64 KiB (512-Sektoren-Image) — Dauer-Wiedergabe braucht später größere virtuelle Kapazität.
 
+### Pi-Host-Regression (ohne Auto)
+
+```bash
+# ESP-OTG + UART am Pi; nicht Handy/BMW
+python3 tools/msc_host_test.py --dev /dev/sda --esp http://192.168.178.89 --uid fav1
+```
+
+Prüft **rohe** FAT/Directory-Sektoren vor/während/nach Stream (`dd iflag=direct`, kein VFS-Cache) + API-Geometrie + Payload-Head.  
+Lab 2026-09-18: **OVERALL PASS** auf 0.4.12-dev.
+
 ---
 
 ## Setup
