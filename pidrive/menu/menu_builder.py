@@ -254,16 +254,19 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
 
     # ── 1. Favoriten (quellenübergreifend) ─────────────────────────────────
     fav_nodes = []
+    _fav_ids: set = set()
     if _fav_mod:
         for _fav in _fav_mod.get_all():
             _src  = _fav.get("source", "")
             _id   = _fav.get("id", "")
             _name = _fav.get("name", _id)
             _meta = _fav.get("meta", {})
+            if _id:
+                _fav_ids.add(_id)
             if _src in ("fm", "dab", "webradio"):
                 fav_nodes.append(MenuNode(
                     id="favx_" + _id, label="* " + _name, type="station",
-                    source=_src, meta=_meta
+                    source=_src, meta=_meta, playable=True
                 ))
             elif _src == "spotify":
                 fav_nodes.append(MenuNode(
@@ -276,6 +279,28 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
                     id="favx_" + _id, label="* " + _name,
                     type="action", action="scan_up:" + _band, meta=_meta
                 ))
+    # stations.json favorite=true (Webradio) — auch ohne favorites.json sichtbar
+    for _s in (store.webradio or []):
+        if not _s.get("favorite"):
+            continue
+        _id = _s.get("id") or ""
+        if not _id or _id in _fav_ids:
+            continue
+        _fav_ids.add(_id)
+        _name = _s.get("name") or _id
+        fav_nodes.append(MenuNode(
+            id="favx_" + _id,
+            label="* " + _name,
+            type="station",
+            source="webradio",
+            playable=True,
+            meta={
+                "url": _s.get("url") or "",
+                "name": _name,
+                "genre": _s.get("genre") or "",
+                "favorite": True,
+            },
+        ))
 
     favoriten = MenuNode(id="favoriten", label="Favoriten", type="folder", children=(
         [
