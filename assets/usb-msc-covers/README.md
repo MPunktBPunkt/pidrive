@@ -1,15 +1,33 @@
 # USB-MSC Covers (Album Art für BMW / PUMP)
 
-**Stand:** 2026-09-17 · Firmware [`esp32.pidrive` 0.4.2-dev](https://github.com/MPunktBPunkt/esp32.pidrive)  
+**Stand:** 2026-09-18 · Firmware [`esp32.pidrive` 0.4.3-dev](https://github.com/MPunktBPunkt/esp32.pidrive)  
 **Zweck:** JPEG-Cover, die als **ID3v2 APIC** in den Live-MP3-Stream eingebettet werden und am Werksradio (NBT/iDrive USB-Medien) als Albumcover erscheinen können.
+
+**Zentraler GitHub-Ordner (editierbar):**  
+https://github.com/MPunktBPunkt/pidrive/tree/main/assets/usb-msc-covers
 
 Die Bridge (`esp32.pidrive/tools/pump_bridge.py`, ab **0.4.3**) wählt Cover so:
 
-1. **APIC** aus lokaler MP3 (`local_play` / `status.library_file`) — skaliert auf 320×320  
+1. **APIC** aus lokaler MP3 (`local_play` / `status.library_file`) — skaliert auf 320×320 / ≤8 KiB  
 2. JPEG aus diesem Ordner (`stations/…`)  
 3. Fallback-Textcover (Sender / Track / BT·WiFi)
 
-Lab 2026-09-18: eingebettetes Cover einer Billy-Talent-MP3 wurde am ESP-Stream verifiziert.
+Lab 2026-09-18: Billy-Talent embedded APIC + Webradio sticky ID3 inkl. APIC am Pi-MSC-Host verifiziert.  
+`stations/` und `status/` sind bewusst leer (nur `.gitkeep`) — hier deine Logos ablegen.
+
+---
+
+## Wo taucht welches Bild auf?
+
+| Ort | Sieht Cover? | Quelle | Hinweis |
+|-----|--------------|--------|---------|
+| **BMW NBT / USB-Medien** | Ziel | sticky ID3 APIC am Dateianfang der virtuellen `.MP3` | Feldtest offen; HU cached oft stark |
+| **ESP SoftAP Web-UI** | **nein** | — | zeigt Menü/Stream-Metriken; kein `<img>` / kein `/api/lab/cover` |
+| **`GET /api/lab/stream`** | Rohdaten | kompletter sticky Tag + Audio-Head | für `ffprobe`/mutagen; Header `X-Stream-Id3` |
+| **`GET /api/lab/listen`** | nein | nur Ring-Audio | ID3 wird übersprungen |
+| **PiDrive WebUI** | eigene UI | Library/Webradio-Admin | unabhängig vom MSC-APIC |
+
+Kurz: Cover stecken im **Stream zum Radio** (und im Lab-Download), nicht im ESP-Webinterface.
 
 ---
 
@@ -18,16 +36,16 @@ Lab 2026-09-18: eingebettetes Cover einer Billy-Talent-MP3 wurde am ESP-Stream v
 ```
 assets/usb-msc-covers/
 ├── README.md                 ← diese Datei
-├── examples/                 ← Referenzbilder (Spec + Lab)
-├── stations/                 ← Senderlogos (von dir)
-└── status/                   ← Zustandsbilder (WiFi, BT, DAB-Scan, …)
+├── examples/                 ← Referenzbilder (Spec + Lab) — nicht Produktion
+├── stations/                 ← Senderlogos (von dir) ← hier editieren
+└── status/                   ← Zustandsbilder (geplant; Bridge liest sie noch nicht)
 ```
 
-| Unterordner | Inhalt |
-|-------------|--------|
-| `stations/` | ein JPEG pro Sender / Station |
-| `status/` | seltene Systemzustände (nicht jeden Menüklick) |
-| `examples/` | Spec-Beispiele, nicht für Produktion nötig |
+| Unterordner | Inhalt | Bridge nutzt? |
+|-------------|--------|---------------|
+| `stations/` | ein JPEG pro Sender / Station | **ja** (Priorität 2) |
+| `status/` | WiFi / BT / DAB-Scan / idle | **noch nicht** (Spec vorbereitet) |
+| `examples/` | Spec-Beispiele + Lab-Extrakte | nein (Referenz) |
 
 ---
 
