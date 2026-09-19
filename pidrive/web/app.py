@@ -730,7 +730,8 @@ def api_spectrum_capture():
     """
     Spectrum Capture. Unterstützt:
     - band=pmr446|freenet → watch_channels() mit Peak-Identifizierung (v0.10.55)
-    - mode=fm_sweep       → Legacy FM-Band-Sweep
+    - mode=range          → Start/Stop-Bereich (Plot, Auto-SR oder sample_rate_hz)
+    - mode=fm_sweep       → Legacy FM-Band-Sweep (Peak-Kandidaten, kein Plot)
     - mode=snapshot       → Einzelmessung bei center_mhz
     """
     args = request.get_json(silent=True) or {}
@@ -780,24 +781,163 @@ def api_spectrum_capture():
                 },
             })
 
-        # Legacy paths — snapshot/single = Einzelmessung; fm_sweep = Band
-        if mode in ("snapshot", "single"):
+        # Gemeinsame optionale Auflösungsparameter
+        n_samp = args.get("sample_count")
+        n_samp = int(n_samp) if n_samp not in (None, "") else None
+        sr_raw = args.get("sample_rate_hz", args.get("sample_rate"))
+        sr_hz = int(sr_raw) if sr_raw not in (None, "", "auto", "0") else None
+        avg_raw = args.get("avg_frames", args.get("avg", 1))
+        try:
+            avg_frames = max(1, min(int(avg_raw or 1), 32))
+        except Exception:
+            avg_frames = 1
+
+        if mode in ("range", "band"):
+            start = float(args.get("start_mhz", args.get("start", 87.5)))
+            stop = float(args.get("stop_mhz", args.get("stop", 108.0)))
+            step_raw = args.get("step_mhz", args.get("step"))
+            step = float(step_raw) if step_raw not in (None, "") else None
+            result = spectrum.capture_range(
+                start_mhz=start, stop_mhz=stop,
+                sample_rate_hz=sr_hz,
+                sample_count=n_samp if n_samp else 65536,
+                ppm=ppm, gain=gain, step_mhz=step,
+                avg_frames=avg_frames,
+            )
+        elif mode in ("snapshot", "single"):
             # UI sendete früher nur "center" — Alias akzeptieren
             center_raw = args.get("center_mhz", args.get("center", 98.0))
             center = float(center_raw)
-            result = spectrum.capture_spectrum(center_mhz=center, ppm=ppm, gain=gain)
+            # 262144 Samples hängen auf manchen Sticks/USB-Hubs; Snapshot braucht weniger
+            samp = n_samp if n_samp else 65536
+            kwargs = dict(
+                center_mhz=center, ppm=ppm, gain=gain, sample_count=samp,
+                avg_frames=avg_frames,
+            )
+            if sr_hz:
+                kwargs["sample_rate_hz"] = sr_hz
+            result = spectrum.capture_spectrum(**kwargs)
             if result.get("ok") and result.get("mode") == "single":
                 result["mode"] = "snapshot"
+            if result.get("ok") and result.get("bin_hz"):
+                result["rbw_hz"] = round(float(result["bin_hz"]), 3)
         else:
             start = float(args.get("start_mhz", 87.5))
             stop  = float(args.get("stop_mhz", 108.0))
             step  = float(args.get("step_mhz", 1.0))
-            result = spectrum.sweep_fm_band(
+            kwargs = dict(
                 start_mhz=start, stop_mhz=stop, step_mhz=step,
-                ppm=ppm, gain=gain)
+                ppm=ppm, gain=gain,
+            )
+            if n_samp:
+                kwargs["sample_count"] = n_samp
+            if sr_hz:
+                kwargs["sample_rate_hz"] = sr_hz
+            result = spectrum.sweep_fm_band(**kwargs)
         return jsonify(result)
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})
+
+
+def _spectrum_export_dir():
+    """Ordner für Spektrum-Exports auf dem Pi."""
+    try:
+        from settings import BASE_DIR as _sb
+        d = os.path.join(str(_sb), "exports", "spectrum")
+    except Exception:
+        d = os.path.join(str(Path.home()), "pidrive", "exports", "spectrum")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+@app.route("/api/spectrum/export", methods=["POST"])
+def api_spectrum_export():
+    """
+    Speichert PNG (und optional Meta-JSON) unter pidrive/exports/spectrum/.
+    Body JSON: { png_base64: "data:image/png;base64,..." | raw b64,
+                 include_json: true, name: optional }
+    """
+    import base64
+    import re as _re
+    from datetime import datetime as _dt
+
+    args = request.get_json(silent=True) or {}
+    png_b64 = args.get("png_base64") or args.get("png") or ""
+    if not png_b64:
+        return jsonify({"ok": False, "error": "png_base64 fehlt"}), 400
+
+    m = _re.match(r"^data:image/png;base64,(.+)$", png_b64, _re.I | _re.S)
+    raw_b64 = m.group(1) if m else png_b64
+    try:
+        png_bytes = base64.b64decode(raw_b64, validate=False)
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"Base64 ungültig: {e}"}), 400
+    if len(png_bytes) < 32 or png_bytes[:8] != b"\x89PNG\r\n\x1a\n":
+        return jsonify({"ok": False, "error": "kein gültiges PNG"}), 400
+    if len(png_bytes) > 8_000_000:
+        return jsonify({"ok": False, "error": "PNG zu groß"}), 400
+
+    stamp = _dt.now().strftime("%Y%m%d-%H%M%S")
+    hint = (args.get("name") or "").strip()
+    hint = _re.sub(r"[^A-Za-z0-9._-]+", "_", hint)[:40]
+    base = f"spectrum-{stamp}" + (f"-{hint}" if hint else "")
+
+    out_dir = _spectrum_export_dir()
+    png_path = os.path.join(out_dir, base + ".png")
+    try:
+        with open(png_path, "wb") as f:
+            f.write(png_bytes)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    json_path = None
+    if args.get("include_json", True):
+        try:
+            from modules.radio import spectrum as _sp
+            data = _sp.load_last_spectrum() or {}
+        except Exception:
+            data = {}
+        # Spektrum-Bins weglassen oder stark kürzen — Meta reicht zum Nachvollziehen
+        meta = {k: v for k, v in data.items() if k != "spectrum_db"}
+        spec = data.get("spectrum_db") or []
+        if spec:
+            # Downsample für Archiv (~500 Punkte)
+            step = max(1, len(spec) // 500)
+            meta["spectrum_db_downsampled"] = spec[::step]
+            meta["spectrum_bins_full"] = len(spec)
+        meta["export_png"] = os.path.basename(png_path)
+        json_path = os.path.join(out_dir, base + ".json")
+        try:
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(meta, f, ensure_ascii=False, indent=2)
+        except Exception:
+            json_path = None
+
+    return jsonify({
+        "ok": True,
+        "dir": out_dir,
+        "png": png_path,
+        "json": json_path,
+        "name": os.path.basename(png_path),
+    })
+
+
+@app.route("/api/spectrum/exports")
+def api_spectrum_exports_list():
+    out_dir = _spectrum_export_dir()
+    try:
+        files = sorted(
+            (f for f in os.listdir(out_dir) if f.endswith((".png", ".json"))),
+            reverse=True,
+        )
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "dir": out_dir})
+    return jsonify({
+        "ok": True,
+        "dir": out_dir,
+        "files": files[:50],
+        "count": len(files),
+    })
 
 
 @app.route("/api/spectrum/stations")

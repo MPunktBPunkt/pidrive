@@ -21,15 +21,93 @@
   </div>
 </div>
 <div class="card">
-  <div class="card-title">🔭 Spektrum-Snapshot</div>
-  <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-    <input id="specCenter" placeholder="Mitte MHz" style="width:90px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="446.1">
-    <input id="specPpm" placeholder="PPM" style="width:60px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="49">
-    <input id="specGain" placeholder="Gain" style="width:60px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="-1">
-    <button class="btn primary" onclick="captureSpectrum()">📡 Snapshot</button>
-    <button class="btn" onclick="loadSpectrumLast()">Letztes</button>
+  <div class="card-title">🔭 Spektrum
+    <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
+      Snapshot = Mitte · Range = Start–Stop
+    </span>
   </div>
-  <canvas id="specCanvas" width="640" height="160" style="width:100%;max-width:640px;height:160px;background:#050d1a;border:1px solid var(--line-soft);display:none;margin-bottom:8px"></canvas>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.45">
+    Stick <b style="color:var(--text);font-weight:600">R820T</b>:
+    Frequenz ca. <b style="color:var(--text);font-weight:600">24–1766 MHz</b>
+    (UKW/DAB im Band · unter ~24 MHz nur Direct Sampling).
+    Gain <b style="color:var(--text);font-weight:600">−1 = Auto (AGC)</b>,
+    sonst Tuner-Gain in <b style="color:var(--text);font-weight:600">dB</b>
+    (nur Stufen 0…49.6, z. B. 3 ≈ 2.7/3.7 dB).
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+    <label style="font-size:12px;color:var(--muted)">Modus
+      <select id="specMode" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
+        <option value="snapshot">Snapshot (Mitte)</option>
+        <option value="range" selected>Range (Start–Stop)</option>
+      </select>
+    </label>
+    <input id="specCenter" placeholder="Mitte MHz" title="Nur Snapshot · 24–1766 MHz" style="width:90px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="103.0">
+    <input id="specStart" placeholder="Start MHz" title="Range Start · ≥24 MHz" style="width:90px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="102.5">
+    <input id="specStop" placeholder="Stop MHz" title="Range Stop · ≤1766 MHz" style="width:90px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="103.5">
+    <input id="specPpm" placeholder="PPM" style="width:60px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" value="49">
+    <label style="font-size:12px;color:var(--muted)">Gain
+      <select id="specGain" title="−1 = AGC · sonst dB (R820T-Stufen)" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
+        <option value="-1" selected>−1 Auto</option>
+        <option value="0">0 dB</option>
+        <option value="3">2.7≈3 dB</option>
+        <option value="8">7.7≈8 dB</option>
+        <option value="13">12.5≈13 dB</option>
+        <option value="20">19.7≈20 dB</option>
+        <option value="25">25.4 dB</option>
+        <option value="30">29.7≈30 dB</option>
+        <option value="33">32.8≈33 dB</option>
+        <option value="37">36.4≈37 dB</option>
+        <option value="40">40.2 dB</option>
+        <option value="44">43.9≈44 dB</option>
+        <option value="48">48.0 dB</option>
+        <option value="50">49.6 dB</option>
+      </select>
+    </label>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+    <label style="font-size:12px;color:var(--muted)">Sample-Rate
+      <select id="specRate" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
+        <option value="auto" selected>auto (Span)</option>
+        <option value="250000">250 kHz</option>
+        <option value="1024000">1.024 MHz</option>
+        <option value="1536000">1.536 MHz</option>
+        <option value="2048000">2.048 MHz</option>
+        <option value="2400000">2.4 MHz</option>
+      </select>
+    </label>
+    <label style="font-size:12px;color:var(--muted)">Samples
+      <select id="specSamples" title="Max 65k auf diesem Stick. Feinere RBW: Sample-Rate senken. Weniger Rauschen: Avg hoch." style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
+        <option value="16384">16k</option>
+        <option value="32768">32k</option>
+        <option value="65536" selected>65k (max)</option>
+      </select>
+    </label>
+    <label style="font-size:12px;color:var(--muted)">Avg
+      <select id="specAvg" title="Mehr Frames mitteln → weniger Rauschen (längere Sweepzeit)" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="4" selected>4</option>
+        <option value="8">8</option>
+        <option value="16">16</option>
+      </select>
+    </label>
+    <label style="font-size:12px;color:var(--muted)" title="Nur bei breitem Range (Span ≳ Sample-Rate). Abstand der Tunefenster in MHz. Leer = auto (~0,85×SR). Min. effektiv ~0,25×SR. Bei Zoom (z. B. 1 MHz) ohne Wirkung.">
+      Fenster-Schritt
+      <input id="specStep" placeholder="auto MHz" inputmode="decimal"
+        title="MHz · nur Multi-Fenster-Sweep · leer=auto · typ. 0,5–2 · Zoom ignoriert"
+        style="width:78px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
+    </label>
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="specShowPeaks" checked> Peaks (gelb)
+    </label>
+    <button class="btn primary" onclick="captureSpectrum()">📡 Erfassen</button>
+    <button class="btn" onclick="loadSpectrumLast()">Letztes</button>
+    <button class="btn" onclick="downloadSpectrumPng()" title="PNG im Browser speichern">⬇ Download</button>
+    <button class="btn" onclick="saveSpectrumOnPi()" title="PNG+JSON nach exports/spectrum auf dem Pi">💾 Auf Pi</button>
+  </div>
+  <div id="specMeta" style="font-size:11px;color:var(--muted);margin-bottom:6px">–</div>
+  <div id="specExportHint" style="font-size:11px;color:var(--muted);margin-bottom:6px"></div>
+  <canvas id="specCanvas" width="720" height="220" style="width:100%;max-width:720px;height:220px;background:#050d1a;border:1px solid var(--line-soft);display:none;margin-bottom:8px"></canvas>
   <pre id="specPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:250px;overflow:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
 </div>
 <div class="card">
@@ -90,19 +168,89 @@ async function refreshRtlsdr(){
   }catch(e){document.getElementById('rtlsdrBlock').textContent='Fehler: '+e;}
 }
 async function captureSpectrum() {
-  const c=document.getElementById('specCenter').value;
+  const mode=(document.getElementById('specMode').value||'range');
   const p=document.getElementById('specPpm').value;
   const g=document.getElementById('specGain').value;
+  const rate=document.getElementById('specRate').value;
+  const samples=document.getElementById('specSamples').value;
+  const avg=(document.getElementById('specAvg')||{}).value||'1';
   const pre=document.getElementById('specPre');
-  pre.textContent='Erfasse Snapshot…';
+  const meta=document.getElementById('specMeta');
+  // R820T-Grenzen (ca.)
+  const FMIN=24, FMAX=1766;
+  let lo, hi;
+  if (mode==='range') {
+    lo=parseFloat(document.getElementById('specStart').value);
+    hi=parseFloat(document.getElementById('specStop').value);
+  } else {
+    lo=hi=parseFloat(document.getElementById('specCenter').value);
+  }
+  if ([lo,hi].some(x=>!Number.isFinite(x)) || hi<lo) {
+    showToast('Frequenz ungültig'); return;
+  }
+  if (lo<FMIN || hi>FMAX) {
+    showToast(`Außerhalb Stick-Bereich (~${FMIN}–${FMAX} MHz)`);
+    // trotzdem weiter — Direct Sampling / Experimente möglich
+  }
+  pre.textContent='Erfasse… (Avg '+avg+')';
+  if (meta) meta.textContent='…';
   try{
-    const url=`/api/spectrum/capture?mode=snapshot&center_mhz=${encodeURIComponent(c)}&ppm=${encodeURIComponent(p)}&gain=${encodeURIComponent(g)}`;
-    const r=await fetch(url,{method:'POST'});
+    const q=new URLSearchParams({mode, ppm:p, gain:g, sample_count:samples, avg_frames:avg});
+    if (rate && rate!=='auto') q.set('sample_rate_hz', rate);
+    if (mode==='range') {
+      q.set('start_mhz', document.getElementById('specStart').value);
+      q.set('stop_mhz', document.getElementById('specStop').value);
+      const step=document.getElementById('specStep').value.trim();
+      if (step) q.set('step_mhz', step);
+    } else {
+      q.set('center_mhz', document.getElementById('specCenter').value);
+    }
+    const r=await fetch('/api/spectrum/capture?'+q.toString(),{method:'POST'});
     const j=await r.json();
     renderSpectrumResult(j);
     if(!j.ok) showToast('Spektrum: '+(j.error||'Fehler'));
-    else showToast('Snapshot ok · '+(j.mode||''));
+    else showToast((j.mode||mode)+' ok · avg '+(j.avg_frames||avg));
   }catch(e){ pre.textContent='Fehler: '+e; showToast('Spektrum-Fehler'); }
+}
+function spectrumExportBasename() {
+  const mode=(document.getElementById('specMode')||{}).value||'spec';
+  if (mode==='range') {
+    const a=document.getElementById('specStart').value;
+    const b=document.getElementById('specStop').value;
+    return `spectrum-${a}-${b}MHz`.replace(/[^0-9A-Za-z._-]+/g,'_');
+  }
+  const c=document.getElementById('specCenter').value;
+  return `spectrum-${c}MHz`.replace(/[^0-9A-Za-z._-]+/g,'_');
+}
+function downloadSpectrumPng() {
+  const cv=document.getElementById('specCanvas');
+  if (!cv || cv.style.display==='none') { showToast('Kein Spektrum-Bild'); return; }
+  const a=document.createElement('a');
+  a.href=cv.toDataURL('image/png');
+  a.download=spectrumExportBasename()+'.png';
+  a.click();
+  showToast('PNG Download');
+}
+async function saveSpectrumOnPi() {
+  const cv=document.getElementById('specCanvas');
+  const hint=document.getElementById('specExportHint');
+  if (!cv || cv.style.display==='none') { showToast('Kein Spektrum-Bild'); return; }
+  if (hint) hint.textContent='Speichere auf Pi…';
+  try{
+    const r=await fetch('/api/spectrum/export',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        png_base64: cv.toDataURL('image/png'),
+        include_json: true,
+        name: spectrumExportBasename().replace(/^spectrum-/,'').slice(0,40),
+      }),
+    });
+    const j=await r.json();
+    if (!j.ok) { showToast('Export: '+(j.error||'Fehler')); if(hint) hint.textContent=''; return; }
+    if (hint) hint.textContent='Gespeichert: '+(j.png||j.name)+' · Ordner: '+(j.dir||'');
+    showToast('Auf Pi: '+(j.name||'ok'));
+  }catch(e){ showToast('Export-Fehler'); if(hint) hint.textContent=String(e); }
 }
 function downsampleSpectrum(arr, maxPts) {
   if (!arr || !arr.length) return [];
@@ -115,46 +263,143 @@ function downsampleSpectrum(arr, maxPts) {
   }
   return out;
 }
-function drawSpectrumCanvas(specDb, peaks, centerMhz, binHz) {
+function drawSpectrumCanvas(specDb, peaks, opts) {
   const cv=document.getElementById('specCanvas');
   if (!cv || !specDb || !specDb.length) { if (cv) cv.style.display='none'; return; }
+  opts = opts || {};
   cv.style.display='block';
   const ctx=cv.getContext('2d');
   const W=cv.width, H=cv.height;
+  const L=48, R=12, T=16, B=28;
+  const plotW=W-L-R, plotH=H-T-B;
   ctx.fillStyle='#050d1a'; ctx.fillRect(0,0,W,H);
-  const pts=downsampleSpectrum(specDb, W);
+
+  const pts=downsampleSpectrum(specDb, Math.max(64, plotW));
   let mn=Infinity, mx=-Infinity;
   for (const v of pts) { if (v<mn) mn=v; if (v>mx) mx=v; }
   if (!(mx>mn)) { mn-=1; mx+=1; }
-  ctx.strokeStyle='#3a8fd4'; ctx.lineWidth=1; ctx.beginPath();
+  const pad=(mx-mn)*0.05 || 1;
+  mn-=pad; mx+=pad;
+
+  const n=specDb.length;
+  const hzBin=Number(opts.binHz)||0;
+  const cMhz=Number(opts.centerMhz);
+  let f0, f1, spanMhz;
+  if (opts.f0Mhz!=null && opts.stopMhz!=null) {
+    f0=Number(opts.f0Mhz); f1=Number(opts.stopMhz);
+    spanMhz=f1-f0;
+  } else if (opts.startMhz!=null && opts.stopMhz!=null) {
+    f0=Number(opts.startMhz); f1=Number(opts.stopMhz);
+    spanMhz=f1-f0;
+  } else {
+    spanMhz=(hzBin>0)? (n*hzBin/1e6) : 2.048;
+    f0=(Number.isFinite(cMhz)? cMhz : 0) - spanMhz/2;
+    f1=f0+spanMhz;
+  }
+  if (!(spanMhz>0)) spanMhz=1;
+
+  ctx.strokeStyle='#1a2a3a'; ctx.lineWidth=1;
+  ctx.fillStyle='#8aa0b5'; ctx.font='11px ui-monospace,monospace';
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  const yTicks=4;
+  for (let i=0;i<=yTicks;i++) {
+    const t=i/yTicks;
+    const y=T+plotH*(1-t);
+    const db=mn+(mx-mn)*t;
+    ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+plotW,y); ctx.stroke();
+    ctx.fillText(db.toFixed(0)+' dB', L-6, y);
+  }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const xTicks=4;
+  for (let i=0;i<=xTicks;i++) {
+    const t=i/xTicks;
+    const x=L+plotW*t;
+    const f=f0+(f1-f0)*t;
+    ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,T+plotH); ctx.stroke();
+    ctx.fillText(f.toFixed(3), x, T+plotH+6);
+  }
+  ctx.fillStyle='#6a8098'; ctx.font='10px ui-monospace,monospace';
+  ctx.textAlign='center';
+  ctx.fillText('MHz', L+plotW/2, H-10);
+  ctx.save();
+  ctx.translate(12, T+plotH/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('dB', 0, 0);
+  ctx.restore();
+
+  ctx.strokeStyle='#2a3a4a'; ctx.strokeRect(L, T, plotW, plotH);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(L, T, plotW, plotH);
+  ctx.clip();
+  ctx.strokeStyle='#3a8fd4'; ctx.lineWidth=1.25; ctx.beginPath();
   for (let i=0;i<pts.length;i++) {
-    const y=H-4-((pts[i]-mn)/(mx-mn))*(H-8);
-    if (i===0) ctx.moveTo(i,y); else ctx.lineTo(i,y);
+    const x=L+(i/(pts.length-1||1))*plotW;
+    const y=T+plotH-((pts[i]-mn)/(mx-mn))*plotH;
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.stroke();
-  if (peaks && peaks.length && centerMhz!=null && binHz) {
+
+  // center marker (grau gestrichelt)
+  if (Number.isFinite(cMhz) && spanMhz>0) {
+    const xc=L+((cMhz-f0)/spanMhz)*plotW;
+    if (xc>=L && xc<=L+plotW) {
+      ctx.strokeStyle='#5a7a94'; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(xc,T); ctx.lineTo(xc,T+plotH); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  // peaks: gelbe Markierungen = erkannte lokale Maxima (kein Artefakt-Flag)
+  const showPeaks = document.getElementById('specShowPeaks');
+  if ((!showPeaks || showPeaks.checked) && peaks && peaks.length) {
     ctx.fillStyle='#e8b84a';
-    const n=specDb.length;
-    const f0=centerMhz - (n/2)*binHz/1e6;
+    ctx.strokeStyle='#e8b84a';
     for (const pk of peaks.slice(0,12)) {
       const f=pk.freq_mhz!=null?pk.freq_mhz:pk.freq;
       if (f==null) continue;
-      const idx=(f-f0)/(binHz/1e6);
-      const x=Math.round(idx/n*W);
-      if (x>=0 && x<W) { ctx.fillRect(x,2,2,H-4); }
+      const x=L+((f-f0)/spanMhz)*plotW;
+      if (x<L || x>L+plotW) continue;
+      // kurze Markierung oben + Dreieck — nicht volle Höhe (weniger „Artefakt“-Look)
+      ctx.fillRect(x-1, T, 2, 10);
+      const yPk = (pk.db!=null) ? T+plotH-((pk.db-mn)/(mx-mn))*plotH : T+14;
+      ctx.beginPath();
+      ctx.moveTo(x, Math.max(T+12, yPk-6));
+      ctx.lineTo(x-4, Math.max(T+12, yPk-6)+8);
+      ctx.lineTo(x+4, Math.max(T+12, yPk-6)+8);
+      ctx.closePath();
+      ctx.fill();
     }
   }
+  ctx.restore();
+
+  ctx.fillStyle='#8aa0b5'; ctx.font='11px ui-monospace,monospace';
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  const rbw = opts.rbwHz!=null ? opts.rbwHz : (hzBin||null);
+  const title=`${f0.toFixed(3)} … ${f1.toFixed(3)} MHz`
+    + (Number.isFinite(cMhz)?` · mid ${cMhz.toFixed(3)}`:'')
+    + (rbw!=null?` · RBW≈${(rbw>=1000?(rbw/1000).toFixed(1)+' kHz':rbw.toFixed(0)+' Hz')}`:'');
+  ctx.fillText(title, L, 2);
 }
 function renderSpectrumResult(j) {
   const data = (j && j.data) ? j.data : j;
   const pre=document.getElementById('specPre');
+  const meta=document.getElementById('specMeta');
   const mode=data && data.mode;
   const ok=data && data.ok;
   const peaks=(data && data.peaks) || [];
+  const rbw = data && (data.rbw_hz!=null ? data.rbw_hz : data.bin_hz);
   const summary={
     ok: !!ok,
     mode: mode||'–',
+    start_mhz: data && data.start_mhz,
+    stop_mhz: data && data.stop_mhz,
     center_mhz: data && data.center_mhz,
+    sample_rate_hz: data && data.sample_rate_hz,
+    sample_count: data && (data.sample_count||data.sample_count_iq),
+    avg_frames: data && data.avg_frames,
+    rbw_hz: rbw,
     ppm: data && data.ppm,
     gain: data && data.gain,
     peak_count: peaks.length,
@@ -165,7 +410,34 @@ function renderSpectrumResult(j) {
     error: data && data.error,
   };
   pre.textContent=JSON.stringify(summary,null,2);
-  drawSpectrumCanvas(data && data.spectrum_db, peaks, data && data.center_mhz, data && data.bin_hz);
+  if (meta) {
+    if (!ok) meta.textContent = 'Fehler: '+(data && data.error || '–');
+    else {
+      const parts=[];
+      if (data.start_mhz!=null && data.stop_mhz!=null)
+        parts.push(`${data.start_mhz}–${data.stop_mhz} MHz`);
+      else if (data.center_mhz!=null)
+        parts.push(`Mitte ${data.center_mhz} MHz`);
+      if (data.sample_rate_hz) parts.push(`SR ${(data.sample_rate_hz/1e6).toFixed(3)} MHz`);
+      if (rbw!=null) parts.push(`RBW≈${rbw>=1000?(rbw/1000).toFixed(1)+' kHz':Number(rbw).toFixed(0)+' Hz'}`);
+      if (data.avg_frames) parts.push(`Avg×${data.avg_frames}`);
+      if (peaks.length) {
+        const p0=peaks[0];
+        const interp=p0 && p0.interpolated ? ' Sub-Bin' : '';
+        parts.push(`${peaks.length} Peaks${interp} (gelb; DC/Mitte kann Spur sein)`);
+      }
+      meta.textContent = parts.join(' · ') || 'ok';
+    }
+  }
+  const f0 = data && (data.f0_mhz!=null ? data.f0_mhz : data.start_mhz);
+  drawSpectrumCanvas(data && data.spectrum_db, peaks, {
+    centerMhz: data && data.center_mhz,
+    binHz: data && data.bin_hz,
+    rbwHz: rbw,
+    startMhz: data && data.start_mhz,
+    stopMhz: data && data.stop_mhz,
+    f0Mhz: f0,
+  });
 }
 async function loadSpectrumLast() {
   try{const r=await fetch('/api/spectrum/last');const j=await r.json();
@@ -198,4 +470,6 @@ async function ppmCalibrate() {
 }
 function onBaseRefresh() { loadDabStatus(); }
 loadDabStatus(); loadRtlsdr(); loadPpmFromRuntime();
+const _peakCb=document.getElementById('specShowPeaks');
+if (_peakCb) _peakCb.addEventListener('change', ()=>{ try{ loadSpectrumLast(); }catch(e){} });
 </script>{% endblock %}

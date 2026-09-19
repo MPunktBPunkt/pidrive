@@ -777,22 +777,89 @@ def _fft_power_db_legacy(samples):
     return db.tolist(), len(db)
 
 
+def _fft_power_db_averaged(samples, frame_len: int, avg_frames: int):
+    """
+    Mehrere FFT-Frames gleicher Länge → Mittelung der linearen Leistung (VBW-ähnlich).
+    RBW bleibt = sample_rate / frame_len (nicht gröber durch Splitten).
+    """
+    if np is None:
+        raise RuntimeError("numpy fehlt — bitte installieren: apt install python3-numpy")
+    if not samples:
+        return [], 0, 0
+
+    frame_len = int(frame_len)
+    avg_frames = max(1, int(avg_frames))
+    if frame_len < 64:
+        db, n = _fft_power_db_legacy(samples)
+        return db, n, 1
+
+    arr = np.asarray(samples, dtype=np.complex64)
+    if arr.size < frame_len:
+        db, n = _fft_power_db_legacy(samples)
+        return db, n, 1
+
+    window = np.hanning(frame_len).astype(np.float32)
+    acc = None
+    used = 0
+    max_frames = min(avg_frames, arr.size // frame_len)
+    for i in range(max_frames):
+        chunk = arr[i * frame_len:(i + 1) * frame_len]
+        if chunk.size < frame_len:
+            break
+        fft = np.fft.fftshift(np.fft.fft(chunk * window))
+        power = np.maximum(np.abs(fft) ** 2, 1e-12).astype(np.float64)
+        if acc is None:
+            acc = power
+        else:
+            acc += power
+        used += 1
+
+    if acc is None or used < 1:
+        db, n = _fft_power_db_legacy(samples)
+        return db, n, 1
+
+    acc /= float(used)
+    db = (10.0 * np.log10(acc)).tolist()
+    return db, len(db), used
+
+
+def _parabolic_delta(y1: float, y2: float, y3: float) -> float:
+    """Sub-Bin-Offset ∈ [-0.5, 0.5] aus drei benachbarten Bin-Werten (dB ok)."""
+    denom = (y1 - 2.0 * y2 + y3)
+    if abs(denom) < 1e-12:
+        return 0.0
+    delta = 0.5 * (y1 - y3) / denom
+    if delta > 0.5:
+        return 0.5
+    if delta < -0.5:
+        return -0.5
+    return float(delta)
+
+
 def _dedupe_peaks(peaks, resolution_mhz=0.1):
     buckets = {}
     for p in peaks:
-        key = round(round(float(p["freq_mhz"]) / resolution_mhz) * resolution_mhz, 3)
+        key = round(round(float(p["freq_mhz"]) / resolution_mhz) * resolution_mhz, 6)
         if key not in buckets:
-            buckets[key] = {"freq_mhz": key, "db": p["db"], "hits": 1}
+            buckets[key] = {
+                "freq_mhz": float(p["freq_mhz"]),
+                "db": p["db"],
+                "hits": 1,
+                "interpolated": bool(p.get("interpolated")),
+            }
         else:
             buckets[key]["hits"] += 1
             if p["db"] > buckets[key]["db"]:
                 buckets[key]["db"] = p["db"]
+                buckets[key]["freq_mhz"] = float(p["freq_mhz"])
+                buckets[key]["interpolated"] = bool(p.get("interpolated"))
     result = list(buckets.values())
     result.sort(key=lambda x: x["db"], reverse=True)
     return result
 
 
-def _find_peaks(spectrum_db, center_mhz, sample_rate_hz, min_db=None, max_peaks=20, min_distance_bins=8):
+def _find_peaks(spectrum_db, center_mhz, sample_rate_hz, min_db=None, max_peaks=20,
+                min_distance_bins=8, interpolate=True):
     peaks = []
     if not spectrum_db:
         return peaks
@@ -809,9 +876,24 @@ def _find_peaks(spectrum_db, center_mhz, sample_rate_hz, min_db=None, max_peaks=
         if v < min_db:
             continue
         if v >= spectrum_db[i - 1] and v >= spectrum_db[i + 1]:
-            offset_hz = (i - n / 2) * bin_hz
+            delta = 0.0
+            db_est = float(v)
+            if interpolate:
+                delta = _parabolic_delta(
+                    float(spectrum_db[i - 1]), float(v), float(spectrum_db[i + 1])
+                )
+                # Peak-Höhe grob interpoliert
+                y1, y2, y3 = float(spectrum_db[i - 1]), float(v), float(spectrum_db[i + 1])
+                db_est = y2 - 0.25 * (y1 - y3) * delta
+            offset_hz = (i + delta - n / 2.0) * bin_hz
             freq_mhz = center_mhz + (offset_hz / 1e6)
-            peaks.append({"bin": i, "freq_mhz": round(freq_mhz, 6), "db": round(v, 2)})
+            peaks.append({
+                "bin": i,
+                "delta_bin": round(delta, 4),
+                "freq_mhz": round(freq_mhz, 6),
+                "db": round(db_est, 2),
+                "interpolated": bool(interpolate and abs(delta) > 1e-6),
+            })
 
     peaks.sort(key=lambda x: x["db"], reverse=True)
     selected = []
@@ -831,8 +913,54 @@ def get_confirmed_stations(min_hits: int = 2) -> list:
     return [c for c in confirmed if c.get("hits", 1) >= min_hits]
 
 
-def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=262144,
-                     ppm=0, gain=-1, peak_threshold_db=None):
+def _kill_rtl_sdr_procs():
+    """Nur Prozesse namens rtl_sdr beenden (kein pkill -f — trifft sonst die eigene Shell)."""
+    try:
+        out = subprocess.check_output(["pgrep", "-x", "rtl_sdr"], text=True, timeout=2)
+    except Exception:
+        return
+    for pid in out.split():
+        try:
+            os.kill(int(pid), 9)
+        except Exception:
+            pass
+
+
+def _run_rtl_sdr_iq(center_hz: int, sample_rate_hz: int, sample_count: int,
+                    ppm: int = 0, gain: int = -1, timeout: float = 20.0) -> bytes:
+    """Ein rtl_sdr-Capture nach stdout.
+
+    Hard-Cap 65536: auf diesem Stick streamt -n 131072 endlos (Timeout), 65536 ist stabil.
+    Feinere RBW → Sample-Rate senken oder Avg erhöhen, nicht mehr Samples.
+    """
+    n = max(4096, min(int(sample_count), 65536))
+    cmd = [
+        "rtl_sdr",
+        "-f", str(int(center_hz)),
+        "-s", str(int(sample_rate_hz)),
+        "-n", str(n),
+    ]
+    if int(ppm) != 0:
+        cmd += ["-p", str(int(ppm))]
+    if int(gain) >= 0:
+        cmd += ["-g", str(int(gain))]
+    cmd += ["-"]
+    t_cap = n / max(float(sample_rate_hz), 1.0)
+    to = max(float(timeout), 8.0 + t_cap * 10.0)
+    try:
+        cp = subprocess.run(cmd, capture_output=True, timeout=to)
+    except subprocess.TimeoutExpired:
+        _kill_rtl_sdr_procs()
+        raise
+    if not cp.stdout:
+        err = (cp.stderr or b"").decode("utf-8", "ignore")[:300]
+        raise RuntimeError(err or "keine IQ-Daten")
+    return cp.stdout
+
+
+def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=65536,
+                     ppm=0, gain=-1, peak_threshold_db=None, avg_frames=1,
+                     interpolate_peaks=True):
     if _rtlsdr:
         usb = _rtlsdr.detect_usb()
         if not usb.get("present"):
@@ -853,48 +981,333 @@ def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=262144,
             if not freed and _rtlsdr.is_busy():
                 return {"ok": False, "error": "RTL-SDR belegt"}
 
+    frame_n = max(4096, min(int(sample_count), 65536))
+    avg_frames = max(1, min(int(avg_frames or 1), 16))
     center_hz = int(float(center_mhz) * 1e6)
-    cmd = ["rtl_sdr", "-f", str(center_hz),
-           "-s", str(int(sample_rate_hz)),
-           "-n", str(int(sample_count))]
+    sr = int(sample_rate_hz)
 
-    if int(ppm) != 0:
-        cmd += ["-p", str(int(ppm))]
-    if int(gain) >= 0:
-        cmd += ["-g", str(int(gain))]
-    cmd += ["-"]  # stdout — ohne Argument nur Usage / leere IQ-Daten
+    # Averaging: mehrere kurze Captures (nicht ein Riesen--n — hängt auf manchen Sticks)
+    power_acc = None
+    frames_used = 0
+    last_err = None
+    iq_total = 0
 
-    try:
-        cp = subprocess.run(cmd, capture_output=True, timeout=25)
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
+    for _ in range(avg_frames):
+        try:
+            raw = _run_rtl_sdr_iq(center_hz, sr, frame_n, ppm=ppm, gain=gain)
+        except subprocess.TimeoutExpired:
+            last_err = "rtl_sdr Timeout"
+            _kill_rtl_sdr_procs()
+            break
+        except Exception as e:
+            last_err = str(e)
+            break
 
-    raw = cp.stdout
-    if not raw:
-        err = (cp.stderr or b"").decode("utf-8", "ignore")[:300]
-        return {"ok": False, "error": "keine IQ-Daten", "stderr": err}
+        samples = _u8_iq_to_complex_legacy(raw)
+        iq_total += len(samples)
+        if np is None:
+            return {"ok": False, "error": "numpy fehlt — bitte installieren: apt install python3-numpy"}
+        if len(samples) < frame_n // 2:
+            last_err = "zu wenige IQ-Samples"
+            break
 
-    samples = _u8_iq_to_complex_legacy(raw)
+        # Frame auf frame_n begrenzen / padden nicht — FFT über verfügbare Länge,
+        # aber für Average gleiche Länge erzwingen
+        use_n = min(len(samples), frame_n)
+        chunk = samples[:use_n]
+        if use_n < frame_n:
+            # zu kurz: einzelnes Legacy-FFT, kein Average-Mix unterschiedlicher Längen
+            try:
+                spectrum_db, n_bins = _fft_power_db_legacy(chunk)
+            except RuntimeError as e:
+                return {"ok": False, "error": str(e)}
+            frames_used = 1
+            peaks = _find_peaks(
+                spectrum_db, float(center_mhz), sr,
+                peak_threshold_db, interpolate=bool(interpolate_peaks),
+            )
+            bin_hz = (sr / n_bins) if n_bins else 0
+            result = {
+                "ok": True, "mode": "single", "center_mhz": float(center_mhz),
+                "sample_rate_hz": sr, "sample_count": use_n, "sample_count_iq": iq_total,
+                "avg_frames": 1, "ppm": int(ppm), "gain": int(gain),
+                "bin_hz": bin_hz, "rbw_hz": round(bin_hz, 3) if bin_hz else 0,
+                "peaks": peaks, "spectrum_db": spectrum_db, "ts": int(time.time()),
+                "note": "kurzes Frame — Average abgebrochen",
+            }
+            save_last_spectrum(result)
+            return result
 
-    try:
-        spectrum_db, n_bins = _fft_power_db_legacy(samples)
-    except RuntimeError as e:
-        return {"ok": False, "error": str(e)}
+        arr = np.asarray(chunk, dtype=np.complex64)
+        window = np.hanning(frame_n).astype(np.float32)
+        fft = np.fft.fftshift(np.fft.fft(arr * window))
+        power = np.maximum(np.abs(fft) ** 2, 1e-12).astype(np.float64)
+        if power_acc is None:
+            power_acc = power
+        else:
+            power_acc += power
+        frames_used += 1
 
-    peaks = _find_peaks(spectrum_db, float(center_mhz),
-                        int(sample_rate_hz), peak_threshold_db)
+    if power_acc is None or frames_used < 1:
+        return {"ok": False, "error": last_err or "keine IQ-Daten"}
 
+    power_acc /= float(frames_used)
+    spectrum_db = (10.0 * np.log10(power_acc)).tolist()
+    n_bins = len(spectrum_db)
+
+    peaks = _find_peaks(
+        spectrum_db, float(center_mhz), sr,
+        peak_threshold_db, interpolate=bool(interpolate_peaks),
+    )
+
+    bin_hz = (sr / n_bins) if n_bins else 0
     result = {
         "ok": True,
         "mode": "single",
         "center_mhz": float(center_mhz),
-        "sample_rate_hz": int(sample_rate_hz),
-        "sample_count_iq": len(samples),
+        "sample_rate_hz": sr,
+        "sample_count": int(frame_n),
+        "sample_count_iq": iq_total,
+        "avg_frames": int(frames_used),
         "ppm": int(ppm),
         "gain": int(gain),
-        "bin_hz": (sample_rate_hz / n_bins) if n_bins else 0,
+        "bin_hz": bin_hz,
+        "rbw_hz": round(bin_hz, 3) if bin_hz else 0,
         "peaks": peaks,
         "spectrum_db": spectrum_db,
+        "ts": int(time.time()),
+    }
+    save_last_spectrum(result)
+    return result
+
+
+# RTL-SDR-übliche Sample-Rates (2.4 Msps weggelassen — auf manchen Sticks problematisch)
+_RTL_SAMPLE_RATES = (
+    250_000,
+    1_024_000,
+    1_536_000,
+    1_792_000,
+    1_920_000,
+    2_048_000,
+)
+
+
+def _pick_sample_rate(span_hz: float, preferred: Optional[int] = None) -> int:
+    """Wählt eine RTL-Sample-Rate, die span_hz (mit Rand) abdeckt."""
+    if preferred and int(preferred) > 0:
+        return int(preferred)
+    need = max(float(span_hz) * 1.12, 200_000.0)
+    for sr in _RTL_SAMPLE_RATES:
+        if sr >= need:
+            return int(sr)
+    return int(_RTL_SAMPLE_RATES[-1])
+
+
+def _crop_spectrum(spectrum_db, center_mhz, sample_rate_hz, start_mhz, stop_mhz):
+    """Schneidet spectrum_db auf [start_mhz, stop_mhz] zu. Gibt (cropped, bin_hz, f0)."""
+    if not spectrum_db:
+        return [], 0.0, float(start_mhz)
+    n = len(spectrum_db)
+    bin_hz = float(sample_rate_hz) / n
+    f0_full = float(center_mhz) - (float(sample_rate_hz) / 2.0) / 1e6
+    i0 = max(0, int(math.floor((float(start_mhz) - f0_full) * 1e6 / bin_hz)))
+    i1 = min(n, int(math.ceil((float(stop_mhz) - f0_full) * 1e6 / bin_hz)))
+    if i1 <= i0:
+        return [], bin_hz, float(start_mhz)
+    cropped = spectrum_db[i0:i1]
+    f0 = f0_full + i0 * bin_hz / 1e6
+    return cropped, bin_hz, f0
+
+
+def _peaks_in_range(peaks, start_mhz, stop_mhz):
+    out = []
+    for p in peaks or []:
+        f = p.get("freq_mhz")
+        if f is None:
+            continue
+        if float(start_mhz) <= float(f) <= float(stop_mhz):
+            out.append(p)
+    return out
+
+
+def capture_range(start_mhz, stop_mhz, sample_rate_hz=None, sample_count=65536,
+                  ppm=0, gain=-1, peak_threshold_db=None, step_mhz=None,
+                  avg_frames=1, interpolate_peaks=True):
+    """
+    Spektrum über [start_mhz, stop_mhz].
+
+    Schmal genug für eine RTL-Fensterbreite → ein Capture + Crop (durchgehender Plot).
+    Breiter → gestaffelte Fenster, gestitchtes Spektrum.
+    step_mhz steuert nur den Multi-Fenster-Fall (Default: ~80 % der Sample-Rate).
+    """
+    start = float(start_mhz)
+    stop = float(stop_mhz)
+    if stop <= start:
+        return {"ok": False, "error": "stop_mhz muss größer als start_mhz sein"}
+
+    span_hz = (stop - start) * 1e6
+    center = (start + stop) / 2.0
+    n_samp = int(sample_count) if sample_count else 65536
+    n_samp = max(4096, min(n_samp, 65536))
+    avg_frames = max(1, min(int(avg_frames or 1), 32))
+
+    preferred = int(sample_rate_hz) if sample_rate_hz else None
+    sr = _pick_sample_rate(span_hz, preferred)
+
+    def _peaks_from_crop(cropped, bin_hz, f0):
+        if not cropped or bin_hz <= 0:
+            return []
+        n = len(cropped)
+        # Äquivalente Mitte/Rate für Peak-Finder auf dem Crop
+        equiv_sr = bin_hz * n
+        equiv_center = f0 + (n * bin_hz / 2.0) / 1e6
+        return _find_peaks(
+            cropped, equiv_center, equiv_sr,
+            peak_threshold_db, interpolate=bool(interpolate_peaks),
+        )
+
+    # Ein Fenster reicht (mit etwas Rand)
+    if span_hz <= sr * 0.98:
+        one = capture_spectrum(
+            center, sample_rate_hz=sr, sample_count=n_samp,
+            ppm=ppm, gain=gain, peak_threshold_db=peak_threshold_db,
+            avg_frames=avg_frames, interpolate_peaks=interpolate_peaks,
+        )
+        if not one.get("ok"):
+            return one
+        cropped, bin_hz, f0 = _crop_spectrum(
+            one.get("spectrum_db") or [], center, sr, start, stop
+        )
+        peaks = _peaks_from_crop(cropped, bin_hz, f0)
+        peaks = _peaks_in_range(peaks, start, stop)
+        rbw_hz = bin_hz if bin_hz else (sr / max(len(cropped), 1))
+        result = {
+            "ok": True,
+            "mode": "range",
+            "start_mhz": start,
+            "stop_mhz": stop,
+            "center_mhz": round(center, 6),
+            "sample_rate_hz": sr,
+            "sample_count": n_samp,
+            "avg_frames": one.get("avg_frames", avg_frames),
+            "ppm": int(ppm),
+            "gain": int(gain),
+            "bin_hz": rbw_hz,
+            "rbw_hz": round(rbw_hz, 3),
+            "f0_mhz": round(f0, 6),
+            "span_mhz": round(stop - start, 6),
+            "windows_total": 1,
+            "windows_ok": 1,
+            "peaks": peaks,
+            "spectrum_db": cropped,
+            "ts": int(time.time()),
+        }
+        save_last_spectrum(result)
+        return result
+
+    # Mehrere Fenster stitchen
+    usable = sr * 0.85  # Überlappung gegen Kantenartefakte
+    if step_mhz is not None and float(step_mhz) > 0:
+        step_hz = float(step_mhz) * 1e6
+    else:
+        step_hz = usable
+    step_hz = max(step_hz, sr * 0.25)
+
+    centers = []
+    # Zentren so wählen, dass Start/Stop abgedeckt sind
+    first = start + (sr / 2.0) / 1e6 * 0.98
+    last = stop - (sr / 2.0) / 1e6 * 0.98
+    if last < first:
+        first = last = center
+    c = first
+    while c <= last + 1e-9:
+        centers.append(round(c, 6))
+        c += step_hz / 1e6
+    if not centers or abs(centers[-1] - last) > 1e-4:
+        centers.append(round(last, 6))
+
+    # Ziel-Raster über den gewünschten Bereich
+    est_bins = max(n_samp, 4096)
+    bin_hz = sr / est_bins
+    n_out = max(2, int(math.ceil(span_hz / bin_hz)))
+    bin_hz = span_hz / n_out
+    acc = [0.0] * n_out
+    wgt = [0.0] * n_out
+    all_peaks = []
+    windows = []
+    avg_used = 0
+
+    for c_mhz in centers:
+        one = capture_spectrum(
+            c_mhz, sample_rate_hz=sr, sample_count=n_samp,
+            ppm=ppm, gain=gain, peak_threshold_db=peak_threshold_db,
+            avg_frames=avg_frames, interpolate_peaks=interpolate_peaks,
+        )
+        if not one.get("ok"):
+            windows.append({"center_mhz": c_mhz, "ok": False, "error": one.get("error", "?")})
+            continue
+        avg_used = max(avg_used, int(one.get("avg_frames") or 1))
+        spec = one.get("spectrum_db") or []
+        n = len(spec)
+        if n < 2:
+            windows.append({"center_mhz": c_mhz, "ok": False, "error": "zu wenig Bins"})
+            continue
+        win_bin = sr / n
+        f0w = c_mhz - (sr / 2.0) / 1e6
+        for i, db in enumerate(spec):
+            f = f0w + i * win_bin / 1e6
+            if f < start or f > stop:
+                continue
+            j = int((f - start) * 1e6 / bin_hz)
+            if j < 0 or j >= n_out:
+                continue
+            # Soft-Edges: Gewicht nahe Fenstermitte höher
+            edge = abs(i - n / 2) / (n / 2)
+            w = max(0.15, 1.0 - edge * 0.7)
+            acc[j] += float(db) * w
+            wgt[j] += w
+        peaks = _peaks_in_range(one.get("peaks") or [], start, stop)
+        all_peaks.extend(peaks)
+        windows.append({
+            "center_mhz": c_mhz, "ok": True,
+            "peak_count": len(peaks), "top_peaks": peaks[:8],
+        })
+
+    spectrum_db = []
+    for i in range(n_out):
+        if wgt[i] > 0:
+            spectrum_db.append(acc[i] / wgt[i])
+        else:
+            spectrum_db.append(-120.0)
+
+    # Peaks final auf gestitchtem Spektrum (bessere Interpolation)
+    peaks = _peaks_from_crop(spectrum_db, bin_hz, start) if spectrum_db else []
+    peaks = _peaks_in_range(peaks, start, stop)
+    if not peaks and all_peaks:
+        peaks = _dedupe_peaks(all_peaks, resolution_mhz=max(0.001, bin_hz / 1e6 * 4))
+
+    windows_ok = sum(1 for w in windows if w.get("ok"))
+    result = {
+        "ok": windows_ok > 0,
+        "mode": "range",
+        "start_mhz": start,
+        "stop_mhz": stop,
+        "center_mhz": round(center, 6),
+        "sample_rate_hz": sr,
+        "sample_count": n_samp,
+        "avg_frames": avg_used or avg_frames,
+        "step_mhz": round(step_hz / 1e6, 6),
+        "ppm": int(ppm),
+        "gain": int(gain),
+        "bin_hz": bin_hz,
+        "rbw_hz": round(bin_hz, 3),
+        "f0_mhz": start,
+        "span_mhz": round(stop - start, 6),
+        "windows_total": len(centers),
+        "windows_ok": windows_ok,
+        "windows": windows,
+        "peaks": peaks[:40],
+        "spectrum_db": spectrum_db if windows_ok else [],
         "ts": int(time.time()),
     }
     save_last_spectrum(result)

@@ -289,6 +289,20 @@
       "file": "pidrive/web/app.py"
     },
     {
+      "path": "/api/spectrum/export",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/spectrum/exports",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
       "path": "/api/spectrum/stations",
       "methods": [
         "GET"

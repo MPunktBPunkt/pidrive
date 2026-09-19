@@ -5,3 +5,6 @@ __pycache__/
 .venv-ci/
 .venv/
 venv/
+pidrive/exports/spectrum/*.png
+pidrive/exports/spectrum/*.json
+!pidrive/exports/spectrum/.gitkeep
