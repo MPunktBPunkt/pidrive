@@ -252,7 +252,7 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
 
   <div style="font-size:11px;color:#3a6090;text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;display:flex;align-items:center;gap:8px">
     <span>Favoriten</span>
-    <button class="btn" style="font-size:10px;padding:2px 8px;text-transform:none;letter-spacing:0" onclick="sendCmd('favorites_add_current');showToast('Favorit merken…');setTimeout(loadFavs,800)">★ Merken</button>
+    <button class="btn" style="font-size:10px;padding:2px 8px;text-transform:none;letter-spacing:0" onclick="sendCmd('favorites_add_current');showToast('Favorit merken…');setTimeout(loadFavorites,800)">★ Merken</button>
   </div>
   <div id="favList"><div style="color:#3a5070;font-size:12px">Lade...</div></div>
 </div>
@@ -390,6 +390,18 @@ function scanFm() {
   if (f) { sendCmd('scan_setfreq:fm:' + f); showToast('Scanner FM ' + f); switchTab('player'); }
 }
 
+function escAttr(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function bindStationClicks(el, onRow) {
+  if (!el || el._stationBound) return;
+  el._stationBound = true;
+  el.addEventListener('click', (e) => {
+    const row = e.target.closest('.station-item');
+    if (!row || !el.contains(row)) return;
+    onRow(row);
+  });
+}
 async function loadDABStations() {
   if (_dabStations.length) { renderDABStations(); return; }
   try { const j = await (await fetch('/api/lists')).json(); _dabStations = j.dab_stations || []; renderDABStations(); } catch(e) {}
@@ -397,9 +409,11 @@ async function loadDABStations() {
 function renderDABStations() {
   const el = document.getElementById('dabStationList');
   el.innerHTML = _dabStations.length ? _dabStations.map(s =>
-    `<div class="station-item${s.name===_currentStation?' playing':''}" onclick="playDAB(${JSON.stringify(s.name)})">
-      <span>${s.name}</span><span style="margin-left:auto;font-size:10px;color:#3a5070">${s.channel||''}</span></div>`
+    `<div class="station-item${s.name===_currentStation?' playing':''}"
+      data-name="${escAttr(s.name||'')}" data-sid="${escAttr(s.service_id||'')}" data-ch="${escAttr(s.channel||'')}">
+      <span>${escAttr(s.name||'')}</span><span style="margin-left:auto;font-size:10px;color:#3a5070">${escAttr(s.channel||'')}</span></div>`
   ).join('') : '<div style="padding:12px;color:#3a5070;font-size:12px">Keine DAB-Sender</div>';
+  bindStationClicks(el, (row) => playDABStation(row.dataset.name||'', row.dataset.sid||'', row.dataset.ch||''));
 }
 async function loadWebStations() {
   if (_webStations.length) { renderWebStations(); return; }
@@ -408,19 +422,52 @@ async function loadWebStations() {
 function renderWebStations() {
   const el = document.getElementById('webStationList');
   el.innerHTML = _webStations.map(s =>
-    `<div class="station-item${s.name===_currentStation?' playing':''}" onclick="playWeb(${JSON.stringify(s.name)})">${s.name}</div>`
+    `<div class="station-item${s.name===_currentStation?' playing':''}" data-name="${escAttr(s.name||'')}">${escAttr(s.name||'')}</div>`
   ).join('');
+  bindStationClicks(el, (row) => playWeb(row.dataset.name||''));
 }
 async function loadFMStations() {
   try {
     const j = await (await fetch('/api/lists')).json();
     const fm = j.fm_stations || [];
-    document.getElementById('fmStationList').innerHTML = fm.map(s =>
-      `<div class="station-item" onclick="document.getElementById('fmFreqInput').value='${s.freq||''}'">${s.name}</div>`
-    ).join('');
+    const el = document.getElementById('fmStationList');
+    el.innerHTML = fm.map(s => {
+      const freq = s.freq_mhz ?? s.freq ?? '';
+      const name = s.name || String(freq);
+      return `<div class="station-item${name===_currentStation?' playing':''}"
+        data-freq="${escAttr(freq)}" data-name="${escAttr(name)}">
+        <span>${escAttr(name)}</span>
+        <span style="margin-left:auto;font-size:10px;color:#3a5070">${freq ? escAttr(freq) + ' MHz' : ''}</span>
+      </div>`;
+    }).join('');
+    bindStationClicks(el, (row) => playFMStation(row.dataset.freq||'', row.dataset.name||''));
+  } catch(e) {}
+}
+function playFMStation(freq, name) {
+  const f = String(freq || '').trim();
+  if (!f) { showToast('Keine Frequenz'); return; }
+  const inp = document.getElementById('fmFreqInput');
+  if (inp) inp.value = f;
+  sendCmd('play_fm:' + f);
+  // Liste offen lassen — nächster Sender per Tippen
+  showToast('FM: ' + (name || f) + ' (' + f + ' MHz)');
+  // playing-Markierung sofort
+  try {
+    document.querySelectorAll('#fmStationList .station-item').forEach(el => {
+      el.classList.toggle('playing', el.textContent.indexOf(f) >= 0);
+    });
   } catch(e) {}
 }
 function playDAB(n) { sendCmd('play_dab:' + n); hideStations(); showToast('DAB: ' + n); }
+function playDABStation(name, serviceId, channel) {
+  // service_id bevorzugt — eindeutiger als Name allein
+  const sid = (serviceId || '').trim();
+  const q = sid ? sid : (name || '');
+  if (!q) { showToast('Kein DAB-Sender'); return; }
+  sendCmd('play_dab:' + q);
+  // Liste offen lassen für nächsten Tip
+  showToast('DAB: ' + (name || q) + (channel ? ' [' + channel + ']' : ''));
+}
 function playWeb(n) { sendCmd('play_web:' + n); hideStations(); showToast('Web: ' + n); }
 
 async function loadFavorites() {
@@ -439,9 +486,9 @@ async function loadFavorites() {
 function playFavByIdx(i) { if (window._favs && window._favs[i]) playFav(window._favs[i]); }
 function playFav(f) {
   const s = (f.source||'').toLowerCase();
-  if (s==='dab') sendCmd('play_dab:'+f.name);
+  if (s==='dab') sendCmd('play_dab:'+(f.service_id||f.name));
   else if (s==='webradio'||s==='web') sendCmd('play_web:'+f.name);
-  else if (s==='fm') sendCmd('play_fm:'+(f.freq||f.name));
+  else if (s==='fm') sendCmd('play_fm:'+(f.freq_mhz||f.freq||f.name));
   else if (s==='spotify') sendCmd('play_spotify');
   else if (s==='scanner') { showToast('Scanner-Favorit: über Scanner-Tab'); return; }
   else { showToast('Unbekannte Quelle: '+(f.source||'?')); return; }

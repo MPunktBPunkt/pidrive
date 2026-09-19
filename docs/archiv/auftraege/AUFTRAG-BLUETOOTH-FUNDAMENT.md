@@ -793,5 +793,5 @@ angeschlossener Antenne.
 
 ### Fortschritt Fahrt 2026-09-16 (erster Connect)
 
-Siehe [BMW-ERSTER-TEST-2026-09-16.md](../fahrzeug/BMW-ERSTER-TEST-2026-09-16.md).  
+Siehe [BMW-ERSTER-TEST-2026-09-16.md](../../fahrzeug/BMW-ERSTER-TEST-2026-09-16.md).  
 HB1/HB2/HB4 bestanden; HB5 teilweise; HB6 und Browsing offen/negativ.

@@ -431,12 +431,17 @@ Flags (vor dem Befehl angeben):
     menu_sub.add_parser("path", help="Aktueller Pfad (Offline-Referenzbaum)")
     menu_sub.add_parser("rebuild", help="Offline-Rebuild-Test (Pfad/Cursor retten)")
 
-    # ── webui (W0/W1: Check, Selftest, Routen) ───────────────────────────────
+    # ── webui (W0/W1 + Live-Smoke) ───────────────────────────────────────────
     p_webui = sub.add_parser("webui", help="WebUI-Check und Selftest")
     webui_sub = p_webui.add_subparsers(dest="webui_cmd")
     webui_sub.add_parser("check", help="Statisch: sendCmd/fetch/Statusfelder")
     webui_sub.add_parser("selftest", help="Import + Aufruf web.shared.*")
     webui_sub.add_parser("routes", help="Alle Flask-Routen listen")
+    p_smoke = webui_sub.add_parser("smoke", help="Live-Smoke (Buttons/APIs/State-Machine)")
+    p_smoke.add_argument("--mode", choices=["quick", "flows", "full"], default="flows",
+                         help="quick|flows|full (default flows)")
+    p_smoke.add_argument("--base", default="http://127.0.0.1:8080",
+                         help="WebUI-Base-URL")
 
     # ── source (W7: Zustandsmaschine sichtbar) ───────────────────────────────
     p_source = sub.add_parser("source", help="Quellen-/Transition-Zustand")
@@ -1963,12 +1968,12 @@ Flags (vor dem Befehl angeben):
             sys.exit(_mg.cmd_rebuild_test())
         sys.exit(EXIT_USAGE)
 
-    # webui (W0/W1)
+    # webui (W0/W1 + Live-Smoke)
     if args.cmd == "webui":
         from web import webui_check as _wc
         wc = getattr(args, "webui_cmd", None)
         if not wc:
-            fmt.err("Unterbefehl fehlt: check|selftest|routes")
+            fmt.err("Unterbefehl fehlt: check|selftest|routes|smoke")
             sys.exit(EXIT_USAGE)
         if wc == "check":
             sys.exit(_wc.run_check())
@@ -1976,6 +1981,32 @@ Flags (vor dem Befehl angeben):
             sys.exit(_wc.run_selftest())
         elif wc == "routes":
             sys.exit(_wc.cmd_routes())
+        elif wc == "smoke":
+            import subprocess as _sp_smoke
+            mode = getattr(args, "mode", "flows") or "flows"
+            base = getattr(args, "base", "http://127.0.0.1:8080") or "http://127.0.0.1:8080"
+            script = None
+            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            for cand in (
+                os.path.join(os.path.dirname(_root), "tools", "webui_live_smoke.py"),
+                os.path.join(_root, "tools", "webui_live_smoke.py"),
+                "/home/pidrive/pidrive/tools/webui_live_smoke.py",
+            ):
+                if os.path.isfile(cand):
+                    script = cand
+                    break
+            if not script:
+                fmt.err("tools/webui_live_smoke.py nicht gefunden")
+                sys.exit(EXIT_ERROR)
+            cmd = ["python3", "-u", script, "--base", base,
+                   "--json-out", "/tmp/pidrive_webui_smoke.json"]
+            if mode == "quick":
+                cmd.append("--quick")
+            elif mode == "full":
+                cmd.append("--full")
+            fmt.out(f"WebUI Live-Smoke mode={mode} base={base}")
+            rc = _sp_smoke.call(cmd)
+            sys.exit(rc if rc in (0, 1) else EXIT_ERROR)
         sys.exit(EXIT_USAGE)
 
     # source (W7)

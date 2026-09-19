@@ -1,6 +1,6 @@
 # PiDrive — Dokumentationsindex
 
-**Stand:** v0.11.132 · 2026-09-16
+**Stand:** v0.11.143 · 2026-09-19
 
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
@@ -11,71 +11,72 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
 | Dokument | Zweck | Zielgruppe | Stand |
 |----------|-------|------------|-------|
-| [FEATURES.md](FEATURES.md) | Funktions-Inventar mit CLI-Prüfungen (M0/W0) | Entwickler, QA | v0.11.132 |
-| [KontextPiDrive.md](KontextPiDrive.md) | Entscheidungsverlauf, Changelog, Funktionsstatus | Entwickler, Planung | v0.11.132 |
+| [FEATURES.md](FEATURES.md) | Funktions-Inventar mit CLI-Prüfungen (M0/W0) | Entwickler, QA | v0.11.143 |
+| [KontextPiDrive.md](KontextPiDrive.md) | Entscheidungsverlauf, Changelog, Funktionsstatus | Entwickler, Planung | v0.11.143 |
 | [architektur/ARCHITECTURE.md](architektur/ARCHITECTURE.md) | Struktur, IPC, Services, CLI-Kurzreferenz | Entwickler | v0.11.132 |
 | [architektur/RUNTIME_FLOWS.md](architektur/RUNTIME_FLOWS.md) | Laufzeitpfade, Menü→Display | Entwickler | v0.11.127 |
-| [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, Transitionen, Sperrschichten — Ist-Zustand und Lücken Z1–Z10 | Entwickler | v0.11.132 |
+| [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, `play_gen`, Transitionen | Entwickler | v0.11.143 |
 | [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code; OTA / source CLI | Entwickler | v0.11.132 |
 | [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.132 |
+| [betrieb/SPECTRUM-CLI.md](betrieb/SPECTRUM-CLI.md) | `pidrivectl spectrum scan/peek/last` | Betrieb, Entwickler | 2026-09-19 |
+| [betrieb/UKW-GAIN-SCAN-2026-09-19.md](betrieb/UKW-GAIN-SCAN-2026-09-19.md) | UKW Gain/PPM-Messung → Defaults fm_gain/ppm | Betrieb, RF | 2026-09-19 |
 | [betrieb/WEBUI-REVIEW-2026-09-18.md](betrieb/WEBUI-REVIEW-2026-09-18.md) | WebUI-Code-Review: Funde R1–R13 + Fixes | Entwickler, QA | 2026-09-18 |
-| [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream (Handy/Auto) | Betrieb, ESP/USB | 2026-09-18 |
+| [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
-| [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest (Pairing + Now Playing, Fotos) | Betrieb, QA | 2026-09-16 |
-| [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | **Erster erfolgreicher Connect** BMW 38304 — HB1–HB6, Logs, AVRCP-Probe | Abnahme / Entwickler | 2026-09-16 |
-| [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe (Phase −1), Mitschnitt 2026-09-16 | Entwickler | 2026-09-16 |
-| [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | **Idee** — USB-MSC-Menü / on-the-fly-MP3; Dension; HW Pi4 vs. ESP32-S3 | Planung | 2026-09-17 |
-| [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | **Konzept** — Architektur USB-MSC; kanonisch auch in [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) | Planung | 2026-09-17 |
-| [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → Pflichtenheft/Umbau; Firmware **0.4.3-dev** ([`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) / [PUMP](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/PUMP.md) / [Lab 09-18](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/LAB-2026-09-18.md) / [Realtime](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/LAB-2026-09-18-REALTIME.md)) | Planung | 2026-09-18 |
-| [../assets/usb-msc-covers/README.md](../assets/usb-msc-covers/README.md) | **USB-MSC Cover-Spec** — 320×320 JPEG, ID3-APIC, Ordner für Senderlogos | Planung / Design | 2026-09-17 |
-| [auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Arbeitsauftrag Menü-Reifung & Gateway-Vorbereitung | Entwickler | 2026-09-15 |
-| [auftraege/AUFTRAG-WEBUI-SANIERUNG.md](auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Arbeitsauftrag WebUI-Statuskette, Scanner, FastScan | Entwickler | 2026-09-15 |
-| [auftraege/AUFTRAG-FUNKPFAD.md](auftraege/AUFTRAG-FUNKPFAD.md) | Funkpfad K1–K5 (Import, Bandbreite, Suchlauf) | Entwickler | 2026-09-15 |
-| [auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md](auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md) | Rückmeldung ans BMW-Display (D1–D3) | Entwickler | 2026-09-15 |
-| [auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) | Spotify-Semantik + Testkette TK-A…E; §11 N1–N5, §12 WLAN/Version/Menü-IDs | Entwickler | 2026-09-16 |
-| [auftraege/AUFTRAG-MPRIS2-STABILITAET.md](auftraege/AUFTRAG-MPRIS2-STABILITAET.md) | **Vorrang** — MPRIS2 SIGABRT, Core-Absturz-Hypothese (M1–M3, M-A…M-F) | Entwickler | 2026-09-16 |
-| [auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md](auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md) | Menüvorrang beendet Blindnavigation (Q-K…Q-N, **zuerst**); FM-Rasterschritte statt modaler Eingabe, behebt D3/FM (Q-G…Q-J); Quellenordner startet letzten Sender (Q-A…Q-E); Suchlauf aufs BMW-Display (Q-F, gesperrt bis M-C) | Entwickler | 2026-09-16 |
-| [auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md](auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) | **Vorrang vor allem** — Kopplung scheitert am fehlenden Antwort-Agenten, Display am fehlenden Spieler (BT1–BT8, BF-A…BF-F, Stufenabnahme HB0–HB6) | Entwickler | 2026-09-16 |
-| [auftraege/AUFTRAG-SPEKTRUM-UND-AVRCP.md](auftraege/AUFTRAG-SPEKTRUM-UND-AVRCP.md) | Spektrumanzeige zurückholen (SA1–SA7, SA-A…SA-F); AVRCP-Tab als Messbühne für die BMW-Rückgaben (AV1–AV8, AV-A…AV-F) | Entwickler | 2026-09-16 |
-| [auftraege/AUFTRAG-DAB-AUDIOWEG.md](auftraege/AUFTRAG-DAB-AUDIOWEG.md) | **DAB bleibt im Fahrzeug stumm** — `welle-cli` schreibt direkt auf ALSA/Klinke, A2DP unerreichbar (DA1–DA5, Messreihe DA-M1…DA-M5, DA-A…DA-F, Abnahme HD1–HD6). DA-A vor der Fahrt | Entwickler | 2026-09-16 |
-| [referenz/WELLE-CLI.md](referenz/WELLE-CLI.md) | welle.io/`welle-cli` Referenz: Optionen, HTTP-Endpunkte, `mux.json`, Gain-Index-Tabelle, Kanalfrequenzen (Quellcode-Analyse, Stand v0.9.4) | Entwickler | 2026-04-21 |
-| [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen (W0/DoD) | Entwickler, QA | 2026-09-15 |
-| [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke (Baseline vor M4) | Entwickler | v0.11.127 |
+| [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest | Betrieb, QA | 2026-09-16 |
+| [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | Erster erfolgreicher Connect BMW 38304 | Abnahme / Entwickler | 2026-09-16 |
+| [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe | Entwickler | 2026-09-16 |
+| [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | Idee — USB-MSC-Menü / on-the-fly-MP3 | Planung | 2026-09-17 |
+| [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC | Planung | 2026-09-17 |
+| [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → esp32.pidrive / PUMP | Planung | 2026-09-18 |
+| [../assets/usb-msc-covers/README.md](../assets/usb-msc-covers/README.md) | USB-MSC Cover-Spec | Planung / Design | 2026-09-17 |
+| [auftraege/README.md](auftraege/README.md) | Aktive Arbeitsaufträge (aktuell leer) | Entwickler | 2026-09-19 |
+| [referenz/WELLE-CLI.md](referenz/WELLE-CLI.md) | welle-cli Optionen, HTTP, Kanäle | Entwickler | 2026-04-21 |
+| [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen | Entwickler, QA | 2026-09-15 |
+| [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |
-| [../tests/README.md](../tests/README.md) | Testübersicht Offline-CI vs HW-Suite | Entwickler, QA | 2026-09-16 |
-| [archiv/MIGRATION_BACKLOG.md](archiv/MIGRATION_BACKLOG.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
-| [archiv/MIGRATION_STRUCTURE.md](archiv/MIGRATION_STRUCTURE.md) | Historisch — nicht mehr gepflegt | Archiv | v0.11.96 |
+| [../tests/README.md](../tests/README.md) | Testübersicht Offline-CI vs HW-Suite | Entwickler, QA | 2026-09-19 |
 
 > Index-Regel: Stempel älter als zehn Patch-Versionen hinter `VERSION` → im Index mit ⚠ markieren.
+
+### Archiv (historisch, nicht mehr gepflegt)
+
+| Dokument | Hinweis |
+|----------|---------|
+| Dokument | Hinweis |
+|----------|---------|
+| [archiv/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md](archiv/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md](archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md](archiv/auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-FUNKPFAD.md](archiv/auftraege/AUFTRAG-FUNKPFAD.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-MPRIS2-STABILITAET.md](archiv/auftraege/AUFTRAG-MPRIS2-STABILITAET.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md](archiv/auftraege/AUFTRAG-QUELLENSTART-UND-SUCHLAUFANZEIGE.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-SPEKTRUM-UND-AVRCP.md](archiv/auftraege/AUFTRAG-SPEKTRUM-UND-AVRCP.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](archiv/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) | Erledigter Auftrag |
+| [archiv/auftraege/AUFTRAG-WEBUI-SANIERUNG.md](archiv/auftraege/AUFTRAG-WEBUI-SANIERUNG.md) | Erledigter Auftrag |
+| [archiv/MIGRATION_BACKLOG.md](archiv/MIGRATION_BACKLOG.md) | Migration-Backlog |
+| [archiv/MIGRATION_STRUCTURE.md](archiv/MIGRATION_STRUCTURE.md) | Migration-Struktur |
 
 ### Geplant (noch nicht vorhanden)
 
 | Dokument | Arbeitspaket |
 |----------|--------------|
 | `fahrzeug/BMW-DISPLAY-PROBE.md` | G2 — Display-Pfad im Fahrzeug |
-| `fahrzeug/BMW-USB-MSC-PROBE.md` | Messung zur Idee USB-MSC-Menü (nach Stick-Spike) |
-| `planung/UMBAU-USB-MSC.md` | PiDrive-Arbeitspakete U0–U8 (nach G-USB-1; Skizze in PFAD-ESP32-PIDRIVE) |
-| ~~`esp32.pidrive`~~ | **angelegt:** https://github.com/MPunktBPunkt/esp32.pidrive — Planung/Hub dort; Firmware folgt |
+| `fahrzeug/BMW-USB-MSC-PROBE.md` | Messung zur Idee USB-MSC-Menü |
+| `planung/UMBAU-USB-MSC.md` | PiDrive-Arbeitspakete U0–U8 |
 
 ---
 
 ## Pfad-Mapping (alt → neu)
 
-Für repo-übergreifende Verweise (z. B. `esp32.bt-gateway`):
-
-| Alter Pfad (Repo-Wurzel) | Neuer Pfad |
-|--------------------------|------------|
-| `ARCHITECTURE.md` | `docs/architektur/ARCHITECTURE.md` |
-| `RUNTIME_FLOWS.md` | `docs/architektur/RUNTIME_FLOWS.md` |
-| `DEVELOPER_GUIDE.md` | `docs/architektur/DEVELOPER_GUIDE.md` |
+| Alter Pfad | Neuer Pfad |
+|------------|------------|
+| `docs/auftraege/AUFTRAG-*.md` | `docs/archiv/auftraege/AUFTRAG-*.md` |
+| `ARCHITECTURE.md` (Wurzel) | `docs/architektur/ARCHITECTURE.md` |
 | `TROUBLESHOOTING.md` | `docs/betrieb/TROUBLESHOOTING.md` |
-| `BluetoothError.md` | `docs/betrieb/BluetoothError.md` |
-| `iDriveBt.md` | `docs/fahrzeug/iDriveBt.md` |
-| `KontextPiDrive.md` | `docs/KontextPiDrive.md` |
-| `MIGRATION_BACKLOG.md` | `docs/archiv/MIGRATION_BACKLOG.md` |
-| `MIGRATION_STRUCTURE.md` | `docs/archiv/MIGRATION_STRUCTURE.md` |
-| `AUFTRAG-MENUE-UND-GATEWAY.md` | `docs/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md` |
+| `MIGRATION_*.md` | `docs/archiv/MIGRATION_*.md` |
 
 ---
 
@@ -84,35 +85,19 @@ Für repo-übergreifende Verweise (z. B. `esp32.bt-gateway`):
 ### Versionsstempel
 
 Jedes gepflegte Dokument beginnt mit `**Stand:** vX.Y.Z · <Datum>`. Wer ein Verhalten
-ändert, zieht den Stempel im betroffenen Dokument nach. Dokumente mit Stempel älter als
-zehn Patch-Versionen gelten als prüfbedürftig und werden im Index markiert.
+ändert, zieht den Stempel im betroffenen Dokument nach.
 
-### Neue Dokumente (verbindlich, D5)
+### Neue Dokumente
 
-- Immer unter `docs/<kategorie>/` anlegen — nie ins Repo-Wurzelverzeichnis.
-  Passt keine Kategorie, wird eine angelegt und hier begründet.
-- Dateinamen: `KEBAB-CASE.md`, deutsch, sprechend (z. B. `BMW-AVRCP-PROBE.md`).
-  Kein `camelCase`, kein `SCREAMING_SNAKE` mehr für neue Dateien.
+- Unter `docs/<kategorie>/` anlegen — nie ins Repo-Wurzelverzeichnis.
 - Im selben Commit in dieser Index-Datei eintragen (sonst schlägt `tools/check_docs.sh` fehl).
-- Ergebnis-Dokumente (Messungen, Abnahmen) tragen Datum und Version im Kopf und werden
-  **nicht** überschrieben, sondern ergänzt; Wiederholungsmessungen als neuer Abschnitt.
 
-### Link-Prüfung
+### Link-Prüfung / Offline-CI
 
 ```bash
 tools/check_docs.sh
-```
-
-Prüft relative Markdown-Links und meldet Dokumente ohne eingehenden Verweis (Waisen).
-
-### Offline-CI (GitHub Actions)
-
-```bash
 bash tools/ci_offline.sh
 ```
 
-Läuft auf jedem Push/PR (`.github/workflows/ci.yml`): Docs-Links, Shell-Syntax,
-`compileall`, pytest (Imports, ipc/status, Scanner-BW, source_state, Menü-Verify,
-WebUI-Check/Selftest, iDrive-Offline-Skript, Routen-Inventar, VERSION-Sync).
-
-HW-Suite `pidrivectl test all` bleibt am Raspberry Pi (RTL/BT/Audio).
+HW-Suite `pidrivectl test all` bleibt am Raspberry Pi (RTL/BT/Audio) und enthält
+WebUI-Live-Smoke (`tools/webui_live_smoke.py`, Diagnose-Tab, `pidrivectl webui smoke`).

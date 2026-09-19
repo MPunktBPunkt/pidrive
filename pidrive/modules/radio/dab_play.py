@@ -490,11 +490,19 @@ def _play_station_locked(station, S, settings=None):
         _err_tail_pos = 0
         _out_tail_pos = 0
 
-        for _ in range(lock_wait_max):
+        for _i in range(lock_wait_max):
             time.sleep(1.0)
             if _get_session() != session_id:
                 log.warn(f"DAB play: session superseded during lock wait {session_id}")
                 return False
+
+            # Indoor / kein Signal: nach 20s ohne jeden Sync abbrechen —
+            # sonst blockiert Stop/FM bis dab_wait_lock (90s).
+            if _i >= 19 and not sync_seen and not pcm_seen and not superframe_seen:
+                log.warn(
+                    f"DAB: nach {_i + 1}s kein Sync — Abbruch (schlechter Empfang)"
+                )
+                break
 
             try:
                 new_lines = []
@@ -608,12 +616,38 @@ def _play_station_locked(station, S, settings=None):
             _radio_started = True  # partieller Lock — besser als false-negative
             log.info("DAB: partieller Sync (sync_seen, kein Superframe) — playing=True für instabilen Betrieb")
         else:
-            # no_lock: DAB läuft noch (welle-cli), aber Status ehrlich halten
+            # no_lock: Stick freigeben — Recovery würde FM/Stop minutenlang blockieren
             S["radio_playing"] = False
             S["source_error"]  = "Kein Lock"
             S["dab_playback_state"] = "no_lock"
             _radio_started = False
-            log.warn(f"DAB: no_lock — welle-cli läuft weiter, Recovery-Monitor aktiv (session={session_id})")
+            log.warn(
+                f"DAB: no_lock — beende welle-cli (Stick freigeben) session={session_id}"
+            )
+            try:
+                import subprocess as _sp_nl
+                _sp_nl.run(
+                    ["pkill", "-9", "-f", "welle-cli"],
+                    timeout=3, capture_output=True,
+                )
+            except Exception:
+                pass
+            try:
+                if _rtlsdr:
+                    _rtlsdr.stop_process()
+            except Exception:
+                pass
+            try:
+                from modules.radio.rtlsdr import clear_stale_lock as _csl_nl
+                _csl_nl()
+            except Exception:
+                pass
+            _player_proc = None
+            S["dab_attempting"] = False
+            # Kein Recovery-Monitor bei no_lock — Quelle bleibt dab bis User wechselt,
+            # aber Stick ist frei für FM.
+            log.action("DAB", f"no_lock: {name} ({ch}) — Stick frei")
+            return False
 
         S["dab_attempting"] = dab_state in ("starting", "partial_sync", "no_lock")
         S["dab_last_error"] = last_err if last_err else ("" if _radio_started else "no_lock")
@@ -622,7 +656,7 @@ def _play_station_locked(station, S, settings=None):
         S["radio_type"] = "DAB"
         S["control_context"] = "radio_dab"
 
-        # Runtime-Monitor: Sync/PCM/DLS auch nach partiellem Lock weiter verfolgen
+        # Runtime-Monitor nur wenn wirklich Signal/PCM da war
         _start_recovery_monitor(session_id, name, S, settings)
 
         log.action("DAB", f"Wiedergabe: {name} ({ch}, sid={sid or '-'}) session={session_id} started={_radio_started}")
@@ -642,10 +676,89 @@ def _play_station_locked(station, S, settings=None):
 
 
 def stop(S):
-    global _player_proc, _scan_running
+    """Stop — Session sofort invalidieren + welle killen, auch wenn play noch im Lock-Wait ist."""
+    global _player_proc, _scan_running, _recovery_stop
 
-    with _dab_play_lock:
-        _stop_locked(S)
+    # 1) Soft-Signal: play-Loop prüft session jede Sekunde und bricht ab
+    try:
+        _clear_session()
+    except Exception:
+        pass
+    _scan_running = False
+    if _recovery_stop:
+        try:
+            _recovery_stop.set()
+        except Exception:
+            pass
+    try:
+        _stop_dls_thread()
+    except Exception:
+        pass
+
+    # 2) Hard-Kill ohne Lock — sonst blockiert Stop bis zu dab_wait_lock (90s)
+    try:
+        import subprocess as _sp_kill
+        _sp_kill.run(
+            ["pkill", "-9", "-f", "welle-cli"],
+            timeout=3, capture_output=True,
+        )
+    except Exception:
+        pass
+
+    # 3) State-Cleanup mit kurzem Lock-Timeout
+    acquired = False
+    try:
+        acquired = _dab_play_lock.acquire(timeout=1.0)
+    except Exception:
+        acquired = False
+    try:
+        if acquired:
+            _stop_locked(S)
+        else:
+            log.warn("DAB stop: Lock-Timeout — Force-Cleanup ohne Lock")
+            _force_stop_cleanup(S)
+    finally:
+        if acquired:
+            try:
+                _dab_play_lock.release()
+            except Exception:
+                pass
+
+
+def _force_stop_cleanup(S):
+    """Minimal-Cleanup wenn _dab_play_lock nicht greifbar (play hängt im Wait)."""
+    global _player_proc
+    _player_proc = None
+    try:
+        if _rtlsdr:
+            _rtlsdr.stop_process()
+    except Exception:
+        pass
+    try:
+        from modules.radio.rtlsdr import clear_stale_lock as _csl
+        _csl()
+    except Exception:
+        pass
+    if S.get("radio_type") in ("DAB", "DAB+"):
+        S["radio_playing"] = False
+        S["radio_station"] = ""
+        S["radio_name"] = ""
+        S["artist"] = ""
+        S["track"] = ""
+        S["dls_text"] = ""
+    _set_dab_status_fields(
+        S,
+        dab_state="idle",
+        dab_playback_state="idle",
+        dab_sync_ok=False,
+        dab_audio_ready=False,
+        dab_pcm_seen=False,
+        dab_sync_seen=False,
+        dab_superframe_seen=False,
+        dab_attempting=False,
+        dab_dls_text="",
+    )
+    log.info("DAB stop: force-cleanup done")
 
 
 def _stop_locked(S):
@@ -669,39 +782,40 @@ def _stop_locked(S):
                 except Exception:
                     pass
             _player_proc.terminate()
-            _player_proc.wait(timeout=2)
+            _player_proc.wait(timeout=1.5)
         except Exception:
-            pass
+            try:
+                _player_proc.kill()
+            except Exception:
+                pass
 
     if _rtlsdr:
         try:
             _rtlsdr.stop_process()
         except Exception:
             pass
-    # Orphan-Killer: alle welle-cli Prozesse beenden
     try:
         import subprocess as _sp_kill
-        _sp_kill.run("pkill -f welle-cli 2>/dev/null",
-                     shell=True, timeout=3, capture_output=True)
+        _sp_kill.run(
+            ["pkill", "-9", "-f", "welle-cli"],
+            timeout=3, capture_output=True,
+        )
     except Exception:
         pass
 
-    import subprocess as _sp, time as _tm
-    _sp.run("pkill -f welle-cli 2>/dev/null", shell=True, timeout=3, capture_output=True)
-    _tm.sleep(0.3)  # kurz warten damit pkill wirkt
+    time.sleep(0.25)
 
-    # RTL-SDR Lock-File clearen — welle-cli ist tot, Lock kann weg
     try:
         from modules.radio.rtlsdr import clear_stale_lock as _csl_dab
         _csl_dab()
-    except Exception: pass
+    except Exception:
+        pass
 
     _player_proc = None
 
-    if S.get("radio_type") == "DAB":
+    if S.get("radio_type") in ("DAB", "DAB+"):
         S["radio_playing"] = False
         S["radio_station"] = ""
-        # v0.10.55: Clear DLS/artist/track fields on stop to avoid stale display
         S["artist"] = ""
         S["track"] = ""
         S["dls_text"] = ""
@@ -720,7 +834,6 @@ def _stop_locked(S):
         dab_dls_text="",
     )
 
-    time.sleep(1.0)
     log.info("DAB stop: done")
 
 
@@ -761,10 +874,24 @@ def play_by_name(name, S, settings=None, service_id=""):
                     log.info(f"DAB play_by_name service_id match name={name!r} sid={service_id}")
                     return play_station(_normalize_station(s), S, settings=settings)
 
+        name_l = str(name or "").strip().lower()
+        # Exact match first
         for s in stations:
             if s.get("name", "") == name:
-                log.info(f"DAB play_by_name fallback name={name!r}")
+                log.info(f"DAB play_by_name exact name={name!r}")
                 return play_station(_normalize_station(s), S, settings=settings)
+        # Case-insensitive / partial
+        if name_l:
+            for s in stations:
+                sn = str(s.get("name", "") or "")
+                if sn.lower() == name_l or name_l in sn.lower():
+                    log.info(f"DAB play_by_name fuzzy name={name!r} → {sn!r}")
+                    return play_station(_normalize_station(s), S, settings=settings)
+            # id match (dab_…)
+            for s in stations:
+                if str(s.get("id", "") or "").lower() == name_l:
+                    log.info(f"DAB play_by_name id match id={name!r}")
+                    return play_station(_normalize_station(s), S, settings=settings)
 
         log.warn(f"DAB play_by_name: Station nicht gefunden name={name!r} sid={service_id!r}")
         return False

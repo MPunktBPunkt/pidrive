@@ -116,15 +116,20 @@ def clear_stale_lock():
 
 
 def find_rtl_processes():
-    """Laufende RTL-Prozesse (ps — kein Device-Zugriff)."""
-    r = _sh(r"ps ax -o pid=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' "
+    """Laufende RTL-Prozesse (ps — kein Device-Zugriff). Zombies ignorieren."""
+    # STAT mitlesen: Z/defunct halten kein Device mehr, blockieren aber Busy-Checks
+    r = _sh(r"ps ax -o pid=,stat=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' "
             r"| grep -v grep || true", timeout=3)
     procs = []
     for ln in r["out"].splitlines():
         ln = ln.strip()
-        m = re.match(r"^(\d+)\s+(.+)$", ln)
-        if m:
-            procs.append({"pid": int(m.group(1)), "cmd": m.group(2)})
+        m = re.match(r"^(\d+)\s+(\S+)\s+(.+)$", ln)
+        if not m:
+            continue
+        pid, stat, cmd = int(m.group(1)), m.group(2), m.group(3)
+        if "Z" in (stat or "") or "<defunct>" in (cmd or ""):
+            continue
+        procs.append({"pid": pid, "cmd": cmd, "stat": stat})
     return procs
 
 def get_throttled():
@@ -243,6 +248,11 @@ def reap_process():
     except Exception:
         rc = 0
     if rc is not None:
+        # wait() räumt Zombie-Eintrag in der Prozesstabelle
+        try:
+            proc.wait(timeout=0.2)
+        except Exception:
+            pass
         _release_runtime_lock()
 
 

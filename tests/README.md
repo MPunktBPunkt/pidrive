@@ -9,7 +9,8 @@
 | Golden Menü | `tests/golden/menu_tree.json` | CI + `pidrivectl menu verify` |
 | WebUI-Inventar | `tests/webui/routes.json` | CI + `pidrivectl webui check` |
 | iDrive-Skripte | `tests/idrive/*.txt` | CI offline / Pi live |
-| HW-Suite | `pidrivectl test all` | **nur Pi** (RTL/BT/Audio) |
+| HW-Suite | `pidrivectl test all` | **nur Pi** (RTL/BT/Audio); inkl. WebUI Live-Smoke |
+| WebUI Live-Smoke | `tools/webui_live_smoke.py` / `pidrivectl webui smoke` | Pi — Flows/Timings/State-Machine |
 
 CI schlägt fehl bei: Doc-Link-Brüchen, Import-Fehlern, Menü-Verlusten,
 WebUI-Vertragsbrüchen (Seiten/APIs/Buttons/onclick), fehlenden Statusfeldern,

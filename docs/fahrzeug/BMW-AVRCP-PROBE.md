@@ -2,7 +2,7 @@
 
 **Gemessen:** 2026-09-16 19:36  
 **Mitschnitt:** `/var/log/pidrive/bmw_hb_messung_20260916_193414/bmw_probe.btsnoop` (131605 dekodierte Zeilen)  
-**Auftrag:** [../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) Paket G1  
+**Auftrag:** [../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) Paket G1  
 **Auswertung:** `tools/bmw_avrcp_analyze.py` — Interpretationsschluessel vorab festgeschrieben
 
 ---

@@ -42,6 +42,7 @@
     "spotify_off",
     "spotify_on",
     "spotify_toggle",
+    "stop",
     "sys_info",
     "sys_version",
     "up",
@@ -223,6 +224,27 @@
       "file": "pidrive/web/app.py"
     },
     {
+      "path": "/api/webui/smoke",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/webui/smoke/start",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/webui/smoke/stop",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
       "path": "/api/grep",
       "methods": [
         "GET"
@@ -359,7 +381,14 @@
       "file": "pidrive/web/api/routes_audio.py"
     },
     {
-      "path": "/api/audio/listen",
+      "path": "/api/gain",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/volume",
       "methods": [
         "GET"
       ],
@@ -373,14 +402,7 @@
       "file": "pidrive/web/api/routes_audio.py"
     },
     {
-      "path": "/api/gain",
-      "methods": [
-        "GET"
-      ],
-      "file": "pidrive/web/api/routes_audio.py"
-    },
-    {
-      "path": "/api/volume",
+      "path": "/api/audio/listen",
       "methods": [
         "GET"
       ],

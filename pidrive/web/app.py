@@ -480,6 +480,44 @@ def api_diagnose():
     })
 
 
+@app.route("/api/webui/smoke", methods=["GET"])
+def api_webui_smoke_status():
+    """Status + Log-Tail + letztes JSON-Ergebnis des WebUI-Live-Smoke."""
+    try:
+        from web.shared.webui_smoke_runner import get_status
+        return jsonify({"ok": True, **get_status()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/webui/smoke/start", methods=["POST"])
+def api_webui_smoke_start():
+    """
+    Startet Live-Smoke im Hintergrund.
+    Body/Query: mode=quick|flows|full (default flows)
+    """
+    try:
+        from web.shared.webui_smoke_runner import start as smoke_start
+        data = request.get_json(silent=True) or {}
+        mode = (data.get("mode") or request.args.get("mode") or "flows").strip()
+        # Immer localhost — Test läuft auf dem Pi neben der WebUI
+        base = (data.get("base") or "http://127.0.0.1:8080").strip()
+        result = smoke_start(mode=mode, base=base)
+        code = 200 if result.get("ok") else 409
+        return jsonify(result), code
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/webui/smoke/stop", methods=["POST"])
+def api_webui_smoke_stop():
+    try:
+        from web.shared.webui_smoke_runner import stop as smoke_stop
+        return jsonify(smoke_stop())
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/api/grep")
 def api_grep():
     import shlex

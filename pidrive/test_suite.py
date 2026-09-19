@@ -1014,7 +1014,7 @@ def test_menu():
 
 
 def test_webui():
-    """W0/W1: webui check (V4 sichtbar) und selftest (shared-Imports)."""
+    """W0/W1: webui check/selftest + Live-Smoke (Buttons/APIs/State-Machine)."""
     _section("WEBUI", "🌐")
     from web import webui_check as _wc
     t0 = time.time()
@@ -1038,6 +1038,91 @@ def test_webui():
         _p(FAIL, "webui selftest", "Import/Aufruf-Fehler in web.shared", time.time() - t1)
     else:
         _p(PASS, "webui selftest", elapsed=time.time() - t1)
+
+    # Live-Smoke: gleiche Engine wie Diagnose-Tab
+    # PIDRIVE_WEBUI_SMOKE=off|quick|flows|full  (default: flows)
+    mode = (os.environ.get("PIDRIVE_WEBUI_SMOKE") or "flows").strip().lower()
+    if mode in ("0", "off", "skip", "none"):
+        _p(SKIP, "webui live smoke", "PIDRIVE_WEBUI_SMOKE=off")
+        return
+
+    t2 = time.time()
+    base = (os.environ.get("PIDRIVE_WEB") or "http://127.0.0.1:8080").rstrip("/")
+    # Web erreichbar?
+    ping = _run(
+        f"curl -s -m3 -o /dev/null -w '%{{http_code}}' {base}/api/core 2>/dev/null || echo 000"
+    )
+    if not (ping or "").strip().startswith("200"):
+        _p(SKIP, "webui live smoke", f"WebUI nicht erreichbar ({base} → {ping})",
+           time.time() - t2)
+        return
+
+    script = None
+    for cand in (
+        os.path.join(os.path.dirname(BASE_DIR), "tools", "webui_live_smoke.py"),
+        os.path.join(BASE_DIR, "tools", "webui_live_smoke.py"),
+        "/home/pidrive/pidrive/tools/webui_live_smoke.py",
+    ):
+        if os.path.isfile(cand):
+            script = cand
+            break
+    if not script:
+        _p(FAIL, "webui live smoke", "tools/webui_live_smoke.py fehlt", time.time() - t2)
+        return
+
+    json_out = "/tmp/pidrive_webui_smoke_testsuite.json"
+    cmd = ["python3", "-u", script, "--base", base, "--json-out", json_out]
+    if mode == "quick":
+        cmd.append("--quick")
+    elif mode == "full":
+        cmd.append("--full")
+    # flows = neither flag
+
+    _send_to_bmw("WebUI Live-Smoke", f"mode={mode}", "test webui")
+    try:
+        r = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=600,
+            env={**os.environ, "PYTHONUNBUFFERED": "1"},
+        )
+        elapsed = time.time() - t2
+        summary = {}
+        try:
+            with open(json_out, encoding="utf-8") as f:
+                report = json.load(f)
+            summary = report.get("summary") or {}
+            # Timeline kurz in Konsole
+            tl = report.get("timeline") or []
+            if tl:
+                print(f"  {DIM}State-Machine Timeline ({len(tl)} Events):{RST}")
+                for row in tl[-12:]:
+                    print(
+                        f"  {DIM}  {row.get('t','')} {row.get('label','')}: "
+                        f"src={row.get('source')} type={row.get('type')} "
+                        f"tr={row.get('transition')} {row.get('ms')}ms{RST}"
+                    )
+        except Exception:
+            report = None
+
+        detail = (
+            f"PASS={summary.get('PASS', 0)} WARN={summary.get('WARN', 0)} "
+            f"FAIL={summary.get('FAIL', 0)} SKIP={summary.get('SKIP', 0)} "
+            f"exit={r.returncode}"
+        )
+        fails = int(summary.get("FAIL") or 0) if summary else (1 if r.returncode else 0)
+        if r.returncode == 0 and fails == 0:
+            _p(PASS, f"webui live smoke ({mode})", detail, elapsed)
+        elif fails == 0 and r.returncode != 0:
+            # Script-Crash ohne JSON
+            tail = ((r.stdout or "") + (r.stderr or ""))[-300:]
+            _p(FAIL, f"webui live smoke ({mode})", f"exit={r.returncode} {tail}", elapsed)
+        elif fails > 0:
+            _p(FAIL, f"webui live smoke ({mode})", detail, elapsed)
+        else:
+            _p(WARN, f"webui live smoke ({mode})", detail, elapsed)
+    except subprocess.TimeoutExpired:
+        _p(FAIL, f"webui live smoke ({mode})", "Timeout 600s", time.time() - t2)
+    except Exception as e:
+        _p(FAIL, f"webui live smoke ({mode})", str(e)[:80], time.time() - t2)
 
 
 def run_all():

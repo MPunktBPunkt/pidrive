@@ -139,7 +139,7 @@ Oder: `bash ~/apply-web-fast-boot.sh` (legt die Unit und startet neu).
 umgeht PipeWire — A2DP bleibt unerreichbar. Webradio/FM/Spotify laufen über `mpv` →
 PipeWire und sind am Fahrzeug hörbar.
 
-Messung / Umbau: [AUFTRAG-DAB-AUDIOWEG.md](../auftraege/AUFTRAG-DAB-AUDIOWEG.md)
+Messung / Umbau: [AUFTRAG-DAB-AUDIOWEG.md](../archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md)
 (DA1–DA5, Ziel: `welle-cli -w` + `mpv`).
 
 Schnellcheck am Pi (Klinke vs. BT):
@@ -454,7 +454,7 @@ sudo wpa_cli -i wlan0 list_networks
 ### Recovery läuft im Fahrzeug alle 5 Minuten ins Leere
 
 Bekannt und **noch nicht behoben** — siehe Paket W-A in
-[../auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](../auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) §12.1.
+[../archiv/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md](../archiv/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md) §12.1.
 
 `wlan_ok()` in `scripts/wifi-recover.sh` fragt nur, ob eine SSID anliegt. Im Fahrzeug ohne
 eingeschalteten Hotspot ist das dauerhaft falsch, und der Timer (`OnUnitActiveSec=5min`)

@@ -288,7 +288,7 @@ Später eigenes Dokument unter `docs/planung/`. Arbeitspakete (Vorschlag):
 
 **Nicht** im Umbauplan: AVRCP-Browsing wiederbeleben; Menülogik nur im ESP; Variante A als Produktziel.
 
-**Vorarbeit die sich lohnt unabhängig vom USB-Pfad:** kopflose UID-Menü-API ([AUFTRAG-MENUE-UND-GATEWAY.md](../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md)) — gleicher Vertrag für WebUI, CLI und späteren FAT-Export.
+**Vorarbeit die sich lohnt unabhängig vom USB-Pfad:** kopflose UID-Menü-API ([AUFTRAG-MENUE-UND-GATEWAY.md](../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md)) — gleicher Vertrag für WebUI, CLI und späteren FAT-Export.
 
 ---
 

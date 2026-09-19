@@ -311,9 +311,11 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 ipc.clear_progress()
         bg(_do_rtlsdr_reset)
 
-    elif cmd == "radio_stop":
+    elif cmd in ("radio_stop", "stop"):
         def _radio_stop():
             from modules.playback_meta import clear_playback_metadata
+            # Invalidiert in-flight play_* (sonst recommittet alter DAB/Web-Thread)
+            source_state.bump_play_gen("radio_stop")
             if source_state.begin_transition("trigger:radio_stop", "idle"):
                 try:
                     webradio.stop(S)
@@ -330,11 +332,18 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     S["radio_station"] = ""
                     S["radio_name"] = ""
                     S["radio_type"] = ""
+                    S["dab_playback_state"] = "idle"
                     S["control_context"] = "idle"
+                    try:
+                        source_state.set_dab_playback_state("idle")
+                    except Exception:
+                        pass
                     source_state.commit_source("idle")
                 finally:
                     source_state.end_transition()
             else:
+                # Transition blockiert — trotzdem hart stoppen + Idle erzwingen
+                source_state.force_end_transition("radio_stop_override")
                 webradio.stop(S)
                 dab.stop(S)
                 fm.stop(S)
@@ -349,8 +358,13 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 S["radio_station"] = ""
                 S["radio_name"] = ""
                 S["radio_type"] = ""
+                S["dab_playback_state"] = "idle"
                 S["control_context"] = "idle"
-                source_state.commit_source("idle")
+                try:
+                    source_state.set_dab_playback_state("idle")
+                except Exception:
+                    pass
+                source_state.commit_source("idle", auto_end=True)
         bg(_radio_stop)
 
     elif cmd == "radio_restart_on_bt":

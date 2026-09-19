@@ -4,7 +4,7 @@
 **Fahrzeug:** BMW 38304 (`D4:36:39:CF:E1:B5`) — Headunit mit iDrive / NBT-Evo-Linie  
 **Pi:** `Pidrive` · WLAN `192.168.178.105` · VERSION **0.11.141** (MPRIS-Fix live; Repo-HEAD am Pi ggf. älter)  
 **Messablage:** `/var/log/pidrive/bmw_hb_messung_20260916_193414/`  
-**Verwandt:** [BMW-AVRCP-PROBE.md](BMW-AVRCP-PROBE.md) · [AUFTRAG-BLUETOOTH-FUNDAMENT.md](../auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) · [iDriveBt.md](iDriveBt.md)
+**Verwandt:** [BMW-AVRCP-PROBE.md](BMW-AVRCP-PROBE.md) · [AUFTRAG-BLUETOOTH-FUNDAMENT.md](../archiv/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) · [iDriveBt.md](iDriveBt.md)
 
 Nach Zündung aus: Agent **19:39:19** `Connected … connected=False`; danach wiederholt `avdtp … Host is down`.  
 **Ist-Zustand jetzt:** Paired/Bonded/Trusted = **ja**, Connected = **nein** — erwartbar.

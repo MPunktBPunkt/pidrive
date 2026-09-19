@@ -73,7 +73,7 @@ _EXACT_TRIGGERS = frozenset({
     "bt_on", "bt_off", "bt_toggle",
     "wifi_scan", "bt_scan",
     "bt_disconnect", "bt_reconnect_last", "bt_backup", "bt_restore",
-    "rtlsdr_reset", "radio_stop", "radio_restart_on_bt", "library_stop",
+    "rtlsdr_reset", "radio_stop", "stop", "radio_restart_on_bt", "library_stop",
     "dab_scan", "dab_scan_replace", "fm_scan",
     "web_next", "web_prev",
     "fm_next", "fm_prev", "dab_next", "dab_prev",

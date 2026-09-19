@@ -204,7 +204,7 @@ curl -s 'http://127.0.0.1:8080/api/spectrum/last' | python3 -m json.tool
 | **`is_busy`** | `True` wenn `find_rtl_processes()` **oder** `STATE_FILE.locked` | `rtlsdr.py`: `STATE_FILE=/tmp/pidrive_rtlsdr_state.json`, `LOCK_FILE=/tmp/pidrive_rtlsdr.lock` |
 | **stdout-Bug** | Legacy `capture_spectrum` startet `rtl_sdr … -n N` **ohne** Dateiname `"-"` → Binary druckt Usage, stdout leer → `"keine IQ-Daten"`. `RTLSDRBackend` hat `cmd += ["-"]` korrekt | `spectrum.py` `capture_spectrum` vs. `RTLSDRBackend.capture_iq` |
 
-Auftrag-Kontext: `docs/auftraege/AUFTRAG-WEBUI-SANIERUNG.md` Abschnitte **F6–F9**, DoD W8, H2.11/H2.12.
+Auftrag-Kontext: `docs/archiv/auftraege/AUFTRAG-WEBUI-SANIERUNG.md` Abschnitte **F6–F9**, DoD W8, H2.11/H2.12.
 
 ### Nachmessung am Pi (Idle, ~17:56 UTC+2, gleiche Session)
 
@@ -294,7 +294,7 @@ curl -s -X POST 'http://127.0.0.1:8080/api/spectrum/capture?mode=snapshot&center
 
 ### Fazit
 
-Testkette TK-A/C/E wirkt: DAB/Spotify verdrehen den Exit-Status nicht mehr. TK-B zeigt einen echten Scanner-Pfad-Bug (commit ohne Gerät / Belegt trotz Stop). MPRIS2 und Scanner-Gerät sind die nächsten Fixes; SP-* noch offen. Auftrag: `docs/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md`.
+Testkette TK-A/C/E wirkt: DAB/Spotify verdrehen den Exit-Status nicht mehr. TK-B zeigt einen echten Scanner-Pfad-Bug (commit ohne Gerät / Belegt trotz Stop). MPRIS2 und Scanner-Gerät sind die nächsten Fixes; SP-* noch offen. Auftrag: `docs/archiv/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md`.
 
 ---
 

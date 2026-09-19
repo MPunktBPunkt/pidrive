@@ -40,6 +40,7 @@ STATE = {
     "stale_cleared":    0,        # v0.10.55: Zähler für automatisch abgeräumte Stale-Transitions
     "dab_playback_state": "idle",   # idle | starting | locked | no_lock | failed
     "playback_epoch": 0,
+    "play_gen": 0,               # Invalidiert in-flight play_*/stop-Threads
     "history": [],               # W7/Z10: letzte Übergänge (Ringpuffer)
 }
 
@@ -252,6 +253,22 @@ def force_end_transition(reason: str = "error"):
         _write_state_file()
 
 
+def bump_play_gen(reason: str = "") -> int:
+    """Neue User-Intention (play/stop) — alte bg-Threads sollen nicht mehr committen."""
+    with _LOCK:
+        STATE["play_gen"] = int(STATE.get("play_gen", 0) or 0) + 1
+        gen = STATE["play_gen"]
+        _write_state_file()
+        if reason:
+            log.info(f"SOURCE play_gen={gen} ({reason})")
+        return gen
+
+
+def is_play_gen(gen: int) -> bool:
+    with _LOCK:
+        return int(STATE.get("play_gen", 0) or 0) == int(gen)
+
+
 # ── Audio-Route ──────────────────────────────────────────────────────────────
 
 def set_audio_route(route: str):
@@ -287,6 +304,16 @@ def set_bt_audio_state(state: str):
         STATE["bt_audio_state"] = state
         if old != state:
             log.info(f"SOURCE bt_audio_state: {old} → {state}")
+        _write_state_file()
+
+
+def set_dab_playback_state(state: str):
+    """Spiegel für dab_playback_state (idle|starting|locked|no_lock|failed)."""
+    with _LOCK:
+        old = STATE.get("dab_playback_state", "idle")
+        STATE["dab_playback_state"] = state or "idle"
+        if old != STATE["dab_playback_state"]:
+            log.info(f"SOURCE dab_playback_state: {old} → {STATE['dab_playback_state']}")
         _write_state_file()
 
 

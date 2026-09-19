@@ -272,16 +272,44 @@ def handle(cmd, menu_state, store, S, settings, bg):
     # ── pidrivectl High-Level Play-Trigger ─────────────────────────────────
     elif cmd.startswith("play_dab:"):
         _query = cmd.split(":", 1)[1].strip()
+        _gen = source_state.bump_play_gen("play_dab")
 
         def _run_cli_dab():
             _sid = _query if _query.startswith("0x") else ""
             try:
+                if not source_state.is_play_gen(_gen):
+                    log.info(f"CLI play_dab: superseded before start {_query!r}")
+                    return
+                _clear_meta(S)
                 try: webradio.stop(S)
                 except Exception: pass
                 try: fm.stop(S)
                 except Exception: pass
+                if not source_state.is_play_gen(_gen):
+                    return
+                # Früher Commit: play_by_name blockiert bis zu dab_wait_lock (90s).
+                # Sonst bleibt die WebUI auf der alten Quelle (z.B. FM) stehen.
+                if source_state.begin_transition("webui:play_dab", "dab"):
+                    try:
+                        if not source_state.is_play_gen(_gen):
+                            return
+                        S["radio_type"] = "DAB+"
+                        S["radio_name"] = _query
+                        S["radio_station"] = f"DAB: {_query}"
+                        S["radio_playing"] = False
+                        S["control_context"] = "radio_dab"
+                        source_state.commit_source("dab")
+                    finally:
+                        source_state.end_transition()
+                if not source_state.is_play_gen(_gen):
+                    log.info(f"CLI play_dab: superseded after commit {_query!r}")
+                    return
                 _dab_ok = dab.play_by_name(_query, S, settings=settings, service_id=_sid)
+                if not source_state.is_play_gen(_gen):
+                    log.info(f"CLI play_dab: superseded after play {_query!r}")
+                    return
                 if _dab_ok is not None:
+                    # erneut committen falls play_station Zwischenzustände gesetzt hat
                     source_state.commit_source("dab")
                     if _dab_ok:
                         log.info(f"CLI play_dab: {_query!r} lock ok")
@@ -301,68 +329,168 @@ def handle(cmd, menu_state, store, S, settings, bg):
 
     elif cmd.startswith("play_fm:"):
         _query = cmd.split(":", 1)[1].strip()
-        try:
-            import json as _fj
-            _cfg_dir = os.path.join(os.path.dirname(os.path.dirname(
-                os.path.abspath(__file__))), "config")
-            _fm_path = os.path.join(_cfg_dir, "fm_stations.json")
-            _fm_data = _fj.load(open(_fm_path))
-            _fm_all  = _fm_data.get("stations", []) if isinstance(_fm_data, dict) else _fm_data
-            _match = next((s for s in _fm_all if
-                           _query.lower() in s.get("name","").lower()
-                           or _query == str(s.get("freq",""))
-                           or _query == str(s.get("freq_mhz",""))), None)
-            if not _match and _query.replace(".","").isdigit():
-                _match = {"name": f"FM {_query}", "freq_mhz": float(_query)}
-            if _match:
+        _gen = source_state.bump_play_gen("play_fm")
+
+        def _run_cli_fm():
+            try:
+                if not source_state.is_play_gen(_gen):
+                    log.info(f"CLI play_fm: superseded before start {_query!r}")
+                    return
+                import json as _fj
+                _cfg_dir = os.path.join(os.path.dirname(os.path.dirname(
+                    os.path.abspath(__file__))), "config")
+                _fm_path = os.path.join(_cfg_dir, "fm_stations.json")
+                _fm_data = _fj.load(open(_fm_path))
+                _fm_all  = _fm_data.get("stations", []) if isinstance(_fm_data, dict) else _fm_data
+                _match = None
+                if _query:
+                    # 1) Frequenz exakt (Float-tolerant) — verhindert "90" ∈ "Radio 90.2"-Falschtreffer
+                    try:
+                        _qf = float(_query.replace(",", "."))
+                    except ValueError:
+                        _qf = None
+                    if _qf is not None:
+                        for s in _fm_all:
+                            for key in ("freq_mhz", "freq"):
+                                try:
+                                    if abs(float(s.get(key)) - _qf) < 0.05:
+                                        _match = s
+                                        break
+                                except (TypeError, ValueError):
+                                    pass
+                            if _match:
+                                break
+                    # 2) Name exakt, dann Teilstring
+                    if not _match:
+                        _ql = _query.lower()
+                        _match = next((s for s in _fm_all if s.get("name", "").lower() == _ql), None)
+                    if not _match and len(_query) >= 3:
+                        _ql = _query.lower()
+                        _match = next(
+                            (s for s in _fm_all if _ql in s.get("name", "").lower()),
+                            None,
+                        )
+                if not _match and _query:
+                    _q2 = _query.replace(",", ".")
+                    try:
+                        _freq_f = float(_q2)
+                        if 76.0 <= _freq_f <= 108.0:
+                            _match = {"name": f"FM {_freq_f:g}", "freq_mhz": _freq_f}
+                    except ValueError:
+                        pass
+                if not _match:
+                    log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
+                    return
+
+                if not source_state.is_play_gen(_gen):
+                    return
                 _clear_meta(S)
+                # DAB zuerst hart stoppen — freigibt Stick auch aus Lock-Wait
                 try: webradio.stop(S)
                 except Exception: pass
                 try: dab.stop(S)
                 except Exception: pass
-                _freq = str(_match.get("freq") or _match.get("freq_mhz",""))
-                _fm_ok = fm.play_station({"name": _match["name"], "freq": _freq}, S, settings)
+
+                if not source_state.is_play_gen(_gen):
+                    log.info(f"CLI play_fm: superseded after stop {_query!r}")
+                    return
+
+                if source_state.begin_transition("webui:play_fm", "fm"):
+                    try:
+                        if not source_state.is_play_gen(_gen):
+                            return
+                        S["radio_type"] = "FM"
+                        S["radio_name"] = _match.get("name") or _query
+                        _fx = str(_match.get("freq") or _match.get("freq_mhz") or _query)
+                        S["radio_station"] = f"FM: {S['radio_name']} ({_fx} MHz)"
+                        S["radio_playing"] = False
+                        S["control_context"] = "radio_fm"
+                        source_state.commit_source("fm")
+                    finally:
+                        source_state.end_transition()
+
+                if not source_state.is_play_gen(_gen):
+                    return
+                _freq = str(_match.get("freq") or _match.get("freq_mhz", ""))
+                _fm_ok = fm.play_station(
+                    {"name": _match["name"], "freq": _freq}, S, settings
+                )
+                if not source_state.is_play_gen(_gen):
+                    log.info(f"CLI play_fm: superseded after play {_query!r}")
+                    return
                 if _fm_ok is not False:
                     source_state.commit_source("fm")
                     try:
                         from mpv_meta import write_source_history as _wsh
-                        _wsh("fm", _match.get("name") or S.get("radio_name") or _freq_str or "FM", _freq_str or "")
-                    except Exception: pass
+                        _wsh(
+                            "fm",
+                            _match.get("name") or S.get("radio_name") or _freq or "FM",
+                            _freq or "",
+                        )
+                    except Exception:
+                        pass
                     log.info(f"CLI play_fm: {_match['name']} ({_freq} MHz)")
                 else:
-                    log.warn(f"CLI play_fm: Fehler beim Starten — {S.get('source_error','?')}")
+                    log.warn(
+                        f"CLI play_fm: Fehler beim Starten — {S.get('source_error', '?')}"
+                    )
                     import modules.source_state as _sst_fm
                     _sst_fm.commit_source("idle", auto_end=True)
-            else:
-                log.warn(f"CLI play_fm: Sender nicht gefunden: {_query!r}")
-        except Exception as e:
-            log.error(f"CLI play_fm Fehler: {e}")
+            except Exception as e:
+                log.error(f"CLI play_fm Fehler: {e}")
+
+        bg(_run_cli_fm)
 
     elif cmd.startswith("play_web:"):
         # Format: play_web:<name_or_id>
         _query = cmd.split(":", 1)[1].strip()
-        try:
-            _stations = webradio.load_stations()
-            _match = next((s for s in _stations if
-                           _query.lower() in (s.get("name","")).lower()
-                           or _query == str(s.get("id","")))
-                          , None)
-            if _match:
+        _gen = source_state.bump_play_gen("play_web")
+
+        def _run_cli_web():
+            try:
+                if not source_state.is_play_gen(_gen):
+                    return
+                _stations = webradio.load_stations()
+                _match = next((s for s in _stations if
+                               _query.lower() in (s.get("name","")).lower()
+                               or _query == str(s.get("id","")))
+                              , None)
+                if not _match:
+                    log.warn(f"CLI play_web: Sender nicht gefunden: {_query!r}")
+                    return
                 try: dab.stop(S)
                 except Exception: pass
                 try: fm.stop(S)
                 except Exception: pass
+                if not source_state.is_play_gen(_gen):
+                    return
+                if source_state.begin_transition("webui:play_web", "webradio"):
+                    try:
+                        if not source_state.is_play_gen(_gen):
+                            return
+                        S["radio_type"] = "WEB"
+                        S["radio_name"] = _match.get("name") or _query
+                        S["radio_station"] = f"WEB: {S['radio_name']}"
+                        S["radio_playing"] = False
+                        S["control_context"] = "radio_web"
+                        source_state.commit_source("webradio")
+                    finally:
+                        source_state.end_transition()
+                if not source_state.is_play_gen(_gen):
+                    return
                 webradio.play_station(_match, S, settings)
+                if not source_state.is_play_gen(_gen):
+                    return
                 source_state.commit_source("webradio")
                 try:
                     from mpv_meta import write_source_history as _wsh2
                     _wsh2("webradio", _match.get("name") or S.get("radio_name") or "", "")
                 except Exception: pass
                 log.info(f"CLI play_web: {_match['name']}")
-            else:
-                log.warn(f"CLI play_web: Sender nicht gefunden: {_query!r}")
-        except Exception as e:
-            log.error(f"CLI play_web Fehler: {e}")
+            except Exception as e:
+                log.error(f"CLI play_web Fehler: {e}")
+
+        bg(_run_cli_web)
 
     elif cmd.startswith("favorites_play:"):
         # Format: favorites_play:<index_or_name>

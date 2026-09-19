@@ -1,5 +1,7 @@
 # pidrivectl spectrum — UKW-Peak-Scan
 
+**Stand:** v0.11.143 · 2026-09-19
+
 ## Kommando
 
 ```bash

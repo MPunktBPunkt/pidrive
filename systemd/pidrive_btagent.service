@@ -9,7 +9,7 @@
 # Wichtig: die alte bluetoothctl-Sitzung in bt_agent.py muss abgeschaltet
 # sein (Paket BF-E). Sonst streiten sich beide um RequestDefaultAgent.
 Description=PiDrive Bluetooth Pairing Agent
-Documentation=file:///home/pidrive/pidrive/docs/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md
+Documentation=file:///home/pidrive/pidrive/docs/archiv/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md
 After=bluetooth.service dbus.service
 Wants=bluetooth.service
 PartOf=bluetooth.service

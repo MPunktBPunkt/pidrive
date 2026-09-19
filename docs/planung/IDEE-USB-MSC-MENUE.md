@@ -5,7 +5,7 @@
 **Anlass:** Nach negativer AVRCP-Browsing-Probe (G1) fehlt ein Weg zu einem echten Listenmenü am NBT Evo.  
 **Bezug:**
 - [../fahrzeug/BMW-AVRCP-PROBE.md](../fahrzeug/BMW-AVRCP-PROBE.md) — PSM `0x001B` wird nicht geöffnet → S3/Browsing gestrichen
-- [../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) — 3-Zeilen-Pfad bleibt BT-Zielbild
+- [../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) — 3-Zeilen-Pfad bleibt BT-Zielbild
 - [../menue/MENU-ERGONOMIE.md](../menue/MENU-ERGONOMIE.md) — Skip-only-Kosten des heutigen Menüs
 - Schwesterprojekt `esp32.bt-gateway` — Classic-ESP32 für A2DP/AVRCP; **bewusst kein** ESP32-S3
 - Referenzprodukt: [Dension DAB+U](https://www.ars24.com/dab-nachruestung/16605/dension-dab-u-interface-zum-nachruesten-von-dab-am-werks-autoradio-per-usb) (virtuelle MP3 über USB)

@@ -323,6 +323,19 @@ def _ensure_a2dp_stack_or_recover(*, allow_bluetooth_restart=False, wait_seconds
     log.info(f"BT connect: warte auf A2DP-Stack ({reason}) …")
     if wait_for_a2dp_stack(timeout=wait_seconds):
         return True
+    # Kein PipeWire-Restart wenn Audio bewusst lokal (Klinke/HDMI/USB) —
+    # Recovery killt mpv/Monitor und hinterlässt RTL-Zombies.
+    try:
+        from settings import load_settings as _ls
+        _ao = str((_ls() or {}).get("audio_output") or "").lower()
+    except Exception:
+        _ao = ""
+    if _ao in ("klinke", "hdmi", "usb_gadget", "usb", "jack", "analog"):
+        log.warn(
+            f"BT connect: A2DP-Stack nicht bereit ({reason}) — "
+            f"Recovery übersprungen (audio_output={_ao})"
+        )
+        return False
     log.warn("BT connect: A2DP-Stack noch nicht bereit — WirePlumber-Recovery (ohne bluetooth)")
     return try_recover_a2dp_stack(include_bluetooth=allow_bluetooth_restart)
 
@@ -703,7 +716,15 @@ def _connect_device_inner(mac, S, settings, *, allow_pair=True, require_rf=False
                 "A2DP fehlt — WirePlumber neu starten (kein Pairing)",
                 color="orange",
             )
-            try_recover_a2dp_stack(include_bluetooth=False)
+            # Nur wenn Audio wirklich auf BT geht — sonst killt Recovery lokale Wiedergabe
+            _ao = str((settings or {}).get("audio_output") or "").lower()
+            if _ao in ("klinke", "hdmi", "usb_gadget", "usb", "jack", "analog"):
+                log.warn(
+                    f"BT connect: A2DP-Profile-Fehler — Recovery übersprungen "
+                    f"(audio_output={_ao})"
+                )
+            else:
+                try_recover_a2dp_stack(include_bluetooth=False)
             connected_ok, conn_info = _ensure_connected(mac, retries=2)
         if not connected_ok:
             reason = _classify_connect_failure(conn_info or "")

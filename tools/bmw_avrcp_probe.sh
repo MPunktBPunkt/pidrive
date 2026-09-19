@@ -1,7 +1,7 @@
 #!/bin/bash
 # bmw_avrcp_probe.sh — Phase-(-1)-Messung: oeffnet das NBT Evo den AVRCP-Browsing-Kanal?
 #
-# Umsetzung von Paket G1 in docs/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md.
+# Umsetzung von Paket G1 in docs/archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md.
 # Diese Messung entscheidet im Gateway-Repo ueber A17 (Bluetooth-Stack) und A18
 # (Menue-Transport) und laeuft mit vorhandener Hardware — kein ESP32 noetig.
 #

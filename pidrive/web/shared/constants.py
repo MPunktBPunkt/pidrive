@@ -39,6 +39,7 @@ ALLOWED_COMMANDS = {
     "bt_disconnect", "bt_reconnect_last",
     "spotify_on", "spotify_off", "spotify_toggle", "play_spotify",
     "radio_stop", "library_stop",
+    "stop",  # Alias → radio_stop (Web/CLI Kompatibilität)
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all", "audio_usb_gadget",
     "vol_up", "vol_set", "vol_down",
     "gain_fm_auto", "gain_dab_auto",

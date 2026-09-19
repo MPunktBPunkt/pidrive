@@ -94,37 +94,56 @@ def api_audio_listen():
     ) != 0:
         return jsonify({"ok": False, "error": "ffmpeg fehlt"}), 500
 
-    cmd = build_listen_ffmpeg_cmd(info["source"])
     env = dict(os.environ)
     env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
-
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env,
-            bufsize=0,
-        )
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+    monitor_src = info["source"]
 
     def generate():
-        try:
-            while True:
-                chunk = proc.stdout.read(4096)
-                if not chunk:
-                    break
-                yield chunk
-        finally:
+        # Bei Pulse/PipeWire-Neustart ffmpeg neu starten (Monitor bleibt nutzbar)
+        backoff = 0.4
+        while True:
+            proc = None
             try:
-                proc.terminate()
-                proc.wait(timeout=2)
-            except Exception:
+                # Source ggf. neu auflösen (Default-Sink kann wechseln)
                 try:
-                    proc.kill()
+                    from web.shared.audio import resolve_listen_monitor_source
+                    fresh = resolve_listen_monitor_source()
+                    src = fresh.get("source") if fresh.get("ok") else monitor_src
                 except Exception:
-                    pass
+                    src = monitor_src
+                if not src:
+                    time.sleep(min(backoff, 3.0))
+                    backoff = min(backoff * 1.5, 3.0)
+                    continue
+                proc = subprocess.Popen(
+                    build_listen_ffmpeg_cmd(src),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env,
+                    bufsize=0,
+                )
+                backoff = 0.4
+                while True:
+                    chunk = proc.stdout.read(4096)
+                    if not chunk:
+                        break
+                    yield chunk
+            except GeneratorExit:
+                raise
+            except Exception:
+                pass
+            finally:
+                if proc is not None:
+                    try:
+                        proc.terminate()
+                        proc.wait(timeout=1.5)
+                    except Exception:
+                        try:
+                            proc.kill()
+                        except Exception:
+                            pass
+            time.sleep(min(backoff, 3.0))
+            backoff = min(backoff * 1.5, 3.0)
 
     headers = {
         "Content-Type": "audio/mpeg",

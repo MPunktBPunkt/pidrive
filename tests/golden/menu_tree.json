@@ -52,17 +52,76 @@
     "playable": false
   },
   {
-    "path": "root/favoriten/fav_empty",
-    "id": "fav_empty",
-    "type": "info",
+    "path": "root/favoriten/favx_web_rock_antenne",
+    "id": "favx_web_rock_antenne",
+    "type": "station",
     "action": null,
-    "source": null,
-    "meta": {},
-    "label": "Noch keine Favoriten",
-    "path_id": "root/favoriten/fav_empty",
-    "uid": 18039893595583045120,
-    "skip_on_nav": true,
-    "playable": false
+    "source": "webradio",
+    "meta": {
+      "url": "https://stream.rockantenne.de/rockantenne/stream/mp3",
+      "name": "Rock Antenne",
+      "genre": "Rock",
+      "favorite": true
+    },
+    "label": "<BT_PREFIX>Rock Antenne",
+    "path_id": "root/favoriten/favx_web_rock_antenne",
+    "uid": 3428222402667302393,
+    "skip_on_nav": false,
+    "playable": true
+  },
+  {
+    "path": "root/favoriten/favx_web_rock_antenne_bayern",
+    "id": "favx_web_rock_antenne_bayern",
+    "type": "station",
+    "action": null,
+    "source": "webradio",
+    "meta": {
+      "url": "https://stream.rockantenne.de/rockantenne-bayern/stream/mp3",
+      "name": "Rock Antenne Bayern",
+      "genre": "Rock",
+      "favorite": true
+    },
+    "label": "<BT_PREFIX>Rock Antenne Bayern",
+    "path_id": "root/favoriten/favx_web_rock_antenne_bayern",
+    "uid": 15741711829939055381,
+    "skip_on_nav": false,
+    "playable": true
+  },
+  {
+    "path": "root/favoriten/favx_web_radio_bob",
+    "id": "favx_web_radio_bob",
+    "type": "station",
+    "action": null,
+    "source": "webradio",
+    "meta": {
+      "url": "https://streams.radiobob.de/bob-national/mp3-128",
+      "name": "Radio BOB!",
+      "genre": "Rock",
+      "favorite": true
+    },
+    "label": "<BT_PREFIX>Radio BOB!",
+    "path_id": "root/favoriten/favx_web_radio_bob",
+    "uid": 8491163567776648871,
+    "skip_on_nav": false,
+    "playable": true
+  },
+  {
+    "path": "root/favoriten/favx_web_rock_fm",
+    "id": "favx_web_rock_fm",
+    "type": "station",
+    "action": null,
+    "source": "webradio",
+    "meta": {
+      "url": "https://liveradio.swr.de/sw282p3/rockfm/play.mp3",
+      "name": "SWR Rock FM",
+      "genre": "Rock",
+      "favorite": true
+    },
+    "label": "<BT_PREFIX>SWR Rock FM",
+    "path_id": "root/favoriten/favx_web_rock_fm",
+    "uid": 3607917656833430363,
+    "skip_on_nav": false,
+    "playable": true
   },
   {
     "path": "root/sources",

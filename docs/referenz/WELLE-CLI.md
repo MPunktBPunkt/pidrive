@@ -7,7 +7,7 @@
 > `welle-cli --help` auf dem Gerät abrufen und die Ausgabe nach `docs/ABNAHMEN.md` legen.
 >
 > Am 2026-09-16 gegen v0.11.139 gegengelesen. Ergebnis in
-> [`../auftraege/AUFTRAG-DAB-AUDIOWEG.md`](../auftraege/AUFTRAG-DAB-AUDIOWEG.md) §5
+> [`../archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md`](../archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md) §5
 > als DA-P1 bis DA-P5. Bestätigt: die Gain-Umrechnung in `dab_helpers.py`
 > `_get_dab_gain()` folgt dieser Referenz korrekt (Index statt dB) — **nicht „begradigen"**.
 
@@ -199,7 +199,7 @@ gleichzeitig Audio produzieren müssen. Das ist der korrekte Scan-Modus für PiD
 
 > **Achtung für die Wiedergabe:** der Carousel **wechselt** das Programm zyklisch. Für die
 > Tonwiedergabe eines festen Senders ist `-C` deshalb falsch — siehe DA-P3 in
-> [AUFTRAG-DAB-AUDIOWEG.md](../auftraege/AUFTRAG-DAB-AUDIOWEG.md).
+> [AUFTRAG-DAB-AUDIOWEG.md](../archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md).
 
 #### `-P` — Carousel-PAD-Modus
 
@@ -887,7 +887,7 @@ welle-cli -c 11D -g -1 -p 'Bayern 1' 2>/tmp/pidrive_dab_welle.err | \
 > **Abweichung im heutigen PiDrive (v0.11.139):** dieser Pipe-Weg wird **nicht** genutzt.
 > `dab_play.py` lässt `welle-cli` selbst auf ALSA ausgeben und entzieht ihm dazu die
 > PipeWire-Umgebung — deshalb ist DAB über Bluetooth unerreichbar. Siehe
-> [AUFTRAG-DAB-AUDIOWEG.md](../auftraege/AUFTRAG-DAB-AUDIOWEG.md).
+> [AUFTRAG-DAB-AUDIOWEG.md](../archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md).
 
 ### 12.2 Scan mit mux.json
 

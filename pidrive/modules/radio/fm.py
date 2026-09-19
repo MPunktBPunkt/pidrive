@@ -33,6 +33,7 @@ STATIONS_FILE = os.path.join(
     os.path.dirname(__file__), "../config/fm_stations.json")
 
 _player_proc      = None
+_rtl_proc         = None
 _last_start_ts    = 0.0
 _last_station_key = ""
 
@@ -129,7 +130,7 @@ def update_rds_metadata(station_name: str, S: dict):
 
 def play_station(station, S, settings=None):
     """FM Station abspielen via rtl_fm | mpv --ao=pulse (v0.8.11: einheitlich)."""
-    global _player_proc, _last_start_ts, _last_station_key
+    global _player_proc, _rtl_proc, _last_start_ts, _last_station_key
 
     freq = _get_freq(station)
     name = station.get("name", "")
@@ -218,54 +219,111 @@ def play_station(station, S, settings=None):
                 return False
 
         from modules import audio as _audio
-        _mpv_env2  = "PULSE_SERVER=unix:/var/run/pulse/native"
-        _mpv_extra = ["--ao=pulse"]
+        try:
+            _mpv_parts = _audio.get_mpv_args(settings=settings, source="fm")
+        except Exception as _ae:
+            log.warn(f"FM: get_mpv_args failed: {_ae}")
+            _mpv_parts = ["PULSE_SERVER=unix:/var/run/pulse/native", "--ao=pulse"]
+        _mpv_env_str = (_mpv_parts[0] if _mpv_parts else "") or ""
+        _mpv_extra = [a for a in (_mpv_parts[1:] if len(_mpv_parts) > 1 else ["--ao=pulse"]) if a]
+        if "--ao=pulse" not in _mpv_extra and not any(a.startswith("--ao=") for a in _mpv_extra):
+            _mpv_extra = ["--ao=pulse"] + _mpv_extra
 
         # Gain und PPM aus Settings aufbauen
         _gain_val  = int(settings.get("fm_gain", -1) if settings else -1)
-        _fm_gain_arg = f" -g {_gain_val}" if _gain_val >= 0 else ""   # -1 = AGC
         # ppm_correction ist der kanonische Key; "ppm" nur Alias
         _ppm_val = 0
         if settings:
             _ppm_val = int(settings.get("ppm_correction", settings.get("ppm", 0)) or 0)
-        _ppm_arg   = f" -p {_ppm_val}" if _ppm_val else ""
 
-        # Prio C: shell=True → Zwei-Prozess-Pipe (kein Shell-Interpreter)
-        rtl_cmd = ["rtl_fm", "-M", "wbfm",
+        def _build_rtl_cmd():
+            cmd = ["rtl_fm", "-M", "wbfm",
                    "-f", freq_hz, "-s", "250000", "-r", "32000",
                    "-A", "fast", "-"]
-        if _gain_val >= 0:
-            rtl_cmd += ["-g", str(_gain_val)]
-        if _ppm_val:
-            rtl_cmd += ["-p", str(_ppm_val)]
+            if _gain_val >= 0:
+                cmd += ["-g", str(_gain_val)]
+            if _ppm_val:
+                cmd += ["-p", str(_ppm_val)]
+            return cmd
 
         mpv_cmd = ["mpv", "--no-video", "--really-quiet",
                    "--title=pidrive_fm",
                    "--demuxer=rawaudio", "--demuxer-rawaudio-rate=32000",
                    "--demuxer-rawaudio-channels=1"] + _mpv_extra + ["-"]
         mpv_env = dict(os.environ, PULSE_SERVER="unix:/var/run/pulse/native")
+        # PULSE_SINK=... aus get_mpv_args-Env-String übernehmen
+        for _tok in _mpv_env_str.split():
+            if "=" in _tok:
+                _k, _v = _tok.split("=", 1)
+                mpv_env[_k] = _v
 
         if _ppm_val:
             log.info(f"FM play: PPM={_ppm_val} gain={_gain_val}")
-        log.info(f"FM play: Popen-Pipe freq_hz={freq_hz}")
 
-        _rtl_proc = subprocess.Popen(
-            rtl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        _mpv_proc = subprocess.Popen(
-            mpv_cmd, stdin=_rtl_proc.stdout,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            env=mpv_env
-        )
-        _rtl_proc.stdout.close()   # SIGPIPE wenn mpv endet
-
-        # _player_proc zeigt auf mpv (für stop/wait), _rtl_proc separat verfolgt
-        _player_proc = _mpv_proc
-        if _rtlsdr:
+        def _proc_wchar(pid):
+            """Bytes geschrieben (inkl. Pipe) — write_bytes zählt Pipes nicht."""
             try:
-                _rtlsdr._proc = _rtl_proc   # RTL-SDR Tracker aktualisieren
+                with open(f"/proc/{pid}/io", "r", encoding="utf-8") as f:
+                    for ln in f:
+                        if ln.startswith("wchar:"):
+                            return int(ln.split(":", 1)[1].strip())
+            except Exception:
+                return -1
+            return -1
+
+        def _start_pipe():
+            global _player_proc, _rtl_proc
+            rtl_cmd = _build_rtl_cmd()
+            log.info(f"FM play: Popen-Pipe freq_hz={freq_hz}")
+            rtl = subprocess.Popen(
+                rtl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+            )
+            mpv = subprocess.Popen(
+                mpv_cmd, stdin=rtl.stdout,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env=mpv_env
+            )
+            rtl.stdout.close()
+            _player_proc = mpv
+            _rtl_proc = rtl
+            if _rtlsdr:
+                try:
+                    _rtlsdr._LOCK_REGISTRY["proc"] = rtl
+                    _rtlsdr._LOCK_REGISTRY["proc_name"] = "fm"
+                    _rtlsdr._LOCK_REGISTRY["started_ts"] = int(time.time())
+                except Exception:
+                    pass
+            return rtl, mpv
+
+        _rtl_proc_local, _mpv_proc = _start_pipe()
+
+        # Sample-Check kurz; USB-Reset nur bei wchar==0 (nicht bei jedem Senderwechsel).
+        _check_s = 0.7 if _last_station_key else 1.2
+        time.sleep(_check_s)
+        _wc = _proc_wchar(_rtl_proc_local.pid) if _rtl_proc_local.pid else -1
+        _alive = (_rtl_proc_local.poll() is None) and (_mpv_proc.poll() is None)
+        if _alive and _wc == 0:
+            log.warn(f"FM: rtl_fm liefert keine Samples (wchar={_wc}) — USB-Reset + Retry")
+            try:
+                stop(S)
             except Exception:
                 pass
+            try:
+                if _rtlsdr:
+                    _rr = _rtlsdr.usb_reset()
+                    log.info(f"FM: usb_reset → {(_rr or {}).get('ok')} steps={(_rr or {}).get('steps')}")
+            except Exception as _re:
+                log.warn(f"FM: usb_reset failed: {_re}")
+            time.sleep(2.0)
+            _rtl_proc_local, _mpv_proc = _start_pipe()
+            time.sleep(1.0)
+            _wc = _proc_wchar(_rtl_proc_local.pid) if _rtl_proc_local.pid else -1
+            if _wc == 0:
+                log.warn(f"FM: nach Reset weiterhin keine Samples (wchar={_wc})")
+            else:
+                log.info(f"FM: Samples ok nach Reset wchar={_wc}")
+        elif _wc > 0:
+            log.info(f"FM: Samples ok wchar={_wc}")
 
         S["radio_playing"]  = True
         S["radio_station"]  = f"FM: {name} ({freq_f:.1f} MHz)"
@@ -274,6 +332,7 @@ def play_station(station, S, settings=None):
         S["track"]          = ""
         S["artist"]         = ""
         S["control_context"] = "radio_fm"
+        S.pop("source_error", None)
         _last_start_ts      = now
         _last_station_key   = cur_key
         # v0.9.26: RDS-Hook — aktuell No-Op (rtl_fm liefert kein RDS)
@@ -289,26 +348,42 @@ def play_station(station, S, settings=None):
 
 
 def stop(S):
-    global _player_proc
+    global _player_proc, _rtl_proc
     log.info("FM stop: requested")
     try:
         if _rtlsdr:
             _rtlsdr.stop_process()
     except Exception as e:
         log.warn(f"FM stop: rtlsdr.stop_process: {e}")
+    # Eigene Popen-Handles zuerst wait() — sonst bleiben Zombies und blockieren Busy
+    for _label, _proc in (("rtl_fm", _rtl_proc), ("mpv", _player_proc)):
+        if not _proc:
+            continue
+        try:
+            if _proc.poll() is None:
+                try:
+                    _proc.terminate()
+                    _proc.wait(timeout=1.5)
+                except Exception:
+                    try:
+                        _proc.kill()
+                        _proc.wait(timeout=1.0)
+                    except Exception:
+                        pass
+            else:
+                try:
+                    _proc.wait(timeout=0.3)
+                except Exception:
+                    pass
+        except Exception as e:
+            log.warn(f"FM stop: {_label} reap: {e}")
+    _rtl_proc = None
+    _player_proc = None
     _bg("pkill -f pidrive_fm 2>/dev/null")
     _bg("pkill -f rtl_fm 2>/dev/null")
     _bg("pkill -f welle-cli 2>/dev/null")   # welle-cli haelt ALSA-Karte belegt
     _bg("pkill -f aplay 2>/dev/null")
     _bg("pkill -f 'mpv --no-video --really-quiet --title=pidrive_fm' 2>/dev/null")
-    if _player_proc:
-        try:
-            _player_proc.terminate()
-            _player_proc.wait(timeout=2.0)   # verhindert Zombie-Prozess
-        except Exception:
-            try: _player_proc.kill()
-            except Exception: pass
-        _player_proc = None
     # Kurzes Warten auf echte Freigabe — verhindert sofortiges Busy beim Folgestart
     try:
         if _rtlsdr:

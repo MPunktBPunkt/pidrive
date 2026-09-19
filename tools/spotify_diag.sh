@@ -2,7 +2,7 @@
 # PiDrive — Spotify-Diagnose (lesend, keine Aenderungen)
 #
 # Klaert, warum PiDrive nicht in der Spotify-App erscheint.
-# Deutungsschluessel siehe docs/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md §11
+# Deutungsschluessel siehe docs/archiv/auftraege/AUFTRAG-SPOTIFY-UND-TESTKETTE.md §11
 #
 # Aufruf:  bash tools/spotify_diag.sh
 # Nur lesende Kommandos — sicher im Fahrzeug ausfuehrbar.

@@ -29,6 +29,25 @@
   <pre id="diagPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:400px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft);margin-top:8px;display:none">–</pre>
 </div>
 <div class="card">
+  <div class="card-title">🧪 WebUI Live-Smoke
+    <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
+      Buttons/APIs + State-Machine + Timings
+    </span>
+  </div>
+  <div id="smokeHint" style="font-size:12px;color:var(--muted);margin-bottom:8px">
+    Simuliert Klicks gegen die laufende WebUI (localhost). „Flows“ ~1–2 Min.
+  </div>
+  <div class="btn-row" style="margin-bottom:8px;flex-wrap:wrap">
+    <button class="btn" id="smokeQuickBtn" onclick="startSmoke('quick')">Quick</button>
+    <button class="btn primary" id="smokeFlowsBtn" onclick="startSmoke('flows')">Flows</button>
+    <button class="btn" id="smokeFullBtn" onclick="startSmoke('full')">Full</button>
+    <button class="btn" onclick="stopSmoke()">Stop</button>
+    <button class="btn" onclick="loadSmoke()">Aktualisieren</button>
+  </div>
+  <div id="smokeSummary" style="font-size:13px;margin-bottom:8px">–</div>
+  <pre id="smokePre" style="background:#050d1a;padding:10px;font-size:11px;max-height:420px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">Noch kein Lauf.</pre>
+</div>
+<div class="card">
   <div class="card-title">📊 Source State</div>
   <pre id="sourceStatePre" style="background:#050d1a;padding:10px;font-size:11px;max-height:200px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
   <button class="btn" onclick="loadSourceState()" style="margin-top:8px">Aktualisieren</button>
@@ -106,6 +125,93 @@ async function loadSourceState() {
     },null,2);
   }catch(e){}
 }
+
+let _smokePoll = null;
+function _smokeSetBusy(busy) {
+  ['smokeQuickBtn','smokeFlowsBtn','smokeFullBtn'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b) b.disabled=!!busy;
+  });
+}
+function _fmtSmoke(j) {
+  const sum = (j.report && j.report.summary) || j.summary || {};
+  const parts = [
+    j.running ? '🟡 läuft…' : (j.exit_code===0 ? '🟢 fertig' : (j.exit_code==null ? '–' : '🔴 exit '+j.exit_code)),
+    j.mode ? ('mode='+j.mode) : '',
+    sum.PASS!=null ? ('PASS '+sum.PASS) : '',
+    sum.WARN!=null ? ('WARN '+sum.WARN) : '',
+    sum.FAIL!=null ? ('FAIL '+sum.FAIL) : '',
+    sum.SKIP!=null ? ('SKIP '+sum.SKIP) : '',
+  ].filter(Boolean);
+  const hint=document.getElementById('smokeHint');
+  if(hint && j.running) hint.textContent='Test läuft — Ergebnis aktualisiert sich automatisch.';
+  else if(hint && !j.running && j.finished_ts) hint.textContent='Letzter Lauf beendet. Timings/State-Machine siehe Log unten.';
+  let body = '';
+  if (j.log_tail) body += j.log_tail;
+  if (j.report && j.report.timeline && j.report.timeline.length) {
+    body += '\n\n=== State-Machine Timeline ===\n';
+    j.report.timeline.forEach(row=>{
+      body += `${row.t||''}  ${(row.label||'').padEnd(28)} src=${row.source} type=${row.type} playing=${row.playing} dab=${row.dab_state} tr=${row.transition} ${row.ms||0}ms\n`;
+    });
+  }
+  if (!body && j.error) body = j.error;
+  if (!body) body = 'Noch kein Lauf.';
+  return {summary: parts.join(' · '), body};
+}
+async function loadSmoke() {
+  const pre=document.getElementById('smokePre');
+  const sumEl=document.getElementById('smokeSummary');
+  try{
+    const r=await fetch('/api/webui/smoke');
+    const j=await r.json();
+    const fmt=_fmtSmoke(j);
+    if(sumEl) sumEl.textContent=fmt.summary;
+    if(pre) pre.textContent=fmt.body;
+    _smokeSetBusy(!!j.running);
+    if(j.running && !_smokePoll){
+      _smokePoll=setInterval(loadSmoke, 2000);
+    }
+    if(!j.running && _smokePoll){
+      clearInterval(_smokePoll); _smokePoll=null;
+    }
+  }catch(e){
+    if(pre) pre.textContent='Fehler: '+e;
+  }
+}
+async function startSmoke(mode) {
+  const pre=document.getElementById('smokePre');
+  const sumEl=document.getElementById('smokeSummary');
+  if(sumEl) sumEl.textContent='Starte…';
+  if(pre) pre.textContent='Starte WebUI-Smoke ('+mode+')…';
+  _smokeSetBusy(true);
+  try{
+    const r=await fetch('/api/webui/smoke/start',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode})
+    });
+    const j=await r.json();
+    if(!j.ok){
+      showToast && showToast('Smoke: '+(j.error||'Fehler'));
+      _smokeSetBusy(false);
+      if(pre) pre.textContent=JSON.stringify(j,null,2);
+      return;
+    }
+    if(_smokePoll) clearInterval(_smokePoll);
+    _smokePoll=setInterval(loadSmoke, 1500);
+    loadSmoke();
+  }catch(e){
+    _smokeSetBusy(false);
+    if(pre) pre.textContent='Start-Fehler: '+e;
+  }
+}
+async function stopSmoke() {
+  try{
+    await fetch('/api/webui/smoke/stop',{method:'POST'});
+    loadSmoke();
+  }catch(e){}
+}
+
 let _sysTick = 0;
 function onBaseRefresh() {
   // Systemressourcen max. alle ~6s (5 Polls), Source-State bei jedem Poll
@@ -113,5 +219,5 @@ function onBaseRefresh() {
   if (_sysTick % 5 === 1) loadSysRes();
   loadSourceState();
 }
-loadLog('core'); loadSysRes(); loadSourceState();
+loadLog('core'); loadSysRes(); loadSourceState(); loadSmoke();
 </script>{% endblock %}

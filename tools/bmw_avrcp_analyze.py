@@ -4,7 +4,7 @@ bmw_avrcp_analyze.py — Auswertung der Phase-(-1)-Probe.
 
 Liest einen btmon-Mitschnitt und beantwortet die Messfragen -1.1, -1.2 und -1.5
 maschinell. Der Interpretationsschluessel ist **vorab** festgeschrieben in
-docs/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md, Paket G1. Er wird hier angewendet,
+docs/archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md, Paket G1. Er wird hier angewendet,
 nicht neu erfunden — genau das ist der Zweck: das Ergebnis soll nicht davon
 abhaengen, was man sich beim Lesen der Rohdaten wuenscht.
 
@@ -483,7 +483,7 @@ def bericht_markdown(f: Findings, sdp_dir: Optional[str] = None) -> str:
     A("")
     A(f"**Gemessen:** {time.strftime('%Y-%m-%d %H:%M')}  ")
     A(f"**Mitschnitt:** `{f.quelle}` ({f.zeilen_gelesen} dekodierte Zeilen)  ")
-    A("**Auftrag:** [../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](../auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) Paket G1  ")
+    A("**Auftrag:** [../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md](../archiv/auftraege/AUFTRAG-MENUE-UND-GATEWAY.md) Paket G1  ")
     A("**Auswertung:** `tools/bmw_avrcp_analyze.py` — Interpretationsschluessel vorab festgeschrieben")
     A("")
     A("---")

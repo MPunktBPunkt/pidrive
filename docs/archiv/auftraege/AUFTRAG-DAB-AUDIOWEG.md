@@ -467,7 +467,7 @@ umgekehrt wäre es fahrlässig, HD6 zu versuchen, solange HD2 nicht steht.
 | [AUFTRAG-FUNKPFAD.md](AUFTRAG-FUNKPFAD.md) | Gerätereservierung am Stick — DA-M4 hängt daran |
 | `docs/betrieb/BluetoothError.md` | Der dort beschriebene A2DP-Pfad gegen Kopfhörer ist die Messgrundlage für HD2 |
 | `docs/KontextPiDrive.md` | Wird durch DA-A berichtigt |
-| [../referenz/WELLE-CLI.md](../referenz/WELLE-CLI.md) | **Quelle für §5** — Kommandoreferenz, HTTP-Endpunkte, `mux.json`-Struktur, Gain-Index-Tabelle. Dort auch die Nebengewinne aus §7 im Detail |
+| [../referenz/WELLE-CLI.md](../../referenz/WELLE-CLI.md) | **Quelle für §5** — Kommandoreferenz, HTTP-Endpunkte, `mux.json`-Struktur, Gain-Index-Tabelle. Dort auch die Nebengewinne aus §7 im Detail |
 | [AUFTRAG-SPEKTRUM-UND-AVRCP.md](AUFTRAG-SPEKTRUM-UND-AVRCP.md) | SA-E gewinnt durch §7 eine dokumentierte Auswertung des `/spectrum`-Formats |
 | [AUFTRAG-SPOTIFY-UND-TESTKETTE.md](AUFTRAG-SPOTIFY-UND-TESTKETTE.md) | Der unklare DAB-Übersprung wird mit `mux.json` entscheidbar (§7) |
 
