@@ -1368,3 +1368,217 @@ def sweep_fm_band(start_mhz=87.5, stop_mhz=108.0, step_mhz=1.0,
     }
     save_last_spectrum(result)
     return result
+
+
+# Bekannte UKW-Labels (Allgäu / Nutzer) — nur Annotation, kein Filter
+_FM_KNOWN_LABELS = {
+    88.7: "Bayern 2 (Grünten)",
+    90.2: "RT1",
+    90.7: "Bayern 1 (Grünten)",
+    95.8: "Bayern 3 (Grünten)",
+    96.0: "Bayern 2? (Hühnerberg ~96.1)",
+    96.1: "Bayern 2 (Hühnerberg)",
+    98.5: "Bayern 3",
+    100.2: "FM4 (ORF)",
+    100.7: "FM4?",
+    100.8: "FM4?",
+    101.0: "BR Klassik (Grünten)",
+    103.0: "SWR3",
+    104.4: "Antenne Bayern",
+    106.9: "BR24 / ex B5 (Grünten)",
+    107.6: "BR24 (Hühnerberg)",
+}
+
+
+def _channel_energy(spec_db, start_mhz, bin_hz, f_c, half_khz=75.0):
+    if not spec_db or bin_hz <= 0:
+        return None
+    lo = f_c - half_khz / 1000.0
+    hi = f_c + half_khz / 1000.0
+    acc = 0.0
+    n = 0
+    peak = -1e9
+    peak_f = None
+    for i, db in enumerate(spec_db):
+        f = start_mhz + i * bin_hz / 1e6
+        if lo <= f <= hi:
+            acc += 10.0 ** (float(db) / 10.0)
+            n += 1
+            if db > peak:
+                peak = float(db)
+                peak_f = f
+    if n == 0:
+        return None
+    return {
+        "mean_db": 10.0 * math.log10(acc / n),
+        "peak_db": peak,
+        "peak_f": peak_f,
+    }
+
+
+def _merge_channel_hits(hits, merge_mhz=0.18):
+    if not hits:
+        return []
+    hits = sorted(hits, key=lambda h: h["f"])
+    groups = [[hits[0]]]
+    for h in hits[1:]:
+        if h["f"] - groups[-1][-1]["f"] <= merge_mhz:
+            groups[-1].append(h)
+        else:
+            groups.append([h])
+    out = []
+    for g in groups:
+        wsum = 0.0
+        fsum = 0.0
+        best = g[0]
+        for h in g:
+            w = 10.0 ** (h["mean_db"] / 10.0)
+            wsum += w
+            fsum += h["f"] * w
+            if h["mean_db"] > best["mean_db"]:
+                best = h
+        fc = fsum / wsum if wsum else best["f"]
+        label = None
+        for fk, name in _FM_KNOWN_LABELS.items():
+            if abs(fc - fk) <= 0.05 or abs(best["f"] - fk) <= 0.05:
+                label = name
+                break
+        out.append({
+            "freq_mhz": round(fc, 3),
+            "chan_mhz": best["f"],
+            "mean_db": round(best["mean_db"], 2),
+            "peak_db": round(best["peak_db"], 2),
+            "n_chans": len(g),
+            "label": label,
+        })
+    out.sort(key=lambda x: -x["mean_db"])
+    return out
+
+
+def scan_fm_channels(start_mhz=87.5, stop_mhz=108.0, top_n=10,
+                     ppm=0, gain=25, avg_frames=2, sample_count=32768,
+                     thresh_db_over_floor=10.0, grid_mhz=0.1,
+                     sample_rate_hz=None):
+    """
+    Praxistauglicher UKW-Scan: Range-Capture → 100-kHz-Kanalenergie → Cluster.
+    Liefert Peaks/Cluster (Sender-Kandidaten), nicht jeden FFT-Bin-Spike.
+    """
+    start = float(start_mhz)
+    stop = float(stop_mhz)
+    if stop <= start:
+        return {"ok": False, "error": "stop_mhz muss größer als start_mhz sein"}
+
+    top_n = max(1, min(int(top_n), 50))
+    rng = capture_range(
+        start_mhz=start, stop_mhz=stop,
+        sample_rate_hz=sample_rate_hz,
+        sample_count=sample_count,
+        ppm=ppm, gain=gain, avg_frames=avg_frames,
+    )
+    if not rng.get("ok"):
+        return rng
+
+    spec = rng.get("spectrum_db") or []
+    f0 = float(rng.get("f0_mhz") or start)
+    bin_hz = float(rng.get("bin_hz") or 0)
+    if not spec or bin_hz <= 0:
+        return {"ok": False, "error": "kein Spektrum für Kanalenergie", "raw": rng}
+
+    srt = sorted(spec)
+    floor = srt[max(0, len(srt) // 5)]
+    thresh = floor + float(thresh_db_over_floor)
+
+    hits = []
+    f = math.floor(start * 10 + 1e-9) / 10.0
+    while f <= stop + 1e-9:
+        e = _channel_energy(spec, f0, bin_hz, f, half_khz=75.0)
+        if e and e["mean_db"] >= thresh:
+            hits.append({
+                "f": round(f, 1),
+                "mean_db": e["mean_db"],
+                "peak_db": e["peak_db"],
+            })
+        f = round(f + float(grid_mhz), 1)
+
+    clusters = _merge_channel_hits(hits, merge_mhz=0.18)
+    peaks = clusters[:top_n]
+
+    result = {
+        "ok": True,
+        "mode": "fm_channels",
+        "start_mhz": start,
+        "stop_mhz": stop,
+        "ppm": int(ppm),
+        "gain": int(gain),
+        "avg_frames": rng.get("avg_frames", avg_frames),
+        "sample_rate_hz": rng.get("sample_rate_hz"),
+        "rbw_hz": rng.get("rbw_hz"),
+        "floor_db": round(floor, 2),
+        "thresh_db": round(thresh, 2),
+        "grid_hits": len(hits),
+        "peak_count": len(peaks),
+        "peaks": peaks,
+        "peaks_all_count": len(clusters),
+        "windows_ok": rng.get("windows_ok"),
+        "windows_total": rng.get("windows_total"),
+        "ts": int(time.time()),
+    }
+    save_last_spectrum({**result, "spectrum_db": spec, "f0_mhz": f0, "bin_hz": bin_hz})
+    return result
+
+
+def peek_fm_channel(freq_mhz, ppm=0, gain=25, avg_frames=2, sample_count=32768):
+    """Einzelkanal prüfen (Offset-Fenster, vermeidet DC auf dem Träger)."""
+    f = float(freq_mhz)
+    start = round(f - 0.2, 3)
+    stop = round(f + 0.5, 3)
+    rng = capture_range(
+        start_mhz=start, stop_mhz=stop,
+        sample_rate_hz=1_024_000,
+        sample_count=sample_count,
+        ppm=ppm, gain=gain, avg_frames=avg_frames,
+    )
+    if not rng.get("ok"):
+        return rng
+    spec = rng.get("spectrum_db") or []
+    f0 = float(rng.get("f0_mhz") or start)
+    bin_hz = float(rng.get("bin_hz") or 0)
+    e = _channel_energy(spec, f0, bin_hz, f, half_khz=60.0)
+    ctrl = _channel_energy(spec, f0, bin_hz, f + 0.25, half_khz=60.0)
+    outs = []
+    for i, db in enumerate(spec):
+        ff = f0 + i * bin_hz / 1e6
+        if abs(ff - f) > 0.2:
+            outs.append(float(db))
+    outs.sort()
+    floor = outs[len(outs) // 5] if outs else 0.0
+    snr = (e["peak_db"] - floor) if e else None
+    margin = (e["peak_db"] - ctrl["peak_db"]) if (e and ctrl) else None
+    label = None
+    for fk, name in _FM_KNOWN_LABELS.items():
+        if abs(f - fk) <= 0.05:
+            label = name
+            break
+    detected = bool(e and snr is not None and snr >= 10 and (margin is None or margin >= 3))
+    result = {
+        "ok": True,
+        "mode": "fm_peek",
+        "freq_mhz": f,
+        "label": label,
+        "detected": detected,
+        "energy": {
+            "mean_db": round(e["mean_db"], 2) if e else None,
+            "peak_db": round(e["peak_db"], 2) if e else None,
+            "peak_f": round(e["peak_f"], 4) if e and e.get("peak_f") else None,
+        },
+        "control_plus_250k": {
+            "peak_db": round(ctrl["peak_db"], 2) if ctrl else None,
+        },
+        "snr_db": round(snr, 1) if snr is not None else None,
+        "margin_db": round(margin, 1) if margin is not None else None,
+        "ppm": int(ppm),
+        "gain": int(gain),
+        "ts": int(time.time()),
+    }
+    save_last_spectrum(result)
+    return result

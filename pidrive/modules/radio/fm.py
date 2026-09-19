@@ -224,7 +224,10 @@ def play_station(station, S, settings=None):
         # Gain und PPM aus Settings aufbauen
         _gain_val  = int(settings.get("fm_gain", -1) if settings else -1)
         _fm_gain_arg = f" -g {_gain_val}" if _gain_val >= 0 else ""   # -1 = AGC
-        _ppm_val   = int(settings.get("ppm", 0) if settings else 0)
+        # ppm_correction ist der kanonische Key; "ppm" nur Alias
+        _ppm_val = 0
+        if settings:
+            _ppm_val = int(settings.get("ppm_correction", settings.get("ppm", 0)) or 0)
         _ppm_arg   = f" -p {_ppm_val}" if _ppm_val else ""
 
         # Prio C: shell=True → Zwei-Prozess-Pipe (kein Shell-Interpreter)

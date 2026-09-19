@@ -37,7 +37,7 @@ _DEFAULTS = {
     "usb_poll_s":         2.0,
     # FM
     "fm_freq":            "98.5",
-    "fm_gain":            -1,            # -1 = Auto AGC, 0–49 = dB
+    "fm_gain":            25,            # Empfohlen Allgäu/UKW: 20–30; -1 = Auto AGC
     # DAB
     "dab_gain":           -1,            # -1 = Auto AGC, gültige RTL-Stufe
     "dab_wait_lock":      90,            # Sekunden auf DAB-Lock warten (Superframe oft >45s)
@@ -49,12 +49,17 @@ _DEFAULTS = {
     # Scanner
     "scanner_vhf_freq":   136.000,
     "scanner_uhf_freq":   400.000,
-    "scanner_gain":       -1,            # -1 = Auto AGC
+    "scanner_gain":       25,            # Spektrum/Scanner-Default (wie FM-Empfehlung)
     "scanner_squelch":    25,            # 0=offen 10=empfindlich 25=standard 35=hart
     "scanner_use_spectrum":   False,     # True = Spectrum Peak für PMR446/Freenet
     "scanner_spectrum_debug": False,     # True = Spectrum Debug-JSON schreiben
     # RTL-SDR
-    "ppm_correction":     0,             # Quarzfehler-Korrektur (gemessener ~52 ppm)
+    "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
+    # Spektrum-Scan Defaults (pidrivectl spectrum)
+    "spectrum_avg":       2,
+    "spectrum_peaks":     10,
+    "spectrum_start_mhz": 87.5,
+    "spectrum_stop_mhz":  108.0,
     # Bluetooth
     "bt_last_mac":        "",
     "bt_last_name":       "",

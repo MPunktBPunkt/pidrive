@@ -204,6 +204,11 @@ def main():
   pidrivectl ppm set 49          PPM-Offset setzen (RTL-SDR Kalibrierung)
   pidrivectl ppm calibrate       Automatische PPM-Kalibrierung
 
+  pidrivectl spectrum scan                 UKW 87.5–108, Top-10 Peaks
+  pidrivectl spectrum scan 87.5-108 -n 5   Bereich + Anzahl Peaks
+  pidrivectl spectrum peek 106.9           Einzelkanal (Offset, DC-sicher)
+  pidrivectl spectrum last                 Letztes Scan-Ergebnis
+
   pidrivectl system              System-Info + Spotify-Status
   pidrivectl system resources    RAM, Speicher, Uptime, Throttling
   pidrivectl system diagnose     Vollstaendige Systemdiagnose
@@ -304,6 +309,29 @@ Flags (vor dem Befehl angeben):
     p_ppm_set = ppm_sub.add_parser("set", help="PPM-Offset setzen")
     p_ppm_set.add_argument("value", type=int, help="PPM-Wert (typ. 40-55)")
     ppm_sub.add_parser("calibrate", help="Automatische Kalibrierung starten")
+
+    # ── spectrum ──────────────────────────────────────────────────────────
+    p_spec = sub.add_parser("spectrum", help="RTL-SDR Spektrum / UKW-Peak-Scan")
+    spec_sub = p_spec.add_subparsers(dest="spectrum_cmd")
+    p_sscan = spec_sub.add_parser(
+        "scan", help="Bereich scannen, Kanalenergie-Cluster als Peaks")
+    p_sscan.add_argument(
+        "range", nargs="?", default=None,
+        help="Start-Stop MHz, z.B. 87.5-108 oder 102.5:103.5")
+    p_sscan.add_argument("-n", "--peaks", type=int, default=None,
+                         help="Anzahl Top-Peaks (Default 10)")
+    p_sscan.add_argument("--start", type=float, default=None)
+    p_sscan.add_argument("--stop", type=float, default=None)
+    p_sscan.add_argument("--gain", type=int, default=None,
+                         help="Gain dB oder -1=Auto")
+    p_sscan.add_argument("--ppm", type=int, default=None)
+    p_sscan.add_argument("--avg", type=int, default=None)
+    p_speek = spec_sub.add_parser("peek", help="Einzelne Frequenz prüfen")
+    p_speek.add_argument("freq", type=float, help="Frequenz MHz, z.B. 106.9")
+    p_speek.add_argument("--gain", type=int, default=None)
+    p_speek.add_argument("--ppm", type=int, default=None)
+    p_speek.add_argument("--avg", type=int, default=None)
+    spec_sub.add_parser("last", help="Letztes Spektrum-/Scan-Ergebnis")
 
     # ── audio ─────────────────────────────────────────────────────────────
     p_audio = sub.add_parser("audio", help="Audio-Ausgang")
@@ -1116,6 +1144,131 @@ Flags (vor dem Befehl angeben):
                 fmt.out("   Abbruch nach <60s liefert ungenaue Werte (Ausreißer ±50 ppm)")
                 fmt.out("   Ergebnis nach 3 min: pidrivectl ppm")
         sys.exit(EXIT_OK)
+
+    # spectrum
+    if args.cmd == "spectrum":
+        import re as _re_sp
+        from settings import load_settings as _ls_sp
+        _s_sp = _ls_sp()
+
+        def _sp_ppm(cli_ppm):
+            if cli_ppm is not None:
+                return int(cli_ppm)
+            return int(_s_sp.get("ppm_correction", _s_sp.get("ppm", 0)) or 0)
+
+        def _sp_gain(cli_gain):
+            if cli_gain is not None:
+                return int(cli_gain)
+            return int(_s_sp.get("scanner_gain", _s_sp.get("fm_gain", 25)))
+
+        def _parse_range(text, start, stop):
+            a = start if start is not None else _s_sp.get("spectrum_start_mhz", 87.5)
+            b = stop if stop is not None else _s_sp.get("spectrum_stop_mhz", 108.0)
+            if text:
+                m = _re_sp.match(
+                    r"^\s*([0-9]+(?:\.[0-9]+)?)\s*[-:]\s*([0-9]+(?:\.[0-9]+)?)\s*$",
+                    text,
+                )
+                if not m:
+                    fmt.out("Range ungültig — erwartet z.B. 87.5-108 oder 102.5:103.5")
+                    sys.exit(1)
+                a, b = float(m.group(1)), float(m.group(2))
+            return float(a), float(b)
+
+        scmd = args.spectrum_cmd
+        if not scmd:
+            fmt.out("Usage: pidrivectl spectrum scan|peek|last …")
+            fmt.out("  scan [87.5-108] [-n 10] [--gain 25] [--ppm 49]")
+            fmt.out("  peek 106.9")
+            fmt.out("  last")
+            sys.exit(EXIT_OK)
+
+        if scmd == "last":
+            from modules.radio import spectrum as _spmod
+            data = _spmod.load_last_spectrum() or {}
+            if use_json:
+                slim = {k: v for k, v in data.items() if k != "spectrum_db"}
+                fmt.print_json(slim)
+            else:
+                if not data:
+                    fmt.out("Kein letztes Spektrum.")
+                else:
+                    fmt.out(f"mode={data.get('mode')} ok={data.get('ok')} "
+                            f"gain={data.get('gain')} ppm={data.get('ppm')}")
+                    peaks = data.get("peaks") or data.get("candidates") or []
+                    for i, p in enumerate(peaks[:20], 1):
+                        fmhz = p.get("freq_mhz", p.get("freq"))
+                        lab = p.get("label") or ""
+                        db = p.get("mean_db", p.get("db", p.get("peak_db")))
+                        fmt.out(f"  {i:2d}. {fmhz} MHz  {db} dB  {lab}")
+            sys.exit(EXIT_OK)
+
+        # Stick braucht Idle — Hinweis wenn Radio läuft
+        try:
+            st = svc.get_status()
+            if st.get("radio_playing") or (st.get("source") or "") in ("fm", "dab", "scanner"):
+                fmt.out("Hinweis: Radio/Scanner aktiv — Capture kann fehlschlagen (Stick belegt).")
+        except Exception:
+            pass
+
+        from modules.radio import spectrum as _spmod
+
+        if scmd == "peek":
+            ppm = _sp_ppm(getattr(args, "ppm", None))
+            gain = _sp_gain(getattr(args, "gain", None))
+            avg = int(args.avg if args.avg is not None else _s_sp.get("spectrum_avg", 2))
+            fmt.out(f"Peek {args.freq} MHz  gain={gain} ppm={ppm} avg={avg} …")
+            r = _spmod.peek_fm_channel(args.freq, ppm=ppm, gain=gain, avg_frames=avg)
+            if use_json:
+                fmt.print_json(r)
+            elif not r.get("ok"):
+                fmt.out("Fehler: " + str(r.get("error")))
+                sys.exit(1)
+            else:
+                det = "JA" if r.get("detected") else "unsicher/schwach"
+                lab = r.get("label") or ""
+                e = r.get("energy") or {}
+                fmt.out(f"{r.get('freq_mhz')} MHz  {lab}  detected={det}")
+                fmt.out(f"  peak={e.get('peak_db')} dB @ {e.get('peak_f')}  "
+                        f"mean={e.get('mean_db')}  snr≈{r.get('snr_db')}  "
+                        f"margin={r.get('margin_db')}")
+            sys.exit(EXIT_OK)
+
+        if scmd == "scan":
+            start, stop = _parse_range(
+                getattr(args, "range", None),
+                getattr(args, "start", None),
+                getattr(args, "stop", None),
+            )
+            top_n = int(args.peaks if args.peaks is not None else _s_sp.get("spectrum_peaks", 10))
+            ppm = _sp_ppm(getattr(args, "ppm", None))
+            gain = _sp_gain(getattr(args, "gain", None))
+            avg = int(args.avg if args.avg is not None else _s_sp.get("spectrum_avg", 2))
+            fmt.out(f"Scan {start}–{stop} MHz  top={top_n}  gain={gain} ppm={ppm} avg={avg} …")
+            r = _spmod.scan_fm_channels(
+                start_mhz=start, stop_mhz=stop, top_n=top_n,
+                ppm=ppm, gain=gain, avg_frames=avg,
+            )
+            if use_json:
+                slim = {k: v for k, v in r.items() if k != "spectrum_db"}
+                fmt.print_json(slim)
+            elif not r.get("ok"):
+                fmt.out("Fehler: " + str(r.get("error")))
+                sys.exit(1)
+            else:
+                fmt.out(f"ok  floor={r.get('floor_db')} dB  thresh={r.get('thresh_db')} dB  "
+                        f"clusters={r.get('peaks_all_count')}  "
+                        f"win={r.get('windows_ok')}/{r.get('windows_total')}")
+                for i, p in enumerate(r.get("peaks") or [], 1):
+                    lab = ("  " + p["label"]) if p.get("label") else ""
+                    fmt.out(f"  {i:2d}. {p['freq_mhz']:7.3f} MHz  "
+                            f"mean={p['mean_db']:5.1f} dB  peak={p['peak_db']:5.1f}{lab}")
+                if not r.get("peaks"):
+                    fmt.out("  (keine Peaks über Schwelle — Gain/Bereich prüfen)")
+            sys.exit(EXIT_OK)
+
+        fmt.out("Unbekanntes spectrum-Subkommando")
+        sys.exit(1)
 
     # audio
     if args.cmd == "audio":
