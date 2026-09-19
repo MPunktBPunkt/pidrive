@@ -191,7 +191,7 @@ _current_ch: dict = {}
 
 _player_proc = None
 _scan_abort = False
-SQUELCH = 25
+SQUELCH = 50  # UHF/PMR: 25 ließ Dauerrauschen durch; 50 mute bis Träger
 
 # Ergebnis eines Suchlaufs (für CLI/WebUI-Rückmeldung)
 SCAN_RESULT_FILE = "/tmp/pidrive_scan_result.json"
@@ -365,28 +365,44 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         _sq_arg = f" -l {_sq}" if _sq and _sq > 0 else ""
 
         # FM-Broadcast (wbfm): andere Parameter als Schmalband-FM
+        _rtl_extra: list = []
+        _mpv_af = None
         if bandwidth_hz >= 150000:
             # Wideband FM — wie fm.py: -M wbfm, fixed rates
             _rtl_sr = 250000
             _out_sr = 32000
             _modulation = "wbfm"
+            _sq_eff = _sq
+            _gain_eff = _gain
         else:
-            # Schmalband FM (PMR, VHF etc.) — Sample-Rate aus Kanalbandbreite (C3)
-            # Vorher: max(200000, …) → immer 200 kHz bei PMR446; jetzt bw*4, mind. 48 kHz
-            _rtl_sr = max(48000, int(bandwidth_hz) * 4)
-            _out_sr = 32000
+            # Schmalband (PMR etc.): 24 kHz ohne Resample, FIR, fester Gain
+            # Schwach/dünn kam von AGC + -A fast + zu niedrigem Squelch-Rauschen.
+            _rtl_sr = 24000
+            _out_sr = 24000
             _modulation = "fm"
+            _sq_eff = max(int(_sq or 0), 50) if bandwidth_hz <= 25000 else max(int(_sq or 0), 35)
+            # AGC (−1) auf UHF oft dünn/rauschig — feste Verstärkung
+            _gain_eff = 36 if int(_gain) < 0 else int(_gain)
+            _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
+            # Sprachband + Pegel für Monitor/Klinke
+            _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3700,volume=10dB]"
 
         # Prio C: shell=True → Popen-Pipe
         import os as _sc_os
         rtl_cmd = [
             "rtl_fm", "-M", _modulation,
             "-f", str(freq_hz), "-s", str(_rtl_sr),
-            "-r", str(_out_sr), "-A", "fast", "-"
         ]
-        if _ppm:    rtl_cmd += ["-p", str(_ppm)]
-        if _gain != -1: rtl_cmd += ["-g", str(_gain)]
-        if _sq and _sq > 0: rtl_cmd += ["-l", str(_sq)]
+        # -r nur wenn Resample nötig (sonst Qualitätsverlust)
+        if _out_sr != _rtl_sr:
+            rtl_cmd += ["-r", str(_out_sr)]
+        rtl_cmd += _rtl_extra + ["-"]
+        if _ppm:
+            rtl_cmd += ["-p", str(_ppm)]
+        if _gain_eff != -1:
+            rtl_cmd += ["-g", str(_gain_eff)]
+        if _sq_eff and _sq_eff > 0:
+            rtl_cmd += ["-l", str(_sq_eff)]
 
         mpv_cmd = [
             "mpv", "--no-video", "--no-terminal",
@@ -394,9 +410,18 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
             f"--demuxer=rawaudio",
             f"--demuxer-rawaudio-rate={_out_sr}",
             "--demuxer-rawaudio-channels=1",
+            "--audio-channels=mono",
             "--ao=pulse",
+            # niedrige Latenz — sonst wirkt Squelch-Öffnen + Monitor träge
+            "--cache=no",
+            "--demuxer-readahead-secs=0",
+            "--untimed=no",
+            "--audio-buffer=0.05",
         ]
-        if _device_arg: mpv_cmd.append(_device_arg)
+        if _mpv_af:
+            mpv_cmd.append(f"--af={_mpv_af}")
+        if _device_arg:
+            mpv_cmd.append(_device_arg)
         mpv_cmd.append("-")
         mpv_env = dict(_sc_os.environ,
                        PULSE_SERVER="unix:/var/run/pulse/native",

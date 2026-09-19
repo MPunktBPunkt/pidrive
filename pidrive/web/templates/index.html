@@ -161,6 +161,10 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
   border-color: #3fb950; color: #3fb950; background: #0a2818;
   box-shadow: 0 0 10px rgba(63,185,80,.25);
 }
+.pmr-ch.primary {
+  border-color: #f0c14a; color: #ffe9a8; background: #2a2208;
+  box-shadow: 0 0 12px rgba(240,193,74,.35); font-weight: 700;
+}
 .pmr-ch.active.playing { border-color: #58a6ff; color: #e8f0ff;
   background: linear-gradient(135deg, #0a2818, #0d2246); }
 .pmr-status { font-size: 11px; color: #5a7a9a; min-height: 16px; margin-top: 4px; }
@@ -369,10 +373,13 @@ function pmrTune(ch) {
   showToast('PMR Kanal ' + ch);
 }
 
-function setPmrActive(chs) {
+function setPmrActive(chs, primary) {
   const set = new Set((chs || []).map(Number));
+  const prim = Number(primary) || 0;
   document.querySelectorAll('.pmr-ch').forEach(b => {
-    b.classList.toggle('active', set.has(Number(b.dataset.ch)));
+    const n = Number(b.dataset.ch);
+    b.classList.toggle('active', set.has(n));
+    b.classList.toggle('primary', prim === n);
   });
   const st = document.getElementById('pmrStatus');
   if (!st) return;
@@ -380,7 +387,8 @@ function setPmrActive(chs) {
     st.textContent = _pmrWatch ? 'Beobachte… keine Aktivität' : 'Tipp: Walkie senden → aktive Kanäle werden grün';
     st.classList.remove('hot');
   } else {
-    st.textContent = 'Aktiv: ' + [...set].sort((a,b)=>a-b).map(n => 'K'+n).join(', ');
+    const list = [...set].sort((a,b)=>a-b).map(n => 'K'+n + (n===prim?'★':'')).join(', ');
+    st.textContent = 'Aktiv: ' + list;
     st.classList.add('hot');
   }
 }
@@ -393,7 +401,7 @@ async function pmrScanOnce() {
     const j = await r.json();
     if (!j.ok) { if (st) st.textContent = 'Fehler: ' + (j.error||'?'); return; }
     const nums = (j.data && j.data.active_ch_numbers) || [];
-    setPmrActive(nums);
+    setPmrActive(nums, j.data && j.data.primary_ch);
   } catch(e) {
     if (st) st.textContent = 'Netzwerkfehler';
   }
@@ -411,7 +419,7 @@ async function togglePmrWatch() {
       const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.0', {method:'POST'});
       const j = await r.json();
       if (!_pmrWatch) break;
-      if (j.ok && j.data) setPmrActive(j.data.active_ch_numbers || []);
+      if (j.ok && j.data) setPmrActive(j.data.active_ch_numbers || [], j.data.primary_ch);
       else if (document.getElementById('pmrStatus'))
         document.getElementById('pmrStatus').textContent = 'Watch: ' + (j.error || 'busy?');
     } catch(e) {

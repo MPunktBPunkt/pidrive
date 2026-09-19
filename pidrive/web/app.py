@@ -810,13 +810,30 @@ def api_spectrum_capture():
             best = None
             if result and result.best_candidate:
                 best = spectrum._candidate_to_dict(result.best_candidate)
-            # Kanalnummern für UI (PMR1 → 1)
+            # UI-Filter: nur klarer Gewinner + nahe Konkurrenten (kein Nachbar-Rauschen)
+            filtered = cands
+            if best and cands:
+                best_score = float(best.get("score") or 0)
+                best_rel = float(best.get("relative_db") or 0)
+                filtered = [
+                    c for c in cands
+                    if float(c.get("relative_db") or 0) >= max(12.0, best_rel - 10.0)
+                    and float(c.get("score") or 0) >= max(8.0, best_score * 0.55)
+                ]
+                if not filtered:
+                    filtered = [best]
             active_chs = []
-            for c in cands:
+            for c in filtered:
                 nm = str(c.get("channel_name") or "")
                 digits = "".join(ch for ch in nm if ch.isdigit())
                 if digits:
                     active_chs.append(int(digits))
+            primary = None
+            if best:
+                nm = str(best.get("channel_name") or "")
+                digits = "".join(ch for ch in nm if ch.isdigit())
+                if digits:
+                    primary = int(digits)
             ended_s = 0.0
             if result:
                 try:
@@ -827,8 +844,10 @@ def api_spectrum_capture():
                 "ok": True,
                 "band": band,
                 "data": {
-                    "active_channels": cands,
+                    "active_channels": filtered,
+                    "active_channels_raw": cands,
                     "active_ch_numbers": active_chs,
+                    "primary_ch": primary,
                     "found": bool(result and result.found),
                     "watch_seconds": round(ended_s, 2),
                     "frames_processed": result.frames_processed if result else 0,

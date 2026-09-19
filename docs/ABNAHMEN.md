@@ -97,7 +97,8 @@ Zusätzlich WARN-Logs aus entschärften `except`-Blöcken.
 | `pidrivectl webui selftest` | **0 Fehler** |
 | Import `modules.radio.fm/scanner/spectrum` | `_rtlsdr`/`_spectrum` gesetzt, `degraded_imports` leer |
 
-**HW ausstehend (wenn Pi wieder erreichbar):** H2.4 (Core stop → Banner), H2.8 (`processes` nicht leer), H2.3 (Throttling), H2.5 (`api-core.js` ohne SyntaxError), **R5** Quellenwechsel nach W4, **R6/R7** Scanner PMR446, **R12–R14** Transitionen.
+**HW ausstehend (wenn Pi wieder erreichbar):** H2.4 (Core stop → Banner), H2.3 (Throttling), H2.5 (`api-core.js` ohne SyntaxError), **R5** Quellenwechsel nach W4, **R12–R14** Transitionen.  
+**Erledigt später:** H2.8 (2026-09-15), **R6/R7 PMR446** (2026-09-19, siehe unten).
 
 ---
 
@@ -513,3 +514,41 @@ Nach Zündung aus: Paired ja, Connected nein.
 Nach Feldtest: Watcher page’t nicht mehr blind auf BlueZ-Namen; Reconnect ohne `Pair()`;
 `bt_last` folgt dem verbundenen Fahrzeug; Pause nach Host-down/Page-Timeout (180 s).
 MPRIS: `radio_type` allein schaltet Radio-Zweig; Album-Label „Menü“ statt „PiDrive Menü“.
+
+---
+
+## 2026-09-19 — PMR446 Walkie-Abnahme (Motorola TLKR T40, v0.11.145)
+
+| | |
+|---|---|
+| Host | `192.168.178.105` (Pidrive) |
+| Gerät | Motorola TLKR T40 (klassisch 8 Kanäle; Stack/UI 16 Kanäle PMR446d) |
+| Commit-Basis UI | `df0037d` (16-Kanal-Grid + sticky Monitor) |
+| Dieser Stand | **v0.11.145** — NBFM-Qualität, Latenz, UI-Primary |
+
+### Messungen gegen Handfunkgerät
+
+| Test | Ergebnis |
+|------|----------|
+| Kanal 3 / 1 / 8 PTT | Aktiv erkannt; Tune `scan_setch:pmr446:N` → passende Frequenz |
+| Blindtest | Sender auf **K2** → korrekt erkannt |
+| Squelch | Default/Floor **50**; hörbar gut bei ~80–90 (Roger-Beep klar) |
+| Audio vorher | Dauerrauschen bei sq 25; „dünn“ mit AGC/`-A fast` |
+| Audio nachher | `-s 24000`, `-F 9`, `-A std`, Gain **36**, Sprachband-EQ, `-t 1` |
+| Latenz ~8 s | **nicht** Demod — Ursache `rtl_fm -t` (Default 10) + Monitor-Puffer |
+| Latenz nach Fix | `-t 1`, mpv `--cache=no`/`--audio-buffer=0.05`, ffmpeg `nobuffer`/`low_delay`, Monitor-Reconnect 350 ms |
+| Monitor-Mithören | `/api/audio/listen` — starke PTT-Bursts auf K2 nachgewiesen (RMS-Peaks) |
+| Spektrum-UI | Trigger 14 dB; `primary_ch` + gefilterte Nachbarn (weniger False-Positives) |
+
+### R6 / R7
+
+| Regel | Stand |
+|-------|-------|
+| R6 `pmr446 ch N` | ✅ NBFM hörbar, korrekte Kanal-Frequenz (z. B. K2 = 446.01875 MHz) |
+| R7 Scan/Watch | ✅ Dauerbeobachtung + einmaliger Capture; Primary-Kanal markiert |
+
+### Bekannte Restpunkte
+
+- Sprache bei hohem Squelch schwächer als Roger-Beep (Pegel/Abstand) — weiter beobachten
+- CB/Freenet/LPD ohne Referenzsender unverifiziert
+- Pi-USB-Stick kann bei vielen Snapshots hängen — unabhängig vom Funkpfad

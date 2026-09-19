@@ -55,7 +55,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | ID | Fähigkeit | CLI-Prüfung | Erwartung | Abhängigkeit | Stand |
 |----|-----------|-------------|-----------|--------------|-------|
 | F-040 | FM-Scanner | `pidrivectl scanner fm scan` | Scan läuft | RTL-SDR | 🟡 |
-| F-041 | PMR446-Scanner | `pidrivectl scanner pmr446 scan` | Scan läuft | RTL-SDR | 🟡 |
+| F-041 | PMR446-Scanner | `pidrivectl scanner pmr446 ch N` / WebUI 16 Kanäle | NBFM-Audio, Watch, Monitor | RTL-SDR + Walkie | ✅ |
 | F-042 | Spektrum-Scan | `pidrivectl spectrum scan [RANGE] -n N` | Peak-Liste | RTL-SDR | ✅ |
 | F-043 | Spektrum-Peek | `pidrivectl spectrum peek <mhz>` | Kanalenergie | RTL-SDR | ✅ |
 | F-044 | Spektrum last | `pidrivectl spectrum last [--json]` | Letztes Ergebnis | — | ✅ |

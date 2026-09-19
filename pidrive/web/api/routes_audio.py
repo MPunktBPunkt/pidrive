@@ -124,7 +124,7 @@ def api_audio_listen():
                 )
                 backoff = 0.4
                 while True:
-                    chunk = proc.stdout.read(4096)
+                    chunk = proc.stdout.read(1024)
                     if not chunk:
                         break
                     yield chunk

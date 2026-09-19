@@ -270,7 +270,7 @@ function _listenAutoReconnect() {
   if (window._listenRetry) clearTimeout(window._listenRetry);
   window._listenRetry = setTimeout(() => {
     if (_listenWantedGet() || window._listenWanted) startGlobalListen();
-  }, 900);
+  }, 350);
 }
 
 (function initGlobalListen() {
@@ -278,10 +278,11 @@ function _listenAutoReconnect() {
   if (!a) return;
   a.addEventListener('ended', _listenAutoReconnect);
   a.addEventListener('error', _listenAutoReconnect);
+  // Weniger Browser-Puffer
+  try { a.preload = 'none'; } catch(e) {}
   if (_listenWantedGet()) {
     window._listenWanted = true;
-    // Autoplay oft blockiert — UI zeigt An, Start beim ersten Klick/nach Poll
-    setTimeout(() => startGlobalListen(), 400);
+    setTimeout(() => startGlobalListen(), 150);
   }
 })();
 

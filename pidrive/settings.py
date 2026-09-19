@@ -50,7 +50,7 @@ _DEFAULTS = {
     "scanner_vhf_freq":   136.000,
     "scanner_uhf_freq":   400.000,
     "scanner_gain":       25,            # Spektrum/Scanner-Default (wie FM-Empfehlung)
-    "scanner_squelch":    25,            # 0=offen 10=empfindlich 25=standard 35=hart
+    "scanner_squelch":    50,            # 0=offen … 50=UHF/PMR (25 ließ Dauerrauschen)
     "scanner_use_spectrum":   False,     # True = Spectrum Peak für PMR446/Freenet
     "scanner_spectrum_debug": False,     # True = Spectrum Debug-JSON schreiben
     # RTL-SDR

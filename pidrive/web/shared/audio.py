@@ -282,12 +282,15 @@ def resolve_listen_monitor_source() -> dict:
 
 
 def build_listen_ffmpeg_cmd(monitor_source: str) -> list:
-    """ffmpeg liest Pulse-Monitor und liefert MP3 auf stdout."""
+    """ffmpeg liest Pulse-Monitor und liefert MP3 auf stdout (niedrige Latenz)."""
     return [
         "ffmpeg", "-hide_banner", "-loglevel", "error",
+        "-fflags", "nobuffer", "-flags", "low_delay",
+        "-probesize", "32", "-analyzeduration", "0",
         "-f", "pulse", "-i", monitor_source,
-        "-ac", "2", "-ar", "44100",
-        "-c:a", "libmp3lame", "-b:a", "128k",
+        "-ac", "1", "-ar", "24000",
+        "-af", "volume=6dB,highpass=f=250,lowpass=f=3700",
+        "-c:a", "libmp3lame", "-q:a", "4", "-reservoir", "0",
         "-f", "mp3", "pipe:1",
     ]
 

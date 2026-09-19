@@ -185,10 +185,11 @@ PMR446_PROFILE = BandProfile(
     fft_size=2048,
     frame_ms=80,
     watch_seconds=2.5,
-    trigger_on_db=9.0,
-    trigger_off_db=4.0,
-    min_active_frames=1,
-    hold_seconds=3.0,
+    # Nahfeld-Walkie: 9 dB war zu niedrig → viele Nachbarkanäle
+    trigger_on_db=14.0,
+    trigger_off_db=8.0,
+    min_active_frames=2,
+    hold_seconds=1.5,
     smoothing_alpha=0.35,
     noise_quantile=0.20,
 )
