@@ -251,6 +251,47 @@ def get_audio_debug() -> dict:
     return data
 
 
+def resolve_listen_monitor_source() -> dict:
+    """
+    Pulse/PipeWire Monitor-Source für Browser-Mithören.
+    Bevorzugt Default-Sink.monitor — ändert kein Routing.
+    """
+    env = {"PULSE_SERVER": "unix:/var/run/pulse/native", **os.environ}
+    try:
+        r = subprocess.run(
+            ["pactl", "get-default-sink"],
+            capture_output=True, text=True, timeout=3, env=env,
+        )
+        sink = (r.stdout or "").strip()
+    except Exception as e:
+        return {"ok": False, "error": f"pactl: {e}", "source": None}
+    if not sink:
+        try:
+            r = subprocess.run(
+                ["pactl", "get-default-source"],
+                capture_output=True, text=True, timeout=3, env=env,
+            )
+            src = (r.stdout or "").strip()
+            if src:
+                return {"ok": True, "source": src, "sink": "", "via": "default_source"}
+        except Exception:
+            pass
+        return {"ok": False, "error": "kein Default-Sink", "source": None}
+    mon = sink if sink.endswith(".monitor") else f"{sink}.monitor"
+    return {"ok": True, "source": mon, "sink": sink, "via": "default_sink_monitor"}
+
+
+def build_listen_ffmpeg_cmd(monitor_source: str) -> list:
+    """ffmpeg liest Pulse-Monitor und liefert MP3 auf stdout."""
+    return [
+        "ffmpeg", "-hide_banner", "-loglevel", "error",
+        "-f", "pulse", "-i", monitor_source,
+        "-ac", "2", "-ar", "44100",
+        "-c:a", "libmp3lame", "-b:a", "128k",
+        "-f", "mp3", "pipe:1",
+    ]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Source / DAB / Spectrum Debug
 # ──────────────────────────────────────────────────────────────────────────────

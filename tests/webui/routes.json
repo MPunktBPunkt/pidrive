@@ -359,6 +359,20 @@
       "file": "pidrive/web/api/routes_audio.py"
     },
     {
+      "path": "/api/audio/listen",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/audio/listen/status",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
       "path": "/api/gain",
       "methods": [
         "GET"
