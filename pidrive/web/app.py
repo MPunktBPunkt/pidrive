@@ -791,29 +791,46 @@ def api_spectrum_capture():
 
         # v0.10.55: Peak-Identifizierung für PMR446 / Freenet
         if band in ("pmr446", "freenet"):
+            import dataclasses as _dc
             watcher = spectrum.build_default_watcher(ppm=ppm, gain=gain)
             profile = spectrum.PMR446_PROFILE if band == "pmr446" else spectrum.FREENET_PROFILE
-            result  = watcher.watch_channels(profile, debug=debug)
-            # DetectionResult hat 'candidates' (alle Peaks) — kein 'active_channels'
-            # Aktive Kanäle: candidates mit found=True oder top candidates
-            cands = result.candidates if result else []
-            best    = None
+            try:
+                ws = float(args.get("watch_seconds", profile.watch_seconds))
+                ws = max(0.6, min(ws, 8.0))
+            except (TypeError, ValueError):
+                ws = profile.watch_seconds
+            if abs(ws - profile.watch_seconds) > 0.05:
+                profile = _dc.replace(profile, watch_seconds=ws)
+            result = watcher.watch_channels(profile, debug=debug)
+            cands = [
+                spectrum._candidate_to_dict(c)
+                for c in ((result.candidates if result else []) or [])
+                if c is not None
+            ]
+            best = None
             if result and result.best_candidate:
-                c = result.best_candidate
-                best = {
-                    "channel": c.channel_name,
-                    "freq_mhz": round(float(c.freq_hz) / 1e6, 6),
-                    "score": round(float(c.score), 3),
-                    "confidence": round(float(c.confidence), 3),
-                    "note": c.note or "",
-                }
+                best = spectrum._candidate_to_dict(result.best_candidate)
+            # Kanalnummern für UI (PMR1 → 1)
+            active_chs = []
+            for c in cands:
+                nm = str(c.get("channel_name") or "")
+                digits = "".join(ch for ch in nm if ch.isdigit())
+                if digits:
+                    active_chs.append(int(digits))
+            ended_s = 0.0
+            if result:
+                try:
+                    ended_s = max(0.0, float(result.watch_ended_ts) - float(result.watch_started_ts))
+                except Exception:
+                    ended_s = float(ws)
             return jsonify({
                 "ok": True,
                 "band": band,
                 "data": {
                     "active_channels": cands,
+                    "active_ch_numbers": active_chs,
                     "found": bool(result and result.found),
-                    "watch_seconds": round(float(result.watch_seconds), 2) if result else 0,
+                    "watch_seconds": round(ended_s, 2),
                     "frames_processed": result.frames_processed if result else 0,
                     "best_candidate": best,
                 },

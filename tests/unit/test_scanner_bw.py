@@ -6,6 +6,10 @@ from modules.radio import scanner as sc
 
 def test_scan_bw_fast_narrowband():
     assert sc._scan_bw_fast("pmr446", 12500) == 25000
+    assert len(sc.PMR446_CHANNELS) == 16
+    assert sc.PMR446_CHANNELS[0]["freq"] == 446.00625
+    assert sc.PMR446_CHANNELS[15]["freq"] == 446.19375
+    assert sc.PMR446_CHANNELS[7]["freq"] == 446.09375  # Ende klassisch 8-Kanal
     assert sc._scan_bw_fast("freenet", 12500) == 25000
     assert sc._scan_bw_fast("lpd433", 12500) == 25000
     assert sc._scan_bw_fast("cb", 10000) == 20000

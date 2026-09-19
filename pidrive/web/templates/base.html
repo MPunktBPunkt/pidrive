@@ -86,6 +86,24 @@
 .btn.danger  { background: var(--red-bg); color: var(--red); border-color: var(--red); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* Globaler Audio-Monitor (überlebt Seiten- und Tabwechsel) */
+.top-listen {
+  display: flex; align-items: center; gap: 6px; margin-left: 10px;
+}
+.top-listen button {
+  padding: 5px 10px; font-size: 12px; border-radius: 4px;
+  border: 1px solid var(--line-soft); background: var(--panel2); color: var(--muted);
+  cursor: pointer; white-space: nowrap;
+}
+.top-listen button.on {
+  border-color: var(--active); color: #8ce7ff; background: #0d2246;
+}
+.top-listen .tl-hint { font-size: 10px; color: var(--muted); max-width: 90px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) {
+  .top-listen .tl-hint { display: none; }
+}
+
 /* ── Toast ─────────────────────────────────────────────────────────────── */
 #toast {
   position: fixed; bottom: 20px; right: 20px;
@@ -110,6 +128,11 @@
       <span id="bTopWifi" class="flag off">WiFi</span>
       <span id="bTopBt"   class="flag off">BT</span>
       <span id="bTopSpot" class="flag off">Spot</span>
+    </div>
+    <div class="top-listen" id="topListen" title="Browser-Monitor — bleibt über Tab-/Seitenwechsel">
+      <button type="button" id="topListenBtn" onclick="toggleGlobalListen()">🎧 Monitor</button>
+      <span class="tl-hint" id="topListenHint">aus</span>
+      <audio id="globalListenAudio" playsinline preload="none" style="display:none"></audio>
     </div>
     <div id="topDebug" style="font-size:11px;color:var(--muted);font-family:monospace"></div>
   </div>
@@ -185,6 +208,82 @@ async function sendCmd(cmd) {
     return j;
   } catch(e) { showToast('Verbindung unterbrochen'); }
 }
+
+// ── Globaler Browser-Monitor (Topbar, sessionStorage) ────────────────────
+const _LISTEN_KEY = 'pidrive_listen_wanted';
+function _listenWantedGet() { try { return sessionStorage.getItem(_LISTEN_KEY) === '1'; } catch(e) { return false; } }
+function _listenWantedSet(v) { try { sessionStorage.setItem(_LISTEN_KEY, v ? '1' : '0'); } catch(e) {} }
+
+function _setListenUi(on, hint) {
+  const btn = el('topListenBtn');
+  const h = el('topListenHint');
+  if (btn) {
+    btn.classList.toggle('on', !!on);
+    btn.textContent = on ? '🎧 An' : '🎧 Monitor';
+  }
+  if (h) h.textContent = hint || (on ? 'läuft' : 'aus');
+}
+
+async function startGlobalListen() {
+  const a = el('globalListenAudio');
+  if (!a) return;
+  _listenWantedSet(true);
+  window._listenWanted = true;
+  _setListenUi(true, 'verbinde…');
+  try {
+    const st = await fetch('/api/audio/listen/status').then(r => r.json()).catch(() => ({}));
+    if (st && st.ok === false) {
+      _setListenUi(false, st.error || 'kein Monitor');
+      _listenWantedSet(false);
+      window._listenWanted = false;
+      return;
+    }
+  } catch(e) {}
+  a.src = '/api/audio/listen?t=' + Date.now();
+  try {
+    await a.play();
+    _setListenUi(true, 'WLAN-Audio');
+  } catch(e) {
+    _setListenUi(true, 'tippen zum Start');
+  }
+}
+
+function stopGlobalListen(clearWanted) {
+  const a = el('globalListenAudio');
+  if (clearWanted !== false) {
+    _listenWantedSet(false);
+    window._listenWanted = false;
+  }
+  if (window._listenRetry) { clearTimeout(window._listenRetry); window._listenRetry = null; }
+  if (a) { try { a.pause(); } catch(e) {} a.removeAttribute('src'); a.load(); }
+  _setListenUi(false, 'aus');
+}
+
+function toggleGlobalListen() {
+  if (_listenWantedGet() || window._listenWanted) stopGlobalListen(true);
+  else startGlobalListen();
+}
+
+function _listenAutoReconnect() {
+  if (!_listenWantedGet() && !window._listenWanted) return;
+  _setListenUi(true, 'reconnect…');
+  if (window._listenRetry) clearTimeout(window._listenRetry);
+  window._listenRetry = setTimeout(() => {
+    if (_listenWantedGet() || window._listenWanted) startGlobalListen();
+  }, 900);
+}
+
+(function initGlobalListen() {
+  const a = el('globalListenAudio');
+  if (!a) return;
+  a.addEventListener('ended', _listenAutoReconnect);
+  a.addEventListener('error', _listenAutoReconnect);
+  if (_listenWantedGet()) {
+    window._listenWanted = true;
+    // Autoplay oft blockiert — UI zeigt An, Start beim ersten Klick/nach Poll
+    setTimeout(() => startGlobalListen(), 400);
+  }
+})();
 
 // ── Core-Polling (Topbar + Schnellstatus) ────────────────────────────────
 async function refreshBase() {

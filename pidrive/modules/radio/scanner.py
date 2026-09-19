@@ -51,10 +51,12 @@ import log
 
 # ── Kanaltabellen ────────────────────────────────────────────────────────────
 
+# PMR446d: 16 Kanäle · 446.00625–446.19375 MHz · 12.5 kHz (EU seit Erweiterung;
+# klassische 8-Kanal-Geräte wie TLKR T40 nutzen K1–K8 derselben Tabelle)
 PMR446_CHANNELS = [
     {"ch": i + 1, "name": f"PMR Kanal {i+1}",
      "freq": round(446.00625 + i * 0.01250, 5)}
-    for i in range(8)
+    for i in range(16)
 ]
 
 FREENET_CHANNELS = [

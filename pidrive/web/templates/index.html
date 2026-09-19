@@ -147,6 +147,24 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
   border-radius: 4px; outline: none; }
 .scan-row input[type=range] { flex: 1; }
 .scan-label { font-size: 11px; color: #5a7a9a; min-width: 60px; }
+.pmr-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0 10px;
+}
+.pmr-ch {
+  padding: 10px 4px; border: 1px solid #1e3d6e; background: #0a1628;
+  color: #6a8fb5; font-size: 12px; font-weight: 600; border-radius: 4px;
+  cursor: pointer; text-align: center; transition: background .15s, border-color .15s, color .15s;
+}
+.pmr-ch:hover { border-color: #58a6ff; color: #8ab8e0; }
+.pmr-ch.playing { border-color: #58a6ff; color: #58a6ff; background: #0d2246; }
+.pmr-ch.active {
+  border-color: #3fb950; color: #3fb950; background: #0a2818;
+  box-shadow: 0 0 10px rgba(63,185,80,.25);
+}
+.pmr-ch.active.playing { border-color: #58a6ff; color: #e8f0ff;
+  background: linear-gradient(135deg, #0a2818, #0d2246); }
+.pmr-status { font-size: 11px; color: #5a7a9a; min-height: 16px; margin-top: 4px; }
+.pmr-status.hot { color: #3fb950; }
 </style>
 {% endblock %}
 
@@ -283,12 +301,14 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
     </div>
   </div>
   <div class="scan-card">
-    <h4>PMR446</h4>
+    <h4>PMR446 — 16 Kanäle</h4>
+    <div class="pmr-grid" id="pmrGrid"></div>
     <div class="scan-row">
-      <button class="btn" onclick="sendCmd('scan_setch:pmr446:1')">Kanal 1</button>
-      <button class="btn" onclick="sendCmd('scan_setch:pmr446:3')">Kanal 3</button>
-      <button class="btn" onclick="sendCmd('scan_setch:pmr446:8')">Kanal 8</button>
+      <button class="btn primary" id="pmrWatchBtn" onclick="togglePmrWatch()">👁 Dauerbeobachtung</button>
+      <button class="btn" onclick="pmrScanOnce()">Scan einmal</button>
+      <button class="btn" onclick="sendCmd('scan_next:pmr446')">Nächster Treffer ▶</button>
     </div>
+    <div class="pmr-status" id="pmrStatus">Tipp: Walkie senden → aktive Kanäle werden grün</div>
   </div>
   <div class="scan-card">
     <h4>Squelch</h4>
@@ -320,7 +340,95 @@ function switchTab(name) {
     p.classList.toggle('active', p.id === 'tab-' + name));
   if (name === 'playlist') { loadPlaylist('today'); startPlPoll(); }
   else stopPlPoll();
+  if (name === 'scanner') renderPmrGrid();
+  else stopPmrWatch();
 }
+
+const PMR_FREQS = Array.from({length: 16}, (_, i) =>
+  Math.round((446.00625 + i * 0.0125) * 1e5) / 1e5);
+let _pmrWatch = false;
+let _pmrPlayingCh = 0;
+
+function renderPmrGrid() {
+  const grid = document.getElementById('pmrGrid');
+  if (!grid || grid.dataset.ready) return;
+  grid.innerHTML = PMR_FREQS.map((f, i) => {
+    const ch = i + 1;
+    return `<button type="button" class="pmr-ch" data-ch="${ch}" id="pmrCh${ch}"
+      title="${f} MHz" onclick="pmrTune(${ch})">K${ch}<br><span style="font-size:9px;opacity:.7">${f}</span></button>`;
+  }).join('');
+  grid.dataset.ready = '1';
+}
+
+function pmrTune(ch) {
+  stopPmrWatch();
+  _pmrPlayingCh = ch;
+  document.querySelectorAll('.pmr-ch').forEach(b =>
+    b.classList.toggle('playing', Number(b.dataset.ch) === ch));
+  sendCmd('scan_setch:pmr446:' + ch);
+  showToast('PMR Kanal ' + ch);
+}
+
+function setPmrActive(chs) {
+  const set = new Set((chs || []).map(Number));
+  document.querySelectorAll('.pmr-ch').forEach(b => {
+    b.classList.toggle('active', set.has(Number(b.dataset.ch)));
+  });
+  const st = document.getElementById('pmrStatus');
+  if (!st) return;
+  if (!set.size) {
+    st.textContent = _pmrWatch ? 'Beobachte… keine Aktivität' : 'Tipp: Walkie senden → aktive Kanäle werden grün';
+    st.classList.remove('hot');
+  } else {
+    st.textContent = 'Aktiv: ' + [...set].sort((a,b)=>a-b).map(n => 'K'+n).join(', ');
+    st.classList.add('hot');
+  }
+}
+
+async function pmrScanOnce() {
+  const st = document.getElementById('pmrStatus');
+  if (st) { st.textContent = 'Messe PMR446…'; st.classList.remove('hot'); }
+  try {
+    const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.2', {method:'POST'});
+    const j = await r.json();
+    if (!j.ok) { if (st) st.textContent = 'Fehler: ' + (j.error||'?'); return; }
+    const nums = (j.data && j.data.active_ch_numbers) || [];
+    setPmrActive(nums);
+  } catch(e) {
+    if (st) st.textContent = 'Netzwerkfehler';
+  }
+}
+
+async function togglePmrWatch() {
+  if (_pmrWatch) { stopPmrWatch(); return; }
+  _pmrWatch = true;
+  const btn = document.getElementById('pmrWatchBtn');
+  if (btn) { btn.textContent = '⏹ Stop Beobachtung'; btn.classList.add('danger'); btn.classList.remove('primary'); }
+  // Stick belegt während Watch — Wiedergabe stoppen
+  sendCmd('radio_stop');
+  while (_pmrWatch) {
+    try {
+      const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.0', {method:'POST'});
+      const j = await r.json();
+      if (!_pmrWatch) break;
+      if (j.ok && j.data) setPmrActive(j.data.active_ch_numbers || []);
+      else if (document.getElementById('pmrStatus'))
+        document.getElementById('pmrStatus').textContent = 'Watch: ' + (j.error || 'busy?');
+    } catch(e) {
+      if (document.getElementById('pmrStatus'))
+        document.getElementById('pmrStatus').textContent = 'Watch-Fehler — warte…';
+      await new Promise(res => setTimeout(res, 800));
+    }
+  }
+}
+
+function stopPmrWatch() {
+  _pmrWatch = false;
+  const btn = document.getElementById('pmrWatchBtn');
+  if (btn) { btn.textContent = '👁 Dauerbeobachtung'; btn.classList.add('primary'); btn.classList.remove('danger'); }
+}
+
+renderPmrGrid();
 
 function startPlPoll() {
   stopPlPoll();

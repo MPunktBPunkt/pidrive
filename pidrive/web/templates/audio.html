@@ -15,11 +15,10 @@
 <div class="card">
   <div class="card-title">📱 Monitor (WLAN)
     <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
-      Mithören im Browser — ändert Routing nicht
+      auch in der Topbar (🎧) — bleibt über alle Seiten
     </span>
   </div>
   <div id="listenHint" style="font-size:12px;color:var(--muted);margin-bottom:8px">–</div>
-  <audio id="listenAudio" controls playsinline style="width:100%;max-width:480px;margin-bottom:8px"></audio>
   <div class="btn-row">
     <button class="btn primary" id="listenStartBtn" onclick="startListen()">🔊 Anhören</button>
     <button class="btn" onclick="stopListen()">Stop</button>
@@ -82,49 +81,26 @@ async function loadListenStatus() {
   }catch(e){ if(hint) hint.textContent='Status-Fehler'; }
 }
 function startListen() {
-  const a=document.getElementById('listenAudio');
-  const hint=document.getElementById('listenHint');
-  if(!a) return;
-  window._listenWanted=true;
-  stopListen(false);
-  a.src='/api/audio/listen?t='+Date.now();
-  const p=a.play();
-  if(p&&p.catch) p.catch(err=>{
-    if(hint) hint.textContent='Play blockiert — Button erneut tippen. '+err;
-  });
-  if(hint) hint.textContent=(hint.textContent||'').replace(/ · Stream.*$/,'')+' · Stream aktiv';
+  if (typeof startGlobalListen === 'function') return startGlobalListen();
 }
 function stopListen(clearWanted) {
-  const a=document.getElementById('listenAudio');
-  if(clearWanted!==false) window._listenWanted=false;
-  if(window._listenRetry){ clearTimeout(window._listenRetry); window._listenRetry=null; }
-  if(!a) return;
-  try{ a.pause(); }catch(e){}
-  a.removeAttribute('src');
-  try{ a.load(); }catch(e){}
+  if (typeof stopGlobalListen === 'function') return stopGlobalListen(clearWanted !== false);
 }
-function _listenAutoReconnect() {
-  if(!window._listenWanted) return;
+async function loadListenStatus() {
   const hint=document.getElementById('listenHint');
-  if(hint) hint.textContent=(hint.textContent||'').replace(/ · Stream.*$/,'')+' · reconnect…';
-  if(window._listenRetry) clearTimeout(window._listenRetry);
-  window._listenRetry=setTimeout(()=>{ if(window._listenWanted) startListen(); }, 800);
+  try{
+    const r=await fetch('/api/audio/listen/status');
+    const j=await r.json();
+    if(!j.ok){
+      if(hint) hint.textContent='Monitor: '+(j.error||'nicht verfügbar');
+      return;
+    }
+    if(hint) hint.textContent=
+      'Quelle: '+(j.source||'–')+
+      (j.ffmpeg===false?' · ⚠ ffmpeg fehlt':'')+
+      ' · Steuerung: Topbar 🎧 Monitor';
+  }catch(e){ if(hint) hint.textContent='Status-Fehler'; }
 }
-(function(){
-  const a=document.getElementById('listenAudio');
-  if(!a) return;
-  a.addEventListener('ended', _listenAutoReconnect);
-  a.addEventListener('error', _listenAutoReconnect);
-  a.addEventListener('stalled', ()=>{
-    // nach ~8s oft Pulse-Reset — kurz neu anbinden
-    if(!window._listenWanted) return;
-    if(window._listenStallTimer) return;
-    window._listenStallTimer=setTimeout(()=>{
-      window._listenStallTimer=null;
-      if(window._listenWanted && a.paused) _listenAutoReconnect();
-    }, 2500);
-  });
-})();
 async function loadAudioDebug() {
   try{const r=await fetch('/api/audio');const j=await r.json();
     document.getElementById('audioDebugBlock').innerHTML=`<pre style="font-size:11px">${JSON.stringify(j,null,2)}</pre>`;}catch(e){}

@@ -170,19 +170,18 @@ PMR446_PROFILE = BandProfile(
     name="PMR446",
     mode="channelized",
     start_hz=446_006_250,
-    stop_hz=446_093_750,
+    stop_hz=446_193_750,  # 16 Kanäle (PMR446d); K1–K8 = klassisch
     channel_width_hz=12_500,
     channels=[
-        ChannelDef("PMR1", 446_006_250, 12_500, label="PMR Kanal 1"),
-        ChannelDef("PMR2", 446_018_750, 12_500, label="PMR Kanal 2"),
-        ChannelDef("PMR3", 446_031_250, 12_500, label="PMR Kanal 3"),
-        ChannelDef("PMR4", 446_043_750, 12_500, label="PMR Kanal 4"),
-        ChannelDef("PMR5", 446_056_250, 12_500, label="PMR Kanal 5"),
-        ChannelDef("PMR6", 446_068_750, 12_500, label="PMR Kanal 6"),
-        ChannelDef("PMR7", 446_081_250, 12_500, label="PMR Kanal 7"),
-        ChannelDef("PMR8", 446_093_750, 12_500, label="PMR Kanal 8"),
+        ChannelDef(
+            f"PMR{i+1}",
+            int(round((446.00625 + i * 0.01250) * 1e6)),
+            12_500,
+            label=f"PMR Kanal {i+1}",
+        )
+        for i in range(16)
     ],
-    preferred_sample_rate=256_000,
+    preferred_sample_rate=256_000,  # deckt ~200 kHz Band + Rand
     fft_size=2048,
     frame_ms=80,
     watch_seconds=2.5,
