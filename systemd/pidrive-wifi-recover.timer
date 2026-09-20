@@ -2,12 +2,12 @@
 Description=PiDrive WLAN Recovery Timer (Nachversuche wenn Boot-Recovery nicht reicht)
 
 [Timer]
-# Erster Nachversuch falls Boot-Service zu früh war / Router noch weg
-OnBootSec=3min
+# Erster verzögerter Check (Firmware/Router oft erst nach ~45s stabil)
+OnBootSec=45s
 # Danach alle 5 Min — Script exit 0 sofort, wenn WLAN ok
 OnUnitActiveSec=5min
-AccuracySec=30s
-Persistent=true
+AccuracySec=15s
+Persistent=false
 Unit=pidrive-wifi-recover.service
 
 [Install]

@@ -1,7 +1,9 @@
 [Unit]
 Description=PiDrive Core - Car Infotainment
-After=multi-user.target network-online.target pipewire.service pipewire-pulse.service wireplumber.service bluetooth.service
-Wants=network-online.target pipewire.service pipewire-pulse.service wireplumber.service bluetooth.service
+# network.target reicht (Interface da). network-online wartet oft 2 Min auf
+# systemd-networkd-wait-online — unnötig für lokalen Start (BT/PipeWire/Menü).
+After=multi-user.target network.target pipewire.service pipewire-pulse.service wireplumber.service bluetooth.service
+Wants=network.target pipewire.service pipewire-pulse.service wireplumber.service bluetooth.service
 StartLimitIntervalSec=60
 StartLimitBurst=5
 
@@ -15,7 +17,7 @@ WorkingDirectory=/home/pi/pidrive/pidrive
 # nutzen damit den System-PulseAudio-Socket statt User-Session
 Environment=PULSE_SERVER=unix:/var/run/pulse/native
 
-ExecStartPre=/bin/sleep 2
+ExecStartPre=/bin/sleep 1
 ExecStart=/usr/bin/python3 /home/pi/pidrive/pidrive/main_core.py
 
 Restart=on-failure

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.146"
+PIDRIVE_VERSION="0.11.147"
 
 # ============================================================
 # PiDrive Install Script
@@ -481,7 +481,26 @@ if [ -f "$SERVICE_DIR/pidrive-wifi-recover.service" ]; then
 fi
 if [ -f "$SERVICE_DIR/pidrive-wifi-recover.timer" ]; then
     systemctl enable --now pidrive-wifi-recover.timer 2>/dev/null || true
-    ok "WLAN-Recovery-Timer: Nachversuche (3 Min nach Boot, dann alle 5 Min)"
+    ok "WLAN-Recovery-Timer: Nachversuche (45s nach Boot, dann alle 5 Min)"
+fi
+
+# Boot-Speed: unter NetworkManager blockiert systemd-networkd-wait-online oft ~2 Min
+# (Timeout, weil networkd keine Interfaces managed) und hält network-online + Core auf.
+if systemctl is-enabled NetworkManager >/dev/null 2>&1 \
+   || systemctl is-active --quiet NetworkManager 2>/dev/null; then
+    systemctl disable --now systemd-networkd-wait-online.service 2>/dev/null || true
+    systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
+    ok "Boot: systemd-networkd-wait-online maskiert (NetworkManager aktiv)"
+fi
+# cloud-init auf Car-Pi unnötig (Image-Firstboot) — spart Sekunden
+if systemctl list-unit-files cloud-init.service >/dev/null 2>&1 \
+   || systemctl list-unit-files cloud-init-local.service >/dev/null 2>&1; then
+    for _cu in cloud-init cloud-init-local cloud-init-main cloud-init-network \
+               cloud-config cloud-final cloud-init-hotplugd.socket; do
+        systemctl disable --now "${_cu}.service" 2>/dev/null || true
+        systemctl disable --now "${_cu}" 2>/dev/null || true
+    done
+    ok "Boot: cloud-init-Dienste deaktiviert (Car-Image)"
 fi
 
 # SSH
@@ -932,14 +951,14 @@ if [ -f /etc/raspotify/conf ]; then
         echo 'LIBRESPOT_DEVICE=default' >> /etc/raspotify/conf
     fi
     if [ -f /lib/systemd/system/raspotify.service ]; then
-        sed -i 's/Wants=network.target/Wants=network-online.target/'  /lib/systemd/system/raspotify.service 2>/dev/null || true
-        sed -i 's/After=network.target/After=network-online.target/' /lib/systemd/system/raspotify.service 2>/dev/null || true
+        # network.target reicht; network-online + networkd-wait-online kostet oft ~2 Min Timeout
+        sed -i 's/Wants=network-online.target/Wants=network.target/'  /lib/systemd/system/raspotify.service 2>/dev/null || true
+        sed -i 's/After=network-online.target/After=network.target/' /lib/systemd/system/raspotify.service 2>/dev/null || true
         # PULSE_SERVER: systemweiter PulseAudio-Daemon
         if ! grep -q "PULSE_SERVER=unix:/var/run/pulse/native" /lib/systemd/system/raspotify.service 2>/dev/null; then
             sed -i '/^\[Service\]/a Environment=PULSE_SERVER=unix:/var/run/pulse/native' \
                 /lib/systemd/system/raspotify.service 2>/dev/null || true
         fi
-        systemctl enable systemd-networkd-wait-online.service 2>/dev/null || true
         systemctl daemon-reload
     fi
 
@@ -1175,13 +1194,19 @@ if _errs: sys.exit(1)
     exit 1
 else
     ok "Import-Smoke-Test OK (main_core)"
-  # WebUI Import-Smoke — Entry ist web.app (webui.py entfernt)
+  # WebUI Import-Smoke — App + Entry-Shim
   if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "from web.app import app" 2>/dev/null); then
     err "Import-Smoke-Test fehlgeschlagen: web.app"
     (cd "$INSTALL_DIR/pidrive" && python3 -c "from web.app import app" 2>&1) | head -12
     exit 1
   else
     ok "Import-Smoke-Test OK (web.app)"
+  fi
+  if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>/dev/null); then
+    err "Import-Smoke-Test fehlgeschlagen: webui"
+    exit 1
+  else
+    ok "Import-Smoke-Test OK (webui entry)"
   fi
 fi
 

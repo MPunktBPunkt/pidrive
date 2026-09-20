@@ -1,16 +1,16 @@
 [Unit]
 Description=PiDrive WLAN Recovery (Boot + nach Stromausfall)
-# Nach Netzwerk und rfkill; Script beendet sich sofort, wenn wlan0 schon ok ist
-After=network-online.target rfkill-unblock.service
-Wants=network-online.target rfkill-unblock.service
+# Kein network-online: sonst warten wir auf networkd-wait-online-Timeout (~2 min).
+# Script exit 0 sofort, wenn wlan0 schon SSID+IPv4 hat.
+After=network.target rfkill-unblock.service
+Wants=network.target rfkill-unblock.service
 
 [Service]
 Type=oneshot
 User=root
-# Firmware/wpa brauchen oft ein paar Sekunden nach Boot
-ExecStartPre=-/bin/sleep 30
+# Kein festes sleep — verzögerte Nachversuche macht der Timer (OnBootSec).
 ExecStart=/bin/bash /home/pi/pidrive/scripts/wifi-recover.sh
-TimeoutStartSec=180
+TimeoutStartSec=120
 Nice=10
 RemainAfterExit=no
 StandardOutput=journal

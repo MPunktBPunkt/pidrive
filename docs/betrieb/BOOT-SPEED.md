@@ -1,0 +1,44 @@
+# Boot-Beschleunigung (Pi + PiDrive)
+
+**Stand:** 2026-09-20 · gemessen auf `192.168.178.105`
+
+## Vorher (typisch)
+
+| Phase | Dauer |
+|-------|-------|
+| Kernel | ~5 s |
+| Userspace bis graphical | **~2 min 40 s** |
+| Davon `systemd-networkd-wait-online` | **~2 min** (Timeout, Failure) |
+| Davon `pidrive-wifi-recover` `sleep 30` | **30 s** (auch wenn WLAN schon ok) |
+| `pidrive_core` Start | erst danach |
+
+Ursache: NetworkManager managed WLAN, aber `systemd-networkd-wait-online` bleibt enabled und hält `network-online.target`. `pidrive_core` wartete darauf.
+
+## Maßnahmen (Repo)
+
+1. **`systemd-networkd-wait-online` maskieren**, wenn NetworkManager aktiv (`install.sh`)
+2. **`pidrive_core` / pump*:** `After=network.target` statt `network-online`
+3. **wifi-recover:** kein festes `sleep 30`; schneller Boot-Check + Timer nach 45 s
+4. **cloud-init** auf Car-Pi deaktivieren (Firstboot-Reste)
+5. Raspotify nicht mehr an `network-online` / networkd-wait koppeln
+
+## Nach Deploy am Pi
+
+```bash
+cd ~/pidrive && git pull
+# Units + Maskierung (oder install.sh Abschnitt erneut)
+sudo cp systemd/pidrive_core.service /etc/systemd/system/
+sudo cp systemd/pidrive-wifi-recover.service /etc/systemd/system/
+sudo cp systemd/pidrive-wifi-recover.timer /etc/systemd/system/
+sudo systemctl disable --now systemd-networkd-wait-online.service
+sudo systemctl mask systemd-networkd-wait-online.service
+sudo systemctl daemon-reload
+sudo systemctl restart pidrive_core
+sudo systemctl enable --now pidrive-wifi-recover.timer
+sudo reboot
+# danach:
+systemd-analyze
+systemd-analyze blame | head -15
+```
+
+Ziel: Userspace deutlich unter einer Minute, Core wenige Sekunden nach `network.target`.

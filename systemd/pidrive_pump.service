@@ -1,7 +1,7 @@
 [Unit]
 Description=PiDrive USB/ESP PUMP Presence (SoftAP status poll)
-After=network-online.target
-Wants=network-online.target
+After=network.target
+Wants=network.target
 # UART bleibt bei pump_bridge — dieser Dienst pollt nur HTTP + Serial-Nodes
 
 [Service]

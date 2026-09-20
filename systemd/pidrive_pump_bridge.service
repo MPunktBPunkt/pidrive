@@ -1,7 +1,7 @@
 [Unit]
 Description=PiDrive PUMP Bridge (UART ↔ esp32.pidrive Live-MP3 + Menü)
-After=network-online.target pidrive_core.service
-Wants=network-online.target
+After=network.target pidrive_core.service
+Wants=network.target
 # Belegt /dev/ttyACM0 — nicht parallel zu minicom/screen
 
 [Service]
