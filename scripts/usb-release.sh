@@ -62,7 +62,9 @@ done
 
 udevadm settle --timeout=10 2>/dev/null || true
 log "done (peripherals_seen=$n)"
+# Bridge nicht synchron starten — sonst Deadlock:
+# usb-release ← bluetooth ← core ← pump_bridge ← usb-release
 if [[ -e /dev/ttyACM0 ]]; then
-    systemctl start pidrive_pump_bridge.service 2>/dev/null || true
+    systemctl start --no-block pidrive_pump_bridge.service 2>/dev/null || true
 fi
 exit 0
