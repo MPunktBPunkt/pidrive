@@ -1,50 +1,41 @@
-# Boot: USB-Geräte verzögert freigeben (ESP / RTL-SDR)
+# Boot & USB (ESP / RTL-SDR)
 
-**Stand:** 2026-09-20 · Pi hat **kein BIOS** — `config.txt`, cmdline, udev, systemd.
+**Stand:** 2026-09-20 · Pi hat **kein BIOS** — `config.txt`, udev, systemd.
 
-## Zwei verschiedene Probleme
+## Betriebsregel (Feldtest)
 
-| Situation | Bedeutung |
-|-----------|-----------|
-| Stick **nach** Boot stecken → ok | Einsteck-Impuls / Hotplug oft unkritisch |
-| Stick **schon beim Einschalten** → Pi kommt nicht | Last + USB-Enumeration ab t=0 (nicht nur Anlaufstrom) |
+**Keinen USB-Hub verwenden** für RTL-SDR / ESP am PiDrive.
 
-Software (`authorized=0`) allein hat den Kaltstart-Hang **nicht** zuverlässig verhindert.
-Deshalb zusätzlich: Kernel **IGNORE-Quirk** (`:k`) für ESP/RTL beim Boot, Freigabe ~10 s später.
+| Aufbau | Kaltstart |
+|--------|-----------|
+| RTL (+ ggf. ESP-Serial) **direkt** am Pi-Port | ok (~30–35 s bis SSH) |
+| Geräte über **USB-Hub** (auch aktiv) ab Power-on | Boot hängt oft; Hub abziehen → Boot läuft weiter |
+| Geräte **nach** erfolgreichem Boot stecken | ok |
 
-## Strategie
+Der Hang mit Hub ist ein **USB-Enumerations-/Bus-Problem**, nicht nur Einsteck-Anlaufstrom
+(Pi-Versorgung bleibt, Hub ab → Boot setzt fort).
+
+## Was Software noch macht
 
 | Was | Wann |
 |-----|------|
 | WLAN | sofort (SSH) |
-| ESP / RTL / QinHeng | cmdline `usbcore.quirks=…:k` → Kernel ignoriert → nach ~10 s Quirks leeren + Hub-Rebind |
+| ESP / RTL | udev `authorized=0`, Freigabe ~10–12 s (`pidrive-usb-release`) |
 | Bluetooth | nach USB-Release |
-| `pump_bridge` | nur mit `/dev/ttyACM0` |
+| `pump_bridge` | nur mit `/dev/ttyACM0`; Start `--no-block` (kein Boot-Deadlock) |
 
-## Wenn es trotzdem hängt
+`usbcore.quirks=…:k` hat den **Hub-Kaltstart** nicht gerettet — nicht nötig / wieder entfernen.
 
-Dann ist es sehr wahrscheinlich **5V-/Controller-Physik** (Hub speist Ports ab Netz-an).
-Software kann Ports nicht „aus“ schalten, bevor der Kernel läuft.
+## Optional `config.txt`
 
-Pragmatisch:
-1. **RTL/ESP erst stecken, wenn Web/SSH da ist** (~30–40 s), oder  
-2. Hub mit **Port-Power** (`uhubctl`, Genesys oft) — Ports soft-an nach Boot, oder  
-3. Stärkere/kürzere Versorgung Pi + Hub getrennt prüfen
-
-## Dateien
-
-- `scripts/usb-boot-quirks-install.sh` → `cmdline.txt`
-- `udev/80-pidrive-defer-usb.rules`
-- `scripts/usb-release.sh`
-- `systemd/pidrive-usb-release.service`
-
-## Test Kaltstart mit Stick
-
-```bash
-sudo bash scripts/usb-boot-quirks-install.sh   # einmalig
-sudo reboot   # Stick + Hub schon an
-# nach ~40s SSH:
-lsusb
-journalctl -u pidrive-usb-release -b
-vcgencmd get_throttled
 ```
+usb_max_current_enable=1
+```
+
+## Empfohlener Steckplan
+
+1. Pi einschalten **ohne** Hub  
+2. RTL-Stick (und ESP-UART) **direkt** in die Pi-USB-A-Buchsen  
+3. ESP-OTG erst wenn System steht, falls nötig  
+
+Docs-Index: Boot-Speed siehe [`BOOT-SPEED.md`](BOOT-SPEED.md).

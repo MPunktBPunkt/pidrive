@@ -1117,6 +1117,7 @@ fi
 if [ -f "$INSTALL_DIR/scripts/usb-release.sh" ]; then
     chmod +x "$INSTALL_DIR/scripts/usb-release.sh"
 fi
+# usbcore.quirks: Hub-Kaltstart nicht gelöst — nicht installieren (siehe BOOT-USB-DEFER.md)
 if [ -f "$INSTALL_DIR/systemd/pidrive-usb-release.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive-usb-release.service" "$SERVICE_DIR/pidrive-usb-release.service"
     sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive-usb-release.service"
