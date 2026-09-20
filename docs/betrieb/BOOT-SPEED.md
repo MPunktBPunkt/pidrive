@@ -41,4 +41,13 @@ systemd-analyze
 systemd-analyze blame | head -15
 ```
 
-Ziel: Userspace deutlich unter einer Minute, Core wenige Sekunden nach `network.target`.
+## Nachher (gemessen 2026-09-20, gleicher Pi)
+
+| Phase | Dauer |
+|-------|-------|
+| Kernel + Userspace | **~24 s** (vorher ~2 min 45 s) |
+| graphical.target | ~19 s |
+| `pidrive_web` | früh aktiv (HTTP 200) |
+| `pidrive_core` | ~1 s in blame |
+
+Noch sichtbar (~10 s): `NetworkManager-wait-online`, `raspotify-crash-report-generator` — unkritisch für Core/Web.
