@@ -1,45 +1,42 @@
 # PiDrive — Architektur & Verzeichnisstruktur
 
-**Stand:** v0.11.132 · 2026-09-15
+**Stand:** v0.11.146 · 2026-09-20
 
 ## Übersicht
 
 PiDrive ist ein modulares, GUI-loses Car-Infotainment-System für BMW iDrive (NBT EVO).
 Zielplattform ist der Raspberry Pi 4; entwickelt und getestet wird zusätzlich auf
 x86/Debian. Es gibt kein TFT-Display mehr (dauerhaft entfernt in v0.10.83) — die
-Bedienung erfolgt über BMW iDrive (AVRCP), die WebUI (Port 8080) und die CLI
-(`pidrivectl`).
+Bedienung erfolgt über BMW iDrive (AVRCP), die WebUI (Port 8080), optional
+USB-MSC am BMW (ESP32-Gadget) und die CLI (`pidrivectl`).
 
 ```
 PiDrive
 ├── Core-Loop / Triggerverarbeitung      main_core.py, trigger/
 ├── Fachmodule (DAB, FM, BT, Audio…)     modules/
-├── WebUI (Flask API + Frontend)         web/ (Entry-Shim: webui.py)
+├── WebUI (Flask API + Frontend)         web/app.py
 ├── CLI (pidrivectl)                      cli/
 ├── IPC / Status / Einstellungen          ipc.py, status.py, settings.py
 ├── AVRCP (BMW-Integration)               integration/avrcp_trigger.py
+├── ESP / USB-PUMP Presence               integration/usb_pump_client.py
 ├── MPRIS2 (BMW-Display)                  mpris2.py (Root, nicht unter integration/)
 ├── Menü-Modell                           menu/ (menu_builder / menu_state / menu_model)
 └── Konfiguration                         config/
 ```
 
-> **Modulpfade & Kompatibilitäts-Shims:** Die früher flache Struktur (z. B. `td_*.py`,
-> `cli_*.py`, `webui.py`, `modules/bluetooth.py` direkt im Wurzelverzeichnis) wurde in
-> Pakete umgebaut (`trigger/`, `cli/`, `web/`, `modules/bluetooth/`, `modules/radio/`,
-> `integration/`). Für Rückwärtskompatibilität existieren dünne **Shims** an den alten
-> Pfaden, die auf die neue Implementierung weiterleiten:
+> **Modulpfade & Rest-Shims:** Die früher flache Struktur wurde in Pakete umgebaut
+> (`trigger/`, `cli/`, `web/`, `modules/bluetooth/`, `modules/radio/`, `integration/`).
+> Noch vorhanden (nur Alt-Imports / systemd-Übergänge):
 >
 > | Shim (alt) | Echte Implementierung |
 > |---|---|
-> | `webui.py` | `web/app.py` |
-> | `web/shared.py` | `web/shared/*` (Re-Export-Layer) |
 > | `avrcp_trigger.py` | `integration/avrcp_trigger.py` |
 > | `modules/dab.py` | `modules/radio/dab.py` |
 > | `modules/fm.py` | `modules/radio/fm.py` |
 > | `modules/scanner.py` | `modules/radio/scanner.py` |
 >
-> Die systemd-Dienste `pidrive_web.service` und `pidrive_avrcp.service` starten teils
-> noch die Shim-Pfade (`webui.py` bzw. direkt `integration/avrcp_trigger.py`).
+> `webui.py` ist entfernt — `pidrive_web.service` startet `web/app.py` direkt.
+> `pidrive_avrcp.service` startet bereits `integration/avrcp_trigger.py`.
 
 ---
 
@@ -60,7 +57,6 @@ pidrive/
 ├── mpris2.py               ← D-Bus MPRIS2-Adapter (BMW-Display-Metadaten)
 ├── mpv_meta.py             ← mpv-Socket-Metadaten-Listener (ICY/Now-Playing)
 │
-├── webui.py                ← Entry-Shim → web/app.py
 ├── avrcp_trigger.py        ← Entry-Shim → integration/avrcp_trigger.py
 │
 ├── menu/                   ← Menü-Modell
@@ -84,16 +80,19 @@ pidrive/
 │   └── format.py           ← Ausgabe-Formatierung
 │
 ├── integration/
-│   └── avrcp_trigger.py    ← BMW iDrive AVRCP → File-Trigger (echte Impl.)
+│   ├── avrcp_trigger.py    ← BMW iDrive AVRCP → File-Trigger (echte Impl.)
+│   └── usb_pump_client.py  ← ESP Presence → /tmp/pidrive_usb_status.json
 │
 ├── modules/                ← Fachmodule
 │   ├── audio.py            ← PipeWire/PulseAudio-Kompat: Volume / Routing / Sink-Wahl
 │   ├── wifi.py             ← WiFi-Management
 │   ├── favorites.py        ← Favoriten-Persistenz
 │   ├── local_player.py     ← Lokale Musik (mpv, Ordner/Playlist, Shuffle)
+│   ├── music_library.py    ← Bibliotheks-Index
 │   ├── usb_music.py        ← USB-Stick-Erkennung & Mount
 │   ├── playback_meta.py    ← Metadaten-Reset bei Quellwechsel
 │   ├── source_state.py     ← Source-State-Machine (boot_phase, aktive Quelle)
+│   ├── source_autoplay.py  ← Autoplay nach Boot/Reconnect
 │   ├── system.py           ← System-Infos (RAM, Temp, throttled)
 │   ├── update.py           ← OTA von GitHub (pidrivectl update)
 │   ├── webradio.py         ← mpv-basiertes Webradio (IPC-Socket-Metadaten)
@@ -123,18 +122,13 @@ pidrive/
 │       └── rtlsdr.py       ← RTL-SDR Prozess-Manager (Lock, Ownership, PPM)
 │
 ├── web/                    ← Web-Frontend
-│   ├── app.py              ← Flask-App (REST-API + HTML-Seiten, echte Impl.)
-│   ├── shared.py           ← Re-Export-Layer für web/shared/*
-│   ├── shared/
-│   │   ├── constants.py    ← Pfade, ALLOWED_COMMANDS, PA_ENV
-│   │   ├── files.py        ← read_json, write_cmd, file_age
-│   │   ├── audio.py        ← Audio-Debug-Helfer
-│   │   ├── system.py       ← System-Debug-Helfer
-│   │   └── view_model.py   ← build_view_model()
+│   ├── app.py              ← Flask-App (REST-API + HTML-Seiten; systemd-Entry)
+│   ├── shared/             ← constants, files, audio, system, view_model
 │   ├── api/
 │   │   ├── routes_audio.py    ← /api/audio, /api/gain, /api/volume
 │   │   ├── routes_bt.py       ← /api/bt/*
 │   │   ├── routes_dab.py      ← /api/dab/*
+│   │   ├── routes_music.py    ← /api/music/*
 │   │   └── routes_webradio.py ← /api/webradio/*
 │   ├── templates/
 │   │   ├── base.html         ← Layout-Template
@@ -215,6 +209,7 @@ Parallel dazu pflegt der Core die BMW-Display-Metadaten über `mpris2.py`
 | `pidrive_dab_play_debug.json` | DAB Lock/PCM/DLS Debug | `modules/radio/dab_helpers.py` |
 | `pidrive_dab_welle.err` | welle-cli stderr (Sync, PCM, DLS) | welle-cli (überschrieben pro Start) |
 | `pidrive_mpv.sock` | mpv IPC-Socket (Metadaten) | mpv |
+| `pidrive_usb_status.json` | ESP Presence (Serial/HTTP/OTG/PUMP) | `integration/usb_pump_client.py` |
 | `pidrive_test_results.json` | Ergebnis `pidrivectl test all` | `test_suite.py` |
 
 ---
@@ -257,9 +252,10 @@ pidrivectl play local /pfad    # Lokale Musik [--shuffle]
 pidrivectl stop                # Stoppen
 pidrivectl favorites list      # Favoriten
 pidrivectl bt scan / pair / connect / known / status
-pidrivectl audio route bt|klinke|hdmi|auto
+pidrivectl audio route bt|klinke|hdmi|usb_gadget|auto
 pidrivectl volume up / down / set 70
 pidrivectl dab scan / status / live / stop
+pidrivectl usb status              # ESP/PUMP Presence (falls Client aktiv)
 pidrivectl update [--check|--yes]  # OTA von origin/main
 pidrivectl source state|history    # Transition-Diagnose (W7)
 pidrivectl webui check|selftest|routes
@@ -275,15 +271,18 @@ Vollständige Referenz: `pidrivectl --help` sowie [`KontextPiDrive.md`](../Konte
 
 | Service | Aufgabe | Entry-Point |
 |---|---|---|
-| `pidrive_core.service` | Core-Loop, Wiedergabe, Menü, MPRIS2, BT-Agent | `main_core.py` |
-| `pidrive_web.service` | WebUI + REST-API (Port 8080) | `webui.py` → `web/app.py` |
+| `pidrive_core.service` | Core-Loop, Wiedergabe, Menü, MPRIS2 | `main_core.py` |
+| `pidrive_web.service` | WebUI + REST-API (Port 8080) | `web/app.py` |
 | `pidrive_avrcp.service` | BMW AVRCP → Trigger-Queue | `integration/avrcp_trigger.py` |
+| `pidrive_btagent.service` | BlueZ Pairing-Agent | `modules/bluetooth/bt_agent_dbus.py` |
+| `pidrive_pump.service` | ESP Presence-Poll (optional) | `integration/usb_pump_client.py` |
+| `pidrive_pump_bridge.service` | Live-MP3 UART→ESP (Lab/Prod) | `/home/pidrive/pump_bridge.py` (esp32.pidrive) |
 | `pipewire.service` | Audio-Server (System-Mode, `User=pulse`) | — |
 | `pipewire-pulse.service` | PulseAudio-Kompat (`/var/run/pulse/native`) | — |
 | `wireplumber.service` | Session-Manager, BT A2DP automatisch | — |
 
-> `pidrive.service` und `pidrive_display.service` sind Alt-Units aus der TFT-Zeit
-> (Display in v0.10.83 entfernt) und werden nicht mehr aktiv genutzt.
+> TFT-Alt-Units (`pidrive.service`, `pidrive_display.service`) liegen unter
+> [`systemd/legacy/`](../../systemd/legacy/) und werden nicht mehr installiert.
 
 ---
 
@@ -296,7 +295,7 @@ Vollständige Referenz: `pidrivectl --help` sowie [`KontextPiDrive.md`](../Konte
 | `Audio: virtual` | Kein BT-Sink (pidrive_null aktiv) | BT verbinden für echtes Audio |
 | `Socket nicht gefunden: /tmp/pidrive_mpv.sock` | mpv noch nicht bereit | Metadaten folgen kurz danach |
 | `mpv rc=2 nach 5s` | Kein PA-Sink (BT getrennt) | Erwartet ohne BT, kein Bug |
-| `pidrive_display.service: deaktiviert` | TFT entfernt (v0.10.83) | Erwartet |
+| Legacy-Units deaktiviert | TFT entfernt (v0.10.83) | Erwartet |
 
 ---
 
@@ -304,4 +303,4 @@ Vollständige Referenz: `pidrivectl --help` sowie [`KontextPiDrive.md`](../Konte
 (Laufzeitpfade), [`TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md) (Fehlerbehebung), [`KontextPiDrive.md`](../KontextPiDrive.md)
 (Entwicklungsverlauf & Entscheidungen).*
 
-*Zuletzt aktualisiert: v0.11.122*
+*Zuletzt aktualisiert: v0.11.146 · 2026-09-20*

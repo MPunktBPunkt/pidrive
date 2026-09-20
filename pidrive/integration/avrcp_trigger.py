@@ -316,11 +316,11 @@ def handle_avrcp(event: str, source: str = "unknown", raw_line: str = ""):
         log.info(f"AVRCP    Raw:     {raw_line[:120]}")
         _raw_log(f"EVENT: {event!r} src={source} raw={raw_line[:120]}")
 
-    # ── Doppelklick Play/Pause → direkt "Jetzt läuft" ───────────────────
+    # ── Doppelklick Play/Pause → Root-Kind 0 (Favoriten) ────────────────
     if event in ("play", "pause", "play_pause"):
         if t0 - _last_enter_time < DOUBLE_TAP_SEC:
             dt_tap = round(t0 - _last_enter_time, 2)
-            log.info(f"AVRCP    Double-tap ({dt_tap}s) → cat:0 (Jetzt läuft)")
+            log.info(f"AVRCP    Double-tap ({dt_tap}s) → cat:0 (Favoriten)")
             write_cmd("cat:0")
             _last_enter_time = 0.0
             _write_debug_full(event, "cat:0", context_name, source, ctx, t0)

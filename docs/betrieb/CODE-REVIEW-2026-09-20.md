@@ -1,6 +1,6 @@
 # PiDrive — Code-Review (Struktur, Legacy, Flows)
 
-**Stand:** v0.11.145 · 2026-09-20  
+**Stand:** v0.11.146 · 2026-09-20  
 **Scope:** Repo-Struktur, Shims/Legacy, systemd, Docs vs. Code, Flussdiagramme  
 **Methode:** Code + Docs-Abgleich (kein Live-HW-Lauf in diesem Durchgang)
 
@@ -21,7 +21,7 @@ Dokument: [`docs/architektur/RUNTIME_FLOWS.md`](../architektur/RUNTIME_FLOWS.md)
 | Flow | Urteil | Bemerkung |
 |------|--------|-----------|
 | **A** BMW → AVRCP → `pidrive_cmd` → Core → Dispatcher | ✅ gültig | `check_trigger` / `drain_triggers` / `trigger/*` unverändert |
-| **B** WebUI `/api/cmd` → Queue | ✅ gültig | Entry weiter über `webui.py` → `web/app.py` |
+| **B** WebUI `/api/cmd` → Queue | ✅ gültig | Entry: `web/app.py` (Shim `webui.py` entfernt 2026-09-20) |
 | **C** `pidrivectl play web` | ✅ gültig | |
 | **D** Local-Play | ✅ gültig | |
 | **E** BT-Connect / A2DP | ✅ gültig | PipeWire-Sink-Hinweis korrekt |
@@ -53,7 +53,7 @@ Zustandsmaschine ([`ZUSTANDSMASCHINE.md`](../architektur/ZUSTANDSMASCHINE.md), v
 
 ### 2.2 Shims — Docs vs. Reality
 
-| Docs (`ARCHITECTURE` / `MIGRATION_STRUCTURE`) | Realität (v0.11.145) |
+| Docs (`ARCHITECTURE` / `MIGRATION_STRUCTURE`) | Realität (v0.11.146) |
 |-----------------------------------------------|----------------------|
 | `web/shared.py` Re-Export-Shim | **fehlt** — nur `web/shared/` |
 | `modules/spectrum.py`, `rtlsdr.py`, `bluetooth.py` Shims | **fehlen** — Import nur über `modules.radio.*` / `modules.bluetooth.*` |

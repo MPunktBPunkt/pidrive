@@ -1,6 +1,6 @@
 # PiDrive — Runtime Flows
 
-**Stand:** v0.11.127 · 2026-09-15 · Debugging-Referenz für Laufzeitpfade
+**Stand:** v0.11.146 · 2026-09-20 · Debugging-Referenz für Laufzeitpfade
 
 Dieses Dokument zeigt die echten Laufzeitpfade, nicht nur die statische Architektur. Es hilft dabei zu verstehen, welche Schichten bei einem Ereignis beteiligt sind und wo Debugging ansetzen muss.
 
@@ -136,7 +136,7 @@ modules/webradio.py — play(name, url, S, settings)
 ```
 
 **Wichtige Fallstricke:**
-- `webui.py` ist nur Entry-Shim → `web/app.py` ist die echte Implementierung
+- WebUI-Entry ist `web/app.py` (`pidrive_web.service`) — kein `webui.py`-Shim mehr
 - `mpv_meta.start()` darf **kein** `os.unlink()` aufrufen — löscht fertigen Socket
 - Ohne PA-Sink: `mpv rc=2` nach 5s — erwartet, kein Bug
 
@@ -446,7 +446,7 @@ AVRCP-Medienkommandos. Diese werden auf die Navigation gemappt:
 | Skip ⏮ (Previous) | `up` | Cursor −1 |
 | ► / ❚❚ (Play/Pause) | `enter` | Ordner öffnen bzw. Station/Aktion/Toggle ausführen |
 | ■ (Stop) | `back` | eine Ebene zurück |
-| Doppel-Tipp ►/❚❚ | `cat:0` | Sprung zu „Jetzt läuft" (nur über `avrcp_trigger.py`-Pfad) |
+| Doppel-Tipp ►/❚❚ | `cat:0` | Sprung zu Root-Kind 0 (**Favoriten**) über `avrcp_trigger.py` |
 
 Verarbeitungskette: `enter`/`up`/`down`/`back` → `trigger/td_nav.py: handle()` →
 `menu_state.key_*()` → `rev++` → erneut `write_menu()` + `mpris2.update()`.
@@ -462,13 +462,57 @@ Verarbeitungskette: `enter`/`up`/`down`/`back` → `trigger/td_nav.py: handle()`
 > **Deshalb: explizite „Zurueck"-Einträge.** Da `back` (= Stop) im Fahrzeug oft nicht
 > ankommt, hat seit v0.11.123 **jeder Ordner** als ersten Eintrag „Zurueck" (Aktion
 > `back`, per enter auslösbar). So kommt man auch ohne Stop-Kommando eine Ebene hoch.
-> Zusätzlich: Doppel-Tipp Play (`cat:0`) springt an den Menüanfang; volle Bedienung
+> Zusätzlich: Doppel-Tipp Play (`cat:0`) springt zu **Favoriten** (Root-Kind 0); volle Bedienung
 > jederzeit über WebUI/CLI.
 >
 > **Zwei Empfangspfade beachten** (siehe [`iDriveBt.md`](../fahrzeug/iDriveBt.md) §6.1): Der `mpris2.py`-Pfad mappt
 > **fest** (Next→down, Stop→back …), der `avrcp_trigger.py`-Pfad **kontextabhängig**.
 > Im Menü-Kontext ergeben beide dasselbe; in Radio-/Scanner-Kontexten unterscheiden sie
 > sich (z. B. Next→`fm_next`).
+
+---
+
+## J. Webradio → USB-Gadget → ESP MSC (BMW USB-Medien)
+
+Live-Audio am BMW über den ESP32 als Mass-Storage-Gadget (nicht über BT-A2DP).
+Firmware und `pump_bridge.py` liegen im Repo **esp32.pidrive**; PiDrive liefert
+Presence-Client, Audio-Route und Menü-Trigger.
+
+```
+pidrivectl play web "Rock Antenne"   (oder Favorit / SoftAP lab/play)
+    │
+    ▼
+trigger/td_radio → modules/webradio.py → mpv
+    │
+    ├── settings["audio_output"] = usb_gadget   (Menü: Audio → USB (ESP))
+    └── PipeWire / Monitor → Bridge-Input
+            │
+            ▼
+pump_bridge.py  (pidrive_pump_bridge.service, UART /dev/ttyACM0)
+    ├── pollt /tmp/pidrive_menu.json → menu_set an ESP
+    ├── ffmpeg → MP3 frames → UART audio_data
+    └── stop ohne status_cover (sonst „keine Einträge“ am BMW)
+            │
+            ▼
+ESP32 USB-MSC Gadget  →  BMW USB-Medien
+    ├── Directory-Namen = Menü-Slots (FAT nach Mount unveränderlich)
+    └── Stream in feste Clusterkette (Listing bleibt sichtbar)
+
+Parallel (optional):
+integration/usb_pump_client.py  (pidrive_pump.service)
+    → /tmp/pidrive_usb_status.json  → Status-Key „usb“ in der WebUI
+```
+
+**Debugging:**
+```bash
+pidrivectl usb status
+pidrivectl audio route usb_gadget
+systemctl status pidrive_pump_bridge
+curl -s http://192.168.4.1/api/status   # SoftAP, oder STA-IP des ESP
+```
+
+Lab-Protokoll: [`USB-MSC-STREAM-LISTING-2026-09-18.md`](../betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) ·
+Pfad: [`PFAD-ESP32-PIDRIVE.md`](../planung/PFAD-ESP32-PIDRIVE.md).
 
 ---
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.144"
+PIDRIVE_VERSION="0.11.146"
 
 # ============================================================
 # PiDrive Install Script
@@ -407,7 +407,7 @@ cp "$INSTALL_DIR/systemd/pidrive_core.service" "$SERVICE_DIR/pidrive_core.servic
 sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_core.service"
 sed -i "s|/home/pi/|${REAL_HOME}/|g" "$SERVICE_DIR/pidrive_core.service"
 
-# pidrive_display.service: entfernt v0.11.96
+# pidrive_display.service: entfernt v0.11.96 — Unit nur noch unter systemd/legacy/
 
 # Web Service (IMMER aktualisieren — Ordering-Cycle-Fix!)
 if [ -f "$INSTALL_DIR/systemd/pidrive_web.service" ]; then
@@ -434,7 +434,7 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_btagent.service" ]; then
     ok "pidrive_btagent.service vorbereitet"
 fi
 
-# v0.6.0: kein monolithischer pidrive.service mehr
+# v0.6.0: kein monolithischer pidrive.service mehr (Unit unter systemd/legacy/)
 
 # rfkill-unblock.service
 cat > "$SERVICE_DIR/rfkill-unblock.service" << 'EOF'
@@ -1155,7 +1155,7 @@ _mods = [
     'trigger.td_hardware','trigger.td_nav','trigger.td_radio',
     'trigger.td_scanner','trigger.td_system','trigger.trigger_dispatcher',
     'menu.menu_model','menu.menu_builder','menu.menu_state',
-    'cli.cli','webui','main_core',
+    'cli.cli','web.app','main_core',
 ]
 _errs = []
 for _m in _mods:
@@ -1163,7 +1163,7 @@ for _m in _mods:
     except Exception as e: _errs.append(f'{_m}: {e}'); print(f'  ✗ {_m}: {e}', file=_sys.stderr)
 if _errs: sys.exit(1)
 "
-  python3 -c "import webui"
+  python3 -c "from web.app import app"
   # Neue Zielpfade (v0.10.55+)
   python3 -c "import cli.cli" 2>/dev/null && echo "  ✓ cli.cli" || echo "  ⚠ cli.cli nicht importierbar"
   python3 -c "import cli.service" 2>/dev/null && echo "  ✓ cli.service" || echo "  ⚠ cli.service"
@@ -1175,13 +1175,13 @@ if _errs: sys.exit(1)
     exit 1
 else
     ok "Import-Smoke-Test OK (main_core)"
-  # v0.9.4: WebUI Import-Smoke-Test — verhindert stille Strukturfehler wie v0.8.12
-  if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>/dev/null); then
-    err "Import-Smoke-Test fehlgeschlagen: webui"
-    (cd "$INSTALL_DIR/pidrive" && python3 -c "import webui" 2>&1) | head -12
+  # WebUI Import-Smoke — Entry ist web.app (webui.py entfernt)
+  if ! (cd "$INSTALL_DIR/pidrive" && python3 -c "from web.app import app" 2>/dev/null); then
+    err "Import-Smoke-Test fehlgeschlagen: web.app"
+    (cd "$INSTALL_DIR/pidrive" && python3 -c "from web.app import app" 2>&1) | head -12
     exit 1
   else
-    ok "Import-Smoke-Test OK (webui)"
+    ok "Import-Smoke-Test OK (web.app)"
   fi
 fi
 

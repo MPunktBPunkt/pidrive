@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand:** v0.11.132 · 2026-09-15
+**Stand:** v0.11.146 · 2026-09-20
 
 ---
 
@@ -12,6 +12,7 @@ PiDrive ist ein Python-Daemon mit Web-Frontend. Trigger aus BMW AVRCP, WebUI und
 BMW iDrive ──[AVRCP BT]──► integration/avrcp_trigger.py
 WebUI       ──[HTTP POST]──► web/app.py + web/api/*.py
 CLI         ──[IPC-Datei]──► cli/adapters.py
+ESP SoftAP ──[lab/play]───► pump_bridge.py (esp32.pidrive)
                                     │
                                /tmp/pidrive_cmd   (append-Queue)
                                     │
@@ -24,11 +25,11 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
                           │
                        modules/*
                           │
-                       PipeWire ──► BT A2DP / Klinke / HDMI
+                       PipeWire ──► BT A2DP / Klinke / HDMI / usb_gadget→ESP
 ```
 
-> **Hinweis zu Compat-Shims:** Die alten flachen Pfade existieren als dünne
-> Weiterleitungen weiter (`webui.py` → `web/app.py`, `avrcp_trigger.py` →
+> **Hinweis zu Compat-Shims:** Die alten flachen Pfade existieren teilweise als dünne
+> Weiterleitungen weiter (`avrcp_trigger.py` →
 > `integration/avrcp_trigger.py`, `modules/dab.py|fm.py|scanner.py` →
 > `modules/radio/*`). Für neuen Code immer die kanonischen Pfade unten (Abschnitt C)
 > verwenden.
@@ -105,12 +106,13 @@ CLI         ──[IPC-Datei]──► cli/adapters.py
 | Bluetooth | `modules/bluetooth/*.py` |
 | Radio | `modules/radio/*.py` |
 | AVRCP (Service-Entry) | `integration/avrcp_trigger.py` |
+| ESP Presence | `integration/usb_pump_client.py` |
 | MPRIS2 | `mpris2.py` (Root) |
 | Core | `main_core.py` (Root, systemd-Entry) |
 
-> **Shims (nicht für neuen Code):** `webui.py`, `web/shared.py`, `avrcp_trigger.py`,
+> **Shims (nicht für neuen Code):** `avrcp_trigger.py`,
 > `modules/dab.py`, `modules/fm.py`, `modules/scanner.py` leiten auf die kanonischen
-> Pfade weiter und bleiben aus Kompatibilitätsgründen bestehen.
+> Pfade weiter. `webui.py` ist entfernt (`web/app.py` ist der Entry).
 
 ---
 

@@ -1,6 +1,5 @@
 """web/app.py — PiDrive WebUI Flask-App
-Hauptdatei für das Webfrontend. Läuft als pidrive_web.service.
-Früher: pidrive/webui.py
+Hauptdatei für das Webfrontend. Läuft als pidrive_web.service (ExecStart: web/app.py).
 """
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
