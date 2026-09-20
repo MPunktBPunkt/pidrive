@@ -54,9 +54,18 @@ systemd-analyze blame | head -15
 
 | Phase | Dauer |
 |-------|-------|
-| Kernel + Userspace | **~24 s** (vorher ~2 min 45 s) |
+| Kernel + Userspace | **~22 s** (Runde 2, ohne ESP) (vorher ~2 min 45 s) |
 | graphical.target | ~19 s |
 | `pidrive_web` | früh aktiv (HTTP 200) |
 | `pidrive_core` | ~1 s in blame |
 
-Noch sichtbar (~10 s): `NetworkManager-wait-online`, `raspotify-crash-report-generator` — unkritisch für Core/Web.
+Noch sichtbar (~5 s): `NetworkManager-wait-online`. Raspotify-Crash-Report weg.
+
+### ESP am USB (Verdacht Boot-Hang)
+
+Mit ESP32 (CDC + ggf. MSC) kam der Pi nach Reboot teils **nicht** wieder ins WLAN.
+Ohne ESP, nur RTL-SDR: Boot ~**22 s**, Core+Web parallel ok.
+
+Maßnahmen:
+- `pidrive_pump_bridge`: `ConditionPathExists=/dev/ttyACM0` (kein Restart-Loop ohne Port)
+- `udev/99-pidrive-esp.rules`: Bridge beim Einstecken nachstarten

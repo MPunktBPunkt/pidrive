@@ -1,0 +1,2 @@
+# ESP32 UART (CDC ACM): Bridge nachstecken starten, ohne Boot-Restart-Loop
+ACTION=="add", KERNEL=="ttyACM0", SUBSYSTEM=="tty", TAG+="systemd", ENV{SYSTEMD_WANTS}+="pidrive_pump_bridge.service"
