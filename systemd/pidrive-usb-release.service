@@ -1,0 +1,18 @@
+[Unit]
+Description=PiDrive deferred USB authorize (ESP/RTL after boot)
+Documentation=file:///home/pi/pidrive/docs/betrieb/BOOT-USB-DEFER.md
+After=network.target local-fs.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+User=root
+# Kurze Pause: 5V-Schiene + Hub stabilisieren, bevor ESP/RTL enumerieren
+ExecStartPre=/bin/sleep 10
+ExecStart=/bin/bash /home/pi/pidrive/scripts/usb-release.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+# PiDrive: USB-Geräte beim Einstecken zuerst NICHT autorisieren (kein Treiber,
+# weniger Strom/Enumerations-Last parallel zum Boot).
+# Freigabe nach ~10s: pidrive-usb-release.service
+#
+# ESP32 (Espressif)
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="303a", ATTR{authorized}="0"
+# RTL-SDR (Realtek 2838/2832)
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0bda", ATTR{idProduct}=="2838", ATTR{authorized}="0"
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0bda", ATTR{idProduct}=="2832", ATTR{authorized}="0"
+# QinHeng USB-Serial (oft am ESP-Adapter)
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="1a86", ATTR{authorized}="0"

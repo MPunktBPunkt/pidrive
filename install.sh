@@ -313,6 +313,11 @@ grep -q "^display_auto_detect" "$CONFIG_TXT" || echo "display_auto_detect=0" >> 
 sed -i 's/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/'   "$CONFIG_TXT" 2>/dev/null || true
 sed -i 's/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/' "$CONFIG_TXT" 2>/dev/null || true
 grep -q "^max_framebuffers=2" "$CONFIG_TXT" || echo "max_framebuffers=2" >> "$CONFIG_TXT"
+# Pi 4/5: höheres USB-Strombudget (hilft bei Hub+ESP+RTL)
+if ! grep -q "^usb_max_current_enable=" "$CONFIG_TXT" 2>/dev/null; then
+    echo "usb_max_current_enable=1" >> "$CONFIG_TXT"
+    ok "config.txt: usb_max_current_enable=1"
+fi
 
 # fbcon=nodeconfig: nur wenn SPI-Display (fb1) vorhanden oder bereits konfiguriert
 if [ -e /sys/class/graphics/fb1 ] || grep -q "fbcon=nodeconfig" "$CMDLINE_TXT" 2>/dev/null; then
@@ -497,7 +502,25 @@ if systemctl is-enabled NetworkManager >/dev/null 2>&1 \
         cp "$INSTALL_DIR/systemd/NetworkManager-wait-online.service.d/timeout.conf" \
            /etc/systemd/system/NetworkManager-wait-online.service.d/timeout.conf
     fi
+    # Ganz maskieren wenn nichts Kritisches network-online braucht (Car-Pi)
+    systemctl disable --now NetworkManager-wait-online.service 2>/dev/null || true
+    systemctl mask NetworkManager-wait-online.service 2>/dev/null || true
+    ok "Boot: NetworkManager-wait-online maskiert"
+    # dhcpcd parallel zu NM → Doppel-IP / langsameres WLAN; NM allein reicht
+    if systemctl is-enabled dhcpcd >/dev/null 2>&1; then
+        systemctl disable --now dhcpcd.service 2>/dev/null || true
+        ok "Boot: dhcpcd deaktiviert (NetworkManager managed WLAN)"
+    fi
 fi
+# rc-local nicht hinter network-online (Debian-Drop-in)
+if [ -f "$INSTALL_DIR/systemd/rc-local.service.d/no-network-online.conf" ]; then
+    mkdir -p /etc/systemd/system/rc-local.service.d
+    cp "$INSTALL_DIR/systemd/rc-local.service.d/no-network-online.conf" \
+       /etc/systemd/system/rc-local.service.d/no-network-online.conf
+    ok "Boot: rc-local ohne network-online-Wartezeit"
+fi
+# EEPROM-Check nicht bei jedem Boot (selten manuell: rpi-eeprom-update)
+systemctl disable rpi-eeprom-update.service 2>/dev/null || true
 # Raspotify: Crash-Report-Generator am Boot vermeiden (~10s)
 if [ -d /usr/lib/systemd/system ] || [ -f /lib/systemd/system/raspotify.service ]; then
     mkdir -p /etc/systemd/system/raspotify.service.d
@@ -1086,9 +1109,30 @@ if [ -f "$INSTALL_DIR/udev/99-pidrive-esp.rules" ]; then
     udevadm control --reload-rules 2>/dev/null || true
     ok "udev: ESP ttyACM0 → pidrive_pump_bridge"
 fi
+# USB-Defer: ESP/RTL erst nach Boot autorisieren
+if [ -f "$INSTALL_DIR/udev/80-pidrive-defer-usb.rules" ]; then
+    cp "$INSTALL_DIR/udev/80-pidrive-defer-usb.rules" /etc/udev/rules.d/80-pidrive-defer-usb.rules
+    ok "udev: USB-Defer ESP/RTL (authorized=0 bis Release)"
+fi
+if [ -f "$INSTALL_DIR/scripts/usb-release.sh" ]; then
+    chmod +x "$INSTALL_DIR/scripts/usb-release.sh"
+fi
+if [ -f "$INSTALL_DIR/systemd/pidrive-usb-release.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive-usb-release.service" "$SERVICE_DIR/pidrive-usb-release.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive-usb-release.service"
+    systemctl enable pidrive-usb-release.service 2>/dev/null || true
+    ok "Boot: pidrive-usb-release (USB nach 10s)"
+fi
+if [ -f "$INSTALL_DIR/systemd/bluetooth.service.d/defer-after-usb.conf" ]; then
+    mkdir -p /etc/systemd/system/bluetooth.service.d
+    cp "$INSTALL_DIR/systemd/bluetooth.service.d/defer-after-usb.conf" \
+       /etc/systemd/system/bluetooth.service.d/defer-after-usb.conf
+    ok "Boot: Bluetooth nach USB-Release"
+fi
 if [ -f "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" "$SERVICE_DIR/pidrive_pump_bridge.service"
 fi
+udevadm control --reload-rules 2>/dev/null || true
 
 info "RTL-SDR: DVB-T Treiber blacklisten..."
 BLACKLIST=/etc/modprobe.d/rtl-sdr-blacklist.conf
