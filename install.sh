@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.149"
+PIDRIVE_VERSION="0.11.148"
 
 # ============================================================
 # PiDrive Install Script
@@ -1078,6 +1078,17 @@ else
     ok "udev: RTL-SDR Regel bereits vorhanden"
 fi
 usermod -a -G plugdev "$REAL_USER" 2>/dev/null || true
+
+# ESP UART: Bridge nur starten wenn /dev/ttyACM0 da ist; Hotplug via udev
+UDEV_ESP="/etc/udev/rules.d/99-pidrive-esp.rules"
+if [ -f "$INSTALL_DIR/udev/99-pidrive-esp.rules" ]; then
+    cp "$INSTALL_DIR/udev/99-pidrive-esp.rules" "$UDEV_ESP"
+    udevadm control --reload-rules 2>/dev/null || true
+    ok "udev: ESP ttyACM0 → pidrive_pump_bridge"
+fi
+if [ -f "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" "$SERVICE_DIR/pidrive_pump_bridge.service"
+fi
 
 info "RTL-SDR: DVB-T Treiber blacklisten..."
 BLACKLIST=/etc/modprobe.d/rtl-sdr-blacklist.conf
