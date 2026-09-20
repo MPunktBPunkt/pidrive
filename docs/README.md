@@ -21,6 +21,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/SPECTRUM-CLI.md](betrieb/SPECTRUM-CLI.md) | `pidrivectl spectrum scan/peek/last` | Betrieb, Entwickler | 2026-09-19 |
 | [betrieb/UKW-GAIN-SCAN-2026-09-19.md](betrieb/UKW-GAIN-SCAN-2026-09-19.md) | UKW Gain/PPM-Messung → Defaults fm_gain/ppm | Betrieb, RF | 2026-09-19 |
 | [betrieb/WEBUI-REVIEW-2026-09-18.md](betrieb/WEBUI-REVIEW-2026-09-18.md) | WebUI-Code-Review: Funde R1–R13 + Fixes | Entwickler, QA | 2026-09-18 |
+| [betrieb/CODE-REVIEW-2026-09-20.md](betrieb/CODE-REVIEW-2026-09-20.md) | Struktur/Legacy/Flows: was veraltet, Ordner, Diagramm-Gültigkeit | Entwickler | 2026-09-20 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
