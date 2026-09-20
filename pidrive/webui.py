@@ -14,4 +14,5 @@ from web.app import app  # noqa: F401
 
 # Entry-Point: systemd startet webui.py direkt → Flask hier starten
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    # threaded: /api/audio/listen hält sonst den einzigen Worker und blockiert die UI
+    app.run(host="0.0.0.0", port=8080, debug=False, threaded=True)

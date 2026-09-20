@@ -226,17 +226,63 @@ FREENET_PROFILE = BandProfile(
 # ============================================================================
 
 def save_last_spectrum(data: dict):
+    """Speichert letztes Spektrum für CLI/WebUI — ohne Riesen-FFT-Arrays (hängen sonst die WebUI)."""
     try:
+        slim = _spectrum_for_persist(data)
         tmp = SPECTRUM_FILE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+            json.dump(slim, f, ensure_ascii=False, separators=(",", ":"))
         os.replace(tmp, SPECTRUM_FILE)
     except Exception:
         pass
 
 
+_MAX_SPECTRUM_LIST = 128
+_MAX_SPECTRUM_FILE_BYTES = 512_000
+
+
+def _spectrum_for_persist(data: dict) -> dict:
+    """Kürzt power/spectrum-Arrays — volle Kurven gehören in Export-Dateien, nicht in /tmp last."""
+    if not isinstance(data, dict):
+        return {"ok": False, "error": "invalid_spectrum_payload"}
+
+    def _trim(obj, depth=0):
+        if depth > 8:
+            return None
+        if isinstance(obj, dict):
+            out = {}
+            for k, v in obj.items():
+                if k in ("spectrum_db", "power_db", "frames", "scores") and isinstance(v, list) and len(v) > _MAX_SPECTRUM_LIST:
+                    out[k] = {"_omitted": True, "len": len(v)}
+                else:
+                    out[k] = _trim(v, depth + 1)
+            return out
+        if isinstance(obj, list):
+            if len(obj) > _MAX_SPECTRUM_LIST:
+                return {"_omitted": True, "len": len(obj), "head": obj[:8]}
+            return [_trim(x, depth + 1) for x in obj]
+        return obj
+
+    slim = _trim(data)
+    if isinstance(slim, dict):
+        slim["_persisted_slim"] = True
+    return slim if isinstance(slim, dict) else {"ok": False, "error": "trim_failed"}
+
+
 def load_last_spectrum() -> dict:
     try:
+        if not os.path.exists(SPECTRUM_FILE):
+            return {}
+        size = os.path.getsize(SPECTRUM_FILE)
+        if size > _MAX_SPECTRUM_FILE_BYTES:
+            # Alte Riesen-Snapshots nicht in den View-Model-Pfad laden (OOM / UI-Hang)
+            return {
+                "ok": False,
+                "error": "spectrum_file_too_large",
+                "size_bytes": size,
+                "limit_bytes": _MAX_SPECTRUM_FILE_BYTES,
+                "hint": "Datei löschen oder neuen Scan speichern (slim)",
+            }
         with open(SPECTRUM_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:

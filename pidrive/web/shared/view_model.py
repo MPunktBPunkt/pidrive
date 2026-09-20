@@ -156,6 +156,14 @@ def get_dab_scan_debug():
 
 def get_spectrum_debug():
     try:
+        path = "/tmp/pidrive_spectrum.json"
+        if os.path.exists(path) and os.path.getsize(path) > 512_000:
+            return {
+                "ok": False,
+                "error": "spectrum_file_too_large",
+                "size_bytes": os.path.getsize(path),
+                "hint": "rm /tmp/pidrive_spectrum.json — verhindert WebUI-Hang/OOM",
+            }
         _base = str(BASE_DIR)
         if _base not in sys.path:
             sys.path.insert(0, _base)

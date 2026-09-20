@@ -1256,4 +1256,5 @@ def api_system_resources():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    # threaded: langer Monitor-Stream (/api/audio/listen) darf Polling nicht blockieren
+    app.run(host="0.0.0.0", port=8080, debug=False, threaded=True)
