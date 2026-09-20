@@ -1,42 +1,50 @@
 # Boot: USB-Geräte verzögert freigeben (ESP / RTL-SDR)
 
-**Stand:** 2026-09-20 · Pi hat **kein BIOS** für so etwas — Steuerung über
-`/boot/firmware/config.txt`, udev und systemd.
+**Stand:** 2026-09-20 · Pi hat **kein BIOS** — `config.txt`, cmdline, udev, systemd.
 
-## Problem
+## Zwei verschiedene Probleme
 
-ESP und/oder RTL-SDR **von Anfang an** am Bus → Boot hängt oft / kein WLAN.
-**Nachträglich** anstecken → ok. Verdacht: 5V-Last + USB-Enumeration parallel zu
-WLAN/BT-Firmware.
+| Situation | Bedeutung |
+|-----------|-----------|
+| Stick **nach** Boot stecken → ok | Einsteck-Impuls / Hotplug oft unkritisch |
+| Stick **schon beim Einschalten** → Pi kommt nicht | Last + USB-Enumeration ab t=0 (nicht nur Anlaufstrom) |
 
-## Strategie (umgesetzt)
+Software (`authorized=0`) allein hat den Kaltstart-Hang **nicht** zuverlässig verhindert.
+Deshalb zusätzlich: Kernel **IGNORE-Quirk** (`:k`) für ESP/RTL beim Boot, Freigabe ~10 s später.
+
+## Strategie
 
 | Was | Wann |
 |-----|------|
-| WLAN | **sofort** (SSH bleibt) |
-| ESP / RTL / QinHeng-Serial | udev `authorized=0` beim Plug → nach **~10 s** freigeben |
-| Bluetooth | erst **nach** USB-Release |
-| `pidrive_pump_bridge` | nur wenn `/dev/ttyACM0` existiert (+ Hotplug-udev) |
+| WLAN | sofort (SSH) |
+| ESP / RTL / QinHeng | cmdline `usbcore.quirks=…:k` → Kernel ignoriert → nach ~10 s Quirks leeren + Hub-Rebind |
+| Bluetooth | nach USB-Release |
+| `pump_bridge` | nur mit `/dev/ttyACM0` |
 
-**Nicht** WLAN/BT im Device-Tree dauerhaft abschalten (`disable-wifi` / `disable-bt`) —
-dann kein Remote-Debug bis manuell wieder an.
+## Wenn es trotzdem hängt
+
+Dann ist es sehr wahrscheinlich **5V-/Controller-Physik** (Hub speist Ports ab Netz-an).
+Software kann Ports nicht „aus“ schalten, bevor der Kernel läuft.
+
+Pragmatisch:
+1. **RTL/ESP erst stecken, wenn Web/SSH da ist** (~30–40 s), oder  
+2. Hub mit **Port-Power** (`uhubctl`, Genesys oft) — Ports soft-an nach Boot, oder  
+3. Stärkere/kürzere Versorgung Pi + Hub getrennt prüfen
 
 ## Dateien
 
+- `scripts/usb-boot-quirks-install.sh` → `cmdline.txt`
 - `udev/80-pidrive-defer-usb.rules`
 - `scripts/usb-release.sh`
 - `systemd/pidrive-usb-release.service`
-- `systemd/bluetooth.service.d/defer-after-usb.conf`
 
-## Optional in `config.txt` (Pi 4/5 Strombudget USB)
+## Test Kaltstart mit Stick
 
+```bash
+sudo bash scripts/usb-boot-quirks-install.sh   # einmalig
+sudo reboot   # Stick + Hub schon an
+# nach ~40s SSH:
+lsusb
+journalctl -u pidrive-usb-release -b
+vcgencmd get_throttled
 ```
-usb_max_current_enable=1
-```
-
-## Test
-
-1. ESP + RTL am Hub **vor** Einschalten stecken  
-2. Boot → SSH sollte in ~20 s da sein (ohne USB-Treiber für ESP/RTL)  
-3. Nach ~10–15 s: `lsusb` zeigt Geräte, RTL/`ttyACM` nutzbar  
-4. `journalctl -u pidrive-usb-release -b`

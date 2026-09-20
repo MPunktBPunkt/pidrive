@@ -8,7 +8,7 @@ Wants=network.target
 Type=oneshot
 User=root
 # Kurze Pause: 5V-Schiene + Hub stabilisieren, bevor ESP/RTL enumerieren
-ExecStartPre=/bin/sleep 10
+ExecStartPre=/bin/sleep 12
 ExecStart=/bin/bash /home/pi/pidrive/scripts/usb-release.sh
 RemainAfterExit=yes
 StandardOutput=journal
