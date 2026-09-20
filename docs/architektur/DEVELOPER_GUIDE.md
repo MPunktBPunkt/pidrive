@@ -110,9 +110,8 @@ ESP SoftAP ──[lab/play]───► pump_bridge.py (esp32.pidrive)
 | MPRIS2 | `mpris2.py` (Root) |
 | Core | `main_core.py` (Root, systemd-Entry) |
 
-> **Shims (nicht für neuen Code):** `avrcp_trigger.py`,
-> `modules/dab.py`, `modules/fm.py`, `modules/scanner.py` leiten auf die kanonischen
-> Pfade weiter. `webui.py` ist entfernt (`web/app.py` ist der Entry).
+> **Shims (nicht für neuen Code):** `webui.py` (systemd-Entry → `web/app.py`),
+> `avrcp_trigger.py`, `modules/dab.py`, `modules/fm.py`, `modules/scanner.py`.
 
 ---
 

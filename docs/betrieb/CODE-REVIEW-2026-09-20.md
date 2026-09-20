@@ -21,7 +21,7 @@ Dokument: [`docs/architektur/RUNTIME_FLOWS.md`](../architektur/RUNTIME_FLOWS.md)
 | Flow | Urteil | Bemerkung |
 |------|--------|-----------|
 | **A** BMW → AVRCP → `pidrive_cmd` → Core → Dispatcher | ✅ gültig | `check_trigger` / `drain_triggers` / `trigger/*` unverändert |
-| **B** WebUI `/api/cmd` → Queue | ✅ gültig | Entry: `web/app.py` (Shim `webui.py` entfernt 2026-09-20) |
+| **B** WebUI `/api/cmd` → Queue | ✅ gültig | Entry: `webui.py` → `web/app.py` (Shim wieder da — Unit-Kompat nach Pull) |
 | **C** `pidrivectl play web` | ✅ gültig | |
 | **D** Local-Play | ✅ gültig | |
 | **E** BT-Connect / A2DP | ✅ gültig | PipeWire-Sink-Hinweis korrekt |

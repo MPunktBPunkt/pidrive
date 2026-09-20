@@ -136,7 +136,7 @@ modules/webradio.py — play(name, url, S, settings)
 ```
 
 **Wichtige Fallstricke:**
-- WebUI-Entry ist `web/app.py` (`pidrive_web.service`) — kein `webui.py`-Shim mehr
+- WebUI-Entry: `webui.py` (systemd) lädt `web/app.py` — beide Pfade starten Flask
 - `mpv_meta.start()` darf **kein** `os.unlink()` aufrufen — löscht fertigen Socket
 - Ohne PA-Sink: `mpv rc=2` nach 5s — erwartet, kein Bug
 

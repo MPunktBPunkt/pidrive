@@ -35,8 +35,8 @@ PiDrive
 > | `modules/fm.py` | `modules/radio/fm.py` |
 > | `modules/scanner.py` | `modules/radio/scanner.py` |
 >
-> `webui.py` ist entfernt — `pidrive_web.service` startet `web/app.py` direkt.
-> `pidrive_avrcp.service` startet bereits `integration/avrcp_trigger.py`.
+> `webui.py` bleibt als **systemd-Entry** (startet `web/app.py`). `pidrive_avrcp.service`
+> startet bereits `integration/avrcp_trigger.py`.
 
 ---
 
@@ -272,7 +272,7 @@ Vollständige Referenz: `pidrivectl --help` sowie [`KontextPiDrive.md`](../Konte
 | Service | Aufgabe | Entry-Point |
 |---|---|---|
 | `pidrive_core.service` | Core-Loop, Wiedergabe, Menü, MPRIS2 | `main_core.py` |
-| `pidrive_web.service` | WebUI + REST-API (Port 8080) | `web/app.py` |
+| `pidrive_web.service` | WebUI + REST-API (Port 8080) | `webui.py` → `web/app.py` |
 | `pidrive_avrcp.service` | BMW AVRCP → Trigger-Queue | `integration/avrcp_trigger.py` |
 | `pidrive_btagent.service` | BlueZ Pairing-Agent | `modules/bluetooth/bt_agent_dbus.py` |
 | `pidrive_pump.service` | ESP Presence-Poll (optional) | `integration/usb_pump_client.py` |
