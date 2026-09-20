@@ -22,6 +22,15 @@ Ursache: NetworkManager managed WLAN, aber `systemd-networkd-wait-online` bleibt
 4. **cloud-init** auf Car-Pi deaktivieren (Firstboot-Reste)
 5. Raspotify nicht mehr an `network-online` / networkd-wait koppeln
 
+
+
+## Runde 2 (Core früher)
+
+6. **`After=multi-user.target` am Core entfernen** — sonst startet Core erst nach fast allen multi-user-Diensten
+7. **Raspotify `OnFailure=` Crash-Report** abkoppeln / Generator maskieren
+8. **NM-wait-online Timeout** auf 5 s (Drop-in)
+9. **pump*** Units auf dem Pi auf `network.target` bringen (Repo war schon so)
+
 ## Nach Deploy am Pi
 
 ```bash

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.147"
+PIDRIVE_VERSION="0.11.148"
 
 # ============================================================
 # PiDrive Install Script
@@ -491,6 +491,22 @@ if systemctl is-enabled NetworkManager >/dev/null 2>&1 \
     systemctl disable --now systemd-networkd-wait-online.service 2>/dev/null || true
     systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
     ok "Boot: systemd-networkd-wait-online maskiert (NetworkManager aktiv)"
+    # NM-wait-online Timeout verkürzen (Default 60s)
+    mkdir -p /etc/systemd/system/NetworkManager-wait-online.service.d
+    if [ -f "$INSTALL_DIR/systemd/NetworkManager-wait-online.service.d/timeout.conf" ]; then
+        cp "$INSTALL_DIR/systemd/NetworkManager-wait-online.service.d/timeout.conf" \
+           /etc/systemd/system/NetworkManager-wait-online.service.d/timeout.conf
+    fi
+fi
+# Raspotify: Crash-Report-Generator am Boot vermeiden (~10s)
+if [ -d /usr/lib/systemd/system ] || [ -f /lib/systemd/system/raspotify.service ]; then
+    mkdir -p /etc/systemd/system/raspotify.service.d
+    if [ -f "$INSTALL_DIR/systemd/raspotify.service.d/no-crash-report.conf" ]; then
+        cp "$INSTALL_DIR/systemd/raspotify.service.d/no-crash-report.conf" \
+           /etc/systemd/system/raspotify.service.d/no-crash-report.conf
+    fi
+    systemctl mask raspotify-crash-report-generator.service 2>/dev/null || true
+    ok "Boot: raspotify Crash-Report-Generator abgekoppelt"
 fi
 # cloud-init auf Car-Pi unnötig (Image-Firstboot) — spart Sekunden
 if systemctl list-unit-files cloud-init.service >/dev/null 2>&1 \
