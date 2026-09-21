@@ -358,12 +358,19 @@ class RTLSDRBackend(SampleBackend):
 
         cmd += ["-"]  # Output auf stdout (rtl_sdr braucht Dateiname, "-" = stdout)
 
+        # Längere Captures (Pro-Watch-Block) brauchen mehr Zeit als Default 6s
         try:
-            cp = subprocess.run(cmd, capture_output=True, timeout=self.timeout_s)
+            need_s = float(sample_count) / max(float(sample_rate), 1.0) + 4.0
+        except Exception:
+            need_s = self.timeout_s
+        run_timeout = max(float(self.timeout_s), need_s)
+
+        try:
+            cp = subprocess.run(cmd, capture_output=True, timeout=run_timeout)
         except FileNotFoundError:
             raise RuntimeError("rtl_sdr Binary nicht gefunden — bitte: sudo apt install rtl-sdr")
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f"rtl_sdr Timeout ({self.timeout_s}s) — Device hängt?")
+            raise RuntimeError(f"rtl_sdr Timeout ({run_timeout:.1f}s) — Device hängt?")
 
         raw = cp.stdout or b""
         if not raw:
@@ -619,8 +626,14 @@ class SpectrumWatcher:
             debug=debug,
         )
 
-        sample_count = int(config.sample_rate * (config.frame_ms / 1000.0))
-        sample_count = max(sample_count, config.fft_size * 2)
+        # Ein IQ-Block pro Watch (statt rtl_sdr pro Frame) — weniger USB-Stress.
+        # Max. 2.5s Rohdaten (~1.3 MB bei 256 kHz), intern in FFT-Frames schneiden.
+        watch_s = max(0.15, float(profile.watch_seconds))
+        block_s = min(watch_s, 2.5)
+        block_samples = int(config.sample_rate * block_s)
+        hop_samples = int(config.sample_rate * (config.frame_ms / 1000.0))
+        hop_samples = max(hop_samples, config.fft_size)
+        block_samples = max(block_samples, hop_samples + config.fft_size)
 
         # Profil-FFT muss dem Processor entsprechen (Bug: build_default_watcher
         # nutzte 512, PMR446_PROFILE 2048 — compute_frame schnitt auf 512).
@@ -637,27 +650,37 @@ class SpectrumWatcher:
         tracker = ActivityTracker(profile)
 
         started = time.time()
-        ended_target = started + profile.watch_seconds
         frames_processed = 0
         early_exit = False
 
         debug_frames: list[dict[str, Any]] = []
         debug_scores: list[dict[str, Any]] = []
         bin_map_cached: Optional[dict[str, tuple[int, int]]] = None
-        early_exit = False
 
-        while time.time() < ended_target:
-            raw = self.backend.capture_iq(
-                center_hz=config.center_hz,
-                sample_rate=config.sample_rate,
-                sample_count=sample_count,
-            )
+        raw = self.backend.capture_iq(
+            center_hz=config.center_hz,
+            sample_rate=config.sample_rate,
+            sample_count=block_samples,
+        )
+        # U8 IQ: 2 Bytes pro Sample
+        bytes_per_sample = 2
+        fft_bytes = int(config.fft_size) * bytes_per_sample
+        hop_bytes = int(hop_samples) * bytes_per_sample
+        raw_len = len(raw)
+        offset = 0
+        frame_idx = 0
 
+        while offset + fft_bytes <= raw_len:
+            chunk = raw[offset:offset + fft_bytes]
+            offset += hop_bytes
             frame = fft_processor.compute_frame(
-                raw_iq=raw,
+                raw_iq=chunk,
                 center_hz=config.center_hz,
                 sample_rate=config.sample_rate,
             )
+            # Zeitstempel entlang des Blocks verteilen (kein Echtzeit-Stream)
+            frame.timestamp = started + (frame_idx * hop_samples / float(config.sample_rate))
+            frame_idx += 1
 
             noise_floor = self.noise_estimator.estimate(frame.power_db)
             frame.noise_floor_db = noise_floor
@@ -691,8 +714,8 @@ class SpectrumWatcher:
                     "channels": {k: round(v, 2) for k, v in scores.items()}
                 })
 
-            # Early-Exit: starker, dominanter Hit nach Mindestbeobachtungszeit
-            elapsed_ms = (time.time() - started) * 1000.0
+            # Early-Exit auf Block-Frames (starke Hits → nicht Rest des Blocks auswerten)
+            elapsed_ms = (frame.timestamp - started) * 1000.0
             if elapsed_ms >= 300.0 and frames_processed >= max(1, int(profile.min_active_frames)):
                 cands_now = tracker.build_candidates(ts)
                 if cands_now:
@@ -728,6 +751,9 @@ class SpectrumWatcher:
                 "frame_ms": int(config.frame_ms),
                 "span_hz": int(compute_span_for_channels(profile.channels)),
                 "early_exit": bool(early_exit),
+                "capture_mode": "block",
+                "block_samples": int(block_samples),
+                "hop_samples": int(hop_samples),
                 "frames": debug_frames if debug else [],
                 "scores": debug_scores if debug else [],
             }

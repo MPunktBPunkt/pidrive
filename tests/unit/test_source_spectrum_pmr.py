@@ -174,7 +174,7 @@ def test_watch_channels_uses_profile_fft_size(monkeypatch):
 
     class FakeBackend:
         def capture_iq(self, center_hz, sample_rate, sample_count):
-            # U8 IQ: 2 Bytes pro Sample — genug für FFT 2048
+            # U8 IQ: 2 Bytes pro Sample — genug für FFT 2048 / Block
             n = max(int(sample_count), 4096) * 2
             return bytes([128] * n)
 
@@ -186,12 +186,13 @@ def test_watch_channels_uses_profile_fft_size(monkeypatch):
     profile = dc.replace(
         sp.PMR446_PROFILE,
         channels=list(sp.PMR446_PROFILE.channels[:2]),
-        watch_seconds=0.05,
+        watch_seconds=0.2,
         min_active_frames=1,
     )
     result = watcher.watch_channels(profile, debug=True)
     assert result.debug["fft_size"] == 2048
     assert result.debug["effective_fft_size"] == 2048
+    assert result.debug.get("capture_mode") == "block"
     assert result.frames_processed >= 1
 
 
