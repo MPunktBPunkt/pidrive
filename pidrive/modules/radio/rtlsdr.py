@@ -33,6 +33,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 from contextlib import contextmanager
 
@@ -841,6 +842,46 @@ def usb_reset() -> dict:
         pass
 
     return result
+
+
+# In-Prozess Capture-Lease (erster Schritt Richtung Owner-Service)
+_CAPTURE_LOCK = threading.Lock()
+_CAPTURE_LEASE = {"owner": "", "since": 0.0}
+_CAPTURE_STALE_S = 45.0
+
+
+def claim_capture(owner: str, timeout_s: float = 4.0) -> bool:
+    """Kurzzeitige Exklusivität für rtl_sdr-Captures im selben Prozess."""
+    owner = str(owner or "anon")
+    deadline = time.time() + max(0.2, float(timeout_s))
+    while time.time() < deadline:
+        with _CAPTURE_LOCK:
+            cur = _CAPTURE_LEASE.get("owner") or ""
+            since = float(_CAPTURE_LEASE.get("since") or 0.0)
+            if not cur or cur == owner:
+                _CAPTURE_LEASE["owner"] = owner
+                _CAPTURE_LEASE["since"] = time.time()
+                return True
+            if since and (time.time() - since) > _CAPTURE_STALE_S:
+                _CAPTURE_LEASE["owner"] = owner
+                _CAPTURE_LEASE["since"] = time.time()
+                return True
+        time.sleep(0.05)
+    return False
+
+
+def release_capture(owner: str = "") -> None:
+    owner = str(owner or "")
+    with _CAPTURE_LOCK:
+        cur = _CAPTURE_LEASE.get("owner") or ""
+        if not owner or cur == owner:
+            _CAPTURE_LEASE["owner"] = ""
+            _CAPTURE_LEASE["since"] = 0.0
+
+
+def capture_lease_snapshot() -> dict:
+    with _CAPTURE_LOCK:
+        return dict(_CAPTURE_LEASE)
 
 
 # Letzter USB-Reset (Cooldownown gegen Reset-Stürme)

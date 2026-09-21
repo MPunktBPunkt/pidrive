@@ -334,6 +334,7 @@ class RTLSDRBackend(SampleBackend):
         self.timeout_s = float(timeout_s)
 
     def capture_iq(self, center_hz: float, sample_rate: int, sample_count: int) -> bytes:
+        lease_owner = f"spectrum:{id(self)}:{int(center_hz)}"
         if _rtlsdr:
             usb = _rtlsdr.detect_usb()
             if not usb.get("present"):
@@ -343,6 +344,9 @@ class RTLSDRBackend(SampleBackend):
                 freed = _rtlsdr.wait_until_free(timeout=4.0, interval=0.2)
                 if not freed:
                     raise RuntimeError("RTL-SDR belegt (Timeout 4s)")
+            if hasattr(_rtlsdr, "claim_capture"):
+                if not _rtlsdr.claim_capture(lease_owner, timeout_s=4.0):
+                    raise RuntimeError("RTL-SDR belegt (capture lease)")
 
         cmd = [
             "rtl_sdr",
@@ -366,22 +370,29 @@ class RTLSDRBackend(SampleBackend):
         run_timeout = max(float(self.timeout_s), need_s)
 
         try:
-            cp = subprocess.run(cmd, capture_output=True, timeout=run_timeout)
-        except FileNotFoundError:
-            raise RuntimeError("rtl_sdr Binary nicht gefunden — bitte: sudo apt install rtl-sdr")
-        except subprocess.TimeoutExpired:
-            raise RuntimeError(f"rtl_sdr Timeout ({run_timeout:.1f}s) — Device hängt?")
+            try:
+                cp = subprocess.run(cmd, capture_output=True, timeout=run_timeout)
+            except FileNotFoundError:
+                raise RuntimeError("rtl_sdr Binary nicht gefunden — bitte: sudo apt install rtl-sdr")
+            except subprocess.TimeoutExpired:
+                raise RuntimeError(f"rtl_sdr Timeout ({run_timeout:.1f}s) — Device hängt?")
 
-        raw = cp.stdout or b""
-        if not raw:
-            err = (cp.stderr or b"").decode("utf-8", "ignore")[:240]
-            if cp.returncode == 1 and ("busy" in err.lower() or "failed to open" in err.lower()):
-                raise RuntimeError(f"RTL-SDR Device busy: {err[:120]}")
-            elif cp.returncode == 127 or not raw:
-                raise RuntimeError(f"rtl_sdr keine Daten (rc={cp.returncode}): {err[:120]}")
-            raise RuntimeError(f"keine IQ-Daten ({err[:120]})")
+            raw = cp.stdout or b""
+            if not raw:
+                err = (cp.stderr or b"").decode("utf-8", "ignore")[:240]
+                if cp.returncode == 1 and ("busy" in err.lower() or "failed to open" in err.lower()):
+                    raise RuntimeError(f"RTL-SDR Device busy: {err[:120]}")
+                elif cp.returncode == 127 or not raw:
+                    raise RuntimeError(f"rtl_sdr keine Daten (rc={cp.returncode}): {err[:120]}")
+                raise RuntimeError(f"keine IQ-Daten ({err[:120]})")
 
-        return raw
+            return raw
+        finally:
+            if _rtlsdr and hasattr(_rtlsdr, "release_capture"):
+                try:
+                    _rtlsdr.release_capture(lease_owner)
+                except Exception:
+                    pass
 
 
 # ============================================================================

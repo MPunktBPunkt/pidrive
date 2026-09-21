@@ -69,9 +69,9 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 
 ### P3 — später / angelaufen
 
-13. Persistenter IQ-/Owner-Service — offen.
-14. Nachbarkanal-/Best-Channel-Tuning — teilweise (`ActivityTracker` unterdrückt schwächere Nachbarn).
-15. Vollständige E2E-Integrationstests mit Mock-RTL — offen.
+13. Persistenter IQ-/Owner-Service — **erster Schritt**: `rtlsdr.claim_capture` / `release_capture` (In-Prozess-Lease um `capture_iq`).
+14. Nachbarkanal-/Best-Channel-Tuning — erledigt (`ActivityTracker` unterdrückt schwächere Nachbarn) + Tests.
+15. E2E-Integrationstests mit Mock-RTL — erledigt (`tests/unit/test_pmr_e2e.py`).
 
 Zusätzlich behoben: sticky-`/tmp` Schreibfehler für `source_state.json` (WebUI blieb bei Kanalwahl auf `idle`).
 
@@ -91,9 +91,10 @@ Zusätzlich behoben: sticky-`/tmp` Schreibfehler für `source_state.json` (WebUI
 [x] preempt_monitor UI-Schalter
 [x] Recovery zentralisieren (`rtlsdr.recover_busy_device`) + Reset-Cooldown
 [x] scan_next Audio erst nach Transition
-[ ] Persistenter IQ-/Owner-Service (P3)
-[ ] Nachbarkanal-/Best-Channel-Tuning (P3)
-[ ] Vollständige E2E-Integrationstests (P3)
+[x] Capture-Lease (`claim_capture`/`release_capture`) — erster Owner-Schritt
+[x] Nachbarkanal-/Best-Channel-Tuning
+[x] E2E-Integrationstests Mock-RTL (`test_pmr_e2e.py`)
+[ ] Vollständiger persistenter IQ-/Owner-Service (Streaming-Reader)
 ```
 
 ---
@@ -121,4 +122,4 @@ Details: Design in den GPT-Folge-Reviews (Mess-/UI-/Ownership-Design) — hier b
 - Architektur: [`SCANNER-PMR.md`](SCANNER-PMR.md)
 - Betrieb: [`../betrieb/PMR-MONITOR.md`](../betrieb/PMR-MONITOR.md)
 - State: [`ZUSTANDSMASCHINE.md`](ZUSTANDSMASCHINE.md)
-- Tests: `tests/unit/test_source_spectrum_pmr.py`
+- Tests: `tests/unit/test_source_spectrum_pmr.py`, `tests/unit/test_pmr_e2e.py`
