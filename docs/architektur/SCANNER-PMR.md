@@ -362,20 +362,24 @@ Echter Treffer sieht z. B. so aus:
 
 ---
 
-## 13. Airband (AM) — Phase 1
+## 13. Airband (AM) — Phase 1 + 2
 
-Manueller Empfang im Band **118.000–136.975 MHz** mit expliziter Modulation `am`.
+Manueller Empfang im Band **118.000–136.975 MHz** mit expliziter Modulation `am`,
+plus **lokale Presets**.
 
 | | |
 |--|--|
 | Band-ID | `airband` in `scanner.BANDS` |
 | Modulation | `rtl_fm -M am` via `play_freq(..., modulation="am")` |
-| Schritt | 25 kHz (`next`/`prev`) |
+| Schritt | 25 kHz (`scan_step:airband:±0.025`) |
+| Presets | `config/airband_stations.json` → `ch` / next / prev |
 | Startfrequenz | 121.500 (Emergency) |
-| CLI | `pidrivectl scanner airband freq 121.500` / `next` / `prev` |
-| Trigger | `scan_setfreq:airband:<mhz>`, `scan_next:airband`, `scan_prev:airband` |
-| WebUI | Scanner-Tab → Airband-Karte |
+| CLI | `scanner airband list\|ch N\|freq F\|next\|prev` |
+| Trigger | `scan_setch:airband:N`, `scan_setfreq:airband:<mhz>`, `scan_up/down:airband` |
+| WebUI | Scanner-Tab → Airband-Karte + Preset-Buttons |
+| API | `GET /api/scanner/airband-stations` |
 | Setting | `scanner_airband_last_freq` |
 
-**Nicht in Phase 1:** Presets, Raster-Scan, Airband-Monitor.  
-Zentrale Runtime-Hilfe: `scanner._get_band_runtime(band_id)` → `modulation` / `audio_profile` / `bw`.
+**Noch nicht:** Raster-Scan-Heuristik für AM, Airband-Monitor.  
+Zentrale Runtime-Hilfe: `scanner._get_band_runtime(band_id)` → `modulation` / `audio_profile` / `bw`.  
+Presets neu laden: `scanner.refresh_airband_channels()` (auch bei jedem `_get_channels("airband")`).

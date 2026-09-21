@@ -207,6 +207,73 @@ BANDS = {
 
 _current_ch: dict = {}
 
+# Airband-Presets (config/airband_stations.json) — ortsabhängig
+AIRBAND_STATIONS_FILE = os.path.join(
+    os.path.dirname(__file__), "..", "..", "config", "airband_stations.json"
+)
+
+
+def load_airband_stations(path: str | None = None) -> list:
+    """
+    Lädt lokale Airband-Presets.
+    Rückgabe: [{"ch": 1, "name": "...", "freq": 121.5, "id": "..."}, ...]
+    """
+    p = path or AIRBAND_STATIONS_FILE
+    stations = []
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        raw = data.get("stations") if isinstance(data, dict) else data
+        if not isinstance(raw, list):
+            raw = []
+    except FileNotFoundError:
+        raw = []
+    except Exception as e:
+        log.warn(f"Airband-Presets lesen: {e}")
+        raw = []
+
+    ch_num = 0
+    for st in raw:
+        if not isinstance(st, dict):
+            continue
+        if st.get("enabled") is False:
+            continue
+        try:
+            freq = float(st.get("freq") or st.get("freq_mhz") or 0)
+        except Exception:
+            continue
+        if not (118.0 <= freq <= 136.975):
+            continue
+        ch_num += 1
+        name = str(st.get("name") or f"AIR {freq:.3f}").strip() or f"AIR {freq:.3f}"
+        stations.append({
+            "ch": ch_num,
+            "name": name,
+            "freq": round(freq, 3),
+            "id": str(st.get("id") or f"air_{ch_num}"),
+        })
+    if not stations:
+        # Fallback: nur Emergency, damit ch/next nie leer sind
+        stations = [{
+            "ch": 1, "name": "Emergency", "freq": 121.5, "id": "emergency",
+        }]
+    return stations
+
+
+def refresh_airband_channels(path: str | None = None) -> list:
+    """BANDS['airband']['channels'] aus Config neu laden."""
+    chs = load_airband_stations(path)
+    if "airband" in BANDS:
+        BANDS["airband"]["channels"] = chs
+    return chs
+
+
+# Beim Import Presets laden (Band-Range bleibt für freq/step erhalten)
+try:
+    refresh_airband_channels()
+except Exception:
+    pass
+
 
 # ── Player / Zustand ─────────────────────────────────────────────────────────
 
@@ -938,6 +1005,13 @@ def freq_input_screen(band_id, settings=None):
 # ── Kanal / Frequenz-Steuerung ───────────────────────────────────────────────
 
 def _get_channels(band_id):
+    band_id = str(band_id or "").lower()
+    if band_id == "airband":
+        # Immer frisch aus Config (ohne Restart editierbar)
+        try:
+            return refresh_airband_channels()
+        except Exception:
+            pass
     return BANDS.get(band_id, {}).get("channels", [])
 
 
@@ -1050,7 +1124,9 @@ def set_freq(band_id, freq_mhz, S, settings=None):
     if not b:
         # C9: Kanalbänder (pmr446/freenet/lpd433/cb) haben kein band-Dict —
         # Frequenz trotzdem mit Bandbreite des Kanals abspielen (Squelch-Reload)
-        if entry.get("channels") is not None or band_id in ("pmr446", "freenet", "lpd433", "cb"):
+        if entry.get("channels") is not None or band_id in (
+            "pmr446", "freenet", "lpd433", "cb", "airband"
+        ):
             try:
                 freq = float(freq_mhz)
             except Exception:

@@ -414,7 +414,24 @@ def test_band_runtime_airband_is_am():
     assert 118.0 <= scanner.BANDS["airband"]["band"]["min"] <= 121.5
     assert scanner.BANDS["airband"]["band"]["max"] >= 136.9
     assert scanner._get_band_runtime("fm")["modulation"] == "wbfm"
-    assert scanner._get_band_runtime("pmr446")["modulation"] in ("fm", "")
+    assert scanner._get_band_runtime("pmr446")["modulation"] == "fm"
+
+
+def test_airband_presets_from_config(tmp_path, monkeypatch):
+    cfg = tmp_path / "airband_stations.json"
+    cfg.write_text(
+        '{"stations":[{"id":"t","name":"Tower","freq":118.7,"enabled":true},'
+        '{"id":"x","name":"Off","freq":119.0,"enabled":false},'
+        '{"id":"bad","name":"VHF","freq":140.0}]}',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(scanner, "AIRBAND_STATIONS_FILE", str(cfg))
+    chs = scanner.refresh_airband_channels()
+    assert len(chs) == 1
+    assert chs[0]["ch"] == 1
+    assert chs[0]["name"] == "Tower"
+    assert chs[0]["freq"] == 118.7
+    assert scanner._get_channels("airband")[0]["name"] == "Tower"
 
 
 def test_stream_fallback_recovers_only_when_busy(monkeypatch):

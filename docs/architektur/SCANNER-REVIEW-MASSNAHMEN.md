@@ -104,8 +104,9 @@ Zusätzlich behoben (nicht in den originalen Review-P0ern, aber Betriebs-kritisc
 [x] CLI/Trigger explizit: watch + trigger_on/off durchreichen + Start-Log
 [x] Stream-Fallback: Recovery nur bei busy + Stream-Telemetrie
 [x] Airband Phase 1: AM-Modulation + CLI/Trigger/WebUI manuell
+[x] Airband Phase 2: Presets (`airband_stations.json`) + ch/next/prev + WebUI
 [ ] Persistenter Mehrprozess-IQ-Streamer (optional, später)
-[ ] Airband Phase 2+: Presets / Scan / Monitor
+[ ] Airband Phase 3+: Raster-Scan / Monitor
 ```
 
 ---

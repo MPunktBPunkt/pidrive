@@ -140,7 +140,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 _blocked()
                 return
             try:
-                scanner.channel_up(b, S)
+                scanner.channel_up(b, S, settings)
                 S["scanner_band"] = b
                 source_state.commit_source("scanner")
             finally:
@@ -155,7 +155,7 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 _blocked()
                 return
             try:
-                scanner.channel_down(b, S)
+                scanner.channel_down(b, S, settings)
                 S["scanner_band"] = b
                 source_state.commit_source("scanner")
             finally:

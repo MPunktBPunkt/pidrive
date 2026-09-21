@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "updated_at": "2026-09-21",
+  "note": "Lokale Airband-Presets (AM). Frequenzen an den Heimatflughafen anpassen.",
+  "stations": [
+    {
+      "id": "emergency",
+      "name": "Emergency",
+      "freq": 121.500,
+      "enabled": true
+    },
+    {
+      "id": "tower",
+      "name": "Tower",
+      "freq": 118.700,
+      "enabled": true
+    },
+    {
+      "id": "ground",
+      "name": "Ground",
+      "freq": 121.900,
+      "enabled": true
+    },
+    {
+      "id": "atis",
+      "name": "ATIS",
+      "freq": 125.050,
+      "enabled": true
+    },
+    {
+      "id": "approach",
+      "name": "Approach",
+      "freq": 119.200,
+      "enabled": true
+    }
+  ]
+}

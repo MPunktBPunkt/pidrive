@@ -730,6 +730,25 @@ def api_ppm_calibrate():
         return jsonify({"ok": False, "error": str(e)})
 
 
+@app.route("/api/scanner/airband-stations", methods=["GET"])
+def api_airband_stations():
+    """Lokale Airband-Presets aus config/airband_stations.json."""
+    try:
+        _base = str(BASE_DIR)
+        if _base not in sys.path:
+            sys.path.insert(0, _base)
+        from modules.radio import scanner as _sc
+        stations = _sc.load_airband_stations()
+        return jsonify({
+            "ok": True,
+            "stations": stations,
+            "count": len(stations),
+            "path": "config/airband_stations.json",
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "stations": []}), 500
+
+
 @app.route("/api/scanner/settings", methods=["GET", "POST"])
 def api_scanner_settings():
     """

@@ -316,10 +316,15 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <span class="scan-label">Freq MHz</span>
       <input type="number" id="scAirFreq" step="0.025" min="118" max="136.975" value="121.5" placeholder="121.500">
       <button class="btn primary" onclick="scanAirband()">▶ Start</button>
-      <button class="btn" onclick="sendCmd('scan_next:airband')" title="+25 kHz">▶</button>
-      <button class="btn" onclick="sendCmd('scan_prev:airband')" title="−25 kHz">◀</button>
+      <button class="btn" onclick="sendCmd('scan_up:airband')" title="nächstes Preset">▶</button>
+      <button class="btn" onclick="sendCmd('scan_down:airband')" title="vorheriges Preset">◀</button>
     </div>
-    <div class="pmr-status" style="margin-top:4px;font-size:11px;opacity:.85">AM via rtl_fm · Emergency 121.500</div>
+    <div class="pmr-grid" id="airbandPresetGrid" style="margin-top:8px"></div>
+    <div class="pmr-status" style="margin-top:4px;font-size:11px;opacity:.85">
+      Presets: <code>config/airband_stations.json</code> · AM via rtl_fm · ±25 kHz:
+      <button class="btn" style="padding:2px 8px;font-size:11px" onclick="airbandStep(0.025)">+25k</button>
+      <button class="btn" style="padding:2px 8px;font-size:11px" onclick="airbandStep(-0.025)">−25k</button>
+    </div>
   </div>
   <div class="scan-card">
     <h4>PMR446 — 16 Kanäle</h4>
@@ -387,7 +392,12 @@ function switchTab(name) {
     p.classList.toggle('active', p.id === 'tab-' + name));
   if (name === 'playlist') { loadPlaylist('today'); startPlPoll(); }
   else stopPlPoll();
-  if (name === 'scanner') { renderPmrGrid(); loadAirbandLastFreq(); startPmrBackendPoll(); }
+  if (name === 'scanner') {
+    renderPmrGrid();
+    loadAirbandLastFreq();
+    loadAirbandPresets();
+    startPmrBackendPoll();
+  }
   else { stopPmrWatch(); stopPmrBackendPoll(); }
 }
 
@@ -758,6 +768,25 @@ function scanAirband() {
     switchTab('player');
   }
 }
+function airbandStep(delta) {
+  const el = document.getElementById('scAirFreq');
+  let f = Number(el && el.value);
+  if (!Number.isFinite(f)) f = 121.5;
+  f = Math.round((f + Number(delta)) * 1000) / 1000;
+  f = Math.max(118, Math.min(136.975, f));
+  if (el) el.value = f.toFixed(3);
+  sendCmd('scan_setfreq:airband:' + f);
+  showToast('Airband ' + f.toFixed(3));
+}
+function airbandTunePreset(ch, freq) {
+  if (freq != null) {
+    const el = document.getElementById('scAirFreq');
+    if (el) el.value = Number(freq).toFixed(3);
+  }
+  sendCmd('scan_setch:airband:' + ch);
+  showToast('Airband K' + ch);
+  switchTab('player');
+}
 async function loadAirbandLastFreq() {
   const el = document.getElementById('scAirFreq');
   if (!el) return;
@@ -767,6 +796,30 @@ async function loadAirbandLastFreq() {
     if (j.ok && j.data && j.data.scanner_airband_last_freq != null)
       el.value = j.data.scanner_airband_last_freq;
   } catch (e) { /* default belassen */ }
+}
+async function loadAirbandPresets() {
+  const grid = document.getElementById('airbandPresetGrid');
+  if (!grid) return;
+  try {
+    const r = await fetch('/api/scanner/airband-stations');
+    const j = await r.json();
+    const stations = (j && j.stations) || [];
+    if (!stations.length) {
+      grid.innerHTML = '<span style="font-size:11px;opacity:.7">Keine Presets</span>';
+      return;
+    }
+    grid.innerHTML = stations.map(s => {
+      const ch = Number(s.ch) || 0;
+      const freq = Number(s.freq);
+      const name = String(s.name || ('K' + ch));
+      return `<button type="button" class="pmr-ch" data-ch="${ch}"
+        title="${freq.toFixed(3)} MHz"
+        onclick="airbandTunePreset(${ch}, ${freq})">K${ch}<br>
+        <span style="font-size:9px;opacity:.7">${name}</span></button>`;
+    }).join('');
+  } catch (e) {
+    grid.innerHTML = '<span style="font-size:11px;opacity:.7">Presets nicht ladbar</span>';
+  }
 }
 
 function escAttr(s) {

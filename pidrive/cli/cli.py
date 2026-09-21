@@ -214,8 +214,10 @@ def main():
   pidrivectl scanner monitor start         Detektor starten (optional Autotune)
   pidrivectl scanner monitor start --no-tune  nur loggen, nicht umschalten
   pidrivectl scanner airband freq 121.500  Airband AM manuell
-  pidrivectl scanner airband next          Airband +25 kHz
-  pidrivectl scanner airband prev          Airband −25 kHz
+  pidrivectl scanner airband ch 1          Airband-Preset (config)
+  pidrivectl scanner airband next          Airband nächstes Preset
+  pidrivectl scanner airband prev          Airband vorheriges Preset
+  pidrivectl scanner airband list          Airband-Presets anzeigen
   pidrivectl scanner monitor start --trigger-on 18  Lab: niedrigere Hit-Schwelle
   pidrivectl scanner monitor stop
   pidrivectl scanner monitor log -n 40     letzte Activity-Events
@@ -387,6 +389,8 @@ Flags (vor dem Befehl angeben):
         _sc_sub2.add_parser("stop")
         _sc_sub2.add_parser("next")
         _sc_sub2.add_parser("prev")
+        if _scb == "airband":
+            _sc_sub2.add_parser("list", help="Airband-Presets aus config/airband_stations.json")
         _p_ch  = _sc_sub2.add_parser("ch");   _p_ch.add_argument("n",  type=int)
         _p_fr  = _sc_sub2.add_parser("freq"); _p_fr.add_argument("f",  type=float)
     sc_sub.add_parser("status", help="Aktives Band, Frequenz, Squelch")
@@ -1910,6 +1914,23 @@ Flags (vor dem Befehl angeben):
             elif sc_action == "stop":
                 svc.send("scanner_stop")
                 fmt.out("  Scanner gestoppt")
+            elif sc_action == "list" and band == "airband":
+                try:
+                    from modules.radio import scanner as _sc
+                    chs = _sc.load_airband_stations()
+                    if use_json:
+                        fmt.print_json({"ok": True, "stations": chs})
+                    else:
+                        fmt.out(f"  Airband-Presets ({len(chs)}):")
+                        for ch in chs:
+                            fmt.out(
+                                f"    K{ch['ch']:02d}  {ch['freq']:7.3f} MHz  {ch['name']}"
+                            )
+                        fmt.out("  Datei: pidrive/config/airband_stations.json")
+                except Exception as e:
+                    fmt.err(str(e))
+                    sys.exit(EXIT_ERROR)
+                sys.exit(EXIT_OK)
             elif sc_action == "next":
                 svc.send(f"scan_up:{band}")
                 fmt.out(f"  {band}: nächster Kanal")
