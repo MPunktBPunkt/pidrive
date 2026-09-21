@@ -732,6 +732,9 @@ def api_scanner_settings():
                     "scanner_use_spectrum":   s.get("scanner_use_spectrum", False),
                     "scanner_spectrum_debug": s.get("scanner_spectrum_debug", False),
                     "scanner_pmr_autotune":   s.get("scanner_pmr_autotune", False),
+                    "scanner_pmr_hold_s":     s.get("scanner_pmr_hold_s", 15),
+                    "scanner_pmr_trigger_on_db":  s.get("scanner_pmr_trigger_on_db", 25.0),
+                    "scanner_pmr_trigger_off_db": s.get("scanner_pmr_trigger_off_db", 14.0),
                     "scanner_gain":           s.get("scanner_gain", -1),
                     "scanner_squelch":        s.get("scanner_squelch", 25),
                     "ppm_correction":         s.get("ppm_correction", 0),
@@ -742,11 +745,16 @@ def api_scanner_settings():
         body = request.get_json(silent=True) or {}
         changed = []
         for key in ("scanner_use_spectrum", "scanner_spectrum_debug",
-                    "scanner_pmr_autotune",
+                    "scanner_pmr_autotune", "scanner_pmr_hold_s",
+                    "scanner_pmr_trigger_on_db", "scanner_pmr_trigger_off_db",
                     "scanner_gain", "scanner_squelch"):
             if key in body:
                 if key == "scanner_pmr_autotune":
                     s[key] = bool(body[key])
+                elif key in ("scanner_pmr_hold_s",
+                             "scanner_pmr_trigger_on_db",
+                             "scanner_pmr_trigger_off_db"):
+                    s[key] = float(body[key])
                 else:
                     s[key] = body[key]
                 changed.append(key)
@@ -769,6 +777,13 @@ def api_pmr_monitor():
                 st = _j.load(f)
         except Exception:
             st = {"running": False}
+        # Abgeleitete Felder nachziehen (auch wenn Status von Disk)
+        try:
+            from modules.radio import scanner as _sc
+            if hasattr(_sc, "_pmr_enrich_status"):
+                st = _sc._pmr_enrich_status(st if isinstance(st, dict) else {})
+        except Exception:
+            pass
         n = int(request.args.get("n", 20))
         n = max(1, min(n, 200))
         lines = []
@@ -785,7 +800,26 @@ def api_pmr_monitor():
                     lines.append({"raw": line[:200]})
         except FileNotFoundError:
             pass
-        return jsonify({"ok": True, "status": st, "log": lines})
+        summary = {
+            "monitor_effective_state": (st or {}).get("monitor_effective_state"),
+            "peek_summary": {
+                "count": (st or {}).get("peek_count"),
+                "last_ch": (st or {}).get("last_peek_ch"),
+                "last_relative_db": (st or {}).get("last_peek_relative_db"),
+            },
+            "error_summary": {
+                "count": (st or {}).get("capture_error_count"),
+                "streak": (st or {}).get("capture_error_streak"),
+                "class": (st or {}).get("last_error_class"),
+                "usb_reset_count": (st or {}).get("usb_reset_count"),
+            },
+        }
+        return jsonify({
+            "ok": True,
+            "status": st,
+            "summary": summary,
+            "log": lines,
+        })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 

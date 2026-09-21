@@ -1073,6 +1073,7 @@ PMR_MONITOR_TRIGGER_ON_DB = 25.0   # Nahfeld-Walkie ~60dB; 9–20dB = Dauer-Fals
 PMR_MONITOR_TRIGGER_OFF_DB = 14.0
 PMR_MONITOR_MIN_FRAMES = 1
 PMR_MONITOR_DEFAULT_GAIN = 36  # Auto(-1) zu taub für PMR-Nahfeld
+PMR_MONITOR_PEEK_MIN_DB = 6.0
 
 _monitor_thread = None
 _monitor_stop = threading.Event()
@@ -1084,9 +1085,37 @@ _monitor_meta = {
     "started_ts": 0.0,
     "cycles": 0,
     "hits": 0,
+    "peek_count": 0,
+    "activity_count": 0,
+    "tune_blocked_count": 0,
+    "capture_error_count": 0,
+    "capture_error_streak": 0,
+    "force_free_rtl_count": 0,
+    "usb_reset_count": 0,
+    "preempt_source_count": 0,
+    "blocked_transition_count": 0,
+    "productive_scan_count": 0,
+    "trigger_on_db": PMR_MONITOR_TRIGGER_ON_DB,
+    "trigger_off_db": PMR_MONITOR_TRIGGER_OFF_DB,
+    "watch_s": PMR_MONITOR_WATCH_S,
     "last_event": "",
+    "last_error_class": "",
     "last_ch": None,
     "last_relative_db": None,
+    "last_peek_ch": None,
+    "last_peek_relative_db": None,
+    "watch_started_ts": None,
+    "watch_finished_ts": None,
+    "activity_ts": None,
+    "tuned_ts": None,
+    "audio_started_ts": None,
+    "listen_end_ts": None,
+    "last_productive_scan_ts": None,
+    "last_usb_reset_ts": None,
+    "last_detect_latency_ms": None,
+    "last_tune_latency_ms": None,
+    "last_audio_latency_ms": None,
+    "last_end_to_end_latency_ms": None,
     "log_path": PMR_MONITOR_LOG,
 }
 
@@ -1101,6 +1130,58 @@ def _pmr_ch_num(channel_name):
         return int(digits) if digits else None
     except Exception:
         return None
+
+
+def _pmr_error_class(err_s: str) -> str:
+    e = (err_s or "").lower()
+    if "authorized" in e:
+        return "usb_authorized_0"
+    if "belegt" in e or "busy" in e:
+        return "busy_timeout"
+    if "timeout" in e or "hängt" in e or "hang" in e:
+        return "rtl_timeout"
+    if "iq" in e or "leer" in e or "keine daten" in e:
+        return "rtl_no_iq"
+    if "spectrum_unavailable" in e:
+        return "spectrum_unavailable"
+    return "capture_error"
+
+
+def _pmr_effective_state(st: dict) -> str:
+    if not st.get("running"):
+        return "stopped"
+    err_streak = int(st.get("capture_error_streak") or 0)
+    if err_streak >= 2 or st.get("last_event") == "capture_error":
+        return "erroring"
+    last = str(st.get("last_event") or "")
+    if last.startswith("listening"):
+        return "listening"
+    if int(st.get("blocked_transition_count") or 0) and last == "scan":
+        # nur Hinweis — nicht dominant
+        pass
+    peek_c = int(st.get("peek_count") or 0)
+    act_c = int(st.get("activity_count") or 0)
+    if peek_c > 0 and act_c == 0:
+        return "running_peek_only"
+    age = st.get("productive_scan_age_s")
+    if age is not None and float(age) > 15.0:
+        return "running_stale"
+    return "running_productive"
+
+
+def _pmr_enrich_status(st: dict) -> dict:
+    """Abgeleitete Felder für API/CLI/WebUI."""
+    out = dict(st)
+    now = time.time()
+    pts = out.get("last_productive_scan_ts")
+    try:
+        out["productive_scan_age_s"] = (
+            round(now - float(pts), 2) if pts else None
+        )
+    except Exception:
+        out["productive_scan_age_s"] = None
+    out["monitor_effective_state"] = _pmr_effective_state(out)
+    return out
 
 
 def _pmr_append_log(entry: dict):
@@ -1120,6 +1201,7 @@ def _pmr_write_status(**extra):
     data = dict(_monitor_meta)
     data.update(extra)
     data["ts"] = _pmr_iso_now()
+    data = _pmr_enrich_status(data)
     try:
         import errno
         tmp = PMR_MONITOR_STATUS + ".tmp"
@@ -1158,18 +1240,41 @@ def get_pmr_monitor_status():
                 st["running"] = is_pmr_monitor_running()
     except Exception:
         pass
-    return st
+    return _pmr_enrich_status(st)
 
 
-def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
+def _pmr_top_peek(result) -> tuple:
+    """(name, relative_db) stärkster Kanal aus Debug-Scores, sonst (None, None)."""
+    try:
+        scores_dbg = ((result.debug or {}).get("scores") or []) if result else []
+        mx = {}
+        for fr in scores_dbg:
+            for k, v in (fr.get("channels") or {}).items():
+                mx[k] = max(mx.get(k, -999.0), float(v))
+        if not mx:
+            return None, None
+        top_name, top_db = max(mx.items(), key=lambda kv: kv[1])
+        return top_name, float(top_db)
+    except Exception:
+        return None, None
+
+
+def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
+                      trigger_on_db, trigger_off_db):
     global _monitor_meta
-    log.action("PMR-Monitor", f"start band={band_id} autotune={autotune} hold={hold_s}s")
+    log.action(
+        "PMR-Monitor",
+        f"start band={band_id} autotune={autotune} hold={hold_s}s "
+        f"trigger_on={trigger_on_db}dB"
+    )
     _pmr_append_log({
         "event": "start",
         "band": band_id,
         "autotune": bool(autotune),
         "hold_s": float(hold_s),
         "watch_s": float(watch_s),
+        "trigger_on_db": float(trigger_on_db),
+        "trigger_off_db": float(trigger_off_db),
     })
     _monitor_meta.update({
         "running": True,
@@ -1178,9 +1283,37 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
         "started_ts": time.time(),
         "cycles": 0,
         "hits": 0,
+        "peek_count": 0,
+        "activity_count": 0,
+        "tune_blocked_count": 0,
+        "capture_error_count": 0,
+        "capture_error_streak": 0,
+        "force_free_rtl_count": 0,
+        "usb_reset_count": 0,
+        "preempt_source_count": 0,
+        "blocked_transition_count": 0,
+        "productive_scan_count": 0,
+        "trigger_on_db": float(trigger_on_db),
+        "trigger_off_db": float(trigger_off_db),
+        "watch_s": float(watch_s),
         "last_event": "start",
+        "last_error_class": "",
         "last_ch": None,
         "last_relative_db": None,
+        "last_peek_ch": None,
+        "last_peek_relative_db": None,
+        "watch_started_ts": None,
+        "watch_finished_ts": None,
+        "activity_ts": None,
+        "tuned_ts": None,
+        "audio_started_ts": None,
+        "listen_end_ts": None,
+        "last_productive_scan_ts": None,
+        "last_usb_reset_ts": None,
+        "last_detect_latency_ms": None,
+        "last_tune_latency_ms": None,
+        "last_audio_latency_ms": None,
+        "last_end_to_end_latency_ms": None,
         "log_path": PMR_MONITOR_LOG,
         "error": "",
     })
@@ -1193,6 +1326,12 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
     try:
         while not _monitor_stop.is_set():
             if (_src_state and _src_state.in_transition()):
+                # Zähler nur einmal pro Blockade-Episode erhöhen
+                if _monitor_meta.get("last_event") != "blocked_transition":
+                    _monitor_meta["blocked_transition_count"] = (
+                        int(_monitor_meta.get("blocked_transition_count") or 0) + 1
+                    )
+                    _monitor_meta["last_event"] = "blocked_transition"
                 time.sleep(0.3)
                 continue
             rt = str(S.get("radio_type") or "").upper()
@@ -1200,6 +1339,9 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                 # Andere RTL-Quellen (z.B. DAB-Boot-Resume) aktiv beenden —
                 # sonst hängt die Überwachung dauerhaft in Pause.
                 log.warn(f"PMR-Monitor: verdränge Quelle {rt}")
+                _monitor_meta["preempt_source_count"] = (
+                    int(_monitor_meta.get("preempt_source_count") or 0) + 1
+                )
                 _pmr_append_log({"event": "preempt_source", "radio_type": rt})
                 try:
                     from modules import dab as _dab, fm as _fm, webradio as _wr
@@ -1230,8 +1372,10 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
 
             if not _spectrum:
                 _monitor_meta["error"] = "spectrum_unavailable"
+                _monitor_meta["last_error_class"] = "spectrum_unavailable"
                 _pmr_write_status()
-                _pmr_append_log({"event": "error", "error": "spectrum_unavailable"})
+                _pmr_append_log({"event": "error", "error": "spectrum_unavailable",
+                                 "error_class": "spectrum_unavailable"})
                 break
 
             profile = _get_spectrum_profile_for_band(band_id)
@@ -1240,13 +1384,15 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                 _pmr_write_status()
                 break
 
+            watch_t0 = time.time()
+            _monitor_meta["watch_started_ts"] = watch_t0
             try:
                 import dataclasses as _dc
                 profile = _dc.replace(
                     profile,
                     watch_seconds=float(watch_s),
-                    trigger_on_db=float(PMR_MONITOR_TRIGGER_ON_DB),
-                    trigger_off_db=float(PMR_MONITOR_TRIGGER_OFF_DB),
+                    trigger_on_db=float(trigger_on_db),
+                    trigger_off_db=float(trigger_off_db),
                     min_active_frames=int(PMR_MONITOR_MIN_FRAMES),
                 )
                 mon_gain = _get_pmr_monitor_gain(settings)
@@ -1258,9 +1404,19 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
             except Exception as e:
                 log.warn(f"PMR-Monitor capture: {e}")
                 err_s = str(e)
+                err_cls = _pmr_error_class(err_s)
                 consecutive_errors += 1
-                _pmr_append_log({"event": "error", "error": err_s[:200],
-                                 "streak": consecutive_errors})
+                _monitor_meta["capture_error_count"] = (
+                    int(_monitor_meta.get("capture_error_count") or 0) + 1
+                )
+                _monitor_meta["capture_error_streak"] = consecutive_errors
+                _monitor_meta["last_error_class"] = err_cls
+                _pmr_append_log({
+                    "event": "error",
+                    "error": err_s[:200],
+                    "error_class": err_cls,
+                    "streak": consecutive_errors,
+                })
                 _monitor_meta["last_event"] = "capture_error"
                 _pmr_write_status(error=err_s[:120])
                 if ("belegt" in err_s.lower() or "busy" in err_s.lower()
@@ -1293,22 +1449,32 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                                 os.remove(_p)
                         except Exception:
                             pass
+                    _monitor_meta["force_free_rtl_count"] = (
+                        int(_monitor_meta.get("force_free_rtl_count") or 0) + 1
+                    )
                     _pmr_append_log({"event": "force_free_rtl",
-                                     "streak": consecutive_errors})
+                                     "streak": consecutive_errors,
+                                     "error_class": err_cls})
                     # Nach 3 Hängern: USB-Reset (bekannter Stick-Bug)
                     if consecutive_errors >= 3 and _rtlsdr:
                         try:
                             rr = _rtlsdr.usb_reset()
+                            reset_ok = bool((rr or {}).get("ok"))
+                            _monitor_meta["usb_reset_count"] = (
+                                int(_monitor_meta.get("usb_reset_count") or 0) + 1
+                            )
+                            _monitor_meta["last_usb_reset_ts"] = time.time()
                             _pmr_append_log({
                                 "event": "usb_reset",
-                                "ok": bool((rr or {}).get("ok")),
+                                "ok": reset_ok,
                                 "steps": (rr or {}).get("steps"),
                             })
                             log.warn(
                                 f"PMR-Monitor usb_reset → "
-                                f"{(rr or {}).get('ok')}"
+                                f"{reset_ok}"
                             )
                             consecutive_errors = 0
+                            _monitor_meta["capture_error_streak"] = 0
                             time.sleep(2.0)
                         except Exception as re:
                             log.warn(f"PMR-Monitor usb_reset: {re}")
@@ -1318,6 +1484,22 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                 continue
 
             consecutive_errors = 0
+            _monitor_meta["capture_error_streak"] = 0
+            _monitor_meta["last_error_class"] = ""
+            _monitor_meta["error"] = ""
+            watch_t1 = time.time()
+            if result is not None:
+                try:
+                    watch_t0 = float(result.watch_started_ts or watch_t0)
+                    watch_t1 = float(result.watch_ended_ts or watch_t1)
+                except Exception:
+                    pass
+            _monitor_meta["watch_started_ts"] = watch_t0
+            _monitor_meta["watch_finished_ts"] = watch_t1
+            _monitor_meta["last_productive_scan_ts"] = watch_t1
+            _monitor_meta["productive_scan_count"] = (
+                int(_monitor_meta.get("productive_scan_count") or 0) + 1
+            )
             _monitor_meta["cycles"] = int(_monitor_meta.get("cycles") or 0) + 1
             idle_since_hb += 1
 
@@ -1331,6 +1513,8 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                 score = round(float(best.score), 3)
                 power = round(float(best.power_db), 2)
                 conf = round(float(best.confidence), 3)
+                activity_ts = time.time()
+                detect_ms = max(0.0, (activity_ts - watch_t0) * 1000.0)
 
                 cands_log = []
                 for c in (result.candidates or []):
@@ -1347,8 +1531,13 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                     })
 
                 _monitor_meta["hits"] = int(_monitor_meta.get("hits") or 0) + 1
+                _monitor_meta["activity_count"] = (
+                    int(_monitor_meta.get("activity_count") or 0) + 1
+                )
                 _monitor_meta["last_ch"] = ch_num
                 _monitor_meta["last_relative_db"] = rel
+                _monitor_meta["activity_ts"] = activity_ts
+                _monitor_meta["last_detect_latency_ms"] = round(detect_ms, 1)
                 _monitor_meta["last_event"] = "activity"
                 _pmr_write_status()
 
@@ -1364,6 +1553,8 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                     "power_db": power,
                     "confidence": conf,
                     "action": action,
+                    "detect_latency_ms": round(detect_ms, 1),
+                    "trigger_on_db": float(trigger_on_db),
                     "candidates": cands_log,
                 })
                 log.action(
@@ -1376,11 +1567,17 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                     owner = f"pmr_monitor:{band_id}"
                     got_tr = False
                     try:
+                        begin_ts = time.time()
                         if _src_state:
                             got_tr = bool(_src_state.begin_transition(
                                 owner, "scanner"
                             ))
                             if not got_tr:
+                                _monitor_meta["tune_blocked_count"] = (
+                                    int(_monitor_meta.get("tune_blocked_count") or 0) + 1
+                                )
+                                _monitor_meta["last_event"] = "tune_blocked"
+                                _pmr_write_status()
                                 _pmr_append_log({
                                     "event": "tune_blocked",
                                     "ch": ch_num,
@@ -1393,11 +1590,21 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                                 continue
                         S["scanner_band"] = band_id
                         set_channel(band_id, int(ch_num), S, settings=settings)
+                        audio_ts = time.time()
                         if _src_state:
                             try:
                                 _src_state.commit_source("scanner")
                             except Exception:
                                 pass
+                        tuned_ts = time.time()
+                        tune_ms = max(0.0, (tuned_ts - begin_ts) * 1000.0)
+                        audio_ms = max(0.0, (audio_ts - begin_ts) * 1000.0)
+                        e2e_ms = max(0.0, (audio_ts - watch_t0) * 1000.0)
+                        _monitor_meta["tuned_ts"] = tuned_ts
+                        _monitor_meta["audio_started_ts"] = audio_ts
+                        _monitor_meta["last_tune_latency_ms"] = round(tune_ms, 1)
+                        _monitor_meta["last_audio_latency_ms"] = round(audio_ms, 1)
+                        _monitor_meta["last_end_to_end_latency_ms"] = round(e2e_ms, 1)
                         _pmr_append_log({
                             "event": "tuned",
                             "band": band_id,
@@ -1405,6 +1612,9 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                             "freq_mhz": freq_mhz,
                             "relative_db": rel,
                             "hold_s": float(hold_s),
+                            "tune_latency_ms": round(tune_ms, 1),
+                            "audio_latency_ms": round(audio_ms, 1),
+                            "end_to_end_latency_ms": round(e2e_ms, 1),
                         })
                         _monitor_meta["last_event"] = f"listening:K{ch_num}"
                         _pmr_write_status()
@@ -1435,6 +1645,7 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                                 stop(S)
                             except Exception:
                                 pass
+                            _monitor_meta["listen_end_ts"] = time.time()
                             _pmr_append_log({
                                 "event": "listen_end",
                                 "ch": ch_num,
@@ -1445,32 +1656,33 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
                 last_heartbeat = time.time()
             else:
                 _monitor_meta["last_event"] = "scan"
-                # Peek: stärkster Kanal auch unter Trigger (Diagnose)
-                try:
-                    scores_dbg = ((result.debug or {}).get("scores") or []) if result else []
-                    mx = {}
-                    for fr in scores_dbg:
-                        for k, v in (fr.get("channels") or {}).items():
-                            mx[k] = max(mx.get(k, -999.0), float(v))
-                    if mx:
-                        top_name, top_db = max(mx.items(), key=lambda kv: kv[1])
-                        if top_db >= 6.0:
-                            _pmr_append_log({
-                                "event": "peek",
-                                "ch": _pmr_ch_num(top_name),
-                                "name": top_name,
-                                "relative_db": round(top_db, 2),
-                                "triggered": False,
-                            })
-                except Exception:
-                    pass
+                top_name, top_db = _pmr_top_peek(result)
+                if top_name is not None and top_db >= PMR_MONITOR_PEEK_MIN_DB:
+                    peek_ch = _pmr_ch_num(top_name)
+                    _monitor_meta["peek_count"] = (
+                        int(_monitor_meta.get("peek_count") or 0) + 1
+                    )
+                    _monitor_meta["last_peek_ch"] = peek_ch
+                    _monitor_meta["last_peek_relative_db"] = round(top_db, 2)
+                    _pmr_append_log({
+                        "event": "peek",
+                        "ch": peek_ch,
+                        "name": top_name,
+                        "relative_db": round(top_db, 2),
+                        "triggered": False,
+                        "trigger_on_db": float(trigger_on_db),
+                    })
+                _pmr_write_status()
                 if time.time() - last_heartbeat >= PMR_MONITOR_HEARTBEAT_S:
                     _pmr_append_log({
                         "event": "heartbeat",
                         "band": band_id,
                         "cycles": _monitor_meta.get("cycles"),
                         "hits": _monitor_meta.get("hits"),
+                        "peek_count": _monitor_meta.get("peek_count"),
+                        "activity_count": _monitor_meta.get("activity_count"),
                         "idle_cycles": idle_since_hb,
+                        "trigger_on_db": float(trigger_on_db),
                     })
                     last_heartbeat = time.time()
                     idle_since_hb = 0
@@ -1487,12 +1699,37 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s):
             "band": band_id,
             "cycles": _monitor_meta.get("cycles"),
             "hits": _monitor_meta.get("hits"),
+            "peek_count": _monitor_meta.get("peek_count"),
+            "activity_count": _monitor_meta.get("activity_count"),
+            "capture_error_count": _monitor_meta.get("capture_error_count"),
+            "usb_reset_count": _monitor_meta.get("usb_reset_count"),
         })
         log.action("PMR-Monitor", "gestoppt")
 
 
+def _pmr_read_trigger_settings(settings):
+    on_db = PMR_MONITOR_TRIGGER_ON_DB
+    off_db = PMR_MONITOR_TRIGGER_OFF_DB
+    try:
+        on_db = float(settings.get(
+            "scanner_pmr_trigger_on_db", PMR_MONITOR_TRIGGER_ON_DB
+        ))
+    except Exception:
+        pass
+    try:
+        off_db = float(settings.get(
+            "scanner_pmr_trigger_off_db", PMR_MONITOR_TRIGGER_OFF_DB
+        ))
+    except Exception:
+        pass
+    on_db = max(6.0, min(60.0, on_db))
+    off_db = max(0.0, min(on_db - 1.0, off_db))
+    return on_db, off_db
+
+
 def start_pmr_monitor(S, settings=None, band_id="pmr446",
-                      autotune=None, hold_s=None, watch_s=None):
+                      autotune=None, hold_s=None, watch_s=None,
+                      trigger_on_db=None, trigger_off_db=None):
     """
     Dauerhafte PMR-Überwachung im Core-Thread:
     Spektrum scannen → Aktivität loggen (Kanal+dB) → optional umschalten.
@@ -1514,6 +1751,13 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
             hold_s = PMR_MONITOR_HOLD_S
     if watch_s is None:
         watch_s = PMR_MONITOR_WATCH_S
+    def_on, def_off = _pmr_read_trigger_settings(settings)
+    if trigger_on_db is None:
+        trigger_on_db = def_on
+    if trigger_off_db is None:
+        trigger_off_db = def_off
+    trigger_on_db = max(6.0, min(60.0, float(trigger_on_db)))
+    trigger_off_db = max(0.0, min(trigger_on_db - 1.0, float(trigger_off_db)))
 
     band_id = (band_id or "pmr446").lower()
     if band_id not in ("pmr446", "freenet"):
@@ -1579,7 +1823,10 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
                 pass
         t = threading.Thread(
             target=_pmr_monitor_loop,
-            args=(S, settings, band_id, bool(autotune), float(hold_s), float(watch_s)),
+            args=(
+                S, settings, band_id, bool(autotune), float(hold_s),
+                float(watch_s), float(trigger_on_db), float(trigger_off_db),
+            ),
             daemon=True,
             name="pmr-monitor",
         )

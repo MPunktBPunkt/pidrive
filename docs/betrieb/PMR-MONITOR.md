@@ -11,10 +11,12 @@ schreiben, optional auf den Kanal umschalten (Autotune).
 ## CLI
 
 ```bash
-pidrivectl scanner monitor status          # läuft? cycles/hits/last_event
+pidrivectl scanner monitor status          # läuft? cycles/hits/peek/latenz
 pidrivectl scanner monitor start           # starten (Default: mit Autotune)
 pidrivectl scanner monitor start --no-tune # nur loggen, nicht umschalten
 pidrivectl scanner monitor start --hold 20 # Hörzeit nach Treffer (Sekunden)
+pidrivectl scanner monitor start --trigger-on 18   # Lab: niedrigere Hit-Schwelle
+pidrivectl scanner monitor start --trigger-off 12
 pidrivectl scanner monitor stop
 pidrivectl scanner monitor log             # letzte Activity-Events
 pidrivectl scanner monitor log -n 80
@@ -26,10 +28,10 @@ Hilfe: `pidrivectl scanner monitor -h` · `pidrivectl scanner monitor start -h`
 
 | Pfad | Inhalt |
 |------|--------|
-| `/tmp/pidrive_pmr_monitor.json` | Live-Status (`running`, `cycles`, `hits`, `last_event`, …) |
-| `/var/log/pidrive/pmr_monitor.jsonl` | Event-Log (`activity`, `error`, `usb_reset`, `heartbeat`, …) |
+| `/tmp/pidrive_pmr_monitor.json` | Live-Status inkl. peek/activity/error/latenz/`monitor_effective_state` |
+| `/var/log/pidrive/pmr_monitor.jsonl` | Event-Log (`peek`, `activity`, `tuned`, `error`, `usb_reset`, …) |
 
-WebUI: Scanner-Tab zeigt Monitor-Status; Trigger `pmr_monitor_start` / `pmr_monitor_stop`.
+WebUI: Scanner-Tab zeigt Monitor-Status + Debugzeile; Trigger-dB einstellbar.
 
 ## Settings (`config/settings.json`)
 
@@ -37,6 +39,8 @@ WebUI: Scanner-Tab zeigt Monitor-Status; Trigger `pmr_monitor_start` / `pmr_moni
 |-----|-----------|---------|
 | `scanner_pmr_autotune` | Bei Hit auf Kanal umschalten | `false` (CLI-`start` setzt `true`, außer `--no-tune`) |
 | `scanner_pmr_hold_s` | Hörzeit nach Tune | `15` |
+| `scanner_pmr_trigger_on_db` | Hit-Schwelle relativ Noise | `25` (Lab oft `16`–`20`) |
+| `scanner_pmr_trigger_off_db` | Hysterese unter Trigger | `14` |
 | `scanner_gain` | Gain; Monitor ersetzt Auto(`-1`) durch festen Nahfeld-Gain | typ. `25`–`36` |
 | `ppm_correction` | Quarzkorrektur | kalibriert |
 

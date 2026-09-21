@@ -318,13 +318,21 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <span>Überwachung: bei Aktivität umschalten</span>
       <span class="hint">(~15 s hören, dann weiter scannen)</span>
     </label>
+    <label class="pmr-opt" title="Hit-Schwelle relativ zum Rauschboden. Live oft Peek ~18–20 dB; Default 25 ist streng.">
+      <span>Trigger dB</span>
+      <input type="number" id="pmrTriggerOn" min="8" max="40" step="1" value="25"
+             style="width:56px;margin:0 6px"
+             onchange="savePmrTriggerOn(this.value)">
+      <span class="hint">(Hit ab diesem relativen dB; gilt beim nächsten Start)</span>
+    </label>
     <div class="scan-row">
       <button class="btn primary" id="pmrWatchBtn" onclick="togglePmrWatch()">👁 Dauerbeobachtung</button>
-      <button class="btn" onclick="pmrScanOnce()">Scan einmal</button>
+      <button class="btn" onclick="pmrScanOnce()" title="Einmaliger Snapshot — stoppt den Backend-Monitor kurz">Scan einmal</button>
       <button class="btn" onclick="sendCmd('scan_next:pmr446')">Nächster Treffer ▶</button>
     </div>
     <div class="pmr-status" id="pmrStatus">Tipp: Walkie senden → aktive Kanäle werden grün</div>
     <div class="pmr-status" id="pmrBackendStatus" style="margin-top:2px"></div>
+    <div class="pmr-status" id="pmrDebugStatus" style="margin-top:2px;font-size:11px;opacity:.85"></div>
   </div>
   <div class="scan-card">
     <h4>Squelch</h4>
@@ -408,12 +416,16 @@ function pmrAutoTuneEnabled() {
 
 async function loadPmrAutoTune() {
   const el = document.getElementById('pmrAutoTune');
-  if (!el) return;
+  const trig = document.getElementById('pmrTriggerOn');
   try {
     const r = await fetch('/api/scanner/settings');
     const j = await r.json();
-    if (j.ok && j.data && typeof j.data.scanner_pmr_autotune === 'boolean')
-      el.checked = j.data.scanner_pmr_autotune;
+    if (j.ok && j.data) {
+      if (el && typeof j.data.scanner_pmr_autotune === 'boolean')
+        el.checked = j.data.scanner_pmr_autotune;
+      if (trig && j.data.scanner_pmr_trigger_on_db != null)
+        trig.value = j.data.scanner_pmr_trigger_on_db;
+    }
   } catch (e) { /* lokal belassen */ }
 }
 
@@ -433,8 +445,22 @@ async function savePmrAutoTune(checked) {
   }
 }
 
+async function savePmrTriggerOn(val) {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return;
+  try {
+    await fetch('/api/scanner/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ scanner_pmr_trigger_on_db: n })
+    });
+    showToast('Trigger ' + n + ' dB (nächster Monitor-Start)');
+  } catch (e) { /* ignore */ }
+}
+
 async function syncPmrBackendStatus() {
   const badge = document.getElementById('pmrBackendStatus');
+  const dbg = document.getElementById('pmrDebugStatus');
   try {
     const r = await fetch('/api/scanner/pmr-monitor?n=8');
     const j = await r.json();
@@ -447,12 +473,37 @@ async function syncPmrBackendStatus() {
         const cycles = st.cycles != null ? st.cycles : '?';
         const ev = st.last_event || 'scan';
         const ch = st.last_ch != null ? (' · zuletzt K' + st.last_ch) : '';
-        badge.textContent = `Backend-Detektor AKTIV · cycles=${cycles} hits=${hits} · ${ev}${ch}`;
+        const state = st.monitor_effective_state || '';
+        badge.textContent = `Backend-Monitor AKTIV · ${state} · cycles=${cycles} hits=${hits} · ${ev}${ch}`;
         badge.classList.add('hot');
       } else {
-        badge.textContent = 'Backend-Detektor: aus';
+        badge.textContent = 'Backend-Monitor: aus · Snapshot ≠ Dauerbeobachtung';
         badge.classList.remove('hot');
       }
+    }
+    if (dbg) {
+      const parts = [];
+      if (st.trigger_on_db != null)
+        parts.push('trigger=' + st.trigger_on_db + 'dB');
+      if (st.last_peek_ch != null)
+        parts.push('peek K' + st.last_peek_ch + ' +' + st.last_peek_relative_db + 'dB');
+      else if (st.peek_count)
+        parts.push('peeks=' + st.peek_count);
+      if (st.activity_count != null)
+        parts.push('activity=' + st.activity_count);
+      if (st.tune_blocked_count)
+        parts.push('tune_blocked=' + st.tune_blocked_count);
+      if (st.capture_error_count)
+        parts.push('err=' + st.capture_error_count
+          + (st.capture_error_streak ? '(streak ' + st.capture_error_streak + ')' : '')
+          + (st.last_error_class ? ' ' + st.last_error_class : ''));
+      if (st.usb_reset_count)
+        parts.push('usb_reset=' + st.usb_reset_count);
+      if (st.last_detect_latency_ms != null)
+        parts.push('detect=' + st.last_detect_latency_ms + 'ms');
+      if (st.productive_scan_age_s != null)
+        parts.push('scan_age=' + st.productive_scan_age_s + 's');
+      dbg.textContent = parts.length ? parts.join(' · ') : '';
     }
     const acts = ((j && j.log) || []).filter(e => e && e.event === 'activity');
     if (acts.length) {
@@ -467,6 +518,9 @@ async function syncPmrBackendStatus() {
     if (stLine && running) {
       if (st.error)
         stLine.textContent = 'Detektor: ' + String(st.error).slice(0, 80);
+      else if (st.monitor_effective_state === 'running_peek_only')
+        stLine.textContent = 'Signal gesehen (peek), aber unter Trigger '
+          + (st.trigger_on_db != null ? st.trigger_on_db + ' dB' : '');
       else if (st.last_event === 'scan' || st.last_event === 'start')
         stLine.textContent = pmrAutoTuneEnabled()
           ? 'Überwachung… keine Aktivität'
@@ -480,7 +534,7 @@ async function syncPmrBackendStatus() {
 function startPmrBackendPoll() {
   stopPmrBackendPoll();
   syncPmrBackendStatus();
-  _pmrBackendPoll = setInterval(syncPmrBackendStatus, 2000);
+  _pmrBackendPoll = setInterval(syncPmrBackendStatus, 1000);
 }
 
 function stopPmrBackendPoll() {
@@ -551,18 +605,20 @@ async function togglePmrWatch() {
     return;
   }
   await savePmrAutoTune(pmrAutoTuneEnabled());
+  const trigEl = document.getElementById('pmrTriggerOn');
+  if (trigEl) await savePmrTriggerOn(trigEl.value);
   sendCmd('radio_stop');
   sendCmd('pmr_monitor_start');
   _setPmrWatchButton(true);
   const st0 = document.getElementById('pmrStatus');
   if (st0) {
     st0.textContent = pmrAutoTuneEnabled()
-      ? 'Backend-Detektor gestartet — scanne permanent…'
-      : 'Backend-Detektor gestartet (ohne Umschalten)';
+      ? 'Backend-Monitor gestartet — scanne permanent…'
+      : 'Backend-Monitor gestartet (ohne Umschalten)';
     st0.classList.remove('hot');
   }
   startPmrBackendPoll();
-  showToast('PMR-Detektor gestartet');
+  showToast('PMR-Monitor gestartet');
 }
 
 function stopPmrWatch() {

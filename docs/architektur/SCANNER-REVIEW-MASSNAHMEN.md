@@ -82,11 +82,11 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 ```
 [x] FFT-Mismatch
 [x] scan_next/prev Return
-[ ] Peek/Activity/Error-Metriken + Zeitstempel (Status/API)
-[ ] Trigger konfigurierbar + Feldtest A (nur Erkennung)
-[ ] Early-Exit + kürzeres Watch (Feldtest B Latency)
+[x] Peek/Activity/Error-Metriken + Zeitstempel (Status/API)
+[x] Trigger konfigurierbar + Feldtest A (nur Erkennung)
+[x] Early-Exit + kürzeres Watch (Feldtest B Latency)  # Early-Exit; Watch-Länge noch Default 2s
 [ ] Block-Capture pro Watch (Feldtest C Stick-Stabilität)
-[ ] UI-Debugblock
+[x] UI-Debugblock
 [ ] Recovery zentralisieren
 ```
 

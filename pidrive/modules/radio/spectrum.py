@@ -639,10 +639,12 @@ class SpectrumWatcher:
         started = time.time()
         ended_target = started + profile.watch_seconds
         frames_processed = 0
+        early_exit = False
 
         debug_frames: list[dict[str, Any]] = []
         debug_scores: list[dict[str, Any]] = []
         bin_map_cached: Optional[dict[str, tuple[int, int]]] = None
+        early_exit = False
 
         while time.time() < ended_target:
             raw = self.backend.capture_iq(
@@ -689,6 +691,23 @@ class SpectrumWatcher:
                     "channels": {k: round(v, 2) for k, v in scores.items()}
                 })
 
+            # Early-Exit: starker, dominanter Hit nach Mindestbeobachtungszeit
+            elapsed_ms = (time.time() - started) * 1000.0
+            if elapsed_ms >= 300.0 and frames_processed >= max(1, int(profile.min_active_frames)):
+                cands_now = tracker.build_candidates(ts)
+                if cands_now:
+                    best_now = cands_now[0]
+                    margin = 8.0
+                    second_rel = (
+                        float(cands_now[1].relative_db) if len(cands_now) > 1 else -999.0
+                    )
+                    if (float(best_now.relative_db) >= float(profile.trigger_on_db) + margin
+                            and float(best_now.relative_db) - second_rel >= 3.0
+                            and int(best_now.active_frames) >= int(profile.min_active_frames)):
+                        early_exit = True
+            if early_exit:
+                break
+
         ended = time.time()
         candidates = tracker.build_candidates(ended)
         best = candidates[0] if candidates else None
@@ -708,6 +727,7 @@ class SpectrumWatcher:
                 "effective_fft_size": int(fft_processor.fft_size),
                 "frame_ms": int(config.frame_ms),
                 "span_hz": int(compute_span_for_channels(profile.channels)),
+                "early_exit": bool(early_exit),
                 "frames": debug_frames if debug else [],
                 "scores": debug_scores if debug else [],
             }

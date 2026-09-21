@@ -213,6 +213,7 @@ def main():
   pidrivectl scanner monitor status        PMR446 Dauer-Detektor Status
   pidrivectl scanner monitor start         Detektor starten (optional Autotune)
   pidrivectl scanner monitor start --no-tune  nur loggen, nicht umschalten
+  pidrivectl scanner monitor start --trigger-on 18  Lab: niedrigere Hit-Schwelle
   pidrivectl scanner monitor stop
   pidrivectl scanner monitor log -n 40     letzte Activity-Events
 
@@ -397,6 +398,12 @@ Flags (vor dem Befehl angeben):
                               help="Nur loggen, nicht umschalten")
     _p_mon_start.add_argument("--hold", type=float, default=None,
                               help="Hörzeit in Sekunden (Default 15)")
+    _p_mon_start.add_argument("--trigger-on", type=float, default=None,
+                              dest="trigger_on",
+                              help="Hit-Schwelle relativ Noise in dB (Default 25; Lab oft 16–20)")
+    _p_mon_start.add_argument("--trigger-off", type=float, default=None,
+                              dest="trigger_off",
+                              help="Hysterese unter Trigger in dB (Default 14)")
     _mon_sub.add_parser("stop", help="Überwachung stoppen")
     _mon_sub.add_parser("status", help="Monitor-Status")
     _p_mon_log = _mon_sub.add_parser("log", help="Aktivitäts-Log anzeigen")
@@ -1758,6 +1765,10 @@ Flags (vor dem Befehl angeben):
                     _s["scanner_pmr_autotune"] = not bool(getattr(args, "no_tune", False))
                     if getattr(args, "hold", None) is not None:
                         _s["scanner_pmr_hold_s"] = float(args.hold)
+                    if getattr(args, "trigger_on", None) is not None:
+                        _s["scanner_pmr_trigger_on_db"] = float(args.trigger_on)
+                    if getattr(args, "trigger_off", None) is not None:
+                        _s["scanner_pmr_trigger_off_db"] = float(args.trigger_off)
                     _ss(_s)
                 except Exception as e:
                     fmt.err(f"Settings: {e}")
@@ -1809,22 +1820,48 @@ Flags (vor dem Befehl angeben):
                     fmt.out(
                         f"  PMR-Monitor: AKTIV  band={st.get('band')}  "
                         f"autotune={st.get('autotune')}  "
+                        f"state={st.get('monitor_effective_state', '?')}  "
                         f"cycles={st.get('cycles')}  hits={st.get('hits')}"
                     )
+                    fmt.out(
+                        f"  Trigger: on={st.get('trigger_on_db')} dB  "
+                        f"off={st.get('trigger_off_db')} dB  "
+                        f"peek={st.get('peek_count')}  "
+                        f"activity={st.get('activity_count')}"
+                    )
+                    if st.get("last_peek_ch") is not None:
+                        fmt.out(
+                            f"  Peek: K{st.get('last_peek_ch')}  "
+                            f"+{st.get('last_peek_relative_db')} dB"
+                        )
                     if st.get("last_ch") is not None:
                         fmt.out(
-                            f"  Zuletzt: K{st.get('last_ch')}  "
+                            f"  Zuletzt Hit: K{st.get('last_ch')}  "
                             f"+{st.get('last_relative_db')} dB  "
                             f"({st.get('last_event')})"
                         )
                     else:
                         fmt.out(f"  Zustand: {st.get('last_event', '?')}")
+                    if st.get("capture_error_count"):
+                        fmt.out(
+                            f"  Errors: {st.get('capture_error_count')}  "
+                            f"streak={st.get('capture_error_streak')}  "
+                            f"class={st.get('last_error_class') or '-'}  "
+                            f"usb_reset={st.get('usb_reset_count')}"
+                        )
+                    if st.get("last_detect_latency_ms") is not None:
+                        fmt.out(
+                            f"  Latenz: detect={st.get('last_detect_latency_ms')} ms  "
+                            f"tune={st.get('last_tune_latency_ms')} ms  "
+                            f"e2e={st.get('last_end_to_end_latency_ms')} ms"
+                        )
                     fmt.out(f"  Log: {st.get('log_path', '/var/log/pidrive/pmr_monitor.jsonl')}")
                 else:
                     fmt.out("  PMR-Monitor: inaktiv")
                     if st:
                         fmt.out(
                             f"  Letzter Lauf: hits={st.get('hits')}  "
+                            f"peek={st.get('peek_count')}  "
                             f"cycles={st.get('cycles')}  event={st.get('last_event')}"
                         )
             except Exception as e:

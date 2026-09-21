@@ -55,6 +55,8 @@ _DEFAULTS = {
     "scanner_spectrum_debug": False,     # True = Spectrum Debug-JSON schreiben
     "scanner_pmr_autotune":   False,     # PMR-Monitor / WebUI: bei Aktivität umschalten
     "scanner_pmr_hold_s":     15,        # Sekunden hören nach Umschalten, dann weiter scannen
+    "scanner_pmr_trigger_on_db":  25.0,  # Monitor: Hit-Schwelle (relativ Noise); Lab oft 16–20
+    "scanner_pmr_trigger_off_db": 14.0,  # Monitor: Hysterese unter Trigger
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

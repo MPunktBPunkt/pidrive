@@ -214,3 +214,35 @@ def test_scan_prev_returns_none_without_hit(monkeypatch):
     monkeypatch.setattr(scanner, "_scan_list", lambda *a, **k: None)
     monkeypatch.setattr(scanner, "_write_scan_result", lambda *a, **k: None)
     assert scanner.scan_prev("pmr446", S, settings={}) is None
+
+
+def test_pmr_error_class_and_enrich():
+    assert scanner._pmr_error_class("Device busy") == "busy_timeout"
+    assert scanner._pmr_error_class("Timeout beim Capture") == "rtl_timeout"
+    assert scanner._pmr_error_class("authorized=0") == "usb_authorized_0"
+    st = scanner._pmr_enrich_status({
+        "running": True,
+        "peek_count": 5,
+        "activity_count": 0,
+        "capture_error_streak": 0,
+        "last_event": "scan",
+        "last_productive_scan_ts": time.time() - 1.5,
+    })
+    assert st["monitor_effective_state"] == "running_peek_only"
+    assert st["productive_scan_age_s"] is not None
+    assert st["productive_scan_age_s"] >= 1.0
+
+
+def test_pmr_read_trigger_settings_clamps():
+    on_db, off_db = scanner._pmr_read_trigger_settings({
+        "scanner_pmr_trigger_on_db": 18,
+        "scanner_pmr_trigger_off_db": 12,
+    })
+    assert on_db == 18.0
+    assert off_db == 12.0
+    on_db, off_db = scanner._pmr_read_trigger_settings({
+        "scanner_pmr_trigger_on_db": 99,
+        "scanner_pmr_trigger_off_db": 90,
+    })
+    assert on_db == 60.0
+    assert off_db < on_db
