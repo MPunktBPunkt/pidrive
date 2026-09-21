@@ -36,6 +36,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC | Planung | 2026-09-17 |
 | [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → esp32.pidrive / PUMP | Planung | 2026-09-18 |
 | [../assets/usb-msc-covers/README.md](../assets/usb-msc-covers/README.md) | USB-MSC Cover-Spec | Planung / Design | 2026-09-17 |
+| [screenshots/README.md](screenshots/README.md) | WebUI- und ESP32-SoftAP-Screenshots (README-Galerie) | Doku, Startseite | 2026-09-21 |
 | [auftraege/README.md](auftraege/README.md) | Aktive Arbeitsaufträge (aktuell leer) | Entwickler | 2026-09-19 |
 | [referenz/WELLE-CLI.md](referenz/WELLE-CLI.md) | welle-cli Optionen, HTTP, Kanäle | Entwickler | 2026-04-21 |
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen | Entwickler, QA | 2026-09-15 |
