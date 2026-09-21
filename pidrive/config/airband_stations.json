@@ -1,7 +1,8 @@
 {
-  "version": 1,
+  "version": 2,
   "updated_at": "2026-09-21",
-  "note": "Lokale Airband-Presets (AM). Frequenzen an den Heimatflughafen anpassen.",
+  "note": "EDJA Memmingen/Allgäu (FMM) — öffentliche COM-Frequenzen. Bei Bedarf lokal anpassen.",
+  "airport": "EDJA / FMM Memmingen",
   "stations": [
     {
       "id": "emergency",
@@ -10,27 +11,33 @@
       "enabled": true
     },
     {
-      "id": "tower",
-      "name": "Tower",
-      "freq": 118.700,
+      "id": "edja_atis",
+      "name": "EDJA ATIS",
+      "freq": 118.855,
       "enabled": true
     },
     {
-      "id": "ground",
-      "name": "Ground",
-      "freq": 121.900,
+      "id": "edja_gnd",
+      "name": "EDJA Ground",
+      "freq": 121.680,
       "enabled": true
     },
     {
-      "id": "atis",
-      "name": "ATIS",
-      "freq": 125.050,
+      "id": "edja_twr",
+      "name": "EDJA Tower",
+      "freq": 126.855,
       "enabled": true
     },
     {
-      "id": "approach",
-      "name": "Approach",
-      "freq": 119.200,
+      "id": "edja_afis",
+      "name": "Langen Info AFIS",
+      "freq": 126.950,
+      "enabled": true
+    },
+    {
+      "id": "muc_radar",
+      "name": "München Radar",
+      "freq": 129.450,
       "enabled": true
     }
   ]
