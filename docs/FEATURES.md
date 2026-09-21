@@ -59,6 +59,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-042 | Spektrum-Scan | `pidrivectl spectrum scan [RANGE] -n N` | Peak-Liste | RTL-SDR | ✅ |
 | F-043 | Spektrum-Peek | `pidrivectl spectrum peek <mhz>` | Kanalenergie | RTL-SDR | ✅ |
 | F-044 | Spektrum last | `pidrivectl spectrum last [--json]` | Letztes Ergebnis | — | ✅ |
+| F-045 | PMR446 Dauer-Monitor | `pidrivectl scanner monitor start\|status\|log\|stop` | hits/cycles, JSONL | RTL-SDR | ✅ |
 
 ## System
 

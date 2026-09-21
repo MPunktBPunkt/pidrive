@@ -52,6 +52,10 @@ def _blocked(title="Scanner"):
 def handle(cmd, menu_state, store, S, settings, bg):
     # ── Scanner ─────────────────────────────────────────────────────────────
     if cmd == "scanner_stop":
+        try:
+            scanner.stop_pmr_monitor(S, join=False)
+        except Exception:
+            pass
         scanner.stop(S)
         source_state.commit_source("idle")
         S["radio_playing"] = False
@@ -60,6 +64,48 @@ def handle(cmd, menu_state, store, S, settings, bg):
         S["radio_type"] = ""
         S["control_context"] = "idle"
         log.info("Scanner via scanner_stop beendet")
+
+    elif cmd == "pmr_monitor_start":
+        def _pmr_mon_start():
+            _stop_other_sources(S)
+            # Frische Settings von Disk (CLI kann --no-tune schon gespeichert haben)
+            try:
+                from settings import load_settings as _ls
+                settings.update(_ls())
+            except Exception:
+                pass
+            autotune = bool(settings.get("scanner_pmr_autotune", True))
+            hold = settings.get("scanner_pmr_hold_s", 15)
+            try:
+                hold = float(hold)
+            except Exception:
+                hold = 15.0
+            ok = scanner.start_pmr_monitor(
+                S, settings, band_id="pmr446",
+                autotune=autotune, hold_s=hold,
+            )
+            log.info(
+                f"pmr_monitor_start: {'ok' if ok else 'already_running'} "
+                f"autotune={autotune}"
+            )
+            ipc.write_progress(
+                "PMR-Monitor",
+                "Aktiv" if ok or scanner.is_pmr_monitor_running() else "Fehler",
+                color="green" if ok or scanner.is_pmr_monitor_running() else "orange",
+            )
+            _time_mod.sleep(1.2)
+            ipc.clear_progress()
+        bg(_pmr_mon_start)
+
+    elif cmd == "pmr_monitor_stop":
+        def _pmr_mon_stop():
+            scanner.stop_pmr_monitor(S, join=True)
+            scanner.stop(S)
+            source_state.commit_source("idle")
+            S["radio_playing"] = False
+            S["radio_type"] = ""
+            log.info("pmr_monitor_stop")
+        bg(_pmr_mon_stop)
 
     elif cmd.startswith("scan_up:"):
         band = cmd.split(":", 1)[1]

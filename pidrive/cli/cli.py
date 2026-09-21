@@ -209,6 +209,13 @@ def main():
   pidrivectl spectrum peek 106.9           Einzelkanal (Offset, DC-sicher)
   pidrivectl spectrum last                 Letztes Scan-Ergebnis
 
+  pidrivectl scanner pmr446 scan           PMR446 Einmal-Scan
+  pidrivectl scanner monitor status        PMR446 Dauer-Detektor Status
+  pidrivectl scanner monitor start         Detektor starten (optional Autotune)
+  pidrivectl scanner monitor start --no-tune  nur loggen, nicht umschalten
+  pidrivectl scanner monitor stop
+  pidrivectl scanner monitor log -n 40     letzte Activity-Events
+
   pidrivectl system              System-Info + Spotify-Status
   pidrivectl system resources    RAM, Speicher, Uptime, Throttling
   pidrivectl system diagnose     Vollstaendige Systemdiagnose
@@ -382,6 +389,18 @@ Flags (vor dem Befehl angeben):
     _p_sq = sc_sub.add_parser("squelch"); _p_sq.add_argument("level", type=int)
     _p_pp = sc_sub.add_parser("ppm");     _p_pp.add_argument("value", type=int)
     _p_st = sc_sub.add_parser("stop")
+    # PMR Dauer-Überwachung (Backend-Log + optional Autotune)
+    _p_mon = sc_sub.add_parser("monitor", help="PMR446 Dauer-Überwachung")
+    _mon_sub = _p_mon.add_subparsers(dest="mon_action")
+    _p_mon_start = _mon_sub.add_parser("start", help="Überwachung starten")
+    _p_mon_start.add_argument("--no-tune", action="store_true",
+                              help="Nur loggen, nicht umschalten")
+    _p_mon_start.add_argument("--hold", type=float, default=None,
+                              help="Hörzeit in Sekunden (Default 15)")
+    _mon_sub.add_parser("stop", help="Überwachung stoppen")
+    _mon_sub.add_parser("status", help="Monitor-Status")
+    _p_mon_log = _mon_sub.add_parser("log", help="Aktivitäts-Log anzeigen")
+    _p_mon_log.add_argument("-n", type=int, default=40, help="letzte N Zeilen")
 
     # ── system ────────────────────────────────────────────────────────────
     p_sys = sub.add_parser("system", help="System")
@@ -1210,11 +1229,20 @@ Flags (vor dem Befehl angeben):
 
         # Stick braucht Idle — Hinweis wenn Radio läuft
         try:
-            st = svc.get_status()
-            if st.get("radio_playing") or (st.get("source") or "") in ("fm", "dab", "scanner"):
-                fmt.out("Hinweis: Radio/Scanner aktiv — Capture kann fehlschlagen (Stick belegt).")
+            from modules import source_state as _ss_gate
+            ok_gate, why = _ss_gate.rtl_capture_gate()
+            if not ok_gate:
+                fmt.out(f"Abbruch: {why}")
+                sys.exit(1)
+        except SystemExit:
+            raise
         except Exception:
-            pass
+            try:
+                st = svc.get_status()
+                if st.get("radio_playing") or (st.get("source") or "") in ("fm", "dab", "scanner"):
+                    fmt.out("Hinweis: Radio/Scanner aktiv — Capture kann fehlschlagen (Stick belegt).")
+            except Exception:
+                pass
 
         from modules.radio import spectrum as _spmod
 
@@ -1718,6 +1746,89 @@ Flags (vor dem Befehl angeben):
         if sc_cmd == "stop":
             svc.send("scanner_stop")
             fmt.out("  Scanner gestoppt")
+            sys.exit(EXIT_OK)
+
+        if sc_cmd == "monitor":
+            mon = getattr(args, "mon_action", None) or "status"
+            if mon == "start":
+                # Setting + Start-Trigger
+                try:
+                    from settings import load_settings as _ls, save_settings as _ss
+                    _s = _ls()
+                    _s["scanner_pmr_autotune"] = not bool(getattr(args, "no_tune", False))
+                    if getattr(args, "hold", None) is not None:
+                        _s["scanner_pmr_hold_s"] = float(args.hold)
+                    _ss(_s)
+                except Exception as e:
+                    fmt.err(f"Settings: {e}")
+                svc.send("pmr_monitor_start")
+                fmt.out("  PMR-Monitor gestartet (Log: /var/log/pidrive/pmr_monitor.jsonl)")
+                sys.exit(EXIT_OK)
+            if mon == "stop":
+                svc.send("pmr_monitor_stop")
+                fmt.out("  PMR-Monitor gestoppt")
+                sys.exit(EXIT_OK)
+            if mon == "log":
+                n = int(getattr(args, "n", 40) or 40)
+                path = "/var/log/pidrive/pmr_monitor.jsonl"
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                    for line in lines[-n:]:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            import json as _j
+                            ev = _j.loads(line)
+                            if ev.get("event") == "activity":
+                                fmt.out(
+                                    f"  {ev.get('ts','?')}  K{ev.get('ch','?')}  "
+                                    f"+{ev.get('relative_db','?')} dB  "
+                                    f"score={ev.get('score','?')}  "
+                                    f"{ev.get('freq_mhz','?')} MHz  → {ev.get('action','')}"
+                                )
+                            else:
+                                fmt.out(f"  {ev.get('ts','?')}  {ev.get('event')}  { {k:v for k,v in ev.items() if k not in ('ts','event','candidates')} }")
+                        except Exception:
+                            fmt.out("  " + line[:160])
+                except FileNotFoundError:
+                    fmt.out("  (noch kein Log)")
+                except Exception as e:
+                    fmt.err(str(e))
+                sys.exit(EXIT_OK)
+            # status
+            try:
+                import json as _j
+                st = {}
+                try:
+                    st = _j.loads(open("/tmp/pidrive_pmr_monitor.json").read())
+                except Exception:
+                    pass
+                if st.get("running"):
+                    fmt.out(
+                        f"  PMR-Monitor: AKTIV  band={st.get('band')}  "
+                        f"autotune={st.get('autotune')}  "
+                        f"cycles={st.get('cycles')}  hits={st.get('hits')}"
+                    )
+                    if st.get("last_ch") is not None:
+                        fmt.out(
+                            f"  Zuletzt: K{st.get('last_ch')}  "
+                            f"+{st.get('last_relative_db')} dB  "
+                            f"({st.get('last_event')})"
+                        )
+                    else:
+                        fmt.out(f"  Zustand: {st.get('last_event', '?')}")
+                    fmt.out(f"  Log: {st.get('log_path', '/var/log/pidrive/pmr_monitor.jsonl')}")
+                else:
+                    fmt.out("  PMR-Monitor: inaktiv")
+                    if st:
+                        fmt.out(
+                            f"  Letzter Lauf: hits={st.get('hits')}  "
+                            f"cycles={st.get('cycles')}  event={st.get('last_event')}"
+                        )
+            except Exception as e:
+                fmt.err(str(e))
             sys.exit(EXIT_OK)
 
         # Band-Kommandos: sc_cmd ist das Band

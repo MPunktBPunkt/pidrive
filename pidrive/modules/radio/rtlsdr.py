@@ -652,21 +652,45 @@ def summary(data):
 
 # ── USB Reset ─────────────────────────────────────────────────────────────────
 
+def _find_rtl_sysfs_path():
+    """Sysfs-Pfad des RTL283x (z.B. /sys/bus/usb/devices/1-1.2), oder None."""
+    import glob
+    for p in glob.glob("/sys/bus/usb/devices/*"):
+        try:
+            idv = open(f"{p}/idVendor").read().strip()
+            idp = open(f"{p}/idProduct").read().strip()
+        except OSError:
+            continue
+        if idv == "0bda" and idp in ("2838", "2832", "2837"):
+            return p
+    return None
+
+
+def _set_authorized(usb_path: str, value: str) -> None:
+    """authorized=0|1 schreiben (root/core)."""
+    with open(f"{usb_path}/authorized", "w") as f:
+        f.write(value)
+
+
 def usb_reset() -> dict:
     """
-    RTL-SDR USB-Stick hard-reset ohne Reboot (v0.8.16).
+    RTL-SDR USB-Stick hard-reset ohne Reboot.
     Nutzt sysfs authorized-Cycle: 0 → kurze Pause → 1.
-    Funktioniert wenn der Stick sich aus dem USB-Subsystem verabschiedet hat.
+    Funktioniert wenn der Stick sich aus dem USB-Subsystem verabschiedet hat
+    oder bei authorized=0 stecken geblieben ist (Monitor/usbreset-Fallback).
 
     Ablauf:
     1. Alle rtl_fm/welle-cli Prozesse killen
     2. Lock + State bereinigen
     3. USB-Device via sysfs unbinden (authorized=0) und wieder binden (authorized=1)
     4. Kurz warten und Stick neu erkennen (lsusb)
+
+    Hinweis: _run() liefert ein dict {"out","err",…} — niemals .splitlines()
+    direkt auf dem Rückgabewert aufrufen (Bug bis v0.11.154).
     """
-    import glob
     import time as _t
-    result = {"ok": False, "steps": [], "found_after_reset": False}
+    result = {"ok": False, "steps": [], "found_after_reset": False,
+              "usb_path": None, "authorized": None}
 
     # Schritt 1: laufende Prozesse killen
     for proc in ("rtl_fm", "rtl_test", "welle-cli", "welle_cli"):
@@ -680,7 +704,6 @@ def usb_reset() -> dict:
     # Schritt 2: Lock + State bereinigen
     try:
         clear_stale_lock()
-        import os
         for f in (LOCK_FILE, STATE_FILE, "/tmp/pidrive_dab_welle.err"):
             try:
                 os.remove(f)
@@ -690,52 +713,62 @@ def usb_reset() -> dict:
     except Exception as e:
         result["steps"].append(f"lock clear error: {e}")
 
-    # Schritt 3: USB-Device via sysfs authorized cycle
-    # USB-Bus-Path für RTL2838 finden
+    # Schritt 3: USB-Pfad finden (primär sysfs — unabhängig von lsusb/_run)
     usb_path = None
     try:
-        raw = _run(["lsusb"], timeout=3)
-        for line in raw.splitlines():
-            for uid in RTL_USB_MATCHES:
-                if uid.lower() in line.lower():
-                    # "Bus 001 Device 004" → /sys/bus/usb/devices/1-X
+        usb_path = _find_rtl_sysfs_path()
+        if not usb_path:
+            # Fallback: Busnummer aus lsusb, dann sysfs matchen
+            r = _run(["lsusb"], timeout=3)
+            text = (r.get("out") or "") + (r.get("err") or "")
+            for line in text.splitlines():
+                for uid in RTL_USB_MATCHES:
+                    if uid.lower() not in line.lower():
+                        continue
                     parts = line.split()
+                    if len(parts) < 4:
+                        continue
                     bus = parts[1].lstrip("0") or "1"
-                    dev = parts[3].rstrip(":").lstrip("0") or "1"
-                    # Sysfs-Pfad über product/idVendor suchen
-                    patterns = glob.glob(f"/sys/bus/usb/devices/{bus}-*")
-                    for p in patterns:
+                    import glob
+                    for p in glob.glob(f"/sys/bus/usb/devices/{bus}-*"):
                         try:
                             idv = open(f"{p}/idVendor").read().strip()
                             idp = open(f"{p}/idProduct").read().strip()
-                            if idv == "0bda" and idp in ("2838", "2832", "2837"):
-                                usb_path = p
-                                break
-                        except Exception:
-                            pass
+                        except OSError:
+                            continue
+                        if idv == "0bda" and idp in ("2838", "2832", "2837"):
+                            usb_path = p
+                            break
+                    break
+                if usb_path:
                     break
     except Exception as e:
         result["steps"].append(f"usb path search error: {e}")
 
+    result["usb_path"] = usb_path
+
     if usb_path:
         result["steps"].append(f"usb path: {usb_path}")
         try:
-            auth_file = f"{usb_path}/authorized"
-            with open(auth_file, "w") as f:
-                f.write("0")
+            _set_authorized(usb_path, "0")
             result["steps"].append("authorized=0 (unbind)")
             _t.sleep(1.5)
-            with open(auth_file, "w") as f:
-                f.write("1")
+            _set_authorized(usb_path, "1")
             result["steps"].append("authorized=1 (rebind)")
             _t.sleep(2.0)
         except Exception as e:
             result["steps"].append(f"sysfs write error: {e}")
-            # Fallback: usbreset wenn vorhanden
             try:
                 _run(["usbreset", "0bda:2838"], timeout=5)
                 result["steps"].append("usbreset fallback")
-                _t.sleep(2.0)
+                _t.sleep(1.0)
+                # Nach usbreset oft authorized=0 — zwingend wieder freigeben
+                try:
+                    _set_authorized(usb_path, "1")
+                    result["steps"].append("authorized=1 after usbreset")
+                except Exception as e3:
+                    result["steps"].append(f"re-authorize failed: {e3}")
+                _t.sleep(1.0)
             except Exception:
                 pass
     else:
@@ -743,18 +776,45 @@ def usb_reset() -> dict:
         try:
             _run(["usbreset", "0bda:2838"], timeout=5)
             result["steps"].append("usbreset")
-            _t.sleep(2.0)
+            _t.sleep(1.0)
+            # Pfad ggf. nach Reset neu auflösen und freigeben
+            usb_path = _find_rtl_sysfs_path()
+            result["usb_path"] = usb_path
+            if usb_path:
+                try:
+                    _set_authorized(usb_path, "1")
+                    result["steps"].append(f"authorized=1 ({usb_path})")
+                except Exception as e3:
+                    result["steps"].append(f"re-authorize failed: {e3}")
+            _t.sleep(1.0)
         except Exception as e2:
             result["steps"].append(f"usbreset failed: {e2}")
 
     # Schritt 4: Ergebnis prüfen
-    _t.sleep(1.0)
+    _t.sleep(0.5)
+    if usb_path:
+        try:
+            auth = open(f"{usb_path}/authorized").read().strip()
+            result["authorized"] = auth
+            if auth != "1":
+                _set_authorized(usb_path, "1")
+                result["steps"].append("authorized forced=1")
+                result["authorized"] = "1"
+                _t.sleep(1.0)
+        except Exception as e:
+            result["steps"].append(f"authorized check error: {e}")
+
     usb_data = detect_usb()
     result["found_after_reset"] = usb_data.get("present", False)
-    result["ok"] = result["found_after_reset"]
+    result["ok"] = bool(result["found_after_reset"] and result.get("authorized") in (None, "1"))
+    if result["found_after_reset"] and result.get("authorized") == "0":
+        result["ok"] = False
+        result["steps"].append("RTL sichtbar aber authorized=0")
     result["steps"].append(
-        "RTL-SDR wieder erkannt ✓" if result["found_after_reset"]
-        else "RTL-SDR NICHT erkannt — Stick ggf. abziehen und neu einstecken"
+        "RTL-SDR wieder erkannt ✓" if result["ok"]
+        else ("RTL-SDR erkannt, aber nicht freigegeben"
+              if result["found_after_reset"]
+              else "RTL-SDR NICHT erkannt — Stick ggf. abziehen und neu einstecken")
     )
 
     # Diagnose neu schreiben (diagnose() schreibt DEBUG_FILE selbst via _atomic_json)

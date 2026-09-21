@@ -79,6 +79,7 @@ _EXACT_TRIGGERS = frozenset({
     "fm_next", "fm_prev", "dab_next", "dab_prev",
     "fm_step:+0.1", "fm_step:-0.1", "fm_step:+1.0", "fm_step:-1.0",
     "scanner_stop",
+    "pmr_monitor_start", "pmr_monitor_stop",
     "lib_browse", "favorites_add_current",
     "reboot", "shutdown", "sys_info", "sys_version", "update", "audio_select",
 })

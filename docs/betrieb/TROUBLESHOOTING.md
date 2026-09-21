@@ -333,6 +333,32 @@ sleep 2
 pidrivectl scanner pmr446 ch 1
 ```
 
+### PMR-Monitor: `Device busy` / `usb_claim_interface` trotz sichtbarem Stick
+
+Symptom: `pidrivectl scanner monitor status` → `capture_error`, Log voller
+`usb_reset`/`force_free_rtl`, `lsusb` zeigt RTL2838, aber
+`/sys/bus/usb/devices/…/authorized` ist **0**.
+
+Ursache (bis v0.11.153): `usb_reset()` behandelte `_run(["lsusb"])`-dict wie einen
+String (`.splitlines()`), fand keinen sysfs-Pfad, machte nur `usbreset` und ließ
+den Stick deauthorized.
+
+Ab v0.11.154: Reset über sysfs + erzwungenes `authorized=1`. Siehe
+[`PMR-MONITOR.md`](PMR-MONITOR.md).
+
+```bash
+echo rtlsdr_reset > /tmp/pidrive_cmd
+sleep 5
+# prüfen:
+for d in /sys/bus/usb/devices/*; do
+  [ -f "$d/idVendor" ] || continue
+  [ "$(cat $d/idVendor):$(cat $d/idProduct)" = "0bda:2838" ] || continue
+  echo "$d authorized=$(cat $d/authorized)"
+done
+pidrivectl scanner monitor start --no-tune
+pidrivectl scanner monitor status
+```
+
 ### Spektrum-Snapshot zeigt JSON / „RTL-SDR belegt“ trotz Idle
 
 **Stand 2026-09-18:** Snapshot-Pfad gefixt (siehe [`WEBUI-REVIEW-2026-09-18.md`](WEBUI-REVIEW-2026-09-18.md) R1–R3).

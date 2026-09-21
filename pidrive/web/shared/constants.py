@@ -51,6 +51,7 @@ ALLOWED_COMMANDS = {
     "rtlsdr_reset",
     "bt_backup", "bt_restore",
     "scanner_stop",
+    "pmr_monitor_start", "pmr_monitor_stop",
     "favorites_add_current", "favorites_add", "favorites_remove",
 }
 

@@ -731,6 +731,7 @@ def api_scanner_settings():
                 "data": {
                     "scanner_use_spectrum":   s.get("scanner_use_spectrum", False),
                     "scanner_spectrum_debug": s.get("scanner_spectrum_debug", False),
+                    "scanner_pmr_autotune":   s.get("scanner_pmr_autotune", False),
                     "scanner_gain":           s.get("scanner_gain", -1),
                     "scanner_squelch":        s.get("scanner_squelch", 25),
                     "ppm_correction":         s.get("ppm_correction", 0),
@@ -741,9 +742,13 @@ def api_scanner_settings():
         body = request.get_json(silent=True) or {}
         changed = []
         for key in ("scanner_use_spectrum", "scanner_spectrum_debug",
+                    "scanner_pmr_autotune",
                     "scanner_gain", "scanner_squelch"):
             if key in body:
-                s[key] = body[key]
+                if key == "scanner_pmr_autotune":
+                    s[key] = bool(body[key])
+                else:
+                    s[key] = body[key]
                 changed.append(key)
         if changed:
             _ss(s)
@@ -751,6 +756,39 @@ def api_scanner_settings():
 
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scanner/pmr-monitor", methods=["GET"])
+def api_pmr_monitor():
+    """Status + optionale Log-Tail der PMR-Überwachung."""
+    try:
+        import json as _j
+        st = {}
+        try:
+            with open("/tmp/pidrive_pmr_monitor.json", "r", encoding="utf-8") as f:
+                st = _j.load(f)
+        except Exception:
+            st = {"running": False}
+        n = int(request.args.get("n", 20))
+        n = max(1, min(n, 200))
+        lines = []
+        try:
+            with open("/var/log/pidrive/pmr_monitor.jsonl", "r", encoding="utf-8") as f:
+                raw = f.readlines()[-n:]
+            for line in raw:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    lines.append(_j.loads(line))
+                except Exception:
+                    lines.append({"raw": line[:200]})
+        except FileNotFoundError:
+            pass
+        return jsonify({"ok": True, "status": st, "log": lines})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 
 @app.route("/api/spectrum/last")
 def api_spectrum_last():
@@ -777,6 +815,13 @@ def api_spectrum_capture():
 
     band = args.get("band", "")
     mode = (args.get("mode") or "fm_sweep").strip().lower()
+    try:
+        from modules import source_state as _ss_gate
+        ok_gate, why = _ss_gate.rtl_capture_gate()
+        if not ok_gate:
+            return jsonify({"ok": False, "error": why, "blocked_by_state": True}), 409
+    except Exception:
+        pass
     try:
         _base = str(BASE_DIR)
         if _base not in sys.path:

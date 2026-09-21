@@ -53,6 +53,8 @@ _DEFAULTS = {
     "scanner_squelch":    50,            # 0=offen … 50=UHF/PMR (25 ließ Dauerrauschen)
     "scanner_use_spectrum":   False,     # True = Spectrum Peak für PMR446/Freenet
     "scanner_spectrum_debug": False,     # True = Spectrum Debug-JSON schreiben
+    "scanner_pmr_autotune":   False,     # PMR-Monitor / WebUI: bei Aktivität umschalten
+    "scanner_pmr_hold_s":     15,        # Sekunden hören nach Umschalten, dann weiter scannen
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

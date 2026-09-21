@@ -359,6 +359,59 @@ def in_transition() -> bool:
         return True
 
 
+def refresh_transition(owner: str | None = None) -> bool:
+    """
+    Verlängert eine laufende Transition (Watchdog-Schutz).
+    Für Holds länger als STALE_TIMEOUT_S (z.B. PMR-Monitor Autotune).
+    owner=None → jede aktive Transition; sonst nur bei Owner-Match (Prefix ok).
+    """
+    with _LOCK:
+        if not STATE["transition"]:
+            return False
+        cur = str(STATE.get("owner") or "")
+        if owner is not None:
+            own = str(owner)
+            if cur != own and not cur.startswith(own) and not own.startswith(cur):
+                return False
+        STATE["since"] = time.time()
+        _write_state_file()
+        return True
+
+
+def rtl_capture_gate(check_monitor: bool = True) -> tuple[bool, str]:
+    """
+    Darf ein Spektrum-/rtl_sdr-Capture jetzt den Stick nutzen?
+    Ändert den Spiegel nicht — nur Lesen + optional Monitor-Check.
+    Monitor: Status-Datei (CLI/Web sind eigene Prozesse, kein Thread-Zugriff).
+    """
+    if in_transition():
+        snap = snapshot()
+        return False, (
+            f"Quelle wechselt (owner={snap.get('owner') or '?'} "
+            f"→ {snap.get('source_target') or '?'})"
+        )
+    cur = (current_source() or "idle").lower()
+    if cur in ("dab", "fm", "scanner"):
+        return False, f"RTL-Quelle aktiv: {cur} — zuerst stoppen"
+    if check_monitor:
+        mon_running = False
+        try:
+            from modules.radio import scanner as _sc
+            mon_running = bool(_sc.is_pmr_monitor_running())
+        except Exception:
+            mon_running = False
+        if not mon_running:
+            try:
+                with open("/tmp/pidrive_pmr_monitor.json", "r", encoding="utf-8") as f:
+                    mon = json.load(f)
+                mon_running = bool(mon.get("running"))
+            except Exception:
+                pass
+        if mon_running:
+            return False, "PMR-Monitor aktiv — zuerst: pidrivectl scanner monitor stop"
+    return True, ""
+
+
 def history(n: int = _HISTORY_MAX) -> list:
     """Letzte n Übergänge (W7/Z10)."""
     with _LOCK:

@@ -94,7 +94,12 @@ sudo welle-cli -F rtl_sdr -T -c 11B -g -1 -p 'DIE NEUE 107.7'
 pidrivectl play fm 104.4
 pidrivectl scanner pmr446 scan
 pidrivectl scanner fm freq 98.5
+pidrivectl scanner monitor start --no-tune   # PMR446 Dauer-Detektor
+pidrivectl scanner monitor status
+pidrivectl scanner monitor log
 ```
+
+Details: [`docs/betrieb/PMR-MONITOR.md`](docs/betrieb/PMR-MONITOR.md) · Spektrum: [`docs/betrieb/SPECTRUM-CLI.md`](docs/betrieb/SPECTRUM-CLI.md)
 
 ### Spotify & lokale Musik
 
@@ -128,6 +133,8 @@ Beim Hotspot-Verbinden zeigt PiDrive kurz die SSH-IP auf dem BMW-Display.
 | **Status** | `status` · `now` · `quick` · `version` · `playlist` |
 | **Wiedergabe** | `play web\|dab\|fm\|spotify\|local` · `stop` |
 | **DAB** | `dab scan` · `dab status` · `dab live` · `dab stop` · `test dab` |
+| **Scanner** | `scanner pmr446 scan` · `scanner monitor start\|stop\|status\|log` |
+| **Spektrum** | `spectrum scan` · `spectrum peek` · `spectrum last` |
 | **Audio** | `audio route …` · `audio test` · `volume set/up/down` |
 | **BT** | `bt scan` · `pair` · `connect` · `known` · `status` |
 | **System** | `system` · `system diagnose` · `log` · `test all` |
