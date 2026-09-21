@@ -57,6 +57,10 @@ def handle(cmd, menu_state, store, S, settings, bg):
             scanner.stop_pmr_monitor(S, join=False)
         except Exception:
             pass
+        try:
+            scanner.stop_airband_monitor(S, join=False)
+        except Exception:
+            pass
         scanner.stop(S)
         source_state.commit_source("idle")
         S["radio_playing"] = False
@@ -127,6 +131,46 @@ def handle(cmd, menu_state, store, S, settings, bg):
             S["radio_type"] = ""
             log.info("pmr_monitor_stop")
         bg(_pmr_mon_stop)
+
+    elif cmd == "airband_monitor_start":
+        def _air_mon_start():
+            _stop_other_sources(S)
+            try:
+                from settings import load_settings as _ls
+                settings.update(_ls())
+            except Exception:
+                pass
+            autotune = bool(settings.get("scanner_airband_autotune", True))
+            try:
+                hold = float(settings.get("scanner_airband_hold_s", 20))
+            except Exception:
+                hold = 20.0
+            ok = scanner.start_airband_monitor(
+                S, settings, autotune=autotune, hold_s=hold,
+            )
+            log.info(
+                f"airband_monitor_start: {'ok' if ok else 'already_running'} "
+                f"autotune={autotune} hold={hold}"
+            )
+            running = ok or scanner.is_airband_monitor_running()
+            ipc.write_progress(
+                "Airband-Monitor",
+                f"hold={hold:g}s" if running else "Fehler",
+                color="green" if running else "orange",
+            )
+            _time_mod.sleep(1.2)
+            ipc.clear_progress()
+        bg(_air_mon_start)
+
+    elif cmd == "airband_monitor_stop":
+        def _air_mon_stop():
+            scanner.stop_airband_monitor(S, join=True)
+            scanner.stop(S)
+            source_state.commit_source("idle")
+            S["radio_playing"] = False
+            S["radio_type"] = ""
+            log.info("airband_monitor_stop")
+        bg(_air_mon_stop)
 
     elif cmd.startswith("scan_up:"):
         band = cmd.split(":", 1)[1]

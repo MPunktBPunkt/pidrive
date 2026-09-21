@@ -642,6 +642,12 @@ def stop(S):
             stop_pmr_monitor(S, join=False)
     except Exception:
         pass
+    try:
+        if (is_airband_monitor_running()
+                and threading.current_thread() is not _air_monitor_thread):
+            stop_airband_monitor(S, join=False)
+    except Exception:
+        pass
     log.info("Scanner stop: requested")
 
     if _rtlsdr:
@@ -2049,6 +2055,13 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
         if is_pmr_monitor_running():
             log.info("PMR-Monitor: läuft bereits")
             return False
+        # Gegenseitig ausschließen
+        try:
+            if is_airband_monitor_running():
+                stop_airband_monitor(S, join=False)
+                time.sleep(0.3)
+        except Exception:
+            pass
         _monitor_stop.clear()
         # RTL freimachen: DAB/FM/Scanner + Lock
         try:
@@ -2152,6 +2165,314 @@ def stop_pmr_monitor(S=None, join=True):
     elif _rtlsdr and hasattr(_rtlsdr, "release_owner"):
         try:
             _rtlsdr.release_owner("pmr_monitor")
+        except Exception:
+            pass
+    return True
+
+
+# ── Airband Dauer-Überwachung (Preset-Scan AM) ───────────────────────────────
+
+AIRBAND_MONITOR_STATUS = "/tmp/pidrive_airband_monitor.json"
+AIRBAND_MONITOR_HOLD_S = 20.0
+AIRBAND_MONITOR_DWELL_S = 1.1
+AIRBAND_MONITOR_IDLE_GAP_S = 0.12
+AIRBAND_MONITOR_START_SETTLE_S = 0.35
+
+_air_monitor_thread = None
+_air_monitor_stop = threading.Event()
+_air_monitor_lock = threading.Lock()
+_air_monitor_meta = {
+    "running": False,
+    "autotune": True,
+    "started_ts": 0.0,
+    "cycles": 0,
+    "hits": 0,
+    "last_event": "",
+    "last_ch": None,
+    "last_name": "",
+    "last_freq": None,
+    "hold_s": AIRBAND_MONITOR_HOLD_S,
+    "dwell_s": AIRBAND_MONITOR_DWELL_S,
+}
+
+
+def _air_write_status(**extra):
+    st = dict(_air_monitor_meta)
+    st.update(extra or {})
+    st["ts"] = time.time()
+    st["running"] = is_airband_monitor_running()
+    try:
+        tmp = AIRBAND_MONITOR_STATUS + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(st, f, ensure_ascii=False, separators=(",", ":"))
+        os.replace(tmp, AIRBAND_MONITOR_STATUS)
+    except Exception:
+        try:
+            with open(AIRBAND_MONITOR_STATUS, "w", encoding="utf-8") as f:
+                json.dump(st, f, ensure_ascii=False)
+        except Exception:
+            pass
+
+
+def is_airband_monitor_running():
+    t = _air_monitor_thread
+    return bool(t and t.is_alive() and not _air_monitor_stop.is_set())
+
+
+def get_airband_monitor_status():
+    st = dict(_air_monitor_meta)
+    st["running"] = is_airband_monitor_running()
+    try:
+        with open(AIRBAND_MONITOR_STATUS, "r", encoding="utf-8") as f:
+            disk = json.load(f)
+        if isinstance(disk, dict):
+            st.update(disk)
+            st["running"] = is_airband_monitor_running() or bool(disk.get("running"))
+    except Exception:
+        pass
+    return st
+
+
+def _airband_monitor_loop(S, settings, autotune, hold_s, dwell_s):
+    global _air_monitor_meta
+    _air_monitor_meta.update({
+        "running": True,
+        "autotune": bool(autotune),
+        "started_ts": time.time(),
+        "cycles": 0,
+        "hits": 0,
+        "last_event": "start",
+        "hold_s": float(hold_s),
+        "dwell_s": float(dwell_s),
+    })
+    _air_write_status()
+    log.info(
+        f"Airband-Monitor start: autotune={autotune} hold={hold_s}s dwell={dwell_s}s"
+    )
+
+    idx = int(_current_ch.get("airband", 0) or 0)
+    try:
+        while not _air_monitor_stop.is_set():
+            channels = _get_channels("airband") or []
+            if not channels:
+                _air_monitor_meta["last_event"] = "no_presets"
+                _air_write_status()
+                if _air_monitor_stop.wait(2.0):
+                    break
+                continue
+
+            n = len(channels)
+            idx = idx % n
+            ch = channels[idx]
+            freq = float(ch.get("freq") or 0)
+            name = str(ch.get("name") or f"K{ch.get('ch', idx + 1)}")
+            ch_num = int(ch.get("ch") or (idx + 1))
+            rt = _get_band_runtime("airband")
+            bw = int(rt.get("bw") or 10000)
+            fast_bw = _scan_bw_fast("airband", bw)
+
+            _air_monitor_meta["cycles"] = int(_air_monitor_meta.get("cycles") or 0) + 1
+            _air_monitor_meta["last_event"] = f"dwell:{name}"
+            _air_write_status(scanning_ch=ch_num, scanning_name=name, scanning_freq=freq)
+
+            hit = False
+            try:
+                if _detect_signal_fast(
+                    freq, fast_bw, timeout_s=min(1.4, float(dwell_s)),
+                    settings=settings, modulation="am",
+                ):
+                    if _detect_signal_confirm(
+                        freq, bw, timeout_s=1.0,
+                        settings=settings, modulation="am",
+                    ):
+                        hit = True
+            except Exception as e:
+                _air_monitor_meta["last_event"] = f"detect_err:{e}"[:80]
+                _air_write_status()
+                idx = (idx + 1) % n
+                if _air_monitor_stop.wait(AIRBAND_MONITOR_IDLE_GAP_S):
+                    break
+                continue
+
+            if hit:
+                _air_monitor_meta["hits"] = int(_air_monitor_meta.get("hits") or 0) + 1
+                _air_monitor_meta["last_ch"] = ch_num
+                _air_monitor_meta["last_name"] = name
+                _air_monitor_meta["last_freq"] = freq
+                _air_monitor_meta["last_event"] = f"hit:{name}"
+                _current_ch["airband"] = idx
+                _air_write_status()
+                log.action("Airband-Monitor", f"Signal: {name} @ {freq} MHz")
+
+                if autotune and not _air_monitor_stop.is_set():
+                    owned = False
+                    try:
+                        if _src_state:
+                            owned = bool(
+                                _src_state.begin_transition(
+                                    "airband_monitor:tune", "scanner"
+                                )
+                            )
+                        if owned or not _src_state:
+                            play_freq(
+                                freq, name, bw, S, settings=settings,
+                                modulation="am", band_id="airband",
+                                audio_profile="airband_voice",
+                            )
+                            if _src_state and owned:
+                                try:
+                                    _src_state.commit_source("scanner")
+                                except Exception:
+                                    pass
+                            _air_monitor_meta["last_event"] = f"listening:{name}"
+                            _air_write_status()
+                            # Hold — Abbruch bei Stop
+                            end = time.time() + float(hold_s)
+                            while time.time() < end and not _air_monitor_stop.is_set():
+                                if _air_monitor_stop.wait(0.4):
+                                    break
+                            try:
+                                stop(S)
+                            except Exception:
+                                pass
+                            if _src_state:
+                                try:
+                                    _src_state.commit_source("idle")
+                                except Exception:
+                                    pass
+                            _air_monitor_meta["last_event"] = "listen_end"
+                            _air_write_status()
+                        else:
+                            _air_monitor_meta["last_event"] = "tune_blocked"
+                            _air_write_status()
+                    finally:
+                        if _src_state and owned:
+                            try:
+                                if _src_state.in_transition():
+                                    _src_state.force_end_transition(
+                                        "airband_monitor:tune_done"
+                                    )
+                            except Exception:
+                                pass
+
+            idx = (idx + 1) % n
+            if _air_monitor_stop.wait(AIRBAND_MONITOR_IDLE_GAP_S):
+                break
+    finally:
+        _air_monitor_meta["running"] = False
+        _air_monitor_meta["last_event"] = "stop"
+        _air_write_status()
+        log.info("Airband-Monitor: beendet")
+
+
+def start_airband_monitor(S, settings=None, autotune=None, hold_s=None,
+                          dwell_s=None):
+    """Dauerhafte Airband-Überwachung: Presets per AM-Detect, optional Autotune."""
+    global _air_monitor_thread
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+
+    if autotune is None:
+        autotune = bool(settings.get("scanner_airband_autotune", True))
+    if hold_s is None:
+        try:
+            hold_s = float(settings.get("scanner_airband_hold_s", AIRBAND_MONITOR_HOLD_S))
+        except Exception:
+            hold_s = AIRBAND_MONITOR_HOLD_S
+    hold_s = max(5.0, min(120.0, float(hold_s)))
+    if dwell_s is None:
+        dwell_s = AIRBAND_MONITOR_DWELL_S
+    dwell_s = max(0.6, min(2.5, float(dwell_s)))
+
+    # Gegenseitig ausschließen (ein Stick)
+    try:
+        if is_pmr_monitor_running():
+            stop_pmr_monitor(S, join=False)
+            time.sleep(0.3)
+    except Exception:
+        pass
+
+    with _air_monitor_lock:
+        if is_airband_monitor_running():
+            log.info("Airband-Monitor: läuft bereits")
+            return False
+        _air_monitor_stop.clear()
+        try:
+            from modules.radio import dab as _dab, fm as _fm
+            from modules import webradio as _wr
+            try:
+                _wr.stop(S)
+            except Exception:
+                pass
+            try:
+                _dab.stop(S)
+            except Exception:
+                pass
+            try:
+                _fm.stop(S)
+            except Exception:
+                pass
+        except Exception:
+            pass
+        try:
+            stop(S)
+        except Exception:
+            pass
+        try:
+            if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
+                _rtlsdr.recover_busy_device(
+                    reason="airband_monitor_start", level="hard"
+                )
+        except Exception:
+            pass
+        if _rtlsdr and hasattr(_rtlsdr, "announce_owner"):
+            try:
+                _rtlsdr.announce_owner("airband_monitor", mode="airband_monitor")
+            except Exception:
+                pass
+        time.sleep(AIRBAND_MONITOR_START_SETTLE_S)
+        if _src_state:
+            try:
+                _src_state.force_end_transition("airband_monitor_start")
+            except Exception:
+                pass
+            try:
+                _src_state.commit_source("idle")
+            except Exception:
+                pass
+        t = threading.Thread(
+            target=_airband_monitor_loop,
+            args=(S, settings, bool(autotune), float(hold_s), float(dwell_s)),
+            daemon=True,
+            name="airband-monitor",
+        )
+        _air_monitor_thread = t
+        t.start()
+    return True
+
+
+def stop_airband_monitor(S=None, join=True):
+    global _air_monitor_thread
+    _air_monitor_stop.set()
+    t = _air_monitor_thread
+    if join and t and t.is_alive() and t is not threading.current_thread():
+        t.join(timeout=8.0)
+    _air_monitor_meta["running"] = False
+    _air_write_status()
+    if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
+        try:
+            _rtlsdr.recover_busy_device(
+                reason="airband_monitor_stop", level="hard"
+            )
+        except Exception:
+            pass
+    elif _rtlsdr and hasattr(_rtlsdr, "release_owner"):
+        try:
+            _rtlsdr.release_owner("airband_monitor")
         except Exception:
             pass
     return True

@@ -446,9 +446,14 @@ def rtl_capture_gate(check_monitor: bool = True) -> tuple[bool, str]:
         return False, f"RTL-Quelle aktiv: {cur} — zuerst stoppen"
     if check_monitor:
         mon_running = False
+        mon_label = "PMR-Monitor"
         try:
             from modules.radio import scanner as _sc
             mon_running = bool(_sc.is_pmr_monitor_running())
+            if not mon_running and hasattr(_sc, "is_airband_monitor_running"):
+                if _sc.is_airband_monitor_running():
+                    mon_running = True
+                    mon_label = "Airband-Monitor"
         except Exception:
             mon_running = False
         if not mon_running:
@@ -458,8 +463,22 @@ def rtl_capture_gate(check_monitor: bool = True) -> tuple[bool, str]:
                 mon_running = bool(mon.get("running"))
             except Exception:
                 pass
+        if not mon_running:
+            try:
+                with open("/tmp/pidrive_airband_monitor.json", "r", encoding="utf-8") as f:
+                    mon = json.load(f)
+                if bool(mon.get("running")):
+                    mon_running = True
+                    mon_label = "Airband-Monitor"
+            except Exception:
+                pass
         if mon_running:
-            return False, "PMR-Monitor aktiv — zuerst: pidrivectl scanner monitor stop"
+            stop_hint = (
+                "pidrivectl scanner airband monitor stop"
+                if mon_label.startswith("Airband")
+                else "pidrivectl scanner monitor stop"
+            )
+            return False, f"{mon_label} aktiv — zuerst: {stop_hint}"
     # Verwaiste rtl_sdr/rtl_fm (z. B. hängengebliebener Streaming-Watch)
     try:
         from modules.radio import rtlsdr as _rtl

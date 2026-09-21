@@ -219,6 +219,9 @@ def main():
   pidrivectl scanner airband prev          Airband vorheriges Preset
   pidrivectl scanner airband scan          Airband Presets nach Signal durchsuchen
   pidrivectl scanner airband list          Airband-Presets anzeigen
+  pidrivectl scanner airband monitor start Airband Dauer-Überwachung (AM)
+  pidrivectl scanner airband monitor stop
+  pidrivectl scanner airband monitor status
   pidrivectl scanner monitor start --trigger-on 18  Lab: niedrigere Hit-Schwelle
   pidrivectl scanner monitor stop
   pidrivectl scanner monitor log -n 40     letzte Activity-Events
@@ -397,6 +400,21 @@ Flags (vor dem Befehl angeben):
         _sc_sub2.add_parser("prev", help="vorheriges Preset/Kanal (ohne Suche)")
         if _scb == "airband":
             _sc_sub2.add_parser("list", help="Airband-Presets aus config/airband_stations.json")
+            _p_amon = _sc_sub2.add_parser(
+                "monitor", help="Airband Dauer-Überwachung (Preset-AM)"
+            )
+            _amon_sub = _p_amon.add_subparsers(dest="air_mon_action")
+            _p_amon_start = _amon_sub.add_parser("start", help="Überwachung starten")
+            _p_amon_start.add_argument(
+                "--no-tune", action="store_true",
+                help="Nur erkennen, nicht umschalten",
+            )
+            _p_amon_start.add_argument(
+                "--hold", type=float, default=None,
+                help="Hörzeit Sekunden nach Treffer (Default 20)",
+            )
+            _amon_sub.add_parser("stop", help="Überwachung stoppen")
+            _amon_sub.add_parser("status", help="Monitor-Status")
         _p_ch  = _sc_sub2.add_parser("ch");   _p_ch.add_argument("n",  type=int)
         _p_fr  = _sc_sub2.add_parser("freq"); _p_fr.add_argument("f",  type=float)
     sc_sub.add_parser("status", help="Aktives Band, Frequenz, Squelch")
@@ -1937,6 +1955,47 @@ Flags (vor dem Befehl angeben):
                     fmt.err(str(e))
                     sys.exit(EXIT_ERROR)
                 sys.exit(EXIT_OK)
+            elif sc_action == "monitor" and band == "airband":
+                air_act = getattr(args, "air_mon_action", None)
+                if air_act == "start":
+                    try:
+                        from settings import load_settings as _ls, save_settings as _ss
+                        s = _ls()
+                        if getattr(args, "no_tune", False):
+                            s["scanner_airband_autotune"] = False
+                        else:
+                            s["scanner_airband_autotune"] = True
+                        if getattr(args, "hold", None) is not None:
+                            s["scanner_airband_hold_s"] = float(args.hold)
+                        _ss(s)
+                    except Exception as e:
+                        fmt.err(str(e))
+                    svc.send("airband_monitor_start")
+                    fmt.out("  Airband-Monitor gestartet")
+                elif air_act == "stop":
+                    svc.send("airband_monitor_stop")
+                    fmt.out("  Airband-Monitor gestoppt")
+                elif air_act == "status":
+                    try:
+                        import json as _j
+                        st = _j.loads(open("/tmp/pidrive_airband_monitor.json").read())
+                    except Exception:
+                        st = {"running": False}
+                    if use_json:
+                        fmt.print_json({"ok": True, "status": st})
+                    else:
+                        run = bool(st.get("running"))
+                        fmt.out(f"  Airband-Monitor: {'läuft' if run else 'aus'}")
+                        if st:
+                            fmt.out(
+                                f"  cycles={st.get('cycles')}  hits={st.get('hits')}  "
+                                f"event={st.get('last_event')}  "
+                                f"last={st.get('last_name') or '-'}"
+                            )
+                else:
+                    fmt.err("Nutze: scanner airband monitor start|stop|status")
+                    sys.exit(EXIT_USAGE)
+                sys.exit(EXIT_OK)
             elif sc_action == "next":
                 svc.send(f"scan_up:{band}")
                 fmt.out(f"  {band}: nächster Kanal")
@@ -1950,7 +2009,8 @@ Flags (vor dem Befehl angeben):
                 svc.send(f"scan_setfreq:{band}:{args.f}")
                 fmt.out(f"  ✓ {band} Freq {args.f} MHz")
             else:
-                fmt.err(f"Unbekannte Aktion. Nutze: scan | ch N | freq F | next | prev | stop")
+                fmt.err(f"Unbekannte Aktion. Nutze: scan | ch N | freq F | next | prev | stop"
+                        + (" | list | monitor" if band == "airband" else ""))
             sys.exit(EXIT_OK)
         sys.exit(EXIT_OK)
 

@@ -775,6 +775,8 @@ def api_scanner_settings():
                     "scanner_pmr_trigger_off_db": s.get("scanner_pmr_trigger_off_db", 14.0),
                     "scanner_pmr_watch_s":        s.get("scanner_pmr_watch_s", 1.0),
                     "scanner_airband_last_freq":  s.get("scanner_airband_last_freq", 121.5),
+                    "scanner_airband_autotune":   s.get("scanner_airband_autotune", True),
+                    "scanner_airband_hold_s":     s.get("scanner_airband_hold_s", 20),
                     "scanner_gain":           s.get("scanner_gain", -1),
                     "scanner_squelch":        s.get("scanner_squelch", 25),
                     "ppm_correction":         s.get("ppm_correction", 0),
@@ -788,14 +790,17 @@ def api_scanner_settings():
                     "scanner_pmr_autotune", "scanner_pmr_hold_s",
                     "scanner_pmr_trigger_on_db", "scanner_pmr_trigger_off_db",
                     "scanner_pmr_watch_s", "scanner_airband_last_freq",
+                    "scanner_airband_autotune", "scanner_airband_hold_s",
                     "scanner_gain", "scanner_squelch"):
             if key in body:
-                if key == "scanner_pmr_autotune":
+                if key in ("scanner_pmr_autotune", "scanner_airband_autotune"):
                     s[key] = bool(body[key])
                 elif key in ("scanner_pmr_hold_s",
                              "scanner_pmr_trigger_on_db",
                              "scanner_pmr_trigger_off_db",
-                             "scanner_pmr_watch_s"):
+                             "scanner_pmr_watch_s",
+                             "scanner_airband_last_freq",
+                             "scanner_airband_hold_s"):
                     s[key] = float(body[key])
                 else:
                     s[key] = body[key]
@@ -804,6 +809,28 @@ def api_scanner_settings():
             _ss(s)
         return jsonify({"ok": True, "changed": changed, "data": {k: s[k] for k in changed}})
 
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/scanner/airband-monitor", methods=["GET"])
+def api_airband_monitor():
+    """Status der Airband-Dauerüberwachung."""
+    try:
+        import json as _j
+        st = {}
+        try:
+            with open("/tmp/pidrive_airband_monitor.json", "r", encoding="utf-8") as f:
+                st = _j.load(f)
+        except Exception:
+            st = {"running": False}
+        try:
+            from modules.radio import scanner as _sc
+            if hasattr(_sc, "get_airband_monitor_status"):
+                st = _sc.get_airband_monitor_status()
+        except Exception:
+            pass
+        return jsonify({"ok": True, "status": st})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -905,6 +932,14 @@ def api_spectrum_capture():
             do_preempt = str(raw_pre).strip().lower() not in ("0", "false", "no", "off")
             if do_preempt and "PMR-Monitor" in (why or ""):
                 _ipc.append_trigger("pmr_monitor_stop")
+                for _ in range(40):
+                    _t_gate.sleep(0.25)
+                    ok_gate, why = _ss_gate.rtl_capture_gate()
+                    if ok_gate:
+                        preempted_monitor = True
+                        break
+            if do_preempt and not ok_gate and "Airband-Monitor" in (why or ""):
+                _ipc.append_trigger("airband_monitor_stop")
                 for _ in range(40):
                     _t_gate.sleep(0.25)
                     ok_gate, why = _ss_gate.rtl_capture_gate()

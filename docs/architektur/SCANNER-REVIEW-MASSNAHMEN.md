@@ -106,8 +106,8 @@ Zusätzlich behoben (nicht in den originalen Review-P0ern, aber Betriebs-kritisc
 [x] Airband Phase 1: AM-Modulation + CLI/Trigger/WebUI manuell
 [x] Airband Phase 2: Presets (`airband_stations.json`) + ch/next/prev + WebUI
 [x] Airband Phase 3: Preset-Scan (`scan_next/prev`) mit AM-Detect + WebUI Suchen
+[x] Airband Phase 4: Dauer-Monitor (Preset-AM, Autotune/Hold)
 [ ] Persistenter Mehrprozess-IQ-Streamer (optional, später)
-[ ] Airband Phase 4: Dauer-Monitor (optional)
 ```
 
 ---

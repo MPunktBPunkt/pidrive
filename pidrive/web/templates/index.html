@@ -321,6 +321,15 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="btn" onclick="sendCmd('scan_down:airband')" title="vorheriges Preset">◀</button>
     </div>
     <div class="pmr-grid" id="airbandPresetGrid" style="margin-top:8px"></div>
+    <label class="pmr-opt" title="Bei erkanntem AM-Signal auf den Kanal schalten und halten">
+      <input type="checkbox" id="airAutoTune" onchange="saveAirAutoTune(this.checked)" checked>
+      <span>Überwachung: bei Signal umschalten</span>
+      <span class="hint">(~20 s hören, dann weiter)</span>
+    </label>
+    <div class="scan-row">
+      <button class="btn primary" id="airWatchBtn" onclick="toggleAirWatch()">👁 Dauerbeobachtung</button>
+    </div>
+    <div id="airMonStatus" class="pmr-status" style="margin-top:4px">–</div>
     <div class="pmr-status" style="margin-top:4px;font-size:11px;opacity:.85">
       Presets: <code>config/airband_stations.json</code> · AM via rtl_fm · ±25 kHz:
       <button class="btn" style="padding:2px 8px;font-size:11px" onclick="airbandStep(0.025)">+25k</button>
@@ -397,9 +406,11 @@ function switchTab(name) {
     renderPmrGrid();
     loadAirbandLastFreq();
     loadAirbandPresets();
+    loadAirAutoTune();
     startPmrBackendPoll();
+    startAirBackendPoll();
   }
-  else { stopPmrWatch(); stopPmrBackendPoll(); }
+  else { stopPmrWatch(); stopPmrBackendPoll(); stopAirBackendPoll(); }
 }
 
 const PMR_FREQS = Array.from({length: 16}, (_, i) =>
@@ -779,6 +790,103 @@ async function airbandScanNext() {
     setTimeout(loadAirbandLastFreq, 2500);
   }
 }
+
+let _airWatch = false;
+let _airBackendPoll = null;
+
+function _setAirWatchButton(running) {
+  _airWatch = !!running;
+  const btn = document.getElementById('airWatchBtn');
+  if (!btn) return;
+  if (running) {
+    btn.textContent = '⏹ Monitor Stop';
+    btn.classList.add('danger');
+    btn.classList.remove('primary');
+  } else {
+    btn.textContent = '👁 Dauerbeobachtung';
+    btn.classList.add('primary');
+    btn.classList.remove('danger');
+  }
+}
+
+async function loadAirAutoTune() {
+  const el = document.getElementById('airAutoTune');
+  if (!el) return;
+  try {
+    const r = await fetch('/api/scanner/settings');
+    const j = await r.json();
+    if (j.ok && j.data && typeof j.data.scanner_airband_autotune === 'boolean')
+      el.checked = j.data.scanner_airband_autotune;
+  } catch (e) { /* lokal belassen */ }
+}
+
+async function saveAirAutoTune(checked) {
+  try {
+    await fetch('/api/scanner/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ scanner_airband_autotune: !!checked })
+    });
+  } catch (e) { /* ignore */ }
+}
+
+async function syncAirBackendStatus() {
+  const stLine = document.getElementById('airMonStatus');
+  try {
+    const r = await fetch('/api/scanner/airband-monitor');
+    const j = await r.json();
+    const st = (j && j.status) || {};
+    const running = !!st.running;
+    _setAirWatchButton(running);
+    if (!stLine) return;
+    if (!running) {
+      stLine.textContent = st.last_event
+        ? ('Monitor aus · zuletzt: ' + st.last_event
+           + (st.last_name ? ' (' + st.last_name + ')' : ''))
+        : 'Tipp: Dauerbeobachtung → Presets per AM abklopfen';
+      return;
+    }
+    const ev = st.last_event || 'läuft';
+    const cur = st.scanning_name || st.last_name || '';
+    stLine.textContent = 'Monitor: ' + ev
+      + (cur ? ' · ' + cur : '')
+      + ' · hits=' + (st.hits || 0)
+      + ' · cycles=' + (st.cycles || 0);
+    if (st.last_ch) airbandMarkPlaying(st.last_ch);
+    if (String(ev).startsWith('listening') && typeof startGlobalListen === 'function')
+      startGlobalListen();
+  } catch (e) {
+    if (stLine) stLine.textContent = 'Status nicht erreichbar';
+  }
+}
+
+function startAirBackendPoll() {
+  stopAirBackendPoll();
+  syncAirBackendStatus();
+  _airBackendPoll = setInterval(syncAirBackendStatus, 1500);
+}
+function stopAirBackendPoll() {
+  if (_airBackendPoll) { clearInterval(_airBackendPoll); _airBackendPoll = null; }
+}
+
+async function toggleAirWatch() {
+  if (_airWatch) {
+    sendCmd('airband_monitor_stop');
+    _setAirWatchButton(false);
+    showToast('Airband-Monitor gestoppt');
+  } else {
+    if (_pmrWatch) {
+      sendCmd('pmr_monitor_stop');
+      _setPmrWatchButton(false);
+    }
+    sendCmd('airband_monitor_start');
+    _setAirWatchButton(true);
+    showToast('Airband-Monitor gestartet');
+    if (typeof startGlobalListen === 'function') startGlobalListen();
+  }
+  setTimeout(syncAirBackendStatus, 800);
+}
+
 function airbandStep(delta) {
   const el = document.getElementById('scAirFreq');
   let f = Number(el && el.value);

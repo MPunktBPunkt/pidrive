@@ -59,6 +59,8 @@ _DEFAULTS = {
     "scanner_pmr_trigger_off_db": 14.0,  # Monitor: Hysterese unter Trigger
     "scanner_pmr_watch_s":       1.0,   # Watch-Fenster pro Zyklus (0.6–2.5; fast≈1.0)
     "scanner_airband_last_freq": 121.5, # letzter Airband-Empfang (MHz)
+    "scanner_airband_autotune": True,   # Airband-Monitor: bei Signal umschalten
+    "scanner_airband_hold_s":   20,     # Sekunden hören nach Treffer, dann weiter
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

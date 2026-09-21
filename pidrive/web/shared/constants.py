@@ -52,6 +52,7 @@ ALLOWED_COMMANDS = {
     "bt_backup", "bt_restore",
     "scanner_stop",
     "pmr_monitor_start", "pmr_monitor_stop",
+    "airband_monitor_start", "airband_monitor_stop",
     "favorites_add_current", "favorites_add", "favorites_remove",
 }
 
