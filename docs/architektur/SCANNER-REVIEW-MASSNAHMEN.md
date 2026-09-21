@@ -69,7 +69,15 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 
 ### P3 — später / angelaufen
 
-13. Persistenter IQ-/Owner-Service — **erster Schritt**: `rtlsdr.claim_capture` / `release_capture` (In-Prozess-Lease um `capture_iq`).
+13. Persistenter IQ-/Owner-Service — **angelaufen**:
+    - Cross-Process Soft-Owner (`/tmp/pidrive_rtlsdr_owner.json`) via
+      `request_owner` / `release_owner` / `announce_owner` / `get_owner`
+    - In-Prozess-Lease bleibt (`claim_capture` = Alias)
+    - `StreamingRtlReader` + `watch_channels` Prefer-Stream (Fallback Block;
+      ab `PIDRIVE_SPECTRUM_STREAM=0`)
+    - Scanner-Audio und PMR-Monitor an Owner-API angebunden
+    - Noch offen: echter persistenter Mehrprozess-IQ-Streamer (ein Prozess,
+      Clients abonnieren)
 14. Nachbarkanal-/Best-Channel-Tuning — erledigt (`ActivityTracker` unterdrückt schwächere Nachbarn) + Tests.
 15. E2E-Integrationstests mit Mock-RTL — erledigt (`tests/unit/test_pmr_e2e.py`).
 
@@ -92,9 +100,10 @@ Zusätzlich behoben: sticky-`/tmp` Schreibfehler für `source_state.json` (WebUI
 [x] Recovery zentralisieren (`rtlsdr.recover_busy_device`) + Reset-Cooldown
 [x] scan_next Audio erst nach Transition
 [x] Capture-Lease (`claim_capture`/`release_capture`) — erster Owner-Schritt
+[x] Cross-Process Owner-Datei + StreamingRtlReader (Watch Early-Exit live)
 [x] Nachbarkanal-/Best-Channel-Tuning
 [x] E2E-Integrationstests Mock-RTL (`test_pmr_e2e.py`)
-[ ] Vollständiger persistenter IQ-/Owner-Service (Streaming-Reader)
+[ ] Persistenter Mehrprozess-IQ-Streamer (optional, später)
 ```
 
 ---

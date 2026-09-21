@@ -395,6 +395,120 @@ class RTLSDRBackend(SampleBackend):
                     pass
 
 
+class StreamingRtlReader:
+    """
+    Ein rtl_sdr-Prozess für die Dauer eines Watch — Samples von stdout.
+    Ermöglicht echte Early-Exits ohne erst den ganzen Block zu puffern.
+    """
+
+    def __init__(
+        self,
+        center_hz: float,
+        sample_rate: int,
+        ppm: int = 0,
+        gain: int = -1,
+        owner: str = "spectrum:stream",
+        read_timeout_s: float = 3.0,
+    ):
+        self.center_hz = float(center_hz)
+        self.sample_rate = int(sample_rate)
+        self.ppm = int(ppm)
+        self.gain = int(gain)
+        self.owner = str(owner)
+        self.read_timeout_s = float(read_timeout_s)
+        self._proc: Optional[subprocess.Popen] = None
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+        return False
+
+    def open(self) -> None:
+        if _rtlsdr:
+            if hasattr(_rtlsdr, "detect_usb") and not _rtlsdr.detect_usb().get("present"):
+                raise RuntimeError("RTL-SDR nicht erkannt (USB)")
+            if hasattr(_rtlsdr, "is_busy") and _rtlsdr.is_busy():
+                if not _rtlsdr.wait_until_free(timeout=4.0, interval=0.2):
+                    raise RuntimeError("RTL-SDR belegt (Timeout 4s)")
+            if hasattr(_rtlsdr, "claim_capture"):
+                if not _rtlsdr.claim_capture(self.owner, timeout_s=4.0,
+                                             mode="spectrum_capture"):
+                    raise RuntimeError("RTL-SDR belegt (capture lease)")
+        cmd = [
+            "rtl_sdr",
+            "-f", str(int(self.center_hz)),
+            "-s", str(int(self.sample_rate)),
+        ]
+        if self.ppm:
+            cmd += ["-p", str(self.ppm)]
+        if self.gain >= 0:
+            cmd += ["-g", str(self.gain)]
+        cmd += ["-"]
+        try:
+            self._proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                bufsize=0,
+            )
+        except FileNotFoundError:
+            self.close()
+            raise RuntimeError("rtl_sdr Binary nicht gefunden")
+        except Exception:
+            self.close()
+            raise
+
+    def read_u8_iq(self, sample_count: int) -> bytes:
+        if not self._proc or not self._proc.stdout:
+            raise RuntimeError("stream nicht offen")
+        need = max(1, int(sample_count)) * 2
+        buf = bytearray()
+        deadline = time.time() + self.read_timeout_s
+        while len(buf) < need and time.time() < deadline:
+            to_read = need - len(buf)
+            chunk = self._proc.stdout.read(to_read)
+            if not chunk:
+                if self._proc.poll() is not None:
+                    break
+                time.sleep(0.005)
+                continue
+            buf.extend(chunk)
+        if len(buf) < need:
+            raise RuntimeError(
+                f"stream short read ({len(buf)}/{need} bytes) — Device hängt?"
+            )
+        return bytes(buf)
+
+    def close(self) -> None:
+        proc = self._proc
+        self._proc = None
+        if proc is not None:
+            try:
+                if proc.stdout:
+                    try:
+                        proc.stdout.close()
+                    except Exception:
+                        pass
+                proc.terminate()
+                try:
+                    proc.wait(timeout=1.5)
+                except Exception:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        if _rtlsdr and hasattr(_rtlsdr, "release_capture"):
+            try:
+                _rtlsdr.release_capture(self.owner)
+            except Exception:
+                pass
+
+
 # ============================================================================
 # DSP
 # ============================================================================
@@ -674,35 +788,22 @@ class SpectrumWatcher:
         started = time.time()
         frames_processed = 0
         early_exit = False
+        capture_mode = "block"
+        stream_error = ""
 
         debug_frames: list[dict[str, Any]] = []
         debug_scores: list[dict[str, Any]] = []
         bin_map_cached: Optional[dict[str, tuple[int, int]]] = None
 
-        raw = self.backend.capture_iq(
-            center_hz=config.center_hz,
-            sample_rate=config.sample_rate,
-            sample_count=block_samples,
-        )
-        # U8 IQ: 2 Bytes pro Sample
-        bytes_per_sample = 2
-        fft_bytes = int(config.fft_size) * bytes_per_sample
-        hop_bytes = int(hop_samples) * bytes_per_sample
-        raw_len = len(raw)
-        offset = 0
-        frame_idx = 0
-
-        while offset + fft_bytes <= raw_len:
-            chunk = raw[offset:offset + fft_bytes]
-            offset += hop_bytes
+        def _ingest_frame(chunk: bytes, ts: float) -> bool:
+            """FFT + Tracker; True bei Early-Exit."""
+            nonlocal frames_processed, early_exit, bin_map_cached
             frame = fft_processor.compute_frame(
                 raw_iq=chunk,
                 center_hz=config.center_hz,
                 sample_rate=config.sample_rate,
             )
-            # Zeitstempel entlang des Blocks verteilen (kein Echtzeit-Stream)
-            frame.timestamp = started + (frame_idx * hop_samples / float(config.sample_rate))
-            frame_idx += 1
+            frame.timestamp = float(ts)
 
             noise_floor = self.noise_estimator.estimate(frame.power_db)
             frame.noise_floor_db = noise_floor
@@ -713,12 +814,11 @@ class SpectrumWatcher:
             channel_powers = analyzer.integrate_channel_power(frame, bin_map_cached)
             scores = analyzer.score_channels(channel_powers, noise_floor)
 
-            ts = frame.timestamp
             for ch in profile.channels:
                 if ch.name not in channel_powers:
                     continue
                 tracker.update_channel(
-                    ts=ts,
+                    ts=frame.timestamp,
                     channel=ch,
                     absolute_power_db=channel_powers[ch.name],
                     relative_db_val=scores[ch.name],
@@ -736,10 +836,9 @@ class SpectrumWatcher:
                     "channels": {k: round(v, 2) for k, v in scores.items()}
                 })
 
-            # Early-Exit auf Block-Frames (starke Hits → nicht Rest des Blocks auswerten)
             elapsed_ms = (frame.timestamp - started) * 1000.0
             if elapsed_ms >= 300.0 and frames_processed >= max(1, int(profile.min_active_frames)):
-                cands_now = tracker.build_candidates(ts)
+                cands_now = tracker.build_candidates(frame.timestamp)
                 if cands_now:
                     best_now = cands_now[0]
                     margin = 8.0
@@ -750,8 +849,67 @@ class SpectrumWatcher:
                             and float(best_now.relative_db) - second_rel >= 3.0
                             and int(best_now.active_frames) >= int(profile.min_active_frames)):
                         early_exit = True
-            if early_exit:
-                break
+            return early_exit
+
+        # Streaming nur mit echtem RTL-Backend (Tests/Fake → Block).
+        # Abschaltbar: PIDRIVE_SPECTRUM_STREAM=0
+        want_stream = (
+            isinstance(self.backend, RTLSDRBackend)
+            and os.environ.get("PIDRIVE_SPECTRUM_STREAM", "1").strip() != "0"
+        )
+        if want_stream:
+            skip_samples = max(0, int(hop_samples) - int(config.fft_size))
+            try:
+                with StreamingRtlReader(
+                    center_hz=config.center_hz,
+                    sample_rate=config.sample_rate,
+                    ppm=int(getattr(self.backend, "ppm", 0) or 0),
+                    gain=int(getattr(self.backend, "gain", -1)),
+                    owner=f"spectrum:stream:{int(config.center_hz)}",
+                    read_timeout_s=max(2.0, float(watch_s) + 1.5),
+                ) as reader:
+                    capture_mode = "stream"
+                    deadline = started + watch_s
+                    while time.time() < deadline and not early_exit:
+                        chunk = reader.read_u8_iq(config.fft_size)
+                        if _ingest_frame(chunk, time.time()):
+                            break
+                        if skip_samples > 0 and time.time() < deadline and not early_exit:
+                            try:
+                                reader.read_u8_iq(skip_samples)
+                            except Exception:
+                                break
+            except Exception as e:
+                stream_error = str(e)[:160]
+                capture_mode = "block"
+                frames_processed = 0
+                early_exit = False
+                debug_frames.clear()
+                debug_scores.clear()
+                bin_map_cached = None
+                tracker = ActivityTracker(profile)
+                started = time.time()
+
+        if capture_mode == "block":
+            raw = self.backend.capture_iq(
+                center_hz=config.center_hz,
+                sample_rate=config.sample_rate,
+                sample_count=block_samples,
+            )
+            bytes_per_sample = 2
+            fft_bytes = int(config.fft_size) * bytes_per_sample
+            hop_bytes = int(hop_samples) * bytes_per_sample
+            raw_len = len(raw)
+            offset = 0
+            frame_idx = 0
+
+            while offset + fft_bytes <= raw_len:
+                chunk = raw[offset:offset + fft_bytes]
+                offset += hop_bytes
+                ts = started + (frame_idx * hop_samples / float(config.sample_rate))
+                frame_idx += 1
+                if _ingest_frame(chunk, ts):
+                    break
 
         ended = time.time()
         candidates = tracker.build_candidates(ended)
@@ -773,7 +931,8 @@ class SpectrumWatcher:
                 "frame_ms": int(config.frame_ms),
                 "span_hz": int(compute_span_for_channels(profile.channels)),
                 "early_exit": bool(early_exit),
-                "capture_mode": "block",
+                "capture_mode": capture_mode,
+                "stream_error": stream_error or None,
                 "block_samples": int(block_samples),
                 "hop_samples": int(hop_samples),
                 "frames": debug_frames if debug else [],

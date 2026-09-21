@@ -349,6 +349,15 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
 
     stop(S)
 
+    if _rtlsdr and hasattr(_rtlsdr, "request_owner"):
+        try:
+            if not _rtlsdr.request_owner(
+                "scanner_audio", mode="scanner_audio", timeout_s=3.0
+            ):
+                log.warn("Scanner: RTL-Owner belegt — Audio startet trotzdem")
+        except Exception:
+            pass
+
     _ppm = _get_ppm(settings)
     _gain = _get_gain(settings)
     _ppm_arg = f" -p {_ppm}" if _ppm else ""
@@ -527,6 +536,12 @@ def stop(S):
         S["radio_playing"] = False
         S["radio_station"] = ""
         S["scanner"] = {"active": False}
+
+    if _rtlsdr and hasattr(_rtlsdr, "release_owner"):
+        try:
+            _rtlsdr.release_owner("scanner_audio")
+        except Exception:
+            pass
 
     # end_transition() gehört dem Aufrufer (td_scanner), nicht stop() —
     # sonst beendet jedes Tunen (play_freq→stop) die äußere Transition (C7).
@@ -1833,12 +1848,22 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
                                capture_output=True, timeout=3)
             except Exception:
                 pass
-            for _p in ("/tmp/pidrive_rtlsdr.lock", "/tmp/pidrive_rtlsdr_state.json"):
+            for _p in (
+                "/tmp/pidrive_rtlsdr.lock",
+                "/tmp/pidrive_rtlsdr_state.json",
+                "/tmp/pidrive_rtlsdr_owner.json",
+            ):
                 try:
                     if os.path.exists(_p):
                         os.remove(_p)
                 except Exception:
                     pass
+        # Soft-Owner-Marker (Diagnose); Capture-Lease hält Spectrum/Audio selbst.
+        if _rtlsdr and hasattr(_rtlsdr, "announce_owner"):
+            try:
+                _rtlsdr.announce_owner("pmr_monitor", mode="pmr_monitor")
+            except Exception:
+                pass
         time.sleep(PMR_MONITOR_START_SETTLE_S)
         if _src_state:
             try:
@@ -1871,4 +1896,9 @@ def stop_pmr_monitor(S=None, join=True):
         t.join(timeout=8.0)
     _monitor_meta["running"] = False
     _pmr_write_status()
+    if _rtlsdr and hasattr(_rtlsdr, "release_owner"):
+        try:
+            _rtlsdr.release_owner("pmr_monitor")
+        except Exception:
+            pass
     return True

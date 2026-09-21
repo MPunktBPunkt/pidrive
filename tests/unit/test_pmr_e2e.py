@@ -72,6 +72,42 @@ def test_capture_lease_blocks_second_owner(monkeypatch):
     rtlsdr.release_capture("b")
 
 
+def test_owner_file_cross_process_and_same_pid(tmp_path, monkeypatch):
+    owner_path = str(tmp_path / "owner.json")
+    monkeypatch.setattr(rtlsdr, "OWNER_FILE", owner_path)
+    rtlsdr.release_owner()
+    assert rtlsdr.request_owner("core", mode="spectrum_capture", timeout_s=0.2)
+    snap = rtlsdr.get_owner()
+    assert snap["disk_owner"] == "core"
+    assert snap["mem_owner"] == "core"
+    # gleicher PID darf Datei-Owner umlabeln, In-Prozess-Lease blockiert anderen Owner
+    rtlsdr.release_owner("core")
+    rtlsdr.announce_owner("pmr_monitor", mode="pmr_monitor")
+    assert rtlsdr.get_owner()["disk_owner"] == "pmr_monitor"
+    assert rtlsdr.request_owner("spectrum:x", mode="spectrum_capture", timeout_s=0.3)
+    assert rtlsdr.get_owner()["disk_owner"] == "spectrum:x"
+    rtlsdr.release_owner("spectrum:x")
+
+
+def test_recover_hard_clears_owner_file(tmp_path, monkeypatch):
+    owner_path = str(tmp_path / "owner.json")
+    lock_path = str(tmp_path / "lock")
+    state_path = str(tmp_path / "state.json")
+    monkeypatch.setattr(rtlsdr, "OWNER_FILE", owner_path)
+    monkeypatch.setattr(rtlsdr, "LOCK_FILE", lock_path)
+    monkeypatch.setattr(rtlsdr, "STATE_FILE", state_path)
+    monkeypatch.setattr(rtlsdr, "wait_until_free", lambda **k: False)
+    monkeypatch.setattr(rtlsdr, "is_busy", lambda: False)
+    monkeypatch.setattr(rtlsdr, "_run", lambda *a, **k: {"ok": True})
+    monkeypatch.setattr(rtlsdr, "clear_stale_lock", lambda: None)
+    rtlsdr.announce_owner("stale", mode="recover")
+    assert (tmp_path / "owner.json").exists()
+    out = rtlsdr.recover_busy_device(reason="t", level="hard")
+    assert out.get("ok") is True
+    assert not (tmp_path / "owner.json").exists()
+    assert rtlsdr.get_owner()["mem_owner"] == ""
+
+
 def test_recover_reset_respects_cooldown(monkeypatch):
     monkeypatch.setattr(rtlsdr, "wait_until_free", lambda **k: False)
     monkeypatch.setattr(rtlsdr, "is_busy", lambda: True)
@@ -123,7 +159,47 @@ def test_watch_channels_block_capture_one_rtl_call():
     assert result.found is False
 
 
-# ── Monitor-Loop (ein Zyklus, Mock-Watcher) ───────────────────────────────────
+def test_watch_channels_stream_mode_with_mock_reader(monkeypatch):
+    reads = {"n": 0}
+
+    class FakeStream:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read_u8_iq(self, sample_count):
+            reads["n"] += 1
+            return _iq_noise(sample_count)
+
+    monkeypatch.setattr(sp, "StreamingRtlReader", FakeStream)
+    monkeypatch.setenv("PIDRIVE_SPECTRUM_STREAM", "1")
+
+    class BlockBackend(sp.RTLSDRBackend):
+        def capture_iq(self, center_hz, sample_rate, sample_count):
+            raise AssertionError("block fallback should not run")
+
+    watcher = sp.SpectrumWatcher(
+        BlockBackend(),
+        sp.FFTProcessor(fft_size=512, smoothing_alpha=0.35),
+        sp.NoiseEstimator(quantile=0.20),
+    )
+    profile = dc.replace(
+        sp.PMR446_PROFILE,
+        channels=list(sp.PMR446_PROFILE.channels[:4]),
+        watch_seconds=0.12,
+        frame_ms=40,
+        min_active_frames=1,
+        trigger_on_db=40.0,
+    )
+    result = watcher.watch_channels(profile, debug=True)
+    assert result.debug.get("capture_mode") == "stream"
+    assert reads["n"] >= 1
+    assert result.frames_processed >= 1
 
 def test_pmr_monitor_loop_records_activity_without_tune(tmp_path, monkeypatch):
     _reset_source(tmp_path, monkeypatch)

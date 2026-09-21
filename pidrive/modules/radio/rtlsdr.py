@@ -70,23 +70,55 @@ def _sh(cmd, timeout=5):
     return _run(["bash", "-c", cmd], timeout=timeout)
 
 def _atomic_json(path, data):
-    """Schreibe JSON; /tmp-Sticky-Bit: In-Place-Fallback wenn replace scheitert."""
-    import errno
-    tmp = path + ".tmp"
+    """Schreibe JSON; /tmp-Sticky-Bit: stale-tmp löschen, replace, In-Place-Fallback."""
     payload = json.dumps(data, indent=2, ensure_ascii=False)
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(payload)
-    try:
-        os.replace(tmp, path)
-    except OSError as e:
-        if e.errno not in (errno.EPERM, errno.EACCES):
-            raise
-        # Core=root, Web=pidrive: Datei überschreiben statt unlink/replace
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(payload)
+    tmp = path + ".tmp"
+
+    def _chmod_world_rw(p):
         try:
-            os.remove(tmp)
+            os.chmod(p, 0o666)
         except OSError:
+            pass
+
+    def _inplace(p):
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(payload)
+            f.flush()
+        _chmod_world_rw(p)
+
+    try:
+        try:
+            os.unlink(tmp)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            pass
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(payload)
+                f.flush()
+            try:
+                os.replace(tmp, path)
+            except OSError:
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
+                try:
+                    os.replace(tmp, path)
+                except OSError:
+                    _inplace(path)
+                    try:
+                        os.unlink(tmp)
+                    except OSError:
+                        pass
+            _chmod_world_rw(path)
+        except OSError:
+            _inplace(path)
+    except Exception:
+        try:
+            _inplace(path)
+        except Exception:
             pass
 
 
@@ -844,44 +876,165 @@ def usb_reset() -> dict:
     return result
 
 
-# In-Prozess Capture-Lease (erster Schritt Richtung Owner-Service)
+# Cross-Process Owner + In-Prozess Capture-Lease
+OWNER_FILE = "/tmp/pidrive_rtlsdr_owner.json"
 _CAPTURE_LOCK = threading.Lock()
-_CAPTURE_LEASE = {"owner": "", "since": 0.0}
+_CAPTURE_LEASE = {"owner": "", "since": 0.0, "mode": ""}
 _CAPTURE_STALE_S = 45.0
+_OWNER_STALE_S = 60.0
+
+# Bekannte Nutzungsarten (Dokumentation / Diagnose)
+OWNER_MODES = (
+    "spectrum_capture",
+    "scanner_audio",
+    "pmr_monitor",
+    "dab_playback",
+    "fm_playback",
+    "recover",
+)
 
 
-def claim_capture(owner: str, timeout_s: float = 4.0) -> bool:
-    """Kurzzeitige Exklusivität für rtl_sdr-Captures im selben Prozess."""
+def _read_owner_file() -> dict:
+    try:
+        with open(OWNER_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _write_owner_file(data: dict) -> None:
+    payload = dict(data or {})
+    payload["ts"] = time.time()
+    payload["pid"] = os.getpid()
+    _atomic_json(OWNER_FILE, payload)
+
+
+def _clear_owner_file() -> None:
+    try:
+        os.remove(OWNER_FILE)
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
+
+
+def get_owner() -> dict:
+    """Aktueller Soft-Owner (Datei + In-Prozess-Lease)."""
+    disk = _read_owner_file()
+    with _CAPTURE_LOCK:
+        mem = dict(_CAPTURE_LEASE)
+    return {
+        "disk_owner": disk.get("owner") or "",
+        "disk_mode": disk.get("mode") or "",
+        "disk_since": disk.get("since") or 0.0,
+        "disk_pid": disk.get("pid") or 0,
+        "mem_owner": mem.get("owner") or "",
+        "mem_mode": mem.get("mode") or "",
+        "mem_since": mem.get("since") or 0.0,
+        "busy_heuristic": bool(is_busy()),
+    }
+
+
+def announce_owner(owner: str, mode: str = "pmr_monitor") -> None:
+    """
+    Disk-Hinweis ohne In-Prozess-Lease (z. B. PMR-Monitor läuft).
+    Capture/Audio nehmen die Lease weiterhin über request_owner.
+    """
+    try:
+        _write_owner_file({
+            "owner": str(owner or "anon"),
+            "mode": str(mode or "pmr_monitor"),
+            "since": time.time(),
+        })
+    except Exception:
+        pass
+
+
+def request_owner(owner: str, mode: str = "spectrum_capture",
+                  timeout_s: float = 4.0, stale_s: float = _OWNER_STALE_S) -> bool:
+    """
+    Soft-Ownership über Prozessgrenzen (Owner-Datei) + In-Prozess-Lease.
+    Kein Ersatz für flock bei rtl_fm/welle — ergänzt Busy-/Capture-Serialisierung.
+
+    In-Prozess: anderer Owner blockiert (Capture-Serialisierung).
+    Datei: anderer PID blockiert; gleicher PID darf umlabeln.
+    """
     owner = str(owner or "anon")
+    mode = str(mode or "spectrum_capture")
     deadline = time.time() + max(0.2, float(timeout_s))
+    my_pid = os.getpid()
     while time.time() < deadline:
+        wait = False
         with _CAPTURE_LOCK:
             cur = _CAPTURE_LEASE.get("owner") or ""
             since = float(_CAPTURE_LEASE.get("since") or 0.0)
-            if not cur or cur == owner:
-                _CAPTURE_LEASE["owner"] = owner
-                _CAPTURE_LEASE["since"] = time.time()
-                return True
-            if since and (time.time() - since) > _CAPTURE_STALE_S:
-                _CAPTURE_LEASE["owner"] = owner
-                _CAPTURE_LEASE["since"] = time.time()
-                return True
-        time.sleep(0.05)
+            mem_stale = (not cur) or (since and (time.time() - since) > _CAPTURE_STALE_S)
+            if cur and cur != owner and not mem_stale:
+                wait = True
+            else:
+                disk = _read_owner_file()
+                d_owner = str(disk.get("owner") or "")
+                d_since = float(disk.get("since") or 0.0)
+                d_pid = int(disk.get("pid") or 0)
+                stale = (not d_owner) or (
+                    d_since and (time.time() - d_since) > float(stale_s)
+                )
+                if d_owner and d_pid and d_pid != my_pid:
+                    try:
+                        os.kill(d_pid, 0)
+                    except ProcessLookupError:
+                        stale = True
+                    except PermissionError:
+                        pass
+                # Gleicher PID → Umlabeln ok; fremder PID → warten
+                if (d_owner and d_owner != owner and not stale
+                        and d_pid and d_pid != my_pid):
+                    wait = True
+                else:
+                    _CAPTURE_LEASE["owner"] = owner
+                    _CAPTURE_LEASE["mode"] = mode
+                    _CAPTURE_LEASE["since"] = time.time()
+                    try:
+                        _write_owner_file({
+                            "owner": owner,
+                            "mode": mode,
+                            "since": _CAPTURE_LEASE["since"],
+                        })
+                    except Exception:
+                        pass
+                    return True
+        if wait:
+            time.sleep(0.05)
     return False
 
 
-def release_capture(owner: str = "") -> None:
+def release_owner(owner: str = "") -> None:
     owner = str(owner or "")
     with _CAPTURE_LOCK:
         cur = _CAPTURE_LEASE.get("owner") or ""
         if not owner or cur == owner:
             _CAPTURE_LEASE["owner"] = ""
+            _CAPTURE_LEASE["mode"] = ""
             _CAPTURE_LEASE["since"] = 0.0
+    disk = _read_owner_file()
+    d_owner = str(disk.get("owner") or "")
+    if not owner or d_owner == owner or not d_owner:
+        _clear_owner_file()
+
+
+def claim_capture(owner: str, timeout_s: float = 4.0,
+                  mode: str = "spectrum_capture") -> bool:
+    """Alias: Capture-Lease inkl. Cross-Process-Owner-Datei."""
+    return request_owner(owner, mode=mode, timeout_s=timeout_s)
+
+
+def release_capture(owner: str = "") -> None:
+    release_owner(owner)
 
 
 def capture_lease_snapshot() -> dict:
-    with _CAPTURE_LOCK:
-        return dict(_CAPTURE_LEASE)
+    return get_owner()
 
 
 # Letzter USB-Reset (Cooldownown gegen Reset-Stürme)
@@ -934,11 +1087,15 @@ def recover_busy_device(reason: str = "", level: str = "soft",
                     pass
         try:
             clear_stale_lock()
-            for f in (LOCK_FILE, STATE_FILE):
+            for f in (LOCK_FILE, STATE_FILE, OWNER_FILE):
                 try:
                     os.remove(f)
                 except FileNotFoundError:
                     pass
+            with _CAPTURE_LOCK:
+                _CAPTURE_LEASE["owner"] = ""
+                _CAPTURE_LEASE["mode"] = ""
+                _CAPTURE_LEASE["since"] = 0.0
             out["steps"].append("lock_cleared")
         except Exception as e:
             out["steps"].append(f"lock_clear_err:{e}")
