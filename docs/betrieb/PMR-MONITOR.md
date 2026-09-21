@@ -1,6 +1,9 @@
 # pidrivectl scanner monitor — PMR446 Dauer-Überwachung
 
-**Stand:** v0.11.154 · 2026-09-21
+**Stand:** v0.11.155 · 2026-09-21
+
+> **Architektur (ausführlich):** [`../architektur/SCANNER-PMR.md`](../architektur/SCANNER-PMR.md)
+> — Dateikarte, Monitor-Schleife, Trigger-Schwellen, State Machine, WebUI.
 
 Hintergrund-Detektor: spektrum-basiert auf PMR446 lauschen, Treffer ins JSONL-Log
 schreiben, optional auf den Kanal umschalten (Autotune).
@@ -50,6 +53,7 @@ WebUI: Scanner-Tab zeigt Monitor-Status; Trigger `pmr_monitor_start` / `pmr_moni
 WebUI Scanner-Tab: Button **Dauerbeobachtung** steuert den Backend-Detektor
 (`pmr_monitor_start/stop`), Statuszeile „Backend-Detektor AKTIV …“.
 
+## Recovery / bekannte Fehler
 
 Ab v0.11.154 sucht `rtlsdr.usb_reset()` den Stick **primär über sysfs**
 (`idVendor=0bda`) und setzt danach zwingend `authorized=1`.

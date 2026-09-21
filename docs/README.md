@@ -17,6 +17,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [architektur/RUNTIME_FLOWS.md](architektur/RUNTIME_FLOWS.md) | Laufzeitpfade, Menü→Display, ESP/USB | Entwickler | v0.11.146 |
 | [architektur/ZUSTANDSMASCHINE.md](architektur/ZUSTANDSMASCHINE.md) | Quellenwechsel, `play_gen`, Transitionen | Entwickler | v0.11.143 |
 | [architektur/DEVELOPER_GUIDE.md](architektur/DEVELOPER_GUIDE.md) | Wo liegt welcher Code; OTA / source CLI | Entwickler | v0.11.146 |
+| [architektur/SCANNER-PMR.md](architektur/SCANNER-PMR.md) | Scanner, Spektrum, PMR-Dauerdetektor (Architektur) | Entwickler | v0.11.155 |
 | [betrieb/TROUBLESHOOTING.md](betrieb/TROUBLESHOOTING.md) | Fehlerbehebung im Betrieb | Betrieb im Fahrzeug | v0.11.132 |
 | [betrieb/SPECTRUM-CLI.md](betrieb/SPECTRUM-CLI.md) | `pidrivectl spectrum scan/peek/last` | Betrieb, Entwickler | 2026-09-19 |
 | [betrieb/PMR-MONITOR.md](betrieb/PMR-MONITOR.md) | `pidrivectl scanner monitor …` + USB-Recovery | Betrieb, Entwickler | 2026-09-21 |

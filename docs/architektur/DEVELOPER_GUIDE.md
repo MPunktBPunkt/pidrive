@@ -44,6 +44,7 @@ ESP SoftAP ──[lab/play]───► pump_bridge.py (esp32.pidrive)
 | Webradio-Playback | `modules/webradio.py` |
 | FM-Wiedergabe | `modules/radio/fm.py` |
 | FM/PMR-Scanner | `modules/radio/scanner.py` |
+| PMR-Dauerdetektor / Spektrum-FFT | `modules/radio/scanner.py` (`_pmr_monitor_loop`), `modules/radio/spectrum.py` — ausführlich: [`SCANNER-PMR.md`](SCANNER-PMR.md) |
 | DAB+ starten/stoppen | `modules/radio/dab.py`, `dab_play.py` |
 | DAB+ DLS/Metadaten | `modules/radio/dab_dls.py` |
 | DAB+ Scan | `modules/radio/dab_scan.py` |

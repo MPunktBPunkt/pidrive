@@ -285,6 +285,11 @@ modules/radio/fm.py — play(freq, S, settings)
 Scanner (pidrivectl scanner pmr446 scan):
     trigger/td_scanner.py → modules/radio/scanner.py
     └── rtl_fm mit engem Squelch, Frequenz-Stepping
+
+PMR-Dauerdetektor (pidrivectl scanner monitor start):
+    td_scanner pmr_monitor_* → scanner._pmr_monitor_loop
+    └── spectrum.watch_channels (FFT) → optional set_channel (Autotune)
+    Ausführlich: architektur/SCANNER-PMR.md
 ```
 
 **Wichtig:** FM-Broadcast braucht `-M wbfm` — `-M fm` ist Schmalband (PMR), liefert kein Radio-Audio.
