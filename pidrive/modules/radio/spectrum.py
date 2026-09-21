@@ -356,6 +356,42 @@ class RTLSDRBackend(SampleBackend):
 
     def capture_iq(self, center_hz: float, sample_rate: int, sample_count: int) -> bytes:
         lease_owner = f"spectrum:{id(self)}:{int(center_hz)}"
+        last_err: Optional[Exception] = None
+        for attempt in range(2):
+            try:
+                return self._capture_iq_once(
+                    center_hz, sample_rate, sample_count, lease_owner
+                )
+            except Exception as e:
+                last_err = e
+                msg = str(e).lower()
+                busyish = any(
+                    x in msg
+                    for x in ("busy", "timeout", "claim", "hängt", "failed to open")
+                )
+                if attempt == 0 and busyish and _rtlsdr and hasattr(
+                    _rtlsdr, "recover_busy_device"
+                ):
+                    try:
+                        _rtlsdr.recover_busy_device(
+                            reason="spectrum_capture_retry", level="hard"
+                        )
+                        time.sleep(0.4)
+                    except Exception:
+                        pass
+                    continue
+                raise
+        if last_err:
+            raise last_err
+        raise RuntimeError("capture_iq failed")
+
+    def _capture_iq_once(
+        self,
+        center_hz: float,
+        sample_rate: int,
+        sample_count: int,
+        lease_owner: str,
+    ) -> bytes:
         if _rtlsdr:
             usb = _rtlsdr.detect_usb()
             if not usb.get("present"):
@@ -385,10 +421,10 @@ class RTLSDRBackend(SampleBackend):
 
         # Längere Captures (Pro-Watch-Block) brauchen mehr Zeit als Default 6s
         try:
-            need_s = float(sample_count) / max(float(sample_rate), 1.0) + 4.0
+            need_s = float(sample_count) / max(float(sample_rate), 1.0) + 5.0
         except Exception:
             need_s = self.timeout_s
-        run_timeout = max(float(self.timeout_s), need_s)
+        run_timeout = max(float(self.timeout_s), need_s, 8.0)
 
         try:
             try:
@@ -954,6 +990,15 @@ class SpectrumWatcher:
                 bin_map_cached = None
                 tracker = ActivityTracker(profile)
                 started = time.time()
+                # Stream-Fehler oft = verwaister/hängender Stick → vor Block freigeben
+                if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
+                    try:
+                        _rtlsdr.recover_busy_device(
+                            reason="stream_fallback", level="hard"
+                        )
+                        time.sleep(0.3)
+                    except Exception:
+                        pass
 
         if capture_mode == "block":
             raw = self.backend.capture_iq(
