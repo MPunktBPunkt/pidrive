@@ -229,10 +229,29 @@ def save_last_spectrum(data: dict):
     """Speichert letztes Spektrum für CLI/WebUI — ohne Riesen-FFT-Arrays (hängen sonst die WebUI)."""
     try:
         slim = _spectrum_for_persist(data)
+        if _rtlsdr and hasattr(_rtlsdr, "_atomic_json"):
+            _rtlsdr._atomic_json(SPECTRUM_FILE, slim)
+            return
         tmp = SPECTRUM_FILE + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(slim, f, ensure_ascii=False, separators=(",", ":"))
-        os.replace(tmp, SPECTRUM_FILE)
+        try:
+            os.unlink(tmp)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            pass
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(slim, f, ensure_ascii=False, separators=(",", ":"))
+                f.flush()
+            os.replace(tmp, SPECTRUM_FILE)
+        except OSError:
+            with open(SPECTRUM_FILE, "w", encoding="utf-8") as f:
+                json.dump(slim, f, ensure_ascii=False, separators=(",", ":"))
+                f.flush()
+        try:
+            os.chmod(SPECTRUM_FILE, 0o666)
+        except OSError:
+            pass
     except Exception:
         pass
 
@@ -866,19 +885,30 @@ class SpectrumWatcher:
                     ppm=int(getattr(self.backend, "ppm", 0) or 0),
                     gain=int(getattr(self.backend, "gain", -1)),
                     owner=f"spectrum:stream:{int(config.center_hz)}",
-                    read_timeout_s=max(2.0, float(watch_s) + 1.5),
+                    read_timeout_s=max(3.0, float(watch_s) + 2.0),
                 ) as reader:
                     capture_mode = "stream"
-                    deadline = started + watch_s
-                    while time.time() < deadline and not early_exit:
+                    # Watch-Fenster erst nach erstem Frame (rtl_sdr-Startup zählt nicht)
+                    armed = False
+                    deadline = 0.0
+                    while not early_exit:
                         chunk = reader.read_u8_iq(config.fft_size)
-                        if _ingest_frame(chunk, time.time()):
+                        now = time.time()
+                        if not armed:
+                            started = now
+                            deadline = started + watch_s
+                            armed = True
+                        if _ingest_frame(chunk, now):
                             break
                         if skip_samples > 0 and time.time() < deadline and not early_exit:
                             try:
                                 reader.read_u8_iq(skip_samples)
                             except Exception:
                                 break
+                        if time.time() >= deadline:
+                            break
+                if frames_processed < 1:
+                    raise RuntimeError("stream: keine Frames")
             except Exception as e:
                 stream_error = str(e)[:160]
                 capture_mode = "block"
