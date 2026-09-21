@@ -142,6 +142,11 @@ Audio-Hinweis: Schmalband-PMR = `rtl_fm -M fm`; UKW-Broadcast = `-M wbfm` (`fm.p
 - Default-Trigger im Profil: `trigger_on_db=14`  
 - **Monitor überschreibt** das beim Watch mit strengeren Werten (siehe §6)
 
+`watch_channels()` stellt sicher, dass der **effektive** `FFTProcessor` dem
+Profil-`fft_size` entspricht (`build_default_watcher` startet mit Default 512;
+Mismatch würde nur die ersten 512 Samples nutzen — siehe
+[`SCANNER-REVIEW-MASSNAHMEN.md`](SCANNER-REVIEW-MASSNAHMEN.md)).
+
 `ChannelAnalyzer` berechnet pro Kanal `relative_db` (gegenüber Rauschboden),
 `score`, `confidence`. Ein Kanal gilt als **gefunden**, wenn über genug Frames
 `relative_db ≥ trigger_on_db`.
@@ -352,3 +357,4 @@ Echter Treffer sieht z. B. so aus:
 | [`../betrieb/PMR-MONITOR.md`](../betrieb/PMR-MONITOR.md) | CLI-Kurzreferenz |
 | [`../betrieb/SPECTRUM-CLI.md`](../betrieb/SPECTRUM-CLI.md) | UKW spectrum CLI |
 | [`../betrieb/TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md) | authorized=0, Diagnose-Write |
+| [`SCANNER-REVIEW-MASSNAHMEN.md`](SCANNER-REVIEW-MASSNAHMEN.md) | Review-Nachbewertung, P0–P3 |

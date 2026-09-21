@@ -1024,8 +1024,9 @@ def scan_next(band_id, S, settings=None):
             _set_scanner_label(band_id, ch["name"], S)
         play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
         _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
-    else:
-        _write_scan_result(band_id, False)
+        return ch
+    _write_scan_result(band_id, False)
+    return None
 
 
 def scan_prev(band_id, S, settings=None):
@@ -1057,9 +1058,9 @@ def scan_prev(band_id, S, settings=None):
             _set_scanner_label(band_id, ch["name"], S)
         play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
         _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
-    else:
-        _write_scan_result(band_id, False)
-
+        return ch
+    _write_scan_result(band_id, False)
+    return None
 # ── PMR446 Dauer-Überwachung (Backend, ohne offene WebUI) ─────────────────────
 
 PMR_MONITOR_STATUS = "/tmp/pidrive_pmr_monitor.json"

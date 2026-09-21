@@ -163,3 +163,54 @@ def test_autotune_happy_path_transition_cycle(tmp_path, monkeypatch):
     ss.commit_source("idle")
     ok, _ = ss.rtl_capture_gate(check_monitor=False)
     assert ok is True
+
+
+# ── Spektrum / klassischer Scan (Review-Regressionen) ─────────────────────────
+
+def test_watch_channels_uses_profile_fft_size(monkeypatch):
+    """Profil-FFT (PMR 2048) darf nicht am Default-FFTProcessor (512) hängenbleiben."""
+    from modules.radio import spectrum as sp
+    import dataclasses as dc
+
+    class FakeBackend:
+        def capture_iq(self, center_hz, sample_rate, sample_count):
+            # U8 IQ: 2 Bytes pro Sample — genug für FFT 2048
+            n = max(int(sample_count), 4096) * 2
+            return bytes([128] * n)
+
+    watcher = sp.SpectrumWatcher(
+        FakeBackend(),
+        sp.FFTProcessor(fft_size=512, smoothing_alpha=0.35),
+        sp.NoiseEstimator(quantile=0.20),
+    )
+    profile = dc.replace(
+        sp.PMR446_PROFILE,
+        channels=list(sp.PMR446_PROFILE.channels[:2]),
+        watch_seconds=0.05,
+        min_active_frames=1,
+    )
+    result = watcher.watch_channels(profile, debug=True)
+    assert result.debug["fft_size"] == 2048
+    assert result.debug["effective_fft_size"] == 2048
+    assert result.frames_processed >= 1
+
+
+def test_scan_next_returns_channel_on_hit(monkeypatch):
+    """td_scanner erwartet truthy Return — früher fehlte return ch."""
+    S = {}
+    hit = {"name": "PMR 1", "freq": 446.00625}
+    monkeypatch.setattr(scanner, "_get_spectrum_enabled", lambda s: False)
+    monkeypatch.setattr(scanner, "_scan_list", lambda *a, **k: hit)
+    monkeypatch.setattr(scanner, "play_freq", lambda *a, **k: None)
+    monkeypatch.setattr(scanner, "_set_scanner_label", lambda *a, **k: None)
+    monkeypatch.setattr(scanner, "_write_scan_result", lambda *a, **k: None)
+    found = scanner.scan_next("pmr446", S, settings={})
+    assert found == hit
+
+
+def test_scan_prev_returns_none_without_hit(monkeypatch):
+    S = {}
+    monkeypatch.setattr(scanner, "_get_spectrum_enabled", lambda s: False)
+    monkeypatch.setattr(scanner, "_scan_list", lambda *a, **k: None)
+    monkeypatch.setattr(scanner, "_write_scan_result", lambda *a, **k: None)
+    assert scanner.scan_prev("pmr446", S, settings={}) is None

@@ -622,6 +622,17 @@ class SpectrumWatcher:
         sample_count = int(config.sample_rate * (config.frame_ms / 1000.0))
         sample_count = max(sample_count, config.fft_size * 2)
 
+        # Profil-FFT muss dem Processor entsprechen (Bug: build_default_watcher
+        # nutzte 512, PMR446_PROFILE 2048 — compute_frame schnitt auf 512).
+        fft_processor = self.fft_processor
+        if (int(getattr(fft_processor, "fft_size", 0) or 0) != int(config.fft_size)
+                or abs(float(getattr(fft_processor, "smoothing_alpha", 0.35))
+                       - float(config.smoothing_alpha)) > 1e-6):
+            fft_processor = FFTProcessor(
+                fft_size=config.fft_size,
+                smoothing_alpha=config.smoothing_alpha,
+            )
+
         analyzer = ChannelAnalyzer(profile.channels)
         tracker = ActivityTracker(profile)
 
@@ -640,7 +651,7 @@ class SpectrumWatcher:
                 sample_count=sample_count,
             )
 
-            frame = self.fft_processor.compute_frame(
+            frame = fft_processor.compute_frame(
                 raw_iq=raw,
                 center_hz=config.center_hz,
                 sample_rate=config.sample_rate,
@@ -694,6 +705,7 @@ class SpectrumWatcher:
                 "center_hz": int(center_hz),
                 "sample_rate": int(config.sample_rate),
                 "fft_size": int(config.fft_size),
+                "effective_fft_size": int(fft_processor.fft_size),
                 "frame_ms": int(config.frame_ms),
                 "span_hz": int(compute_span_for_channels(profile.channels)),
                 "frames": debug_frames if debug else [],
