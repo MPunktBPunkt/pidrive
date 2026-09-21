@@ -8,8 +8,9 @@ from settings import save_settings
 from modules import source_state
 from modules import (
     wifi, bluetooth, audio, system as sys_mod,
-    webradio, dab, fm, scanner, update, favorites
+    webradio, update, favorites
 )
+from modules.radio import dab, fm, scanner
 from modules.playback_meta import clear_playback_metadata
 
 

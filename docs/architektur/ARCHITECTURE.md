@@ -24,19 +24,15 @@ PiDrive
 └── Konfiguration                         config/
 ```
 
-> **Modulpfade & Rest-Shims:** Die früher flache Struktur wurde in Pakete umgebaut
-> (`trigger/`, `cli/`, `web/`, `modules/bluetooth/`, `modules/radio/`, `integration/`).
-> Noch vorhanden (nur Alt-Imports / systemd-Übergänge):
+> **Modulpfade:** Flache Struktur → Pakete (`trigger/`, `cli/`, `web/`,
+> `modules/bluetooth/`, `modules/radio/`, `integration/`). Die früheren
+> Compat-Shims `modules/dab.py|fm.py|scanner.py` und Root-`avrcp_trigger.py`
+> sind **entfernt** (2026-09-21).
 >
-> | Shim (alt) | Echte Implementierung |
+> | Entry | Implementierung |
 > |---|---|
-> | `avrcp_trigger.py` | `integration/avrcp_trigger.py` |
-> | `modules/dab.py` | `modules/radio/dab.py` |
-> | `modules/fm.py` | `modules/radio/fm.py` |
-> | `modules/scanner.py` | `modules/radio/scanner.py` |
->
-> `webui.py` bleibt als **systemd-Entry** (startet `web/app.py`). `pidrive_avrcp.service`
-> startet bereits `integration/avrcp_trigger.py`.
+> | `webui.py` (systemd) | `web/app.py` |
+> | `pidrive_avrcp.service` | `integration/avrcp_trigger.py` (direkt) |
 
 ---
 
@@ -56,9 +52,7 @@ pidrive/
 │
 ├── mpris2.py               ← D-Bus MPRIS2-Adapter (BMW-Display-Metadaten)
 ├── mpv_meta.py             ← mpv-Socket-Metadaten-Listener (ICY/Now-Playing)
-│
-├── avrcp_trigger.py        ← Entry-Shim → integration/avrcp_trigger.py
-│
+├── webui.py                ← systemd-Entry → web/app.py
 ├── menu/                   ← Menü-Modell
 │   ├── menu_model.py       ← Menübaumstruktur (Knoten, Typen)
 │   ├── menu_state.py       ← Menüzustand (Cursor, Pfad, History)
@@ -97,8 +91,6 @@ pidrive/
 │   ├── update.py           ← OTA von GitHub (pidrivectl update)
 │   ├── webradio.py         ← mpv-basiertes Webradio (IPC-Socket-Metadaten)
 │   ├── platform.py         ← Plattformerkennung + CAPS-Dictionary
-│   │
-│   ├── dab.py / fm.py / scanner.py   ← Compat-Shims → modules/radio/*
 │   │
 │   ├── bluetooth/          ← Bluetooth-Subsystem
 │   │   ├── bluetooth.py    ← BT-Facade (A2DP, Pairing, Status)

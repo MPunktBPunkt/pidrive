@@ -1,6 +1,6 @@
 # PiDrive — Developer Guide
 
-**Stand:** v0.11.146 · 2026-09-20
+**Stand:** v0.11.155 · 2026-09-21
 
 ---
 
@@ -28,11 +28,11 @@ ESP SoftAP ──[lab/play]───► pump_bridge.py (esp32.pidrive)
                        PipeWire ──► BT A2DP / Klinke / HDMI / usb_gadget→ESP
 ```
 
-> **Hinweis zu Compat-Shims:** Die alten flachen Pfade existieren teilweise als dünne
-> Weiterleitungen weiter (`avrcp_trigger.py` →
-> `integration/avrcp_trigger.py`, `modules/dab.py|fm.py|scanner.py` →
-> `modules/radio/*`). Für neuen Code immer die kanonischen Pfade unten (Abschnitt C)
-> verwenden.
+> **Compat-Shims (Stand 2026-09-21):** Die flachen Radio-Shims
+> `modules/dab.py|fm.py|scanner.py` und Root-`avrcp_trigger.py` sind **entfernt**.
+> Kanonisch: `modules.radio.*` bzw. `integration/avrcp_trigger.py`.
+> Einziger absichtlicher Entry-Shim: `webui.py` → `web/app.py` (systemd
+> `pidrive_web.service`).
 
 ---
 
@@ -111,8 +111,8 @@ ESP SoftAP ──[lab/play]───► pump_bridge.py (esp32.pidrive)
 | MPRIS2 | `mpris2.py` (Root) |
 | Core | `main_core.py` (Root, systemd-Entry) |
 
-> **Shims (nicht für neuen Code):** `webui.py` (systemd-Entry → `web/app.py`),
-> `avrcp_trigger.py`, `modules/dab.py`, `modules/fm.py`, `modules/scanner.py`.
+> **Shims:** Nur noch `webui.py` als systemd-Entry → `web/app.py`.
+> Radio/AVRCP: immer `modules.radio.*` bzw. `integration/avrcp_trigger.py`.
 
 ---
 

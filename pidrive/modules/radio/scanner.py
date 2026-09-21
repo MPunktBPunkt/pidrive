@@ -1366,7 +1366,8 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
                 )
                 _pmr_append_log({"event": "preempt_source", "radio_type": rt})
                 try:
-                    from modules import dab as _dab, fm as _fm, webradio as _wr
+                    from modules.radio import dab as _dab, fm as _fm
+                    from modules import webradio as _wr
                     try:
                         _wr.stop(S)
                     except Exception:
@@ -1444,7 +1445,7 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
                 if ("belegt" in err_s.lower() or "busy" in err_s.lower()
                         or "Timeout" in err_s or "hängt" in err_s):
                     try:
-                        from modules import dab as _dab, fm as _fm
+                        from modules.radio import dab as _dab, fm as _fm
                         try:
                             _dab.stop(S)
                         except Exception:
@@ -1807,7 +1808,8 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
         _monitor_stop.clear()
         # RTL freimachen: DAB/FM/Scanner + Lock
         try:
-            from modules import dab as _dab, fm as _fm, webradio as _wr
+            from modules.radio import dab as _dab, fm as _fm
+            from modules import webradio as _wr
             try:
                 _wr.stop(S)
             except Exception:

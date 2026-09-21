@@ -37,8 +37,12 @@
 > `modules/rtlsdr.py` und `modules/spectrum.py` existierten nicht mehr, aber sechs Stellen
 > in `modules/radio/*` importierten weiter `from modules import rtlsdr|spectrum` und
 > schluckten den Fehler — Lock/Busy-Check und Spektrum-Pfad waren tot.
-> `modules/scanner.py` ist **nicht** gelöscht (5-Zeilen-Compat-Shim, C15).
+> `modules/scanner.py` war damals noch 5-Zeilen-Compat-Shim (C15).
 > Behoben in W4: Imports auf `modules.radio.*`.
+>
+> **Abbau 2026-09-21:** `modules/dab.py|fm.py|scanner.py` und Root-`avrcp_trigger.py`
+> entfernt; Imports auf `modules.radio.*` / `integration.avrcp_trigger` umgestellt.
+> Verbleibender Entry-Shim: nur `webui.py` → `web/app.py`.
 
 **Toter Code (keine Importer):**
 - `modules/bluetooth_impl.py` — 3 Zeilen, nie genutzt

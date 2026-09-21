@@ -9,8 +9,9 @@ from menu.menu_model import build_tree
 from modules import source_state
 from modules import (
     wifi, bluetooth, audio, system as sys_mod,
-    webradio, dab, fm, scanner, update, favorites
+    webradio, update, favorites
 )
+from modules.radio import dab, fm, scanner
 
 
 # ── Scan-Guards (werden von main_core.py per _set_radio_guards() gesetzt) ────

@@ -22,8 +22,9 @@ from menu.menu_model import MenuNode, MenuState, StationStore, build_tree
 from modules import source_state
 from modules import (
     wifi, bluetooth, audio, system as sys_mod,
-    webradio, dab, fm, scanner, update, favorites
+    webradio, update, favorites
 )
+from modules.radio import dab, fm, scanner
 from modules.platform import CAPS
 
 logger = log.setup("core")

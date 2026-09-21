@@ -9,8 +9,8 @@ SCHNITTSTELLENBESCHREIBUNG (v0.9.29)
 
     main_core.py        → get_mpv_args(), set_output(), apply_startup_volume(),
                           volume_up(), volume_down(), is_radio_source()
-    modules/dab.py      → get_mpv_args(settings, source="dab")
-    modules/fm.py       → get_mpv_args(settings, source="fm")
+    modules/radio/dab.py → get_mpv_args(settings, source="dab")
+    modules/radio/fm.py  → get_mpv_args(settings, source="fm")
     modules/webradio.py → get_mpv_args(settings, source="webradio")
     modules/bluetooth.py→ get_mpv_args(settings, source="bt_auto_reconnect")
     webui.py            → read_last_decision_file(), get_sink_volume(),

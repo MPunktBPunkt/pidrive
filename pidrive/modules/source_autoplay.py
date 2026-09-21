@@ -87,12 +87,12 @@ def run_autoplay(source: str, S: dict, settings: dict, store,
     try:
         stop_all()
         if src == "fm":
-            from modules import fm
+            from modules.radio import fm
             ok = fm.play_station(station, S, settings) is not False
             if ok:
                 source_state.commit_source("fm")
         elif src == "dab":
-            from modules import dab
+            from modules.radio import dab
             name = station.get("name", "")
             sid = station.get("service_id", "")
             result = dab.play_by_name(name, S, settings=settings, service_id=sid)

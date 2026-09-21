@@ -46,19 +46,20 @@ pidrive/
 └── settings.py         ← scanner_gain, ppm, scanner_pmr_*
 ```
 
-Compat-Shim (nur Alt-Imports): `modules/scanner.py` → `modules/radio/scanner.py`.
+Kanonischer Pfad: `modules/radio/scanner.py` (keine Compat-Shims mehr).
 
 | Thema | Primärdatei | Einstieg |
 |-------|-------------|----------|
 | Kanaltabellen PMR/Freenet/… | `scanner.py` | `PMR446_CHANNELS`, `BANDS` |
 | Einmal-Scan / next/prev | `scanner.py` + `td_scanner.py` | `scan_next:pmr446` |
 | Kanal hören | `scanner.py` | `set_channel` / `play_freq` → `rtl_fm -M fm` |
-| FFT / Peak-Detektion | `spectrum.py` | `ChannelAnalyzer.watch_channels` |
+| FFT / Peak-Detektion | `spectrum.py` | `SpectrumWatcher.watch_channels` |
 | Dauer-Detektor | `scanner.py` | `_pmr_monitor_loop`, `start_pmr_monitor` |
-| USB freigeben | `rtlsdr.py` | `usb_reset()`, `_find_rtl_sysfs_path` |
+| USB freigeben / Owner | `rtlsdr.py` | `recover_busy_device`, `request_owner`, `find_rtl_processes` |
 | Quellen-Spiegel | `source_state.py` | `begin_transition` / `rtl_capture_gate` |
 | CLI | `cli/cli.py` | `scanner monitor …`, `spectrum scan` |
 | Web Capture | `web/app.py` | `api_spectrum_capture` (`preempt_monitor`) |
+| Review-Maßnahmen | [`SCANNER-REVIEW-MASSNAHMEN.md`](SCANNER-REVIEW-MASSNAHMEN.md) | P0–P3 Abschluss |
 
 ---
 

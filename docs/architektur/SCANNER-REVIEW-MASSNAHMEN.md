@@ -1,6 +1,7 @@
 # Scanner / PMR446 — Review-Nachbewertung und Maßnahmen
 
-Stand: 2026-09-21 · Grundlage: GPT-Reviews (7+5+4) gegen Live-Betrieb und Code
+Stand: 2026-09-21 · Grundlage: GPT-Reviews (7+5+4) gegen Live-Betrieb und Code  
+**Abschluss Status:** P0–P3 umsetzbar **erledigt**; optionaler Mehrprozess-IQ-Streamer bewusst offen.
 
 Dieses Dokument filtert die Review-Ergebnisse gegen den tatsächlichen Code und die
 beobachteten Live-Symptome (viele `peek` ~18–20 dB, `hits=0`, Capture-/Timeout-Loops,
@@ -10,22 +11,19 @@ mehrere Sekunden Audio-Delay).
 
 ## Kurzfazit
 
-Die Reviews sind **weitgehend treffend**. Die drei Realprobleme
+Die Reviews waren **weitgehend treffend**. Die drei Realprobleme
 
 1. keine Hits trotz Nahfeld-Senden,
 2. späte Hörbarkeit nach Autotune,
 3. RTL-Busy / Recovery-Loops
 
-sind **kein Zufall aus drei getrennten Bugs**, sondern hängen zusammen:
+hingen zusammen und sind im Code adressiert:
 
-| Symptom | Hauptursache(n) |
-|---------|-----------------|
-| Kein Hit | FFT-Mismatch (echt), Trigger 25 dB (Tuning), pro-Frame-`rtl_sdr` (Architektur) |
-| Audio-Delay | `watch_seconds≈2` ohne Early-Exit, feste Sleeps, Prozessstart `rtl_fm`/`mpv` |
-| Stick-Hänger | Viele kurze `rtl_sdr`-Opens + verteilte Recovery/`pkill`-Pfade |
-
-**Nicht** alles aus den Reviews ist P0: Ownership-Rewrite, persistenter Streaming-Reader
-und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose-Fixes.
+| Symptom | Hauptursache(n) | Status |
+|---------|-----------------|--------|
+| Kein Hit | FFT-Mismatch, Trigger 25 dB, pro-Frame-`rtl_sdr` | FFT/Block/Early-Exit behoben; Trigger konfigurierbar (Feld-Tuning) |
+| Audio-Delay | langes Watch ohne Early-Exit, Sleeps, `rtl_fm`/`mpv`-Start | Watch kürzer, Early-Exit, Sleep-Audit |
+| Stick-Hänger | viele Opens + verteilte Recovery; später verwaiste `rtl_sdr`-Streams | zentrale Recovery + Busy erkennt `rtl_sdr` + hartes Stream-Close |
 
 ---
 
@@ -33,102 +31,101 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 
 | Claim | Status | Ort |
 |-------|--------|-----|
-| Profil-FFT 2048 vs. Processor 512 | **echter Bug** (behoben) | `spectrum.watch_channels` / `build_default_watcher` |
-| `scan_next`/`scan_prev` ohne Return | **echter Bug** (behoben) | `scanner.py` → `td_scanner` sah immer „kein Treffer“ |
-| Monitor-Trigger 25 dB | Design/Tuning | Live: Peeks ~18–20 dB → unter Trigger |
-| Einzelcapture pro Frame | Designschwäche | `RTLSDRBackend.capture_iq` |
-| Hold braucht `refresh_transition` | korrekt / getestet | Hold 15 s > Stale 12 s |
+| Profil-FFT 2048 vs. Processor 512 | **Bug behoben** | `spectrum.watch_channels` / `build_default_watcher` |
+| `scan_next`/`scan_prev` ohne Return | **Bug behoben** | `scanner.py` → `td_scanner` |
+| Monitor-Trigger 25 dB | Design/Tuning | Live oft Peeks ~18–20 dB → unter Trigger (absenkbar) |
+| Einzelcapture pro Frame | durch Block + Stream ersetzt | `RTLSDRBackend` / `StreamingRtlReader` |
+| Hold braucht `refresh_transition` | korrekt | Hold 15 s > Stale 12 s |
 | `play_freq` schon low-latency | bestätigt | mpv-Cache/Buffer bereits knapp |
-| WebUI Poll ~2 s verstärkt Delay-Eindruck | UX | `index.html` |
-| Preemption / Status „running ≠ produktiv“ | gültig | Monitor-Loop |
+| WebUI Poll verstärkt Delay-Eindruck | UX | `index.html` (Poll 1 s + Peek-Markierung) |
+| Preemption / Status „running ≠ produktiv“ | gültig | `monitor_effective_state` |
 
 ---
 
-## Priorisierte Maßnahmen
+## Priorisierte Maßnahmen — Abschluss
 
-### P0 — sofort (Detektion / Korrektheit)
+### P0 — Detektion / Korrektheit — erledigt
 
-1. **FFT-Size an Profil koppeln** — erledigt.
-2. **`scan_next` / `scan_prev` Rückgabe** — erledigt.
-3. **Diagnose-Mindestsatz** — erledigt.
-4. **Trigger testweise absenkbar** — erledigt.
+1. FFT-Size an Profil koppeln  
+2. `scan_next` / `scan_prev` Rückgabe  
+3. Diagnose-Mindestsatz (peek/activity/error/latenz)  
+4. Trigger testweise absenkbar (`scanner_pmr_trigger_on_db`, CLI `--trigger-on`)
 
-### P1 — kurzfristig (Latenz + Robustheit)
+### P1 — Latenz + Robustheit — erledigt
 
-5. **Early-Exit** — erledigt.
-6. **Watch-Fenster konfigurierbar** — erledigt (`scanner_pmr_watch_s`, Default 1.0 s).
-7. **Pro-Watch-IQ-Block** — erledigt.
-8. **Sleep-Audit** — erledigt (Start/Preempt/Listen-Ende verkürzt).
-9. **WebUI Debug / preempt-Schalter** — erledigt.
+5. Early-Exit  
+6. Watch-Fenster konfigurierbar (`scanner_pmr_watch_s`)  
+7. Pro-Watch-IQ-Block  
+8. Sleep-Audit  
+9. WebUI Debug / preempt-Schalter  
 
-### P2 — mittelfristig (Ownership)
+### P2 — Ownership / Recovery — erledigt
 
-10. **Recovery zentral** — erledigt (`rtlsdr.recover_busy_device`).
-11. **Reset-Cooldown** — erledigt (60 s).
-12. **`scan_next` Audio nach Transition** — erledigt (`autoplay=False` + play im Trigger).
+10. Recovery zentral (`rtlsdr.recover_busy_device`)  
+11. Reset-Cooldown (60 s)  
+12. `scan_next` Audio nach Transition  
 
-### P3 — später / angelaufen
+### P3 — angelaufen / abgeschlossen wo sinnvoll
 
-13. Persistenter IQ-/Owner-Service — **angelaufen**:
-    - Cross-Process Soft-Owner (`/tmp/pidrive_rtlsdr_owner.json`) via
-      `request_owner` / `release_owner` / `announce_owner` / `get_owner`
-    - In-Prozess-Lease bleibt (`claim_capture` = Alias)
-    - `StreamingRtlReader` + `watch_channels` Prefer-Stream (Fallback Block;
-      ab `PIDRIVE_SPECTRUM_STREAM=0`)
-    - Scanner-Audio und PMR-Monitor an Owner-API angebunden
-    - Noch offen: echter persistenter Mehrprozess-IQ-Streamer (ein Prozess,
-      Clients abonnieren)
-14. Nachbarkanal-/Best-Channel-Tuning — erledigt (`ActivityTracker` unterdrückt schwächere Nachbarn) + Tests.
-15. E2E-Integrationstests mit Mock-RTL — erledigt (`tests/unit/test_pmr_e2e.py`).
+13. Soft-Owner + Streaming-Watch — **erledigt als praktikabler Schritt**:
+    - `/tmp/pidrive_rtlsdr_owner.json` (`request_owner` / `release_owner` / `announce_owner`)
+    - In-Prozess-Lease (`claim_capture`)
+    - `StreamingRtlReader` (Prefer-Stream, Fallback Block; `PIDRIVE_SPECTRUM_STREAM=0` schaltet ab)
+    - Busy-Erkennung inkl. `rtl_sdr`, hartes Process-Group-Kill, Recover bei Capture-Timeout
+    - **bewusst offen:** echter persistenter Mehrprozess-IQ-Streamer (ein Daemon, Clients abonnieren)
+14. Nachbarkanal-/Best-Channel-Tuning — erledigt  
+15. E2E-Mock-Tests — erledigt (`tests/unit/test_pmr_e2e.py`)
 
-Zusätzlich behoben: sticky-`/tmp` Schreibfehler für `source_state.json` (WebUI blieb bei Kanalwahl auf `idle`).
+Zusätzlich behoben (nicht in den originalen Review-P0ern, aber Betriebs-kritisch):
+
+- sticky-`/tmp`-Schreibfehler (`source_state.json`, `spectrum.json`)  
+- verwaiste `rtl_sdr`-Streams → Spektrum `usb_claim_interface -6`  
+- Peek unter Trigger in der WebUI sichtbar markieren  
 
 ---
 
-## Empfohlene Umsetzungsreihenfolge
+## Checkliste
 
 ```
 [x] FFT-Mismatch
 [x] scan_next/prev Return
 [x] Peek/Activity/Error-Metriken + Zeitstempel (Status/API)
-[x] Trigger konfigurierbar + Feldtest A (nur Erkennung)
-[x] Early-Exit + kürzeres Watch (Feldtest B Latency)
-[x] Block-Capture pro Watch (Feldtest C Stick-Stabilität)
-[x] UI-Debugblock
-[x] Watch-Fenster konfigurierbar / Sleep-Audit
-[x] preempt_monitor UI-Schalter
-[x] Recovery zentralisieren (`rtlsdr.recover_busy_device`) + Reset-Cooldown
+[x] Trigger konfigurierbar
+[x] Early-Exit + kürzeres Watch
+[x] Block-Capture pro Watch
+[x] UI-Debugblock / preempt_monitor
+[x] Watch-Fenster / Sleep-Audit
+[x] Recovery zentral + Reset-Cooldown
 [x] scan_next Audio erst nach Transition
-[x] Capture-Lease (`claim_capture`/`release_capture`) — erster Owner-Schritt
-[x] Cross-Process Owner-Datei + StreamingRtlReader (Watch Early-Exit live)
-[x] Nachbarkanal-/Best-Channel-Tuning
-[x] E2E-Integrationstests Mock-RTL (`test_pmr_e2e.py`)
+[x] Capture-Lease + Cross-Process Owner-Datei
+[x] StreamingRtlReader (Watch Early-Exit live) + Orphan-Fixes
+[x] Nachbarkanal-Tuning
+[x] E2E-Mock-Tests
 [ ] Persistenter Mehrprozess-IQ-Streamer (optional, später)
 ```
 
 ---
 
-## Feldtest (kurz)
+## Feldtest (weiterhin empfohlen)
 
-**A — Erkennung:** `scanner monitor start --no-tune`, 10× 3 s senden → `peek_count` vs. `activity_count`, `last_peek_relative_db`.  
+**A — Erkennung:** `scanner monitor start --no-tune`, Trigger ggf. 18–20 dB, 10× senden → peek vs. activity.  
 **B — Latenz:** Autotune an → Diffs `activity_ts − watch_started`, `audio_started − activity`.  
-**C — Stick:** 10–15 min Monitor + Snapshot mit/ohne Preempt → `capture_error_streak`, `usb_reset_count`.
-
-Details: Design in den GPT-Folge-Reviews (Mess-/UI-/Ownership-Design) — hier bewusst auf Umsetzbares verdichtet.
+**C — Stick:** 10–15 min Monitor + Spektrum-Snapshot → keine Orphans (`ps aux | grep rtl_sdr` zwischen Watches leer), `capture_error_streak` niedrig.
 
 ---
 
-## Was bewusst *nicht* sofort angefasst wird
+## Bewusst nicht angefasst
 
-- Kompletter Ownership-Rewrite vor Block-Capture (würde Symptome ohne Root-Fix umbauen).
-- Aggressive Trigger-Absenkung ohne Diagnose (erschwert Vergleich vorher/nachher).
-- mpv-Feintuning (Latenz sitzt überwiegend vor Audio-Start).
+- Kompletter Ownership-Rewrite als eigener Service vor den Detektionsfixes (überholt durch Soft-Owner + Stream).  
+- Aggressive Absenkung des **Default**-Triggers ohne Feldvergleich (Default bleibt 25 dB).  
+- mpv-Feintuning (Latenz sitzt überwiegend vor Audio-Start).  
 
 ---
 
 ## Bezug
 
-- Architektur: [`SCANNER-PMR.md`](SCANNER-PMR.md)
-- Betrieb: [`../betrieb/PMR-MONITOR.md`](../betrieb/PMR-MONITOR.md)
-- State: [`ZUSTANDSMASCHINE.md`](ZUSTANDSMASCHINE.md)
-- Tests: `tests/unit/test_source_spectrum_pmr.py`, `tests/unit/test_pmr_e2e.py`
+- Architektur: [`SCANNER-PMR.md`](SCANNER-PMR.md)  
+- Betrieb: [`../betrieb/PMR-MONITOR.md`](../betrieb/PMR-MONITOR.md)  
+- State: [`ZUSTANDSMASCHINE.md`](ZUSTANDSMASCHINE.md)  
+- Compat-Shims abgebaut: siehe [`DEVELOPER_GUIDE.md`](DEVELOPER_GUIDE.md) § Compat  
+- Tests: `tests/unit/test_source_spectrum_pmr.py`, `tests/unit/test_pmr_e2e.py`  

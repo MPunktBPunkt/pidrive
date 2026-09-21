@@ -33,6 +33,10 @@ Hilfe: `pidrivectl scanner monitor -h` · `pidrivectl scanner monitor start -h`
 | `/var/log/pidrive/pmr_monitor.jsonl` | Event-Log (`peek`, `activity`, `tuned`, `error`, `usb_reset`, …) |
 
 WebUI: Scanner-Tab zeigt Monitor-Status + Debugzeile; Trigger-dB einstellbar.
+Peek unter Trigger markiert den Kanal (grün), Activity erst ab `trigger_on_db`.
+
+Review-Maßnahmen P0–P3: [`../architektur/SCANNER-REVIEW-MASSNAHMEN.md`](../architektur/SCANNER-REVIEW-MASSNAHMEN.md)
+(umsetzbar erledigt; optional offen: persistenter Mehrprozess-IQ-Streamer).
 
 ## Settings (`config/settings.json`)
 
