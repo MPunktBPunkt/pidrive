@@ -184,6 +184,24 @@ BANDS = {
         },
         "bw": 200000,
         "label": "FM/UKW",
+        "modulation": "wbfm",
+        "audio_profile": "broadcast_fm",
+    },
+    "airband": {
+        "band": {
+            "min": 118.000,
+            "max": 136.975,
+            "start": 121.500,
+            "step_fine": 0.025,
+            "step_coarse": 1.0,
+            "step": 0.025,
+            "label": "Airband (118-136.975 MHz)",
+            "short": "AIR",
+        },
+        "bw": 10000,
+        "label": "Airband",
+        "modulation": "am",
+        "audio_profile": "airband_voice",
     },
 }
 
@@ -256,6 +274,29 @@ def _get_pmr_monitor_gain(settings=None):
     if g < 0:
         return PMR_MONITOR_DEFAULT_GAIN
     return g
+
+
+def _get_band_runtime(band_id: str) -> dict:
+    """Zentrale Band-Metadaten für Audio/Scan (Modulation nicht aus BW raten)."""
+    entry = BANDS.get(str(band_id or "").lower()) or {}
+    bw = int(entry.get("bw") or 25000)
+    mod = str(entry.get("modulation") or "").lower().strip()
+    if mod not in ("am", "fm", "wbfm"):
+        mod = "wbfm" if bw >= 150000 else "fm"
+    profile = str(entry.get("audio_profile") or "").strip()
+    if not profile:
+        if mod == "wbfm":
+            profile = "broadcast_fm"
+        elif mod == "am":
+            profile = "airband_voice"
+        else:
+            profile = "pmr_voice"
+    return {
+        "bw": bw,
+        "modulation": mod,
+        "audio_profile": profile,
+        "label": entry.get("label") or band_id,
+    }
 
 
 def _get_spectrum_enabled(settings=None):
@@ -332,7 +373,8 @@ def check_hardware(screen=None):
 
 # ── Audio / Playback ─────────────────────────────────────────────────────────
 
-def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
+def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
+              modulation=None, band_id=None, audio_profile=None):
     global _player_proc
 
     if not check_hardware():
@@ -360,11 +402,20 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
 
     _ppm = _get_ppm(settings)
     _gain = _get_gain(settings)
-    _ppm_arg = f" -p {_ppm}" if _ppm else ""
-    _gain_arg = f" -g {_gain}" if _gain != -1 else ""
 
     freq_hz = int(float(freq_mhz) * 1e6)
-    sr = max(48000, int(bandwidth_hz) * 4)
+    runtime = _get_band_runtime(band_id) if band_id else {}
+    _modulation = str(modulation or runtime.get("modulation") or "").lower()
+    _audio_profile = str(audio_profile or runtime.get("audio_profile") or "")
+    if _modulation not in ("am", "fm", "wbfm"):
+        _modulation = "wbfm" if int(bandwidth_hz) >= 150000 else "fm"
+    if not _audio_profile:
+        if _modulation == "wbfm":
+            _audio_profile = "broadcast_fm"
+        elif _modulation == "am":
+            _audio_profile = "airband_voice"
+        else:
+            _audio_profile = "pmr_voice"
 
     try:
         from modules.audio import _get_headphone_card as _ghc2
@@ -378,33 +429,34 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         except Exception:
             pass
         _device_arg = f"--audio-device=pulse/{_bt_sink}" if _bt_sink else ""
-        _sc_mpv_env    = "PULSE_SERVER=unix:/var/run/pulse/native XDG_RUNTIME_DIR=/tmp"
-        _sc_mpv_prefix = _sc_mpv_env + " "
         # Squelch aus Settings
         _sq = _get_squelch(settings)
-        _sq_arg = f" -l {_sq}" if _sq and _sq > 0 else ""
 
-        # FM-Broadcast (wbfm): andere Parameter als Schmalband-FM
+        # Explizite Modulation + Audio-Profile (Airband AM ≠ PMR FM ≠ UKW WBFM)
         _rtl_extra: list = []
         _mpv_af = None
-        if bandwidth_hz >= 150000:
-            # Wideband FM — wie fm.py: -M wbfm, fixed rates
+        if _modulation == "wbfm":
             _rtl_sr = 250000
             _out_sr = 32000
-            _modulation = "wbfm"
             _sq_eff = _sq
             _gain_eff = _gain
-        else:
-            # Schmalband (PMR etc.): 24 kHz ohne Resample, FIR, fester Gain
-            # Schwach/dünn kam von AGC + -A fast + zu niedrigem Squelch-Rauschen.
+        elif _modulation == "am":
             _rtl_sr = 24000
             _out_sr = 24000
-            _modulation = "fm"
+            _sq_eff = max(int(_sq or 0), 30)
+            _gain_eff = 36 if int(_gain) < 0 else int(_gain)
+            _rtl_extra = ["-F", "9", "-A", "std"]
+            if _audio_profile == "airband_voice":
+                _mpv_af = "lavfi=[highpass=f=300,lowpass=f=3000,volume=8dB]"
+            else:
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=8dB]"
+        else:
+            # Schmalband-FM (PMR etc.)
+            _rtl_sr = 24000
+            _out_sr = 24000
             _sq_eff = max(int(_sq or 0), 50) if bandwidth_hz <= 25000 else max(int(_sq or 0), 35)
-            # AGC (−1) auf UHF oft dünn/rauschig — feste Verstärkung
             _gain_eff = 36 if int(_gain) < 0 else int(_gain)
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
-            # Sprachband + Pegel für Monitor/Klinke
             _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3700,volume=10dB]"
 
         # Prio C: shell=True → Popen-Pipe
@@ -478,13 +530,24 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
         S["radio_type"] = "SCANNER"
         S["scanner"] = {
             "active": True,
-            "band": S.get("scanner_band", ""),
+            "band": band_id or S.get("scanner_band", ""),
             "freq": float(freq_mhz),
             "name": name,
+            "modulation": _modulation,
+            "audio_profile": _audio_profile,
             "squelch": _get_squelch(settings) if settings is not None else S.get("scanner_squelch"),
             "bandwidth_hz": int(bandwidth_hz),
             "sample_rate": int(_rtl_sr),
         }
+        if band_id:
+            S["scanner_band"] = band_id
+        if band_id == "airband" and settings is not None:
+            try:
+                settings["scanner_airband_last_freq"] = float(freq_mhz)
+                from settings import save_settings as _ss
+                _ss(settings)
+            except Exception:
+                pass
 
         if _src_state:
             try:
@@ -492,7 +555,7 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None):
             except Exception:
                 pass
 
-        log.action("Scanner", f"{name} @ {freq_mhz} MHz")
+        log.action("Scanner", f"{name} @ {freq_mhz} MHz ({_modulation})")
 
     except Exception as e:
         log.error(f"Scanner play: {e}")
@@ -891,7 +954,12 @@ def _play_channel(band_id, idx, S, settings=None):
     freq = ch.get("freq", "")
     S["scanner_band"] = band_id
     S[f"scanner_{band_id}"] = f"{name}  {freq} MHz"
-    play_freq(freq, name, BANDS[band_id]["bw"], S, settings=settings)
+    rt = _get_band_runtime(band_id)
+    play_freq(
+        freq, name, rt["bw"], S, settings=settings,
+        modulation=rt["modulation"], band_id=band_id,
+        audio_profile=rt["audio_profile"],
+    )
 
 
 def _play_band_freq(band_id, freq, S, settings=None):
@@ -904,7 +972,12 @@ def _play_band_freq(band_id, freq, S, settings=None):
     name = f"{b.get('short', band_id.upper())} {freq:.3f} MHz"
     _set_scanner_label(band_id, name, S)
     log.info(f"Scanner: PLAY_FREQ band={band_id} freq={freq}")
-    play_freq(freq, name, BANDS[band_id]["bw"], S, settings=settings)
+    rt = _get_band_runtime(band_id)
+    play_freq(
+        freq, name, rt["bw"], S, settings=settings,
+        modulation=rt["modulation"], band_id=band_id,
+        audio_profile=rt["audio_profile"],
+    )
 
 
 def set_channel(band_id: str, ch_num: int, S: dict, settings=None):
@@ -986,7 +1059,12 @@ def set_freq(band_id, freq_mhz, S, settings=None):
             bw = entry.get("bw", 12500)
             name = f"{band_id.upper()} {freq:.5f} MHz"
             _set_scanner_label(band_id, name, S)
-            play_freq(freq, name, bw, S, settings=settings)
+            rt = _get_band_runtime(band_id)
+            play_freq(
+                freq, name, bw, S, settings=settings,
+                modulation=rt["modulation"], band_id=band_id,
+                audio_profile=rt["audio_profile"],
+            )
             return
         log.warn(f"Scanner: SET_FREQ kein Band-Range: {band_id}")
         return
@@ -1038,7 +1116,12 @@ def scan_next(band_id, S, settings=None, autoplay=True):
         else:
             _set_scanner_label(band_id, ch["name"], S)
         if autoplay:
-            play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
+            rt = _get_band_runtime(band_id)
+            play_freq(
+                ch["freq"], ch["name"], b["bw"], S, settings=settings,
+                modulation=rt["modulation"], band_id=band_id,
+                audio_profile=rt["audio_profile"],
+            )
         _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
         return ch
     _write_scan_result(band_id, False)
@@ -1073,7 +1156,12 @@ def scan_prev(band_id, S, settings=None, autoplay=True):
         else:
             _set_scanner_label(band_id, ch["name"], S)
         if autoplay:
-            play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
+            rt = _get_band_runtime(band_id)
+            play_freq(
+                ch["freq"], ch["name"], b["bw"], S, settings=settings,
+                modulation=rt["modulation"], band_id=band_id,
+                audio_profile=rt["audio_profile"],
+            )
         _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
         return ch
     _write_scan_result(band_id, False)
@@ -1117,6 +1205,10 @@ _monitor_meta = {
     "preempt_source_count": 0,
     "blocked_transition_count": 0,
     "productive_scan_count": 0,
+    "stream_fallback_count": 0,
+    "stream_recover_count": 0,
+    "last_capture_mode": "",
+    "stream_stats": {},
     "trigger_on_db": PMR_MONITOR_TRIGGER_ON_DB,
     "trigger_off_db": PMR_MONITOR_TRIGGER_OFF_DB,
     "watch_s": PMR_MONITOR_WATCH_S,
@@ -1536,6 +1628,19 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
             )
             _monitor_meta["cycles"] = int(_monitor_meta.get("cycles") or 0) + 1
             idle_since_hb += 1
+            dbg = (result.debug if result else None) or {}
+            if dbg.get("capture_mode"):
+                _monitor_meta["last_capture_mode"] = dbg.get("capture_mode")
+            if dbg.get("stream_fallback"):
+                _monitor_meta["stream_fallback_count"] = (
+                    int(_monitor_meta.get("stream_fallback_count") or 0) + 1
+                )
+            if dbg.get("stream_recovered"):
+                _monitor_meta["stream_recover_count"] = (
+                    int(_monitor_meta.get("stream_recover_count") or 0) + 1
+                )
+            if isinstance(dbg.get("stream_stats"), dict):
+                _monitor_meta["stream_stats"] = dict(dbg["stream_stats"])
 
             best = result.best_candidate if result else None
             found = bool(result and result.found and best)

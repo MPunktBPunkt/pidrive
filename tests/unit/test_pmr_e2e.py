@@ -405,3 +405,62 @@ def test_scan_setch_commits_scanner_source(tmp_path, monkeypatch):
     assert ran
     assert ss.current_source() == "scanner"
     assert S.get("scanner_band") == "pmr446"
+
+
+def test_band_runtime_airband_is_am():
+    rt = scanner._get_band_runtime("airband")
+    assert rt["modulation"] == "am"
+    assert rt["audio_profile"] == "airband_voice"
+    assert 118.0 <= scanner.BANDS["airband"]["band"]["min"] <= 121.5
+    assert scanner.BANDS["airband"]["band"]["max"] >= 136.9
+    assert scanner._get_band_runtime("fm")["modulation"] == "wbfm"
+    assert scanner._get_band_runtime("pmr446")["modulation"] in ("fm", "")
+
+
+def test_stream_fallback_recovers_only_when_busy(monkeypatch):
+    recover_calls = []
+
+    class BoomStream:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read_u8_iq(self, sample_count):
+            raise RuntimeError("stream short read (0/4096 bytes)")
+
+    monkeypatch.setattr(sp, "StreamingRtlReader", BoomStream)
+    monkeypatch.setenv("PIDRIVE_SPECTRUM_STREAM", "1")
+    monkeypatch.setattr(rtlsdr, "is_busy", lambda: False)
+    monkeypatch.setattr(
+        rtlsdr,
+        "recover_busy_device",
+        lambda **k: recover_calls.append(k) or {"ok": True},
+    )
+
+    class BlockBackend(sp.RTLSDRBackend):
+        def capture_iq(self, center_hz, sample_rate, sample_count):
+            return _iq_noise(sample_count)
+
+    watcher = sp.SpectrumWatcher(
+        BlockBackend(),
+        sp.FFTProcessor(fft_size=512, smoothing_alpha=0.35),
+        sp.NoiseEstimator(quantile=0.20),
+    )
+    profile = dc.replace(
+        sp.PMR446_PROFILE,
+        channels=list(sp.PMR446_PROFILE.channels[:4]),
+        watch_seconds=0.2,
+        min_active_frames=1,
+        trigger_on_db=40.0,
+    )
+    result = watcher.watch_channels(profile, debug=True)
+    assert result.debug.get("capture_mode") == "block"
+    assert result.debug.get("stream_fallback") is True
+    assert result.debug.get("stream_recovered") is False
+    assert recover_calls == []
+    assert int(sp.stream_stats_snapshot().get("fallbacks") or 0) >= 1

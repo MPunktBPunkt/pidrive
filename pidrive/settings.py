@@ -58,6 +58,7 @@ _DEFAULTS = {
     "scanner_pmr_trigger_on_db":  25.0,  # Monitor: Hit-Schwelle (relativ Noise); Lab oft 16–20
     "scanner_pmr_trigger_off_db": 14.0,  # Monitor: Hysterese unter Trigger
     "scanner_pmr_watch_s":       1.0,   # Watch-Fenster pro Zyklus (0.6–2.5; fast≈1.0)
+    "scanner_airband_last_freq": 121.5, # letzter Airband-Empfang (MHz)
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

@@ -311,6 +311,17 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
     </div>
   </div>
   <div class="scan-card">
+    <h4>Airband AM — 118–136.975 MHz</h4>
+    <div class="scan-row">
+      <span class="scan-label">Freq MHz</span>
+      <input type="number" id="scAirFreq" step="0.025" min="118" max="136.975" value="121.5" placeholder="121.500">
+      <button class="btn primary" onclick="scanAirband()">▶ Start</button>
+      <button class="btn" onclick="sendCmd('scan_next:airband')" title="+25 kHz">▶</button>
+      <button class="btn" onclick="sendCmd('scan_prev:airband')" title="−25 kHz">◀</button>
+    </div>
+    <div class="pmr-status" style="margin-top:4px;font-size:11px;opacity:.85">AM via rtl_fm · Emergency 121.500</div>
+  </div>
+  <div class="scan-card">
     <h4>PMR446 — 16 Kanäle</h4>
     <div class="pmr-grid" id="pmrGrid"></div>
     <label class="pmr-opt" title="Spektrum scannen, bei Aktivität auf den Kanal schalten, danach weiter scannen">
@@ -376,7 +387,7 @@ function switchTab(name) {
     p.classList.toggle('active', p.id === 'tab-' + name));
   if (name === 'playlist') { loadPlaylist('today'); startPlPoll(); }
   else stopPlPoll();
-  if (name === 'scanner') { renderPmrGrid(); startPmrBackendPoll(); }
+  if (name === 'scanner') { renderPmrGrid(); loadAirbandLastFreq(); startPmrBackendPoll(); }
   else { stopPmrWatch(); stopPmrBackendPoll(); }
 }
 
@@ -531,6 +542,12 @@ async function syncPmrBackendStatus() {
         parts.push('detect=' + st.last_detect_latency_ms + 'ms');
       if (st.productive_scan_age_s != null)
         parts.push('scan_age=' + st.productive_scan_age_s + 's');
+      if (st.last_capture_mode)
+        parts.push('cap=' + st.last_capture_mode);
+      if (st.stream_fallback_count)
+        parts.push('stream_fb=' + st.stream_fallback_count);
+      if (st.stream_stats && st.stream_stats.short_reads)
+        parts.push('short_rd=' + st.stream_stats.short_reads);
       dbg.textContent = parts.length ? parts.join(' · ') : '';
     }
     const acts = ((j && j.log) || []).filter(e => e && e.event === 'activity');
@@ -732,6 +749,24 @@ function playFM() {
 function scanFm() {
   const f = document.getElementById('scFmFreq').value;
   if (f) { sendCmd('scan_setfreq:fm:' + f); showToast('Scanner FM ' + f); switchTab('player'); }
+}
+function scanAirband() {
+  const f = document.getElementById('scAirFreq').value;
+  if (f) {
+    sendCmd('scan_setfreq:airband:' + f);
+    showToast('Airband AM ' + f + ' MHz');
+    switchTab('player');
+  }
+}
+async function loadAirbandLastFreq() {
+  const el = document.getElementById('scAirFreq');
+  if (!el) return;
+  try {
+    const r = await fetch('/api/scanner/settings');
+    const j = await r.json();
+    if (j.ok && j.data && j.data.scanner_airband_last_freq != null)
+      el.value = j.data.scanner_airband_last_freq;
+  } catch (e) { /* default belassen */ }
 }
 
 function escAttr(s) {

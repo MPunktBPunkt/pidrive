@@ -359,3 +359,23 @@ Echter Treffer sieht z. B. so aus:
 | [`../betrieb/SPECTRUM-CLI.md`](../betrieb/SPECTRUM-CLI.md) | UKW spectrum CLI |
 | [`../betrieb/TROUBLESHOOTING.md`](../betrieb/TROUBLESHOOTING.md) | authorized=0, Diagnose-Write |
 | [`SCANNER-REVIEW-MASSNAHMEN.md`](SCANNER-REVIEW-MASSNAHMEN.md) | Review-Nachbewertung, P0–P3 |
+
+---
+
+## 13. Airband (AM) — Phase 1
+
+Manueller Empfang im Band **118.000–136.975 MHz** mit expliziter Modulation `am`.
+
+| | |
+|--|--|
+| Band-ID | `airband` in `scanner.BANDS` |
+| Modulation | `rtl_fm -M am` via `play_freq(..., modulation="am")` |
+| Schritt | 25 kHz (`next`/`prev`) |
+| Startfrequenz | 121.500 (Emergency) |
+| CLI | `pidrivectl scanner airband freq 121.500` / `next` / `prev` |
+| Trigger | `scan_setfreq:airband:<mhz>`, `scan_next:airband`, `scan_prev:airband` |
+| WebUI | Scanner-Tab → Airband-Karte |
+| Setting | `scanner_airband_last_freq` |
+
+**Nicht in Phase 1:** Presets, Raster-Scan, Airband-Monitor.  
+Zentrale Runtime-Hilfe: `scanner._get_band_runtime(band_id)` → `modulation` / `audio_profile` / `bw`.

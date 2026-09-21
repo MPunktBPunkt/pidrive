@@ -101,7 +101,11 @@ Zusätzlich behoben (nicht in den originalen Review-P0ern, aber Betriebs-kritisc
 [x] StreamingRtlReader (Watch Early-Exit live) + Orphan-Fixes
 [x] Nachbarkanal-Tuning
 [x] E2E-Mock-Tests
+[x] CLI/Trigger explizit: watch + trigger_on/off durchreichen + Start-Log
+[x] Stream-Fallback: Recovery nur bei busy + Stream-Telemetrie
+[x] Airband Phase 1: AM-Modulation + CLI/Trigger/WebUI manuell
 [ ] Persistenter Mehrprozess-IQ-Streamer (optional, später)
+[ ] Airband Phase 2+: Presets / Scan / Monitor
 ```
 
 ---

@@ -44,6 +44,29 @@ except Exception as _e:
 
 SPECTRUM_FILE = "/tmp/pidrive_spectrum.json"
 
+# Stream-/Fallback-Telemetrie (Prozess-lokal, für Monitor/Debug)
+_STREAM_STATS = {
+    "sessions": 0,
+    "failures": 0,
+    "fallbacks": 0,
+    "short_reads": 0,
+    "recoveries": 0,
+    "last_error": "",
+}
+
+
+def stream_stats_snapshot() -> dict:
+    return dict(_STREAM_STATS)
+
+
+def _stream_stat_inc(key: str, error: str = "") -> None:
+    try:
+        _STREAM_STATS[key] = int(_STREAM_STATS.get(key) or 0) + 1
+        if error:
+            _STREAM_STATS["last_error"] = str(error)[:160]
+    except Exception:
+        pass
+
 
 # ============================================================================
 # v0.10.0: Pi 3B Ressourcen-Guards
@@ -548,6 +571,7 @@ class StreamingRtlReader:
                 continue
             buf.extend(chunk)
         if len(buf) < need:
+            _stream_stat_inc("short_reads", f"short {len(buf)}/{need}")
             raise RuntimeError(
                 f"stream short read ({len(buf)}/{need} bytes) — Device hängt?"
             )
@@ -880,6 +904,8 @@ class SpectrumWatcher:
         early_exit = False
         capture_mode = "block"
         stream_error = ""
+        stream_recovered = False
+        stream_fallback = False
 
         debug_frames: list[dict[str, Any]] = []
         debug_scores: list[dict[str, Any]] = []
@@ -959,6 +985,7 @@ class SpectrumWatcher:
                     read_timeout_s=max(3.0, float(watch_s) + 2.0),
                 ) as reader:
                     capture_mode = "stream"
+                    _stream_stat_inc("sessions")
                     # Watch-Fenster erst nach erstem Frame (rtl_sdr-Startup zählt nicht)
                     armed = False
                     deadline = 0.0
@@ -982,6 +1009,7 @@ class SpectrumWatcher:
                     raise RuntimeError("stream: keine Frames")
             except Exception as e:
                 stream_error = str(e)[:160]
+                stream_fallback = True
                 capture_mode = "block"
                 frames_processed = 0
                 early_exit = False
@@ -990,15 +1018,21 @@ class SpectrumWatcher:
                 bin_map_cached = None
                 tracker = ActivityTracker(profile)
                 started = time.time()
-                # Stream-Fehler oft = verwaister/hängender Stick → vor Block freigeben
-                if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
-                    try:
-                        _rtlsdr.recover_busy_device(
-                            reason="stream_fallback", level="hard"
-                        )
-                        time.sleep(0.3)
-                    except Exception:
-                        pass
+                _stream_stat_inc("failures", stream_error)
+                _stream_stat_inc("fallbacks", stream_error)
+                # Reader.close() räumt nur den eigenen Prozess auf.
+                # Systemweite Recovery nur wenn Stick danach noch busy.
+                if _rtlsdr and hasattr(_rtlsdr, "is_busy") and _rtlsdr.is_busy():
+                    if hasattr(_rtlsdr, "recover_busy_device"):
+                        try:
+                            _rtlsdr.recover_busy_device(
+                                reason="stream_fallback", level="hard"
+                            )
+                            stream_recovered = True
+                            _stream_stat_inc("recoveries")
+                            time.sleep(0.3)
+                        except Exception:
+                            pass
 
         if capture_mode == "block":
             raw = self.backend.capture_iq(
@@ -1043,6 +1077,9 @@ class SpectrumWatcher:
                 "early_exit": bool(early_exit),
                 "capture_mode": capture_mode,
                 "stream_error": stream_error or None,
+                "stream_fallback": bool(stream_fallback),
+                "stream_recovered": bool(stream_recovered),
+                "stream_stats": stream_stats_snapshot(),
                 "block_samples": int(block_samples),
                 "hop_samples": int(hop_samples),
                 "frames": debug_frames if debug else [],

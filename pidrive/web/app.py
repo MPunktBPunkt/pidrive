@@ -755,6 +755,7 @@ def api_scanner_settings():
                     "scanner_pmr_trigger_on_db":  s.get("scanner_pmr_trigger_on_db", 25.0),
                     "scanner_pmr_trigger_off_db": s.get("scanner_pmr_trigger_off_db", 14.0),
                     "scanner_pmr_watch_s":        s.get("scanner_pmr_watch_s", 1.0),
+                    "scanner_airband_last_freq":  s.get("scanner_airband_last_freq", 121.5),
                     "scanner_gain":           s.get("scanner_gain", -1),
                     "scanner_squelch":        s.get("scanner_squelch", 25),
                     "ppm_correction":         s.get("ppm_correction", 0),
@@ -767,7 +768,7 @@ def api_scanner_settings():
         for key in ("scanner_use_spectrum", "scanner_spectrum_debug",
                     "scanner_pmr_autotune", "scanner_pmr_hold_s",
                     "scanner_pmr_trigger_on_db", "scanner_pmr_trigger_off_db",
-                    "scanner_pmr_watch_s",
+                    "scanner_pmr_watch_s", "scanner_airband_last_freq",
                     "scanner_gain", "scanner_squelch"):
             if key in body:
                 if key == "scanner_pmr_autotune":

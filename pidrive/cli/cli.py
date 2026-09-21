@@ -213,6 +213,9 @@ def main():
   pidrivectl scanner monitor status        PMR446 Dauer-Detektor Status
   pidrivectl scanner monitor start         Detektor starten (optional Autotune)
   pidrivectl scanner monitor start --no-tune  nur loggen, nicht umschalten
+  pidrivectl scanner airband freq 121.500  Airband AM manuell
+  pidrivectl scanner airband next          Airband +25 kHz
+  pidrivectl scanner airband prev          Airband −25 kHz
   pidrivectl scanner monitor start --trigger-on 18  Lab: niedrigere Hit-Schwelle
   pidrivectl scanner monitor stop
   pidrivectl scanner monitor log -n 40     letzte Activity-Events
@@ -375,7 +378,7 @@ Flags (vor dem Befehl angeben):
     # scanner ohne Subcommand → Status
     p_sc_band = sc_sub.add_parser("band", help="Band-Kommando (intern)")
     # scanner BAND scan|ch|freq|next|prev
-    for _scb in ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]:
+    for _scb in ["pmr446","freenet","lpd433","vhf","uhf","cb","fm","airband"]:
         _p = sc_sub.add_parser(_scb)
         _sc_sub2 = _p.add_subparsers(dest="sc_action")
         _p_scan = _sc_sub2.add_parser("scan")
@@ -1723,7 +1726,7 @@ Flags (vor dem Befehl angeben):
         sc_cmd = getattr(args, "sc_cmd", None)
         sc_action = getattr(args, "sc_action", None)
 
-        BANDS = ["pmr446","freenet","lpd433","vhf","uhf","cb","fm"]
+        BANDS = ["pmr446","freenet","lpd433","vhf","uhf","cb","fm","airband"]
 
         if sc_cmd is None or sc_cmd == "status":
             # scanner / scanner status

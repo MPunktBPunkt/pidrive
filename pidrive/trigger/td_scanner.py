@@ -81,17 +81,37 @@ def handle(cmd, menu_state, store, S, settings, bg):
                 hold = float(hold)
             except Exception:
                 hold = 15.0
+            try:
+                watch_s = float(settings.get("scanner_pmr_watch_s", 1.0))
+            except Exception:
+                watch_s = 1.0
+            try:
+                trigger_on = float(settings.get("scanner_pmr_trigger_on_db", 25.0))
+            except Exception:
+                trigger_on = 25.0
+            try:
+                trigger_off = float(settings.get("scanner_pmr_trigger_off_db", 14.0))
+            except Exception:
+                trigger_off = 14.0
             ok = scanner.start_pmr_monitor(
                 S, settings, band_id="pmr446",
                 autotune=autotune, hold_s=hold,
+                watch_s=watch_s,
+                trigger_on_db=trigger_on,
+                trigger_off_db=trigger_off,
             )
             log.info(
                 f"pmr_monitor_start: {'ok' if ok else 'already_running'} "
-                f"autotune={autotune}"
+                f"autotune={autotune} hold={hold} watch={watch_s} "
+                f"trigger_on={trigger_on} trigger_off={trigger_off}"
             )
             ipc.write_progress(
                 "PMR-Monitor",
-                "Aktiv" if ok or scanner.is_pmr_monitor_running() else "Fehler",
+                (
+                    f"on={trigger_on:g}dB watch={watch_s:g}s"
+                    if ok or scanner.is_pmr_monitor_running()
+                    else "Fehler"
+                ),
                 color="green" if ok or scanner.is_pmr_monitor_running() else "orange",
             )
             _time_mod.sleep(1.2)
@@ -157,9 +177,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     return
                 try:
                     S["scanner_band"] = b
-                    bw = (scanner.BANDS.get(b) or {}).get("bw")
+                    rt = scanner._get_band_runtime(b)
                     scanner.play_freq(
-                        found["freq"], found["name"], bw, S, settings=settings
+                        found["freq"], found["name"], rt["bw"], S,
+                        settings=settings,
+                        modulation=rt["modulation"], band_id=b,
+                        audio_profile=rt["audio_profile"],
                     )
                     source_state.commit_source("scanner")
                 finally:
@@ -179,9 +202,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
                     return
                 try:
                     S["scanner_band"] = b
-                    bw = (scanner.BANDS.get(b) or {}).get("bw")
+                    rt = scanner._get_band_runtime(b)
                     scanner.play_freq(
-                        found["freq"], found["name"], bw, S, settings=settings
+                        found["freq"], found["name"], rt["bw"], S,
+                        settings=settings,
+                        modulation=rt["modulation"], band_id=b,
+                        audio_profile=rt["audio_profile"],
                     )
                     source_state.commit_source("scanner")
                 finally:
