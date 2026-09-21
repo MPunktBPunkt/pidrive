@@ -100,10 +100,22 @@ def check_stale_transition() -> bool:
 
 def _write_state_file():
     try:
+        import errno
         tmp = STATE_FILE + ".tmp"
+        payload = json.dumps(STATE, indent=2, ensure_ascii=False)
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(STATE, f, indent=2, ensure_ascii=False)
-        os.replace(tmp, STATE_FILE)
+            f.write(payload)
+        try:
+            os.replace(tmp, STATE_FILE)
+        except OSError as e:
+            if e.errno not in (errno.EPERM, errno.EACCES):
+                raise
+            with open(STATE_FILE, "w", encoding="utf-8") as f:
+                f.write(payload)
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
     except Exception as e:
         log.warn("SOURCE state file write: " + str(e))
 

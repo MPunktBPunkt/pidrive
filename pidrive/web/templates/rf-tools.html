@@ -209,7 +209,11 @@ async function captureSpectrum() {
     const j=await r.json();
     renderSpectrumResult(j);
     if(!j.ok) showToast('Spektrum: '+(j.error||'Fehler'));
-    else showToast((j.mode||mode)+' ok · avg '+(j.avg_frames||avg));
+    else {
+      let msg=(j.mode||mode)+' ok · avg '+(j.avg_frames||avg);
+      if (j.preempted_monitor) msg='Detektor gestoppt → '+msg;
+      showToast(msg);
+    }
   }catch(e){ pre.textContent='Fehler: '+e; showToast('Spektrum-Fehler'); }
 }
 function spectrumExportBasename() {

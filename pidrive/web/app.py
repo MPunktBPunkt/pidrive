@@ -808,6 +808,9 @@ def api_spectrum_capture():
     - mode=range          → Start/Stop-Bereich (Plot, Auto-SR oder sample_rate_hz)
     - mode=fm_sweep       → Legacy FM-Band-Sweep (Peak-Kandidaten, kein Plot)
     - mode=snapshot       → Einzelmessung bei center_mhz
+
+    Bei aktivem PMR-Monitor: Standardmäßig Monitor stoppen und Capture fortsetzen
+    (preempt_monitor=0 zum Ablehnen).
     """
     args = request.get_json(silent=True) or {}
     if not args:
@@ -815,11 +818,30 @@ def api_spectrum_capture():
 
     band = args.get("band", "")
     mode = (args.get("mode") or "fm_sweep").strip().lower()
+    preempted_monitor = False
     try:
         from modules import source_state as _ss_gate
+        import ipc as _ipc
+        import time as _t_gate
         ok_gate, why = _ss_gate.rtl_capture_gate()
         if not ok_gate:
-            return jsonify({"ok": False, "error": why, "blocked_by_state": True}), 409
+            raw_pre = args.get("preempt_monitor", args.get("stop_monitor", "1"))
+            do_preempt = str(raw_pre).strip().lower() not in ("0", "false", "no", "off")
+            if do_preempt and "PMR-Monitor" in (why or ""):
+                _ipc.append_trigger("pmr_monitor_stop")
+                for _ in range(40):
+                    _t_gate.sleep(0.25)
+                    ok_gate, why = _ss_gate.rtl_capture_gate()
+                    if ok_gate:
+                        preempted_monitor = True
+                        break
+            if not ok_gate:
+                return jsonify({
+                    "ok": False,
+                    "error": why,
+                    "blocked_by_state": True,
+                    "hint": "preempt_monitor=1 stoppt den Detektor und wiederholt den Capture",
+                }), 409
     except Exception:
         pass
     try:
@@ -887,6 +909,7 @@ def api_spectrum_capture():
             return jsonify({
                 "ok": True,
                 "band": band,
+                "preempted_monitor": preempted_monitor,
                 "data": {
                     "active_channels": filtered,
                     "active_channels_raw": cands,
@@ -952,6 +975,9 @@ def api_spectrum_capture():
             if sr_hz:
                 kwargs["sample_rate_hz"] = sr_hz
             result = spectrum.sweep_fm_band(**kwargs)
+        if isinstance(result, dict):
+            result = dict(result)
+            result["preempted_monitor"] = preempted_monitor
         return jsonify(result)
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)})

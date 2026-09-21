@@ -69,10 +69,24 @@ def _sh(cmd, timeout=5):
     return _run(["bash", "-c", cmd], timeout=timeout)
 
 def _atomic_json(path, data):
+    """Schreibe JSON; /tmp-Sticky-Bit: In-Place-Fallback wenn replace scheitert."""
+    import errno
     tmp = path + ".tmp"
+    payload = json.dumps(data, indent=2, ensure_ascii=False)
     with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    os.replace(tmp, path)
+        f.write(payload)
+    try:
+        os.replace(tmp, path)
+    except OSError as e:
+        if e.errno not in (errno.EPERM, errno.EACCES):
+            raise
+        # Core=root, Web=pidrive: Datei überschreiben statt unlink/replace
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(payload)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 # ── Passive Checks (öffnen das Device NICHT) ──────────────────────────────
@@ -502,7 +516,10 @@ def diagnose(active_tests=False):
                 data[key] = fn()
             except Exception as e:
                 data[key] = {"ok": False, "error": str(e)}
-    _atomic_json(DEBUG_FILE, data)
+    try:
+        _atomic_json(DEBUG_FILE, data)
+    except Exception as e:
+        data["write_warning"] = str(e)
     return data
 
 

@@ -333,7 +333,14 @@ sleep 2
 pidrivectl scanner pmr446 ch 1
 ```
 
+### RTL Diagnose: `Operation not permitted … pidrive_rtlsdr.json`
+
+Ursache: Core läuft als **root**, WebUI als **pidrive**. `/tmp` hat Sticky-Bit —
+`os.replace(tmp, datei)` darf eine root-Datei nicht ersetzen. Ab v0.11.155:
+In-Place-Schreiben als Fallback. Diagnose selbst ist ok wenn Stick/Tools ✓.
+
 ### PMR-Monitor: `Device busy` / `usb_claim_interface` trotz sichtbarem Stick
+
 
 Symptom: `pidrivectl scanner monitor status` → `capture_error`, Log voller
 `usb_reset`/`force_free_rtl`, `lsusb` zeigt RTL2838, aber

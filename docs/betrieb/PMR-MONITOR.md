@@ -45,9 +45,10 @@ WebUI: Scanner-Tab zeigt Monitor-Status; Trigger `pmr_monitor_start` / `pmr_moni
 | Autotune-Hit | `begin_transition(pmr_monitor:…, scanner)` — bei `False` kein Tune |
 | Listening | `commit_source("scanner")`, Hold mit `refresh_transition()` (Hold > Stale-Timeout) |
 | Listen-Ende | `end_transition()` + Scanner-Stop |
-| Spektrum parallel | `rtl_capture_gate()` blockiert bei Transition / DAB|FM|Scanner / laufendem Monitor |
+| Spektrum parallel | `rtl_capture_gate()`; Standard `preempt_monitor=1` stoppt Detektor und nimmt Snapshot |
 
-Details: `tests/unit/test_source_spectrum_pmr.py`
+WebUI Scanner-Tab: Button **Dauerbeobachtung** steuert den Backend-Detektor
+(`pmr_monitor_start/stop`), Statuszeile „Backend-Detektor AKTIV …“.
 
 
 Ab v0.11.154 sucht `rtlsdr.usb_reset()` den Stick **primär über sysfs**

@@ -324,6 +324,7 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="btn" onclick="sendCmd('scan_next:pmr446')">Nächster Treffer ▶</button>
     </div>
     <div class="pmr-status" id="pmrStatus">Tipp: Walkie senden → aktive Kanäle werden grün</div>
+    <div class="pmr-status" id="pmrBackendStatus" style="margin-top:2px"></div>
   </div>
   <div class="scan-card">
     <h4>Squelch</h4>
@@ -355,31 +356,49 @@ function switchTab(name) {
     p.classList.toggle('active', p.id === 'tab-' + name));
   if (name === 'playlist') { loadPlaylist('today'); startPlPoll(); }
   else stopPlPoll();
-  if (name === 'scanner') renderPmrGrid();
-  else stopPmrWatch();
+  if (name === 'scanner') { renderPmrGrid(); startPmrBackendPoll(); }
+  else { stopPmrWatch(); stopPmrBackendPoll(); }
 }
 
 const PMR_FREQS = Array.from({length: 16}, (_, i) =>
   Math.round((446.00625 + i * 0.0125) * 1e5) / 1e5);
-const PMR_HOLD_MS = 15000;  // nach Umschalten hören, dann weiter scannen
-let _pmrWatch = false;
+let _pmrWatch = false;          // Backend-Detektor (pmr_monitor_*)
 let _pmrPlayingCh = 0;
 let _pmrListening = false;
+let _pmrBackendPoll = null;
 
 function _pmrSleep(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
 
+function _setPmrWatchButton(running) {
+  _pmrWatch = !!running;
+  const btn = document.getElementById('pmrWatchBtn');
+  if (!btn) return;
+  if (running) {
+    btn.textContent = '⏹ Detektor Stop';
+    btn.classList.add('danger');
+    btn.classList.remove('primary');
+  } else {
+    btn.textContent = '👁 Dauerbeobachtung';
+    btn.classList.add('primary');
+    btn.classList.remove('danger');
+  }
+}
+
 function renderPmrGrid() {
   const grid = document.getElementById('pmrGrid');
-  if (!grid || grid.dataset.ready) return;
-  grid.innerHTML = PMR_FREQS.map((f, i) => {
-    const ch = i + 1;
-    return `<button type="button" class="pmr-ch" data-ch="${ch}" id="pmrCh${ch}"
-      title="${f} MHz" onclick="pmrTune(${ch})">K${ch}<br><span style="font-size:9px;opacity:.7">${f}</span></button>`;
-  }).join('');
-  grid.dataset.ready = '1';
-  loadPmrAutoTune();
+  if (!grid) return;
+  if (!grid.dataset.ready) {
+    grid.innerHTML = PMR_FREQS.map((f, i) => {
+      const ch = i + 1;
+      return `<button type="button" class="pmr-ch" data-ch="${ch}" id="pmrCh${ch}"
+        title="${f} MHz" onclick="pmrTune(${ch})">K${ch}<br><span style="font-size:9px;opacity:.7">${f}</span></button>`;
+    }).join('');
+    grid.dataset.ready = '1';
+    loadPmrAutoTune();
+  }
+  syncPmrBackendStatus();
 }
 
 function pmrAutoTuneEnabled() {
@@ -414,6 +433,60 @@ async function savePmrAutoTune(checked) {
   }
 }
 
+async function syncPmrBackendStatus() {
+  const badge = document.getElementById('pmrBackendStatus');
+  try {
+    const r = await fetch('/api/scanner/pmr-monitor?n=8');
+    const j = await r.json();
+    const st = (j && j.status) || {};
+    const running = !!st.running;
+    _setPmrWatchButton(running);
+    if (badge) {
+      if (running) {
+        const hits = st.hits != null ? st.hits : '?';
+        const cycles = st.cycles != null ? st.cycles : '?';
+        const ev = st.last_event || 'scan';
+        const ch = st.last_ch != null ? (' · zuletzt K' + st.last_ch) : '';
+        badge.textContent = `Backend-Detektor AKTIV · cycles=${cycles} hits=${hits} · ${ev}${ch}`;
+        badge.classList.add('hot');
+      } else {
+        badge.textContent = 'Backend-Detektor: aus';
+        badge.classList.remove('hot');
+      }
+    }
+    const acts = ((j && j.log) || []).filter(e => e && e.event === 'activity');
+    if (acts.length) {
+      const last = acts[acts.length - 1];
+      const nums = (last.candidates || []).map(c => Number(c.ch)).filter(Boolean);
+      if (!nums.length && last.ch) nums.push(Number(last.ch));
+      setPmrActive(nums, last.ch);
+      if (String(st.last_event || '').startsWith('listening'))
+        pmrMarkPlaying(st.last_ch);
+    }
+    const stLine = document.getElementById('pmrStatus');
+    if (stLine && running) {
+      if (st.error)
+        stLine.textContent = 'Detektor: ' + String(st.error).slice(0, 80);
+      else if (st.last_event === 'scan' || st.last_event === 'start')
+        stLine.textContent = pmrAutoTuneEnabled()
+          ? 'Überwachung… keine Aktivität'
+          : 'Beobachte… keine Aktivität';
+    }
+  } catch (e) {
+    if (badge) badge.textContent = 'Backend-Status nicht erreichbar';
+  }
+}
+
+function startPmrBackendPoll() {
+  stopPmrBackendPoll();
+  syncPmrBackendStatus();
+  _pmrBackendPoll = setInterval(syncPmrBackendStatus, 2000);
+}
+
+function stopPmrBackendPoll() {
+  if (_pmrBackendPoll) { clearInterval(_pmrBackendPoll); _pmrBackendPoll = null; }
+}
+
 function pmrMarkPlaying(ch) {
   _pmrPlayingCh = Number(ch) || 0;
   document.querySelectorAll('.pmr-ch').forEach(b =>
@@ -421,7 +494,10 @@ function pmrMarkPlaying(ch) {
 }
 
 function pmrTune(ch) {
-  stopPmrWatch();
+  if (_pmrWatch) {
+    sendCmd('pmr_monitor_stop');
+    _setPmrWatchButton(false);
+  }
   pmrMarkPlaying(ch);
   sendCmd('scan_setch:pmr446:' + ch);
   showToast('PMR Kanal ' + ch);
@@ -453,101 +529,51 @@ async function pmrScanOnce() {
   const st = document.getElementById('pmrStatus');
   if (st) { st.textContent = 'Messe PMR446…'; st.classList.remove('hot'); }
   try {
-    const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.2', {method:'POST'});
+    const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.2&preempt_monitor=1', {method:'POST'});
     const j = await r.json();
     if (!j.ok) { if (st) st.textContent = 'Fehler: ' + (j.error||'?'); return; }
+    if (j.preempted_monitor) showToast('Detektor gestoppt → Snapshot');
     const nums = (j.data && j.data.active_ch_numbers) || [];
     setPmrActive(nums, j.data && j.data.primary_ch);
+    syncPmrBackendStatus();
   } catch(e) {
     if (st) st.textContent = 'Netzwerkfehler';
   }
 }
 
-/** Spektrum → Kanal umschalten → halten → Stick freigeben → weiter scannen */
-async function pmrListenThenResume(ch) {
-  const st = document.getElementById('pmrStatus');
-  _pmrListening = true;
-  pmrMarkPlaying(ch);
-  if (st) {
-    st.textContent = 'Schalte auf K' + ch + '… (kann dauern)';
-    st.classList.add('hot');
-  }
-  sendCmd('scan_setch:pmr446:' + ch);
-  showToast('Überwachung → K' + ch);
-
-  const holdEnd = Date.now() + PMR_HOLD_MS;
-  while (_pmrWatch && Date.now() < holdEnd) {
-    const left = Math.ceil((holdEnd - Date.now()) / 1000);
-    if (st) st.textContent = 'Höre K' + ch + ' · Scan in ' + left + ' s';
-    await _pmrSleep(400);
-  }
-  _pmrListening = false;
-  if (!_pmrWatch) return;
-  if (st) { st.textContent = 'Weiter scannen…'; st.classList.remove('hot'); }
-  sendCmd('radio_stop');
-  // Stick/rtl_fm freigeben lassen
-  await _pmrSleep(700);
-}
-
 async function togglePmrWatch() {
-  if (_pmrWatch) { stopPmrWatch(); return; }
-  _pmrWatch = true;
-  _pmrListening = false;
-  const btn = document.getElementById('pmrWatchBtn');
-  if (btn) {
-    btn.textContent = '⏹ Stop Beobachtung';
-    btn.classList.add('danger');
-    btn.classList.remove('primary');
+  if (_pmrWatch) {
+    sendCmd('pmr_monitor_stop');
+    _setPmrWatchButton(false);
+    const st0 = document.getElementById('pmrStatus');
+    if (st0) { st0.textContent = 'Detektor gestoppt'; st0.classList.remove('hot'); }
+    syncPmrBackendStatus();
+    return;
   }
-  // Stick für Spektrum freigeben
+  await savePmrAutoTune(pmrAutoTuneEnabled());
   sendCmd('radio_stop');
-  const autoHint = pmrAutoTuneEnabled();
+  sendCmd('pmr_monitor_start');
+  _setPmrWatchButton(true);
   const st0 = document.getElementById('pmrStatus');
   if (st0) {
-    st0.textContent = autoHint
-      ? 'Überwachung gestartet — scanne permanent…'
-      : 'Beobachte… (ohne Umschalten)';
+    st0.textContent = pmrAutoTuneEnabled()
+      ? 'Backend-Detektor gestartet — scanne permanent…'
+      : 'Backend-Detektor gestartet (ohne Umschalten)';
     st0.classList.remove('hot');
   }
-
-  while (_pmrWatch) {
-    try {
-      const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.0', {method:'POST'});
-      const j = await r.json();
-      if (!_pmrWatch) break;
-      if (j.ok && j.data) {
-        const nums = j.data.active_ch_numbers || [];
-        const prim = Number(j.data.primary_ch) || 0;
-        setPmrActive(nums, prim);
-        if (pmrAutoTuneEnabled() && prim >= 1 && prim <= 16) {
-          await pmrListenThenResume(prim);
-          continue;
-        }
-      } else if (document.getElementById('pmrStatus') && !_pmrListening) {
-        document.getElementById('pmrStatus').textContent = 'Watch: ' + (j.error || 'busy?');
-      }
-      // Pause zwischen Captures — Stick/CPU schonen
-      await _pmrSleep(pmrAutoTuneEnabled() ? 600 : 300);
-    } catch(e) {
-      if (document.getElementById('pmrStatus'))
-        document.getElementById('pmrStatus').textContent = 'Watch-Fehler — warte…';
-      await _pmrSleep(800);
-    }
-  }
+  startPmrBackendPoll();
+  showToast('PMR-Detektor gestartet');
 }
 
 function stopPmrWatch() {
-  _pmrWatch = false;
+  // Tab-Wechsel: UI-Flag; Backend läuft ggf. weiter (CLI/Detektor)
   _pmrListening = false;
-  const btn = document.getElementById('pmrWatchBtn');
-  if (btn) {
-    btn.textContent = '👁 Dauerbeobachtung';
-    btn.classList.add('primary');
-    btn.classList.remove('danger');
-  }
 }
 
 renderPmrGrid();
+if (document.getElementById('tab-scanner') &&
+    document.getElementById('tab-scanner').classList.contains('active'))
+  startPmrBackendPoll();
 
 function startPlPoll() {
   stopPlPoll();

@@ -20,11 +20,24 @@ USB_STATUS_FILE = "/tmp/pidrive_usb_status.json"
 
 
 def write_json(path, data):
+    """Atomar schreiben. Fallback bei /tmp-Sticky-Bit (root-owned → pidrive)."""
     tmp = path + ".tmp"
     try:
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False)
-        os.replace(tmp, path)
+        try:
+            os.replace(tmp, path)
+            return
+        except OSError as e:
+            # Sticky /tmp: Nicht-Owner darf fremde Datei nicht ersetzen/unlinken.
+            if getattr(e, "errno", None) not in (1, 13):  # EPERM, EACCES
+                raise
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
     except Exception:
         pass  # write error silently ignored (tmpfs race)
 

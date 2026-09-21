@@ -1120,10 +1120,22 @@ def _pmr_write_status(**extra):
     data.update(extra)
     data["ts"] = _pmr_iso_now()
     try:
+        import errno
         tmp = PMR_MONITOR_STATUS + ".tmp"
+        payload = json.dumps(data, ensure_ascii=False)
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
-        os.replace(tmp, PMR_MONITOR_STATUS)
+            f.write(payload)
+        try:
+            os.replace(tmp, PMR_MONITOR_STATUS)
+        except OSError as e:
+            if e.errno not in (errno.EPERM, errno.EACCES):
+                raise
+            with open(PMR_MONITOR_STATUS, "w", encoding="utf-8") as f:
+                f.write(payload)
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
     except Exception as e:
         log.warn(f"PMR-Monitor Status: {e}")
 
