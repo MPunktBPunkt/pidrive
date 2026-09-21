@@ -63,6 +63,23 @@ def test_neighbor_bleed_keeps_only_stronger_channel():
 
 # ── Capture-Lease / Recovery ─────────────────────────────────────────────────
 
+def test_find_rtl_processes_includes_rtl_sdr(monkeypatch):
+    monkeypatch.setattr(
+        rtlsdr,
+        "_sh",
+        lambda *a, **k: {
+            "ok": True,
+            "out": "782458 Sl   rtl_sdr -f 446100000 -s 256000 -\n"
+                   "793983 Z    [rtl_fm] <defunct>\n",
+            "err": "",
+        },
+    )
+    procs = rtlsdr.find_rtl_processes()
+    assert len(procs) == 1
+    assert "rtl_sdr" in procs[0]["cmd"]
+    assert rtlsdr.is_busy() is True
+
+
 def test_capture_lease_blocks_second_owner(monkeypatch):
     rtlsdr.release_capture()
     assert rtlsdr.claim_capture("a", timeout_s=0.2) is True

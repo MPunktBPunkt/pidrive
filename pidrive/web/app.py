@@ -891,6 +891,18 @@ def api_spectrum_capture():
                     if ok_gate:
                         preempted_monitor = True
                         break
+            # Orphaned rtl_sdr / busy without monitor → hard recover once
+            if (not ok_gate) and do_preempt and "RTL-Gerät belegt" in (why or ""):
+                try:
+                    from modules.radio import rtlsdr as _rtl_rec
+                    if hasattr(_rtl_rec, "recover_busy_device"):
+                        _rtl_rec.recover_busy_device(
+                            reason="spectrum_capture_preempt", level="hard"
+                        )
+                        _t_gate.sleep(0.35)
+                        ok_gate, why = _ss_gate.rtl_capture_gate()
+                except Exception:
+                    pass
             if not ok_gate:
                 return jsonify({
                     "ok": False,

@@ -541,6 +541,9 @@ async function syncPmrBackendStatus() {
       setPmrActive(nums, last.ch);
       if (String(st.last_event || '').startsWith('listening'))
         pmrMarkPlaying(st.last_ch);
+    } else if (running && st.last_peek_ch) {
+      // Peek unter Trigger: Kanal markieren, damit Fortschritt sichtbar bleibt
+      setPmrActive([st.last_peek_ch], null);
     }
     const stLine = document.getElementById('pmrStatus');
     if (stLine && running) {

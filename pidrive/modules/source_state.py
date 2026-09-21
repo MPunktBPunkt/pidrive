@@ -460,6 +460,17 @@ def rtl_capture_gate(check_monitor: bool = True) -> tuple[bool, str]:
                 pass
         if mon_running:
             return False, "PMR-Monitor aktiv — zuerst: pidrivectl scanner monitor stop"
+    # Verwaiste rtl_sdr/rtl_fm (z. B. hängengebliebener Streaming-Watch)
+    try:
+        from modules.radio import rtlsdr as _rtl
+        if hasattr(_rtl, "is_busy") and _rtl.is_busy():
+            procs = []
+            if hasattr(_rtl, "find_rtl_processes"):
+                procs = _rtl.find_rtl_processes() or []
+            hint = (procs[0].get("cmd") or "RTL-Prozess")[:72] if procs else "Lock/Prozess"
+            return False, f"RTL-Gerät belegt ({hint})"
+    except Exception:
+        pass
     return True, ""
 
 

@@ -1896,7 +1896,14 @@ def stop_pmr_monitor(S=None, join=True):
         t.join(timeout=8.0)
     _monitor_meta["running"] = False
     _pmr_write_status()
-    if _rtlsdr and hasattr(_rtlsdr, "release_owner"):
+    # Streaming-Watch kann rtl_sdr hinterlassen wenn Thread hängt —
+    # gezielt freigeben, sonst Spektrum/WebUI: usb_claim_interface -6.
+    if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
+        try:
+            _rtlsdr.recover_busy_device(reason="pmr_monitor_stop", level="hard")
+        except Exception:
+            pass
+    elif _rtlsdr and hasattr(_rtlsdr, "release_owner"):
         try:
             _rtlsdr.release_owner("pmr_monitor")
         except Exception:

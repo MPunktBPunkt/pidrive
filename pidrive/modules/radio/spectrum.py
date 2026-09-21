@@ -20,6 +20,8 @@ import os
 import json
 import time
 import math
+import select
+import signal
 import subprocess
 from dataclasses import dataclass, field
 from typing import Optional, Any
@@ -472,6 +474,7 @@ class StreamingRtlReader:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 bufsize=0,
+                start_new_session=True,
             )
         except FileNotFoundError:
             self.close()
@@ -486,13 +489,26 @@ class StreamingRtlReader:
         need = max(1, int(sample_count)) * 2
         buf = bytearray()
         deadline = time.time() + self.read_timeout_s
+        fd = self._proc.stdout.fileno()
         while len(buf) < need and time.time() < deadline:
-            to_read = need - len(buf)
-            chunk = self._proc.stdout.read(to_read)
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                break
+            try:
+                ready, _, _ = select.select([fd], [], [], min(0.25, remaining))
+            except (ValueError, OSError):
+                break
+            if not ready:
+                if self._proc.poll() is not None:
+                    break
+                continue
+            try:
+                chunk = os.read(fd, need - len(buf))
+            except OSError:
+                break
             if not chunk:
                 if self._proc.poll() is not None:
                     break
-                time.sleep(0.005)
                 continue
             buf.extend(chunk)
         if len(buf) < need:
@@ -505,20 +521,39 @@ class StreamingRtlReader:
         proc = self._proc
         self._proc = None
         if proc is not None:
+            pid = getattr(proc, "pid", None)
             try:
                 if proc.stdout:
                     try:
                         proc.stdout.close()
                     except Exception:
                         pass
-                proc.terminate()
                 try:
-                    proc.wait(timeout=1.5)
+                    proc.terminate()
+                except Exception:
+                    pass
+                try:
+                    proc.wait(timeout=0.8)
                 except Exception:
                     try:
                         proc.kill()
                     except Exception:
                         pass
+                    try:
+                        proc.wait(timeout=0.5)
+                    except Exception:
+                        pass
+                # Prozessgruppe (start_new_session) — Orphans sicher killen
+                if pid:
+                    try:
+                        os.killpg(pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    except Exception:
+                        try:
+                            os.kill(pid, signal.SIGKILL)
+                        except Exception:
+                            pass
             except Exception:
                 pass
         if _rtlsdr and hasattr(_rtlsdr, "release_capture"):

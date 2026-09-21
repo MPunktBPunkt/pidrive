@@ -165,7 +165,9 @@ def clear_stale_lock():
 def find_rtl_processes():
     """Laufende RTL-Prozesse (ps — kein Device-Zugriff). Zombies ignorieren."""
     # STAT mitlesen: Z/defunct halten kein Device mehr, blockieren aber Busy-Checks
-    r = _sh(r"ps ax -o pid=,stat=,cmd= | grep -E 'rtl_test|rtl_fm|welle-cli' "
+    # Wichtig: rtl_sdr (Streaming-/Block-Capture) muss mit erkannt werden —
+    # sonst bleiben verwaiste Streams unsichtbar → usb_claim_interface -6.
+    r = _sh(r"ps ax -o pid=,stat=,cmd= | grep -E 'rtl_sdr|rtl_test|rtl_fm|welle-cli|welle_cli' "
             r"| grep -v grep || true", timeout=3)
     procs = []
     for ln in r["out"].splitlines():
