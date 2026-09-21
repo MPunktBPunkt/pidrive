@@ -11,6 +11,41 @@ Spotify Connect · Webradio · DAB+ · FM · Funk-Scanner · Bluetooth A2DP · l
 
 ---
 
+## WebUI
+
+PiDrive im Browser (`http://<Pi-IP>:8080`) — Inbetriebnahme, Routing, RF-Diagnose.
+Klick öffnet die Vollansicht. Alle Aufnahmen: [`docs/screenshots/`](docs/screenshots/).
+
+<table>
+<tr>
+<td align="center" width="25%"><a href="docs/screenshots/webui/01-alltag.png"><img src="docs/screenshots/webui/01-alltag.png" alt="Alltag / Player" width="220"></a><br><sub>Alltag</sub></td>
+<td align="center" width="25%"><a href="docs/screenshots/webui/02-bluetooth.png"><img src="docs/screenshots/webui/02-bluetooth.png" alt="Bluetooth" width="220"></a><br><sub>Bluetooth</sub></td>
+<td align="center" width="25%"><a href="docs/screenshots/webui/03-audio.png"><img src="docs/screenshots/webui/03-audio.png" alt="Audio-Routing" width="220"></a><br><sub>Audio</sub></td>
+<td align="center" width="25%"><a href="docs/screenshots/webui/04-audio-debug.png"><img src="docs/screenshots/webui/04-audio-debug.png" alt="Audio Debug Cockpit" width="220"></a><br><sub>Audio-Debug</sub></td>
+</tr>
+<tr>
+<td align="center"><a href="docs/screenshots/webui/05-rf-dab.png"><img src="docs/screenshots/webui/05-rf-dab.png" alt="RF/DAB Diagnose" width="220"></a><br><sub>RF / DAB</sub></td>
+<td align="center"><a href="docs/screenshots/webui/06-spektrum.png"><img src="docs/screenshots/webui/06-spektrum.png" alt="Spektrum" width="220"></a><br><sub>Spektrum</sub></td>
+<td align="center"><a href="docs/screenshots/webui/07-webradio.png"><img src="docs/screenshots/webui/07-webradio.png" alt="Webradio" width="220"></a><br><sub>Webradio</sub></td>
+<td align="center"><a href="docs/screenshots/webui/08-medien.png"><img src="docs/screenshots/webui/08-medien.png" alt="Medienbibliothek" width="220"></a><br><sub>Medien</sub></td>
+</tr>
+</table>
+
+ESP32-SoftAP (`esp32.pidrive`, Lab `http://192.168.4.1`) — USB-MSC-Fernbedienung neben der Pi-UI:
+
+<table>
+<tr>
+<td align="center" width="16%"><a href="docs/screenshots/esp32/01-remote.png"><img src="docs/screenshots/esp32/01-remote.png" alt="ESP32 Remote" width="140"></a><br><sub>Remote</sub></td>
+<td align="center" width="16%"><a href="docs/screenshots/esp32/02-auto-test.png"><img src="docs/screenshots/esp32/02-auto-test.png" alt="ESP32 Auto-Test" width="140"></a><br><sub>Auto-Test</sub></td>
+<td align="center" width="16%"><a href="docs/screenshots/esp32/03-menu.png"><img src="docs/screenshots/esp32/03-menu.png" alt="ESP32 Menü" width="140"></a><br><sub>Menü</sub></td>
+<td align="center" width="16%"><a href="docs/screenshots/esp32/04-events.png"><img src="docs/screenshots/esp32/04-events.png" alt="ESP32 Events" width="140"></a><br><sub>Events</sub></td>
+<td align="center" width="16%"><a href="docs/screenshots/esp32/05-config.png"><img src="docs/screenshots/esp32/05-config.png" alt="ESP32 Config" width="140"></a><br><sub>Config</sub></td>
+<td align="center" width="16%"><a href="docs/screenshots/esp32/06-ota.png"><img src="docs/screenshots/esp32/06-ota.png" alt="ESP32 OTA" width="140"></a><br><sub>OTA</sub></td>
+</tr>
+</table>
+
+---
+
 ## Highlights
 
 | Feature | Beschreibung |
@@ -45,7 +80,7 @@ pidrivectl play web 1       # Webradio Rock Antenne
 pidrivectl play dab 22      # DAB+ (Sender nach Scan/Nummer)
 ```
 
-**WebUI:** `http://<Pi-IP>:8080` (Flask lauscht auf **8080**, nicht auf Port 80)
+**WebUI:** `http://<Pi-IP>:8080` (Flask lauscht auf **8080**, nicht auf Port 80) — [Screenshots](#webui)
 
 ---
 
