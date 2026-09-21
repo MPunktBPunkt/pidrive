@@ -99,23 +99,62 @@ def check_stale_transition() -> bool:
 # ── Datei-I/O ────────────────────────────────────────────────────────────────
 
 def _write_state_file():
-    try:
-        import errno
-        tmp = STATE_FILE + ".tmp"
-        payload = json.dumps(STATE, indent=2, ensure_ascii=False)
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(payload)
+    """Persistiert STATE nach /tmp.
+
+    Sticky /tmp (1777): os.replace scheitert, wenn die Zieldatei einem anderen
+    UID gehört. Stale *.tmp vom User pidrive blockiert außerdem root-Truncates.
+    Strategie: stale tmp löschen → atomic replace → Fallback in-place + chmod 666.
+    """
+    import errno
+    payload = json.dumps(STATE, indent=2, ensure_ascii=False)
+    tmp = STATE_FILE + ".tmp"
+
+    def _chmod_world_rw(path: str) -> None:
         try:
-            os.replace(tmp, STATE_FILE)
-        except OSError as e:
-            if e.errno not in (errno.EPERM, errno.EACCES):
-                raise
-            with open(STATE_FILE, "w", encoding="utf-8") as f:
+            os.chmod(path, 0o666)
+        except OSError:
+            pass
+
+    def _write_inplace(path: str) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(payload)
+            f.flush()
+        _chmod_world_rw(path)
+
+    try:
+        # Stale .tmp fremder Owner auf sticky /tmp entfernen
+        try:
+            os.unlink(tmp)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            pass
+
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
                 f.write(payload)
+                f.flush()
             try:
-                os.remove(tmp)
+                os.replace(tmp, STATE_FILE)
             except OSError:
-                pass
+                try:
+                    os.unlink(STATE_FILE)
+                except OSError:
+                    pass
+                try:
+                    os.replace(tmp, STATE_FILE)
+                except OSError:
+                    _write_inplace(STATE_FILE)
+                    try:
+                        os.unlink(tmp)
+                    except OSError:
+                        pass
+            _chmod_world_rw(STATE_FILE)
+            return
+        except OSError:
+            # tmp nicht schreibbar → direkt in-place
+            _write_inplace(STATE_FILE)
+            return
     except Exception as e:
         log.warn("SOURCE state file write: " + str(e))
 

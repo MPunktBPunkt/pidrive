@@ -58,3 +58,16 @@ def test_commit_without_auto_end_keeps_transition(tmp_path, monkeypatch):
     assert ss.snapshot()["transition"] is True
     ss.end_transition()
     assert ss.snapshot()["transition"] is False
+
+
+def test_write_state_file_survives_stale_tmp(tmp_path, monkeypatch):
+    """Stale *.tmp darf Persistenz nicht blockieren (sticky-/tmp-Szenario)."""
+    state = tmp_path / "src.json"
+    monkeypatch.setattr(ss, "STATE_FILE", str(state))
+    _reset_state()
+    stale = tmp_path / "src.json.tmp"
+    stale.write_text("stale")
+    # Simuliere nicht schreibbares tmp: unlink muss klappen, dann neu schreiben
+    ss.commit_source("scanner")
+    data = __import__("json").loads(state.read_text())
+    assert data["source_current"] == "scanner"

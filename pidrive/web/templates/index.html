@@ -858,10 +858,17 @@ const SRC_LABEL = { idle:'IDLE', dab:'DAB+', fm:'FM', webradio:'WEB', web:'WEB',
   scanner:'SCANNER', spotify:'SPOTIFY' };
 
 function onBaseRefresh(j, st, ss, now) {
-  const src = ss.source_current || 'idle';
+  let src = ss.source_current || 'idle';
+  // Fallback wenn source_state.json sticky-/tmp-stale, Status aber SCANNER etc. sagt
+  const rt = String(st.radio_type || '').toUpperCase();
+  if ((!src || src === 'idle') && rt) {
+    const map = {SCANNER:'scanner', DAB:'dab', 'DAB+':'dab', FM:'fm',
+      WEB:'webradio', WEBRADIO:'webradio', SPOTIFY:'spotify'};
+    if (map[rt]) src = map[rt];
+  }
   now = now || j.now || {};
   _currentSource = src;
-  _currentStation = st.radio_name || '';
+  _currentStation = st.radio_name || st.radio_station || '';
 
   // Epoch: UI bei Quellwechsel sofort leeren
   const epoch = ss.playback_epoch || 0;
@@ -874,7 +881,7 @@ function onBaseRefresh(j, st, ss, now) {
   document.getElementById('pSource').textContent = SRC_LABEL[src] || src.toUpperCase();
   document.getElementById('pSrcDot').style.background = src === 'idle' ? '#3a5070' : '#58a6ff';
 
-  const title = src === 'idle' ? 'Kein Sender' : (now.title || st.radio_name || '...');
+  const title = src === 'idle' ? 'Kein Sender' : (now.title || st.radio_name || st.radio_station || '...');
   document.getElementById('pTitle').textContent = title;
   document.getElementById('pMeta').textContent = now.artist || '';
   document.getElementById('pDls').textContent = now.dls || '';

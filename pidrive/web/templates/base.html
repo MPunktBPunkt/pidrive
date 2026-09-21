@@ -324,12 +324,16 @@ async function refreshBase() {
     if (dbEl) {
       const rev = j.rev || '–';
       const ageStr = (statusAge != null) ? (statusAge.toFixed ? statusAge.toFixed(1) : statusAge) + 's' : '–';
-      dbEl.textContent = `Core ${ageStr}${coreStale ? ' ⚠' : ''} | Rev=${rev} | ${ss.source_current||'idle'}`;
+      dbEl.textContent = `Core ${ageStr}${coreStale ? ' ⚠' : ''} | Rev=${rev} | ${ss.source_current||st.radio_type||'idle'}`;
     }
 
-    const src = ss.source_current || 'idle';
+    let src = ss.source_current || 'idle';
+    const rtTop = String(st.radio_type || '').toUpperCase();
+    if ((!src || src === 'idle') && rtTop === 'SCANNER') src = 'scanner';
+    else if ((!src || src === 'idle') && rtTop === 'FM') src = 'fm';
+    else if ((!src || src === 'idle') && (rtTop === 'DAB' || rtTop === 'DAB+')) src = 'dab';
     const playing = src !== 'idle';
-    const title = playing ? (now.title || st.radio_name || st.track || '–') : '–';
+    const title = playing ? (now.title || st.radio_name || st.radio_station || st.track || '–') : '–';
     setText('qsSource', src);
     setText('qsTitle',  String(title).substring(0, 35));
     setText('qsVol',    (st.volume != null ? st.volume : '–') + '%');

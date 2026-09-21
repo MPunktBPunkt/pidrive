@@ -67,11 +67,13 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 11. **Reset-Cooldown** — erledigt (60 s).
 12. **`scan_next` Audio nach Transition** — erledigt (`autoplay=False` + play im Trigger).
 
-### P3 — später
+### P3 — später / angelaufen
 
-13. Persistenter IQ-/Owner-Service.
-14. Nachbarkanal-/Best-Channel-Tuning.
-15. Vollständige E2E-Integrationstests mit Mock-RTL.
+13. Persistenter IQ-/Owner-Service — offen.
+14. Nachbarkanal-/Best-Channel-Tuning — teilweise (`ActivityTracker` unterdrückt schwächere Nachbarn).
+15. Vollständige E2E-Integrationstests mit Mock-RTL — offen.
+
+Zusätzlich behoben: sticky-`/tmp` Schreibfehler für `source_state.json` (WebUI blieb bei Kanalwahl auf `idle`).
 
 ---
 

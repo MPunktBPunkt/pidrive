@@ -589,6 +589,17 @@ class ActivityTracker:
             ))
 
         out.sort(key=lambda x: (x.score, x.confidence), reverse=True)
+        # Best-Channel: schwächere direkte Nachbarn unterdrücken (Bleed)
+        if len(out) >= 2:
+            best = out[0]
+            kept = [best]
+            for c in out[1:]:
+                sep = abs(float(c.freq_hz) - float(best.freq_hz))
+                neigh_lim = max(float(best.bandwidth_hz), float(c.bandwidth_hz)) * 1.6
+                if sep <= neigh_lim and float(c.relative_db) < float(best.relative_db):
+                    continue
+                kept.append(c)
+            out = kept
         return out
 
     def best_candidate(self, now_ts: float) -> Optional[PeakCandidate]:

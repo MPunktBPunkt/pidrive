@@ -256,6 +256,25 @@ def api_core():
         source_state = load_snapshot_file()
     except Exception:
         source_state = {}
+    # Fallback: sticky-/tmp-Schreibfehler → Datei stale, Core-Status hat radio_type
+    try:
+        cur = str((source_state or {}).get("source_current") or "idle").lower()
+        rt = str((status or {}).get("radio_type") or "").upper()
+        if cur in ("", "idle") and rt:
+            _map = {
+                "SCANNER": "scanner",
+                "DAB": "dab", "DAB+": "dab",
+                "FM": "fm",
+                "WEB": "webradio", "WEBRADIO": "webradio",
+                "SPOTIFY": "spotify",
+            }
+            mapped = _map.get(rt)
+            if mapped:
+                source_state = dict(source_state or {})
+                source_state["source_current"] = mapped
+                source_state["_inferred_from_radio_type"] = True
+    except Exception:
+        pass
     try:
         from modules.playback_meta import metadata_for_source
         now = metadata_for_source(source_state.get("source_current", "idle"), status)
