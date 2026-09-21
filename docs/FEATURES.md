@@ -60,6 +60,7 @@ Status: ✅ verifiziert · 🟡 nur im Fahrzeug prüfbar · ⛔ bekannt defekt
 | F-043 | Spektrum-Peek | `pidrivectl spectrum peek <mhz>` | Kanalenergie | RTL-SDR | ✅ |
 | F-044 | Spektrum last | `pidrivectl spectrum last [--json]` | Letztes Ergebnis | — | ✅ |
 | F-045 | PMR446 Dauer-Monitor | `pidrivectl scanner monitor start\|status\|log\|stop` | hits/cycles, JSONL | RTL-SDR | ✅ |
+| F-046 | Airband AM | `pidrivectl scanner airband list\|ch\|freq\|scan\|next\|prev` / WebUI | AM-Audio, EDJA-Presets, Preset-Scan | RTL-SDR | ✅ |
 
 ## System
 

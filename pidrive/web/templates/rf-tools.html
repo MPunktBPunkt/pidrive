@@ -35,6 +35,20 @@
     (nur Stufen 0…49.6, z. B. 3 ≈ 2.7/3.7 dB).
   </div>
   <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+    <label style="font-size:12px;color:var(--muted)">Preset
+      <select id="specPreset" onchange="applySpecPreset()"
+        title="Start/Stop (bzw. Mitte) setzen"
+        style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px;max-width:220px">
+        <option value="">— manuell —</option>
+        <option value="fm">FM/UKW 87.5–108</option>
+        <option value="airband">Airband 118–137</option>
+        <option value="pmr446">PMR446 446.0–446.2</option>
+        <option value="dab_11d">DAB 11D (Bayern) 222.064</option>
+        <option value="dab_10a">DAB 10A 209.936</option>
+        <option value="dab_11b">DAB 11B 218.640</option>
+        <option value="gsm900">GSM-900 DL 935–960</option>
+      </select>
+    </label>
     <label style="font-size:12px;color:var(--muted)">Modus
       <select id="specMode" style="background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px">
         <option value="snapshot">Snapshot (Mitte)</option>
@@ -159,7 +173,44 @@ async function loadRtlsdr() {
     document.getElementById('rtlsdrBlock').textContent='Fehler: '+e;
   }
 }
-async function resetRtlsdr(){await sendCmd('rtlsdr_reset');showToast('Reset gesendet');}
+async function resetRtlsdr(){
+  showToast('RTL USB-Reset…');
+  await sendCmd('rtlsdr_reset');
+  setTimeout(loadRtlsdr, 2500);
+}
+
+// Spektrum-Presets (DAB = dab_scan_channels 11D/10A/11B · Kanalbreite ~1.5 MHz)
+const SPEC_PRESETS = {
+  fm:      { mode:'range', start:87.5, stop:108.0, rate:'auto', label:'FM/UKW' },
+  airband: { mode:'range', start:118.0, stop:137.0, rate:'auto', label:'Airband' },
+  pmr446:  { mode:'range', start:446.0, stop:446.2, rate:'250000', label:'PMR446' },
+  dab_11d: { mode:'range', start:221.3, stop:222.9, center:222.064, rate:'2048000', label:'DAB 11D' },
+  dab_10a: { mode:'range', start:209.2, stop:210.8, center:209.936, rate:'2048000', label:'DAB 10A' },
+  dab_11b: { mode:'range', start:217.9, stop:219.5, center:218.640, rate:'2048000', label:'DAB 11B' },
+  gsm900:  { mode:'range', start:935.0, stop:960.0, rate:'auto', label:'GSM-900 DL' },
+};
+
+function applySpecPreset() {
+  const key = (document.getElementById('specPreset') || {}).value || '';
+  const p = SPEC_PRESETS[key];
+  if (!p) return;
+  const modeEl = document.getElementById('specMode');
+  if (modeEl) modeEl.value = p.mode || 'range';
+  const start = document.getElementById('specStart');
+  const stop = document.getElementById('specStop');
+  const center = document.getElementById('specCenter');
+  const rate = document.getElementById('specRate');
+  if (start && p.start != null) start.value = p.start;
+  if (stop && p.stop != null) stop.value = p.stop;
+  if (center) {
+    const mid = p.center != null ? p.center
+      : (p.start != null && p.stop != null ? (p.start + p.stop) / 2 : null);
+    if (mid != null) center.value = Math.round(mid * 1000) / 1000;
+  }
+  if (rate && p.rate) rate.value = p.rate;
+  showToast('Preset: ' + (p.label || key));
+}
+
 async function refreshRtlsdr(){
   try{
     document.getElementById('rtlsdrBlock').textContent='Aktualisiere…';

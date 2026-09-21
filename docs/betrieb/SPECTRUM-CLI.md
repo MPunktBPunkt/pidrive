@@ -1,6 +1,6 @@
 # pidrivectl spectrum — UKW-Peak-Scan
 
-**Stand:** v0.11.143 · 2026-09-19
+**Stand:** v0.11.155 · 2026-09-21
 
 ## Kommando
 
@@ -13,6 +13,9 @@ pidrivectl spectrum scan 87.5-108 -n 10
 pidrivectl spectrum scan 102.5:103.5 -n 3
 pidrivectl spectrum scan --start 87.5 --stop 108 --peaks 1
 
+# Airband-Beispiel (CLI Peak-Scan, nicht AM-Demod)
+pidrivectl spectrum scan 118-137 -n 15
+
 # Einzelkanal (Offset-Fenster, DC-sicher)
 pidrivectl spectrum peek 106.9
 pidrivectl spectrum peek 100.2 --gain 30
@@ -21,6 +24,11 @@ pidrivectl spectrum peek 100.2 --gain 30
 pidrivectl spectrum last
 pidrivectl spectrum last --json
 ```
+
+## WebUI-Presets (RF/DAB → Spektrum)
+
+Dropdown setzt Start/Stop für Range-Captures: FM, Airband, PMR446,
+DAB 11D/10A/11B, GSM-900 DL. Das ist FFT-Spektrum, kein AM-Zero-Span.
 
 ## Parameter
 

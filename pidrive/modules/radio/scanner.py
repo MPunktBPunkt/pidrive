@@ -278,6 +278,7 @@ except Exception:
 # ── Player / Zustand ─────────────────────────────────────────────────────────
 
 _player_proc = None
+_rtl_audio_proc = None
 _scan_abort = False
 SQUELCH = 50  # UHF/PMR: 25 ließ Dauerrauschen durch; 50 mute bis Träger
 
@@ -442,7 +443,7 @@ def check_hardware(screen=None):
 
 def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
               modulation=None, band_id=None, audio_profile=None):
-    global _player_proc
+    global _player_proc, _rtl_audio_proc
 
     if not check_hardware():
         S["radio_station"] = "Scanner-Hardware fehlt"
@@ -588,6 +589,7 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
         )
         _rtl_proc_sc.stdout.close()
         _player_proc = _mpv_proc_sc
+        _rtl_audio_proc = _rtl_proc_sc
         if _rtlsdr:
             try: _rtlsdr._proc = _rtl_proc_sc
             except Exception: pass
@@ -629,7 +631,7 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
 
 
 def stop(S):
-    global _player_proc, _scan_abort
+    global _player_proc, _rtl_audio_proc, _scan_abort
 
     _scan_abort = True
     # PMR-Monitor nur von außen stoppen — nicht aus dem Monitor-Thread selbst
@@ -653,14 +655,22 @@ def stop(S):
     # C12: Muster an tatsächliche mpv-Kommandozeile anpassen (--no-terminal, nicht --really-quiet)
     _bg("pkill -f 'mpv --no-video --no-terminal --title=pidrive_scanner' 2>/dev/null")
 
-    if _player_proc:
+    for proc_name, proc in (("_player_proc", _player_proc),
+                            ("_rtl_audio_proc", _rtl_audio_proc)):
+        if not proc:
+            continue
         try:
-            _player_proc.terminate()
-            _player_proc.wait(timeout=2.0)   # verhindert Zombie-Prozess
+            if proc.poll() is None:
+                proc.terminate()
+            proc.wait(timeout=2.0)   # verhindert Zombie-Prozess
         except Exception:
-            try: _player_proc.kill()
-            except Exception: pass
-        _player_proc = None
+            try:
+                proc.kill()
+                proc.wait(timeout=1.0)
+            except Exception:
+                pass
+    _player_proc = None
+    _rtl_audio_proc = None
 
     if S.get("radio_type") == "SCANNER":
         S["radio_playing"] = False
@@ -682,7 +692,8 @@ def stop(S):
 
 # ── Fast/Confirm Detection ───────────────────────────────────────────────────
 
-def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=1.5, squelch=None, settings=None):
+def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=1.5, squelch=None,
+                        settings=None, modulation=None):
     freq_hz = int(float(freq_mhz) * 1e6)
     if squelch is None:
         squelch = max(5, _get_squelch(settings) // 2)
@@ -691,9 +702,15 @@ def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=1.5, squelch=None, set
     _gain = _get_gain(settings)
     _ppm_arg = f" -p {_ppm}" if _ppm else ""
     _gain_arg = f" -g {_gain}" if _gain != -1 else ""
+    mod = str(modulation or "fm").lower()
+    if mod not in ("am", "fm", "wbfm"):
+        mod = "fm"
+    # AM: etwas mehr Gain-Hilfe bei Detect (Squelch schon halbiert)
+    if mod == "am" and _gain == -1:
+        _gain_arg = " -g 36"
 
     cmd = (
-        f"timeout {timeout_s}s rtl_fm -M fm -f {freq_hz} -s {int(bandwidth_hz)} "
+        f"timeout {timeout_s}s rtl_fm -M {mod} -f {freq_hz} -s {int(bandwidth_hz)} "
         f"-l {int(squelch)}{_ppm_arg}{_gain_arg} - 2>/dev/null | wc -c"
     )
 
@@ -706,13 +723,17 @@ def _detect_signal_fast(freq_mhz, bandwidth_hz, timeout_s=1.5, squelch=None, set
             timeout=timeout_s + 1.0
         )
         count = int((r.stdout or "0").strip() or "0")
-        log.debug(f"Scanner fast-detect: freq={freq_mhz} bw={bandwidth_hz} bytes={count}")
+        log.debug(
+            f"Scanner fast-detect: freq={freq_mhz} bw={bandwidth_hz} "
+            f"mod={mod} bytes={count}"
+        )
         return count > 180
     except Exception:
         return False
 
 
-def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=1.20, squelch=None, settings=None):
+def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=1.20, squelch=None,
+                           settings=None, modulation=None):
     freq_hz = int(float(freq_mhz) * 1e6)
     if squelch is None:
         squelch = _get_squelch(settings)
@@ -721,9 +742,17 @@ def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=1.20, squelch=None,
     _gain = _get_gain(settings)
     _ppm_arg = f" -p {_ppm}" if _ppm else ""
     _gain_arg = f" -g {_gain}" if _gain != -1 else ""
+    mod = str(modulation or "fm").lower()
+    if mod not in ("am", "fm", "wbfm"):
+        mod = "fm"
+    if mod == "am" and _gain == -1:
+        _gain_arg = " -g 36"
+    # AM-Träger oft schwächer als NBFM — etwas milderer Confirm-Squelch
+    if mod == "am":
+        squelch = max(10, int(squelch) - 10)
 
     cmd = (
-        f"timeout {timeout_s}s rtl_fm -M fm -f {freq_hz} -s {int(bandwidth_hz)} "
+        f"timeout {timeout_s}s rtl_fm -M {mod} -f {freq_hz} -s {int(bandwidth_hz)} "
         f"-l {int(squelch)}{_ppm_arg}{_gain_arg} - 2>/dev/null | wc -c"
     )
 
@@ -736,19 +765,24 @@ def _detect_signal_confirm(freq_mhz, bandwidth_hz, timeout_s=1.20, squelch=None,
             timeout=timeout_s + 1.4
         )
         count = int((r.stdout or "0").strip() or "0")
-        log.debug(f"Scanner confirm: freq={freq_mhz} bw={bandwidth_hz} bytes={count}")
+        log.debug(
+            f"Scanner confirm: freq={freq_mhz} bw={bandwidth_hz} "
+            f"mod={mod} bytes={count}"
+        )
         return count > 450
     except Exception:
         return False
 
 
-def _detect_signal(freq_mhz, bandwidth_hz, timeout_s=0.55, settings=None):
+def _detect_signal(freq_mhz, bandwidth_hz, timeout_s=0.55, settings=None,
+                   modulation=None):
     return _detect_signal_confirm(
         freq_mhz,
         bandwidth_hz,
         timeout_s=timeout_s,
         squelch=_get_squelch(settings),
-        settings=settings
+        settings=settings,
+        modulation=modulation,
     )
 
 
@@ -757,6 +791,8 @@ def _scan_bw_fast(band_id, default_bw):
         return 25000
     if band_id == "cb":
         return 20000
+    if band_id == "airband":
+        return max(int(default_bw or 10000), 12000)
     if band_id in ("vhf", "uhf"):
         # C5: Schritt 0.1 MHz → fast_bw muss ≥ 100 kHz sein (sonst Abtastlücken)
         return max(default_bw, 100000)
@@ -840,6 +876,7 @@ def _scan_list(S, channels, bw, direction, band_id="", settings=None):
                                 _current_ch.get(band_id, 0))
     idx = start_idx % n
     fast_bw = _scan_bw_fast(band_id, bw)
+    mod = _get_band_runtime(band_id).get("modulation") if band_id else "fm"
 
     for _ in range(n):
         if (_scan_abort
@@ -852,10 +889,17 @@ def _scan_list(S, channels, bw, direction, band_id="", settings=None):
         freq = ch["freq"]
         name = ch["name"]
 
-        log.info(f"Scanner scan-list: FAST band={band_id} ch={name} freq={freq} bw={fast_bw}")
-        if _detect_signal_fast(freq, fast_bw, settings=settings):
+        log.info(
+            f"Scanner scan-list: FAST band={band_id} ch={name} "
+            f"freq={freq} bw={fast_bw} mod={mod}"
+        )
+        if _detect_signal_fast(
+            freq, fast_bw, settings=settings, modulation=mod
+        ):
             log.info(f"Scanner scan-list: CANDIDATE band={band_id} ch={name} freq={freq}")
-            if _detect_signal_confirm(freq, bw, settings=settings):
+            if _detect_signal_confirm(
+                freq, bw, settings=settings, modulation=mod
+            ):
                 log.action("Scanner", f"Signal: {name} @ {freq} MHz")
                 if band_id:
                     _current_ch[f"scan_idx:{band_id}"] = idx
@@ -879,6 +923,7 @@ def _scan_range(S, band, bw, direction, band_id="", settings=None):
     total = max(1, round((band["max"] - band["min"]) / step_fast))
     freq = band.get("start", band["min"])
     fast_bw = _scan_bw_fast(band_id, bw)
+    mod = _get_band_runtime(band_id).get("modulation") if band_id else "fm"
 
     for _ in range(total):
         if (_scan_abort
@@ -887,18 +932,22 @@ def _scan_range(S, band, bw, direction, band_id="", settings=None):
             log.info(f"Scanner scan-range: abgebrochen band={band_id} radio_type={S.get('radio_type', '')}")
             return None
 
-        log.info(f"Scanner scan-range: FAST band={band_id} freq={freq:.3f} bw={fast_bw}")
-        if _detect_signal_fast(freq, fast_bw, settings=settings):
-            log.info(f"Scanner scan-range: CANDIDATE band={band_id} freq={freq:.3f}")
-            if _detect_signal_confirm(freq, bw, settings=settings):
-                name = f"{band['short']} {freq:.3f} MHz"
-                log.action("Scanner", f"Signal @ {freq:.3f} MHz")
+        log.info(
+            f"Scanner scan-range: FAST band={band_id} freq={freq} "
+            f"bw={fast_bw} mod={mod}"
+        )
+        if _detect_signal_fast(
+            freq, fast_bw, settings=settings, modulation=mod
+        ):
+            if _detect_signal_confirm(
+                freq, bw, settings=settings, modulation=mod
+            ):
+                name = f"{band.get('short', band_id.upper())} {freq:.3f}"
+                log.action("Scanner", f"Signal: {name} MHz")
                 band["start"] = freq
                 return {"name": name, "freq": freq}
-            else:
-                log.info(f"Scanner scan-range: FALSE_POSITIVE band={band_id} freq={freq:.3f}")
 
-        freq = round(freq + direction * step_fast, 3)
+        freq = round(freq + direction * step_fast, 6)
         if freq > band["max"]:
             freq = band["min"]
         elif freq < band["min"]:
@@ -1179,12 +1228,19 @@ def scan_next(band_id, S, settings=None, autoplay=True):
         if ch:
             log.info(f"Scanner: spectrum-hit band={band_id} freq={ch.get('freq')}")
 
-    # Fallback auf klassischen Scanner
+    # Fallback auf klassischen Scanner — Airband: frische Presets
     if ch is None:
-        if "channels" in b:
-            ch = _scan_list(S, b["channels"], b["bw"], 1, band_id=band_id, settings=settings)
-        else:
-            ch = _scan_range(S, b["band"], b["bw"], 1, band_id=band_id, settings=settings)
+        channels = _get_channels(band_id) if band_id else []
+        if channels:
+            ch = _scan_list(
+                S, channels, b.get("bw", 12500), 1,
+                band_id=band_id, settings=settings,
+            )
+        elif "band" in b:
+            ch = _scan_range(
+                S, b["band"], b.get("bw", 12500), 1,
+                band_id=band_id, settings=settings,
+            )
 
     if ch:
         if ch.get("freq") and "MHz" not in ch["name"]:
@@ -1194,7 +1250,7 @@ def scan_next(band_id, S, settings=None, autoplay=True):
         if autoplay:
             rt = _get_band_runtime(band_id)
             play_freq(
-                ch["freq"], ch["name"], b["bw"], S, settings=settings,
+                ch["freq"], ch["name"], b.get("bw", rt["bw"]), S, settings=settings,
                 modulation=rt["modulation"], band_id=band_id,
                 audio_profile=rt["audio_profile"],
             )
@@ -1221,10 +1277,17 @@ def scan_prev(band_id, S, settings=None, autoplay=True):
             log.info(f"Scanner: spectrum-hit-prev band={band_id} freq={ch.get('freq')}")
 
     if ch is None:
-        if "channels" in b:
-            ch = _scan_list(S, b["channels"], b["bw"], -1, band_id=band_id, settings=settings)
-        else:
-            ch = _scan_range(S, b["band"], b["bw"], -1, band_id=band_id, settings=settings)
+        channels = _get_channels(band_id) if band_id else []
+        if channels:
+            ch = _scan_list(
+                S, channels, b.get("bw", 12500), -1,
+                band_id=band_id, settings=settings,
+            )
+        elif "band" in b:
+            ch = _scan_range(
+                S, b["band"], b.get("bw", 12500), -1,
+                band_id=band_id, settings=settings,
+            )
 
     if ch:
         if ch.get("freq") and "MHz" not in ch["name"]:
@@ -1234,7 +1297,7 @@ def scan_prev(band_id, S, settings=None, autoplay=True):
         if autoplay:
             rt = _get_band_runtime(band_id)
             play_freq(
-                ch["freq"], ch["name"], b["bw"], S, settings=settings,
+                ch["freq"], ch["name"], b.get("bw", rt["bw"]), S, settings=settings,
                 modulation=rt["modulation"], band_id=band_id,
                 audio_profile=rt["audio_profile"],
             )

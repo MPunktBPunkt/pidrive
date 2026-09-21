@@ -28,6 +28,7 @@ Steuerung: AVRCP, WebUI Port **8080**, `pidrivectl`.
 | DAB+ | ✅ SM/Start/Stop; Indoor oft no_lock |
 | Spektrum CLI | ✅ scan/peek/last |
 | PMR446 Scanner | ✅ 16 Kanäle, Watch, NBFM, Monitor |
+| Airband AM | ✅ Presets (EDJA), Scan, AM via rtl_fm |
 | Browser-Monitor | ✅ `/api/audio/listen` (niedrige Latenz) |
 | WebUI Live-Smoke | ✅ Diagnose + test all |
 | BT A2DP | ✅ kein PW-Kill auf Klinke |

@@ -316,7 +316,8 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <span class="scan-label">Freq MHz</span>
       <input type="number" id="scAirFreq" step="0.025" min="118" max="136.975" value="121.5" placeholder="121.500">
       <button class="btn primary" onclick="scanAirband()">▶ Start</button>
-      <button class="btn" onclick="sendCmd('scan_up:airband')" title="nächstes Preset">▶</button>
+      <button class="btn" onclick="airbandScanNext()" title="Presets nach Signal durchsuchen">🔍 Suchen</button>
+      <button class="btn" onclick="sendCmd('scan_up:airband')" title="nächstes Preset (ohne Suche)">▶</button>
       <button class="btn" onclick="sendCmd('scan_down:airband')" title="vorheriges Preset">◀</button>
     </div>
     <div class="pmr-grid" id="airbandPresetGrid" style="margin-top:8px"></div>
@@ -601,7 +602,7 @@ function stopPmrBackendPoll() {
 
 function pmrMarkPlaying(ch) {
   _pmrPlayingCh = Number(ch) || 0;
-  document.querySelectorAll('.pmr-ch').forEach(b =>
+  document.querySelectorAll('#pmrGrid .pmr-ch').forEach(b =>
     b.classList.toggle('playing', Number(b.dataset.ch) === _pmrPlayingCh));
 }
 
@@ -618,7 +619,7 @@ function pmrTune(ch) {
 function setPmrActive(chs, primary) {
   const set = new Set((chs || []).map(Number));
   const prim = Number(primary) || 0;
-  document.querySelectorAll('.pmr-ch').forEach(b => {
+  document.querySelectorAll('#pmrGrid .pmr-ch').forEach(b => {
     const n = Number(b.dataset.ch);
     b.classList.toggle('active', set.has(n));
     b.classList.toggle('primary', prim === n);
@@ -765,7 +766,17 @@ function scanAirband() {
   if (f) {
     sendCmd('scan_setfreq:airband:' + f);
     showToast('Airband AM ' + f + ' MHz');
-    switchTab('player');
+    airbandMarkPlaying(null);
+    if (typeof startGlobalListen === 'function') startGlobalListen();
+  }
+}
+async function airbandScanNext() {
+  showToast('Airband-Suche…');
+  const j = await sendCmd('scan_next:airband');
+  if (j && j.ok) {
+    showToast('Suche gestartet — Presets AM');
+    if (typeof startGlobalListen === 'function') startGlobalListen();
+    setTimeout(loadAirbandLastFreq, 2500);
   }
 }
 function airbandStep(delta) {
@@ -777,15 +788,26 @@ function airbandStep(delta) {
   if (el) el.value = f.toFixed(3);
   sendCmd('scan_setfreq:airband:' + f);
   showToast('Airband ' + f.toFixed(3));
+  airbandMarkPlaying(null);
+  if (typeof startGlobalListen === 'function') startGlobalListen();
+}
+function airbandMarkPlaying(ch) {
+  const grid = document.getElementById('airbandPresetGrid');
+  if (!grid) return;
+  const n = Number(ch) || 0;
+  grid.querySelectorAll('.airband-ch').forEach(b =>
+    b.classList.toggle('playing', n > 0 && Number(b.dataset.ch) === n));
 }
 function airbandTunePreset(ch, freq) {
   if (freq != null) {
     const el = document.getElementById('scAirFreq');
     if (el) el.value = Number(freq).toFixed(3);
   }
+  airbandMarkPlaying(ch);
   sendCmd('scan_setch:airband:' + ch);
   showToast('Airband K' + ch);
-  switchTab('player');
+  // Scanner-Tab offen lassen — switchTab('player') ließ die Preset-Tabelle „verschwinden“
+  if (typeof startGlobalListen === 'function') startGlobalListen();
 }
 async function loadAirbandLastFreq() {
   const el = document.getElementById('scAirFreq');
@@ -812,7 +834,7 @@ async function loadAirbandPresets() {
       const ch = Number(s.ch) || 0;
       const freq = Number(s.freq);
       const name = String(s.name || ('K' + ch));
-      return `<button type="button" class="pmr-ch" data-ch="${ch}"
+      return `<button type="button" class="pmr-ch airband-ch" data-ch="${ch}"
         title="${freq.toFixed(3)} MHz"
         onclick="airbandTunePreset(${ch}, ${freq})">K${ch}<br>
         <span style="font-size:9px;opacity:.7">${name}</span></button>`;

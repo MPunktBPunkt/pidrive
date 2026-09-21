@@ -217,6 +217,7 @@ def main():
   pidrivectl scanner airband ch 1          Airband-Preset (config)
   pidrivectl scanner airband next          Airband nächstes Preset
   pidrivectl scanner airband prev          Airband vorheriges Preset
+  pidrivectl scanner airband scan          Airband Presets nach Signal durchsuchen
   pidrivectl scanner airband list          Airband-Presets anzeigen
   pidrivectl scanner monitor start --trigger-on 18  Lab: niedrigere Hit-Schwelle
   pidrivectl scanner monitor stop
@@ -383,12 +384,17 @@ Flags (vor dem Befehl angeben):
     for _scb in ["pmr446","freenet","lpd433","vhf","uhf","cb","fm","airband"]:
         _p = sc_sub.add_parser(_scb)
         _sc_sub2 = _p.add_subparsers(dest="sc_action")
-        _p_scan = _sc_sub2.add_parser("scan")
+        _p_scan = _sc_sub2.add_parser(
+            "scan",
+            help=("Presets/Kanäle nach Signal durchsuchen "
+                  "(Airband: AM-Detect)") if _scb == "airband"
+            else "Kanäle/Band nach Signal durchsuchen",
+        )
         _p_scan.add_argument("--verbose", "-v", action="store_true",
                              help="pro Kanal Frequenz/Entscheidung ausgeben")
         _sc_sub2.add_parser("stop")
-        _sc_sub2.add_parser("next")
-        _sc_sub2.add_parser("prev")
+        _sc_sub2.add_parser("next", help="nächstes Preset/Kanal (ohne Suche)")
+        _sc_sub2.add_parser("prev", help="vorheriges Preset/Kanal (ohne Suche)")
         if _scb == "airband":
             _sc_sub2.add_parser("list", help="Airband-Presets aus config/airband_stations.json")
         _p_ch  = _sc_sub2.add_parser("ch");   _p_ch.add_argument("n",  type=int)

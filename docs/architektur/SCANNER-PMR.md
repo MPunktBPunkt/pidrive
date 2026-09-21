@@ -287,7 +287,7 @@ Transition bei Hold=15 s mitten im Hören löschen.
 | Symptom | Typische Ursache | Reaktion |
 |---------|------------------|----------|
 | `Device busy` / `authorized=0` | USB soft-getrennt | `usb_reset` → authorized 0→1 |
-| `rtl_sdr Timeout` | Stick hängt | `force_free_rtl`, nach 3× Reset |
+| `rtl_sdr Timeout` | Stick hängt | Auto: hard-Recover + Retry, dann USB-Reset (60 s Cooldown); manuell: RF-Tools **Reset** / `rtlsdr_reset` |
 | Diagnose `Operation not permitted … json` | `/tmp` Sticky, root vs pidrive | In-Place-Write (v0.11.155) |
 | Spektrum 409 „PMR-Monitor aktiv“ | Gate | `preempt_monitor=1` (Default) |
 | hits=0, viele peeks ~19 dB | unter Trigger 25 dB | näher senden / Gain / Trigger |
@@ -362,10 +362,10 @@ Echter Treffer sieht z. B. so aus:
 
 ---
 
-## 13. Airband (AM) — Phase 1 + 2
+## 13. Airband (AM) — Phase 1–3
 
 Manueller Empfang im Band **118.000–136.975 MHz** mit expliziter Modulation `am`,
-plus **lokale Presets**.
+**lokale Presets**, und **Preset-Scan** (Signal-Suche).
 
 | | |
 |--|--|
@@ -373,13 +373,14 @@ plus **lokale Presets**.
 | Modulation | `rtl_fm -M am` via `play_freq(..., modulation="am")` |
 | Schritt | 25 kHz (`scan_step:airband:±0.025`) |
 | Presets | `config/airband_stations.json` → `ch` / next / prev |
+| Preset-Scan | `scan_next:airband` / `scan_prev:airband` — Detect mit `-M am` |
 | Startfrequenz | 121.500 (Emergency) |
-| CLI | `scanner airband list\|ch N\|freq F\|next\|prev` |
-| Trigger | `scan_setch:airband:N`, `scan_setfreq:airband:<mhz>`, `scan_up/down:airband` |
-| WebUI | Scanner-Tab → Airband-Karte + Preset-Buttons |
+| CLI | `scanner airband list\|ch N\|freq F\|next\|prev\|scan` |
+| Trigger | `scan_setch:airband:N`, `scan_setfreq:airband:<mhz>`, `scan_up/down:airband`, `scan_next/prev:airband` |
+| WebUI | Scanner-Tab → Airband-Karte + Presets + **Suchen** |
 | API | `GET /api/scanner/airband-stations` |
 | Setting | `scanner_airband_last_freq` |
 
-**Noch nicht:** Raster-Scan-Heuristik für AM, Airband-Monitor.  
+**Noch nicht:** Dauer-Monitor analog PMR, Spektrum-Profil über ganzes Airband (Span zu groß).  
 Zentrale Runtime-Hilfe: `scanner._get_band_runtime(band_id)` → `modulation` / `audio_profile` / `bw`.  
 Presets neu laden: `scanner.refresh_airband_channels()` (auch bei jedem `_get_channels("airband")`).

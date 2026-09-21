@@ -289,8 +289,11 @@ def build_listen_ffmpeg_cmd(monitor_source: str) -> list:
         "-probesize", "32", "-analyzeduration", "0",
         "-f", "pulse", "-i", monitor_source,
         "-ac", "1", "-ar", "24000",
-        "-af", "volume=6dB,highpass=f=250,lowpass=f=3700",
+        # Kein scharfes Voice-EQ hier — sonst bleibt der Stream bei
+        # Stille/Squelch zu lange ohne Frames und der Browser hängt auf play().
+        "-af", "volume=8dB,aresample=async=1:first_pts=0",
         "-c:a", "libmp3lame", "-q:a", "4", "-reservoir", "0",
+        "-flush_packets", "1",
         "-f", "mp3", "pipe:1",
     ]
 

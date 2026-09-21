@@ -239,13 +239,33 @@ async function startGlobalListen() {
       return;
     }
   } catch(e) {}
+  // Alten Stream hart trennen — sonst hängt play() auf „verbinde…“
+  try { a.pause(); } catch(e) {}
+  a.removeAttribute('src');
+  try { a.load(); } catch(e) {}
+  const onPlaying = () => {
+    if (_listenWantedGet() || window._listenWanted)
+      _setListenUi(true, 'WLAN-Audio');
+  };
+  a.addEventListener('playing', onPlaying, { once: true });
   a.src = '/api/audio/listen?t=' + Date.now();
+  try { a.load(); } catch(e) {}
+  let playResult = 'pending';
   try {
-    await a.play();
-    _setListenUi(true, 'WLAN-Audio');
+    const playP = Promise.resolve(a.play()).then(() => 'ok').catch(() => 'err');
+    const toP = new Promise(res => setTimeout(() => res('timeout'), 3500));
+    playResult = await Promise.race([playP, toP]);
   } catch(e) {
-    _setListenUi(true, 'tippen zum Start');
+    playResult = 'err';
   }
+  if (!(_listenWantedGet() || window._listenWanted)) return;
+  if (playResult === 'ok')
+    _setListenUi(true, 'WLAN-Audio');
+  else if (playResult === 'timeout')
+    // Stream läuft oft schon — Browser wartet noch auf Puffer
+    _setListenUi(true, 'stream…');
+  else
+    _setListenUi(true, 'tippen zum Start');
 }
 
 function stopGlobalListen(clearWanted) {

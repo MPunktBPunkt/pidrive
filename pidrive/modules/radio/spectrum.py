@@ -1358,12 +1358,25 @@ def _kill_rtl_sdr_procs():
             pass
 
 
+def _recover_after_rtl_timeout(level: str = "hard") -> None:
+    """Nach rtl_sdr-Timeout: Prozess killen + gestufte Freigabe/USB-Reset."""
+    _kill_rtl_sdr_procs()
+    if not _rtlsdr or not hasattr(_rtlsdr, "recover_busy_device"):
+        return
+    try:
+        _rtlsdr.recover_busy_device(reason="rtl_sdr_timeout", level=level)
+    except Exception:
+        pass
+    time.sleep(0.35)
+
+
 def _run_rtl_sdr_iq(center_hz: int, sample_rate_hz: int, sample_count: int,
                     ppm: int = 0, gain: int = -1, timeout: float = 20.0) -> bytes:
     """Ein rtl_sdr-Capture nach stdout.
 
     Hard-Cap 65536: auf diesem Stick streamt -n 131072 endlos (Timeout), 65536 ist stabil.
     Feinere RBW → Sample-Rate senken oder Avg erhöhen, nicht mehr Samples.
+    Bei Timeout: hard-Recover + 1 Retry, danach USB-Reset-Stufe.
     """
     n = max(4096, min(int(sample_count), 65536))
     cmd = [
@@ -1379,15 +1392,24 @@ def _run_rtl_sdr_iq(center_hz: int, sample_rate_hz: int, sample_count: int,
     cmd += ["-"]
     t_cap = n / max(float(sample_rate_hz), 1.0)
     to = max(float(timeout), 8.0 + t_cap * 10.0)
-    try:
-        cp = subprocess.run(cmd, capture_output=True, timeout=to)
-    except subprocess.TimeoutExpired:
-        _kill_rtl_sdr_procs()
-        raise
-    if not cp.stdout:
-        err = (cp.stderr or b"").decode("utf-8", "ignore")[:300]
-        raise RuntimeError(err or "keine IQ-Daten")
-    return cp.stdout
+
+    last_timeout = None
+    for attempt in range(2):
+        try:
+            cp = subprocess.run(cmd, capture_output=True, timeout=to)
+        except subprocess.TimeoutExpired as e:
+            last_timeout = e
+            # 1. Versuch: hart freigeben; 2. Versuch: USB-Reset (Cooldownown)
+            _recover_after_rtl_timeout(level="hard" if attempt == 0 else "reset")
+            continue
+        if not cp.stdout:
+            err = (cp.stderr or b"").decode("utf-8", "ignore")[:300]
+            raise RuntimeError(err or "keine IQ-Daten")
+        return cp.stdout
+
+    if last_timeout is not None:
+        raise last_timeout
+    raise RuntimeError("keine IQ-Daten")
 
 
 def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=65536,
@@ -1428,8 +1450,8 @@ def capture_spectrum(center_mhz, sample_rate_hz=2048000, sample_count=65536,
         try:
             raw = _run_rtl_sdr_iq(center_hz, sr, frame_n, ppm=ppm, gain=gain)
         except subprocess.TimeoutExpired:
-            last_err = "rtl_sdr Timeout"
-            _kill_rtl_sdr_procs()
+            last_err = "rtl_sdr Timeout (Recover/Reset versucht)"
+            _recover_after_rtl_timeout(level="reset")
             break
         except Exception as e:
             last_err = str(e)

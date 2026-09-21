@@ -98,8 +98,28 @@ def api_audio_listen():
     env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
     monitor_src = info["source"]
 
+    # Kurzes MP3-Preroll, damit der Browser nicht endlos auf play() wartet
+    # (PipeWire-Monitor liefert manchmal erst nach dem ersten Chunk Daten).
+    preroll = b""
+    try:
+        pr = subprocess.run(
+            [
+                "ffmpeg", "-hide_banner", "-loglevel", "error",
+                "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono",
+                "-t", "0.15", "-c:a", "libmp3lame", "-q:a", "9",
+                "-f", "mp3", "pipe:1",
+            ],
+            capture_output=True, timeout=3, env=env,
+        )
+        if pr.returncode == 0 and pr.stdout:
+            preroll = pr.stdout
+    except Exception:
+        preroll = b""
+
     def generate():
         # Bei Pulse/PipeWire-Neustart ffmpeg neu starten (Monitor bleibt nutzbar)
+        if preroll:
+            yield preroll
         backoff = 0.4
         while True:
             proc = None

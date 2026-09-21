@@ -34,10 +34,12 @@ Hilfe: `pidrivectl scanner monitor -h` · `pidrivectl scanner monitor start -h`
 
 WebUI: Scanner-Tab zeigt Monitor-Status + Debugzeile; Trigger-dB einstellbar.
 Peek unter Trigger markiert den Kanal (grün), Activity erst ab `trigger_on_db`.
-Airband AM: eigene Karte (Freq / Start / ±25 kHz) — siehe [`SCANNER-PMR.md`](../architektur/SCANNER-PMR.md) §13.
+Airband AM: eigene Karte (Freq / Start / Presets / ±25 kHz / **Suchen**) — siehe [`SCANNER-PMR.md`](../architektur/SCANNER-PMR.md) §13.
+Presets: `pidrive/config/airband_stations.json` (lokal anpassbar).
+CLI: `pidrivectl scanner airband scan` (Preset-Scan AM) · `ch N` · `list`.
 
 Review-Maßnahmen P0–P3: [`../architektur/SCANNER-REVIEW-MASSNAHMEN.md`](../architektur/SCANNER-REVIEW-MASSNAHMEN.md)
-(umsetzbar erledigt; optional offen: persistenter Mehrprozess-IQ-Streamer).
+(umsetzbar erledigt; optional offen: Airband Phase 4 Dauer-Monitor, persistenter IQ-Streamer).
 
 ## Settings (`config/settings.json`)
 
