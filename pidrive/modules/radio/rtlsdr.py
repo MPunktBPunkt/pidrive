@@ -842,6 +842,91 @@ def usb_reset() -> dict:
 
     return result
 
+
+# Letzter USB-Reset (Cooldownown gegen Reset-Stürme)
+_LAST_USB_RESET_TS = 0.0
+USB_RESET_COOLDOWN_S = 60.0
+
+
+def recover_busy_device(reason: str = "", level: str = "soft",
+                       force_reset: bool = False) -> dict:
+    """
+    Gestufte RTL-Freigabe für Scanner/Monitor/Capture.
+
+    level:
+      soft  — wait_until_free
+      hard  — gezielte pkill + Lock/State-Cleanup
+      reset — usb_reset() (mit Cooldown, außer force_reset)
+    """
+    global _LAST_USB_RESET_TS
+    out = {
+        "ok": False,
+        "level": level,
+        "reason": str(reason or "")[:120],
+        "steps": [],
+        "skipped_reset_cooldown": False,
+    }
+    lvl = (level or "soft").lower()
+
+    if lvl in ("soft", "hard", "reset"):
+        try:
+            if wait_until_free(timeout=2.0, interval=0.15):
+                out["steps"].append("wait_until_free:ok")
+                if lvl == "soft":
+                    out["ok"] = True
+                    return out
+            else:
+                out["steps"].append("wait_until_free:busy")
+        except Exception as e:
+            out["steps"].append(f"wait_until_free:err:{e}")
+
+    if lvl in ("hard", "reset"):
+        for proc in ("rtl_sdr", "rtl_fm", "welle-cli", "welle_cli", "rtl_test"):
+            try:
+                _run(["pkill", "-9", "-x", proc], timeout=3)
+                out["steps"].append(f"kill {proc}")
+            except Exception:
+                try:
+                    _run(["pkill", "-9", "-f", proc], timeout=3)
+                    out["steps"].append(f"kill -f {proc}")
+                except Exception:
+                    pass
+        try:
+            clear_stale_lock()
+            for f in (LOCK_FILE, STATE_FILE):
+                try:
+                    os.remove(f)
+                except FileNotFoundError:
+                    pass
+            out["steps"].append("lock_cleared")
+        except Exception as e:
+            out["steps"].append(f"lock_clear_err:{e}")
+        time.sleep(0.25)
+        if lvl == "hard":
+            out["ok"] = not is_busy()
+            return out
+
+    if lvl == "reset":
+        now = time.time()
+        since = now - float(_LAST_USB_RESET_TS or 0.0)
+        if (not force_reset) and _LAST_USB_RESET_TS and since < USB_RESET_COOLDOWN_S:
+            out["skipped_reset_cooldown"] = True
+            out["steps"].append(
+                f"usb_reset skipped (cooldown {USB_RESET_COOLDOWN_S - since:.0f}s left)"
+            )
+            out["ok"] = not is_busy()
+            return out
+        rr = usb_reset()
+        _LAST_USB_RESET_TS = time.time()
+        out["steps"].extend(list((rr or {}).get("steps") or []))
+        out["usb_reset"] = rr
+        out["ok"] = bool((rr or {}).get("ok"))
+        return out
+
+    out["ok"] = not is_busy()
+    return out
+
+
 # ── CLI ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

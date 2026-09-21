@@ -17,6 +17,7 @@ pidrivectl scanner monitor start --no-tune # nur loggen, nicht umschalten
 pidrivectl scanner monitor start --hold 20 # Hörzeit nach Treffer (Sekunden)
 pidrivectl scanner monitor start --trigger-on 18   # Lab: niedrigere Hit-Schwelle
 pidrivectl scanner monitor start --trigger-off 12
+pidrivectl scanner monitor start --watch 0.8       # schnelleres Watch-Fenster
 pidrivectl scanner monitor stop
 pidrivectl scanner monitor log             # letzte Activity-Events
 pidrivectl scanner monitor log -n 80
@@ -41,6 +42,7 @@ WebUI: Scanner-Tab zeigt Monitor-Status + Debugzeile; Trigger-dB einstellbar.
 | `scanner_pmr_hold_s` | Hörzeit nach Tune | `15` |
 | `scanner_pmr_trigger_on_db` | Hit-Schwelle relativ Noise | `25` (Lab oft `16`–`20`) |
 | `scanner_pmr_trigger_off_db` | Hysterese unter Trigger | `14` |
+| `scanner_pmr_watch_s` | Watch-Fenster pro Zyklus | `1.0` (0.5–2.5) |
 | `scanner_gain` | Gain; Monitor ersetzt Auto(`-1`) durch festen Nahfeld-Gain | typ. `25`–`36` |
 | `ppm_correction` | Quarzkorrektur | kalibriert |
 

@@ -995,7 +995,7 @@ def set_freq(band_id, freq_mhz, S, settings=None):
 
 # ── Scan öffentlich ──────────────────────────────────────────────────────────
 
-def scan_next(band_id, S, settings=None):
+def scan_next(band_id, S, settings=None, autoplay=True):
     global _scan_abort
     _scan_abort = False
 
@@ -1022,14 +1022,15 @@ def scan_next(band_id, S, settings=None):
             _set_scanner_label(band_id, f"{ch['name']}  {ch['freq']} MHz", S)
         else:
             _set_scanner_label(band_id, ch["name"], S)
-        play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
+        if autoplay:
+            play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
         _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
         return ch
     _write_scan_result(band_id, False)
     return None
 
 
-def scan_prev(band_id, S, settings=None):
+def scan_prev(band_id, S, settings=None, autoplay=True):
     global _scan_abort
     _scan_abort = False
 
@@ -1056,7 +1057,8 @@ def scan_prev(band_id, S, settings=None):
             _set_scanner_label(band_id, f"{ch['name']}  {ch['freq']} MHz", S)
         else:
             _set_scanner_label(band_id, ch["name"], S)
-        play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
+        if autoplay:
+            play_freq(ch["freq"], ch["name"], b["bw"], S, settings=settings)
         _write_scan_result(band_id, True, ch["name"], ch.get("freq"))
         return ch
     _write_scan_result(band_id, False)
@@ -1066,14 +1068,19 @@ def scan_prev(band_id, S, settings=None):
 PMR_MONITOR_STATUS = "/tmp/pidrive_pmr_monitor.json"
 PMR_MONITOR_LOG = "/var/log/pidrive/pmr_monitor.jsonl"
 PMR_MONITOR_HOLD_S = 15.0
-PMR_MONITOR_WATCH_S = 2.0
-PMR_MONITOR_IDLE_GAP_S = 0.4
+PMR_MONITOR_WATCH_S = 1.0
+PMR_MONITOR_WATCH_S_MIN = 0.5
+PMR_MONITOR_WATCH_S_MAX = 2.5
+PMR_MONITOR_IDLE_GAP_S = 0.25
 PMR_MONITOR_HEARTBEAT_S = 120.0
 PMR_MONITOR_TRIGGER_ON_DB = 25.0   # Nahfeld-Walkie ~60dB; 9–20dB = Dauer-Falsch (K8/K9)
 PMR_MONITOR_TRIGGER_OFF_DB = 14.0
 PMR_MONITOR_MIN_FRAMES = 1
 PMR_MONITOR_DEFAULT_GAIN = 36  # Auto(-1) zu taub für PMR-Nahfeld
 PMR_MONITOR_PEEK_MIN_DB = 6.0
+PMR_MONITOR_START_SETTLE_S = 0.35
+PMR_MONITOR_PREEMPT_SETTLE_S = 0.35
+PMR_MONITOR_LISTEN_END_SETTLE_S = 0.25
 
 _monitor_thread = None
 _monitor_stop = threading.Event()
@@ -1367,7 +1374,7 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
                         _src_state.commit_source("idle")
                     except Exception:
                         pass
-                time.sleep(0.8)
+                time.sleep(PMR_MONITOR_PREEMPT_SETTLE_S)
                 continue
 
             if not _spectrum:
@@ -1433,53 +1440,64 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
                             pass
                     except Exception:
                         pass
+                    # Gestufte Recovery über zentrale RTL-API
                     try:
-                        subprocess.run(["pkill", "-9", "-x", "welle-cli"],
-                                       capture_output=True, timeout=3)
-                        subprocess.run(["pkill", "-9", "-x", "rtl_sdr"],
-                                       capture_output=True, timeout=3)
-                        subprocess.run(["pkill", "-9", "-x", "rtl_fm"],
-                                       capture_output=True, timeout=3)
-                    except Exception:
-                        pass
-                    for _p in ("/tmp/pidrive_rtlsdr.lock",
-                               "/tmp/pidrive_rtlsdr_state.json"):
-                        try:
-                            if os.path.exists(_p):
-                                os.remove(_p)
-                        except Exception:
-                            pass
-                    _monitor_meta["force_free_rtl_count"] = (
-                        int(_monitor_meta.get("force_free_rtl_count") or 0) + 1
-                    )
-                    _pmr_append_log({"event": "force_free_rtl",
-                                     "streak": consecutive_errors,
-                                     "error_class": err_cls})
-                    # Nach 3 Hängern: USB-Reset (bekannter Stick-Bug)
-                    if consecutive_errors >= 3 and _rtlsdr:
-                        try:
-                            rr = _rtlsdr.usb_reset()
-                            reset_ok = bool((rr or {}).get("ok"))
-                            _monitor_meta["usb_reset_count"] = (
-                                int(_monitor_meta.get("usb_reset_count") or 0) + 1
+                        if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
+                            level = "reset" if consecutive_errors >= 3 else "hard"
+                            rr = _rtlsdr.recover_busy_device(
+                                reason=f"monitor:{err_cls}",
+                                level=level,
                             )
-                            _monitor_meta["last_usb_reset_ts"] = time.time()
+                            _monitor_meta["force_free_rtl_count"] = (
+                                int(_monitor_meta.get("force_free_rtl_count") or 0) + 1
+                            )
                             _pmr_append_log({
-                                "event": "usb_reset",
-                                "ok": reset_ok,
+                                "event": "force_free_rtl",
+                                "streak": consecutive_errors,
+                                "error_class": err_cls,
+                                "level": level,
                                 "steps": (rr or {}).get("steps"),
                             })
-                            log.warn(
-                                f"PMR-Monitor usb_reset → "
-                                f"{reset_ok}"
-                            )
-                            consecutive_errors = 0
-                            _monitor_meta["capture_error_streak"] = 0
-                            time.sleep(2.0)
-                        except Exception as re:
-                            log.warn(f"PMR-Monitor usb_reset: {re}")
-                    time.sleep(0.5)
-                if _monitor_stop.wait(2.0):
+                            if level == "reset":
+                                if (rr or {}).get("skipped_reset_cooldown"):
+                                    _pmr_append_log({
+                                        "event": "usb_reset_skipped",
+                                        "reason": "cooldown",
+                                        "steps": (rr or {}).get("steps"),
+                                    })
+                                else:
+                                    reset_ok = bool((rr or {}).get("ok"))
+                                    _monitor_meta["usb_reset_count"] = (
+                                        int(_monitor_meta.get("usb_reset_count") or 0) + 1
+                                    )
+                                    _monitor_meta["last_usb_reset_ts"] = time.time()
+                                    _pmr_append_log({
+                                        "event": "usb_reset",
+                                        "ok": reset_ok,
+                                        "steps": (rr or {}).get("steps"),
+                                    })
+                                    log.warn(
+                                        f"PMR-Monitor usb_reset → {reset_ok}"
+                                    )
+                                    consecutive_errors = 0
+                                    _monitor_meta["capture_error_streak"] = 0
+                                    time.sleep(1.5)
+                        else:
+                            raise RuntimeError("no recover_busy_device")
+                    except Exception as re:
+                        log.warn(f"PMR-Monitor recover: {re}")
+                        # Fallback: alter Direkt-Kill
+                        try:
+                            subprocess.run(["pkill", "-9", "-x", "welle-cli"],
+                                           capture_output=True, timeout=3)
+                            subprocess.run(["pkill", "-9", "-x", "rtl_sdr"],
+                                           capture_output=True, timeout=3)
+                            subprocess.run(["pkill", "-9", "-x", "rtl_fm"],
+                                           capture_output=True, timeout=3)
+                        except Exception:
+                            pass
+                    time.sleep(0.35)
+                if _monitor_stop.wait(1.5):
                     break
                 continue
 
@@ -1651,7 +1669,7 @@ def _pmr_monitor_loop(S, settings, band_id, autotune, hold_s, watch_s,
                                 "ch": ch_num,
                                 "hold_s": float(hold_s),
                             })
-                            time.sleep(0.6)
+                            time.sleep(PMR_MONITOR_LISTEN_END_SETTLE_S)
                 idle_since_hb = 0
                 last_heartbeat = time.time()
             else:
@@ -1750,7 +1768,11 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
         except Exception:
             hold_s = PMR_MONITOR_HOLD_S
     if watch_s is None:
-        watch_s = PMR_MONITOR_WATCH_S
+        try:
+            watch_s = float(settings.get("scanner_pmr_watch_s", PMR_MONITOR_WATCH_S))
+        except Exception:
+            watch_s = PMR_MONITOR_WATCH_S
+    watch_s = max(PMR_MONITOR_WATCH_S_MIN, min(PMR_MONITOR_WATCH_S_MAX, float(watch_s)))
     def_on, def_off = _pmr_read_trigger_settings(settings)
     if trigger_on_db is None:
         trigger_on_db = def_on
@@ -1789,29 +1811,35 @@ def start_pmr_monitor(S, settings=None, band_id="pmr446",
             stop(S)
         except Exception:
             pass
-        # Synchron freigeben — async _bg würde den frischen Capture treffen
+        # Synchron freigeben — bevorzugt zentrale Recovery
         try:
-            subprocess.run(["pkill", "-x", "welle-cli"],
-                           capture_output=True, timeout=3)
+            if _rtlsdr and hasattr(_rtlsdr, "recover_busy_device"):
+                _rtlsdr.recover_busy_device(reason="pmr_monitor_start", level="hard")
+            else:
+                raise RuntimeError("no recover")
         except Exception:
-            pass
-        try:
-            subprocess.run(["pkill", "-x", "rtl_sdr"],
-                           capture_output=True, timeout=3)
-        except Exception:
-            pass
-        try:
-            subprocess.run(["pkill", "-x", "rtl_fm"],
-                           capture_output=True, timeout=3)
-        except Exception:
-            pass
-        for _p in ("/tmp/pidrive_rtlsdr.lock", "/tmp/pidrive_rtlsdr_state.json"):
             try:
-                if os.path.exists(_p):
-                    os.remove(_p)
+                subprocess.run(["pkill", "-x", "welle-cli"],
+                               capture_output=True, timeout=3)
             except Exception:
                 pass
-        time.sleep(1.0)
+            try:
+                subprocess.run(["pkill", "-x", "rtl_sdr"],
+                               capture_output=True, timeout=3)
+            except Exception:
+                pass
+            try:
+                subprocess.run(["pkill", "-x", "rtl_fm"],
+                               capture_output=True, timeout=3)
+            except Exception:
+                pass
+            for _p in ("/tmp/pidrive_rtlsdr.lock", "/tmp/pidrive_rtlsdr_state.json"):
+                try:
+                    if os.path.exists(_p):
+                        os.remove(_p)
+                except Exception:
+                    pass
+        time.sleep(PMR_MONITOR_START_SETTLE_S)
         if _src_state:
             try:
                 _src_state.force_end_transition("pmr_monitor_start")

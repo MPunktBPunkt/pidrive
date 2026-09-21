@@ -323,13 +323,25 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <input type="number" id="pmrTriggerOn" min="8" max="40" step="1" value="25"
              style="width:56px;margin:0 6px"
              onchange="savePmrTriggerOn(this.value)">
-      <span class="hint">(Hit ab diesem relativen dB; gilt beim nächsten Start)</span>
+      <span class="hint">Hit-Schwelle</span>
+    </label>
+    <label class="pmr-opt" title="Kürzeres Watch = schnellere Reaktion, etwas weniger Integration">
+      <span>Watch s</span>
+      <input type="number" id="pmrWatchS" min="0.5" max="2.5" step="0.1" value="1.0"
+             style="width:56px;margin:0 6px"
+             onchange="savePmrWatchS(this.value)">
+      <span class="hint">(0.5–2.5; gilt beim nächsten Start)</span>
     </label>
     <div class="scan-row">
       <button class="btn primary" id="pmrWatchBtn" onclick="togglePmrWatch()">👁 Dauerbeobachtung</button>
-      <button class="btn" onclick="pmrScanOnce()" title="Einmaliger Snapshot — stoppt den Backend-Monitor kurz">Scan einmal</button>
+      <button class="btn" onclick="pmrScanOnce()">Scan einmal</button>
       <button class="btn" onclick="sendCmd('scan_next:pmr446')">Nächster Treffer ▶</button>
     </div>
+    <label class="pmr-opt" title="Snapshot stoppt den Backend-Monitor kurz, damit der Stick frei ist">
+      <input type="checkbox" id="pmrPreemptMonitor" checked>
+      <span>Snapshot stoppt Monitor kurz</span>
+      <span class="hint">(preempt_monitor)</span>
+    </label>
     <div class="pmr-status" id="pmrStatus">Tipp: Walkie senden → aktive Kanäle werden grün</div>
     <div class="pmr-status" id="pmrBackendStatus" style="margin-top:2px"></div>
     <div class="pmr-status" id="pmrDebugStatus" style="margin-top:2px;font-size:11px;opacity:.85"></div>
@@ -417,6 +429,7 @@ function pmrAutoTuneEnabled() {
 async function loadPmrAutoTune() {
   const el = document.getElementById('pmrAutoTune');
   const trig = document.getElementById('pmrTriggerOn');
+  const watch = document.getElementById('pmrWatchS');
   try {
     const r = await fetch('/api/scanner/settings');
     const j = await r.json();
@@ -425,6 +438,8 @@ async function loadPmrAutoTune() {
         el.checked = j.data.scanner_pmr_autotune;
       if (trig && j.data.scanner_pmr_trigger_on_db != null)
         trig.value = j.data.scanner_pmr_trigger_on_db;
+      if (watch && j.data.scanner_pmr_watch_s != null)
+        watch.value = j.data.scanner_pmr_watch_s;
     }
   } catch (e) { /* lokal belassen */ }
 }
@@ -455,6 +470,19 @@ async function savePmrTriggerOn(val) {
       body: JSON.stringify({ scanner_pmr_trigger_on_db: n })
     });
     showToast('Trigger ' + n + ' dB (nächster Monitor-Start)');
+  } catch (e) { /* ignore */ }
+}
+
+async function savePmrWatchS(val) {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return;
+  try {
+    await fetch('/api/scanner/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ scanner_pmr_watch_s: n })
+    });
+    showToast('Watch ' + n + 's (nächster Monitor-Start)');
   } catch (e) { /* ignore */ }
 }
 
@@ -582,8 +610,10 @@ function setPmrActive(chs, primary) {
 async function pmrScanOnce() {
   const st = document.getElementById('pmrStatus');
   if (st) { st.textContent = 'Messe PMR446…'; st.classList.remove('hot'); }
+  const preemptEl = document.getElementById('pmrPreemptMonitor');
+  const preempt = (!preemptEl || preemptEl.checked) ? '1' : '0';
   try {
-    const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.2&preempt_monitor=1', {method:'POST'});
+    const r = await fetch('/api/spectrum/capture?band=pmr446&watch_seconds=1.2&preempt_monitor=' + preempt, {method:'POST'});
     const j = await r.json();
     if (!j.ok) { if (st) st.textContent = 'Fehler: ' + (j.error||'?'); return; }
     if (j.preempted_monitor) showToast('Detektor gestoppt → Snapshot');
@@ -607,6 +637,8 @@ async function togglePmrWatch() {
   await savePmrAutoTune(pmrAutoTuneEnabled());
   const trigEl = document.getElementById('pmrTriggerOn');
   if (trigEl) await savePmrTriggerOn(trigEl.value);
+  const watchEl = document.getElementById('pmrWatchS');
+  if (watchEl) await savePmrWatchS(watchEl.value);
   sendCmd('radio_stop');
   sendCmd('pmr_monitor_start');
   _setPmrWatchButton(true);

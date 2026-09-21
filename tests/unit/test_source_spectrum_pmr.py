@@ -202,11 +202,27 @@ def test_scan_next_returns_channel_on_hit(monkeypatch):
     hit = {"name": "PMR 1", "freq": 446.00625}
     monkeypatch.setattr(scanner, "_get_spectrum_enabled", lambda s: False)
     monkeypatch.setattr(scanner, "_scan_list", lambda *a, **k: hit)
-    monkeypatch.setattr(scanner, "play_freq", lambda *a, **k: None)
+    played = []
+    monkeypatch.setattr(scanner, "play_freq", lambda *a, **k: played.append(a))
     monkeypatch.setattr(scanner, "_set_scanner_label", lambda *a, **k: None)
     monkeypatch.setattr(scanner, "_write_scan_result", lambda *a, **k: None)
     found = scanner.scan_next("pmr446", S, settings={})
     assert found == hit
+    assert played  # default autoplay
+
+
+def test_scan_next_autoplay_false_skips_play(monkeypatch):
+    S = {}
+    hit = {"name": "PMR 1", "freq": 446.00625}
+    monkeypatch.setattr(scanner, "_get_spectrum_enabled", lambda s: False)
+    monkeypatch.setattr(scanner, "_scan_list", lambda *a, **k: hit)
+    played = []
+    monkeypatch.setattr(scanner, "play_freq", lambda *a, **k: played.append(a))
+    monkeypatch.setattr(scanner, "_set_scanner_label", lambda *a, **k: None)
+    monkeypatch.setattr(scanner, "_write_scan_result", lambda *a, **k: None)
+    found = scanner.scan_next("pmr446", S, settings={}, autoplay=False)
+    assert found == hit
+    assert played == []
 
 
 def test_scan_prev_returns_none_without_hit(monkeypatch):

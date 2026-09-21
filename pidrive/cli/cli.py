@@ -404,6 +404,8 @@ Flags (vor dem Befehl angeben):
     _p_mon_start.add_argument("--trigger-off", type=float, default=None,
                               dest="trigger_off",
                               help="Hysterese unter Trigger in dB (Default 14)")
+    _p_mon_start.add_argument("--watch", type=float, default=None,
+                              help="Watch-Fenster Sekunden (0.5–2.5, Default 1.0)")
     _mon_sub.add_parser("stop", help="Überwachung stoppen")
     _mon_sub.add_parser("status", help="Monitor-Status")
     _p_mon_log = _mon_sub.add_parser("log", help="Aktivitäts-Log anzeigen")
@@ -1769,6 +1771,8 @@ Flags (vor dem Befehl angeben):
                         _s["scanner_pmr_trigger_on_db"] = float(args.trigger_on)
                     if getattr(args, "trigger_off", None) is not None:
                         _s["scanner_pmr_trigger_off_db"] = float(args.trigger_off)
+                    if getattr(args, "watch", None) is not None:
+                        _s["scanner_pmr_watch_s"] = float(args.watch)
                     _ss(_s)
                 except Exception as e:
                     fmt.err(f"Settings: {e}")

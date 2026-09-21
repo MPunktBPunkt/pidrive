@@ -148,14 +148,18 @@ def handle(cmd, menu_state, store, S, settings, bg):
             else: S.pop(_sk, None)
         def _scan_next(b=band):
             _stop_other_sources(S)
-            # W5/E3: Transition erst NACH dem Scan — sonst bricht C1 ab
-            found = scanner.scan_next(b, S, settings)
+            # Scan ohne Audio — play_freq erst nach Transition (Ownership)
+            found = scanner.scan_next(b, S, settings, autoplay=False)
             if found:
                 if not source_state.begin_transition(f"scan_next:{b}", "scanner"):
                     _blocked()
                     return
                 try:
                     S["scanner_band"] = b
+                    bw = (scanner.BANDS.get(b) or {}).get("bw")
+                    scanner.play_freq(
+                        found["freq"], found["name"], bw, S, settings=settings
+                    )
                     source_state.commit_source("scanner")
                 finally:
                     source_state.end_transition()
@@ -167,13 +171,17 @@ def handle(cmd, menu_state, store, S, settings, bg):
         band = cmd.split(":", 1)[1]
         def _scan_prev(b=band):
             _stop_other_sources(S)
-            found = scanner.scan_prev(b, S, settings)
+            found = scanner.scan_prev(b, S, settings, autoplay=False)
             if found:
                 if not source_state.begin_transition(f"scan_prev:{b}", "scanner"):
                     _blocked()
                     return
                 try:
                     S["scanner_band"] = b
+                    bw = (scanner.BANDS.get(b) or {}).get("bw")
+                    scanner.play_freq(
+                        found["freq"], found["name"], bw, S, settings=settings
+                    )
                     source_state.commit_source("scanner")
                 finally:
                     source_state.end_transition()

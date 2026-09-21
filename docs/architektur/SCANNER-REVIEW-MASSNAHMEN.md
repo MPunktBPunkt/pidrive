@@ -48,26 +48,24 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 
 ### P0 — sofort (Detektion / Korrektheit)
 
-1. **FFT-Size an Profil koppeln** — erledigt in `watch_channels()`; Debugfeld `effective_fft_size`.
-2. **`scan_next` / `scan_prev` Rückgabe** — erledigt (`return ch` / `None`).
-3. **Diagnose-Mindestsatz** (als Nächstes):
-   - Status: `last_peek_*`, `peek_count`, `activity_count`, `capture_error_streak`
-   - Zeitstempel: `watch_started_ts`, `activity_ts`, `tuned_ts`, `audio_started_ts`
-4. **Trigger testweise absenkbar** (Settings/CLI, z. B. 16–20 dB Lab-Modus) — ohne Softcode-Hardcoding nur 25.
+1. **FFT-Size an Profil koppeln** — erledigt.
+2. **`scan_next` / `scan_prev` Rückgabe** — erledigt.
+3. **Diagnose-Mindestsatz** — erledigt.
+4. **Trigger testweise absenkbar** — erledigt.
 
 ### P1 — kurzfristig (Latenz + Robustheit)
 
-5. **Early-Exit** in `watch_channels()` bei starkem Hit (Margin über Trigger + Mindestzeit ~300 ms).
-6. **Watch-Fenster** für Monitor konfigurierbar / `fast`-Modus (0.6–1.0 s).
-7. **Pro-Watch-IQ-Block** statt N× `rtl_sdr` pro Frame (größter Hebel gegen Stick-Stress).
-8. **Sleep-Audit** im Monitor (Start 1.0 s, Preempt 0.8 s, Listen-Ende 0.6 s).
-9. **WebUI**: Snapshot vs. Backend-Monitor klarer; `preempt_monitor` sichtbar; Debug-Poll 0.5–1 s.
+5. **Early-Exit** — erledigt.
+6. **Watch-Fenster konfigurierbar** — erledigt (`scanner_pmr_watch_s`, Default 1.0 s).
+7. **Pro-Watch-IQ-Block** — erledigt.
+8. **Sleep-Audit** — erledigt (Start/Preempt/Listen-Ende verkürzt).
+9. **WebUI Debug / preempt-Schalter** — erledigt.
 
 ### P2 — mittelfristig (Ownership)
 
-10. Recovery-Eskalation zentral in `rtlsdr.recover_device(level=…)` statt Sonder-`pkill` in `scanner.py`.
-11. Reset-Cooldown + Zähler im Status.
-12. `scan_next`: Scan und `play_freq` entkoppeln (Trigger startet Audio nach Transition) — heute startet Audio schon vor `begin_transition`.
+10. **Recovery zentral** — erledigt (`rtlsdr.recover_busy_device`).
+11. **Reset-Cooldown** — erledigt (60 s).
+12. **`scan_next` Audio nach Transition** — erledigt (`autoplay=False` + play im Trigger).
 
 ### P3 — später
 
@@ -84,10 +82,16 @@ und UI-Komplettumbau sind sinnvoll, aber nach den schnellen Detektions-/Diagnose
 [x] scan_next/prev Return
 [x] Peek/Activity/Error-Metriken + Zeitstempel (Status/API)
 [x] Trigger konfigurierbar + Feldtest A (nur Erkennung)
-[x] Early-Exit + kürzeres Watch (Feldtest B Latency)  # Early-Exit; Watch-Länge noch Default 2s
+[x] Early-Exit + kürzeres Watch (Feldtest B Latency)
 [x] Block-Capture pro Watch (Feldtest C Stick-Stabilität)
 [x] UI-Debugblock
-[ ] Recovery zentralisieren
+[x] Watch-Fenster konfigurierbar / Sleep-Audit
+[x] preempt_monitor UI-Schalter
+[x] Recovery zentralisieren (`rtlsdr.recover_busy_device`) + Reset-Cooldown
+[x] scan_next Audio erst nach Transition
+[ ] Persistenter IQ-/Owner-Service (P3)
+[ ] Nachbarkanal-/Best-Channel-Tuning (P3)
+[ ] Vollständige E2E-Integrationstests (P3)
 ```
 
 ---
