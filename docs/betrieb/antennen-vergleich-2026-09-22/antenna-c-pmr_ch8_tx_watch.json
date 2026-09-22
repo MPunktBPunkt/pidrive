@@ -1,0 +1,144 @@
+{
+  "band": "pmr446",
+  "data": {
+    "active_ch_numbers": [
+      8
+    ],
+    "active_channels": [
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR8",
+        "confidence": 1.0,
+        "freq_hz": 446093750.0,
+        "freq_mhz": 446.09375,
+        "note": "PMR Kanal 8",
+        "power_db": 43.27,
+        "relative_db": 56.75,
+        "score": 48.948,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      }
+    ],
+    "active_channels_raw": [
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR8",
+        "confidence": 1.0,
+        "freq_hz": 446093750.0,
+        "freq_mhz": 446.09375,
+        "note": "PMR Kanal 8",
+        "power_db": 43.27,
+        "relative_db": 56.75,
+        "score": 48.948,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR11",
+        "confidence": 1.0,
+        "freq_hz": 446131250.0,
+        "freq_mhz": 446.13125,
+        "note": "PMR Kanal 11",
+        "power_db": 27.19,
+        "relative_db": 40.66,
+        "score": 35.262,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR14",
+        "confidence": 1.0,
+        "freq_hz": 446168750.0,
+        "freq_mhz": 446.16875,
+        "note": "PMR Kanal 14",
+        "power_db": 15.21,
+        "relative_db": 28.68,
+        "score": 24.986,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR1",
+        "confidence": 1.0,
+        "freq_hz": 446006250.0,
+        "freq_mhz": 446.00625,
+        "note": "PMR Kanal 1",
+        "power_db": 14.88,
+        "relative_db": 28.35,
+        "score": 24.766,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR15",
+        "confidence": 1.0,
+        "freq_hz": 446181250.0,
+        "freq_mhz": 446.18125,
+        "note": "PMR Kanal 15",
+        "power_db": 10.26,
+        "relative_db": 23.73,
+        "score": 20.824,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR5",
+        "confidence": 1.0,
+        "freq_hz": 446056250.0,
+        "freq_mhz": 446.05625,
+        "note": "PMR Kanal 5",
+        "power_db": 9.67,
+        "relative_db": 23.14,
+        "score": 20.267,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      {
+        "active_frames": 4,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR4",
+        "confidence": 0.69,
+        "freq_hz": 446043750.0,
+        "freq_mhz": 446.04375,
+        "note": "PMR Kanal 4",
+        "power_db": 2.37,
+        "relative_db": 15.84,
+        "score": 13.553,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      }
+    ],
+    "best_candidate": {
+      "active_frames": 8,
+      "bandwidth_hz": 12500.0,
+      "channel_name": "PMR8",
+      "confidence": 1.0,
+      "freq_hz": 446093750.0,
+      "freq_mhz": 446.09375,
+      "note": "PMR Kanal 8",
+      "power_db": 43.27,
+      "relative_db": 56.75,
+      "score": 48.948,
+      "source": "channel",
+      "timestamp": 1790087569.047
+    },
+    "found": true,
+    "frames_processed": 8,
+    "primary_ch": 8,
+    "watch_seconds": 0.58
+  },
+  "ok": true,
+  "preempted_monitor": false
+}

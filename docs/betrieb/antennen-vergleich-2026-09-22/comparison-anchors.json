@@ -1,69 +1,94 @@
 {
-  "A_vs_B": {
-    "FM 90.7": {
-      "a_peak": 64.84,
-      "b_peak": 49.26,
-      "d_peak": -15.580000000000005,
-      "a_snr": 35.44,
-      "b_snr": 47.03,
-      "d_snr": 11.590000000000003
-    },
-    "FM 95.8": {
-      "a_peak": 65.81,
-      "b_peak": 47.07,
-      "d_peak": -18.740000000000002,
-      "a_snr": 37.58,
-      "b_snr": 43.05,
-      "d_snr": 5.469999999999999
-    },
-    "FM 103.0": {
-      "a_peak": 61.19,
-      "b_peak": 47.23,
-      "d_peak": -13.96,
-      "a_snr": 29.13,
-      "b_snr": 46.17,
-      "d_snr": 17.040000000000003
-    },
-    "FM 104.4": {
-      "a_peak": 69.86,
-      "b_peak": 47.17,
-      "d_peak": -22.689999999999998,
-      "a_snr": 43.41,
-      "b_snr": 46.02,
-      "d_snr": 2.6100000000000065
-    },
-    "K2 ATIS": {
-      "a_peak": 70.55,
-      "b_peak": 53.75,
-      "d_peak": -16.799999999999997,
-      "a_snr": 40.68,
-      "b_snr": 49.34,
-      "d_snr": 8.660000000000004
-    },
-    "DAB 10A Rockantenne": {
-      "a_peak": 55.94,
-      "b_peak": 46.99,
-      "d_peak": -8.949999999999996,
-      "a_snr": 17.72,
-      "b_snr": 34.57,
-      "d_snr": 16.85
-    },
-    "DAB 11D Bayern3": {
-      "a_peak": 54.09,
-      "b_peak": 46.99,
-      "d_peak": -7.100000000000001,
-      "a_snr": 17.53,
-      "b_snr": 32.07,
-      "d_snr": 14.54
-    },
-    "PMR446 Ch8 TX": {
-      "a_val": 61.11,
-      "b_val": 54.47,
-      "delta": -6.640000000000001,
-      "unit": "rel_db"
-    }
+  "labels": {
+    "A": "AliExpress DVB-T AT-01 (USB-LNA)",
+    "B": "Teleskop (ausziehbar)",
+    "C": "Bingfu Magnetfu\u00df 7dBi (VHF136-174/UHF400-470)"
   },
-  "note": "PMR uses watch relative_db; FM/ATIS snr from same peek method; DAB snr methods differ slightly; B=Teleskop (ausziehbar).",
-  "B_label": "Teleskop (ausziehbar)",
-  "A_label": "AliExpress DVB-T AT-01"
+  "rows": [
+    {
+      "name": "FM 90.7",
+      "A_peak": 64.84,
+      "B_peak": 49.26,
+      "C_peak": 52.0,
+      "A_snr": 35.44,
+      "B_snr": 47.03,
+      "C_snr": 46.84,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "FM 95.8",
+      "A_peak": 65.81,
+      "B_peak": 47.07,
+      "C_peak": 47.13,
+      "A_snr": 37.58,
+      "B_snr": 43.05,
+      "C_snr": 39.02,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "FM 103.0",
+      "A_peak": 61.19,
+      "B_peak": 47.23,
+      "C_peak": 47.21,
+      "A_snr": 29.13,
+      "B_snr": 46.17,
+      "C_snr": 39.26,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "FM 104.4",
+      "A_peak": 69.86,
+      "B_peak": 47.17,
+      "C_peak": 47.24,
+      "A_snr": 43.41,
+      "B_snr": 46.02,
+      "C_snr": 37.74,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "K2 ATIS",
+      "A_peak": 70.55,
+      "B_peak": 53.75,
+      "C_peak": 58.18,
+      "A_snr": 40.68,
+      "B_snr": 49.34,
+      "C_snr": 46.45,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "DAB 10A Rockantenne",
+      "A_peak": 55.94,
+      "B_peak": 46.99,
+      "C_peak": 47.17,
+      "A_snr": 17.72,
+      "B_snr": 34.57,
+      "C_snr": 30.45,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "DAB 11D Bayern3",
+      "A_peak": 54.09,
+      "B_peak": 46.99,
+      "C_peak": 47.18,
+      "A_snr": 17.53,
+      "B_snr": 32.07,
+      "C_snr": 26.46,
+      "best_peak": "A",
+      "best_snr": "B"
+    },
+    {
+      "name": "PMR446 Ch8 TX",
+      "unit": "rel_db",
+      "A": 61.11,
+      "B": 54.47,
+      "C": 56.75,
+      "best": "A"
+    }
+  ]
 }

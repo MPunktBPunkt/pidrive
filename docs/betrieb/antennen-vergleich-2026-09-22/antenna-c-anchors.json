@@ -1,0 +1,363 @@
+{
+  "antenna": "C_bingfu",
+  "label": "Bingfu Magnetfu\u00df 7dBi (VHF136-174 / UHF400-470, SMA, RG174 3m)",
+  "kind": "anchor_points",
+  "position": "Dachboden",
+  "ppm": 49,
+  "ts": 1790087576.1999493,
+  "ts_iso": "2026-09-22T16:32:56+0200",
+  "spec_claim": {
+    "gain_dbi": 7,
+    "vhf_mhz": [
+      136,
+      174
+    ],
+    "uhf_mhz": [
+      400,
+      470
+    ],
+    "vswr": "<2.0",
+    "impedance_ohm": 50,
+    "cable": "3m RG174",
+    "connector": "SMA female"
+  },
+  "note": "Antenna C Bingfu anchors complete (PMR during TX, then FM/ATIS/DAB)",
+  "results": [
+    {
+      "name": "PMR446 Ch8 TX",
+      "band": "PMR",
+      "freq_mhz": 446.09375,
+      "ok": true,
+      "gain": 36,
+      "ppm": 49,
+      "peak_db": 87.71,
+      "peak_f": 446.08892,
+      "noise_floor_db": 1.96,
+      "snr_db": 85.75,
+      "window_mhz": [
+        446.04375,
+        446.24375
+      ],
+      "top": [
+        [
+          446.08892,
+          87.79
+        ],
+        [
+          446.05824,
+          68.18
+        ],
+        [
+          446.08888,
+          56.46
+        ],
+        [
+          446.08898,
+          55.32
+        ],
+        [
+          446.08883,
+          54.78
+        ],
+        [
+          446.08902,
+          54.0
+        ],
+        [
+          446.1196,
+          48.76
+        ],
+        [
+          446.08913,
+          48.42
+        ]
+      ],
+      "watch_found": true,
+      "watch_primary_ch": 8,
+      "watch_best": {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR8",
+        "confidence": 1.0,
+        "freq_hz": 446093750.0,
+        "freq_mhz": 446.09375,
+        "note": "PMR Kanal 8",
+        "power_db": 43.27,
+        "relative_db": 56.75,
+        "score": 48.948,
+        "source": "channel",
+        "timestamp": 1790087569.047
+      },
+      "watch_active": [
+        {
+          "active_frames": 8,
+          "bandwidth_hz": 12500.0,
+          "channel_name": "PMR8",
+          "confidence": 1.0,
+          "freq_hz": 446093750.0,
+          "freq_mhz": 446.09375,
+          "note": "PMR Kanal 8",
+          "power_db": 43.27,
+          "relative_db": 56.75,
+          "score": 48.948,
+          "source": "channel",
+          "timestamp": 1790087569.047
+        }
+      ],
+      "watch_relative_db": 56.75,
+      "watch_power_db": 43.27
+    },
+    {
+      "freq_mhz": 90.7,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 52.0,
+      "peak_f": 90.6995,
+      "mean_db": 22.02,
+      "noise_floor_db": 5.16,
+      "snr_db": 46.84,
+      "margin_db": 37.23,
+      "ctrl_peak_db": 14.77,
+      "top3": [
+        [
+          90.6995,
+          52.24
+        ],
+        [
+          90.6994,
+          51.48
+        ],
+        [
+          90.6992,
+          50.8
+        ]
+      ],
+      "name": "FM 90.7",
+      "band": "UKW",
+      "window_mhz": [
+        90.5,
+        91.0
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 95.8,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 47.13,
+      "peak_f": 95.85,
+      "mean_db": 24.97,
+      "noise_floor_db": 8.1,
+      "snr_db": 39.02,
+      "margin_db": 19.16,
+      "ctrl_peak_db": 27.96,
+      "top3": [
+        [
+          95.85,
+          47.13
+        ],
+        [
+          95.7964,
+          44.01
+        ],
+        [
+          95.8101,
+          44.0
+        ]
+      ],
+      "name": "FM 95.8",
+      "band": "UKW",
+      "window_mhz": [
+        95.6,
+        96.1
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 103.0,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 47.21,
+      "peak_f": 103.05,
+      "mean_db": 19.91,
+      "noise_floor_db": 7.94,
+      "snr_db": 39.26,
+      "margin_db": 27.34,
+      "ctrl_peak_db": 19.86,
+      "top3": [
+        [
+          103.05,
+          47.21
+        ],
+        [
+          102.9993,
+          45.82
+        ],
+        [
+          102.9995,
+          43.68
+        ]
+      ],
+      "name": "FM 103.0",
+      "band": "UKW",
+      "window_mhz": [
+        102.8,
+        103.3
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 104.4,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 47.24,
+      "peak_f": 104.45,
+      "mean_db": 24.89,
+      "noise_floor_db": 9.5,
+      "snr_db": 37.74,
+      "margin_db": 28.95,
+      "ctrl_peak_db": 18.28,
+      "top3": [
+        [
+          104.45,
+          47.24
+        ],
+        [
+          104.4005,
+          44.68
+        ],
+        [
+          104.3994,
+          44.25
+        ]
+      ],
+      "name": "FM 104.4",
+      "band": "UKW",
+      "window_mhz": [
+        104.2,
+        104.7
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 118.855,
+      "ok": true,
+      "error": null,
+      "gain": 36,
+      "ppm": 49,
+      "peak_db": 58.18,
+      "peak_f": 118.8493,
+      "mean_db": 13.88,
+      "noise_floor_db": 11.73,
+      "snr_db": 46.45,
+      "margin_db": 10.92,
+      "ctrl_peak_db": 47.27,
+      "top3": [
+        [
+          118.8493,
+          58.72
+        ],
+        [
+          118.9,
+          47.27
+        ],
+        [
+          119.1723,
+          31.26
+        ]
+      ],
+      "name": "K2 ATIS",
+      "band": "Airband",
+      "window_mhz": [
+        118.6,
+        119.2
+      ],
+      "half_khz": 12
+    },
+    {
+      "name": "DAB 10A Rockantenne",
+      "band": "DAB",
+      "freq_mhz": 209.936,
+      "ok": true,
+      "gain": 30,
+      "ppm": 49,
+      "peak_db": 47.17,
+      "peak_f": 209.936,
+      "snr_db": 30.45,
+      "noise_floor_db": 7.45,
+      "peak_db_wide": 37.91,
+      "snr_db_wide": 30.45,
+      "margin_db": 17.38,
+      "window_mhz": [
+        209.186,
+        210.686
+      ],
+      "window_mhz_wide": [
+        208.73600000000002,
+        211.136
+      ],
+      "top3": [
+        [
+          209.936,
+          47.18
+        ],
+        [
+          209.4738,
+          32.52
+        ],
+        [
+          209.6628,
+          32.15
+        ]
+      ],
+      "note": "peak_db=narrow; snr_db=wide\u00b11.2M (outside claim VHF136-174)"
+    },
+    {
+      "name": "DAB 11D Bayern3",
+      "band": "DAB",
+      "freq_mhz": 222.064,
+      "ok": true,
+      "gain": 30,
+      "ppm": 49,
+      "peak_db": 47.18,
+      "peak_f": 222.064,
+      "snr_db": 26.46,
+      "noise_floor_db": 5.72,
+      "peak_db_wide": 32.18,
+      "snr_db_wide": 26.46,
+      "margin_db": 27.32,
+      "window_mhz": [
+        221.314,
+        222.814
+      ],
+      "window_mhz_wide": [
+        220.864,
+        223.26399999999998
+      ],
+      "top3": [
+        [
+          222.064,
+          47.18
+        ],
+        [
+          222.4994,
+          24.71
+        ],
+        [
+          221.4017,
+          23.69
+        ]
+      ],
+      "note": "peak_db=narrow; snr_db=wide\u00b11.2M (outside claim VHF136-174)"
+    }
+  ],
+  "ts_done": 1790087692.2893994
+}

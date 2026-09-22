@@ -22,7 +22,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/SPECTRUM-CLI.md](betrieb/SPECTRUM-CLI.md) | `pidrivectl spectrum scan/peek/last` | Betrieb, Entwickler | 2026-09-19 |
 | [betrieb/PMR-MONITOR.md](betrieb/PMR-MONITOR.md) | `pidrivectl scanner monitor …` + USB-Recovery | Betrieb, Entwickler | 2026-09-21 |
 | [betrieb/UKW-GAIN-SCAN-2026-09-19.md](betrieb/UKW-GAIN-SCAN-2026-09-19.md) | UKW Gain/PPM-Messung → Defaults fm_gain/ppm | Betrieb, RF | 2026-09-19 |
-| [betrieb/antennen-vergleich-2026-09-22/](betrieb/antennen-vergleich-2026-09-22/README.md) | Antennen A (DVB-T) vs. B Teleskop: UKW/DAB/Airband/PMR | Betrieb, RF | 2026-09-22 |
+| [betrieb/antennen-vergleich-2026-09-22/](betrieb/antennen-vergleich-2026-09-22/README.md) | Antennen A/B/C (DVB-T, Teleskop, Bingfu): UKW/DAB/Airband/PMR | Betrieb, RF | 2026-09-22 |
 | [betrieb/WEBUI-REVIEW-2026-09-18.md](betrieb/WEBUI-REVIEW-2026-09-18.md) | WebUI-Code-Review: Funde R1–R13 + Fixes | Entwickler, QA | 2026-09-18 |
 | [betrieb/CODE-REVIEW-2026-09-20.md](betrieb/CODE-REVIEW-2026-09-20.md) | Struktur/Legacy/Flows: was veraltet, Ordner, Diagramm-Gültigkeit | Entwickler | 2026-09-20 |
 | [betrieb/BOOT-SPEED.md](betrieb/BOOT-SPEED.md) | Boot-Zeiten: networkd-wait-online, wifi-recover, Core | Betrieb, Entwickler | 2026-09-20 |

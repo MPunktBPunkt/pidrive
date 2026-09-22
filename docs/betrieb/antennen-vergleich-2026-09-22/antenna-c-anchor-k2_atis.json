@@ -1,0 +1,147 @@
+{
+  "ok": true,
+  "gain": 36,
+  "ppm": 49,
+  "peaks": [
+    {
+      "bin": 15958,
+      "db": 58.72,
+      "delta_bin": 0.2973,
+      "freq_mhz": 118.849333,
+      "interpolated": true
+    },
+    {
+      "bin": 19201,
+      "db": 47.27,
+      "delta_bin": -0.0054,
+      "freq_mhz": 118.9,
+      "interpolated": true
+    },
+    {
+      "bin": 36630,
+      "db": 31.26,
+      "delta_bin": -0.2734,
+      "freq_mhz": 119.172324,
+      "interpolated": true
+    },
+    {
+      "bin": 15945,
+      "db": 29.84,
+      "delta_bin": 0.4417,
+      "freq_mhz": 118.849132,
+      "interpolated": true
+    },
+    {
+      "bin": 24447,
+      "db": 29.73,
+      "delta_bin": 0.1685,
+      "freq_mhz": 118.981971,
+      "interpolated": true
+    },
+    {
+      "bin": 15980,
+      "db": 29.7,
+      "delta_bin": 0.4057,
+      "freq_mhz": 118.849678,
+      "interpolated": true
+    },
+    {
+      "bin": 15936,
+      "db": 29.6,
+      "delta_bin": 0.4593,
+      "freq_mhz": 118.848992,
+      "interpolated": true
+    },
+    {
+      "bin": 24456,
+      "db": 27.05,
+      "delta_bin": 0.0812,
+      "freq_mhz": 118.982111,
+      "interpolated": true
+    },
+    {
+      "bin": 24037,
+      "db": 26.32,
+      "delta_bin": -0.2607,
+      "freq_mhz": 118.975558,
+      "interpolated": true
+    },
+    {
+      "bin": 12647,
+      "db": 26.26,
+      "delta_bin": -0.3646,
+      "freq_mhz": 118.797588,
+      "interpolated": true
+    },
+    {
+      "bin": 26965,
+      "db": 26.14,
+      "delta_bin": 0.0683,
+      "freq_mhz": 119.021314,
+      "interpolated": true
+    },
+    {
+      "bin": 17565,
+      "db": 25.59,
+      "delta_bin": -0.313,
+      "freq_mhz": 118.874433,
+      "interpolated": true
+    },
+    {
+      "bin": 24119,
+      "db": 25.19,
+      "delta_bin": -0.4599,
+      "freq_mhz": 118.976837,
+      "interpolated": true
+    },
+    {
+      "bin": 24385,
+      "db": 25.09,
+      "delta_bin": 0.402,
+      "freq_mhz": 118.981006,
+      "interpolated": true
+    },
+    {
+      "bin": 2699,
+      "db": 24.96,
+      "delta_bin": 0.3617,
+      "freq_mhz": 118.642162,
+      "interpolated": true
+    }
+  ],
+  "analysis": {
+    "freq_mhz": 118.855,
+    "ok": true,
+    "error": null,
+    "gain": 36,
+    "ppm": 49,
+    "peak_db": 58.18,
+    "peak_f": 118.8493,
+    "mean_db": 13.88,
+    "noise_floor_db": 11.73,
+    "snr_db": 46.45,
+    "margin_db": 10.92,
+    "ctrl_peak_db": 47.27,
+    "top3": [
+      [
+        118.8493,
+        58.72
+      ],
+      [
+        118.9,
+        47.27
+      ],
+      [
+        119.1723,
+        31.26
+      ]
+    ],
+    "name": "K2 ATIS",
+    "band": "Airband",
+    "window_mhz": [
+      118.6,
+      119.2
+    ],
+    "half_khz": 12
+  }
+}

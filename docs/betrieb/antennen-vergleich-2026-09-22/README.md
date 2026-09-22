@@ -1,7 +1,7 @@
 # Antennen-Vergleich 2026-09-22
 
 Spektrum-Messungen (RTL-SDR über PiDrive `/api/spectrum/capture`) im Dachboden.
-Ziel: AliExpress-DVB-T-Antenne (A) gegen Teleskop ausziehbar (B).
+Ziel: A AliExpress-DVB-T, B Teleskop (ausziehbar), C Bingfu Magnetfuß.
 
 | | |
 |---|---|
@@ -11,12 +11,21 @@ Ziel: AliExpress-DVB-T-Antenne (A) gegen Teleskop ausziehbar (B).
 | Empfänger | RTL-SDR (PiDrive) |
 | TX | PMR446 Ch8 nur während Stützpunkt-Messung (Nahfeld) |
 
-Rohdaten: `antenna-a-*.json` in diesem Ordner.
-Stützpunkte: `antenna-a-anchors.json` (+ `antenna-a-anchor-*.json`).
+Rohdaten: `antenna-{a,b,c}-*.json`. Stützpunkte: `antenna-*-anchors.json`, `comparison-anchors.json`.
 
 ---
 
-## Antenne A — AliExpress DVB-T AT-01 (aktiv)
+## Übersicht Antennen
+
+| ID | Typ | Claim / Hinweis |
+|----|-----|-----------------|
+| **A** | AliExpress DVB-T AT-01 | VHF 172–240 / UHF 470–860, USB-LNA 5 V, 75 Ω |
+| **B** | Teleskop (ausziehbar) | passiv, bisherige Antenne |
+| **C** | Bingfu Magnetfuß 7 dBi | VHF 136–174 / UHF 400–470, 50 Ω, SMA, 3 m RG174 |
+
+---
+
+## Antenne A — AliExpress DVB-T AT-01
 
 **Marketing-Claim (AliExpress, mit Vorsicht):** VHF 172–240 MHz / UHF 470–860 MHz,
 „200 Meilen“, LNA „25 dBi“, USB 5 V (~20 mA), F-Male, ~4,5 m Kabel, Impedanz 75 Ω.
@@ -143,23 +152,50 @@ Rohdaten: `antenna-b-anchors.json`, `antenna-b-anchor-*.json`, `comparison-ancho
 
 ---
 
-## Vergleichstabelle Stützpunkte (A vs. B Teleskop)
+## Antenne C — Bingfu Magnetfuß (7 dBi)
 
-Δ = B − A. Positives Δ SNR: B „sauberer“. Negatives Δ Peak / PMR-rel: A stärker (LNA).
+**Claim:** VHF 136–174 MHz / UHF 400–470 MHz, 7 dBi, VSWR &lt;2, 50 Ω, omni, Magnetfuß,
+3 m RG174, SMA-Buchse. **Im Claim:** PMR446 und oberes Airband-Ende; **außerhalb:** UKW, ATIS 118,855, DAB.
 
-| Ziel | A Peak | A SNR/rel | B Peak | B SNR/rel | Δ Peak | Δ SNR/rel |
-|------|--------|-----------|--------|-----------|--------|-----------|
-| FM 90,7 | 64,8 | 35,4 | 49,3 | 47,0 | −15,6 | **+11,6** |
-| FM 95,8 | 65,8 | 37,6 | 47,1 | 43,1 | −18,7 | **+5,5** |
-| FM 103,0 | 61,2 | 29,1 | 47,2 | 46,2 | −14,0 | **+17,0** |
-| FM 104,4 | 69,9 | 43,4 | 47,2 | 46,0 | −22,7 | **+2,6** |
-| K2 ATIS | 70,6 | 40,7 | 53,8 | 49,3 | −16,8 | **+8,7** |
-| DAB 10A | 55,9 | 17,7 | 47,0 | 34,6* | −9,0 | (+)* |
-| DAB 11D | 54,1 | 17,5 | 47,0 | 32,1* | −7,1 | (+)* |
-| PMR Ch8 TX | — | **61,1 rel** | — | **54,5 rel** | — | **−6,6** |
+Rohdaten: `antenna-c-anchors.json`, `antenna-c-anchor-*.json`.
+
+| Stützpunkt | Peak (dB) | SNR / rel | Rang Peak | Rang SNR/rel |
+|------------|-----------|-----------|-----------|--------------|
+| FM 90,7 | 52,0 | 46,8 | 2. (nach A) | ≈B |
+| FM 95,8 | 47,1 | 39,0 | ≈B | 3. |
+| FM 103,0 | 47,2 | 39,3 | ≈B | 3. |
+| FM 104,4 | 47,2 | 37,7 | ≈B | 3. |
+| K2 ATIS | **58,2** | 46,5 | 2. (nach A) | 2. |
+| DAB 10A | 47,2 | 30,5 | ≈B | 3. |
+| DAB 11D | 47,2 | 26,5 | ≈B | 3. |
+| PMR Ch8 TX | 43,3 pwr | **56,8 rel** | — | 2. (A&gt;C&gt;B) |
+
+### Kurzfazit Antenne C (Bingfu)
+
+- **PMR (Claim-Band):** stark — zwischen A und B (rel. 56,8).
+- **ATIS:** besserer Peak als Teleskop B, unter A-LNA.
+- **UKW/DAB (außerhalb Claim):** ähnlich B, SNR meist unter Teleskop.
+
+---
+
+## Vergleichstabelle Stützpunkte (A / B / C)
+
+| Ziel | A Peak | A SNR/rel | B Peak | B SNR/rel | C Peak | C SNR/rel | Peak-Sieger | SNR/rel-Sieger |
+|------|--------|-----------|--------|-----------|--------|-----------|-------------|----------------|
+| FM 90,7 | 64,8 | 35,4 | 49,3 | **47,0** | 52,0 | 46,8 | **A** | **B** |
+| FM 95,8 | 65,8 | 37,6 | 47,1 | **43,1** | 47,1 | 39,0 | **A** | **B** |
+| FM 103,0 | 61,2 | 29,1 | 47,2 | **46,2** | 47,2 | 39,3 | **A** | **B** |
+| FM 104,4 | 69,9 | 43,4 | 47,2 | **46,0** | 47,2 | 37,7 | **A** | **B** |
+| K2 ATIS | **70,6** | 40,7 | 53,8 | **49,3** | 58,2 | 46,5 | **A** | **B** |
+| DAB 10A | **55,9** | 17,7 | 47,0 | **34,6*** | 47,2 | 30,5* | **A** | **B*** |
+| DAB 11D | **54,1** | 17,5 | 47,0 | **32,1*** | 47,2 | 26,5* | **A** | **B*** |
+| PMR Ch8 TX | — | **61,1** | — | 54,5 | — | 56,8 | — | **A** |
+
+\* DAB-SNR mit breiterem Floor bei B/C; Peak robuster für DAB-Vergleich.
 
 ### Bewertung
 
-- **Antenne A (DVB-T + USB-LNA):** mehr absolute Feldstärke (Peak), besser bei PMR; LNA hebt auch den Rauschboden.
-- **Antenne B (Teleskop ausziehbar):** oft besserer SNR trotz schwächerem Peak — weniger Verstärkerrauschen.
-- Für schwache Signale (Airband idle / Randlagen) kann A durch Gain helfen; für UKW bei starkem Sender reicht B und klingt/misst „sauberer“.
+- **A (DVB-T + USB-LNA):** stärkste Peaks und bestes PMR; LNA hebt den Rauschboden (SNR oft schwächer).
+- **B (Teleskop):** beste SNR-Werte auf UKW/ATIS — „sauberster“ Empfang ohne Verstärker.
+- **C (Bingfu):** gutes PMR (Claim-UHF), ATIS-Peak zwischen A und B; UKW/DAB unauffällig (außerhalb Spec).
+- Praxis: schwache Signale → A oder C (je Band); starkes UKW → B oft ausreichend und rauschärmer.
