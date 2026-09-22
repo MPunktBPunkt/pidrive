@@ -1,11 +1,11 @@
 {
-  "antenna": "B_previous",
+  "antenna": "B_teleskop_ausziehbar",
   "kind": "anchor_points",
   "position": "Dachboden",
   "ppm": 49,
   "ts": 1790086845.966775,
   "ts_iso": "2026-09-22T16:20:45+0200",
-  "note": "Antenna B anchors complete (PMR during TX, then FM/ATIS/DAB)",
+  "note": "Antenna B Teleskop (ausziehbar): anchors complete (PMR during TX, then FM/ATIS/DAB)",
   "results": [
     {
       "name": "PMR446 Ch8 TX",
@@ -345,5 +345,6 @@
       "note": "peak_db=narrow(\u00b10.5M like A); snr_db=wide\u00b11.2M"
     }
   ],
-  "ts_done": 1790086897.1087012
+  "ts_done": 1790086897.1087012,
+  "label": "Teleskop (ausziehbar)"
 }

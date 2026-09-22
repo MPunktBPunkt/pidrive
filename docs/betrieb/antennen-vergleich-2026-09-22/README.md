@@ -1,7 +1,7 @@
 # Antennen-Vergleich 2026-09-22
 
 Spektrum-Messungen (RTL-SDR über PiDrive `/api/spectrum/capture`) im Dachboden.
-Ziel: aktive AliExpress-DVB-T-Antenne (A) gegen die bisherige Antenne (B, folgt).
+Ziel: AliExpress-DVB-T-Antenne (A) gegen Teleskop ausziehbar (B).
 
 | | |
 |---|---|
@@ -118,7 +118,7 @@ DAB: kein Ensemble-Decode, nur Kanalenergie um 10A/11D.
 
 ---
 
-## Antenne B — bisherige Antenne
+## Antenne B — Teleskop (ausziehbar)
 
 Gleiche Position (Dachboden), PPM 49, gleiche Gains. PMR Ch8 mit TX.
 Rohdaten: `antenna-b-anchors.json`, `antenna-b-anchor-*.json`, `comparison-anchors.json`.
@@ -136,14 +136,14 @@ Rohdaten: `antenna-b-anchors.json`, `antenna-b-anchor-*.json`, `comparison-ancho
 
 \* DAB-SNR B mit etwas breiterem Floor-Fenster; Peak-Δ ist der robustere DAB-Vergleich.
 
-### Kurzfazit Antenne B
+### Kurzfazit Antenne B (Teleskop)
 
 - Ohne USB-LNA: **niedrigerer Peak**, aber **höherer SNR** (ruhigerer Rauschboden).
 - **PMR Ch8:** klar erkannt, relative ~6,6 dB unter A (LNA-Vorteil von A).
 
 ---
 
-## Vergleichstabelle Stützpunkte (A vs. B)
+## Vergleichstabelle Stützpunkte (A vs. B Teleskop)
 
 Δ = B − A. Positives Δ SNR: B „sauberer“. Negatives Δ Peak / PMR-rel: A stärker (LNA).
 
@@ -161,5 +161,5 @@ Rohdaten: `antenna-b-anchors.json`, `antenna-b-anchor-*.json`, `comparison-ancho
 ### Bewertung
 
 - **Antenne A (DVB-T + USB-LNA):** mehr absolute Feldstärke (Peak), besser bei PMR; LNA hebt auch den Rauschboden.
-- **Antenne B (bisherige):** oft besserer SNR trotz schwächerem Peak — weniger Verstärkerrauschen.
+- **Antenne B (Teleskop ausziehbar):** oft besserer SNR trotz schwächerem Peak — weniger Verstärkerrauschen.
 - Für schwache Signale (Airband idle / Randlagen) kann A durch Gain helfen; für UKW bei starkem Sender reicht B und klingt/misst „sauberer“.

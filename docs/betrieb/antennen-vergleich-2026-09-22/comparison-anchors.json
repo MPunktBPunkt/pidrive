@@ -63,5 +63,7 @@
       "unit": "rel_db"
     }
   },
-  "note": "PMR uses watch relative_db; FM/ATIS snr from same peek method; DAB snr methods differ slightly"
+  "note": "PMR uses watch relative_db; FM/ATIS snr from same peek method; DAB snr methods differ slightly; B=Teleskop (ausziehbar).",
+  "B_label": "Teleskop (ausziehbar)",
+  "A_label": "AliExpress DVB-T AT-01"
 }
