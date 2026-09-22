@@ -321,6 +321,19 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="btn" onclick="sendCmd('scan_down:airband')" title="vorheriges Preset">◀</button>
     </div>
     <div class="pmr-grid" id="airbandPresetGrid" style="margin-top:8px"></div>
+    <div class="scan-row" id="airTuneRow" style="margin-top:8px;flex-wrap:wrap;gap:6px;align-items:center">
+      <span class="scan-label">Gain</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepGain(-1)" title="Gain −">−</button>
+      <span id="airGainLabel" style="min-width:3.2em;text-align:center;font-variant-numeric:tabular-nums">45</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepGain(1)" title="Gain +">+</button>
+      <span class="scan-label" style="margin-left:8px">SR</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepSr(-1)" title="Sample-Rate −">−</button>
+      <span id="airSrLabel" style="min-width:4.5em;text-align:center;font-variant-numeric:tabular-nums">24000</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepSr(1)" title="Sample-Rate +">+</button>
+      <button class="btn primary" id="airTuneSaveBtn" style="padding:2px 10px;margin-left:8px"
+              onclick="airbandTuneSave()" title="Aktuelle Werte als Default speichern">💾 Save</button>
+      <span id="airTuneDirty" style="font-size:11px;opacity:.75"></span>
+    </div>
     <label class="pmr-opt" title="Bei erkanntem AM-Signal auf den Kanal schalten und halten">
       <input type="checkbox" id="airAutoTune" onchange="saveAirAutoTune(this.checked)" checked>
       <span>Überwachung: bei Signal umschalten</span>
@@ -906,6 +919,39 @@ function airbandMarkPlaying(ch) {
   grid.querySelectorAll('.airband-ch').forEach(b =>
     b.classList.toggle('playing', n > 0 && Number(b.dataset.ch) === n));
 }
+function _airSetTuneLabels(gain, sr, dirty) {
+  const g = document.getElementById('airGainLabel');
+  const s = document.getElementById('airSrLabel');
+  const d = document.getElementById('airTuneDirty');
+  const btn = document.getElementById('airTuneSaveBtn');
+  if (g) g.textContent = String(gain);
+  if (s) s.textContent = String(sr);
+  if (d) d.textContent = dirty ? 'ungespeichert' : '';
+  if (btn) btn.classList.toggle('danger', !!dirty);
+}
+async function loadAirbandTuneParams() {
+  try {
+    const r = await fetch('/api/scanner/settings');
+    const j = await r.json();
+    const t = (j && j.data && j.data.airband_tune) || {};
+    const gain = t.gain != null ? t.gain : (j.data && j.data.scanner_airband_gain) || 45;
+    const sr = t.sample_rate != null ? t.sample_rate : (j.data && j.data.scanner_airband_sample_rate) || 24000;
+    _airSetTuneLabels(gain, sr, !!(t.dirty));
+  } catch (e) { /* defaults im HTML */ }
+}
+async function airbandStepGain(delta) {
+  await sendCmd('airband_gain_step:' + (delta >= 0 ? '1' : '-1'));
+  setTimeout(loadAirbandTuneParams, 400);
+}
+async function airbandStepSr(delta) {
+  await sendCmd('airband_sr_step:' + (delta >= 0 ? '1' : '-1'));
+  setTimeout(loadAirbandTuneParams, 400);
+}
+async function airbandTuneSave() {
+  const j = await sendCmd('airband_tune_save');
+  if (j && j.ok) showToast('Airband-Default gespeichert');
+  setTimeout(loadAirbandTuneParams, 400);
+}
 function airbandTunePreset(ch, freq) {
   if (freq != null) {
     const el = document.getElementById('scAirFreq');
@@ -914,7 +960,8 @@ function airbandTunePreset(ch, freq) {
   airbandMarkPlaying(ch);
   sendCmd('scan_setch:airband:' + ch);
   showToast('Airband K' + ch);
-  // Scanner-Tab offen lassen — switchTab('player') ließ die Preset-Tabelle „verschwinden“
+  // nach Kanal-Tap: Defaults in die Anzeige laden
+  setTimeout(loadAirbandTuneParams, 500);
   if (typeof startGlobalListen === 'function') startGlobalListen();
 }
 async function loadAirbandLastFreq() {
@@ -925,6 +972,13 @@ async function loadAirbandLastFreq() {
     const j = await r.json();
     if (j.ok && j.data && j.data.scanner_airband_last_freq != null)
       el.value = j.data.scanner_airband_last_freq;
+    const t = (j.data && j.data.airband_tune) || {};
+    if (t.gain != null || t.sample_rate != null || j.data.scanner_airband_gain != null)
+      _airSetTuneLabels(
+        t.gain != null ? t.gain : j.data.scanner_airband_gain,
+        t.sample_rate != null ? t.sample_rate : j.data.scanner_airband_sample_rate,
+        !!t.dirty
+      );
   } catch (e) { /* default belassen */ }
 }
 async function loadAirbandPresets() {

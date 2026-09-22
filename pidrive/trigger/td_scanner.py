@@ -397,6 +397,87 @@ def handle(cmd, menu_state, store, S, settings, bg):
         except Exception as e:
             log.error(f"set_ppm Fehler: {e}")
 
+    elif cmd.startswith("airband_gain_step:"):
+        # ±1 Stufe Gain (Live), Retune; Save übernimmt Defaults
+        try:
+            delta = int(cmd.split(":", 1)[1].strip())
+            delta = 1 if delta >= 0 else -1
+            new = scanner.step_airband_gain(delta, settings, S=S, persist=False)
+            dirty = bool((S.get("airband_tune") or {}).get("dirty"))
+            mark = " *" if dirty else ""
+            ipc.write_progress("Airband Gain", f"{new} dB{mark}", color="green")
+            scanner.retune_airband_if_playing(S, settings)
+            log.info(f"airband_gain_step → {new} dirty={dirty}")
+            import time as _tag
+            _tag.sleep(0.6)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"airband_gain_step: {e}")
+
+    elif cmd.startswith("airband_sr_step:"):
+        try:
+            delta = int(cmd.split(":", 1)[1].strip())
+            delta = 1 if delta >= 0 else -1
+            new = scanner.step_airband_sample_rate(delta, settings, S=S, persist=False)
+            dirty = bool((S.get("airband_tune") or {}).get("dirty"))
+            mark = " *" if dirty else ""
+            ipc.write_progress("Airband SR", f"{new} Hz{mark}", color="green")
+            scanner.retune_airband_if_playing(S, settings)
+            log.info(f"airband_sr_step → {new} dirty={dirty}")
+            import time as _tas
+            _tas.sleep(0.6)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"airband_sr_step: {e}")
+
+    elif cmd.startswith("airband_gain:"):
+        # Absolut setzen (Live)
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            tune = scanner._ensure_airband_tune(S, settings)
+            tune["gain"] = scanner._nearest_step(val, scanner.AIRBAND_GAIN_STEPS)
+            def_g = scanner._get_airband_gain(settings, S=None)
+            def_sr = scanner._get_airband_sample_rate(settings, S=None)
+            tune["dirty"] = (tune["gain"] != def_g) or (int(tune["sample_rate"]) != def_sr)
+            ipc.write_progress("Airband Gain", f"{tune['gain']} dB", color="green")
+            scanner.retune_airband_if_playing(S, settings)
+            import time as _tag2
+            _tag2.sleep(0.6)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"airband_gain: {e}")
+
+    elif cmd.startswith("airband_sr:"):
+        try:
+            val = int(cmd.split(":", 1)[1].strip())
+            tune = scanner._ensure_airband_tune(S, settings)
+            tune["sample_rate"] = scanner._nearest_step(val, scanner.AIRBAND_SR_STEPS)
+            def_g = scanner._get_airband_gain(settings, S=None)
+            def_sr = scanner._get_airband_sample_rate(settings, S=None)
+            tune["dirty"] = (int(tune["gain"]) != def_g) or (tune["sample_rate"] != def_sr)
+            ipc.write_progress("Airband SR", f"{tune['sample_rate']} Hz", color="green")
+            scanner.retune_airband_if_playing(S, settings)
+            import time as _tas2
+            _tas2.sleep(0.6)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"airband_sr: {e}")
+
+    elif cmd == "airband_tune_save":
+        try:
+            saved = scanner.save_airband_tune_as_defaults(S, settings)
+            ipc.write_progress(
+                "Airband Default",
+                f"Gain {saved['gain']} · SR {saved['sample_rate']}",
+                color="green",
+            )
+            log.info(f"airband_tune_save {saved}")
+            import time as _tave
+            _tave.sleep(1.0)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"airband_tune_save: {e}")
+
     else:
         return False
     return True

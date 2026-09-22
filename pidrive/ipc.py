@@ -143,6 +143,7 @@ def write_status(S, settings):
         "degraded_imports":     _degraded_imports(),
         "processes":            S.get("processes", []),
         "scanner":              _scanner_status(S),
+        "airband_tune":         S.get("airband_tune") if isinstance(S.get("airband_tune"), dict) else {},
         "usb":                  _usb_status(),
         "ts":        int(time.time()),
     })

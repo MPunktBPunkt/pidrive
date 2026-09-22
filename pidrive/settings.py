@@ -62,7 +62,8 @@ _DEFAULTS = {
     "scanner_airband_autotune": True,   # Airband-Monitor: bei Signal umschalten
     "scanner_airband_hold_s":   20,     # Sekunden hören nach Treffer, dann weiter
     "scanner_airband_squelch":  0,      # Listen/ATIS: 0=offen (PMR-Squelch nicht übernehmen)
-    "scanner_airband_gain":     45,     # AM-Default (wie vor 0.11.157; 40 war zu schwach)
+    "scanner_airband_gain":     45,     # AM Gain dB (Stufen per UI ±)
+    "scanner_airband_sample_rate": 24000,  # rtl_fm -s für Airband (Stufen per UI ±)
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

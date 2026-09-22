@@ -764,6 +764,33 @@ def api_scanner_settings():
         s = _ls()
 
         if request.method == "GET":
+            tune = {}
+            try:
+                from modules.radio import scanner as _sc
+                # Live-State aus Core-Status falls verfügbar
+                import json as _j
+                st = {}
+                try:
+                    with open("/tmp/pidrive_status.json", "r", encoding="utf-8") as f:
+                        st = _j.load(f) or {}
+                except Exception:
+                    st = {}
+                # airband_tune steckt nicht immer im Status — Defaults reichen für Anzeige
+                tune = _sc.get_airband_tune_params(s, S=None)
+                # Wenn Core Status airband_tune hat:
+                at = st.get("airband_tune")
+                if isinstance(at, dict) and ("gain" in at or "sample_rate" in at):
+                    tune["gain"] = int(at.get("gain", tune["gain"]))
+                    tune["sample_rate"] = int(at.get("sample_rate", tune["sample_rate"]))
+                    tune["dirty"] = bool(at.get("dirty"))
+            except Exception:
+                tune = {
+                    "gain": s.get("scanner_airband_gain", 45),
+                    "sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "dirty": False,
+                    "default_gain": s.get("scanner_airband_gain", 45),
+                    "default_sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                }
             return jsonify({
                 "ok": True,
                 "data": {
@@ -777,9 +804,13 @@ def api_scanner_settings():
                     "scanner_airband_last_freq":  s.get("scanner_airband_last_freq", 121.5),
                     "scanner_airband_autotune":   s.get("scanner_airband_autotune", True),
                     "scanner_airband_hold_s":     s.get("scanner_airband_hold_s", 20),
+                    "scanner_airband_gain":       s.get("scanner_airband_gain", 45),
+                    "scanner_airband_sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "scanner_airband_squelch":    s.get("scanner_airband_squelch", 0),
                     "scanner_gain":           s.get("scanner_gain", -1),
                     "scanner_squelch":        s.get("scanner_squelch", 25),
                     "ppm_correction":         s.get("ppm_correction", 0),
+                    "airband_tune":           tune,
                 }
             })
 
@@ -791,6 +822,8 @@ def api_scanner_settings():
                     "scanner_pmr_trigger_on_db", "scanner_pmr_trigger_off_db",
                     "scanner_pmr_watch_s", "scanner_airband_last_freq",
                     "scanner_airband_autotune", "scanner_airband_hold_s",
+                    "scanner_airband_gain", "scanner_airband_sample_rate",
+                    "scanner_airband_squelch",
                     "scanner_gain", "scanner_squelch"):
             if key in body:
                 if key in ("scanner_pmr_autotune", "scanner_airband_autotune"):

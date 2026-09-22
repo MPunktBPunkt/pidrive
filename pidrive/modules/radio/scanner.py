@@ -350,8 +350,13 @@ def _get_gain(settings=None):
         return -1
 
 
-def _get_airband_gain(settings=None):
-    """AM-Airband: bevorzugt scanner_airband_gain, sonst scanner_gain, Default 40."""
+def _get_airband_gain(settings=None, S=None):
+    """AM-Airband: Live-Tune (S) > settings Default > 45."""
+    if S and isinstance(S.get("airband_tune"), dict) and "gain" in S["airband_tune"]:
+        try:
+            return int(S["airband_tune"]["gain"])
+        except Exception:
+            pass
     if settings is None:
         try:
             from settings import load_settings
@@ -360,13 +365,213 @@ def _get_airband_gain(settings=None):
             settings = {}
     try:
         if settings is not None and "scanner_airband_gain" in settings:
-            return int(settings.get("scanner_airband_gain", 40))
+            return int(settings.get("scanner_airband_gain", 45))
     except Exception:
         pass
     g = _get_gain(settings)
     if g >= 0:
         return g
-    return 40
+    return 45
+
+
+# Diskrete Stufen für WebUI/iDrive ± (Optimierung an K2 ATIS etc.)
+AIRBAND_GAIN_STEPS = (0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 49)
+AIRBAND_SR_STEPS = (12000, 16000, 20000, 24000, 32000)
+
+
+def _nearest_step(val, steps):
+    try:
+        v = int(val)
+    except Exception:
+        v = int(steps[len(steps) // 2])
+    return min(steps, key=lambda s: abs(int(s) - v))
+
+
+def _step_in_list(val, steps, delta: int):
+    cur = _nearest_step(val, steps)
+    idx = list(steps).index(cur)
+    idx = max(0, min(len(steps) - 1, idx + int(delta)))
+    return int(steps[idx])
+
+
+def _get_airband_sample_rate(settings=None, S=None):
+    if S and isinstance(S.get("airband_tune"), dict) and "sample_rate" in S["airband_tune"]:
+        try:
+            return _nearest_step(S["airband_tune"]["sample_rate"], AIRBAND_SR_STEPS)
+        except Exception:
+            pass
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    try:
+        raw = int((settings or {}).get("scanner_airband_sample_rate", 24000))
+    except Exception:
+        raw = 24000
+    return _nearest_step(raw, AIRBAND_SR_STEPS)
+
+
+def _ensure_airband_tune(S, settings=None):
+    """Live-Werte aus Defaults befüllen (Kanal-Tap / erster Step)."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    tune = S.setdefault("airband_tune", {})
+    if "gain" not in tune:
+        tune["gain"] = _get_airband_gain(settings, S=None)
+    if "sample_rate" not in tune:
+        tune["sample_rate"] = _get_airband_sample_rate(settings, S=None)
+    tune.setdefault("dirty", False)
+    return tune
+
+
+def seed_airband_tune_from_defaults(S, settings=None):
+    """Bei Kanal-Tap: Live = gespeicherte Defaults (dirty zurücksetzen)."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    S["airband_tune"] = {
+        "gain": int(_get_airband_gain(settings, S=None)),
+        "sample_rate": int(_get_airband_sample_rate(settings, S=None)),
+        "dirty": False,
+    }
+    return dict(S["airband_tune"])
+
+
+def get_airband_tune_params(settings=None, S=None):
+    """Live + Defaults + Stufen (WebUI)."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    if S is not None:
+        tune = _ensure_airband_tune(S, settings)
+    else:
+        tune = {
+            "gain": _get_airband_gain(settings),
+            "sample_rate": _get_airband_sample_rate(settings),
+            "dirty": False,
+        }
+    return {
+        "gain": int(tune["gain"]),
+        "sample_rate": int(tune["sample_rate"]),
+        "dirty": bool(tune.get("dirty")),
+        "default_gain": _get_airband_gain(settings, S=None),
+        "default_sample_rate": _get_airband_sample_rate(settings, S=None),
+        "gain_steps": list(AIRBAND_GAIN_STEPS),
+        "sample_rate_steps": list(AIRBAND_SR_STEPS),
+        "squelch": _get_airband_squelch(settings),
+    }
+
+
+def step_airband_gain(delta: int, settings=None, S=None, persist=False):
+    """Gain ±1 Stufe (Live). persist=False → erst Save schreibt Defaults."""
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    if S is None:
+        # ohne S: direkt Settings (Legacy)
+        cur = _get_airband_gain(settings)
+        new = _step_in_list(cur, AIRBAND_GAIN_STEPS, delta)
+        settings["scanner_airband_gain"] = new
+        if persist:
+            try:
+                from settings import save_settings
+                save_settings(settings)
+            except Exception:
+                pass
+        return new
+    tune = _ensure_airband_tune(S, settings)
+    new = _step_in_list(tune["gain"], AIRBAND_GAIN_STEPS, delta)
+    tune["gain"] = new
+    def_g = _get_airband_gain(settings, S=None)
+    def_sr = _get_airband_sample_rate(settings, S=None)
+    tune["dirty"] = (new != def_g) or (int(tune["sample_rate"]) != def_sr)
+    return new
+
+
+def step_airband_sample_rate(delta: int, settings=None, S=None, persist=False):
+    """Sample-Rate ±1 Stufe (Live)."""
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    if S is None:
+        cur = _get_airband_sample_rate(settings)
+        new = _step_in_list(cur, AIRBAND_SR_STEPS, delta)
+        settings["scanner_airband_sample_rate"] = new
+        if persist:
+            try:
+                from settings import save_settings
+                save_settings(settings)
+            except Exception:
+                pass
+        return new
+    tune = _ensure_airband_tune(S, settings)
+    new = _step_in_list(tune["sample_rate"], AIRBAND_SR_STEPS, delta)
+    tune["sample_rate"] = new
+    def_g = _get_airband_gain(settings, S=None)
+    def_sr = _get_airband_sample_rate(settings, S=None)
+    tune["dirty"] = (int(tune["gain"]) != def_g) or (new != def_sr)
+    return new
+
+
+def save_airband_tune_as_defaults(S, settings=None):
+    """Live Gain/SR als neue Defaults in settings.json übernehmen."""
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    tune = _ensure_airband_tune(S, settings)
+    settings["scanner_airband_gain"] = int(tune["gain"])
+    settings["scanner_airband_sample_rate"] = int(tune["sample_rate"])
+    try:
+        from settings import save_settings
+        save_settings(settings)
+    except Exception:
+        pass
+    tune["dirty"] = False
+    return {
+        "gain": settings["scanner_airband_gain"],
+        "sample_rate": settings["scanner_airband_sample_rate"],
+    }
+
+
+def retune_airband_if_playing(S, settings=None):
+    """Wenn Airband gerade spielt: mit aktuellen Gain/SR neu starten."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    sc = S.get("scanner") if isinstance(S.get("scanner"), dict) else {}
+    band = str(S.get("scanner_band") or sc.get("band") or "").lower()
+    if band != "airband":
+        return False
+    try:
+        freq = float(sc.get("freq") or settings.get("scanner_airband_last_freq") or 0)
+    except Exception:
+        freq = 0.0
+    if freq < 118.0:
+        return False
+    name = str(sc.get("name") or S.get("radio_station") or f"AIR {freq:.3f}")
+    rt = _get_band_runtime("airband")
+    play_freq(
+        freq, name, rt.get("bw") or 10000, S,
+        settings=settings,
+        modulation="am", band_id="airband",
+        audio_profile="airband_voice",
+    )
+    return True
 
 
 def _get_pmr_monitor_gain(settings=None):
@@ -542,13 +747,16 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             _sq_eff = _sq
             _gain_eff = _gain
         elif _modulation == "am":
-            _rtl_sr = 24000
-            _out_sr = 24000
+            if band_id == "airband" or _audio_profile == "airband_voice":
+                _rtl_sr = _get_airband_sample_rate(settings, S=S)
+            else:
+                _rtl_sr = 24000
+            _out_sr = _rtl_sr
             # Listen: Airband-Squelch (Default 0). Globales scanner_squelch
             # ist für PMR — würde ATIS/Continuous choppy machen.
             if band_id == "airband" or _audio_profile == "airband_voice":
                 _sq_eff = _get_airband_squelch(settings)
-                _gain_eff = _get_airband_gain(settings)
+                _gain_eff = _get_airband_gain(settings, S=S)
             else:
                 try:
                     _sq_eff = int(_sq)
@@ -648,9 +856,14 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             "name": name,
             "modulation": _modulation,
             "audio_profile": _audio_profile,
-            "squelch": _get_squelch(settings) if settings is not None else S.get("scanner_squelch"),
+            "squelch": (
+                _get_airband_squelch(settings)
+                if (band_id == "airband" or _audio_profile == "airband_voice")
+                else (_get_squelch(settings) if settings is not None else S.get("scanner_squelch"))
+            ),
             "bandwidth_hz": int(bandwidth_hz),
             "sample_rate": int(_rtl_sr),
+            "gain": int(_gain_eff) if _gain_eff is not None else None,
         }
         if band_id:
             S["scanner_band"] = band_id
@@ -1155,6 +1368,9 @@ def _play_band_freq(band_id, freq, S, settings=None):
 
 def set_channel(band_id: str, ch_num: int, S: dict, settings=None):
     """Direkt zu Kanal ch_num springen (1-basiert, nach Feld 'ch')."""
+    if str(band_id).lower() == "airband":
+        # Kanal-Tap: Live = gespeicherte Defaults (Basis zum Optimieren)
+        seed_airband_tune_from_defaults(S, settings)
     chs = _get_channels(band_id)
     if not chs:
         log.warn(f"Scanner: set_channel — kein Kanal-Band: {band_id}")
