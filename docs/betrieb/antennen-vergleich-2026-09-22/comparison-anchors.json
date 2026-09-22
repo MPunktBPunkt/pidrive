@@ -2,7 +2,8 @@
   "labels": {
     "A": "AliExpress DVB-T AT-01 (USB-LNA)",
     "B": "Teleskop (ausziehbar)",
-    "C": "Bingfu Magnetfu\u00df 7dBi (VHF136-174/UHF400-470)"
+    "C": "Bingfu Magnetfu\u00df 7dBi (VHF136-174/UHF400-470)",
+    "D": "RTL-SDR Beipack / kurze Stockantenne"
   },
   "rows": [
     {
@@ -10,53 +11,63 @@
       "A_peak": 64.84,
       "B_peak": 49.26,
       "C_peak": 52.0,
+      "D_peak": 47.3,
       "A_snr": 35.44,
       "B_snr": 47.03,
       "C_snr": 46.84,
+      "D_snr": 48.3,
       "best_peak": "A",
-      "best_snr": "B"
+      "best_snr": "D"
     },
     {
       "name": "FM 95.8",
       "A_peak": 65.81,
       "B_peak": 47.07,
       "C_peak": 47.13,
+      "D_peak": 47.22,
       "A_snr": 37.58,
       "B_snr": 43.05,
       "C_snr": 39.02,
+      "D_snr": 46.83,
       "best_peak": "A",
-      "best_snr": "B"
+      "best_snr": "D"
     },
     {
       "name": "FM 103.0",
       "A_peak": 61.19,
       "B_peak": 47.23,
       "C_peak": 47.21,
+      "D_peak": 47.2,
       "A_snr": 29.13,
       "B_snr": 46.17,
       "C_snr": 39.26,
+      "D_snr": 46.73,
       "best_peak": "A",
-      "best_snr": "B"
+      "best_snr": "D"
     },
     {
       "name": "FM 104.4",
       "A_peak": 69.86,
       "B_peak": 47.17,
       "C_peak": 47.24,
+      "D_peak": 47.2,
       "A_snr": 43.41,
       "B_snr": 46.02,
       "C_snr": 37.74,
+      "D_snr": 46.08,
       "best_peak": "A",
-      "best_snr": "B"
+      "best_snr": "D"
     },
     {
       "name": "K2 ATIS",
       "A_peak": 70.55,
       "B_peak": 53.75,
       "C_peak": 58.18,
+      "D_peak": 48.82,
       "A_snr": 40.68,
       "B_snr": 49.34,
       "C_snr": 46.45,
+      "D_snr": 46.73,
       "best_peak": "A",
       "best_snr": "B"
     },
@@ -65,9 +76,11 @@
       "A_peak": 55.94,
       "B_peak": 46.99,
       "C_peak": 47.17,
+      "D_peak": 47.11,
       "A_snr": 17.72,
       "B_snr": 34.57,
       "C_snr": 30.45,
+      "D_snr": 32.47,
       "best_peak": "A",
       "best_snr": "B"
     },
@@ -76,9 +89,11 @@
       "A_peak": 54.09,
       "B_peak": 46.99,
       "C_peak": 47.18,
+      "D_peak": 47.17,
       "A_snr": 17.53,
       "B_snr": 32.07,
       "C_snr": 26.46,
+      "D_snr": 31.04,
       "best_peak": "A",
       "best_snr": "B"
     },
@@ -88,6 +103,7 @@
       "A": 61.11,
       "B": 54.47,
       "C": 56.75,
+      "D": 54.19,
       "best": "A"
     }
   ]

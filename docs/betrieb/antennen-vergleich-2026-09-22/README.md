@@ -1,7 +1,7 @@
 # Antennen-Vergleich 2026-09-22
 
 Spektrum-Messungen (RTL-SDR über PiDrive `/api/spectrum/capture`) im Dachboden.
-Ziel: A AliExpress-DVB-T, B Teleskop (ausziehbar), C Bingfu Magnetfuß.
+Ziel: A AliExpress-DVB-T, B Teleskop, C Bingfu, D RTL-Stockantenne.
 
 | | |
 |---|---|
@@ -11,7 +11,7 @@ Ziel: A AliExpress-DVB-T, B Teleskop (ausziehbar), C Bingfu Magnetfuß.
 | Empfänger | RTL-SDR (PiDrive) |
 | TX | PMR446 Ch8 nur während Stützpunkt-Messung (Nahfeld) |
 
-Rohdaten: `antenna-{a,b,c}-*.json`. Stützpunkte: `antenna-*-anchors.json`, `comparison-anchors.json`.
+Rohdaten: `antenna-{a,b,c,d}-*.json`. Stützpunkte: `antenna-*-anchors.json`, `comparison-anchors.json`.
 
 ---
 
@@ -20,8 +20,9 @@ Rohdaten: `antenna-{a,b,c}-*.json`. Stützpunkte: `antenna-*-anchors.json`, `com
 | ID | Typ | Claim / Hinweis |
 |----|-----|-----------------|
 | **A** | AliExpress DVB-T AT-01 | VHF 172–240 / UHF 470–860, USB-LNA 5 V, 75 Ω |
-| **B** | Teleskop (ausziehbar) | passiv, bisherige Antenne |
+| **B** | Teleskop (ausziehbar) | passiv |
 | **C** | Bingfu Magnetfuß 7 dBi | VHF 136–174 / UHF 400–470, 50 Ω, SMA, 3 m RG174 |
+| **D** | RTL-SDR Beipack (kurz) | Stockantenne am Stick, vermutl. DVB-T-Beipack |
 
 ---
 
@@ -178,24 +179,52 @@ Rohdaten: `antenna-c-anchors.json`, `antenna-c-anchor-*.json`.
 
 ---
 
-## Vergleichstabelle Stützpunkte (A / B / C)
+## Antenne D — RTL-SDR Beipack (kurze Stockantenne)
 
-| Ziel | A Peak | A SNR/rel | B Peak | B SNR/rel | C Peak | C SNR/rel | Peak-Sieger | SNR/rel-Sieger |
-|------|--------|-----------|--------|-----------|--------|-----------|-------------|----------------|
-| FM 90,7 | 64,8 | 35,4 | 49,3 | **47,0** | 52,0 | 46,8 | **A** | **B** |
-| FM 95,8 | 65,8 | 37,6 | 47,1 | **43,1** | 47,1 | 39,0 | **A** | **B** |
-| FM 103,0 | 61,2 | 29,1 | 47,2 | **46,2** | 47,2 | 39,3 | **A** | **B** |
-| FM 104,4 | 69,9 | 43,4 | 47,2 | **46,0** | 47,2 | 37,7 | **A** | **B** |
-| K2 ATIS | **70,6** | 40,7 | 53,8 | **49,3** | 58,2 | 46,5 | **A** | **B** |
-| DAB 10A | **55,9** | 17,7 | 47,0 | **34,6*** | 47,2 | 30,5* | **A** | **B*** |
-| DAB 11D | **54,1** | 17,5 | 47,0 | **32,1*** | 47,2 | 26,5* | **A** | **B*** |
-| PMR Ch8 TX | — | **61,1** | — | 54,5 | — | 56,8 | — | **A** |
+Kurze Whip, die dem RTL-Stick beilag (typisch DVB-T-Beipack). Passiv, direkt am Stick.
+Rohdaten: `antenna-d-anchors.json`, `antenna-d-anchor-*.json`.
 
-\* DAB-SNR mit breiterem Floor bei B/C; Peak robuster für DAB-Vergleich.
+| Stützpunkt | Peak (dB) | SNR / rel | Einordnung |
+|------------|-----------|-----------|------------|
+| FM 90,7 | 47,3 | **48,3** | Peak schwach; SNR oft best |
+| FM 95,8 | 47,2 | **46,8** | wie B, SNR hoch |
+| FM 103,0 | 47,2 | **46,7** | wie B, SNR hoch |
+| FM 104,4 | 47,2 | 46,1 | ≈B |
+| K2 ATIS | **48,8** | 46,7 | schwächster ATIS-Peak |
+| DAB 10A | 47,1 | 32,5 | ≈B/C Peak |
+| DAB 11D | 47,2 | 31,0 | ≈B Peak |
+| PMR Ch8 TX | — | **54,2 rel** | ≈B (schwächstes PMR mit B) |
+
+### Kurzfazit Antenne D (RTL-Stock)
+
+- **UKW:** SNR oft am höchsten, Peak aber flach (~47 dB) — wenig absolute Feldstärke.
+- **ATIS:** klar schwächster Peak der Serie.
+- **PMR:** ≈ Teleskop B, unter Bingfu und A.
+- Als Referenz-/Baseline sinnvoll, nicht als Primärantenne.
+
+---
+
+## Vergleichstabelle Stützpunkte (A / B / C / D)
+
+Werte: Peak / SNR (bzw. `relative_db` bei PMR). ★ = best in Zeile.
+
+| Ziel | A | B | C | D | Peak★ | SNR/rel★ |
+|------|---|---|---|---|-------|----------|
+| FM 90,7 | 64,8 / 35,4 | 49,3 / 47,0 | 52,0 / 46,8 | 47,3 / **48,3** | **A** | **D** |
+| FM 95,8 | 65,8 / 37,6 | 47,1 / 43,1 | 47,1 / 39,0 | 47,2 / **46,8** | **A** | **D** |
+| FM 103,0 | 61,2 / 29,1 | 47,2 / 46,2 | 47,2 / 39,3 | 47,2 / **46,7** | **A** | **D** |
+| FM 104,4 | 69,9 / 43,4 | 47,2 / 46,0 | 47,2 / 37,7 | 47,2 / **46,1** | **A** | **D**≈B |
+| K2 ATIS | **70,6** / 40,7 | 53,8 / **49,3** | 58,2 / 46,5 | 48,8 / 46,7 | **A** | **B** |
+| DAB 10A | **55,9** / 17,7 | 47,0 / **34,6*** | 47,2 / 30,5* | 47,1 / 32,5* | **A** | **B*** |
+| DAB 11D | **54,1** / 17,5 | 47,0 / **32,1*** | 47,2 / 26,5* | 47,2 / 31,0* | **A** | **B*** |
+| PMR Ch8 | **61,1** rel | 54,5 | 56,8 | 54,2 | — | **A** |
+
+\* DAB-SNR B/C/D mit breiterem Floor; Peak robuster für DAB.
 
 ### Bewertung
 
-- **A (DVB-T + USB-LNA):** stärkste Peaks und bestes PMR; LNA hebt den Rauschboden (SNR oft schwächer).
-- **B (Teleskop):** beste SNR-Werte auf UKW/ATIS — „sauberster“ Empfang ohne Verstärker.
-- **C (Bingfu):** gutes PMR (Claim-UHF), ATIS-Peak zwischen A und B; UKW/DAB unauffällig (außerhalb Spec).
-- Praxis: schwache Signale → A oder C (je Band); starkes UKW → B oft ausreichend und rauschärmer.
+- **A (DVB-T + USB-LNA):** stärkste Peaks, bestes PMR und DAB-Peak; LNA hebt den Rauschboden.
+- **B (Teleskop):** bestes ATIS-SNR; starkes UKW-SNR ohne LNA.
+- **C (Bingfu):** gutes PMR (Claim-UHF), ATIS-Peak Platz 2; UKW mittel.
+- **D (RTL-Stock):** Baseline — hohe UKW-SNR-Zahlen bei schwachem Peak; ATIS/PMR schwach.
+- Praxis: schwach → A (Gain) oder C (PMR/VHF-Claim); UKW stark → B; D nur Notbehelf.

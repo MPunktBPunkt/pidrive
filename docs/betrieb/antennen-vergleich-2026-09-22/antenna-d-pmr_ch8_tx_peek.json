@@ -1,0 +1,144 @@
+{
+  "peaks": [
+    {
+      "bin": 11866,
+      "db": 91.31,
+      "delta_bin": 0.4921,
+      "freq_mhz": 446.089015,
+      "interpolated": true
+    },
+    {
+      "bin": 3725,
+      "db": 72.41,
+      "delta_bin": -0.3558,
+      "freq_mhz": 446.057956,
+      "interpolated": true
+    },
+    {
+      "bin": 11893,
+      "db": 57.51,
+      "delta_bin": -0.3296,
+      "freq_mhz": 446.089115,
+      "interpolated": true
+    },
+    {
+      "bin": 11840,
+      "db": 57.4,
+      "delta_bin": 0.2947,
+      "freq_mhz": 446.088915,
+      "interpolated": true
+    },
+    {
+      "bin": 11854,
+      "db": 55.75,
+      "delta_bin": -0.4422,
+      "freq_mhz": 446.088965,
+      "interpolated": true
+    },
+    {
+      "bin": 11880,
+      "db": 54.98,
+      "delta_bin": -0.4739,
+      "freq_mhz": 446.089065,
+      "interpolated": true
+    },
+    {
+      "bin": 20010,
+      "db": 52.19,
+      "delta_bin": -0.3225,
+      "freq_mhz": 446.120079,
+      "interpolated": true
+    },
+    {
+      "bin": 11814,
+      "db": 48.63,
+      "delta_bin": 0.1357,
+      "freq_mhz": 446.088815,
+      "interpolated": true
+    }
+  ],
+  "analysis": {
+    "name": "PMR446 Ch8 TX",
+    "band": "PMR",
+    "freq_mhz": 446.09375,
+    "ok": true,
+    "gain": 36,
+    "ppm": 49,
+    "peak_db": 90.03,
+    "peak_f": 446.08901,
+    "noise_floor_db": -1.86,
+    "snr_db": 91.89,
+    "window_mhz": [
+      446.04375,
+      446.24375
+    ],
+    "top": [
+      [
+        446.08902,
+        91.31
+      ],
+      [
+        446.05796,
+        72.41
+      ],
+      [
+        446.08911,
+        57.51
+      ],
+      [
+        446.08891,
+        57.4
+      ],
+      [
+        446.08896,
+        55.75
+      ],
+      [
+        446.08907,
+        54.98
+      ],
+      [
+        446.12008,
+        52.19
+      ],
+      [
+        446.08882,
+        48.63
+      ]
+    ],
+    "watch_found": true,
+    "watch_primary_ch": 8,
+    "watch_best": {
+      "active_frames": 8,
+      "bandwidth_hz": 12500.0,
+      "channel_name": "PMR8",
+      "confidence": 1.0,
+      "freq_hz": 446093750.0,
+      "freq_mhz": 446.09375,
+      "note": "PMR Kanal 8",
+      "power_db": 43.29,
+      "relative_db": 54.19,
+      "score": 47.057,
+      "source": "channel",
+      "timestamp": 1790088128.089
+    },
+    "watch_active": [
+      {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR8",
+        "confidence": 1.0,
+        "freq_hz": 446093750.0,
+        "freq_mhz": 446.09375,
+        "note": "PMR Kanal 8",
+        "power_db": 43.29,
+        "relative_db": 54.19,
+        "score": 47.057,
+        "source": "channel",
+        "timestamp": 1790088128.089
+      }
+    ],
+    "watch_relative_db": 54.19,
+    "watch_power_db": 43.29
+  }
+}

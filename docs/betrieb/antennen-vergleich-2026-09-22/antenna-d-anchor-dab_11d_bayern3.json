@@ -1,0 +1,104 @@
+{
+  "narrow": {
+    "analysis": {
+      "freq_mhz": 222.064,
+      "ok": true,
+      "error": null,
+      "gain": 30,
+      "ppm": 49,
+      "peak_db": 47.17,
+      "peak_f": 222.064,
+      "mean_db": 14.07,
+      "noise_floor_db": null,
+      "snr_db": null,
+      "margin_db": 22.35,
+      "ctrl_peak_db": 24.82,
+      "top3": [
+        [
+          222.064,
+          47.17
+        ],
+        [
+          222.4091,
+          27.47
+        ],
+        [
+          221.5502,
+          26.41
+        ]
+      ]
+    }
+  },
+  "wide": {
+    "analysis": {
+      "freq_mhz": 222.064,
+      "ok": true,
+      "error": null,
+      "gain": 30,
+      "ppm": 49,
+      "peak_db": 34.72,
+      "peak_f": 222.2605,
+      "mean_db": 14.91,
+      "noise_floor_db": 3.68,
+      "snr_db": 31.04,
+      "margin_db": 10.44,
+      "ctrl_peak_db": 24.28,
+      "top3": [
+        [
+          222.2605,
+          34.72
+        ],
+        [
+          221.8675,
+          33.82
+        ],
+        [
+          222.2193,
+          29.05
+        ]
+      ],
+      "window_mhz": [
+        220.864,
+        223.26399999999998
+      ]
+    }
+  },
+  "analysis": {
+    "name": "DAB 11D Bayern3",
+    "band": "DAB",
+    "freq_mhz": 222.064,
+    "ok": true,
+    "gain": 30,
+    "ppm": 49,
+    "peak_db": 47.17,
+    "peak_f": 222.064,
+    "snr_db": 31.04,
+    "noise_floor_db": 3.68,
+    "peak_db_wide": 34.72,
+    "snr_db_wide": 31.04,
+    "margin_db": 22.35,
+    "window_mhz": [
+      221.314,
+      222.814
+    ],
+    "window_mhz_wide": [
+      220.864,
+      223.26399999999998
+    ],
+    "top3": [
+      [
+        222.064,
+        47.17
+      ],
+      [
+        222.4091,
+        27.47
+      ],
+      [
+        221.5502,
+        26.41
+      ]
+    ],
+    "note": "peak_db=narrow; snr_db=wide\u00b11.2M"
+  }
+}
