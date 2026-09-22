@@ -228,3 +228,41 @@ Werte: Peak / SNR (bzw. `relative_db` bei PMR). ★ = best in Zeile.
 - **C (Bingfu):** gutes PMR (Claim-UHF), ATIS-Peak Platz 2; UKW mittel.
 - **D (RTL-Stock):** Baseline — hohe UKW-SNR-Zahlen bei schwachem Peak; ATIS/PMR schwach.
 - Praxis: schwach → A (Gain) oder C (PMR/VHF-Claim); UKW stark → B; D nur Notbehelf.
+
+---
+
+## Filtertest: B + 500 MHz Tiefpass
+
+Teleskop B mit vorgeschaltetem **500 MHz LPF**. Rohdaten: `antenna-b-lpf500-*.json`, `comparison-b-lpf500.json`.
+
+### Was der Filter tut
+
+| Band | Frequenz | Relativ zur 500-MHz-Kante | Erwartung |
+|------|----------|---------------------------|-----------|
+| UKW | ~88–108 | weit darunter | durch (kleine Einfügedämpfung) |
+| Airband | ~118–137 | darunter | durch |
+| DAB B3 | ~174–230 | darunter | durch |
+| PMR446 | ~446 | darunter, nahe Kante | durch, ggf. etwas Dämpfung / besserer Out-of-Band-Reject |
+| UHF &gt;500 / GSM o.ä. | &gt;500 | darüber | stark gedämpft |
+
+Nutzen: weniger Out-of-Band / Spiegelfrequenzen / Breitbandrauschen am RTL — oft **saubererer** Empfang unterhalb der Kante, nicht zwingend höherer Peak.
+
+### Messung B vs. B+LPF500 (Δ = LPF − B)
+
+| Ziel | B Peak/SNR bzw. rel | B+LPF | Δ |
+|------|---------------------|-------|---|
+| FM 90,7 | 49,3 / 47,0 | 49,7 / 43,4 | Peak ≈ / SNR −3,6 |
+| FM 95,8 | 47,1 / 43,1 | 48,1 / 41,1 | Peak +1 / SNR −2 |
+| FM 103,0 | 47,2 / 46,2 | 47,2 / 42,7 | ≈ / SNR −3,5 |
+| FM 104,4 | 47,2 / 46,0 | 47,1 / 41,1 | ≈ / SNR −4,9 |
+| K2 ATIS | 53,8 / 49,3 | **58,2** / 46,5 | Peak **+4,5** / SNR −2,8 |
+| DAB 10A | 47,0 / 34,6 | 47,2 / 30,5 | ≈ / SNR −4 |
+| DAB 11D | 47,0 / 32,1 | 47,3 / **37,6** | ≈ / SNR **+5,5** |
+| PMR Ch8 TX | 54,5 rel | **63,2 rel** | **+8,7** |
+
+### Kurzfazit Filter
+
+- **Passband (FM/Airband/DAB/PMR):** alles nutzbar — passt zu deinem Hörtest.
+- **PMR:** klarer Gewinn beim Watcher (`relative_db` +8,7) — typisch weniger Störanteil oberhalb/außerhalb.
+- **ATIS-Peak** etwas stärker; UKW-Peaks ≈ unverändert, SNR-Zahlen leicht niedriger (Tages-/Floor-Schwankung + Einfügedämpfung).
+- Für PiDrive-Nutzung (alles &lt;500 MHz): **LPF sinnvoll**, vor allem gegen UHF-Müll und RTL-Spiegelfrequenzen.

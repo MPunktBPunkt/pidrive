@@ -1,0 +1,144 @@
+{
+  "peaks": [
+    {
+      "bin": 16000,
+      "db": 47.18,
+      "delta_bin": -0.0014,
+      "freq_mhz": 103.05,
+      "interpolated": true
+    },
+    {
+      "bin": 12969,
+      "db": 34.94,
+      "delta_bin": -0.3623,
+      "freq_mhz": 103.002635,
+      "interpolated": true
+    },
+    {
+      "bin": 13009,
+      "db": 34.78,
+      "delta_bin": -0.1812,
+      "freq_mhz": 103.003263,
+      "interpolated": true
+    },
+    {
+      "bin": 13090,
+      "db": 34.38,
+      "delta_bin": 0.2521,
+      "freq_mhz": 103.004535,
+      "interpolated": true
+    },
+    {
+      "bin": 13017,
+      "db": 33.82,
+      "delta_bin": -0.363,
+      "freq_mhz": 103.003385,
+      "interpolated": true
+    },
+    {
+      "bin": 13144,
+      "db": 33.65,
+      "delta_bin": -0.0134,
+      "freq_mhz": 103.005375,
+      "interpolated": true
+    },
+    {
+      "bin": 12580,
+      "db": 33.52,
+      "delta_bin": -0.3399,
+      "freq_mhz": 102.996557,
+      "interpolated": true
+    },
+    {
+      "bin": 13152,
+      "db": 33.4,
+      "delta_bin": 0.3634,
+      "freq_mhz": 103.005506,
+      "interpolated": true
+    },
+    {
+      "bin": 12996,
+      "db": 33.28,
+      "delta_bin": -0.4465,
+      "freq_mhz": 103.003056,
+      "interpolated": true
+    },
+    {
+      "bin": 13104,
+      "db": 32.92,
+      "delta_bin": -0.3697,
+      "freq_mhz": 103.004744,
+      "interpolated": true
+    },
+    {
+      "bin": 12978,
+      "db": 32.89,
+      "delta_bin": 0.2709,
+      "freq_mhz": 103.002785,
+      "interpolated": true
+    },
+    {
+      "bin": 12689,
+      "db": 32.85,
+      "delta_bin": -0.0399,
+      "freq_mhz": 102.998265,
+      "interpolated": true
+    },
+    {
+      "bin": 12347,
+      "db": 32.79,
+      "delta_bin": 0.4398,
+      "freq_mhz": 102.992929,
+      "interpolated": true
+    },
+    {
+      "bin": 7534,
+      "db": 32.75,
+      "delta_bin": 0.3922,
+      "freq_mhz": 102.917725,
+      "interpolated": true
+    },
+    {
+      "bin": 13029,
+      "db": 32.43,
+      "delta_bin": 0.0925,
+      "freq_mhz": 103.00358,
+      "interpolated": true
+    }
+  ],
+  "analysis": {
+    "freq_mhz": 103.0,
+    "ok": true,
+    "error": null,
+    "gain": 25,
+    "ppm": 49,
+    "peak_db": 47.18,
+    "peak_f": 103.05,
+    "mean_db": 16.13,
+    "noise_floor_db": 4.49,
+    "snr_db": 42.69,
+    "margin_db": 32.5,
+    "ctrl_peak_db": 14.68,
+    "top3": [
+      [
+        103.05,
+        47.18
+      ],
+      [
+        103.0026,
+        34.94
+      ],
+      [
+        103.0033,
+        34.78
+      ]
+    ],
+    "name": "FM 103.0",
+    "band": "UKW",
+    "window_mhz": [
+      102.8,
+      103.3
+    ],
+    "half_khz": 60
+  }
+}

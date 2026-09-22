@@ -1,0 +1,80 @@
+{
+  "labels": {
+    "B": "Teleskop",
+    "B_lpf500": "Teleskop + 500 MHz LPF"
+  },
+  "filter": {
+    "cutoff_mhz": 500
+  },
+  "rows": [
+    {
+      "name": "FM 90.7",
+      "B_peak": 49.26,
+      "LPF_peak": 49.74,
+      "d_peak": 0.48,
+      "B_snr": 47.03,
+      "LPF_snr": 43.42,
+      "d_snr": -3.61
+    },
+    {
+      "name": "FM 95.8",
+      "B_peak": 47.07,
+      "LPF_peak": 48.12,
+      "d_peak": 1.05,
+      "B_snr": 43.05,
+      "LPF_snr": 41.08,
+      "d_snr": -1.97
+    },
+    {
+      "name": "FM 103.0",
+      "B_peak": 47.23,
+      "LPF_peak": 47.18,
+      "d_peak": -0.05,
+      "B_snr": 46.17,
+      "LPF_snr": 42.69,
+      "d_snr": -3.48
+    },
+    {
+      "name": "FM 104.4",
+      "B_peak": 47.17,
+      "LPF_peak": 47.14,
+      "d_peak": -0.03,
+      "B_snr": 46.02,
+      "LPF_snr": 41.1,
+      "d_snr": -4.92
+    },
+    {
+      "name": "K2 ATIS",
+      "B_peak": 53.75,
+      "LPF_peak": 58.23,
+      "d_peak": 4.48,
+      "B_snr": 49.34,
+      "LPF_snr": 46.52,
+      "d_snr": -2.82
+    },
+    {
+      "name": "DAB 10A Rockantenne",
+      "B_peak": 46.99,
+      "LPF_peak": 47.2,
+      "d_peak": 0.21,
+      "B_snr": 34.57,
+      "LPF_snr": 30.54,
+      "d_snr": -4.03
+    },
+    {
+      "name": "DAB 11D Bayern3",
+      "B_peak": 46.99,
+      "LPF_peak": 47.26,
+      "d_peak": 0.27,
+      "B_snr": 32.07,
+      "LPF_snr": 37.6,
+      "d_snr": 5.53
+    },
+    {
+      "name": "PMR446 Ch8 TX",
+      "B_rel": 54.47,
+      "LPF_rel": 63.18,
+      "delta": 8.71
+    }
+  ]
+}

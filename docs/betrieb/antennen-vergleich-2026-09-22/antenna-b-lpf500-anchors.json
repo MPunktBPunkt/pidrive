@@ -1,0 +1,324 @@
+{
+  "antenna": "B_teleskop_lpf500",
+  "label": "Teleskop (ausziehbar) + 500 MHz Tiefpass",
+  "kind": "anchor_points",
+  "filter": {
+    "type": "LPF",
+    "cutoff_mhz": 500,
+    "note": "PMR446/FM/Airband/DAB pass; >500 MHz attenuated"
+  },
+  "position": "Dachboden",
+  "ppm": 49,
+  "ts": 1790089615.7499297,
+  "ts_iso": "2026-09-22T17:06:55+0200",
+  "compare_to": "B_teleskop_ausziehbar (no filter)",
+  "note": "B+LPF500 anchors complete (UHF reject sample included)",
+  "results": [
+    {
+      "name": "PMR446 Ch8 TX",
+      "band": "PMR",
+      "freq_mhz": 446.09375,
+      "ok": true,
+      "gain": 36,
+      "ppm": 49,
+      "peak_db": 86.73,
+      "peak_f": 446.09139,
+      "noise_floor_db": -5.12,
+      "snr_db": 91.85,
+      "window_mhz": [
+        446.04375,
+        446.24375
+      ],
+      "top": [
+        [
+          446.09139,
+          87.01
+        ],
+        [
+          446.05088,
+          67.28
+        ],
+        [
+          446.05082,
+          66.73
+        ],
+        [
+          446.09142,
+          52.06
+        ],
+        [
+          446.13187,
+          49.98
+        ],
+        [
+          446.13198,
+          48.7
+        ],
+        [
+          446.09134,
+          47.66
+        ],
+        [
+          446.14375,
+          46.98
+        ]
+      ],
+      "watch_found": true,
+      "watch_primary_ch": 8,
+      "watch_best": {
+        "active_frames": 8,
+        "bandwidth_hz": 12500.0,
+        "channel_name": "PMR8",
+        "confidence": 1.0,
+        "freq_hz": 446093750.0,
+        "freq_mhz": 446.09375,
+        "note": "PMR Kanal 8",
+        "power_db": 43.31,
+        "relative_db": 63.18,
+        "score": 54.52,
+        "source": "channel",
+        "timestamp": 1790089608.728
+      },
+      "watch_relative_db": 63.18,
+      "watch_power_db": 43.31
+    },
+    {
+      "freq_mhz": 90.7,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 49.74,
+      "peak_f": 90.6997,
+      "mean_db": 33.29,
+      "noise_floor_db": 6.32,
+      "snr_db": 43.42,
+      "margin_db": 30.98,
+      "ctrl_peak_db": 18.76,
+      "top3": [
+        [
+          90.6997,
+          49.96
+        ],
+        [
+          90.6952,
+          49.74
+        ],
+        [
+          90.6999,
+          49.59
+        ]
+      ],
+      "name": "FM 90.7",
+      "band": "UKW",
+      "window_mhz": [
+        90.5,
+        91.0
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 95.8,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 48.12,
+      "peak_f": 95.7987,
+      "mean_db": 31.14,
+      "noise_floor_db": 7.04,
+      "snr_db": 41.08,
+      "margin_db": 18.71,
+      "ctrl_peak_db": 29.42,
+      "top3": [
+        [
+          95.7987,
+          48.13
+        ],
+        [
+          95.8015,
+          47.83
+        ],
+        [
+          95.7991,
+          47.63
+        ]
+      ],
+      "name": "FM 95.8",
+      "band": "UKW",
+      "window_mhz": [
+        95.6,
+        96.1
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 103.0,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 47.18,
+      "peak_f": 103.05,
+      "mean_db": 16.13,
+      "noise_floor_db": 4.49,
+      "snr_db": 42.69,
+      "margin_db": 32.5,
+      "ctrl_peak_db": 14.68,
+      "top3": [
+        [
+          103.05,
+          47.18
+        ],
+        [
+          103.0026,
+          34.94
+        ],
+        [
+          103.0033,
+          34.78
+        ]
+      ],
+      "name": "FM 103.0",
+      "band": "UKW",
+      "window_mhz": [
+        102.8,
+        103.3
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 104.4,
+      "ok": true,
+      "error": null,
+      "gain": 25,
+      "ppm": 49,
+      "peak_db": 47.14,
+      "peak_f": 104.45,
+      "mean_db": 21.97,
+      "noise_floor_db": 6.04,
+      "snr_db": 41.1,
+      "margin_db": 32.0,
+      "ctrl_peak_db": 15.14,
+      "top3": [
+        [
+          104.45,
+          47.14
+        ],
+        [
+          104.4054,
+          41.37
+        ],
+        [
+          104.4026,
+          40.34
+        ]
+      ],
+      "name": "FM 104.4",
+      "band": "UKW",
+      "window_mhz": [
+        104.2,
+        104.7
+      ],
+      "half_khz": 60
+    },
+    {
+      "freq_mhz": 118.855,
+      "ok": true,
+      "error": null,
+      "gain": 36,
+      "ppm": 49,
+      "peak_db": 58.23,
+      "peak_f": 118.8499,
+      "mean_db": 14.9,
+      "noise_floor_db": 11.71,
+      "snr_db": 46.52,
+      "margin_db": 11.07,
+      "ctrl_peak_db": 47.16,
+      "top3": [
+        [
+          118.8499,
+          58.56
+        ],
+        [
+          118.9,
+          47.16
+        ],
+        [
+          119.0218,
+          32.08
+        ]
+      ],
+      "name": "K2 ATIS",
+      "band": "Airband",
+      "window_mhz": [
+        118.6,
+        119.2
+      ],
+      "half_khz": 12
+    },
+    {
+      "name": "DAB 10A Rockantenne",
+      "band": "DAB",
+      "freq_mhz": 209.936,
+      "ok": true,
+      "gain": 30,
+      "ppm": 49,
+      "peak_db": 47.2,
+      "peak_f": 209.936,
+      "snr_db": 30.54,
+      "noise_floor_db": 7.38,
+      "peak_db_wide": 37.92,
+      "margin_db": 10.51,
+      "top3": [
+        [
+          209.936,
+          47.2
+        ],
+        [
+          209.9274,
+          37.13
+        ],
+        [
+          210.4749,
+          36.93
+        ]
+      ]
+    },
+    {
+      "name": "DAB 11D Bayern3",
+      "band": "DAB",
+      "freq_mhz": 222.064,
+      "ok": true,
+      "gain": 30,
+      "ppm": 49,
+      "peak_db": 47.26,
+      "peak_f": 222.064,
+      "snr_db": 37.6,
+      "noise_floor_db": 3.53,
+      "peak_db_wide": 41.13,
+      "margin_db": 6.57,
+      "top3": [
+        [
+          222.064,
+          47.26
+        ],
+        [
+          222.1727,
+          41.33
+        ],
+        [
+          222.0947,
+          40.74
+        ]
+      ]
+    },
+    {
+      "name": "UHF above LPF 520-540",
+      "ok": false,
+      "error": "HTTP Error 409: CONFLICT",
+      "top": []
+    }
+  ],
+  "ts_done": 1790089795.7887
+}

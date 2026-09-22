@@ -1,0 +1,86 @@
+{
+  "narrow": {
+    "freq_mhz": 209.936,
+    "ok": true,
+    "error": null,
+    "gain": 30,
+    "ppm": 49,
+    "peak_db": 47.2,
+    "peak_f": 209.936,
+    "mean_db": 22.73,
+    "noise_floor_db": null,
+    "snr_db": null,
+    "margin_db": 10.51,
+    "ctrl_peak_db": 36.69,
+    "top3": [
+      [
+        209.936,
+        47.2
+      ],
+      [
+        209.9274,
+        37.13
+      ],
+      [
+        210.4749,
+        36.93
+      ]
+    ]
+  },
+  "wide": {
+    "freq_mhz": 209.936,
+    "ok": true,
+    "error": null,
+    "gain": 30,
+    "ppm": 49,
+    "peak_db": 37.92,
+    "peak_f": 210.1325,
+    "mean_db": 24.09,
+    "noise_floor_db": 7.38,
+    "snr_db": 30.54,
+    "margin_db": 0.96,
+    "ctrl_peak_db": 36.97,
+    "top3": [
+      [
+        210.1325,
+        37.93
+      ],
+      [
+        209.7395,
+        37.83
+      ],
+      [
+        209.8019,
+        37.62
+      ]
+    ]
+  },
+  "analysis": {
+    "name": "DAB 10A Rockantenne",
+    "band": "DAB",
+    "freq_mhz": 209.936,
+    "ok": true,
+    "gain": 30,
+    "ppm": 49,
+    "peak_db": 47.2,
+    "peak_f": 209.936,
+    "snr_db": 30.54,
+    "noise_floor_db": 7.38,
+    "peak_db_wide": 37.92,
+    "margin_db": 10.51,
+    "top3": [
+      [
+        209.936,
+        47.2
+      ],
+      [
+        209.9274,
+        37.13
+      ],
+      [
+        210.4749,
+        36.93
+      ]
+    ]
+  }
+}
