@@ -1,0 +1,37 @@
+{
+  "avg_frames": 3,
+  "bin_hz": 15.625,
+  "center_mhz": 446.1,
+  "f0_mhz": 445.999984,
+  "gain": 36,
+  "mode": "range",
+  "ok": true,
+  "peaks": [
+    {
+      "bin": 6401,
+      "db": 47.33,
+      "delta_bin": -0.005,
+      "freq_mhz": 446.1,
+      "interpolated": true
+    },
+    {
+      "bin": 9611,
+      "db": 41.28,
+      "delta_bin": -0.1196,
+      "freq_mhz": 446.150154,
+      "interpolated": true
+    }
+  ],
+  "ppm": 49,
+  "preempted_monitor": false,
+  "rbw_hz": 15.625,
+  "sample_count": 65536,
+  "sample_rate_hz": 1024000,
+  "span_mhz": 0.2,
+  "start_mhz": 446.0,
+  "stop_mhz": 446.2,
+  "ts": 1790085909,
+  "windows_ok": 1,
+  "windows_total": 1,
+  "spectrum_len": 12801
+}

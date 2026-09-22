@@ -1,0 +1,164 @@
+{
+  "avg_frames": 3,
+  "bin_hz": 31.25,
+  "center_mhz": 202.0,
+  "f0_mhz": 174.0,
+  "gain": 30,
+  "mode": "range",
+  "ok": true,
+  "peaks": [
+    {
+      "bin": 1098677,
+      "db": 74.6,
+      "delta_bin": 0.385,
+      "freq_mhz": 208.333668,
+      "interpolated": true
+    },
+    {
+      "bin": 883517,
+      "db": 65.47,
+      "delta_bin": -0.1388,
+      "freq_mhz": 201.609902,
+      "interpolated": true
+    },
+    {
+      "bin": 1669950,
+      "db": 61.1,
+      "delta_bin": -0.2504,
+      "freq_mhz": 226.18593,
+      "interpolated": true
+    },
+    {
+      "bin": 1344341,
+      "db": 60.78,
+      "delta_bin": -0.455,
+      "freq_mhz": 216.010642,
+      "interpolated": true
+    },
+    {
+      "bin": 422694,
+      "db": 60.04,
+      "delta_bin": 0.2231,
+      "freq_mhz": 187.209194,
+      "interpolated": true
+    },
+    {
+      "bin": 1280874,
+      "db": 59.03,
+      "delta_bin": 0.1925,
+      "freq_mhz": 214.027319,
+      "interpolated": true
+    },
+    {
+      "bin": 1072011,
+      "db": 58.18,
+      "delta_bin": -0.3551,
+      "freq_mhz": 207.500333,
+      "interpolated": true
+    },
+    {
+      "bin": 832009,
+      "db": 57.81,
+      "delta_bin": 0.4864,
+      "freq_mhz": 200.000296,
+      "interpolated": true
+    },
+    {
+      "bin": 1543019,
+      "db": 57.67,
+      "delta_bin": -0.0185,
+      "freq_mhz": 222.219343,
+      "interpolated": true
+    },
+    {
+      "bin": 1232011,
+      "db": 57.56,
+      "delta_bin": 0.028,
+      "freq_mhz": 212.500345,
+      "interpolated": true
+    },
+    {
+      "bin": 351653,
+      "db": 57.55,
+      "delta_bin": -0.436,
+      "freq_mhz": 184.989143,
+      "interpolated": true
+    },
+    {
+      "bin": 298081,
+      "db": 57.51,
+      "delta_bin": 0.2708,
+      "freq_mhz": 183.31504,
+      "interpolated": true
+    },
+    {
+      "bin": 831941,
+      "db": 56.51,
+      "delta_bin": 0.1874,
+      "freq_mhz": 199.998162,
+      "interpolated": true
+    },
+    {
+      "bin": 1392012,
+      "db": 56.4,
+      "delta_bin": 0.383,
+      "freq_mhz": 217.500387,
+      "interpolated": true
+    },
+    {
+      "bin": 1690942,
+      "db": 55.46,
+      "delta_bin": 0.1685,
+      "freq_mhz": 226.841943,
+      "interpolated": true
+    },
+    {
+      "bin": 1155895,
+      "db": 55.43,
+      "delta_bin": 0.031,
+      "freq_mhz": 210.12172,
+      "interpolated": true
+    },
+    {
+      "bin": 244509,
+      "db": 55.22,
+      "delta_bin": 0.1857,
+      "freq_mhz": 181.640912,
+      "interpolated": true
+    },
+    {
+      "bin": 746164,
+      "db": 55.22,
+      "delta_bin": 0.4651,
+      "freq_mhz": 197.31764,
+      "interpolated": true
+    },
+    {
+      "bin": 1145662,
+      "db": 55.12,
+      "delta_bin": 0.2527,
+      "freq_mhz": 209.801945,
+      "interpolated": true
+    },
+    {
+      "bin": 1678232,
+      "db": 55.06,
+      "delta_bin": 0.4889,
+      "freq_mhz": 226.444765,
+      "interpolated": true
+    }
+  ],
+  "ppm": 49,
+  "preempted_monitor": false,
+  "rbw_hz": 31.25,
+  "sample_count": 65536,
+  "sample_rate_hz": 2048000,
+  "span_mhz": 56.0,
+  "start_mhz": 174.0,
+  "step_mhz": 1.7408,
+  "stop_mhz": 230.0,
+  "ts": 1790085853,
+  "windows_ok": 31,
+  "windows_total": 33,
+  "spectrum_len": 1792000
+}
