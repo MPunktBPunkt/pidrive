@@ -316,6 +316,20 @@ def _get_squelch(settings=None):
     return int(settings.get("scanner_squelch", SQUELCH))
 
 
+def _get_airband_squelch(settings=None):
+    """Airband-Listen: eigener Default (0), nicht PMR-Squelch 50."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            return 0
+    try:
+        return max(0, min(100, int(settings.get("scanner_airband_squelch", 0))))
+    except Exception:
+        return 0
+
+
 def _get_ppm(settings=None):
     try:
         if settings is None:
@@ -334,6 +348,25 @@ def _get_gain(settings=None):
         return int(settings.get("scanner_gain", -1))
     except Exception:
         return -1
+
+
+def _get_airband_gain(settings=None):
+    """AM-Airband: bevorzugt scanner_airband_gain, sonst scanner_gain, Default 40."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    try:
+        if settings is not None and "scanner_airband_gain" in settings:
+            return int(settings.get("scanner_airband_gain", 40))
+    except Exception:
+        pass
+    g = _get_gain(settings)
+    if g >= 0:
+        return g
+    return 40
 
 
 def _get_pmr_monitor_gain(settings=None):
@@ -509,22 +542,32 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             _sq_eff = _sq
             _gain_eff = _gain
         elif _modulation == "am":
-            _rtl_sr = 24000
-            _out_sr = 24000
-            # Airband/ATIS oft schwach: kein Hard-Floor (0 = Squelch aus).
-            # Früher max(..., 30) → set_scanner_squelch:0 wirkte nie, nur Rauschen/Träger.
-            try:
-                _sq_eff = int(_sq)
-            except Exception:
-                _sq_eff = 0
-            _sq_eff = max(0, min(_sq_eff, 100))
-            _gain_eff = 45 if int(_gain) < 0 else int(_gain)
+            # 16 kHz: genug für Airband-Sprache, weniger Rauschen als 24 kHz
+            _rtl_sr = 16000
+            _out_sr = 16000
+            # Listen: Airband-Squelch (Default 0). Globales scanner_squelch=50
+            # ist für PMR — würde ATIS/Continuous choppy machen.
+            if band_id == "airband" or _audio_profile == "airband_voice":
+                _sq_eff = _get_airband_squelch(settings)
+            else:
+                try:
+                    _sq_eff = int(_sq)
+                except Exception:
+                    _sq_eff = 0
+                _sq_eff = max(0, min(_sq_eff, 100))
+            if band_id == "airband" or _audio_profile == "airband_voice":
+                _gain_eff = _get_airband_gain(settings)
+            else:
+                _gain_eff = 40 if int(_gain) < 0 else int(_gain)
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
             if _audio_profile == "airband_voice":
-                # Mehr Pegel + etwas breiteres Sprachband für ATIS-Ansagen
-                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3500,volume=16dB]"
+                # Engeres Sprachband + sanfte Pegelglättung statt hartem +16 dB
+                _mpv_af = (
+                    "lavfi=[highpass=f=300,lowpass=f=3000,"
+                    "dynaudnorm=f=75:g=12:p=0.9,volume=6dB]"
+                )
             else:
-                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=10dB]"
         else:
             # Schmalband-FM (PMR etc.)
             _rtl_sr = 24000

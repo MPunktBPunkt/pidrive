@@ -42,5 +42,7 @@
   "spectrum_watch_seconds": 2.5,
   "audio_sink_name": "",
   "audio_card_index": -1,
-  "music_dir": "/home/pidrive/Musik"
+  "music_dir": "/home/pidrive/Musik",
+  "scanner_airband_squelch": 0,
+  "scanner_airband_gain": 40
 }
