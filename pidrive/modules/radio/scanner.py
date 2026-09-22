@@ -542,32 +542,26 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             _sq_eff = _sq
             _gain_eff = _gain
         elif _modulation == "am":
-            # 16 kHz: genug für Airband-Sprache, weniger Rauschen als 24 kHz
-            _rtl_sr = 16000
-            _out_sr = 16000
-            # Listen: Airband-Squelch (Default 0). Globales scanner_squelch=50
+            _rtl_sr = 24000
+            _out_sr = 24000
+            # Listen: Airband-Squelch (Default 0). Globales scanner_squelch
             # ist für PMR — würde ATIS/Continuous choppy machen.
             if band_id == "airband" or _audio_profile == "airband_voice":
                 _sq_eff = _get_airband_squelch(settings)
+                _gain_eff = _get_airband_gain(settings)
             else:
                 try:
                     _sq_eff = int(_sq)
                 except Exception:
                     _sq_eff = 0
                 _sq_eff = max(0, min(_sq_eff, 100))
-            if band_id == "airband" or _audio_profile == "airband_voice":
-                _gain_eff = _get_airband_gain(settings)
-            else:
-                _gain_eff = 40 if int(_gain) < 0 else int(_gain)
+                _gain_eff = 45 if int(_gain) < 0 else int(_gain)
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
             if _audio_profile == "airband_voice":
-                # Engeres Sprachband + sanfte Pegelglättung statt hartem +16 dB
-                _mpv_af = (
-                    "lavfi=[highpass=f=300,lowpass=f=3000,"
-                    "dynaudnorm=f=75:g=12:p=0.9,volume=6dB]"
-                )
+                # Bewährtes Profil (vor 0.11.157-Experiment): breiter + fester Pegel
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3500,volume=16dB]"
             else:
-                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=10dB]"
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
         else:
             # Schmalband-FM (PMR etc.)
             _rtl_sr = 24000
