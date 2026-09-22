@@ -511,13 +511,20 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
         elif _modulation == "am":
             _rtl_sr = 24000
             _out_sr = 24000
-            _sq_eff = max(int(_sq or 0), 30)
-            _gain_eff = 36 if int(_gain) < 0 else int(_gain)
-            _rtl_extra = ["-F", "9", "-A", "std"]
+            # Airband/ATIS oft schwach: kein Hard-Floor (0 = Squelch aus).
+            # Früher max(..., 30) → set_scanner_squelch:0 wirkte nie, nur Rauschen/Träger.
+            try:
+                _sq_eff = int(_sq)
+            except Exception:
+                _sq_eff = 0
+            _sq_eff = max(0, min(_sq_eff, 100))
+            _gain_eff = 45 if int(_gain) < 0 else int(_gain)
+            _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
             if _audio_profile == "airband_voice":
-                _mpv_af = "lavfi=[highpass=f=300,lowpass=f=3000,volume=8dB]"
+                # Mehr Pegel + etwas breiteres Sprachband für ATIS-Ansagen
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3500,volume=16dB]"
             else:
-                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=8dB]"
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
         else:
             # Schmalband-FM (PMR etc.)
             _rtl_sr = 24000
