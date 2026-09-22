@@ -1,0 +1,154 @@
+{
+  "ok": true,
+  "error": null,
+  "gain": 30,
+  "ppm": 49,
+  "start_mhz": 221.3,
+  "stop_mhz": 222.8,
+  "bin_hz": 27.34375,
+  "f0_mhz": 221.299988,
+  "sample_rate_hz": 1792000,
+  "avg_frames": 3,
+  "peaks": [
+    {
+      "bin": 43879,
+      "db": 54.15,
+      "delta_bin": -0.1434,
+      "freq_mhz": 222.499801,
+      "interpolated": true
+    },
+    {
+      "bin": 18981,
+      "db": 54.1,
+      "delta_bin": -0.0582,
+      "freq_mhz": 221.818998,
+      "interpolated": true
+    },
+    {
+      "bin": 52532,
+      "db": 52.68,
+      "delta_bin": -0.1896,
+      "freq_mhz": 222.736405,
+      "interpolated": true
+    },
+    {
+      "bin": 51274,
+      "db": 52.49,
+      "delta_bin": 0.1541,
+      "freq_mhz": 222.702016,
+      "interpolated": true
+    },
+    {
+      "bin": 27429,
+      "db": 51.69,
+      "delta_bin": 0.2316,
+      "freq_mhz": 222.050006,
+      "interpolated": true
+    },
+    {
+      "bin": 51395,
+      "db": 51.21,
+      "delta_bin": -0.0944,
+      "freq_mhz": 222.705318,
+      "interpolated": true
+    },
+    {
+      "bin": 36759,
+      "db": 51.14,
+      "delta_bin": 0.114,
+      "freq_mhz": 222.30512,
+      "interpolated": true
+    },
+    {
+      "bin": 49706,
+      "db": 50.53,
+      "delta_bin": -0.1012,
+      "freq_mhz": 222.659134,
+      "interpolated": true
+    },
+    {
+      "bin": 27872,
+      "db": 50.35,
+      "delta_bin": -0.3436,
+      "freq_mhz": 222.062104,
+      "interpolated": true
+    },
+    {
+      "bin": 52261,
+      "db": 50.26,
+      "delta_bin": 0.2972,
+      "freq_mhz": 222.729008,
+      "interpolated": true
+    },
+    {
+      "bin": 51310,
+      "db": 50.18,
+      "delta_bin": 0.059,
+      "freq_mhz": 222.702998,
+      "interpolated": true
+    },
+    {
+      "bin": 51386,
+      "db": 50.09,
+      "delta_bin": 0.3382,
+      "freq_mhz": 222.705083,
+      "interpolated": true
+    },
+    {
+      "bin": 47405,
+      "db": 49.94,
+      "delta_bin": 0.2666,
+      "freq_mhz": 222.596226,
+      "interpolated": true
+    },
+    {
+      "bin": 51211,
+      "db": 49.93,
+      "delta_bin": -0.2159,
+      "freq_mhz": 222.700283,
+      "interpolated": true
+    },
+    {
+      "bin": 50301,
+      "db": 49.81,
+      "delta_bin": 0.2671,
+      "freq_mhz": 222.675414,
+      "interpolated": true
+    }
+  ],
+  "analysis": {
+    "freq_mhz": 222.064,
+    "ok": true,
+    "error": null,
+    "gain": 30,
+    "ppm": 49,
+    "peak_db": 54.09,
+    "peak_f": 221.819,
+    "mean_db": 39.4,
+    "noise_floor_db": 36.56,
+    "snr_db": 17.53,
+    "margin_db": 1.52,
+    "ctrl_peak_db": 52.57,
+    "top3": [
+      [
+        222.4998,
+        54.15
+      ],
+      [
+        221.819,
+        54.1
+      ],
+      [
+        222.7364,
+        52.68
+      ]
+    ],
+    "name": "DAB 11D Bayern3",
+    "band": "DAB",
+    "window_mhz": [
+      221.3,
+      222.8
+    ],
+    "half_khz": 500
+  }
+}
