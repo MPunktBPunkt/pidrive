@@ -1,0 +1,149 @@
+{
+  "ok": true,
+  "gain": 30,
+  "ppm": 49,
+  "start_mhz": 209.2,
+  "stop_mhz": 210.7,
+  "peaks": [
+    {
+      "bin": 27429,
+      "db": 46.99,
+      "delta_bin": -0.0013,
+      "freq_mhz": 209.95,
+      "interpolated": true
+    },
+    {
+      "bin": 4630,
+      "db": 41.03,
+      "delta_bin": 0.1009,
+      "freq_mhz": 209.326593,
+      "interpolated": true
+    },
+    {
+      "bin": 10820,
+      "db": 40.55,
+      "delta_bin": -0.0678,
+      "freq_mhz": 209.495846,
+      "interpolated": true
+    },
+    {
+      "bin": 7052,
+      "db": 40.33,
+      "delta_bin": 0.0028,
+      "freq_mhz": 209.392816,
+      "interpolated": true
+    },
+    {
+      "bin": 8476,
+      "db": 39.88,
+      "delta_bin": 0.3186,
+      "freq_mhz": 209.431763,
+      "interpolated": true
+    },
+    {
+      "bin": 23720,
+      "db": 39.75,
+      "delta_bin": 0.4268,
+      "freq_mhz": 209.848594,
+      "interpolated": true
+    },
+    {
+      "bin": 2479,
+      "db": 39.72,
+      "delta_bin": 0.1496,
+      "freq_mhz": 209.267778,
+      "interpolated": true
+    },
+    {
+      "bin": 4778,
+      "db": 39.64,
+      "delta_bin": -0.3979,
+      "freq_mhz": 209.330626,
+      "interpolated": true
+    },
+    {
+      "bin": 9791,
+      "db": 39.58,
+      "delta_bin": -0.0675,
+      "freq_mhz": 209.467709,
+      "interpolated": true
+    },
+    {
+      "bin": 2443,
+      "db": 39.57,
+      "delta_bin": -0.4916,
+      "freq_mhz": 209.266776,
+      "interpolated": true
+    },
+    {
+      "bin": 3536,
+      "db": 39.43,
+      "delta_bin": -0.0853,
+      "freq_mhz": 209.296673,
+      "interpolated": true
+    },
+    {
+      "bin": 8513,
+      "db": 39.2,
+      "delta_bin": 0.1975,
+      "freq_mhz": 209.432771,
+      "interpolated": true
+    },
+    {
+      "bin": 10925,
+      "db": 39.17,
+      "delta_bin": -0.2425,
+      "freq_mhz": 209.498712,
+      "interpolated": true
+    },
+    {
+      "bin": 24747,
+      "db": 39.09,
+      "delta_bin": 0.2706,
+      "freq_mhz": 209.876671,
+      "interpolated": true
+    },
+    {
+      "bin": 2509,
+      "db": 39.08,
+      "delta_bin": -0.1339,
+      "freq_mhz": 209.26859,
+      "interpolated": true
+    }
+  ],
+  "analysis": {
+    "freq_mhz": 209.936,
+    "ok": true,
+    "error": null,
+    "gain": 30,
+    "ppm": 49,
+    "peak_db": 40.22,
+    "peak_f": 209.7395,
+    "mean_db": 25.99,
+    "noise_floor_db": 5.64,
+    "snr_db": 34.57,
+    "margin_db": 8.88,
+    "ctrl_peak_db": 38.12,
+    "top3": [
+      [
+        209.95,
+        46.99
+      ],
+      [
+        209.3266,
+        41.03
+      ],
+      [
+        209.4958,
+        40.55
+      ]
+    ],
+    "name": "DAB 10A Rockantenne",
+    "band": "DAB",
+    "window_mhz": [
+      208.73600000000002,
+      211.136
+    ],
+    "half_khz": 500
+  }
+}
