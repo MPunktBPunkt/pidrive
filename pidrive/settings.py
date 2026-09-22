@@ -64,6 +64,10 @@ _DEFAULTS = {
     "scanner_airband_squelch":  0,      # Listen/ATIS: 0=offen (PMR-Squelch nicht übernehmen)
     "scanner_airband_gain":     45,     # AM Gain dB (Stufen per UI ±)
     "scanner_airband_sample_rate": 24000,  # rtl_fm -s für Airband (Stufen per UI ±)
+    "scanner_airband_hp_hz":    250,    # mpv highpass nach Demod (Sprache)
+    "scanner_airband_lp_hz":    3500,   # mpv lowpass nach Demod
+    "fm_hp_hz":                 60,     # FM Rauschfilter highpass
+    "fm_lp_hz":                 12000,  # FM Rauschfilter lowpass (schwache Sender)
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

@@ -779,17 +779,40 @@ def api_scanner_settings():
                 tune = _sc.get_airband_tune_params(s, S=None)
                 # Wenn Core Status airband_tune hat:
                 at = st.get("airband_tune")
-                if isinstance(at, dict) and ("gain" in at or "sample_rate" in at):
-                    tune["gain"] = int(at.get("gain", tune["gain"]))
-                    tune["sample_rate"] = int(at.get("sample_rate", tune["sample_rate"]))
+                if isinstance(at, dict) and ("gain" in at or "sample_rate" in at or "hp_hz" in at):
+                    for k in ("gain", "sample_rate", "hp_hz", "lp_hz"):
+                        if k in at:
+                            tune[k] = int(at[k])
                     tune["dirty"] = bool(at.get("dirty"))
             except Exception:
                 tune = {
                     "gain": s.get("scanner_airband_gain", 45),
                     "sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "hp_hz": s.get("scanner_airband_hp_hz", 250),
+                    "lp_hz": s.get("scanner_airband_lp_hz", 3500),
                     "dirty": False,
                     "default_gain": s.get("scanner_airband_gain", 45),
                     "default_sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "default_hp_hz": s.get("scanner_airband_hp_hz", 250),
+                    "default_lp_hz": s.get("scanner_airband_lp_hz", 3500),
+                }
+            fm_tune = {}
+            try:
+                from modules.radio import fm as _fm
+                fm_tune = _fm.get_fm_tune_params(s, S=None)
+                ft = st.get("fm_tune")
+                if isinstance(ft, dict) and ("hp_hz" in ft or "lp_hz" in ft):
+                    for k in ("hp_hz", "lp_hz"):
+                        if k in ft:
+                            fm_tune[k] = int(ft[k])
+                    fm_tune["dirty"] = bool(ft.get("dirty"))
+            except Exception:
+                fm_tune = {
+                    "hp_hz": s.get("fm_hp_hz", 60),
+                    "lp_hz": s.get("fm_lp_hz", 12000),
+                    "dirty": False,
+                    "default_hp_hz": s.get("fm_hp_hz", 60),
+                    "default_lp_hz": s.get("fm_lp_hz", 12000),
                 }
             return jsonify({
                 "ok": True,
@@ -806,11 +829,16 @@ def api_scanner_settings():
                     "scanner_airband_hold_s":     s.get("scanner_airband_hold_s", 20),
                     "scanner_airband_gain":       s.get("scanner_airband_gain", 45),
                     "scanner_airband_sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "scanner_airband_hp_hz":      s.get("scanner_airband_hp_hz", 250),
+                    "scanner_airband_lp_hz":      s.get("scanner_airband_lp_hz", 3500),
                     "scanner_airband_squelch":    s.get("scanner_airband_squelch", 0),
+                    "fm_hp_hz":                  s.get("fm_hp_hz", 60),
+                    "fm_lp_hz":                  s.get("fm_lp_hz", 12000),
                     "scanner_gain":           s.get("scanner_gain", -1),
                     "scanner_squelch":        s.get("scanner_squelch", 25),
                     "ppm_correction":         s.get("ppm_correction", 0),
                     "airband_tune":           tune,
+                    "fm_tune":                fm_tune,
                 }
             })
 
@@ -823,7 +851,9 @@ def api_scanner_settings():
                     "scanner_pmr_watch_s", "scanner_airband_last_freq",
                     "scanner_airband_autotune", "scanner_airband_hold_s",
                     "scanner_airband_gain", "scanner_airband_sample_rate",
+                    "scanner_airband_hp_hz", "scanner_airband_lp_hz",
                     "scanner_airband_squelch",
+                    "fm_hp_hz", "fm_lp_hz",
                     "scanner_gain", "scanner_squelch"):
             if key in body:
                 if key in ("scanner_pmr_autotune", "scanner_airband_autotune"):

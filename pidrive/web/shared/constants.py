@@ -54,6 +54,7 @@ ALLOWED_COMMANDS = {
     "pmr_monitor_start", "pmr_monitor_stop",
     "airband_monitor_start", "airband_monitor_stop",
     "airband_tune_save",
+    "fm_tune_save",
     "favorites_add_current", "favorites_add", "favorites_remove",
 }
 
@@ -66,6 +67,8 @@ ALLOWED_COMMAND_PREFIXES = (
     "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
     "set_scanner_squelch:", "set_ppm:",
     "airband_gain_step:", "airband_sr_step:", "airband_gain:", "airband_sr:",
+    "airband_hp_step:", "airband_lp_step:",
+    "fm_hp_step:", "fm_lp_step:",
     "webradio_play:",
     "local_play:",
     "play_dab:", "play_fm:", "play_web:",

@@ -144,6 +144,7 @@ def write_status(S, settings):
         "processes":            S.get("processes", []),
         "scanner":              _scanner_status(S),
         "airband_tune":         S.get("airband_tune") if isinstance(S.get("airband_tune"), dict) else {},
+        "fm_tune":              S.get("fm_tune") if isinstance(S.get("fm_tune"), dict) else {},
         "usb":                  _usb_status(),
         "ts":        int(time.time()),
     })

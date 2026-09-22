@@ -78,6 +78,221 @@ def _station_key(name, freq):
     return f"{(name or '').strip().lower()}|{str(freq).strip()}"
 
 
+# ── FM Audio-Filter (Rauschen / Höhen dämpfen) ──────────────────────────────
+# WBFM → 32 kHz PCM. Mildes HP/LP schneidet Rumpeln und Zischen bei schwachen Sendern.
+FM_HP_STEPS = (20, 40, 60, 80, 100, 120)
+FM_LP_STEPS = (8000, 10000, 12000, 14000, 15000, 16000)
+
+
+def _nearest_step(val, steps):
+    try:
+        v = int(val)
+    except Exception:
+        v = int(steps[len(steps) // 2])
+    return min(steps, key=lambda s: abs(int(s) - v))
+
+
+def _step_in_list(val, steps, delta: int):
+    cur = _nearest_step(val, steps)
+    idx = list(steps).index(cur)
+    idx = max(0, min(len(steps) - 1, idx + int(delta)))
+    return int(steps[idx])
+
+
+def _get_fm_hp(settings=None, S=None):
+    if S and isinstance(S.get("fm_tune"), dict) and "hp_hz" in S["fm_tune"]:
+        try:
+            return _nearest_step(S["fm_tune"]["hp_hz"], FM_HP_STEPS)
+        except Exception:
+            pass
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    try:
+        raw = int((settings or {}).get("fm_hp_hz", 60))
+    except Exception:
+        raw = 60
+    return _nearest_step(raw, FM_HP_STEPS)
+
+
+def _get_fm_lp(settings=None, S=None):
+    if S and isinstance(S.get("fm_tune"), dict) and "lp_hz" in S["fm_tune"]:
+        try:
+            return _nearest_step(S["fm_tune"]["lp_hz"], FM_LP_STEPS)
+        except Exception:
+            pass
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    try:
+        raw = int((settings or {}).get("fm_lp_hz", 12000))
+    except Exception:
+        raw = 12000
+    return _nearest_step(raw, FM_LP_STEPS)
+
+
+def _fm_af_string(settings=None, S=None):
+    hp = _get_fm_hp(settings, S=S)
+    lp = _get_fm_lp(settings, S=S)
+    if lp <= hp:
+        lp = max(hp + 1000, 8000)
+    return f"lavfi=[highpass=f={hp},lowpass=f={lp}]"
+
+
+def _fm_default_dict(settings=None):
+    return {
+        "hp_hz": _get_fm_hp(settings, S=None),
+        "lp_hz": _get_fm_lp(settings, S=None),
+    }
+
+
+def _mark_fm_dirty(tune, settings=None):
+    d = _fm_default_dict(settings)
+    tune["dirty"] = any(int(tune.get(k, d[k])) != int(d[k]) for k in d)
+    return tune["dirty"]
+
+
+def _ensure_fm_tune(S, settings=None):
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    tune = S.setdefault("fm_tune", {})
+    defs = _fm_default_dict(settings)
+    for k, v in defs.items():
+        if k not in tune:
+            tune[k] = v
+    _mark_fm_dirty(tune, settings)
+    return tune
+
+
+def seed_fm_tune_from_defaults(S, settings=None):
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    defs = _fm_default_dict(settings)
+    defs["dirty"] = False
+    S["fm_tune"] = defs
+    return dict(S["fm_tune"])
+
+
+def get_fm_tune_params(settings=None, S=None):
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    if S is not None:
+        tune = _ensure_fm_tune(S, settings)
+    else:
+        tune = dict(_fm_default_dict(settings))
+        tune["dirty"] = False
+    defs = _fm_default_dict(settings)
+    return {
+        "hp_hz": int(tune.get("hp_hz", defs["hp_hz"])),
+        "lp_hz": int(tune.get("lp_hz", defs["lp_hz"])),
+        "dirty": bool(tune.get("dirty")),
+        "default_hp_hz": defs["hp_hz"],
+        "default_lp_hz": defs["lp_hz"],
+        "hp_steps": list(FM_HP_STEPS),
+        "lp_steps": list(FM_LP_STEPS),
+    }
+
+
+def step_fm_hp(delta: int, settings=None, S=None):
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    if S is None:
+        return _get_fm_hp(settings)
+    tune = _ensure_fm_tune(S, settings)
+    new = _step_in_list(tune["hp_hz"], FM_HP_STEPS, delta)
+    if new >= int(tune.get("lp_hz", 12000)):
+        return int(tune["hp_hz"])
+    tune["hp_hz"] = new
+    _mark_fm_dirty(tune, settings)
+    return new
+
+
+def step_fm_lp(delta: int, settings=None, S=None):
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    if S is None:
+        return _get_fm_lp(settings)
+    tune = _ensure_fm_tune(S, settings)
+    new = _step_in_list(tune["lp_hz"], FM_LP_STEPS, delta)
+    if new <= int(tune.get("hp_hz", 60)):
+        return int(tune["lp_hz"])
+    tune["lp_hz"] = new
+    _mark_fm_dirty(tune, settings)
+    return new
+
+
+def save_fm_tune_as_defaults(S, settings=None):
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    tune = _ensure_fm_tune(S, settings)
+    settings["fm_hp_hz"] = int(tune["hp_hz"])
+    settings["fm_lp_hz"] = int(tune["lp_hz"])
+    try:
+        from settings import save_settings
+        save_settings(settings)
+    except Exception:
+        pass
+    tune["dirty"] = False
+    return {"hp_hz": settings["fm_hp_hz"], "lp_hz": settings["fm_lp_hz"]}
+
+
+def retune_fm_if_playing(S, settings=None):
+    """Wenn FM läuft: mit aktuellem HP/LP neu starten."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    if S.get("radio_type") != "FM" or not S.get("radio_playing"):
+        return False
+    last = settings.get("last_fm_station") if isinstance(settings, dict) else None
+    if not isinstance(last, dict) or not _get_freq(last):
+        # Fallback aus S
+        name = str(S.get("radio_name") or S.get("radio_station") or "FM")
+        # radio_station oft "Name · 104.4"
+        freq = None
+        try:
+            rs = str(S.get("radio_station") or "")
+            for part in rs.replace(",", ".").split():
+                try:
+                    f = float(part)
+                    if 87.0 <= f <= 108.5:
+                        freq = f
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        if freq is None:
+            return False
+        last = {"name": name, "freq": freq}
+    # Guard in play_station umgehen: stop setzt playing=False
+    stop(S)
+    return play_station(last, S, settings) is not False
+
+
 def is_rtlsdr_available():
     out = _run("lsusb 2>/dev/null | grep -i 'RTL\\|2832\\|2838'", capture=True)
     return bool(out)
@@ -228,6 +443,11 @@ def play_station(station, S, settings=None):
         _mpv_extra = [a for a in (_mpv_parts[1:] if len(_mpv_parts) > 1 else ["--ao=pulse"]) if a]
         if "--ao=pulse" not in _mpv_extra and not any(a.startswith("--ao=") for a in _mpv_extra):
             _mpv_extra = ["--ao=pulse"] + _mpv_extra
+
+        # Audio-Filter: HP/LP gegen Rauschen (Live aus fm_tune / Defaults)
+        _mpv_af = _fm_af_string(settings, S=S)
+        if _mpv_af and not any(a.startswith("--af=") for a in _mpv_extra):
+            _mpv_extra = [f"--af={_mpv_af}"] + _mpv_extra
 
         # Gain und PPM aus Settings aufbauen
         _gain_val  = int(settings.get("fm_gain", -1) if settings else -1)

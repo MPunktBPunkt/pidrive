@@ -377,6 +377,9 @@ def _get_airband_gain(settings=None, S=None):
 # Diskrete Stufen für WebUI/iDrive ± (Optimierung an K2 ATIS etc.)
 AIRBAND_GAIN_STEPS = (0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 49)
 AIRBAND_SR_STEPS = (12000, 16000, 20000, 24000, 32000)
+AIRBAND_HP_STEPS = (100, 150, 200, 250, 300, 350, 400)
+AIRBAND_LP_STEPS = (2500, 2800, 3000, 3200, 3500, 3800, 4000)
+AIRBAND_AF_VOLUME_DB = 16
 
 
 def _nearest_step(val, steps):
@@ -392,6 +395,68 @@ def _step_in_list(val, steps, delta: int):
     idx = list(steps).index(cur)
     idx = max(0, min(len(steps) - 1, idx + int(delta)))
     return int(steps[idx])
+
+
+def _get_airband_hp(settings=None, S=None):
+    if S and isinstance(S.get("airband_tune"), dict) and "hp_hz" in S["airband_tune"]:
+        try:
+            return _nearest_step(S["airband_tune"]["hp_hz"], AIRBAND_HP_STEPS)
+        except Exception:
+            pass
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    try:
+        raw = int((settings or {}).get("scanner_airband_hp_hz", 250))
+    except Exception:
+        raw = 250
+    return _nearest_step(raw, AIRBAND_HP_STEPS)
+
+
+def _get_airband_lp(settings=None, S=None):
+    if S and isinstance(S.get("airband_tune"), dict) and "lp_hz" in S["airband_tune"]:
+        try:
+            return _nearest_step(S["airband_tune"]["lp_hz"], AIRBAND_LP_STEPS)
+        except Exception:
+            pass
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    try:
+        raw = int((settings or {}).get("scanner_airband_lp_hz", 3500))
+    except Exception:
+        raw = 3500
+    return _nearest_step(raw, AIRBAND_LP_STEPS)
+
+
+def _airband_af_string(settings=None, S=None):
+    hp = _get_airband_hp(settings, S=S)
+    lp = _get_airband_lp(settings, S=S)
+    if lp <= hp:
+        lp = min(AIRBAND_LP_STEPS, key=lambda x: abs(x - (hp + 500)))
+        lp = max(lp, hp + 500)
+    return f"lavfi=[highpass=f={hp},lowpass=f={lp},volume={AIRBAND_AF_VOLUME_DB}dB]"
+
+
+def _airband_default_dict(settings=None):
+    return {
+        "gain": _get_airband_gain(settings, S=None),
+        "sample_rate": _get_airband_sample_rate(settings, S=None),
+        "hp_hz": _get_airband_hp(settings, S=None),
+        "lp_hz": _get_airband_lp(settings, S=None),
+    }
+
+
+def _mark_airband_dirty(tune, settings=None):
+    d = _airband_default_dict(settings)
+    tune["dirty"] = any(int(tune.get(k, d[k])) != int(d[k]) for k in d)
+    return tune["dirty"]
 
 
 def _get_airband_sample_rate(settings=None, S=None):
@@ -422,11 +487,11 @@ def _ensure_airband_tune(S, settings=None):
         except Exception:
             settings = {}
     tune = S.setdefault("airband_tune", {})
-    if "gain" not in tune:
-        tune["gain"] = _get_airband_gain(settings, S=None)
-    if "sample_rate" not in tune:
-        tune["sample_rate"] = _get_airband_sample_rate(settings, S=None)
-    tune.setdefault("dirty", False)
+    defs = _airband_default_dict(settings)
+    for k, v in defs.items():
+        if k not in tune:
+            tune[k] = v
+    _mark_airband_dirty(tune, settings)
     return tune
 
 
@@ -438,11 +503,9 @@ def seed_airband_tune_from_defaults(S, settings=None):
             settings = load_settings()
         except Exception:
             settings = {}
-    S["airband_tune"] = {
-        "gain": int(_get_airband_gain(settings, S=None)),
-        "sample_rate": int(_get_airband_sample_rate(settings, S=None)),
-        "dirty": False,
-    }
+    defs = _airband_default_dict(settings)
+    defs["dirty"] = False
+    S["airband_tune"] = defs
     return dict(S["airband_tune"])
 
 
@@ -457,19 +520,23 @@ def get_airband_tune_params(settings=None, S=None):
     if S is not None:
         tune = _ensure_airband_tune(S, settings)
     else:
-        tune = {
-            "gain": _get_airband_gain(settings),
-            "sample_rate": _get_airband_sample_rate(settings),
-            "dirty": False,
-        }
+        tune = dict(_airband_default_dict(settings))
+        tune["dirty"] = False
+    defs = _airband_default_dict(settings)
     return {
         "gain": int(tune["gain"]),
         "sample_rate": int(tune["sample_rate"]),
+        "hp_hz": int(tune.get("hp_hz", defs["hp_hz"])),
+        "lp_hz": int(tune.get("lp_hz", defs["lp_hz"])),
         "dirty": bool(tune.get("dirty")),
-        "default_gain": _get_airband_gain(settings, S=None),
-        "default_sample_rate": _get_airband_sample_rate(settings, S=None),
+        "default_gain": defs["gain"],
+        "default_sample_rate": defs["sample_rate"],
+        "default_hp_hz": defs["hp_hz"],
+        "default_lp_hz": defs["lp_hz"],
         "gain_steps": list(AIRBAND_GAIN_STEPS),
         "sample_rate_steps": list(AIRBAND_SR_STEPS),
+        "hp_steps": list(AIRBAND_HP_STEPS),
+        "lp_steps": list(AIRBAND_LP_STEPS),
         "squelch": _get_airband_squelch(settings),
     }
 
@@ -480,7 +547,6 @@ def step_airband_gain(delta: int, settings=None, S=None, persist=False):
         from settings import load_settings
         settings = load_settings()
     if S is None:
-        # ohne S: direkt Settings (Legacy)
         cur = _get_airband_gain(settings)
         new = _step_in_list(cur, AIRBAND_GAIN_STEPS, delta)
         settings["scanner_airband_gain"] = new
@@ -494,9 +560,7 @@ def step_airband_gain(delta: int, settings=None, S=None, persist=False):
     tune = _ensure_airband_tune(S, settings)
     new = _step_in_list(tune["gain"], AIRBAND_GAIN_STEPS, delta)
     tune["gain"] = new
-    def_g = _get_airband_gain(settings, S=None)
-    def_sr = _get_airband_sample_rate(settings, S=None)
-    tune["dirty"] = (new != def_g) or (int(tune["sample_rate"]) != def_sr)
+    _mark_airband_dirty(tune, settings)
     return new
 
 
@@ -519,20 +583,51 @@ def step_airband_sample_rate(delta: int, settings=None, S=None, persist=False):
     tune = _ensure_airband_tune(S, settings)
     new = _step_in_list(tune["sample_rate"], AIRBAND_SR_STEPS, delta)
     tune["sample_rate"] = new
-    def_g = _get_airband_gain(settings, S=None)
-    def_sr = _get_airband_sample_rate(settings, S=None)
-    tune["dirty"] = (int(tune["gain"]) != def_g) or (new != def_sr)
+    _mark_airband_dirty(tune, settings)
+    return new
+
+
+def step_airband_hp(delta: int, settings=None, S=None):
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    if S is None:
+        return _get_airband_hp(settings)
+    tune = _ensure_airband_tune(S, settings)
+    new = _step_in_list(tune["hp_hz"], AIRBAND_HP_STEPS, delta)
+    # HP darf LP nicht überschreiten
+    if new >= int(tune.get("lp_hz", 3500)):
+        return int(tune["hp_hz"])
+    tune["hp_hz"] = new
+    _mark_airband_dirty(tune, settings)
+    return new
+
+
+def step_airband_lp(delta: int, settings=None, S=None):
+    if settings is None:
+        from settings import load_settings
+        settings = load_settings()
+    if S is None:
+        return _get_airband_lp(settings)
+    tune = _ensure_airband_tune(S, settings)
+    new = _step_in_list(tune["lp_hz"], AIRBAND_LP_STEPS, delta)
+    if new <= int(tune.get("hp_hz", 250)):
+        return int(tune["lp_hz"])
+    tune["lp_hz"] = new
+    _mark_airband_dirty(tune, settings)
     return new
 
 
 def save_airband_tune_as_defaults(S, settings=None):
-    """Live Gain/SR als neue Defaults in settings.json übernehmen."""
+    """Live Gain/SR/HP/LP als neue Defaults in settings.json übernehmen."""
     if settings is None:
         from settings import load_settings
         settings = load_settings()
     tune = _ensure_airband_tune(S, settings)
     settings["scanner_airband_gain"] = int(tune["gain"])
     settings["scanner_airband_sample_rate"] = int(tune["sample_rate"])
+    settings["scanner_airband_hp_hz"] = int(tune["hp_hz"])
+    settings["scanner_airband_lp_hz"] = int(tune["lp_hz"])
     try:
         from settings import save_settings
         save_settings(settings)
@@ -542,11 +637,13 @@ def save_airband_tune_as_defaults(S, settings=None):
     return {
         "gain": settings["scanner_airband_gain"],
         "sample_rate": settings["scanner_airband_sample_rate"],
+        "hp_hz": settings["scanner_airband_hp_hz"],
+        "lp_hz": settings["scanner_airband_lp_hz"],
     }
 
 
 def retune_airband_if_playing(S, settings=None):
-    """Wenn Airband gerade spielt: mit aktuellen Gain/SR neu starten."""
+    """Wenn Airband gerade spielt: mit aktuellen Gain/SR/HP/LP neu starten."""
     if settings is None:
         try:
             from settings import load_settings
@@ -570,6 +667,35 @@ def retune_airband_if_playing(S, settings=None):
         settings=settings,
         modulation="am", band_id="airband",
         audio_profile="airband_voice",
+    )
+    return True
+
+
+def retune_scanner_fm_if_playing(S, settings=None):
+    """Wenn Scanner-FM (UKW) läuft: mit aktuellem HP/LP neu starten."""
+    if settings is None:
+        try:
+            from settings import load_settings
+            settings = load_settings()
+        except Exception:
+            settings = {}
+    sc = S.get("scanner") if isinstance(S.get("scanner"), dict) else {}
+    band = str(S.get("scanner_band") or sc.get("band") or "").lower()
+    if band != "fm":
+        return False
+    try:
+        freq = float(sc.get("freq") or 0)
+    except Exception:
+        return False
+    if not (87.0 <= freq <= 108.5):
+        return False
+    name = str(sc.get("name") or S.get("radio_station") or f"FM {freq:.1f}")
+    rt = _get_band_runtime("fm")
+    play_freq(
+        freq, name, rt.get("bw") or 200000, S,
+        settings=settings,
+        modulation="wbfm", band_id="fm",
+        audio_profile="broadcast_fm",
     )
     return True
 
@@ -746,6 +872,12 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             _out_sr = 32000
             _sq_eff = _sq
             _gain_eff = _gain
+            # UKW: gleicher HP/LP-Rauschfilter wie fm.play_station
+            try:
+                from modules.radio import fm as _fm_af
+                _mpv_af = _fm_af._fm_af_string(settings, S=S)
+            except Exception:
+                _mpv_af = "lavfi=[highpass=f=60,lowpass=f=12000]"
         elif _modulation == "am":
             if band_id == "airband" or _audio_profile == "airband_voice":
                 _rtl_sr = _get_airband_sample_rate(settings, S=S)
@@ -766,8 +898,8 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
                 _gain_eff = 45 if int(_gain) < 0 else int(_gain)
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
             if _audio_profile == "airband_voice":
-                # Bewährtes Profil (vor 0.11.157-Experiment): breiter + fester Pegel
-                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3500,volume=16dB]"
+                # Live HP/LP aus airband_tune / Settings (Default 250–3500 Hz)
+                _mpv_af = _airband_af_string(settings, S=S)
             else:
                 _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
         else:

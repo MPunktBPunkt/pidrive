@@ -605,6 +605,61 @@ def handle(cmd, menu_state, store, S, settings, bg):
             return True
         bg(lambda d=_delta: fm.step_freq(S, settings, d))
 
+    elif cmd.startswith("fm_hp_step:"):
+        try:
+            delta = int(cmd.split(":", 1)[1].strip())
+            delta = 1 if delta >= 0 else -1
+            new = fm.step_fm_hp(delta, settings, S=S)
+            dirty = bool((S.get("fm_tune") or {}).get("dirty"))
+            mark = " *" if dirty else ""
+            ipc.write_progress("FM HP", f"{new} Hz{mark}", color="green")
+            fm.retune_fm_if_playing(S, settings)
+            try:
+                scanner.retune_scanner_fm_if_playing(S, settings)
+            except Exception:
+                pass
+            log.info(f"fm_hp_step → {new} dirty={dirty}")
+            import time as _tfh
+            _tfh.sleep(0.6)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"fm_hp_step: {e}")
+
+    elif cmd.startswith("fm_lp_step:"):
+        try:
+            delta = int(cmd.split(":", 1)[1].strip())
+            delta = 1 if delta >= 0 else -1
+            new = fm.step_fm_lp(delta, settings, S=S)
+            dirty = bool((S.get("fm_tune") or {}).get("dirty"))
+            mark = " *" if dirty else ""
+            ipc.write_progress("FM LP", f"{new} Hz{mark}", color="green")
+            fm.retune_fm_if_playing(S, settings)
+            try:
+                scanner.retune_scanner_fm_if_playing(S, settings)
+            except Exception:
+                pass
+            log.info(f"fm_lp_step → {new} dirty={dirty}")
+            import time as _tfl
+            _tfl.sleep(0.6)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"fm_lp_step: {e}")
+
+    elif cmd == "fm_tune_save":
+        try:
+            saved = fm.save_fm_tune_as_defaults(S, settings)
+            ipc.write_progress(
+                "FM Default",
+                f"HP{saved['hp_hz']} LP{saved['lp_hz']}",
+                color="green",
+            )
+            log.info(f"fm_tune_save {saved}")
+            import time as _tfs
+            _tfs.sleep(1.0)
+            ipc.clear_progress()
+        except Exception as e:
+            log.error(f"fm_tune_save: {e}")
+
     # ── DAB Next/Prev ───────────────────────────────────────────────────────
     elif cmd == "dab_next":
         bg(lambda: dab.play_next(S, store.dab))

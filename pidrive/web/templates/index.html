@@ -309,6 +309,19 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <input type="number" id="scFmFreq" step="0.1" min="87.5" max="108" value="104.4" placeholder="104.4">
       <button class="btn primary" onclick="scanFm()">▶ Start</button>
     </div>
+    <div class="scan-row" id="fmTuneRow" style="margin-top:8px;flex-wrap:wrap;gap:6px;align-items:center">
+      <span class="scan-label" title="Highpass — Rumpeln">HP</span>
+      <button class="btn" style="padding:2px 10px" onclick="fmStepHp(-1)" title="Highpass −">−</button>
+      <span id="fmHpLabel" style="min-width:3.5em;text-align:center;font-variant-numeric:tabular-nums">60</span>
+      <button class="btn" style="padding:2px 10px" onclick="fmStepHp(1)" title="Highpass +">+</button>
+      <span class="scan-label" style="margin-left:8px" title="Lowpass — Zischen/Rauschen">LP</span>
+      <button class="btn" style="padding:2px 10px" onclick="fmStepLp(-1)" title="Lowpass −">−</button>
+      <span id="fmLpLabel" style="min-width:4.5em;text-align:center;font-variant-numeric:tabular-nums">12000</span>
+      <button class="btn" style="padding:2px 10px" onclick="fmStepLp(1)" title="Lowpass +">+</button>
+      <button class="btn primary" id="fmTuneSaveBtn" style="padding:2px 10px;margin-left:8px"
+              onclick="fmTuneSave()" title="Aktuelle HP/LP als Default speichern">💾 Save</button>
+      <span id="fmTuneDirty" style="font-size:11px;opacity:.75"></span>
+    </div>
   </div>
   <div class="scan-card">
     <h4>Airband AM — 118–136.975 MHz</h4>
@@ -330,6 +343,14 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="btn" style="padding:2px 10px" onclick="airbandStepSr(-1)" title="Sample-Rate −">−</button>
       <span id="airSrLabel" style="min-width:4.5em;text-align:center;font-variant-numeric:tabular-nums">24000</span>
       <button class="btn" style="padding:2px 10px" onclick="airbandStepSr(1)" title="Sample-Rate +">+</button>
+      <span class="scan-label" style="margin-left:8px" title="Highpass">HP</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepHp(-1)" title="Highpass −">−</button>
+      <span id="airHpLabel" style="min-width:3.2em;text-align:center;font-variant-numeric:tabular-nums">250</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepHp(1)" title="Highpass +">+</button>
+      <span class="scan-label" style="margin-left:8px" title="Lowpass">LP</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepLp(-1)" title="Lowpass −">−</button>
+      <span id="airLpLabel" style="min-width:3.5em;text-align:center;font-variant-numeric:tabular-nums">3500</span>
+      <button class="btn" style="padding:2px 10px" onclick="airbandStepLp(1)" title="Lowpass +">+</button>
       <button class="btn primary" id="airTuneSaveBtn" style="padding:2px 10px;margin-left:8px"
               onclick="airbandTuneSave()" title="Aktuelle Werte als Default speichern">💾 Save</button>
       <span id="airTuneDirty" style="font-size:11px;opacity:.75"></span>
@@ -919,13 +940,17 @@ function airbandMarkPlaying(ch) {
   grid.querySelectorAll('.airband-ch').forEach(b =>
     b.classList.toggle('playing', n > 0 && Number(b.dataset.ch) === n));
 }
-function _airSetTuneLabels(gain, sr, dirty) {
+function _airSetTuneLabels(gain, sr, hp, lp, dirty) {
   const g = document.getElementById('airGainLabel');
   const s = document.getElementById('airSrLabel');
+  const h = document.getElementById('airHpLabel');
+  const l = document.getElementById('airLpLabel');
   const d = document.getElementById('airTuneDirty');
   const btn = document.getElementById('airTuneSaveBtn');
   if (g) g.textContent = String(gain);
   if (s) s.textContent = String(sr);
+  if (h && hp != null) h.textContent = String(hp);
+  if (l && lp != null) l.textContent = String(lp);
   if (d) d.textContent = dirty ? 'ungespeichert' : '';
   if (btn) btn.classList.toggle('danger', !!dirty);
 }
@@ -934,9 +959,12 @@ async function loadAirbandTuneParams() {
     const r = await fetch('/api/scanner/settings');
     const j = await r.json();
     const t = (j && j.data && j.data.airband_tune) || {};
-    const gain = t.gain != null ? t.gain : (j.data && j.data.scanner_airband_gain) || 45;
-    const sr = t.sample_rate != null ? t.sample_rate : (j.data && j.data.scanner_airband_sample_rate) || 24000;
-    _airSetTuneLabels(gain, sr, !!(t.dirty));
+    const d = j.data || {};
+    const gain = t.gain != null ? t.gain : d.scanner_airband_gain || 45;
+    const sr = t.sample_rate != null ? t.sample_rate : d.scanner_airband_sample_rate || 24000;
+    const hp = t.hp_hz != null ? t.hp_hz : d.scanner_airband_hp_hz || 250;
+    const lp = t.lp_hz != null ? t.lp_hz : d.scanner_airband_lp_hz || 3500;
+    _airSetTuneLabels(gain, sr, hp, lp, !!(t.dirty));
   } catch (e) { /* defaults im HTML */ }
 }
 async function airbandStepGain(delta) {
@@ -947,10 +975,52 @@ async function airbandStepSr(delta) {
   await sendCmd('airband_sr_step:' + (delta >= 0 ? '1' : '-1'));
   setTimeout(loadAirbandTuneParams, 400);
 }
+async function airbandStepHp(delta) {
+  await sendCmd('airband_hp_step:' + (delta >= 0 ? '1' : '-1'));
+  setTimeout(loadAirbandTuneParams, 400);
+}
+async function airbandStepLp(delta) {
+  await sendCmd('airband_lp_step:' + (delta >= 0 ? '1' : '-1'));
+  setTimeout(loadAirbandTuneParams, 400);
+}
 async function airbandTuneSave() {
   const j = await sendCmd('airband_tune_save');
   if (j && j.ok) showToast('Airband-Default gespeichert');
   setTimeout(loadAirbandTuneParams, 400);
+}
+function _fmSetTuneLabels(hp, lp, dirty) {
+  const h = document.getElementById('fmHpLabel');
+  const l = document.getElementById('fmLpLabel');
+  const d = document.getElementById('fmTuneDirty');
+  const btn = document.getElementById('fmTuneSaveBtn');
+  if (h) h.textContent = String(hp);
+  if (l) l.textContent = String(lp);
+  if (d) d.textContent = dirty ? 'ungespeichert' : '';
+  if (btn) btn.classList.toggle('danger', !!dirty);
+}
+async function loadFmTuneParams() {
+  try {
+    const r = await fetch('/api/scanner/settings');
+    const j = await r.json();
+    const t = (j && j.data && j.data.fm_tune) || {};
+    const d = j.data || {};
+    const hp = t.hp_hz != null ? t.hp_hz : d.fm_hp_hz || 60;
+    const lp = t.lp_hz != null ? t.lp_hz : d.fm_lp_hz || 12000;
+    _fmSetTuneLabels(hp, lp, !!(t.dirty));
+  } catch (e) { /* defaults */ }
+}
+async function fmStepHp(delta) {
+  await sendCmd('fm_hp_step:' + (delta >= 0 ? '1' : '-1'));
+  setTimeout(loadFmTuneParams, 400);
+}
+async function fmStepLp(delta) {
+  await sendCmd('fm_lp_step:' + (delta >= 0 ? '1' : '-1'));
+  setTimeout(loadFmTuneParams, 400);
+}
+async function fmTuneSave() {
+  const j = await sendCmd('fm_tune_save');
+  if (j && j.ok) showToast('FM-Filter gespeichert');
+  setTimeout(loadFmTuneParams, 400);
 }
 function airbandTunePreset(ch, freq) {
   if (freq != null) {
@@ -973,12 +1043,20 @@ async function loadAirbandLastFreq() {
     if (j.ok && j.data && j.data.scanner_airband_last_freq != null)
       el.value = j.data.scanner_airband_last_freq;
     const t = (j.data && j.data.airband_tune) || {};
-    if (t.gain != null || t.sample_rate != null || j.data.scanner_airband_gain != null)
-      _airSetTuneLabels(
-        t.gain != null ? t.gain : j.data.scanner_airband_gain,
-        t.sample_rate != null ? t.sample_rate : j.data.scanner_airband_sample_rate,
-        !!t.dirty
-      );
+    const d = j.data || {};
+    _airSetTuneLabels(
+      t.gain != null ? t.gain : d.scanner_airband_gain,
+      t.sample_rate != null ? t.sample_rate : d.scanner_airband_sample_rate,
+      t.hp_hz != null ? t.hp_hz : d.scanner_airband_hp_hz,
+      t.lp_hz != null ? t.lp_hz : d.scanner_airband_lp_hz,
+      !!t.dirty
+    );
+    const ft = d.fm_tune || {};
+    _fmSetTuneLabels(
+      ft.hp_hz != null ? ft.hp_hz : d.fm_hp_hz || 60,
+      ft.lp_hz != null ? ft.lp_hz : d.fm_lp_hz || 12000,
+      !!ft.dirty
+    );
   } catch (e) { /* default belassen */ }
 }
 async function loadAirbandPresets() {
