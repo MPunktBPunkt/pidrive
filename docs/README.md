@@ -28,6 +28,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/BOOT-USB-DEFER.md](betrieb/BOOT-USB-DEFER.md) | USB/BT verzögert freigeben (ESP/RTL Boot-Hang) | Betrieb, Entwickler | 2026-09-20 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
+| [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: BMW Play-Detection → Live-Stream | Entwickler, ESP/USB | 2026-09-22 |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest | Betrieb, QA | 2026-09-16 |
 | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | Erster erfolgreicher Connect BMW 38304 | Abnahme / Entwickler | 2026-09-16 |
@@ -36,7 +37,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC | Planung | 2026-09-17 |
 | [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → esp32.pidrive / PUMP | Planung | 2026-09-18 |
 | [../assets/usb-msc-covers/README.md](../assets/usb-msc-covers/README.md) | USB-MSC Cover-Spec | Planung / Design | 2026-09-17 |
-| [auftraege/README.md](auftraege/README.md) | Aktive Arbeitsaufträge (aktuell leer) | Entwickler | 2026-09-19 |
+| [auftraege/README.md](auftraege/README.md) | Aktive Arbeitsaufträge | Entwickler | 2026-09-22 |
 | [referenz/WELLE-CLI.md](referenz/WELLE-CLI.md) | welle-cli Optionen, HTTP, Kanäle | Entwickler | 2026-04-21 |
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen | Entwickler, QA | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke | Entwickler | v0.11.127 |
@@ -49,8 +50,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
 | Dokument | Hinweis |
 |----------|---------|
-| Dokument | Hinweis |
-|----------|---------|
+| [archiv/analysen/README.md](archiv/analysen/README.md) | Rohanalysen (GPT-Dumps) |
+| [archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt](archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt) | GPT Play-Detection (Roh) |
 | [archiv/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md](archiv/auftraege/AUFTRAG-BLUETOOTH-FUNDAMENT.md) | Erledigter Auftrag |
 | [archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md](archiv/auftraege/AUFTRAG-DAB-AUDIOWEG.md) | Erledigter Auftrag |
 | [archiv/auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md](archiv/auftraege/AUFTRAG-DISPLAY-RUECKMELDUNG.md) | Erledigter Auftrag |
