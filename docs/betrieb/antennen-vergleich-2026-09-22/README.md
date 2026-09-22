@@ -23,6 +23,7 @@ Rohdaten: `antenna-{a,b,c,d}-*.json`. Stützpunkte: `antenna-*-anchors.json`, `c
 | **B** | Teleskop (ausziehbar) | passiv |
 | **C** | Bingfu Magnetfuß 7 dBi | VHF 136–174 / UHF 400–470, 50 Ω, SMA, 3 m RG174 |
 | **D** | RTL-SDR Beipack (kurz) | Stockantenne am Stick, vermutl. DVB-T-Beipack |
+| **B+LPF** | Teleskop + 500 MHz Tiefpass | gleiches B, Filter dämpft &gt;500 MHz |
 
 ---
 
