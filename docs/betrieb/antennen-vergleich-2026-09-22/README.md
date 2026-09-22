@@ -118,30 +118,48 @@ DAB: kein Ensemble-Decode, nur Kanalenergie um 10A/11D.
 
 ---
 
-## Antenne B — bisherige Antenne (folgt)
+## Antenne B — bisherige Antenne
 
-Gleiche Stützpunkte, Gains, PPM, Position. PMR erneut mit TX auf Ch8.
+Gleiche Position (Dachboden), PPM 49, gleiche Gains. PMR Ch8 mit TX.
+Rohdaten: `antenna-b-anchors.json`, `antenna-b-anchor-*.json`, `comparison-anchors.json`.
 
-| Stützpunkt | Status |
-|------------|--------|
-| FM 90,7 / 95,8 / 103,0 / 104,4 | ausstehend |
-| K2 ATIS 118,855 | ausstehend |
-| DAB 10A / 11D | ausstehend |
-| PMR446 Ch8 TX | ausstehend |
+| Stützpunkt | Peak (dB) | SNR / rel | vs. A |
+|------------|-----------|-----------|-------|
+| FM 90,7 | 49,3 | **47,0** SNR | Peak −15,6 / SNR **+11,6** |
+| FM 95,8 | 47,1 | **43,1** SNR | Peak −18,7 / SNR **+5,5** |
+| FM 103,0 | 47,2 | **46,2** SNR | Peak −14,0 / SNR **+17,0** |
+| FM 104,4 | 47,2 | **46,0** SNR | Peak −22,7 / SNR **+2,6** |
+| K2 ATIS | 53,8 | **49,3** SNR | Peak −16,8 / SNR **+8,7** |
+| DAB 10A | 47,0 | 34,6 SNR* | Peak −9,0 |
+| DAB 11D | 47,0 | 32,1 SNR* | Peak −7,1 |
+| PMR Ch8 TX | 43,3 pwr | **54,5 rel** | rel **−6,6** |
+
+\* DAB-SNR B mit etwas breiterem Floor-Fenster; Peak-Δ ist der robustere DAB-Vergleich.
+
+### Kurzfazit Antenne B
+
+- Ohne USB-LNA: **niedrigerer Peak**, aber **höherer SNR** (ruhigerer Rauschboden).
+- **PMR Ch8:** klar erkannt, relative ~6,6 dB unter A (LNA-Vorteil von A).
 
 ---
 
 ## Vergleichstabelle Stützpunkte (A vs. B)
 
-| Ziel | A Peak | A SNR / rel | B Peak | B SNR / rel | Δ |
-|------|--------|-------------|--------|-------------|---|
-| FM 90,7 | 64,8 | 35,4 | — | — | — |
-| FM 95,8 | 65,8 | 37,6 | — | — | — |
-| FM 103,0 | 61,2 | 29,1 | — | — | — |
-| FM 104,4 | 69,9 | 43,4 | — | — | — |
-| K2 ATIS | 70,6 | 40,7 | — | — | — |
-| DAB 10A | 55,9 | 17,7 | — | — | — |
-| DAB 11D | 54,1 | 17,5 | — | — | — |
-| PMR Ch8 TX | 43,3 pwr | **61,1 rel** | — | — | — |
+Δ = B − A. Positives Δ SNR: B „sauberer“. Negatives Δ Peak / PMR-rel: A stärker (LNA).
 
-Nach Messung B: Δ = B − A (SNR bzw. `relative_db`).
+| Ziel | A Peak | A SNR/rel | B Peak | B SNR/rel | Δ Peak | Δ SNR/rel |
+|------|--------|-----------|--------|-----------|--------|-----------|
+| FM 90,7 | 64,8 | 35,4 | 49,3 | 47,0 | −15,6 | **+11,6** |
+| FM 95,8 | 65,8 | 37,6 | 47,1 | 43,1 | −18,7 | **+5,5** |
+| FM 103,0 | 61,2 | 29,1 | 47,2 | 46,2 | −14,0 | **+17,0** |
+| FM 104,4 | 69,9 | 43,4 | 47,2 | 46,0 | −22,7 | **+2,6** |
+| K2 ATIS | 70,6 | 40,7 | 53,8 | 49,3 | −16,8 | **+8,7** |
+| DAB 10A | 55,9 | 17,7 | 47,0 | 34,6* | −9,0 | (+)* |
+| DAB 11D | 54,1 | 17,5 | 47,0 | 32,1* | −7,1 | (+)* |
+| PMR Ch8 TX | — | **61,1 rel** | — | **54,5 rel** | — | **−6,6** |
+
+### Bewertung
+
+- **Antenne A (DVB-T + USB-LNA):** mehr absolute Feldstärke (Peak), besser bei PMR; LNA hebt auch den Rauschboden.
+- **Antenne B (bisherige):** oft besserer SNR trotz schwächerem Peak — weniger Verstärkerrauschen.
+- Für schwache Signale (Airband idle / Randlagen) kann A durch Gain helfen; für UKW bei starkem Sender reicht B und klingt/misst „sauberer“.
