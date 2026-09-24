@@ -31,6 +31,7 @@ bzw. Debian 12 Soft-Test (Proxmox LXC amd64).
 - `pump_bridge.py` liegt **nicht** im PiDrive-Repo (Deploy aus esp32.pidrive).
 - Raspbian existiert **nicht** als amd64-LXC auf Proxmox — Soft-Test: Debian 12 Bookworm.
 - Feldregel USB: kein Hub beim Kaltstart — siehe [`BOOT-USB-DEFER.md`](BOOT-USB-DEFER.md).
+- Smoke/CI: `sudo bash install.sh --fast` (kürzere Stabilitätswartezeit).
 
 ## Proxmox Soft-Smoke
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.162"
+PIDRIVE_VERSION="0.11.163"
 
 # ============================================================
 # PiDrive Install Script
@@ -8,10 +8,20 @@ PIDRIVE_VERSION="0.11.162"
 # Aufruf:
 #   curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | sudo bash
 #   oder lokal:
-#   sudo bash install.sh
+#   sudo bash install.sh [--fast]
 # ============================================================
 
 set -e
+
+# Modi: sudo bash install.sh [--fast]
+#   --fast / PIDRIVE_INSTALL_FAST=1 — kürzere Wartezeiten (Smoke/CI)
+FAST=0
+for _arg in "$@"; do
+    case "$_arg" in
+        --fast|-f) FAST=1 ;;
+    esac
+done
+[[ "${PIDRIVE_INSTALL_FAST:-0}" == "1" ]] && FAST=1
 
 REPO_URL="https://github.com/MPunktBPunkt/pidrive"
 # Installationsverzeichnis — wird nach REAL_USER-Erkennung gesetzt
@@ -100,12 +110,35 @@ info() { echo -e "${BLUE}  → ${1}${NC}"; }
 warn() { echo -e "${YELLOW}  ⚠ ${1}${NC}"; }
 err()  { echo -e "${RED}  ✗ ${1}${NC}"; }
 
+# systemctl enable mit sichtbarem Fehler (statt still || true)
+_sys_enable() {
+    local u
+    for u in "$@"; do
+        if ! systemctl enable "$u" 2>/dev/null; then
+            warn "systemctl enable $u fehlgeschlagen"
+            return 1
+        fi
+    done
+    return 0
+}
+_sys_enable_now() {
+    local u
+    for u in "$@"; do
+        if ! systemctl enable --now "$u" 2>/dev/null; then
+            warn "systemctl enable --now $u fehlgeschlagen"
+            return 1
+        fi
+    done
+    return 0
+}
+
 echo -e "${BOLD}${BLUE}"
 echo "╔═══════════════════════════════════════════╗"
 printf "║  %-42s║\n" "PiDrive Installer v${PIDRIVE_VERSION}"
 echo "║   github.com/MPunktBPunkt/pidrive         ║"
 echo "╚═══════════════════════════════════════════╝"
-echo -e "${NC}" 
+echo -e "${NC}"
+[[ "$FAST" -eq 1 ]] && info "FAST-Modus: verkuerzte Stabilitaetspruefung"
 
 if [ "$EUID" -ne 0 ]; then
     err "Bitte als root ausfuehren:  su -  dann  bash ~/pidrive/install.sh"
@@ -297,21 +330,33 @@ mkdir -p "$LOG_DIR"
 chown "$REAL_USER:$REAL_USER" "$LOG_DIR"
 ok "Log-Verzeichnis: $LOG_DIR"
 
-  # v0.10.55: tmpfiles.d — IPC-Dateien 0666 damit webui (pi) CMD_FILE schreiben kann
+# pidrive-Gruppe frueh anlegen (tmpfiles braucht sie)
+groupadd -f pidrive 2>/dev/null || true
+usermod -a -G pidrive "$REAL_USER" 2>/dev/null || true
+
+  # v0.10.55 / v0.11.163: tmpfiles.d — Mode wie Policy (nicht 666)
   cat > /etc/tmpfiles.d/pidrive.conf << 'TMPEOF'
-# PiDrive IPC: world-writable damit webui (pi) CMD_FILE schreiben kann
-# Trigger: nur pidrive-Gruppe darf schreiben (nicht world-write)
+# PiDrive IPC
+# Trigger: nur pidrive-Gruppe darf schreiben
 f /tmp/pidrive_cmd          0660 root pidrive -
 # Status/Menu: world-readable für Diagnose
 f /tmp/pidrive_status.json  0664 root pidrive -
 f /tmp/pidrive_menu.json    0664 root pidrive -
 f /tmp/pidrive_list.json    0664 root pidrive -
 TMPEOF
-  # Sofort anwenden auf bestehende Dateien
-  chmod 666 /tmp/pidrive_cmd 2>/dev/null || true
-  chmod 666 /tmp/pidrive_menu.json 2>/dev/null || true
-  chmod 666 /tmp/pidrive_status.json 2>/dev/null || true
-  ok "tmpfiles.d: IPC-Dateien konfiguriert (cmd=0660:pidrive, status=0664)"
+  systemd-tmpfiles --create /etc/tmpfiles.d/pidrive.conf 2>/dev/null || true
+  # Bestehende Dateien an Policy anpassen
+  for _ipc in /tmp/pidrive_cmd; do
+    [ -e "$_ipc" ] || continue
+    chown root:pidrive "$_ipc" 2>/dev/null || true
+    chmod 0660 "$_ipc" 2>/dev/null || true
+  done
+  for _ipc in /tmp/pidrive_status.json /tmp/pidrive_menu.json /tmp/pidrive_list.json; do
+    [ -e "$_ipc" ] || continue
+    chown root:pidrive "$_ipc" 2>/dev/null || true
+    chmod 0664 "$_ipc" 2>/dev/null || true
+  done
+  ok "tmpfiles.d: IPC (cmd=0660:pidrive, status=0664)"
 
 # ══════════════════════════════════════════════════════════════
 # SCHRITT 5: /boot/config.txt
@@ -498,20 +543,20 @@ if [ -f "$INSTALL_DIR/systemd/pidrive-wifi-recover.service" ] \
 fi
 
 systemctl daemon-reload
-systemctl enable pidrive_core rfkill-unblock 2>/dev/null || true
-[ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
-[ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
+_sys_enable pidrive_core rfkill-unblock || true
+[ -f "$SERVICE_DIR/pidrive_web.service" ]   && _sys_enable pidrive_web || true
+[ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && _sys_enable pidrive_avrcp || true
 ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 if [ -f "$SERVICE_DIR/pidrive_btagent.service" ]; then
-    systemctl enable --now pidrive_btagent 2>/dev/null || true
+    _sys_enable_now pidrive_btagent || true
     ok "BT-Agent: pidrive_btagent aktiv (D-Bus Pairing)"
 fi
 if [ -f "$SERVICE_DIR/pidrive-wifi-recover.service" ]; then
-    systemctl enable pidrive-wifi-recover.service 2>/dev/null || true
+    _sys_enable pidrive-wifi-recover.service || true
     ok "WLAN-Recovery: bei jedem Boot aktiv"
 fi
 if [ -f "$SERVICE_DIR/pidrive-wifi-recover.timer" ]; then
-    systemctl enable --now pidrive-wifi-recover.timer 2>/dev/null || true
+    _sys_enable_now pidrive-wifi-recover.timer || true
     ok "WLAN-Recovery-Timer: Nachversuche (45s nach Boot, dann alle 5 Min)"
 fi
 
@@ -608,8 +653,7 @@ ok "sudoers: NOPASSWD für pidrive-Wartungsbefehle"
 # SCHRITT 9: Berechtigungen
 # ══════════════════════════════════════════════════════════════
 info "9/10 Berechtigungen setzen..."
-# pidrive-Gruppe anlegen (IPC-Schreibrecht + Bedienung)
-groupadd -f pidrive 2>/dev/null || true
+# pidrive-Gruppe bereits in Schritt 4 angelegt
 usermod -a -G pidrive "$REAL_USER" 2>/dev/null || true
 usermod -a -G video,input,render,tty,systemd-journal,audio,dialout "$REAL_USER" 2>/dev/null || true
 ok "Gruppen: video, input, render, tty, systemd-journal, audio, dialout"
@@ -926,17 +970,18 @@ pkill -u "$REAL_USER" -x wireplumber 2>/dev/null || true
 sleep 1
 
 systemctl daemon-reload
-systemctl enable pipewire pipewire-pulse wireplumber 2>/dev/null || true
+systemctl enable pipewire pipewire-pulse wireplumber 2>/dev/null || \
+    warn "PipeWire enable fehlgeschlagen"
 # /run/pulse Verzeichnis vor Start erstellen (RuntimeDirectory macht das erst beim Start)
 mkdir -p /run/pulse
 chown pulse:pulse /run/pulse 2>/dev/null || true
 chmod 755 /run/pulse
 
-systemctl start  pipewire 2>/dev/null || true ; sleep 2
-systemctl start  pipewire-pulse 2>/dev/null || true ; sleep 1
-systemctl start  wireplumber    2>/dev/null || true ; sleep 3
+systemctl start  pipewire 2>/dev/null || true ; sleep $([ "$FAST" -eq 1 ] && echo 1 || echo 2)
+systemctl start  pipewire-pulse 2>/dev/null || true ; sleep $([ "$FAST" -eq 1 ] && echo 0 || echo 1)
+systemctl start  wireplumber    2>/dev/null || true ; sleep $([ "$FAST" -eq 1 ] && echo 1 || echo 3)
 # WirePlumber nach bluetooth starten damit A2DP-Profile registriert werden
-systemctl restart wireplumber 2>/dev/null || true ; sleep 2
+systemctl restart wireplumber 2>/dev/null || true ; sleep $([ "$FAST" -eq 1 ] && echo 1 || echo 2)
 
 # /var/run ist Symlink auf /run auf modernen Systemen
 # Sicherheitshalber: /var/run/pulse Verzeichnis sicherstellen
@@ -1147,7 +1192,8 @@ fi
 if [ -f "$INSTALL_DIR/systemd/pidrive-usb-release.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive-usb-release.service" "$SERVICE_DIR/pidrive-usb-release.service"
     sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive-usb-release.service"
-    systemctl enable pidrive-usb-release.service 2>/dev/null || true
+    systemctl enable pidrive-usb-release.service 2>/dev/null || \
+        warn "enable pidrive-usb-release fehlgeschlagen"
     ok "Boot: pidrive-usb-release (USB nach 10s)"
 fi
 if [ -f "$INSTALL_DIR/systemd/pidrive-usb-hotplug-release.service" ]; then
@@ -1168,7 +1214,7 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_pump.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive_pump.service" "$SERVICE_DIR/pidrive_pump.service"
     sed -i "s|/home/pidrive/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_pump.service"
     sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_pump.service"
-    systemctl enable pidrive_pump.service 2>/dev/null || true
+    _sys_enable pidrive_pump.service || true
     ok "ESP Presence: pidrive_pump.service"
 fi
 # UART Bridge: Unit aus Repo; Script kommt aus esp32.pidrive → $REAL_HOME/pump_bridge.py
@@ -1185,7 +1231,7 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" ]; then
     sed -i "s|ExecStart=/usr/bin/python3 -u /home/pidrive/pump_bridge.py|ExecStart=/usr/bin/python3 -u ${_BRIDGE_PY}|g" \
         "$SERVICE_DIR/pidrive_pump_bridge.service"
     # Hotplug via udev; enable damit WantedBy/SYSTEMD_WANTS greift (ConditionPathExists)
-    systemctl enable pidrive_pump_bridge.service 2>/dev/null || true
+    _sys_enable pidrive_pump_bridge.service || true
     if [ -f "$_BRIDGE_PY" ]; then
         ok "ESP Bridge: pidrive_pump_bridge.service → $_BRIDGE_PY"
     else
@@ -1346,7 +1392,7 @@ fi
 # Service starten + ausfuehrliche Verifikation
 info "pidrive_core.service starten..."
 if systemctl start pidrive_core 2>/dev/null; then
-    sleep 5
+    sleep $([ "$FAST" -eq 1 ] && echo 2 || echo 5)
     if systemctl is-active --quiet pidrive_core; then
         ok "pidrive_core.service laeuft!"
 
@@ -1380,7 +1426,7 @@ if systemctl start pidrive_core 2>/dev/null; then
             info "stdin (fd 0) → $STDIN"
 
             # Neue Log-Eintraege pruefen (nur Eintraege nach Service-Start)
-            sleep 3
+            sleep $([ "$FAST" -eq 1 ] && echo 1 || echo 3)
             START_TS=$(date +"%Y-%m-%d %H:%M" --date="2 seconds ago" 2>/dev/null || date +"%Y-%m-%d %H:%M")
             LOG_NEW=$(grep "Core v0.6\|Core-Loop\|Core gestartet\|PiDrive Core" /var/log/pidrive/pidrive.log 2>/dev/null \
                      | awk -v ts="$START_TS" '$0 >= ts' | tail -3)
@@ -1398,7 +1444,7 @@ if systemctl start pidrive_core 2>/dev/null; then
             warn "Kein PID ermittelt"
         fi
         # IPC pruefen
-        sleep 2
+        sleep $([ "$FAST" -eq 1 ] && echo 1 || echo 2)
         if [ -f /tmp/pidrive_status.json ]; then
             ok "IPC: /tmp/pidrive_status.json vorhanden"
         else
@@ -1414,22 +1460,24 @@ fi
 # ══════════════════════════════════════════════════════════════
 # DIAGNOSE
 # ══════════════════════════════════════════════════════════════
-# v0.10.0: Diagnose erst nach boot_phase=steady warten (max 25s)
+# v0.10.0: Diagnose erst nach boot_phase=steady warten (max 25s; FAST: 5s)
 echo ""
 echo "  → Warte auf boot_phase=steady..."
 _SW=0
-while [ $_SW -lt 25 ]; do
+_SW_MAX=$([ "$FAST" -eq 1 ] && echo 5 || echo 25)
+while [ $_SW -lt $_SW_MAX ]; do
   _PHASE=$(python3 -c "import json; print(json.load(open('/tmp/pidrive_source_state.json')).get('boot_phase',''))" 2>/dev/null || echo "")
   [ "$_PHASE" = "steady" ] && { ok "boot_phase=steady — starte Diagnose"; break; }
   sleep 1; _SW=$((_SW+1))
 done
-[ $_SW -ge 25 ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
+[ $_SW -ge $_SW_MAX ] && warn "Timeout — Diagnose startet (boot_phase ggf. noch nicht steady)"
 
-# Runtime-Stabilitaetsfenster: 15s beobachten (Review v0.11.96)
+# Runtime-Stabilitaetsfenster (FAST: 3s)
 _CORE_PID=$(systemctl show pidrive_core --property=MainPID --value 2>/dev/null | tr -d ' ')
 _RESTART0=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
-printf "  → Stabilitaetspruefung (15s)..."
-sleep 15
+_STAB_S=$([ "$FAST" -eq 1 ] && echo 3 || echo 15)
+printf "  → Stabilitaetspruefung (${_STAB_S}s)..."
+sleep "$_STAB_S"
 _RESTART1=$(systemctl show pidrive_core --property=NRestarts --value 2>/dev/null | grep -oE '[0-9]+' | head -1)
 _ACTIVE=$(systemctl is-active pidrive_core 2>/dev/null)
 _TRACEBACK=$(journalctl -u pidrive_core --since "30 seconds ago" --no-pager -q 2>/dev/null   | grep -c "Traceback\|UnboundLocalError\|ImportError\|ModuleNotFoundError" 2>/dev/null   | tr -dc '0-9' || echo 0)
@@ -1504,6 +1552,23 @@ fi
 echo ""
 echo -e "${BOLD}${GREEN}Installation abgeschlossen! (v$VER)${NC}"
 echo ""
+echo -e "${BOLD}Checkliste:${NC}"
+_chk_svc() {
+  local s="$1"
+  if systemctl is-active --quiet "$s" 2>/dev/null; then ok "$s aktiv"
+  elif systemctl is-enabled --quiet "$s" 2>/dev/null; then warn "$s enabled aber nicht aktiv"
+  else warn "$s fehlt / nicht enabled"; fi
+}
+_chk_svc pidrive_core
+_chk_svc pidrive_web
+systemctl is-active --quiet pipewire pipewire-pulse 2>/dev/null && ok "PipeWire aktiv" || warn "PipeWire nicht aktiv"
+command -v ffmpeg >/dev/null && ok "ffmpeg vorhanden" || warn "ffmpeg fehlt"
+command -v pidrivectl >/dev/null && ok "pidrivectl vorhanden" || warn "pidrivectl fehlt"
+_BR="$REAL_HOME/pump_bridge.py"
+if [ -f "$_BR" ]; then ok "ESP Bridge-Script: $_BR"
+else warn "ESP Bridge-Script fehlt: $_BR (aus esp32.pidrive deployen)"; fi
+systemctl is-enabled --quiet pidrive_pump 2>/dev/null && ok "pidrive_pump enabled" || warn "pidrive_pump nicht enabled"
+echo ""
 echo -e "${BOLD}Log pruefen:${NC}"
 echo -e "  ${CYAN}tail -20 $LOG_DIR/pidrive.log${NC}"
 echo -e "  ${CYAN}journalctl -u pidrive_core -f${NC}"
@@ -1533,17 +1598,17 @@ JEOF
 systemctl restart systemd-journald 2>/dev/null || true
 ok "Journald: max 50M, 7 Tage Retention"
 
-# ── Car-Only Cleanup (v0.10.55: bei Frisch-Install mit anschliessendem Reboot) ──
+# ── Car-Only Cleanup (Erstinstallation einmalig; Updates: Prompt nur mit TTY) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
   if [ ! -f "$_CLEANUP_DONE_FILE" ]; then
     info "Car-Only Cleanup (Erstinstallation — automatisch)..."
-    echo -e "  Deaktiviert unnötige Dienste und User-PulseAudio."
-    bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
+    echo -e "  Deaktiviert Desktop-Dienste; User-Audio → System-PipeWire."
+    INSTALL_DIR="$INSTALL_DIR" bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
     touch "$_CLEANUP_DONE_FILE"
     ok "Car-Only Cleanup abgeschlossen"
     echo ""
-    warn "Erstinstallation: Reboot erforderlich damit PulseAudio System-Mode greift."
+    warn "Erstinstallation: Reboot empfohlen (User-Unit-Masking + RTL-Blacklist)."
     echo -e "  ${CYAN}${_SUDO} reboot${NC}"
     echo ""
     echo -e "${BOLD}Update nach Reboot:${NC}"
@@ -1551,20 +1616,20 @@ if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
     exit 0
   else
     echo ""
-    echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup${NC}"
+    echo -e "${BOLD}${YELLOW}Optional: Car-Only System-Cleanup (Update — bereits einmal gelaufen)${NC}"
     echo -e "  Deaktiviert unnötige Dienste (cups, ModemManager, snapd, ...)"
-    echo -e "  und bereinigt Desktop-Audio-Stack (PipeWire, User-PulseAudio)."
+    echo -e "  und bereinigt Desktop-User-Audio (System-PipeWire bleibt)."
     echo ""
     if [ -t 0 ]; then
       read -r -t 15 -p "  Car-Only Cleanup erneut ausführen? [j/N] " CLEANUP_CHOICE || CLEANUP_CHOICE="n"
       echo ""
     else
       CLEANUP_CHOICE="n"
-      info "Kein TTY — Cleanup-Prompt uebersprungen"
+      info "Kein TTY — Cleanup-Prompt uebersprungen (Update-Lauf)"
     fi
     if [[ "$CLEANUP_CHOICE" =~ ^[jJyY]$ ]]; then
       echo -e "${CYAN}  Starte Car-Only Cleanup...${NC}"
-      bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
+      INSTALL_DIR="$INSTALL_DIR" bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
       ok "Car-Only Cleanup abgeschlossen"
     else
       echo -e "  Cleanup übersprungen."

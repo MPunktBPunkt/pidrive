@@ -74,14 +74,13 @@ if [[ "$INSTALL_SRC" == "github" ]]; then
     pct exec "$CTID" -- bash -c '
 set -e
 curl -fsSL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh -o /tmp/install.sh
-bash /tmp/install.sh
+PIDRIVE_INSTALL_FAST=1 bash /tmp/install.sh --fast
 ' || die "Installer fehlgeschlagen"
 else
     [[ -f "$INSTALL_SRC" ]] || die "INSTALL_SRC Datei fehlt: $INSTALL_SRC"
     echo "→ Installer lokal: $INSTALL_SRC"
     pct push "$CTID" "$INSTALL_SRC" /tmp/install.sh
-    # Wenn Installer lokal ist, Repo ggf. noch von GitHub — Script klont selbst
-    pct exec "$CTID" -- bash /tmp/install.sh || die "Installer fehlgeschlagen"
+    pct exec "$CTID" -- bash -c 'PIDRIVE_INSTALL_FAST=1 bash /tmp/install.sh --fast' || die "Installer fehlgeschlagen"
 fi
 
 echo "→ Assertions"

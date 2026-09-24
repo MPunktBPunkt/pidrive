@@ -11,8 +11,8 @@ User=root
 WorkingDirectory=/home/pidrive/pidrive/pidrive
 Environment=PYTHONPATH=/home/pidrive/pidrive/pidrive
 ExecStart=/usr/bin/python3 /home/pidrive/pidrive/pidrive/integration/usb_pump_client.py
-Restart=always
-RestartSec=5
+Restart=on-failure
+RestartSec=15
 StandardOutput=journal
 StandardError=journal
 
