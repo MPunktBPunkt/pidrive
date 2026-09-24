@@ -40,6 +40,60 @@ _DAB_FATAL_PATTERNS = [
 import threading as _threading
 
 
+def _load_dab_station_list():
+    path = os.path.join(os.path.dirname(__file__), "../../config/dab_stations.json")
+    try:
+        data = json.load(open(path, encoding="utf-8"))
+        return data.get("stations", data) if isinstance(data, dict) else data
+    except Exception:
+        return []
+
+
+def _unique_welle_programme(name: str, channel: str = "", stations=None) -> str:
+    """Kürzel für welle-cli -p / stdin, das auf diesem Kanal eindeutig ist.
+
+    welle-cli zerlegt Mehrwort-Namen und matcht Teilstrings (z.B. BAY → BAYERN 1).
+    Deshalb den kürzesten Token-Präfix wählen, der nur den Zielsender trifft.
+    """
+    name = str(name or "").strip()
+    if not name:
+        return name
+    stations = stations if stations is not None else _load_dab_station_list()
+    ch_u = str(channel or "").strip().upper()
+    peers = []
+    for s in stations or []:
+        if not isinstance(s, dict):
+            continue
+        pn = str(s.get("name") or "").strip()
+        if not pn:
+            continue
+        if ch_u and str(s.get("channel") or "").strip().upper() != ch_u:
+            continue
+        peers.append(pn)
+    if name not in peers:
+        peers.append(name)
+
+    tokens = name.split()
+    name_u = name.upper()
+
+    def _hits(cand: str):
+        cu = cand.upper()
+        return [p for p in peers if cu in p.upper()]
+
+    for n in range(1, len(tokens) + 1):
+        cand = " ".join(tokens[:n])
+        hits = _hits(cand)
+        if len(hits) == 1 and hits[0].upper() == name_u:
+            return cand
+
+    # Fallback: erster Token, wenn eindeutig; sonst voller Name
+    if tokens:
+        hits = _hits(tokens[0])
+        if len(hits) == 1:
+            return tokens[0]
+    return name
+
+
 def _feed_welle_programme(proc, name: str, reason: str = "") -> bool:
     """Sendet Sendernamen an welle-cli stdin (non-TTY braucht das trotz -p)."""
     try:
@@ -54,7 +108,7 @@ def _feed_welle_programme(proc, name: str, reason: str = "") -> bool:
 
 
 def _start_welle_stdin_feeder(proc, name: str, session_id: str):
-    """Hintergrund: Sendernamen senden wenn welle-cli danach fragt."""
+    """Hintergrund: Sendernamen nur bei Prompt senden (nicht bei Trying to tune)."""
     def _run():
         fed = False
         err_pos = out_pos = 0
@@ -69,7 +123,9 @@ def _start_welle_stdin_feeder(proc, name: str, session_id: str):
                     out_pos = new_pos
                 for ln in chunk:
                     fl = _welle_line_flags(ln)
-                    if fl["programme_prompt"] or fl.get("trying_tune"):
+                    # Nur echter Prompt — bei trying_tune nicht erneut füttern
+                    # (sonst Mehrwort-Zerlegung / Bayern-1-Fehlmatch)
+                    if fl["programme_prompt"]:
                         if _feed_welle_programme(proc, name, "prompt"):
                             fed = True
                             return
@@ -251,6 +307,9 @@ def _play_station_locked(station, S, settings=None):
     ch = station.get("channel", "")
     name = station.get("name", "")
     sid = str(station.get("service_id", "") or "").strip()
+    _prog = _unique_welle_programme(name, ch)
+    if _prog != name:
+        log.info(f"DAB welle programme: {name!r} → {_prog!r} (eindeutig auf {ch})")
 
     if not ch:
         log.error(f"DAB play: kein channel station={station!r}")
@@ -350,7 +409,7 @@ def _play_station_locked(station, S, settings=None):
         # Mit stdbuf: jede Zeile wird sofort in STDOUT_FILE geschrieben
         _stdbuf = ["stdbuf", "-oL", "-eL"]
         _welle_cmd = _stdbuf + [
-            "welle-cli", "-F", "rtl_sdr", "-T", "-c", ch, "-g", _gain, "-p", name
+            "welle-cli", "-F", "rtl_sdr", "-T", "-c", ch, "-g", _gain, "-p", _prog
         ]
         _welle_stderr = open(_sess_err_file, "w")  # stderr
         try:
@@ -418,7 +477,7 @@ def _play_station_locked(station, S, settings=None):
         })
 
         log.info(
-            f"DAB play: START name={name!r} channel={ch} sid={sid!r} gain={_gain} "
+            f"DAB play: START name={name!r} programme={_prog!r} channel={ch} sid={sid!r} gain={_gain} "
             f"session={session_id} | ALSA=direct PULSE_SERVER={'✗' if 'PULSE_SERVER' not in _welle_env else '✓'} "
             f"PA_Default={_pa_default or '(nicht gesetzt)'}"
         )
@@ -467,8 +526,8 @@ def _play_station_locked(station, S, settings=None):
             _welle_stderr.close()
             _welle_stdout.close()
 
-        _feed_welle_programme(_player_proc, name, "startup")
-        _start_welle_stdin_feeder(_player_proc, name, session_id)
+        _feed_welle_programme(_player_proc, _prog, "startup")
+        _start_welle_stdin_feeder(_player_proc, _prog, session_id)
 
         _write_play_debug({
             "welle_pid": getattr(_player_proc, "pid", None),
