@@ -4,7 +4,7 @@
 # --authorize-only (Hotplug): nur authorize + Bridge no-block.
 set -euo pipefail
 
-log() { echo "[usb-release] $*"; }
+log() { echo "[usb-release] $*" >&2; }
 
 AUTHORIZE_ONLY=0
 if [[ "${1:-}" == "--authorize-only" ]]; then
