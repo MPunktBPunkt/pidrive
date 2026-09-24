@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.161"
+PIDRIVE_VERSION="0.11.162"
 
 # ============================================================
 # PiDrive Install Script
@@ -144,8 +144,9 @@ ok "fbcp gestoppt und dauerhaft deaktiviert"
 # ══════════════════════════════════════════════════════════════
 info "2/10 Pakete installieren..."
 apt-get update -qq
+# Kritische Pakete: Fehler nicht verschlucken (sonst Clone/Core/WebUI tot)
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-    python3-pygame python3-pip git mpv \
+    python3-pip git mpv \
     avahi-daemon avahi-utils rfkill \
     bluez \
     wpasupplicant rtl-sdr sox \
@@ -155,8 +156,13 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     python3-gi \
     pipewire pipewire-pulse wireplumber pipewire-audio \
     libspa-0.2-bluetooth pulseaudio-utils \
-    2>/dev/null || true
-
+    ffmpeg alsa-utils \
+    curl ca-certificates
+# Optional / Distro-abhängig
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-pygame 2>/dev/null || \
+    warn "python3-pygame nicht verfuegbar (Display-Pfad optional)"
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wireless-tools 2>/dev/null || \
+    warn "wireless-tools (iwgetid) nicht verfuegbar — WLAN-Check eingeschraenkt"
 apt-get install -y -qq welle.io 2>/dev/null || \
     warn "welle.io nicht verfuegbar — DAB+ spaeter installierbar"
 if $IS_PI; then
@@ -266,6 +272,26 @@ info "4/10 Verzeichnisse anlegen..."
 MUSIK_DIR="$REAL_HOME/Musik"
 [ ! -d "$MUSIK_DIR" ] && run_as_real_user mkdir -p "$MUSIK_DIR"
 ok "Musik-Verzeichnis: $MUSIK_DIR"
+# settings.json: music_dir auf REAL_HOME (Defaults im Repo zeigen oft /home/pidrive)
+_SETTINGS_LIVE="$INSTALL_DIR/pidrive/config/settings.json"
+if [ -f "$_SETTINGS_LIVE" ]; then
+    python3 -c "
+import json, os
+p = '$_SETTINGS_LIVE'
+with open(p) as f:
+    s = json.load(f)
+want = '$MUSIK_DIR'
+if s.get('music_dir') != want or s.get('music_path') != want:
+    s['music_dir'] = want
+    s['music_path'] = want
+    tmp = p + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(s, f, indent=2)
+        f.write('\n')
+    os.replace(tmp, p)
+    print('music_dir ->', want)
+" 2>/dev/null && ok "settings.json: music_dir=$MUSIK_DIR" || true
+fi
 
 mkdir -p "$LOG_DIR"
 chown "$REAL_USER:$REAL_USER" "$LOG_DIR"
@@ -473,9 +499,9 @@ fi
 
 systemctl daemon-reload
 systemctl enable pidrive_core rfkill-unblock 2>/dev/null || true
-ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 [ -f "$SERVICE_DIR/pidrive_web.service" ]   && systemctl enable pidrive_web   2>/dev/null || true
 [ -f "$SERVICE_DIR/pidrive_avrcp.service" ] && systemctl enable pidrive_avrcp 2>/dev/null || true
+ok "Dienste aktiviert (pidrive_core, pidrive_web, rfkill-unblock)"
 if [ -f "$SERVICE_DIR/pidrive_btagent.service" ]; then
     systemctl enable --now pidrive_btagent 2>/dev/null || true
     ok "BT-Agent: pidrive_btagent aktiv (D-Bus Pairing)"
@@ -585,8 +611,8 @@ info "9/10 Berechtigungen setzen..."
 # pidrive-Gruppe anlegen (IPC-Schreibrecht + Bedienung)
 groupadd -f pidrive 2>/dev/null || true
 usermod -a -G pidrive "$REAL_USER" 2>/dev/null || true
-usermod -a -G video,input,render,tty,systemd-journal "$REAL_USER" 2>/dev/null || true
-ok "Gruppen: video, input, render, tty, systemd-journal"
+usermod -a -G video,input,render,tty,systemd-journal,audio,dialout "$REAL_USER" 2>/dev/null || true
+ok "Gruppen: video, input, render, tty, systemd-journal, audio, dialout"
 
   # ── Berechtigungen prüfen und korrigieren ─────────────────────────────────
   _perm_ok=0; _perm_fix=0; _perm_err=0
@@ -1137,10 +1163,38 @@ if [ -f "$INSTALL_DIR/systemd/bluetooth.service.d/defer-after-usb.conf" ]; then
        /etc/systemd/system/bluetooth.service.d/defer-after-usb.conf
     ok "Boot: Bluetooth nach USB-Release"
 fi
+# ESP Presence-Poll (HTTP SoftAP) — im Repo; immer installieren
+if [ -f "$INSTALL_DIR/systemd/pidrive_pump.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive_pump.service" "$SERVICE_DIR/pidrive_pump.service"
+    sed -i "s|/home/pidrive/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_pump.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_pump.service"
+    systemctl enable pidrive_pump.service 2>/dev/null || true
+    ok "ESP Presence: pidrive_pump.service"
+fi
+# UART Bridge: Unit aus Repo; Script kommt aus esp32.pidrive → $REAL_HOME/pump_bridge.py
 if [ -f "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" ]; then
     cp "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" "$SERVICE_DIR/pidrive_pump_bridge.service"
+    _BRIDGE_PY="$REAL_HOME/pump_bridge.py"
+    sed -i "s|/home/pidrive/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_pump_bridge.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive_pump_bridge.service"
+    sed -i "s|User=pidrive|User=${REAL_USER}|g" "$SERVICE_DIR/pidrive_pump_bridge.service"
+    sed -i "s|WorkingDirectory=/home/pidrive|WorkingDirectory=${REAL_HOME}|g" \
+        "$SERVICE_DIR/pidrive_pump_bridge.service"
+    sed -i "s|Environment=PYTHONPATH=/home/pidrive/pidrive/pidrive|Environment=PYTHONPATH=${INSTALL_DIR}/pidrive|g" \
+        "$SERVICE_DIR/pidrive_pump_bridge.service"
+    sed -i "s|ExecStart=/usr/bin/python3 -u /home/pidrive/pump_bridge.py|ExecStart=/usr/bin/python3 -u ${_BRIDGE_PY}|g" \
+        "$SERVICE_DIR/pidrive_pump_bridge.service"
+    # Hotplug via udev; enable damit WantedBy/SYSTEMD_WANTS greift (ConditionPathExists)
+    systemctl enable pidrive_pump_bridge.service 2>/dev/null || true
+    if [ -f "$_BRIDGE_PY" ]; then
+        ok "ESP Bridge: pidrive_pump_bridge.service → $_BRIDGE_PY"
+    else
+        warn "ESP Bridge-Unit installiert, aber $_BRIDGE_PY fehlt"
+        warn "  Deploy: esp32.pidrive/tools/pump_bridge.py → $_BRIDGE_PY"
+    fi
 fi
 udevadm control --reload-rules 2>/dev/null || true
+systemctl daemon-reload
 
 info "RTL-SDR: DVB-T Treiber blacklisten..."
 BLACKLIST=/etc/modprobe.d/rtl-sdr-blacklist.conf
@@ -1467,6 +1521,18 @@ echo -e "     RTL-SDR-Hinweis: DVB-T Treiber wird erst nach Reboot deaktiviert."
 echo -e "     Alternativ ohne Reboot: ${CYAN}${_SUDO} modprobe -r dvb_usb_rtl28xxu rtl2832${NC}"
 echo ""
 
+# ── Journald: Größe begrenzen (SD-Karten-Schonung) — vor ggf. early exit ──
+_jcf=/etc/systemd/journald.conf.d/pidrive.conf
+mkdir -p /etc/systemd/journald.conf.d
+cat > "$_jcf" << 'JEOF'
+[Journal]
+SystemMaxUse=50M
+SystemMaxFileSize=10M
+MaxRetentionSec=7day
+JEOF
+systemctl restart systemd-journald 2>/dev/null || true
+ok "Journald: max 50M, 7 Tage Retention"
+
 # ── Car-Only Cleanup (v0.10.55: bei Frisch-Install mit anschliessendem Reboot) ──
 if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
   _CLEANUP_DONE_FILE="/etc/pidrive_car_cleanup_done"
@@ -1489,8 +1555,13 @@ if [ -f "$INSTALL_DIR/pidrive_car_only_cleanup.sh" ]; then
     echo -e "  Deaktiviert unnötige Dienste (cups, ModemManager, snapd, ...)"
     echo -e "  und bereinigt Desktop-Audio-Stack (PipeWire, User-PulseAudio)."
     echo ""
-    read -r -t 15 -p "  Car-Only Cleanup erneut ausführen? [j/N] " CLEANUP_CHOICE || CLEANUP_CHOICE="n"
-    echo ""
+    if [ -t 0 ]; then
+      read -r -t 15 -p "  Car-Only Cleanup erneut ausführen? [j/N] " CLEANUP_CHOICE || CLEANUP_CHOICE="n"
+      echo ""
+    else
+      CLEANUP_CHOICE="n"
+      info "Kein TTY — Cleanup-Prompt uebersprungen"
+    fi
     if [[ "$CLEANUP_CHOICE" =~ ^[jJyY]$ ]]; then
       echo -e "${CYAN}  Starte Car-Only Cleanup...${NC}"
       bash "$INSTALL_DIR/pidrive_car_only_cleanup.sh" || true
@@ -1505,15 +1576,4 @@ fi
 echo ""
 echo -e "${BOLD}Update:${NC}"
 echo -e "  ${CYAN}curl -sL https://raw.githubusercontent.com/MPunktBPunkt/pidrive/main/install.sh | ${_SUDO} bash${NC}"
-# ── Journald: Größe begrenzen (SD-Karten-Schonung) ─────────────────────────
-_jcf=/etc/systemd/journald.conf.d/pidrive.conf
-mkdir -p /etc/systemd/journald.conf.d
-cat > "$_jcf" << 'JEOF'
-[Journal]
-SystemMaxUse=50M
-SystemMaxFileSize=10M
-MaxRetentionSec=7day
-JEOF
-systemctl restart systemd-journald 2>/dev/null || true
-echo "  ✓ Journald: max 50M, 7 Tage Retention"
 

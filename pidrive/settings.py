@@ -24,7 +24,7 @@ _DEFAULTS = {
     "dabfm_enabled":      True,
     # Audio
     "music_path":         os.path.expanduser("~/Musik"),  # legacy
-    "music_dir":          "/home/pidrive/Musik",           # kanonisch
+    "music_dir":          os.path.expanduser("~/Musik"),  # kanonisch (= REAL_HOME/Musik)
     "audio_output":       "auto",        # auto | klinke | bt | hdmi | usb_gadget
     "audio_sink_name":    "",            # Leer = automatisch erkennen
     "audio_card_index":   -1,            # -1 = automatisch
