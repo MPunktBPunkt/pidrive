@@ -202,6 +202,8 @@ if $IS_PI; then
     apt-get install -y -q dhcpcd5 2>/dev/null || true
 fi
 ok "System-Pakete installiert"
+# mDNS (.local) — nach altem Car-Cleanup ggf. wieder an
+systemctl enable --now avahi-daemon 2>/dev/null && ok "avahi-daemon aktiv" || true
 
 # pip3 Kompatibilität: --break-system-packages nur ab pip 22 (Python 3.10+)
 # Bullseye (Python 3.9) hat pip 21 ohne dieses Flag
@@ -1500,7 +1502,7 @@ elif [ "${_TRACEBACK:-0}" -gt 0 ]; then
 elif [ "${_STATUS_AGE:-9999}" -gt 20 ]; then
   warn "Core laeuft, aber status.json veraltet (${_STATUS_AGE}s)"
 else
-  ok "Stabilitaetspruefung OK (15s stabil, kein Restart, kein Traceback)"
+  ok "Stabilitaetspruefung OK (${_STAB_S}s stabil, kein Restart, kein Traceback)"
 fi
 
 echo -e "${BOLD}${CYAN}Automatische Diagnose...${NC}"

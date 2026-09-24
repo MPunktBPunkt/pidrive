@@ -68,8 +68,10 @@ for SVC in ModemManager ofono dundee cups cups-browsed triggerhappy; do
     ok "$SVC deaktiviert"
   fi
 done
-if systemctl is-enabled avahi-daemon >/dev/null 2>&1; then
-  ok "avahi-daemon bleibt aktiv (.local / mDNS)"
+if systemctl list-unit-files avahi-daemon.service 2>/dev/null | grep -q avahi-daemon.service; then
+  systemctl unmask avahi-daemon 2>/dev/null || true
+  systemctl enable --now avahi-daemon 2>/dev/null || true
+  ok "avahi-daemon aktiv (.local / mDNS)"
 fi
 
 # ------------------------------------------------------------------
