@@ -26,7 +26,7 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/WEBUI-REVIEW-2026-09-18.md](betrieb/WEBUI-REVIEW-2026-09-18.md) | WebUI-Code-Review: Funde R1–R13 + Fixes | Entwickler, QA | 2026-09-18 |
 | [betrieb/CODE-REVIEW-2026-09-20.md](betrieb/CODE-REVIEW-2026-09-20.md) | Struktur/Legacy/Flows: was veraltet, Ordner, Diagramm-Gültigkeit | Entwickler | 2026-09-20 |
 | [betrieb/BOOT-SPEED.md](betrieb/BOOT-SPEED.md) | Boot-Zeiten: networkd-wait-online, wifi-recover, Core | Betrieb, Entwickler | 2026-09-20 |
-| [betrieb/BOOT-USB-DEFER.md](betrieb/BOOT-USB-DEFER.md) | USB/BT verzögert freigeben (ESP/RTL Boot-Hang) | Betrieb, Entwickler | 2026-09-20 |
+| [betrieb/BOOT-USB-DEFER.md](betrieb/BOOT-USB-DEFER.md) | USB/BT verzögert freigeben + Hotplug-Release | Betrieb, Entwickler | 2026-09-24 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
 | [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: BMW Play-Detection → Live-Stream | Entwickler, ESP/USB | 2026-09-22 |

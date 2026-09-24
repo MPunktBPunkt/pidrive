@@ -1,0 +1,14 @@
+[Unit]
+Description=PiDrive authorize deferred USB after hotplug
+Documentation=file:///home/pi/pidrive/docs/betrieb/BOOT-USB-DEFER.md
+# Erst nach Boot-Release: frühe Adds warten auf die ~12s-Defer-Fenster
+After=pidrive-usb-release.service
+
+[Service]
+Type=oneshot
+User=root
+# Kurz stabilisieren, dann nur authorize (kein Hub-Rebind)
+ExecStartPre=/bin/sleep 1
+ExecStart=/bin/bash /home/pi/pidrive/scripts/usb-release.sh --authorize-only
+StandardOutput=journal
+StandardError=journal

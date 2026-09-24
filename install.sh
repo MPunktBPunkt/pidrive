@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.148"
+PIDRIVE_VERSION="0.11.161"
 
 # ============================================================
 # PiDrive Install Script
@@ -1123,6 +1123,13 @@ if [ -f "$INSTALL_DIR/systemd/pidrive-usb-release.service" ]; then
     sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive-usb-release.service"
     systemctl enable pidrive-usb-release.service 2>/dev/null || true
     ok "Boot: pidrive-usb-release (USB nach 10s)"
+fi
+if [ -f "$INSTALL_DIR/systemd/pidrive-usb-hotplug-release.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive-usb-hotplug-release.service" \
+       "$SERVICE_DIR/pidrive-usb-hotplug-release.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" \
+        "$SERVICE_DIR/pidrive-usb-hotplug-release.service"
+    ok "udev: USB-Hotplug-Release nach Boot-Defer"
 fi
 if [ -f "$INSTALL_DIR/systemd/bluetooth.service.d/defer-after-usb.conf" ]; then
     mkdir -p /etc/systemd/system/bluetooth.service.d
