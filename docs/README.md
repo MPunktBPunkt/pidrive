@@ -41,6 +41,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [../assets/usb-msc-covers/README.md](../assets/usb-msc-covers/README.md) | USB-MSC Cover-Spec | Planung / Design | 2026-09-17 |
 | [auftraege/README.md](auftraege/README.md) | Aktive Arbeitsaufträge | Entwickler | 2026-09-22 |
 | [referenz/WELLE-CLI.md](referenz/WELLE-CLI.md) | welle-cli Optionen, HTTP, Kanäle | Entwickler | 2026-04-21 |
+| [referenz/rtl2832u Stick](referenz/rtl2832u%20Stick) | Fasizi/RTL2832U+R820T2: HF/DSP/Kalibrierung (Langreferenz) | Entwickler, RF | 2026-09-25 |
+| [referenz/FM-AM-RTL-REVIEW-2026-09-25.md](referenz/FM-AM-RTL-REVIEW-2026-09-25.md) | Abgleich Stick-Doku ↔ PiDrive FM/AM: umgesetzt / verbessern / zu aufwendig | Entwickler, RF | 2026-09-25 |
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen | Entwickler, QA | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |
