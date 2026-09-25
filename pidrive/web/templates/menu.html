@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — Menü{% endblock %}
+{% block content %}
+<style>
+.menu-tree { background:#050d1a; border:1px solid var(--line-soft); margin-top:8px; }
+.menu-crumb { padding:8px 10px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line-soft); }
+.menu-crumb b { color:var(--text); }
+.tree-item {
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
+  border-bottom:1px solid #0a1528; cursor:pointer; font-size:14px;
+}
+.tree-item:hover { background:#0d1a30; }
+.tree-item.selected { background:#12305a; outline:1px solid var(--active); }
+.tree-item.playing { color:#8ce7ff; }
+.tree-item .node-icon { width:1.2em; color:var(--muted); text-align:center; }
+.tree-item .node-arrow { margin-left:auto; color:var(--muted); }
+.pad-grid { display:grid; grid-template-columns:repeat(3, 56px); gap:6px; justify-content:center; margin:10px 0; }
+.pad-grid .btn { width:56px; height:40px; padding:0; }
+.hint { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.4; }
+</style>
+
+<div class="card">
+  <div class="card-title">☰ iDrive-Menü (Dev-Vorschau)</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+    Spiegelt <code>/tmp/pidrive_menu.json</code> — Navigation wie am BMW (AVRCP), ohne Auto.
+    ESP SoftAP: siehe <a href="https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/planung/CAR-STANDALONE.md" style="color:var(--active2)">esp32 SoftAP</a>
+    · Lab-Doku im Repo: <code>docs/betrieb/LAB-MENU-WLAN.md</code>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="menuNav('up')">▲</button>
+    <button class="btn" onclick="menuNav('down')">▼</button>
+    <button class="btn primary" onclick="menuNav('enter')">Enter</button>
+    <button class="btn" onclick="menuNav('back')">Back</button>
+    <button class="btn" onclick="menuNav('goto:root')">Home</button>
+    <button class="btn" onclick="loadMenu(true)">Refresh</button>
+  </div>
+  <div class="pad-grid" aria-hidden="true">
+    <span></span>
+    <button class="btn" onclick="menuNav('up')">▲</button>
+    <span></span>
+    <button class="btn" onclick="menuNav('back')">◀</button>
+    <button class="btn primary" onclick="menuNav('enter')">OK</button>
+    <button class="btn" onclick="menuNav('right')">▶</button>
+    <span></span>
+    <button class="btn" onclick="menuNav('down')">▼</button>
+    <span></span>
+  </div>
+  <div class="menu-tree" id="menuTreeWrap">
+    <div class="menu-crumb">Lade…</div>
+  </div>
+  <div id="menuMeta" class="hint">–</div>
+</div>
+
+<div class="card">
+  <div class="card-title">Schnell-Kategorien</div>
+  <div class="btn-row" id="menuCats">–</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const ICONS = {folder:'▸', station:'♪', action:'→', toggle:'◉', info:'ℹ', value:'±'};
+let _menuBusy = false;
+let _lastRev = null;
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function renderMenu(j) {
+  const wrap = document.getElementById('menuTreeWrap');
+  const meta = document.getElementById('menuMeta');
+  if (!wrap) return;
+  const nodes = j.nodes || [];
+  const path = j.path || ['PiDrive'];
+  const cursor = j.cursor || 0;
+  const canBack = !!j.can_back;
+  let html = `<div class="menu-crumb">${canBack ? '◄ ' : ''}<b>${path.map(esc).join(' › ')}</b></div>`;
+  if (!nodes.length) {
+    html += '<div class="tree-item type-info"><span class="node-icon">ℹ</span><span>Keine Menüdaten (Core?)</span></div>';
+  } else {
+    nodes.forEach((n, i) => {
+      const typ = n.type || 'folder';
+      const sel = (i === cursor) ? ' selected' : '';
+      const play = n.active ? ' playing' : '';
+      const uid = n.uid != null ? String(n.uid) : '';
+      const pid = n.path_id || '';
+      html += `<div class="tree-item type-${esc(typ)}${sel}${play}" data-uid="${esc(uid)}" data-path="${esc(pid)}" data-type="${esc(typ)}" data-idx="${i}">
+        <span class="node-icon">${ICONS[typ]||'▸'}</span>
+        <span class="node-label">${esc(n.label||'?')}</span>
+        ${n.has_children ? '<span class="node-arrow">›</span>' : ''}
+      </div>`;
+    });
+  }
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.tree-item[data-uid]').forEach(el => {
+    el.addEventListener('click', () => onNodeClick(el));
+    el.addEventListener('dblclick', () => onNodeActivate(el));
+  });
+  if (meta) {
+    const age = j.menu_age != null ? (Number(j.menu_age).toFixed(1) + 's') : '–';
+    meta.textContent = `Rev ${j.rev ?? '–'} · cursor ${cursor} · age ${age}` +
+      (j.menu_error ? ` · ⚠ ${j.menu_error}` : '');
+  }
+  const cats = document.getElementById('menuCats');
+  if (cats) {
+    const list = j.categories || [];
+    if (!list.length) cats.textContent = '–';
+    else {
+      cats.innerHTML = '';
+      list.forEach(c => {
+        const id = (typeof c === 'string') ? c : (c.id || c.label || '');
+        const lab = (typeof c === 'string') ? c : (c.label || c.id || '?');
+        const b = document.createElement('button');
+        b.className = 'btn';
+        b.textContent = lab;
+        b.onclick = () => menuNav('cat:' + id);
+        cats.appendChild(b);
+      });
+    }
+  }
+}
+
+async function loadMenu(force) {
+  try {
+    const r = await fetch('/api/core');
+    const j = await r.json();
+    if (!force && j.rev === _lastRev && _lastRev != null) return j;
+    _lastRev = j.rev;
+    renderMenu(j);
+    return j;
+  } catch (e) {
+    const wrap = document.getElementById('menuTreeWrap');
+    if (wrap) wrap.innerHTML = `<div class="menu-crumb">Fehler: ${esc(e)}</div>`;
+    return null;
+  }
+}
+
+async function menuNav(cmd) {
+  if (_menuBusy) return;
+  _menuBusy = true;
+  try {
+    await sendCmd(cmd);
+    await new Promise(r => setTimeout(r, 120));
+    await loadMenu(true);
+  } finally {
+    _menuBusy = false;
+  }
+}
+
+async function onNodeClick(el) {
+  const idx = parseInt(el.dataset.idx, 10);
+  const j = await loadMenu(true);
+  if (!j) return;
+  let cur = j.cursor || 0;
+  if (idx === cur) {
+    await onNodeActivate(el);
+    return;
+  }
+  const steps = idx - cur;
+  const dir = steps > 0 ? 'down' : 'up';
+  for (let i = 0; i < Math.abs(steps); i++) {
+    await sendCmd(dir);
+  }
+  await new Promise(r => setTimeout(r, 80));
+  await loadMenu(true);
+}
+
+async function onNodeActivate(el) {
+  const typ = el.dataset.type || '';
+  const uid = el.dataset.uid;
+  if (uid && (typ === 'station' || typ === 'action' || typ === 'toggle')) {
+    await menuNav('activate:' + uid);
+    return;
+  }
+  await menuNav('enter');
+}
+
+function onBaseRefresh(j) {
+  if (!j) return;
+  if (j.rev !== _lastRev) renderMenu(j);
+  _lastRev = j.rev;
+}
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return;
+  const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'back', ArrowRight:'enter', Enter:'enter', Escape:'back', Backspace:'back' };
+  const cmd = map[ev.key];
+  if (!cmd) return;
+  ev.preventDefault();
+  menuNav(cmd);
+});
+
+loadMenu(true);
+</script>
+{% endblock %}

@@ -108,6 +108,18 @@ def page_bluetooth():
         vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("bluetooth.html", vm=vm)
 
+@app.route("/menu")
+def page_menu():
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model menu.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
+    return render_template("menu.html", vm=vm)
+
+
 @app.route("/audio")
 def page_audio():
     try:
