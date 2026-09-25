@@ -340,6 +340,17 @@ def _get_ppm(settings=None):
         return 0
 
 
+def _rtl_offset_enabled(settings=None) -> bool:
+    """rtl_fm -E offset (DC-Spike); Default an laut FM/AM-Review."""
+    try:
+        if settings is None:
+            from settings import load_settings
+            settings = load_settings()
+        return bool(settings.get("rtl_offset_tuning", True))
+    except Exception:
+        return True
+
+
 def _get_gain(settings=None):
     try:
         if settings is None:
@@ -351,7 +362,7 @@ def _get_gain(settings=None):
 
 
 def _get_airband_gain(settings=None, S=None):
-    """AM-Airband: Live-Tune (S) > settings Default > 45."""
+    """AM-Airband: Live-Tune (S) > settings Default > 20."""
     if S and isinstance(S.get("airband_tune"), dict) and "gain" in S["airband_tune"]:
         try:
             return int(S["airband_tune"]["gain"])
@@ -365,13 +376,13 @@ def _get_airband_gain(settings=None, S=None):
             settings = {}
     try:
         if settings is not None and "scanner_airband_gain" in settings:
-            return int(settings.get("scanner_airband_gain", 45))
+            return int(settings.get("scanner_airband_gain", 20))
     except Exception:
         pass
     g = _get_gain(settings)
     if g >= 0:
         return g
-    return 45
+    return 20
 
 
 # Diskrete Stufen für WebUI/iDrive ± (Optimierung an K2 ATIS etc.)
@@ -429,9 +440,9 @@ def _get_airband_lp(settings=None, S=None):
         except Exception:
             settings = {}
     try:
-        raw = int((settings or {}).get("scanner_airband_lp_hz", 3500))
+        raw = int((settings or {}).get("scanner_airband_lp_hz", 3000))
     except Exception:
-        raw = 3500
+        raw = 3000
     return _nearest_step(raw, AIRBAND_LP_STEPS)
 
 
@@ -472,9 +483,9 @@ def _get_airband_sample_rate(settings=None, S=None):
         except Exception:
             settings = {}
     try:
-        raw = int((settings or {}).get("scanner_airband_sample_rate", 24000))
+        raw = int((settings or {}).get("scanner_airband_sample_rate", 16000))
     except Exception:
-        raw = 24000
+        raw = 16000
     return _nearest_step(raw, AIRBAND_SR_STEPS)
 
 
@@ -868,10 +879,16 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
         _rtl_extra: list = []
         _mpv_af = None
         if _modulation == "wbfm":
-            _rtl_sr = 250000
+            try:
+                _rtl_sr = int((settings or {}).get("fm_rtl_sr", 170000) or 170000)
+            except Exception:
+                _rtl_sr = 170000
+            _rtl_sr = max(100000, min(_rtl_sr, 320000))
             _out_sr = 32000
             _sq_eff = _sq
             _gain_eff = _gain
+            if _rtl_offset_enabled(settings):
+                _rtl_extra = ["-E", "offset"]
             # UKW: gleicher HP/LP-Rauschfilter wie fm.play_station
             try:
                 from modules.radio import fm as _fm_af
@@ -882,7 +899,7 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             if band_id == "airband" or _audio_profile == "airband_voice":
                 _rtl_sr = _get_airband_sample_rate(settings, S=S)
             else:
-                _rtl_sr = 24000
+                _rtl_sr = 16000
             _out_sr = _rtl_sr
             # Listen: Airband-Squelch (Default 0). Globales scanner_squelch
             # ist für PMR — würde ATIS/Continuous choppy machen.
@@ -895,10 +912,12 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
                 except Exception:
                     _sq_eff = 0
                 _sq_eff = max(0, min(_sq_eff, 100))
-                _gain_eff = 45 if int(_gain) < 0 else int(_gain)
+                _gain_eff = 20 if int(_gain) < 0 else int(_gain)
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
+            if _rtl_offset_enabled(settings):
+                _rtl_extra += ["-E", "offset"]
             if _audio_profile == "airband_voice":
-                # Live HP/LP aus airband_tune / Settings (Default 250–3500 Hz)
+                # Live HP/LP aus airband_tune / Settings (Default 250–3000 Hz)
                 _mpv_af = _airband_af_string(settings, S=S)
             else:
                 _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
@@ -909,6 +928,8 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             _sq_eff = max(int(_sq or 0), 50) if bandwidth_hz <= 25000 else max(int(_sq or 0), 35)
             _gain_eff = 36 if int(_gain) < 0 else int(_gain)
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
+            if _rtl_offset_enabled(settings):
+                _rtl_extra += ["-E", "offset"]
             _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3700,volume=10dB]"
 
         # Prio C: shell=True → Popen-Pipe

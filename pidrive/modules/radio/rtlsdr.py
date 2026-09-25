@@ -124,12 +124,54 @@ def _atomic_json(path, data):
 
 # ── Passive Checks (öffnen das Device NICHT) ──────────────────────────────
 
+def _detect_usb_sysfs():
+    """Fallback ohne lsusb (z. B. schlanke Proxmox-CT ohne usbutils)."""
+    matches = []
+    try:
+        base = "/sys/bus/usb/devices"
+        for name in os.listdir(base):
+            d = os.path.join(base, name)
+            try:
+                with open(os.path.join(d, "idVendor"), encoding="ascii") as f:
+                    vendor = f.read().strip().lower()
+                with open(os.path.join(d, "idProduct"), encoding="ascii") as f:
+                    product = f.read().strip().lower()
+            except OSError:
+                continue
+            usb_id = f"{vendor}:{product}"
+            if usb_id in ("0bda:2838", "0bda:2832"):
+                try:
+                    with open(os.path.join(d, "busnum"), encoding="ascii") as f:
+                        bus = int(f.read().strip())
+                    with open(os.path.join(d, "devnum"), encoding="ascii") as f:
+                        dev = int(f.read().strip())
+                    matches.append(
+                        f"Bus {bus:03d} Device {dev:03d}: ID {usb_id} (sysfs)"
+                    )
+                except (OSError, ValueError):
+                    matches.append(f"ID {usb_id} (sysfs {name})")
+    except OSError:
+        pass
+    return matches
+
+
 def detect_usb():
-    """USB-Stick per lsusb erkennen — kein Öffnen."""
+    """USB-Stick erkennen — lsusb, sonst sysfs. Kein Geräteöffnen."""
     r = _run(["lsusb"], timeout=3)
-    text = r["out"] + r["err"]
+    text = (r.get("out") or "") + (r.get("err") or "")
     lines = [ln.strip() for ln in text.splitlines()
              if any(m in ln for m in RTL_USB_MATCHES)]
+    if lines:
+        return {"present": True, "matches": lines, "raw": text.strip()}
+    # FileNotFoundError landet in _run oft als err-Text; zusätzlich sysfs
+    if "No such file or directory" in text or not shutil.which("lsusb"):
+        sys_matches = _detect_usb_sysfs()
+        if sys_matches:
+            return {
+                "present": True,
+                "matches": sys_matches,
+                "raw": (text.strip() + "\n" if text.strip() else "") + "via sysfs",
+            }
     return {"present": bool(lines), "matches": lines, "raw": text.strip()}
 
 def which_tools():

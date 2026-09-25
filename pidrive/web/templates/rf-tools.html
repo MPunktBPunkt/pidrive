@@ -126,10 +126,23 @@
 </div>
 <div class="card">
   <div class="card-title">🎛 PPM Kalibrierung</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+    Ein Wert pro Host — speichert dauerhaft in settings.json (FM/Scanner nutzen ihn als <code>-p</code>).
+  </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <input id="ppmVal" type="number" value="49" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px">
-    <button class="btn" onclick="sendCmd('ppm:'+document.getElementById('ppmVal').value)">PPM setzen</button>
-    <button class="btn" onclick="ppmCalibrate()">Auto-Kalibrieren</button>
+    <span style="font-size:12px;color:var(--muted)">Gespeichert:</span>
+    <strong id="ppmSaved">–</strong>
+    <input id="ppmVal" type="number" step="1" style="width:70px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px" title="PPM-Offset">
+    <button class="btn primary" onclick="ppmSet()">PPM setzen</button>
+    <button class="btn" onclick="ppmCalibrate()" title="rtl_test -p, ca. 3 Minuten — Radio stoppt vorher">Auto-Kalibrieren (~3 Min)</button>
+    <button class="btn" id="ppmApplyBtn" style="display:none" onclick="ppmApplySuggested()">Vorschlag übernehmen</button>
+  </div>
+  <div id="ppmStatus" style="font-size:12px;margin-top:8px;line-height:1.45;min-height:2.6em">
+    <div id="ppmStatus1" style="color:var(--muted)">–</div>
+    <div id="ppmStatus2" style="color:var(--muted)"></div>
+  </div>
+  <div style="margin-top:6px;height:4px;background:var(--line-soft);border-radius:2px;overflow:hidden">
+    <div id="ppmProgress" style="height:100%;width:0%;background:var(--accent,#3b82f6);transition:width .4s"></div>
   </div>
   <div id="ppmHint" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
 </div>
@@ -508,20 +521,142 @@ async function loadPpmFromRuntime() {
   try{
     const r=await fetch('/api/runtime'); const j=await r.json();
     const ppm = j.settings && j.settings.ppm_correction;
-    if (ppm != null && ppm !== '-') document.getElementById('ppmVal').value = ppm;
+    const saved = document.getElementById('ppmSaved');
+    const inp = document.getElementById('ppmVal');
+    if (ppm != null && ppm !== '-') {
+      if (saved) saved.textContent = (Number(ppm) > 0 ? '+' : '') + ppm + ' ppm';
+      if (inp && (inp.value === '' || inp.dataset.touched !== '1')) inp.value = ppm;
+    } else if (saved) {
+      saved.textContent = '0 (aus)';
+    }
   }catch(e){}
+}
+let _ppmSuggested = null;
+let _ppmPollTimer = null;
+function _ppmFmt(v) {
+  if (v == null || v === '') return '–';
+  const n = Number(v);
+  if (Number.isNaN(n)) return String(v);
+  return (n > 0 ? '+' : '') + n + ' ppm';
+}
+function _ppmFmtTime(s) {
+  s = Math.max(0, Math.floor(Number(s) || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ':' + String(r).padStart(2, '0');
+}
+function _ppmSetStatus(line1, line2, pct) {
+  const s1 = document.getElementById('ppmStatus1');
+  const s2 = document.getElementById('ppmStatus2');
+  const bar = document.getElementById('ppmProgress');
+  if (s1) s1.textContent = line1 || '';
+  if (s2) s2.textContent = line2 || '';
+  if (bar && pct != null) bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+}
+function _ppmStopPoll() {
+  if (_ppmPollTimer) { clearInterval(_ppmPollTimer); _ppmPollTimer = null; }
+}
+async function ppmSet() {
+  const inp = document.getElementById('ppmVal');
+  const v = parseInt(inp && inp.value, 10);
+  if (Number.isNaN(v)) { showToast('Ungültiger PPM-Wert'); return; }
+  const j = await sendCmd('ppm:' + v);
+  if (j && j.ok !== false) {
+    showToast('PPM gespeichert: ' + v);
+    const hint = document.getElementById('ppmHint');
+    if (hint) hint.textContent = 'Gespeichert. FM/Scanner neu starten, damit -p greift.';
+    setTimeout(loadPpmFromRuntime, 800);
+  }
 }
 async function ppmCalibrate() {
   const hint = document.getElementById('ppmHint');
-  if (hint) hint.textContent = 'Kalibriere…';
-  try{
-    const r = await fetch('/api/ppm_calibrate', {method:'POST'});
+  const applyBtn = document.getElementById('ppmApplyBtn');
+  const btn = document.querySelector('button[onclick="ppmCalibrate()"]');
+  if (applyBtn) applyBtn.style.display = 'none';
+  _ppmSuggested = null;
+  _ppmStopPoll();
+  if (btn) btn.disabled = true;
+  if (hint) hint.textContent = '';
+  _ppmSetStatus('Starte Kalibrierung…', 'Radio wird gestoppt, Stick muss frei sein.', 0);
+  showToast('PPM-Kalibrierung gestartet (~3 Min)', 3000);
+  try {
+    const r = await fetch('/api/ppm_calibrate/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({duration: 180}),
+    });
     const j = await r.json();
-    if (!j.ok) { showToast('PPM: '+(j.error||'Fehler')); return; }
-    if (hint) hint.textContent = (j.ppm_found || j.hint || j.raw || 'fertig').toString().substring(0,120);
-    const m = (j.ppm_found||'').match(/([-+]?\d+\.?\d*)/);
-    if (m) document.getElementById('ppmVal').value = m[1];
-  }catch(e){ if (hint) hint.textContent = 'Fehler: '+e; }
+    if (!j.ok) {
+      _ppmSetStatus('Start fehlgeschlagen', j.error || 'unbekannt', 0);
+      showToast('PPM-Start fehlgeschlagen');
+      if (btn) btn.disabled = false;
+      return;
+    }
+    _ppmSetStatus(
+      j.already_running ? 'Messung läuft bereits…' : 'Messung läuft (rtl_test -p)…',
+      'Erste PPM-Werte kommen ca. alle 10 s.',
+      1
+    );
+    await ppmPollOnce();
+    _ppmPollTimer = setInterval(ppmPollOnce, 2000);
+  } catch (e) {
+    _ppmSetStatus('Fehler', String(e), 0);
+    if (btn) btn.disabled = false;
+  }
+}
+async function ppmPollOnce() {
+  const hint = document.getElementById('ppmHint');
+  const applyBtn = document.getElementById('ppmApplyBtn');
+  const btn = document.querySelector('button[onclick="ppmCalibrate()"]');
+  try {
+    const r = await fetch('/api/ppm_calibrate/status');
+    const j = await r.json();
+    if (!j.ok) return;
+    const cur = _ppmFmt(j.current_ppm);
+    const cum = _ppmFmt(j.cumulative_ppm);
+    const samp = j.samples || 0;
+    if (j.running) {
+      _ppmSetStatus(
+        'Laufzeit ' + _ppmFmtTime(j.elapsed_s) + ' / ' + _ppmFmtTime(j.duration_s) +
+          ' · noch ca. ' + _ppmFmtTime(j.remaining_s),
+        'Aktuell ' + cur + ' · kumulativ ' + cum + ' · ' + samp + ' Messungen',
+        j.progress_pct
+      );
+      return;
+    }
+    if (j.done) {
+      _ppmStopPoll();
+      if (btn) btn.disabled = false;
+      const sug = j.suggested_ppm;
+      if (sug != null) {
+        _ppmSuggested = sug;
+        const inp = document.getElementById('ppmVal');
+        if (inp) { inp.value = sug; inp.dataset.touched = '1'; }
+        if (applyBtn) applyBtn.style.display = '';
+        _ppmSetStatus(
+          'Fertig · Vorschlag ' + _ppmFmt(sug),
+          (j.method || '') + ' · ' + samp + ' Messungen',
+          100
+        );
+        if (hint) hint.textContent = (j.hints || []).join(' · ');
+        showToast('Vorschlag ' + sug + ' ppm — Übernehmen?', 4000);
+      } else {
+        _ppmSetStatus('Fertig · kein PPM erkannt', j.method || '', 100);
+        if (hint) hint.textContent = (j.hints || []).join(' · ') || 'Kein Wert';
+        showToast('Kein PPM erkannt');
+      }
+    }
+  } catch (e) {
+    _ppmSetStatus('Status-Fehler', String(e), null);
+  }
+}
+async function ppmApplySuggested() {
+  if (_ppmSuggested == null) return;
+  const inp = document.getElementById('ppmVal');
+  if (inp) inp.value = _ppmSuggested;
+  await ppmSet();
+  const applyBtn = document.getElementById('ppmApplyBtn');
+  if (applyBtn) applyBtn.style.display = 'none';
 }
 function onBaseRefresh() { loadDabStatus(); }
 loadDabStatus(); loadRtlsdr(); loadPpmFromRuntime();

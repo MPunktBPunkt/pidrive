@@ -453,13 +453,25 @@ def play_station(station, S, settings=None):
         _gain_val  = int(settings.get("fm_gain", -1) if settings else -1)
         # ppm_correction ist der kanonische Key; "ppm" nur Alias
         _ppm_val = 0
+        _rtl_sr = 170000
+        _offset = True
         if settings:
             _ppm_val = int(settings.get("ppm_correction", settings.get("ppm", 0)) or 0)
+            try:
+                _rtl_sr = int(settings.get("fm_rtl_sr", 170000) or 170000)
+            except Exception:
+                _rtl_sr = 170000
+            _rtl_sr = max(100000, min(_rtl_sr, 320000))
+            _offset = bool(settings.get("rtl_offset_tuning", True))
 
         def _build_rtl_cmd():
+            # -M wbfm ≈ 170k + deemp; -s überschreibt Bandbreite, -E offset gegen DC-Spike
             cmd = ["rtl_fm", "-M", "wbfm",
-                   "-f", freq_hz, "-s", "250000", "-r", "32000",
-                   "-A", "fast", "-"]
+                   "-f", freq_hz, "-s", str(_rtl_sr), "-r", "32000",
+                   "-A", "fast"]
+            if _offset:
+                cmd += ["-E", "offset"]
+            cmd += ["-"]
             if _gain_val >= 0:
                 cmd += ["-g", str(_gain_val)]
             if _ppm_val:
@@ -477,8 +489,8 @@ def play_station(station, S, settings=None):
                 _k, _v = _tok.split("=", 1)
                 mpv_env[_k] = _v
 
-        if _ppm_val:
-            log.info(f"FM play: PPM={_ppm_val} gain={_gain_val}")
+        if _ppm_val or _gain_val >= 0:
+            log.info(f"FM play: PPM={_ppm_val} gain={_gain_val} sr={_rtl_sr} offset={_offset}")
 
         def _proc_wchar(pid):
             """Bytes geschrieben (inkl. Pipe) — write_bytes zählt Pipes nicht."""
@@ -714,7 +726,7 @@ def scan_stations(S):
     while freq <= 107.9:
         freq_hz = int(freq * 1e6)
         cmd = (f"timeout 1.5s rtl_fm -M wbfm -f {freq_hz} "
-               f"-s 200000 -l 30 - 2>/dev/null | wc -c")
+               f"-s 170000 -E offset -l 30 - 2>/dev/null | wc -c")
         try:
             r = subprocess.run(cmd, shell=True,
                                capture_output=True, text=True, timeout=3)

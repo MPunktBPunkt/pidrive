@@ -62,12 +62,14 @@ _DEFAULTS = {
     "scanner_airband_autotune": True,   # Airband-Monitor: bei Signal umschalten
     "scanner_airband_hold_s":   20,     # Sekunden hören nach Treffer, dann weiter
     "scanner_airband_squelch":  0,      # Listen/ATIS: 0=offen (PMR-Squelch nicht übernehmen)
-    "scanner_airband_gain":     45,     # AM Gain dB (Stufen per UI ±)
-    "scanner_airband_sample_rate": 24000,  # rtl_fm -s für Airband (Stufen per UI ±)
+    "scanner_airband_gain":     20,     # AM: lieber niedrig (UKW-Blocking); Doku ~10–12, Allgäu-Praxis ~15–25
+    "scanner_airband_sample_rate": 16000,  # rtl_fm -s; enger ≈ bessere Selektivität (25-kHz-Raster)
     "scanner_airband_hp_hz":    250,    # mpv highpass nach Demod (Sprache)
-    "scanner_airband_lp_hz":    3500,   # mpv lowpass nach Demod
+    "scanner_airband_lp_hz":    3000,   # mpv lowpass (Doku ~2.5–3.5 kHz)
     "fm_hp_hz":                 60,     # FM Rauschfilter highpass
     "fm_lp_hz":                 12000,  # FM Rauschfilter lowpass (schwache Sender)
+    "fm_rtl_sr":                170000, # rtl_fm -s für WBFM (wbfm-Preset / Doku ~170k)
+    "rtl_offset_tuning":        True,   # rtl_fm -E offset (DC-Spike meiden)
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

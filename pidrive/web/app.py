@@ -634,100 +634,372 @@ def api_rtlsdr_reset():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
-@app.route("/api/rtlsdr/calibrate")
-def api_rtlsdr_calibrate():
+PPM_CAL_LOG = "/tmp/pidrive_ppm_calibrate.log"
+PPM_CAL_META = "/tmp/pidrive_ppm_calibrate.json"
+
+
+def _ppm_parse_log_text(stdout: str) -> dict:
+    """Parse rtl_test -p Output → current/cumulative/suggested."""
     import re as _re
-    # Mindestlaufzeit: 3 Minuten für stabile PPM-Messung
-    # <60s liefert unzuverlässige Werte (Ausreißer ±50 ppm möglich)
-    result = safe_run("timeout 180s rtl_test -p 2>&1")
-    stdout = result.get("stdout", "") or ""
-
-    ppm = None
-    method = "nicht erkannt"
-    lines = stdout.splitlines()
-
+    lines = (stdout or "").splitlines()
     cum_ppms = []
+    cur_ppms = []
     for ln in lines:
-        m = _re.search(r'cumulative PPM[: ]+([-+]?[0-9]+)', ln, _re.I)
+        m = _re.search(r"cumulative PPM[: ]+([-+]?[0-9]+)", ln, _re.I)
         if m:
             try:
                 cum_ppms.append(int(m.group(1)))
             except Exception:
                 pass
+        m = _re.search(r"current PPM[: ]+([-+]?[0-9]+)", ln, _re.I)
+        if m:
+            try:
+                cur_ppms.append(int(m.group(1)))
+            except Exception:
+                pass
 
+    ppm = None
+    method = "nicht erkannt"
     if cum_ppms:
         ppm = cum_ppms[-1]
-        stability = "⚠ zu wenige Messungen — Ergebnis unzuverlässig" if len(cum_ppms) < 6 else f"{len(cum_ppms)} Messungen — stabil"
-        method = f"cumulative PPM aus rtl_test ({stability})"
-
-    if ppm is None:
-        cur_ppms = []
+        stability = (
+            "⚠ zu wenige Messungen — noch unzuverlässig"
+            if len(cum_ppms) < 6
+            else f"{len(cum_ppms)} Messungen — stabil"
+        )
+        method = f"cumulative PPM ({stability})"
+    elif cur_ppms:
+        sorted_c = sorted(cur_ppms)
+        ppm = sorted_c[len(sorted_c) // 2]
+        method = f"current PPM Median aus {len(cur_ppms)} Werten"
+    else:
         for ln in lines:
-            m = _re.search(r'current PPM[: ]+([-+]?[0-9]+)', ln, _re.I)
-            if m:
-                try:
-                    cur_ppms.append(int(m.group(1)))
-                except Exception:
-                    pass
-        if cur_ppms:
-            cur_ppms.sort()
-            ppm = cur_ppms[len(cur_ppms)//2]
-            method = f"current PPM Median aus {len(cur_ppms)} Werten"
-
-    if ppm is None:
-        for ln in lines:
-            m = _re.search(r'real sample rate[: ]+([\d.]+)', ln, _re.I)
+            m = _re.search(r"real sample rate[: ]+([\d.]+)", ln, _re.I)
             if m:
                 try:
                     measured = float(m.group(1))
-                    nominal = 2048000.0
-                    ppm_raw = (measured - nominal) / nominal * 1e6
-                    ppm = round(ppm_raw)
+                    ppm = round((measured - 2048000.0) / 2048000.0 * 1e6)
                     method = f"Samplerate-Berechnung ({measured:.0f} S/s)"
                 except Exception:
                     pass
                 break
 
+    return {
+        "suggested_ppm": ppm,
+        "current_ppm": cur_ppms[-1] if cur_ppms else None,
+        "cumulative_ppm": cum_ppms[-1] if cum_ppms else None,
+        "samples": len(cum_ppms),
+        "method": method,
+        "ppm_found": f"{ppm} ppm" if ppm is not None else None,
+    }
+
+
+def _ppm_result_hints(ppm, method: str, err: str = "") -> list:
     hints = []
+    if err:
+        hints.append(err)
     if ppm is None:
-        hints.append("Kein PPM-Wert erkannt — mögliche Ursachen:")
-        hints.append("• RTL-SDR Stick noch nicht freigegeben (kurz warten, erneut versuchen)")
-        hints.append("• Kalibrierung läuft nur wenn kein FM/DAB/Scanner aktiv ist")
-        hints.append("• Timeout zu kurz — 30s reicht normalerweise")
-        hints.append("Manuelle Alternative: PPM-Wert schrittweise ±5 testen beim FM-Hören")
+        hints.append("Kein PPM-Wert erkannt — Stick belegt oder nicht gefunden?")
+        hints.append("Manuell: Wert ±5 beim FM-Hören testen")
     else:
         hints.append(f"Methode: {method}")
         if abs(ppm) > 100:
             hints.append("⚠ Wert > 100 ppm — sehr hoch, eventuell Stick-Problem")
         elif abs(ppm) > 50:
-            hints.append("Hinweis: Typischer Bereich für RTL2838 ist ±20-60 ppm")
-        hints.append("Nach Übernehmen → FM neu starten um Wert zu aktivieren")
+            hints.append("Hinweis: Typischer Bereich für RTL2838 ist ±20–60 ppm")
+        hints.append("Übernehmen speichert dauerhaft; FM/Scanner neu starten zum Aktivieren")
+    return hints
 
-    return jsonify({
+
+def _ppm_calibrate_run(duration_s: int = 180) -> dict:
+    """Blockierend: rtl_test -p für duration_s (CLI / Sync-API)."""
+    import subprocess as _sp
+    duration_s = max(60, min(int(duration_s or 180), 300))
+    stdout = ""
+    err = ""
+    try:
+        cp = _sp.run(
+            ["timeout", f"{duration_s}s", "rtl_test", "-p"],
+            capture_output=True, text=True, timeout=duration_s + 20,
+        )
+        stdout = (cp.stdout or "") + (cp.stderr or "")
+    except _sp.TimeoutExpired as e:
+        stdout = (e.stdout or "") + (e.stderr or "")
+        err = "Messung per Python-Timeout beendet"
+    except FileNotFoundError:
+        return {
+            "ok": False,
+            "error": "rtl_test nicht gefunden (rtl-sdr Paket)",
+            "suggested_ppm": None,
+            "method": "nicht erkannt",
+            "hints": ["rtl-sdr installieren: apt install rtl-sdr"],
+            "stdout": "",
+            "samples": 0,
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": str(e),
+            "suggested_ppm": None,
+            "method": "nicht erkannt",
+            "hints": [str(e)],
+            "stdout": "",
+            "samples": 0,
+        }
+
+    parsed = _ppm_parse_log_text(stdout)
+    hints = _ppm_result_hints(parsed.get("suggested_ppm"), parsed.get("method") or "", err)
+    return {
         "ok": True,
         "stdout": stdout[-1000:],
-        "suggested_ppm": ppm,
-        "method": method,
+        "suggested_ppm": parsed.get("suggested_ppm"),
+        "current_ppm": parsed.get("current_ppm"),
+        "cumulative_ppm": parsed.get("cumulative_ppm"),
+        "ppm_found": parsed.get("ppm_found"),
+        "method": parsed.get("method"),
         "hints": hints,
-    })
+        "hint": (hints[0] if hints else ""),
+        "samples": parsed.get("samples") or 0,
+        "duration_s": duration_s,
+    }
+
+
+def _ppm_meta_read() -> dict:
+    try:
+        with open(PPM_CAL_META, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _ppm_meta_write(data: dict) -> None:
+    try:
+        tmp = PPM_CAL_META + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, PPM_CAL_META)
+    except Exception:
+        pass
+
+
+def _ppm_pid_alive(pid) -> bool:
+    if not pid:
+        return False
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except Exception:
+        return False
+
+
+def _ppm_open_log_write():
+    """Log/Meta schreibbar machen (ältere root-Runs hinterlassen oft mode 644 root)."""
+    for path in (PPM_CAL_LOG, PPM_CAL_META):
+        try:
+            if os.path.exists(path):
+                try:
+                    os.chmod(path, 0o666)
+                except OSError:
+                    try:
+                        os.unlink(path)
+                    except OSError:
+                        pass
+        except OSError:
+            pass
+    log_f = open(PPM_CAL_LOG, "w", encoding="utf-8")
+    try:
+        os.chmod(PPM_CAL_LOG, 0o666)
+    except OSError:
+        pass
+    return log_f
+
+
+def _ppm_calibrate_start(duration_s: int = 180) -> dict:
+    """Startet rtl_test -p im Hintergrund; Status per /api/ppm_calibrate/status."""
+    import subprocess as _sp
+    duration_s = max(60, min(int(duration_s or 180), 300))
+    meta = _ppm_meta_read()
+    if meta.get("running") and _ppm_pid_alive(meta.get("pid")):
+        return {
+            "ok": True,
+            "started": False,
+            "already_running": True,
+            "duration_s": meta.get("duration_s", duration_s),
+            "started_ts": meta.get("started_ts"),
+            "pid": meta.get("pid"),
+        }
+    # alte Prozesse beenden
+    try:
+        _sp.run(["pkill", "-f", "rtl_test -p"], capture_output=True, timeout=3)
+    except Exception:
+        pass
+    time.sleep(0.4)
+    try:
+        log_f = _ppm_open_log_write()
+    except Exception as e:
+        return {"ok": False, "error": f"Log nicht schreibbar: {e}"}
+    try:
+        proc = _sp.Popen(
+            ["stdbuf", "-oL", "-eL", "timeout", f"{duration_s}s", "rtl_test", "-p"],
+            stdout=log_f,
+            stderr=_sp.STDOUT,
+            start_new_session=True,
+        )
+    except FileNotFoundError:
+        # stdbuf optional — Fallback ohne Line-Buffering
+        try:
+            log_f.seek(0)
+            log_f.truncate()
+            proc = _sp.Popen(
+                ["timeout", f"{duration_s}s", "rtl_test", "-p"],
+                stdout=log_f,
+                stderr=_sp.STDOUT,
+                start_new_session=True,
+            )
+        except FileNotFoundError:
+            log_f.close()
+            return {"ok": False, "error": "rtl_test nicht gefunden (rtl-sdr Paket)"}
+        except Exception as e:
+            log_f.close()
+            return {"ok": False, "error": str(e)}
+    except Exception as e:
+        log_f.close()
+        return {"ok": False, "error": str(e)}
+    finally:
+        try:
+            log_f.close()
+        except Exception:
+            pass
+
+    started_ts = time.time()
+    meta = {
+        "running": True,
+        "pid": proc.pid,
+        "started_ts": started_ts,
+        "duration_s": duration_s,
+        "log": PPM_CAL_LOG,
+    }
+    _ppm_meta_write(meta)
+    try:
+        os.chmod(PPM_CAL_META, 0o666)
+    except OSError:
+        pass
+    return {
+        "ok": True,
+        "started": True,
+        "already_running": False,
+        "pid": proc.pid,
+        "duration_s": duration_s,
+        "started_ts": started_ts,
+    }
+
+
+def _ppm_calibrate_status() -> dict:
+    meta = _ppm_meta_read()
+    started_ts = float(meta.get("started_ts") or 0)
+    duration_s = int(meta.get("duration_s") or 180)
+    pid = meta.get("pid")
+    alive = _ppm_pid_alive(pid)
+    now = time.time()
+    elapsed = max(0, int(now - started_ts)) if started_ts else 0
+    remaining = max(0, duration_s - elapsed) if started_ts else duration_s
+
+    stdout = ""
+    try:
+        with open(PPM_CAL_LOG, "r", encoding="utf-8", errors="replace") as f:
+            stdout = f.read()
+    except Exception:
+        pass
+    parsed = _ppm_parse_log_text(stdout)
+
+    running = bool(meta.get("running")) and alive
+    # timeout-Prozess beendet → fertig
+    if meta.get("running") and not alive and started_ts:
+        running = False
+        if meta.get("running"):
+            meta["running"] = False
+            meta["finished_ts"] = now
+            _ppm_meta_write(meta)
+
+    done = bool(started_ts) and not running and bool(stdout or elapsed >= 5)
+    ppm = parsed.get("suggested_ppm")
+    hints = _ppm_result_hints(ppm, parsed.get("method") or "") if done else []
+
+    return {
+        "ok": True,
+        "running": running,
+        "done": done,
+        "pid": pid,
+        "elapsed_s": elapsed,
+        "remaining_s": remaining if running else 0,
+        "duration_s": duration_s,
+        "progress_pct": min(100, int(100 * elapsed / duration_s)) if duration_s else 0,
+        "current_ppm": parsed.get("current_ppm"),
+        "cumulative_ppm": parsed.get("cumulative_ppm"),
+        "suggested_ppm": ppm if done else parsed.get("cumulative_ppm"),
+        "samples": parsed.get("samples") or 0,
+        "method": parsed.get("method"),
+        "hints": hints,
+        "hint": (hints[0] if hints else ""),
+        "has_log": bool(stdout),
+        "stdout_tail": stdout[-400:] if done else "",
+    }
+
+
+@app.route("/api/rtlsdr/calibrate")
+def api_rtlsdr_calibrate():
+    # Sync: ~3 Min blockierend (CLI)
+    duration = 180
+    try:
+        duration = int(request.args.get("duration", 180))
+    except Exception:
+        pass
+    return jsonify(_ppm_calibrate_run(duration_s=duration))
 
 
 @app.route("/api/ppm_calibrate", methods=["GET", "POST"])
 def api_ppm_calibrate():
-    import subprocess as _sp2, re as _re2
+    """Sync-Kalibrierung (CLI). WebUI nutzt /start + /status für Live-Fortschritt."""
+    duration = 180
     try:
-        r = _sp2.run("timeout 8 rtl_test -t 2>&1 | tail -5",
-                     shell=True, capture_output=True, text=True, timeout=12)
-        out = r.stdout.strip()
-        m = _re2.search(r"([-+]?\d+\.?\d*)\s*ppm", out, _re2.IGNORECASE)
-        return jsonify({
-            "ok": True,
-            "raw": out[:500],
-            "ppm_found": m.group(0) if m else None,
-            "hint": "rtl_test Ergebnis — PPM manuell in WebUI setzen"
-        })
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
+        if request.method == "POST" and request.is_json:
+            duration = int((request.get_json(silent=True) or {}).get("duration", 180))
+        else:
+            duration = int(request.args.get("duration", 180))
+    except Exception:
+        pass
+    data = _ppm_calibrate_run(duration_s=duration)
+    code = 200 if data.get("ok") else 500
+    return jsonify(data), code
+
+
+@app.route("/api/ppm_calibrate/start", methods=["POST", "GET"])
+def api_ppm_calibrate_start():
+    duration = 180
+    try:
+        if request.method == "POST" and request.is_json:
+            duration = int((request.get_json(silent=True) or {}).get("duration", 180))
+        else:
+            duration = int(request.args.get("duration", 180))
+    except Exception:
+        pass
+    # Radio freigeben (Core-Cmd)
+    try:
+        write_cmd("radio_stop")
+    except Exception:
+        pass
+    time.sleep(1.0)
+    data = _ppm_calibrate_start(duration_s=duration)
+    code = 200 if data.get("ok") else 500
+    return jsonify(data), code
+
+
+@app.route("/api/ppm_calibrate/status")
+def api_ppm_calibrate_status():
+    return jsonify(_ppm_calibrate_status())
 
 
 @app.route("/api/scanner/airband-stations", methods=["GET"])
@@ -786,15 +1058,15 @@ def api_scanner_settings():
                     tune["dirty"] = bool(at.get("dirty"))
             except Exception:
                 tune = {
-                    "gain": s.get("scanner_airband_gain", 45),
-                    "sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "gain": s.get("scanner_airband_gain", 20),
+                    "sample_rate": s.get("scanner_airband_sample_rate", 16000),
                     "hp_hz": s.get("scanner_airband_hp_hz", 250),
-                    "lp_hz": s.get("scanner_airband_lp_hz", 3500),
+                    "lp_hz": s.get("scanner_airband_lp_hz", 3000),
                     "dirty": False,
-                    "default_gain": s.get("scanner_airband_gain", 45),
-                    "default_sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "default_gain": s.get("scanner_airband_gain", 20),
+                    "default_sample_rate": s.get("scanner_airband_sample_rate", 16000),
                     "default_hp_hz": s.get("scanner_airband_hp_hz", 250),
-                    "default_lp_hz": s.get("scanner_airband_lp_hz", 3500),
+                    "default_lp_hz": s.get("scanner_airband_lp_hz", 3000),
                 }
             fm_tune = {}
             try:
@@ -827,10 +1099,10 @@ def api_scanner_settings():
                     "scanner_airband_last_freq":  s.get("scanner_airband_last_freq", 121.5),
                     "scanner_airband_autotune":   s.get("scanner_airband_autotune", True),
                     "scanner_airband_hold_s":     s.get("scanner_airband_hold_s", 20),
-                    "scanner_airband_gain":       s.get("scanner_airband_gain", 45),
-                    "scanner_airband_sample_rate": s.get("scanner_airband_sample_rate", 24000),
+                    "scanner_airband_gain":       s.get("scanner_airband_gain", 20),
+                    "scanner_airband_sample_rate": s.get("scanner_airband_sample_rate", 16000),
                     "scanner_airband_hp_hz":      s.get("scanner_airband_hp_hz", 250),
-                    "scanner_airband_lp_hz":      s.get("scanner_airband_lp_hz", 3500),
+                    "scanner_airband_lp_hz":      s.get("scanner_airband_lp_hz", 3000),
                     "scanner_airband_squelch":    s.get("scanner_airband_squelch", 0),
                     "fm_hp_hz":                  s.get("fm_hp_hz", 60),
                     "fm_lp_hz":                  s.get("fm_lp_hz", 12000),

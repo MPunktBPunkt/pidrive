@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.164"
+PIDRIVE_VERSION="0.11.168"
 
 # ============================================================
 # PiDrive Install Script
@@ -182,7 +182,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     python3-pip git mpv \
     avahi-daemon avahi-utils rfkill \
     bluez \
-    wpasupplicant rtl-sdr sox \
+    wpasupplicant rtl-sdr sox usbutils \
     python3-flask \
     python3-bluez \
     python3-dbus \

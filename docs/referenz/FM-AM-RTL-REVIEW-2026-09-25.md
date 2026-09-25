@@ -158,16 +158,20 @@ Legende: **✓** umgesetzt · **◐** teilweise · **○** offen/machbar · **�
 
 ## 5. Was verbessert werden kann (empfohlen, aufwandarm)
 
+> **Umgesetzt 2026-09-25 (v0.11.168):** P1–P4 — Airband Gain 20 / SR 16 kHz / LP 3 kHz;
+> FM `-s` 170 kHz (`fm_rtl_sr`); `rtl_fm -E offset` (`rtl_offset_tuning`).
+> Bestehende Host-`settings.json` ggf. manuell nachziehen (Defaults greifen nur fehlende Keys).
+
 Priorität für spätere Umsetzung — jeweils A/B gegen aktuellen Default.
 
-| Prio | Maßnahme | Dateien | Aufwand | Erwartung |
-|------|----------|---------|---------|-----------|
-| **P1** | Airband-Default-Gain senken (z. B. 12–20 statt 45); UI-Hinweis „nicht maxen“ | `settings.py`, ggf. Web-Defaults | klein | weniger UKW-Blocking/IM, bessere AM-Verständlichkeit |
-| **P2** | Airband-Listen-Default-`-s` Richtung 12–16 kHz + Default-LP 3000 | `settings.py`, `scanner.py` Steps ok | klein | engere Selektivität |
-| **P3** | FM Play: `-s` von 250k auf **170k–200k** testen (A/B) | `fm.py` (Konstante oder Setting) | klein | etwas weniger Rauschen/CPU; Qualität prüfen |
-| **P4** | Optional `rtl_fm` Offset-Tuning (`-E offset` o. ä., Version prüfen) | `fm.py`, `scanner.py` | klein–mittel | weniger DC-Spike |
-| **P5** | Band-Profile in Settings (`fm_*` / `airband_*` klar getrennt dokumentieren + RF-Tools-Kurzhilfe) | Docs + RF-Tools Text | klein | Bedienung |
-| **P6** | Kurzreferenz „übernommene Stick-Defaults“ neben dem GPT-Langdokument | `docs/referenz/` | klein | Wartbarkeit |
+| Prio | Maßnahme | Dateien | Aufwand | Erwartung | Stand |
+|------|----------|---------|---------|-----------|-------|
+| **P1** | Airband-Default-Gain senken (z. B. 12–20 statt 45); UI-Hinweis „nicht maxen“ | `settings.py`, ggf. Web-Defaults | klein | weniger UKW-Blocking/IM, bessere AM-Verständlichkeit | **done** (20) |
+| **P2** | Airband-Listen-Default-`-s` Richtung 12–16 kHz + Default-LP 3000 | `settings.py`, `scanner.py` Steps ok | klein | engere Selektivität | **done** |
+| **P3** | FM Play: `-s` von 250k auf **170k–200k** testen (A/B) | `fm.py` (Konstante oder Setting) | klein | etwas weniger Rauschen/CPU; Qualität prüfen | **done** (`fm_rtl_sr=170000`) |
+| **P4** | Optional `rtl_fm` Offset-Tuning (`-E offset`) | `fm.py`, `scanner.py` | klein–mittel | weniger DC-Spike | **done** |
+| **P5** | Band-Profile in Settings (`fm_*` / `airband_*` klar getrennt dokumentieren + RF-Tools-Kurzhilfe) | Docs + RF-Tools Text | klein | Bedienung | offen |
+| **P6** | Kurzreferenz „übernommene Stick-Defaults“ neben dem GPT-Langdokument | `docs/referenz/` | klein | Wartbarkeit | ◐ dieses Review |
 
 Nicht als Soft-Default ändern ohne Messung: FM-Gain 25 (eigene Messung stützt 20–30).
 

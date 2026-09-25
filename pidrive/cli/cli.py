@@ -202,7 +202,8 @@ def main():
 
   pidrivectl ppm                 Aktuellen PPM-Offset anzeigen
   pidrivectl ppm set 49          PPM-Offset setzen (RTL-SDR Kalibrierung)
-  pidrivectl ppm calibrate       Automatische PPM-Kalibrierung
+  pidrivectl ppm calibrate       rtl_test -p (~3 Min), Vorschlag anzeigen
+  pidrivectl ppm calibrate --apply  … und speichern
 
   pidrivectl spectrum scan                 UKW 87.5–108, Top-10 Peaks
   pidrivectl spectrum scan 87.5-108 -n 5   Bereich + Anzahl Peaks
@@ -325,7 +326,9 @@ Flags (vor dem Befehl angeben):
     ppm_sub.add_parser("status", help="Aktuellen PPM-Wert anzeigen")
     p_ppm_set = ppm_sub.add_parser("set", help="PPM-Offset setzen")
     p_ppm_set.add_argument("value", type=int, help="PPM-Wert (typ. 40-55)")
-    ppm_sub.add_parser("calibrate", help="Automatische Kalibrierung starten")
+    p_ppm_cal = ppm_sub.add_parser("calibrate", help="rtl_test -p (~3 Min), Vorschlag anzeigen")
+    p_ppm_cal.add_argument("--apply", action="store_true",
+                           help="Vorschlag sofort als ppm_correction speichern")
 
     # ── spectrum ──────────────────────────────────────────────────────────
     p_spec = sub.add_parser("spectrum", help="RTL-SDR Spektrum / UKW-Peak-Scan")
@@ -1198,16 +1201,55 @@ Flags (vor dem Befehl angeben):
             if use_json: fmt.print_json(r)
             else: fmt.out("PPM gesetzt auf " + str(args.value))
         elif args.ppm_cmd == "calibrate":
-            svc.require_online()
-            r = svc.send("ppm_calibrate")
-            if use_json: fmt.print_json(r)
+            # Früher: svc.send("ppm_calibrate") — Trigger existiert nicht.
+            # Jetzt: Web-API (rtl_test -p ~3 Min), optional --apply speichert.
+            import json as _jcal
+            import time as _tcal
+            import urllib.request as _urlcal
+            apply = bool(getattr(args, "apply", False))
+            try:
+                svc.send("radio_stop")
+            except Exception:
+                pass
+            _tcal.sleep(1.5)
+            if not use_json:
+                fmt.out("PPM-Kalibrierung läuft (~3 Min, rtl_test -p)…")
+                fmt.out("   Radio sollte gestoppt sein; Abbruch <60s → ungenaue Werte")
+            data = {}
+            try:
+                req = _urlcal.Request(
+                    "http://127.0.0.1:8080/api/ppm_calibrate?duration=180",
+                    method="GET",
+                )
+                with _urlcal.urlopen(req, timeout=220) as resp:
+                    data = _jcal.loads(resp.read().decode("utf-8", errors="replace"))
+            except Exception as e:
+                if use_json:
+                    fmt.print_json({"ok": False, "error": str(e)})
+                else:
+                    fmt.out("Kalibrierung fehlgeschlagen: " + str(e))
+                    fmt.out("Fallback: rtl_test -p  (mind. 3 min), dann pidrivectl ppm set N")
+                sys.exit(EXIT_ERROR)
+            sug = data.get("suggested_ppm")
+            if use_json:
+                fmt.print_json(data)
             else:
-                fmt.out("PPM-Kalibrierung gestartet — rtl_test -p")
-                fmt.out("⏱  Mindestlaufzeit: 3 Minuten für stabile Messung")
-                fmt.out("   Alternativ direkt: rtl_test -p  (mind. 3 min laufen lassen)")
-                fmt.out("   Abbruch nach <60s liefert ungenaue Werte (Ausreißer ±50 ppm)")
-                fmt.out("   Ergebnis nach 3 min: pidrivectl ppm")
-        sys.exit(EXIT_OK)
+                if sug is None:
+                    fmt.out("Kein PPM erkannt — " + (data.get("error") or data.get("method") or ""))
+                    for h in (data.get("hints") or [])[:4]:
+                        fmt.out("  " + str(h))
+                else:
+                    fmt.out(f"Vorschlag: {sug} ppm  ({data.get('method') or ''})")
+                    for h in (data.get("hints") or [])[:3]:
+                        fmt.out("  " + str(h))
+                    if apply:
+                        svc.require_online()
+                        svc.send("ppm:" + str(int(sug)))
+                        fmt.out(f"Gespeichert: ppm_correction={sug}")
+                    else:
+                        fmt.out(f"Übernehmen:  pidrivectl ppm set {sug}")
+                        fmt.out("Oder:        pidrivectl ppm calibrate --apply")
+            sys.exit(EXIT_OK)
 
     # spectrum
     if args.cmd == "spectrum":

@@ -341,7 +341,7 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="btn" style="padding:2px 10px" onclick="airbandStepGain(1)" title="Gain +">+</button>
       <span class="scan-label" style="margin-left:8px">SR</span>
       <button class="btn" style="padding:2px 10px" onclick="airbandStepSr(-1)" title="Sample-Rate −">−</button>
-      <span id="airSrLabel" style="min-width:4.5em;text-align:center;font-variant-numeric:tabular-nums">24000</span>
+      <span id="airSrLabel" style="min-width:4.5em;text-align:center;font-variant-numeric:tabular-nums">16000</span>
       <button class="btn" style="padding:2px 10px" onclick="airbandStepSr(1)" title="Sample-Rate +">+</button>
       <span class="scan-label" style="margin-left:8px" title="Highpass">HP</span>
       <button class="btn" style="padding:2px 10px" onclick="airbandStepHp(-1)" title="Highpass −">−</button>
@@ -349,7 +349,7 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="btn" style="padding:2px 10px" onclick="airbandStepHp(1)" title="Highpass +">+</button>
       <span class="scan-label" style="margin-left:8px" title="Lowpass">LP</span>
       <button class="btn" style="padding:2px 10px" onclick="airbandStepLp(-1)" title="Lowpass −">−</button>
-      <span id="airLpLabel" style="min-width:3.5em;text-align:center;font-variant-numeric:tabular-nums">3500</span>
+      <span id="airLpLabel" style="min-width:3.5em;text-align:center;font-variant-numeric:tabular-nums">3000</span>
       <button class="btn" style="padding:2px 10px" onclick="airbandStepLp(1)" title="Lowpass +">+</button>
       <button class="btn primary" id="airTuneSaveBtn" style="padding:2px 10px;margin-left:8px"
               onclick="airbandTuneSave()" title="Aktuelle Werte als Default speichern">💾 Save</button>
@@ -960,10 +960,10 @@ async function loadAirbandTuneParams() {
     const j = await r.json();
     const t = (j && j.data && j.data.airband_tune) || {};
     const d = j.data || {};
-    const gain = t.gain != null ? t.gain : d.scanner_airband_gain || 45;
-    const sr = t.sample_rate != null ? t.sample_rate : d.scanner_airband_sample_rate || 24000;
+    const gain = t.gain != null ? t.gain : d.scanner_airband_gain || 20;
+    const sr = t.sample_rate != null ? t.sample_rate : d.scanner_airband_sample_rate || 16000;
     const hp = t.hp_hz != null ? t.hp_hz : d.scanner_airband_hp_hz || 250;
-    const lp = t.lp_hz != null ? t.lp_hz : d.scanner_airband_lp_hz || 3500;
+    const lp = t.lp_hz != null ? t.lp_hz : d.scanner_airband_lp_hz || 3000;
     _airSetTuneLabels(gain, sr, hp, lp, !!(t.dirty));
   } catch (e) { /* defaults im HTML */ }
 }
