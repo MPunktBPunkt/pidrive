@@ -1,0 +1,1747 @@
+```markdown
+# Entwicklerdokumentation: Fasizi ELA0065 (ASIN B09Z27VTFL) als RTL-SDR unter Linux
+## Vollständige technische Entwickler-, DSP- und Empfängerdokumentation
+### Schwerpunkt: RTL2832U + R820T2, Linux, FM-/AM-Optimierung, Kalibrierung, Testmethodik und reproduzierbare Inbetriebnahme
+
+> Zielgruppe: Entwickler und technisch orientierte Anwender, die den Stick auf Linux-Systemen möglichst systematisch und reproduzierbar einsetzen und optimieren wollen.  
+> Fokusplattform: Debian / Raspberry Pi OS / Raspbian.  
+> Schwerpunkt: UKW-FM, Airband-AM, NFM/PMR, Empfangsoptimierung, Kalibrierung, DSP-Architektur und Testverfahren.
+
+---
+
+# Inhaltsverzeichnis
+
+1. [Dokumentziel und Geltungsbereich](#1-dokumentziel-und-geltungsbereich)  
+2. [Geräteidentifikation und technische Zuordnung](#2-geräteidentifikation-und-technische-zuordnung)  
+3. [Systemarchitektur des Sticks](#3-systemarchitektur-des-sticks)  
+4. [Bausteine im Detail](#4-bausteine-im-detail)  
+5. [Signalweg: analog, digital, softwareseitig](#5-signalweg-analog-digital-softwareseitig)  
+6. [Empfangsbereich, Praxiseignung und frequenzabhängige Grenzen](#6-empfangsbereich-praxiseignung-und-frequenzabhängige-grenzen)  
+7. [Empfängerkennwerte aus HF-Sicht](#7-empfängerkennwerte-aus-hf-sicht)  
+8. [Frontend-Verhalten des R820T2](#8-frontend-verhalten-des-r820t2)  
+9. [Dynamik, Blocking, Desense, Intermodulation](#9-dynamik-blocking-desense-intermodulation)  
+10. [Linux-Treiber und Software-Stacks](#10-linux-treiber-und-software-stacks)  
+11. [Kernel-Treiber vs. SDR-Userland](#11-kernel-treiber-vs-sdr-userland)  
+12. [Direkt zugängliche Geräteeinstellungen](#12-direkt-zugängliche-geräteeinstellungen)  
+13. [R820T2-interne Funktionen und indirekt zugängliche Parameter](#13-r820t2-interne-funktionen-und-indirekt-zugängliche-parameter)  
+14. [Filter und Verstärker: was ist steuerbar?](#14-filter-und-verstärker-was-ist-steuerbar)  
+15. [Datenformate, Abgriffpunkte und Verarbeitungsebenen](#15-datenformate-abgriffpunkte-und-verarbeitungsebenen)  
+16. [Analoge und digitale Filterung](#16-analoge-und-digitale-filterung)  
+17. [Digitale Signalverarbeitung: Grundarchitektur](#17-digitale-signalverarbeitung-grundarchitektur)  
+18. [Filtertheorie für dieses Projekt](#18-filtertheorie-für-dieses-projekt)  
+19. [Mehrstufige Decimation und Resampling](#19-mehrstufige-decimation-und-resampling)  
+20. [FM-Demodulation: Theorie, Algorithmen und Praxis](#20-fm-demodulation-theorie-algorithmen-und-praxis)  
+21. [AM-Demodulation: Theorie, Algorithmen und Praxis](#21-am-demodulation-theorie-algorithmen-und-praxis)  
+22. [DSP-Referenzpipeline für WBFM](#22-dsp-referenzpipeline-für-wbfm)  
+23. [DSP-Referenzpipeline für Airband-AM](#23-dsp-referenzpipeline-für-airband-am)  
+24. [DSP-Referenzpipeline für NFM/PMR](#24-dsp-referenzpipeline-für-nfmpmr)  
+25. [Band- und kanalbezogene Referenzparameter](#25-band--und-kanalbezogene-referenzparameter)  
+26. [Optimierung des UKW-FM-Empfangs](#26-optimierung-des-ukw-fm-empfangs)  
+27. [Optimierung des AM-/Airband-Empfangs](#27-optimierung-des-am-airband-empfangs)  
+28. [Squelch, AGC, Limiting und Audioaufbereitung](#28-squelch-agc-limiting-und-audioaufbereitung)  
+29. [Externe Filter, Vorverstärker und Antennen](#29-externe-filter-vorverstärker-und-antennen)  
+30. [Praxisgrenzen des RTL2832U/R820T2-Systems](#30-praxisgrenzen-des-rtl2832ur820t2-systems)  
+31. [Linux-Tools, Testkommandos und Entwicklungsumgebung](#31-linux-tools-testkommandos-und-entwicklungsumgebung)  
+32. [Referenzarchitektur für eigene SDR-Software](#32-referenzarchitektur-für-eigene-sdr-software)  
+33. [Messmethodik, A/B-Tests und Offline-Optimierung](#33-messmethodik-ab-tests-und-offline-optimierung)  
+34. [Typische Fehlerszenarien und Diagnose](#34-typische-fehlerszenarien-und-diagnose)  
+35. [Empfohlene Konfigurationsprofile](#35-empfohlene-konfigurationsprofile)  
+36. [Zusammenfassung und Engineering-Empfehlungen](#36-zusammenfassung-und-engineering-empfehlungen)  
+37. [Kalibrierung, Referenzsignale und Stick-Profile](#37-kalibrierung-referenzsignale-und-stick-profile)  
+38. [Standardisierte Testprozeduren für WBFM, Airband-AM und NFM](#38-standardisierte-testprozeduren-für-wbfm-airband-am-und-nfm)  
+39. [Geeignete Referenzsignale im Feldbetrieb](#39-geeignete-referenzsignale-im-feldbetrieb)  
+
+---
+
+# 1. Dokumentziel und Geltungsbereich
+
+Dieses Dokument beschreibt den USB-Stick **Fasizi ELA0065** als SDR-Empfänger unter Linux mit Fokus auf:
+
+- technische Eigenschaften des Geräts,
+- reale Systemgrenzen,
+- Empfangsverhalten aus HF-Sicht,
+- Linux-Treiber und Softwarepfade,
+- verfügbare und indirekt beeinflussbare Tunerparameter,
+- digitale Signalverarbeitung,
+- Optimierung von FM und AM,
+- Kalibrierung, Referenzsignale und reproduzierbare Testverfahren.
+
+Es handelt sich nicht um ein offizielles Herstellerdatenblatt, sondern um eine technische Entwicklerdokumentation auf Basis der bekannten RTL-SDR-Architektur, Linux-Praxis, typischem Verhalten von **RTL2832U + R820T2** und empfangstechnischer Systembetrachtung.
+
+---
+
+# 2. Geräteidentifikation und technische Zuordnung
+
+## 2.1 Modellzuordnung
+
+Der Stick lässt sich dem Modell:
+
+- **Fasizi ELA0065**
+
+zuordnen.
+
+Bekannte oder sehr wahrscheinliche Merkmale:
+- USB-DVB-T-Stick
+- USB 2.0
+- Linux-USB-ID typischerweise:
+  - `0bda:2838`
+- SDR-fähig über `rtl-sdr` / `librtlsdr`
+- typischer HF-Tuner:
+  - **Rafael Micro R820T2**
+- typischer Demodulator-/USB-/Samplepfad:
+  - **Realtek RTL2832U**
+
+## 2.2 Einordnung von `RTL2838`
+
+Unter Linux wird das Gerät oft als:
+- `RTL2838`
+- `RTL2838UHIDIR`
+
+angezeigt.
+
+Das ist kein Widerspruch zur eigentlichen SDR-Basis **RTL2832U**.  
+Für die SDR-relevante Architektur ist die Kombination **RTL2832U + R820T2** der maßgebliche technische Kern.
+
+---
+
+# 3. Systemarchitektur des Sticks
+
+## 3.1 Gesamtübersicht
+
+```text
+Antenne
+  │
+  ▼
+Eingangsnetzwerk / Schutz / Matching
+  │
+  ▼
+R820T2 Tuner
+  ├─ Tracking- / Vorselektionsfilter
+  ├─ LNA
+  ├─ Mixer
+  ├─ PLL / LO
+  ├─ IF- / Basisbandfilter
+  ├─ VGA / interne Gain-Stufen
+  └─ Kalibrier- / Regelpfade
+  │
+  ▼
+RTL2832U
+  ├─ digitale Erfassung
+  ├─ Datenaufbereitung
+  ├─ USB-Ausgabe
+  ├─ Tunersteuerung per I2C
+  └─ Hostschnittstelle
+  │
+  ▼
+USB 2.0
+  │
+  ▼
+Linux-Treiber / librtlsdr / eigene Software
+  │
+  ▼
+komplexe I/Q-Daten im Host
+  │
+  ├─ Kanalfilterung
+  ├─ Frequenzverschiebung
+  ├─ Decimation / Resampling
+  ├─ Demodulation
+  ├─ Audio-DSP
+  └─ Analyse / Speicherung
+```
+
+## 3.2 Technische Einordnung
+
+Das Gerät ist ein breitbandiger Low-Cost-Empfänger mit:
+- einfacher analoger Vorselektion,
+- begrenzter Dynamik,
+- hoher softwareseitiger Flexibilität.
+
+Seine Stärke liegt nicht in hoher analoger Linearität, sondern in:
+- geringer Einstiegshürde,
+- Roh-I/Q-Zugriff,
+- breiter Linux-Unterstützung,
+- umfassender digitaler Nachverarbeitung im Host.
+
+---
+
+# 4. Bausteine im Detail
+
+# 4.1 RTL2832U
+
+## Funktion
+Der RTL2832U übernimmt:
+- USB-Anbindung,
+- Sampleerfassung,
+- Host-Kommunikation,
+- Steuerung des Tuners,
+- Ausgabe von Rohdaten in SDR-geeigneter Form.
+
+## Entwicklerrelevante Eigenschaften
+- sehr weit verbreitet,
+- durch `librtlsdr` gut nutzbar,
+- günstige Plattform für eigene DSP-Entwicklung,
+- typischerweise 8-Bit-I/Q-Streaming.
+
+## Praktische Einschränkungen
+- begrenzter Dynamikbereich,
+- keine High-End-Messhardware,
+- interne Details weniger transparent als bei professionellen SDRs.
+
+# 4.2 R820T2
+
+## Funktion
+Der R820T2 ist das HF-Frontend und bestimmt:
+- Frequenzabstimmung,
+- Eingangsempfindlichkeit,
+- analoges Störverhalten,
+- Vorselektion,
+- Mischerverhalten,
+- Tunerinterne Verstärkungs- und Filterzustände.
+
+## Enthaltene Funktionsblöcke
+Typisch:
+- LNA
+- Mixer
+- PLL / LO
+- VGA / IF-Gain
+- Tracking-Filter
+- interne Filter- und Kalibrierpfade
+
+## Entwicklerrelevanz
+Der R820T2 ist entscheidend für:
+- Großsignalfestigkeit,
+- Desense,
+- Intermodulation,
+- Airband-Verhalten bei starken UKW-Rundfunksendern,
+- Wirkung externer Filter.
+
+---
+
+# 5. Signalweg: analog, digital, softwareseitig
+
+# 5.1 Analoger Signalweg
+
+```text
+Antenne
+  │
+  ▼
+ESD / Matching / Eingangsnetzwerk
+  │
+  ▼
+R820T2
+  ├─ Tracking-Filter
+  ├─ LNA
+  ├─ Mischer
+  ├─ IF-/Basisbandfilter
+  └─ weitere Gain-Stufen
+  ▼
+RTL2832U
+```
+
+## Wichtige Konsequenz
+Alles, was hier schiefgeht, ist später nur begrenzt oder gar nicht korrigierbar:
+- Clipping,
+- Intermodulation,
+- Frontend-Kompression,
+- Störprodukte.
+
+# 5.2 Digitaler Geräteteil
+
+Im RTL2832U erfolgt die digitale Weitergabe der Daten an den Host.  
+Für die Software sichtbar ist primär:
+- ein digitaler I/Q-Datenstrom,
+- ergänzt um Steuerfunktionen wie Frequenz, Sample Rate, Gain, AGC und PPM.
+
+# 5.3 Hostseitiger Signalweg
+
+```text
+USB-Transfer
+→ I/Q-Block lesen
+→ U8 in float/int16 konvertieren
+→ DC-Entfernung
+→ optional IQ-Korrektur
+→ Feintuning / Frequency Shift
+→ komplexer Kanalfilter
+→ Decimation
+→ Demodulation
+→ Audio-DSP
+→ Audioausgabe / Datei / Analyse
+```
+
+---
+
+# 6. Empfangsbereich, Praxiseignung und frequenzabhängige Grenzen
+
+## 6.1 Typischer Frequenzbereich
+
+Für R820T2-basierte RTL-SDR-Sticks wird in der Praxis oft genannt:
+
+- etwa **24 MHz bis 1766 MHz**
+
+## 6.2 Wichtige Einschränkung
+
+Dieser Bereich ist **nicht gleichwertig gut nutzbar**.  
+Abhängig von der Frequenz variieren:
+- Eingangsanpassung,
+- Filterwirkung,
+- Empfindlichkeit,
+- Störanfälligkeit,
+- Nebensignale,
+- reale Großsignalfestigkeit.
+
+## 6.3 Relevante Bänder für dieses Projekt
+
+### UKW-FM
+- 87.5–108 MHz
+- breitbandig
+- oft sehr hohe Pegel
+
+### Airband-AM
+- ca. 108–137 MHz
+- schmalbandig
+- empfindlich gegen Frontend-Großsignale
+
+### PMR446 / NFM
+- 446 MHz
+- schmalbandig
+- gut für DSP- und Filteroptimierung
+
+### DAB+
+- Band III
+- hier nicht Schwerpunkt, aber als Referenzsignal teilweise nützlich
+
+---
+
+# 7. Empfängerkennwerte aus HF-Sicht
+
+# 7.1 Empfindlichkeit
+
+Empfindlichkeit beschreibt, wie schwach ein Signal sein darf, damit es mit definierter Qualität noch empfangen werden kann.
+
+Sie wird beeinflusst durch:
+- Antenne,
+- Leitung,
+- Rauschzahl,
+- Bandbreite,
+- Gain-Verteilung,
+- Modulationsart,
+- DSP-Qualität.
+
+Wichtig:
+- Maximale Verstärkung bedeutet nicht automatisch maximale nutzbare Empfindlichkeit.
+
+# 7.2 Rauschzahl
+
+Die Rauschzahl beschreibt die Verschlechterung des Signal-Rausch-Verhältnisses durch das Frontend.
+
+Praktisch relevant:
+- frühe Verstärkung wirkt stark,
+- aber frühe Verstärkung ist auch aus Intermodulationssicht kritisch.
+
+# 7.3 Dynamikbereich
+
+Der Dynamikbereich ist der Bereich zwischen:
+- kleinstem sinnvoll detektierbaren Signal,
+- größtem noch verzerrungsfrei verarbeiteten Signal.
+
+Beim RTL-SDR begrenzt durch:
+- 8-Bit-Erfassung,
+- einfache Vorselektion,
+- Consumer-Frontend-Linearität.
+
+# 7.4 1-dB-Kompression
+
+Der 1-dB-Kompressionspunkt markiert den Übergang vom linearen zum komprimierenden Verhalten.
+
+Folgen:
+- verzerrte Pegelverhältnisse,
+- ansteigender Rauschboden,
+- schlechtere Verständlichkeit,
+- scheinbar „starker“, aber real schlechter Empfang.
+
+# 7.5 Blocking
+
+Ein starkes fremdes Signal verschlechtert den Empfang eines anderen Signals.
+
+Beispiel:
+- starker UKW-Sender bei 100 MHz
+- Nutzsignal im Airband bei 125 MHz
+
+Auch ohne direkte Frequenzüberlappung kann Blocking auftreten.
+
+# 7.6 Desense
+
+Desensibilisierung bedeutet:
+- die effektive Empfindlichkeit sinkt wegen starker Fremdsignale,
+- schwache Signale verschwinden,
+- der Empfänger wirkt „taub“.
+
+# 7.7 Intermodulation
+
+Nichtlineare Stufen erzeugen Mischprodukte aus starken Sendern.
+
+Beispiel:
+- zwei starke UKW-Sender erzeugen Produkte,
+- diese können im Airband oder in anderen Zielbändern erscheinen.
+
+# 7.8 SFDR
+
+Spurious-Free Dynamic Range beschreibt den Bereich, in dem Nutzsignale nicht durch dominante Spurious oder Intermodulationsprodukte verdeckt werden.
+
+Bei RTL-SDR begrenzt durch:
+- Frontend,
+- ADC-Auflösung,
+- Clock-Nebenprodukte,
+- Host-/Boardstörungen.
+
+# 7.9 Selektivität
+
+Selektivität ist die Fähigkeit, Nachbar- und Störsignale zu unterdrücken.
+
+Sie entsteht aus:
+- analoger Vorselektion,
+- korrekter Kanalfilterung,
+- geeigneter Bandbreite,
+- sauberer DSP-Kette.
+
+---
+
+# 8. Frontend-Verhalten des R820T2
+
+# 8.1 Warum das Frontend so wichtig ist
+
+Die später beste DSP hilft nur, wenn der Analogpfad nicht bereits versagt hat.
+
+Nicht per DSP reparierbar:
+- Frontend-Kompression,
+- Clipping,
+- Intermodulation,
+- Desense.
+
+# 8.2 Tracking-Filter
+
+Der R820T2 besitzt bandabhängige Tracking- bzw. Vorselektionsfilter.
+
+Wichtige Einordnung:
+- hilfreich,
+- aber keine steilen Präzisionsbandpässe,
+- reduzieren grobe bandferne Belastungen,
+- ersetzen keinen externen FM-Notch oder Airband-Bandpass.
+
+# 8.3 LNA
+
+Die frühe Verstärkung bestimmt:
+- Empfindlichkeit,
+- Rauschverhalten,
+- Nichtlinearitätsrisiko.
+
+Frühe Verstärkung ist kritischer als späte Verstärkung.
+
+# 8.4 Mixer
+
+Der Mischer erzeugt:
+- die gewünschte Frequenzumsetzung,
+- aber auch potenzielle Nebenprodukte,
+- LO-Durchschlag,
+- Mischprodukte,
+- DC-nahe Artefakte.
+
+# 8.5 IF-/Basisbandfilter
+
+Interne Filter begrenzen das weiterverarbeitete Spektrum, sind aber in Standardsoftware meist nicht frei parametrierbar.
+
+# 8.6 Spätere Gain-Stufen
+
+Spätere Gain-Stufen sind meist weniger kritisch als die erste HF-Verstärkung, können aber dennoch:
+- ADC-Aussteuerung verschlechtern,
+- Rauschboden anheben,
+- schwache Signale unbrauchbar machen, wenn der Arbeitspunkt falsch liegt.
+
+---
+
+# 9. Dynamik, Blocking, Desense, Intermodulation
+
+# 9.1 Typisches Airband-Szenario
+
+- starke UKW-Sender im 88–108-MHz-Bereich,
+- schwache Airband-Signale oberhalb 118 MHz.
+
+Mögliche Folgen:
+- angehobener Rauschboden,
+- Phantomsignale,
+- schlechtere AM-Verständlichkeit,
+- vermeintlich „unsaubere Abstimmung“,
+- Desense trotz korrekter DSP.
+
+# 9.2 Warum mehr Gain oft schlechter ist
+
+Mehr Gain hebt:
+- Nutzsignal,
+- Störsignal,
+- Intermodulationsprodukte,
+- Rauschboden.
+
+Wenn das Frontend in Nichtlinearität gerät, wird der Gesamtempfang schlechter.
+
+# 9.3 Reihenfolge der Kritikalität
+
+1. Antenneneingang  
+2. LNA  
+3. Mixer  
+4. IF-/VGA-Stufen  
+5. ADC / digitale Erfassung  
+6. erst danach DSP  
+
+Merksatz:
+**Ein überfahrenes Frontend ist digital nicht rettbar.**
+
+---
+
+# 10. Linux-Treiber und Software-Stacks
+
+# 10.1 Kernel-DVB-Treiber
+
+Typische Module:
+- `dvb_usb_rtl28xxu`
+- `rtl2832`
+- `rtl2830`
+- `r820t`
+
+Einsatz:
+- klassischer DVB-/TV-Betrieb
+
+Nachteil:
+- blockieren oft den Zugriff für SDR-Software
+
+# 10.2 `librtlsdr` / `rtl-sdr`
+
+Das ist der Standard-SDR-Zugriffspfad.
+
+Tools:
+- `rtl_test`
+- `rtl_sdr`
+- `rtl_fm`
+- `rtl_power`
+- `rtl_tcp`
+
+Vorteile:
+- stabil,
+- weit verbreitet,
+- gut dokumentiert,
+- einfach zu integrieren.
+
+# 10.3 SoapySDR
+
+Abstraktionsschicht für SDR-Hardware.
+
+Vorteil:
+- einheitliche API
+
+Nachteil:
+- beim RTL-SDR oft kein echter Funktionsgewinn gegenüber direkter `librtlsdr`-Nutzung
+
+# 10.4 GNU Radio / Osmocom
+
+Geeignet für:
+- Experimente,
+- Flowgraph-Entwicklung,
+- Prototyping,
+- Vergleich alternativer DSP-Ketten
+
+# 10.5 Alternative und experimentelle Treiber
+
+Es existieren Forks und Reverse-Engineering-basierte Varianten für:
+- andere Tuner-Initialisierung,
+- Registerzugriff,
+- alternative Gain-Zuordnungen.
+
+Diese sind interessant für Forschung, aber nicht erste Priorität für robuste Optimierung.
+
+---
+
+# 11. Kernel-Treiber vs. SDR-Userland
+
+## Gerät erkennen
+```bash
+lsusb
+```
+
+## Geladene Module prüfen
+```bash
+lsmod | grep -E 'rtl|dvb_usb_rtl28xxu|r820t'
+```
+
+## Blacklist für SDR-Nutzung
+```bash
+sudo nano /etc/modprobe.d/rtl-sdr-blacklist.conf
+```
+
+Beispiel:
+```text
+blacklist dvb_usb_rtl28xxu
+blacklist rtl2832
+blacklist rtl2830
+```
+
+Danach:
+```bash
+sudo reboot
+```
+
+## Installation
+```bash
+sudo apt update
+sudo apt install rtl-sdr
+```
+
+## Test
+```bash
+rtl_test -t
+```
+
+---
+
+# 12. Direkt zugängliche Geräteeinstellungen
+
+# 12.1 Mittenfrequenz
+- in Hz
+- bestimmt Tunerabstimmung und Kanalzentrierung
+
+# 12.2 Sample Rate
+Typische Werte:
+- 250 kS/s
+- 1.024 MS/s
+- 1.8 MS/s
+- 2.048 MS/s
+- 2.4 MS/s
+- 2.56 MS/s
+- 2.88 MS/s
+
+# 12.3 Gain Mode
+- Auto
+- Manual
+
+# 12.4 Tuner Gain
+- diskrete Stufen
+- in Standardsoftware meist als Gesamtwert angesprochen
+
+# 12.5 AGC
+- Tuner-AGC
+- RTL-/Digital-AGC
+
+# 12.6 PPM Correction
+- globaler Frequenzkorrekturwert
+
+# 12.7 Offset Tuning
+- verlagert das Nutzsignal weg vom DC-Zentrum
+
+# 12.8 Direct Sampling
+- für KW/HF relevant, nicht Schwerpunkt hier
+
+# 12.9 Bias Tee
+- nur falls Hardware dies wirklich unterstützt
+
+---
+
+# 13. R820T2-interne Funktionen und indirekt zugängliche Parameter
+
+Enthaltene Blöcke:
+- LNA
+- Mixer
+- VGA
+- Tracking-Filter
+- IF-/Basisbandfilter
+- PLL
+- Kalibrierpfade
+
+Standardmäßig meist **nicht direkt** zugänglich:
+- LNA separat
+- Mixer separat
+- VGA separat
+- Tracking-Filter fein
+- IF-Bandbreite als offizieller User-Parameter
+
+Indirekt beeinflussbar:
+- über Frequenzwahl,
+- Gesamt-Gain,
+- AGC-Konfiguration,
+- alternative Initialisierungsroutinen.
+
+---
+
+# 14. Filter und Verstärker: was ist steuerbar?
+
+## Direkt gut steuerbar
+- Mittenfrequenz
+- Sample Rate
+- Gesamt-Gain
+- Gain Mode
+- AGC
+- PPM
+- Offset Tuning
+
+## Indirekt beeinflusst
+- interne Filterzustände
+- Tunerinterne Verstärkungsverteilung
+
+## Praktisch nicht sauber offiziell steuerbar
+- einzelne R820T2-Stufen getrennt
+- Tracking-Filter direkt
+- IF-Filter fein
+
+## Praktisch wichtigste Stellgrößen
+- externer Filter
+- korrekter Gesamt-Gain
+- passende Sample Rate
+- korrekte DSP-Kanalfilterung
+- richtige Demodulationspipeline
+
+---
+
+# 15. Datenformate, Abgriffpunkte und Verarbeitungsebenen
+
+## Abgriffpunkte
+- vor Tuner: nur analog
+- intern: nicht praxisnah zugänglich
+- nach RTL2832U: digitaler I/Q-Strom
+
+## Hostformat
+- interleaved unsigned 8-bit I/Q
+- `I0, Q0, I1, Q1, ...`
+
+## Normierung
+```c
+i = (buf[2*n]   - 127.5f) / 127.5f;
+q = (buf[2*n+1] - 127.5f) / 127.5f;
+```
+
+## Übliche interne Darstellung
+- `complex float`
+
+---
+
+# 16. Analoge und digitale Filterung
+
+## Analoge Filterung
+Wirkt:
+- vor Übersteuerung,
+- vor Intermodulation,
+- vor ADC-Problemen.
+
+Beispiele:
+- FM-Notch
+- Airband-Bandpass
+- Hochpass
+- externer Preselector
+
+## Digitale Filterung
+Wirkt:
+- nach der Erfassung,
+- sehr präzise,
+- aber nur auf bereits digitalisierte Information.
+
+Digital repariert nicht:
+- Clipping,
+- Frontend-Kompression,
+- analoge Mischprodukte.
+
+---
+
+# 17. Digitale Signalverarbeitung: Grundarchitektur
+
+```text
+I/Q Input
+→ Normierung
+→ DC-Entfernung
+→ optionale IQ-Korrektur
+→ Frequenzverschiebung
+→ komplexer Kanalfilter
+→ Decimation
+→ Demodulation
+→ Audio-DSP
+→ Ausgabe / Speicherung
+```
+
+Wichtige Trennung:
+1. RF-/Frontend-Ebene  
+2. komplexe Basisband-Ebene  
+3. Demodulation  
+4. Audio-Ebene  
+
+---
+
+# 18. Filtertheorie für dieses Projekt
+
+Wichtige Parameter:
+- Passband
+- Transition Band
+- Stopband Attenuation
+- Ripple
+- Gruppenlaufzeit
+
+## FIR
+Gut für:
+- Kanalfilter
+- Decimation
+- definierte Bandbreiten
+
+## IIR
+Gut für:
+- Deemphasis
+- Audiofilter
+- DC-Blocker
+- einfache AGC-nahe Audiobearbeitung
+
+---
+
+# 19. Mehrstufige Decimation und Resampling
+
+## Prinzip
+Große Ratensprünge effizient in mehreren Stufen aufteilen.
+
+## Beispiel Airband
+```text
+1.024 MS/s
+→ Shift auf Zielkanal
+→ komplexes FIR
+→ Decimation auf 128 kS/s
+→ schmaleres Filter
+→ Demodulation
+→ Audiofilter
+→ Resampling auf Audio-Rate
+```
+
+## Beispiel WBFM
+```text
+1.024 MS/s
+→ Kanalfilter ~180–220 kHz
+→ Decimation auf 256 kS/s
+→ FM-Demod
+→ MPX oder Mono-Audio
+→ Resampling auf 48 kS/s
+```
+
+---
+
+# 20. FM-Demodulation: Theorie, Algorithmen und Praxis
+
+## 20.1 Grundprinzip
+FM kodiert Information in der Frequenzabweichung, nicht in der Amplitude.
+
+## 20.2 Phasendifferenzdemodulator
+\[
+y[n] = \arg(x[n] \cdot x^*[n-1])
+\]
+
+## 20.3 Arctan-Variante
+\[
+\phi[n] = \operatorname{atan2}(Q[n], I[n]), \quad y[n] = \phi[n] - \phi[n-1]
+\]
+
+## 20.4 Quadrature-Discriminator
+\[
+y[n] = \frac{I[n]\Delta Q[n] - Q[n]\Delta I[n]}{I[n]^2 + Q[n]^2}
+\]
+
+## 20.5 Limiter
+Sinnvoll vor FM-Demod:
+- reduziert Rest-AM
+- stabilisiert den Eingang des Discriminators
+
+## 20.6 Deemphasis
+Europa:
+- 50 µs
+
+IIR-Näherung:
+\[
+y[n] = y[n-1] + \alpha (x[n] - y[n-1])
+\]
+
+## 20.7 WBFM-Multiplex
+Kann enthalten:
+- L+R
+- 19-kHz-Pilot
+- 38-kHz-L−R
+- 57-kHz-RDS
+
+## 20.8 Engineering-Relevanz
+Unterschiedliche Ziele brauchen unterschiedliche Kanalbandbreiten:
+- Mono
+- Stereo
+- Stereo + RDS
+
+---
+
+# 21. AM-Demodulation: Theorie, Algorithmen und Praxis
+
+## 21.1 Envelope-Demodulation
+\[
+y[n] = |x[n]| = \sqrt{I[n]^2 + Q[n]^2}
+\]
+
+Danach nötig:
+- DC-Entfernung
+- Audiofilterung
+- Pegelnormalisierung
+
+## 21.2 Produktdetektor
+AM kann per Trägerrekonstruktion gemischt werden.
+
+## 21.3 Synchrone Demodulation
+Geeignet bei:
+- Fading
+- grenzwertigem SNR
+- leichter Schiefabstimmung
+- höherem Qualitätsanspruch
+
+## 21.4 Airband-spezifische Punkte
+- 25-kHz-Raster vs. 8.33-kHz-Raster
+- enge Filter für Nachbarkanalunterdrückung
+- exakte Frequenzzentrierung wichtig
+
+---
+
+# 22. DSP-Referenzpipeline für WBFM
+
+```text
+RTL-SDR IQ
+→ U8 to complex float
+→ DC blocker
+→ optional IQ correction
+→ shift
+→ WBFM channel FIR
+→ decimate
+→ optional limiter
+→ FM discriminator
+→ deemphasis
+→ mono oder MPX-Auswertung
+→ audio LP
+→ resample
+→ output
+```
+
+---
+
+# 23. DSP-Referenzpipeline für Airband-AM
+
+## Envelope-Pipeline
+```text
+RTL-SDR IQ
+→ complex float
+→ DC removal
+→ shift
+→ complex channel FIR
+→ decimate
+→ envelope demod
+→ DC removal
+→ audio LP
+→ optional AGC
+→ output
+```
+
+## Sync-AM-Pipeline
+```text
+RTL-SDR IQ
+→ complex float
+→ shift
+→ schmaler komplexer FIR
+→ decimate
+→ carrier estimation
+→ synchronous demod
+→ DC removal
+→ audio band limiting
+→ slow AGC
+→ output
+```
+
+---
+
+# 24. DSP-Referenzpipeline für NFM/PMR
+
+```text
+RTL-SDR IQ
+→ Normierung
+→ DC removal
+→ shift
+→ complex FIR
+→ decimate
+→ optional limiter
+→ FM discriminator
+→ audio LP
+→ squelch
+→ output
+```
+
+---
+
+# 25. Band- und kanalbezogene Referenzparameter
+
+| Modus | Eingangsrate | Komplexe Kanal-BW | Demodulator | Audio-LP | Hinweise |
+|---|---:|---:|---|---:|---|
+| WBFM Mono | 1.024 MS/s | 150–180 kHz | FM Phasendifferenz | 15 kHz | 50 µs Deemphasis |
+| WBFM Stereo | 1.024–2.4 MS/s | 180–220+ kHz | FM + MPX | 15 kHz | Pilot/L−R |
+| WBFM + RDS | 1.024–2.4 MS/s | 200–240 kHz | FM + MPX + RDS | 15 kHz | 57-kHz-RDS |
+| Airband AM 25 kHz | 256 kS/s intern/decimiert | 8–10 kHz | Envelope oder Sync-AM | 3 kHz | exakte Abstimmung |
+| Airband AM 8.33 kHz | 256 kS/s intern/decimiert | 5–7 kHz | bevorzugt Sync-AM | 2.5–3 kHz | hohe Selektivität |
+| PMR/NFM 12.5 kHz | 240–256 kS/s intern/decimiert | 10–12.5 kHz | FM discrim | 3 kHz | manuelles Gain |
+
+---
+
+# 26. Optimierung des UKW-FM-Empfangs
+
+## Zieldefinition
+Vor dem Tuning festlegen:
+- Mono?
+- Stereo?
+- RDS?
+- maximale Robustheit oder maximale Audioqualität?
+
+## Typische Probleme
+- Übersteuerung
+- falscher Gain
+- zu breite/zu schmale Filter
+- Multipath
+- schlechter Pilot-Lock
+- instabiler RDS-Empfang
+
+## Praxis
+- Gain nicht blind maximieren
+- Stereo nur aktivieren, wenn SNR ausreicht
+- Mono oft robuster
+- Filter passend zum Ziel auslegen
+
+---
+
+# 27. Optimierung des AM-/Airband-Empfangs
+
+## Hauptprobleme
+- UKW-Großsignale
+- falscher Gain
+- falscher Frequenzoffset
+- ungeeignete Kanalbandbreite
+- einfache Envelope-Demod bei grenzwertigem Signal
+
+## Höchste Priorität
+- FM-Notch vor dem Stick
+
+## Für 25-kHz-Airband
+- Kanalbreite meist ca. 8–10 kHz
+
+## Für 8.33-kHz-Airband
+- eher 5–7 kHz
+- höhere Anforderungen an Selektivität
+
+## Demodulatorwahl
+- Envelope: einfach, schnell
+- Sync-AM: meist besser bei schwachem/störbehaftetem Signal
+
+---
+
+# 28. Squelch, AGC, Limiting und Audioaufbereitung
+
+## AGC
+- vor Demod: vorsichtig
+- nach Demod: für Audiopegel oft besser beherrschbar
+
+## FM-Limiter
+- oft hilfreich vor FM-Demod
+
+## Audio-AGC
+- langsam und zurückhaltend
+
+## DC-Blocker
+\[
+y[n] = x[n] - x[n-1] + \alpha y[n-1]
+\]
+
+## Audiofilter
+- Sprache: ca. 250 Hz HP + 2.5–3.5 kHz LP
+- WBFM-Audio: bis etwa 15 kHz
+
+---
+
+# 29. Externe Filter, Vorverstärker und Antennen
+
+## Externe Filter
+- FM-Notch: sehr wichtig für Airband
+- Airband-Bandpass: sinnvoll bei gezieltem Betrieb
+- Hochpass / Bandpass je nach Störumgebung
+
+## Vorverstärker
+Nur sinnvoll, wenn:
+- wirklich zu wenig Feldstärke vorliegt
+- keine starke Großsignalumgebung besteht
+
+## Antennen
+- für UKW: Dipol besser als Beipackantenne
+- für Airband: abgestimmte VHF-Antenne
+- Abstand vom Raspberry Pi und gute Schirmung helfen oft stark
+
+---
+
+# 30. Praxisgrenzen des RTL2832U/R820T2-Systems
+
+- 8-Bit-Dynamik
+- begrenzte Großsignalfestigkeit
+- vermutlich kein TCXO
+- begrenzte Vorselektion
+- Host-/USB-Störungen möglich
+
+---
+
+# 31. Linux-Tools, Testkommandos und Entwicklungsumgebung
+
+## Erkennung
+```bash
+lsusb
+```
+
+## Gerätetest
+```bash
+rtl_test -t
+```
+
+## PPM-Test
+```bash
+rtl_test -p
+```
+
+## IQ-Aufnahme
+```bash
+rtl_sdr -f 123.450M -s 1024000 -g 20 airband.iq
+```
+
+## WBFM-Test
+```bash
+rtl_fm -f 103.0M -M wbfm -s 170k -r 48k -g 20 | aplay -r 48k -f S16_LE
+```
+
+## AM-Test
+```bash
+rtl_fm -f 123.45M -M am -s 25k -r 25k -g 20 | aplay -r 25k -f S16_LE
+```
+
+---
+
+# 32. Referenzarchitektur für eigene SDR-Software
+
+Empfohlene Module:
+```text
+device/
+dsp/
+audio/
+analysis/
+profiles/
+calibration/
+tests/
+```
+
+Typische Parameter:
+```yaml
+device:
+  sample_rate: 1024000
+  center_frequency_hz: 123450000
+  ppm: 33
+  gain_mode: manual
+  gain_db: 12.5
+  offset_tuning: true
+
+channel:
+  mode: airband_am
+  fine_offset_hz: -350
+  channel_bw_hz: 8000
+  demod: sync_am
+
+audio:
+  lowpass_hz: 3000
+  highpass_hz: 250
+  agc: slow
+```
+
+---
+
+# 33. Messmethodik, A/B-Tests und Offline-Optimierung
+
+## Ziel
+Reproduzierbare Verbesserung statt subjektiver Einzelfallbeobachtung.
+
+## Sinnvolle Metriken
+- SNR
+- SINAD
+- THD+N
+- Adjacent Channel Rejection
+- spektraler Rauschboden
+- Clipping-Indikatoren
+- Audioverständlichkeit
+
+## A/B-Prinzip
+- identische I/Q-Datei
+- nur eine Variable ändern
+- Ergebnisse protokollieren
+
+## Übersteuerung erkennen
+- Histogramm der I/Q-Werte
+- Spektrum mit breitbandigem Buckel
+- viele Phantomsignale
+- Verschlechterung bei höherem Gain
+
+---
+
+# 34. Typische Fehlerszenarien und Diagnose
+
+## Airband schlecht trotz sichtbarem Signal
+Mögliche Ursachen:
+- UKW-Blocking
+- Gain zu hoch
+- Filter zu breit
+- PPM falsch
+- Envelope-Demod unzureichend
+
+## FM verzerrt trotz starkem Sender
+- Übersteuerung
+- falsche Kanalbreite
+- Multipath
+- DC-Spike
+
+## Phantomsignale
+- Intermod
+- Hoststörungen
+- zu hoher Gain
+
+---
+
+# 35. Empfohlene Konfigurationsprofile
+
+## WBFM Mono robust
+```yaml
+sample_rate: 1024000
+gain_mode: manual
+gain_db: 14.4
+offset_tuning: true
+channel_bw_hz: 180000
+demod: fm_phase
+deemphasis_us: 50
+audio_lowpass_hz: 15000
+```
+
+## Airband 25 kHz
+```yaml
+sample_rate: 1024000
+gain_mode: manual
+gain_db: 12.5
+offset_tuning: true
+channel_bw_hz: 9000
+demod: sync_am
+audio_lowpass_hz: 3000
+audio_highpass_hz: 250
+```
+
+## Airband 8.33 kHz
+```yaml
+sample_rate: 1024000
+gain_mode: manual
+gain_db: 10.0
+offset_tuning: true
+channel_bw_hz: 6000
+demod: sync_am
+audio_lowpass_hz: 2700
+audio_highpass_hz: 300
+```
+
+---
+
+# 36. Zusammenfassung und Engineering-Empfehlungen
+
+Der Stick ist als **RTL2832U/R820T2-System** eine sehr brauchbare SDR-Entwicklungsplattform mit klaren Grenzen.
+
+## Wichtigste Stärken
+- Linux-Unterstützung
+- Roh-I/Q-Zugriff
+- gute Basis für eigene DSP
+- sehr geeignet für FM, AM, NFM, DAB, Analyseanwendungen
+
+## Wichtigste Grenzen
+- 8-Bit-Dynamik
+- begrenzte Großsignalfestigkeit
+- nur teilweise kontrollierbare Tunerinterna
+- frequenzabhängige Schwächen
+- vermutlich kein TCXO
+
+## Wichtigste Optimierungshebel
+1. korrekter Gain  
+2. saubere Frequenzkalibrierung  
+3. gute Kanalfilterung  
+4. passende Demodulation  
+5. externe Filter, besonders FM-Notch für Airband  
+6. reproduzierbare Mess- und Testverfahren  
+
+---
+
+# 37. Kalibrierung, Referenzsignale und Stick-Profile
+
+Dieses Kapitel beschreibt die reproduzierbare Inbetriebnahme und Kalibrierung des Sticks.  
+Der Fokus liegt nicht auf absoluter Labormesstechnik, sondern auf belastbarer, wiederholbarer Feld- und Entwicklungs-Kalibrierung.
+
+# 37.1 Ziel der Kalibrierung
+
+Kalibrierung soll sicherstellen, dass:
+- Frequenzen reproduzierbar richtig liegen,
+- Gain nicht zufällig gewählt wird,
+- Kanalfilter zum Signal passen,
+- DSP-Pfade bandweise sinnvoll voreingestellt sind,
+- verschiedene Sticks nicht verwechselt werden,
+- Warmup- und Driftverhalten berücksichtigt werden.
+
+# 37.2 Fünf Kalibrierebenen
+
+## 37.2.1 Frequenzkalibrierung
+Ziel:
+- globalen PPM-Fehler bestimmen,
+- Restoffset minimieren,
+- Drift verstehen.
+
+## 37.2.2 Restoffset-Kalibrierung pro Band
+Ziel:
+- band- oder profilbezogene Feinkorrektur ergänzen.
+
+## 37.2.3 Kanalfilter-Kalibrierung
+Ziel:
+- überprüfen, ob Filter zentriert und breit genug sind.
+
+## 37.2.4 Gain-Kalibrierung
+Ziel:
+- optimalen Arbeitspunkt pro Band, Antenne und Standort finden.
+
+## 37.2.5 Audio-/Demod-Kalibrierung
+Ziel:
+- Deemphasis,
+- Audiofrequenzgang,
+- AGC,
+- Squelch,
+- Envelope vs. Sync-AM vergleichen.
+
+# 37.3 Frequenzkalibrierung
+
+## 37.3.1 Grobe Kalibrierung
+Werkzeug:
+```bash
+rtl_test -p
+```
+
+Nutzen:
+- erster Richtwert für PPM,
+- initiale Abschätzung.
+
+Grenze:
+- nicht allein als endgültige Referenz nutzen.
+
+## 37.3.2 Kalibrierung mit realem Referenzsignal
+Besser ist ein möglichst stabiler, schmaler oder gut auswertbarer Referenzträger.
+
+Vorgehen:
+1. Stick kalt starten
+2. Referenzsignal empfangen
+3. Offset messen
+4. nach 1, 5, 10, 20 Minuten wiederholen
+5. PPM- und Restoffset dokumentieren
+
+## 37.3.3 Warmup-Verhalten
+Bei günstigen Quarzen wichtig:
+- Kaltstart kann deutlich abweichen
+- nach einigen Minuten stabilisiert sich das System
+
+Empfehlung:
+- pro Stick eine typische Warmup-Zeit definieren
+
+## 37.3.4 Mehrpunktprüfung
+Wenn möglich:
+- mehrere Referenzfrequenzen prüfen
+- kontrollieren, ob der Fehler näherungsweise ppm-linear ist
+
+# 37.4 Restoffset pro Band
+
+Auch bei gutem globalem PPM bleibt oft ein bandbezogener Rest.
+
+Praktisches Vorgehen:
+- globalen PPM setzen
+- auf Zielband Referenz empfangen
+- Restfehler in Hz bestimmen
+- im Bandprofil speichern
+
+Beispiel:
+```yaml
+airband:
+  ppm_global: 33
+  fine_offset_hz: -350
+```
+
+# 37.5 Kanalfilter-Kalibrierung
+
+Ziel:
+- Filterzentrierung prüfen
+- effektive Nutzbandbreite prüfen
+- Audioverhalten vs. Selektivität optimieren
+
+Beobachtungskriterien:
+- Sprachverständlichkeit
+- Höhenverlust
+- Verzerrung
+- Pfeiftöne
+- Nachbarkanalunterdrückung
+
+# 37.6 Gain-Kalibrierung
+
+Nicht absolut, sondern betriebspunktbezogen.
+
+Für jede Kombination aus:
+- Stick
+- Antenne
+- Standort
+- Band
+
+einen Gain-Sweep durchführen.
+
+Beispielstufen:
+- 0 dB
+- 7.7 dB
+- 14.4 dB
+- 19.7 dB
+- 28.0 dB
+- 37.2 dB
+
+Beobachten:
+- Rauschboden
+- Audioverständlichkeit
+- Auftreten von Intermod
+- Buckel im Spektrum
+- Clipping-Indikatoren
+
+Ergebnis:
+- Default-Gain pro Bandprofil speichern
+
+# 37.7 Audio-/Demod-Kalibrierung
+
+## Für WBFM
+- Deemphasis prüfen
+- Mono vs. Stereo vergleichen
+- Audiofilter abstimmen
+- Pilot-/RDS-Stabilität beobachten
+
+## Für AM
+- Envelope vs. Sync-AM vergleichen
+- HP/LP abstimmen
+- Audio-AGC prüfen
+- Squelch-Verhalten optimieren
+
+# 37.8 Stick-Profile
+
+Jeder Stick sollte ein eigenes Profil haben.
+
+Empfohlene Inhalte:
+- Stick-ID / USB-Zuordnung
+- globaler PPM
+- Warmup-Zeit
+- Driftwerte
+- bandbezogene Fine Offsets
+- Default-Gain pro Band
+- Auffälligkeiten
+
+Beispiel:
+```yaml
+stick_id: rtl_01
+ppm_global: 33
+warmup_minutes: 10
+drift:
+  t0: 38
+  t5: 34
+  t10: 33
+  t20: 33
+profiles:
+  wbfm:
+    fine_offset_hz: -150
+    gain_db: 14.4
+    channel_bw_hz: 180000
+  airband:
+    fine_offset_hz: -420
+    gain_db: 12.5
+    channel_bw_hz: 8000
+    demod: sync_am
+```
+
+# 37.9 Praktische Empfehlung für zwei Sticks
+
+Wenn zwei Sticks unterschiedliche PPM-Werte zeigen, z. B.:
+- Stick A: 33 ppm
+- Stick B: 49 ppm
+
+dann:
+- beide getrennt profilieren,
+- nicht gemeinsame Defaultwerte verwenden,
+- Warmup separat dokumentieren,
+- bandbezogene Feinabgleiche getrennt speichern.
+
+---
+
+# 38. Standardisierte Testprozeduren für WBFM, Airband-AM und NFM
+
+Ziel dieses Kapitels ist es, aus Einzelversuchen einen reproduzierbaren Engineering-Prozess zu machen.
+
+# 38.1 Grundregeln für alle Tests
+
+Vor jedem Test festhalten:
+- Stick-ID
+- Antenne
+- Standort
+- Datum/Uhrzeit
+- Temperatur/Warmup-Zustand
+- verwendete Softwareversion
+- PPM
+- Gain
+- Sample Rate
+- Demodulator
+- Filterbreite
+
+Konstant halten:
+- gleiche Antenne
+- gleiche Position
+- gleiche Netzteil-/USB-Situation
+- identische DSP-Kette, wenn nur ein Parameter untersucht wird
+
+# 38.2 Test 1: Frequenzgenauigkeit
+
+## Ziel
+- globalen PPM-Wert und Restoffset bewerten
+
+## Setup
+- stabiler Referenzsender
+- fester Warmup-Zustand
+
+## Protokoll
+- gemessener Offset in Hz
+- geschätzter PPM
+- Zeit seit Kaltstart
+
+## Interpretation
+- Drift fällt nach Warmup ab
+- stabile Werte können als Profil übernommen werden
+
+# 38.3 Test 2: Gain-Sweep
+
+## Ziel
+- optimalen Gain-Arbeitspunkt finden
+
+## Setup
+- fester Sender
+- fester Standort
+- mehrere Gain-Stufen
+
+## Beobachten
+- Audioqualität
+- Rauschboden
+- Intermod
+- Phantomsignale
+- Spektrum
+
+## Interpretation
+- bester Gain ist der mit bester Gesamtverständlichkeit, nicht mit maximalem Pegel
+
+# 38.4 Test 3: Filterbreitenvergleich
+
+## Ziel
+- optimale Kanalbreite finden
+
+## Vorgehen
+- identisches Signal
+- nur Kanalbreite ändern
+- gleiche übrige Parameter
+
+## Beobachten
+- Audio-Höhenverlust
+- Nachbarkanalunterdrückung
+- Pfeiftöne
+- Verständlichkeit
+
+# 38.5 Test 4: Envelope vs. Sync-AM
+
+## Ziel
+- passende AM-Demodulation für Airband finden
+
+## Vorgehen
+- identischer Airband-Mitschnitt
+- einmal Envelope
+- einmal Sync-AM
+
+## Beobachten
+- Sprachverständlichkeit
+- Rauschruhe
+- Verhalten bei Fading
+- Verzerrung bei leichter Fehlabstimmung
+
+# 38.6 Test 5: Limiter an/aus bei FM
+
+## Ziel
+- prüfen, ob FM-Limiter reale Vorteile bringt
+
+## Beobachten
+- Zischanteile
+- Verzerrung
+- Robustheit bei schwächeren Sendern
+- Stereo-Stabilität
+
+# 38.7 Test 6: FM-Notch an/aus bei Airband
+
+## Ziel
+- Frontend-Entlastung sichtbar machen
+
+## Beobachten
+- Rauschboden
+- Phantomsignale
+- Verständlichkeit
+- benötigter Gain
+- Spektrumbild
+
+# 38.8 Test 7: Offline-A/B mit identischem IQ
+
+## Ziel
+- reine DSP-Unterschiede sauber bewerten
+
+## Vorgehen
+- kritische I/Q-Datei aufnehmen
+- mehrere Algorithmen offline rechnen
+- gleiche Eingangsdaten garantieren
+
+## Vorteil
+- maximale Vergleichbarkeit
+
+# 38.9 Test 8: Drift vor/nach Warmup
+
+## Ziel
+- Warmup-Dauer bestimmen
+
+## Vorgehen
+- nach Kaltstart messen
+- nach 1, 5, 10, 20 Minuten wiederholen
+
+## Ergebnis
+- Warmup-Minimum im Stickprofil speichern
+
+---
+
+# 39. Geeignete Referenzsignale im Feldbetrieb
+
+Nicht jedes bekannte Signal eignet sich für jeden Zweck.  
+Man muss unterscheiden zwischen:
+- Frequenzreferenz,
+- Demodulationsreferenz,
+- Gain-/Frontend-Referenz,
+- Audio-/Filterreferenz.
+
+# 39.1 UKW-Rundfunksender
+
+Beispiel:
+- `103.0 MHz SWR3`
+
+Gut geeignet für:
+- WBFM-Demod-Test
+- Gain-Sweep im UKW-Band
+- Deemphasis-Test
+- Stereo-Test
+- RDS-Test
+- Übersteuerung sichtbar machen
+
+Weniger geeignet für:
+- hochpräzise Hz-genaue Frequenzkalibrierung nur per Hörvergleich
+
+# 39.2 Airband-Daueransage / ATIS
+
+Sehr gut geeignet für:
+- Airband-Profil-Tuning
+- Filterbreitenvergleich
+- Envelope vs. Sync-AM
+- Squelch-Optimierung
+- Feinabgleich im Zielband
+
+Grenzen:
+- keine perfekte absolute Frequenzreferenz
+- Sprachmodulation ist nicht konstant
+
+# 39.3 DAB-Ensemble
+
+Gut geeignet für:
+- Driftbeobachtung
+- Band-III-Referenz
+- relative Pegelvergleiche
+
+Für FM-/AM-Demod selbst nur indirekt hilfreich.
+
+# 39.4 NOAA / Wetterfunk / Dauerträger
+
+Wenn regional verfügbar, sehr gut für:
+- Frequenzzentrierung
+- Driftbeobachtung
+- schmalbandige Kalibrierung
+
+# 39.5 Unmodulierter oder schwach modulierter Träger
+
+Ideal für:
+- Frequenzkalibrierung
+- Restoffsetmessung
+- Filterzentrierung
+
+Beispiele:
+- Bake
+- Testsender
+- Signalgenerator
+- Referenz-SDR-Quelle
+
+# 39.6 Welche Signale wofür?
+
+## Für den FM-Pfad
+Nutze einen starken, sauberen UKW-Sender für:
+- Gain-Sweep
+- WBFM-Kanalbreite
+- Mono/Stereo
+- RDS
+- Deemphasis
+- Limiter an/aus
+
+## Für den Airband-Pfad
+Nutze ATIS/Daueransagen für:
+- Feinabstimmung
+- Filterbreite 5/6/7/8/10 kHz
+- Envelope vs. Sync-AM
+- Squelch
+- FM-Notch an/aus
+
+## Für präzise Frequenzkalibrierung
+Nutze möglichst:
+- schmalen Dauerträger
+- Bake
+- NOAA
+- Generator
+- stabile Referenzquelle
+
+# 39.7 Was man nicht nur mit Rundfunksignalen machen sollte
+
+Nicht ideal nur mit SWR3 oder ATIS:
+- exakte ppm-Kalibrierung im niedrigen Hz-Bereich
+- absolute Pegelkalibrierung
+- präzise THD-Messung
+- echte SFDR-/IP3-Bestimmung
+- exakte Filteramplitudengangmessung
+
+---
+
+# Abschlussfazit
+
+Die wichtigste praktische Erkenntnis für dieses Gerät lautet:
+
+**Die Qualität deiner FM- und AM-Ergebnisse wird weniger durch exotische Registertricks bestimmt als durch einen sauberen Engineering-Prozess aus Kalibrierung, Gain-Management, geeigneten Referenzsignalen, externer HF-Entlastung und reproduzierbarer DSP-Auswertung.**
+
+Für deinen konkreten Stick bedeutet das:
+- jeden Stick einzeln profilieren,
+- globalen PPM plus bandbezogenen Restoffset erfassen,
+- für WBFM und Airband getrennte Profile pflegen,
+- bekannte Referenzsignale gezielt und nicht pauschal einsetzen,
+- Offline-A/B-Tests mit identischem I/Q-Material als Standardmethode verwenden.
+```
