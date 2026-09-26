@@ -226,6 +226,8 @@ Parallel dazu pflegt der Core die BMW-Display-Metadaten über `mpris2.py`
 | `GET /api/rtlsdr` | `web/app.py` | RTL-SDR-Status |
 | `GET /api/logs?target=core` | `web/app.py` | Core-Log |
 | `GET /api/avrcp` | `web/app.py` | AVRCP-Debug-Status |
+| `GET|POST /api/esp/discover` | `web/app.py` · `integration/esp_discover.py` | ESP im LAN suchen |
+| `GET|POST /api/esp/host` | `web/app.py` | `usb_esp_host` lesen/setzen |
 | `GET /api/system/resources` | `web/app.py` | RAM/CPU/Temp |
 
 ---
@@ -268,7 +270,7 @@ Vollständige Referenz: `pidrivectl --help` sowie [`KontextPiDrive.md`](../Konte
 | `pidrive_avrcp.service` | BMW AVRCP → Trigger-Queue | `integration/avrcp_trigger.py` |
 | `pidrive_btagent.service` | BlueZ Pairing-Agent | `modules/bluetooth/bt_agent_dbus.py` |
 | `pidrive_pump.service` | ESP Presence-Poll (optional) | `integration/usb_pump_client.py` |
-| `pidrive_pump_bridge.service` | Live-MP3 UART→ESP (Lab/Prod) | `/home/pidrive/pump_bridge.py` (esp32.pidrive) |
+| `pidrive_pump_bridge.service` | Live-MP3 UART/TCP→ESP (Lab/Prod) | `/home/pidrive/pump_bridge.py` (esp32.pidrive) |
 | `pipewire.service` | Audio-Server (System-Mode, `User=pulse`) | — |
 | `pipewire-pulse.service` | PulseAudio-Kompat (`/var/run/pulse/native`) | — |
 | `wireplumber.service` | Session-Manager, BT A2DP automatisch | — |

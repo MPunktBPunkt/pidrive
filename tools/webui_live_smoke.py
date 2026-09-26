@@ -324,7 +324,7 @@ def main() -> int:
 
     # ── 1) HTML-Seiten laden ─────────────────────────────────────────────
     print("-- Pages --")
-    page_list = sorted(pages | {"/", "/audio", "/rf-tools", "/diagnostics", "/avrcp",
+    page_list = sorted(pages | {"/", "/audio", "/rf-tools", "/diagnostics", "/avrcp", "/car",
                                  "/webradio-admin", "/music-admin"})
     if args.quick:
         page_list = ["/", "/audio", "/rf-tools"]

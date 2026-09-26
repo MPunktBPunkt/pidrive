@@ -158,12 +158,11 @@
   <!-- Navigation -->
   <nav class="main-nav">
     <a href="/" id="navHome">🏠 Alltag</a>
-    <a href="/menu" id="navMenu">☰ Menü</a>
     <a href="/bluetooth" id="navBt">🔵 Bluetooth</a>
     <a href="/audio" id="navAudio">🔊 Audio</a>
     <a href="/rf-tools" id="navRf">📡 RF/DAB</a>
+    <a href="/car" id="navCar">🚗 Car</a>
     <a href="/diagnostics" id="navDiag" class="admin-link">🪲 Diagnose</a>
-    <a href="/avrcp" id="navAvrcp" class="admin-link">🚗 AVRCP</a>
     <a href="/webradio-admin" id="navWrAdmin" class="admin-link">📶 Webradio</a>
     <a href="/music-admin" id="navMusicAdmin" class="admin-link">🎵 Medien</a>
   </nav>
@@ -383,10 +382,14 @@ async function refreshBase() {
       msb.style.display = st.metadata_unavailable ? '' : 'none';
     }
 
-    // Nav: active Seite hervorheben
+    // Nav: active Seite hervorheben (/car und /avrcp = dieselbe Seite)
     const path_here = window.location.pathname;
     document.querySelectorAll('.main-nav a').forEach(a => {
-      a.classList.toggle('active', a.getAttribute('href') === path_here);
+      const href = a.getAttribute('href');
+      let on = href === path_here;
+      if (!on && (path_here === '/car' || path_here === '/avrcp')
+          && (href === '/car' || href === '/avrcp')) on = true;
+      a.classList.toggle('active', on);
     });
 
     // Seiten-spezifischer Hook

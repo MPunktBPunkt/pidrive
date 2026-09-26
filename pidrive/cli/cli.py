@@ -38,6 +38,8 @@ Befehle:
 
   usb status              ESP / USB-Gadget Presence (PUMP)
   usb probe               Einmal SoftAP+Serial prüfen
+  usb discover            ESP im LAN suchen (SoftAP + /24)
+  usb use <ip>            usb_esp_host speichern
 
   dab status              DAB+-Status (Lock, PCM, DLS)
   dab scan                DAB-Sendersuchlauf starten
@@ -366,6 +368,10 @@ Flags (vor dem Befehl angeben):
     usb_sub = p_usb.add_subparsers(dest="usb_cmd")
     usb_sub.add_parser("status", help="Presence aus Status-IPC")
     usb_sub.add_parser("probe", help="Sofort SoftAP+Serial pollen")
+    usb_sub.add_parser("discover", help="ESP im LAN suchen")
+    p_usb_use = usb_sub.add_parser("use", help="usb_esp_host speichern")
+    p_usb_use.add_argument("host", help="ESP-IP oder Hostname")
+    p_usb_use.add_argument("--tcp-port", type=int, default=None)
 
     # ── dab ───────────────────────────────────────────────────────────────
     p_dab = sub.add_parser("dab", help="DAB+")
@@ -1663,12 +1669,16 @@ Flags (vor dem Befehl angeben):
                     f"  OTG {'●' if usb.get('otg_up') else '○'}  "
                     f"PUMP {'●' if usb.get('pump_up') else '○'}  "
                     f"UART {'●' if usb.get('uart_up') else '○'}  "
+                    f"TCP {'●' if usb.get('pump_tcp_up') else '○'}  "
                     f"MSC {'●' if usb.get('msc_ready') else '○'}"
                 )
                 if usb.get("serial_ports"):
                     fmt.out("  Serial: " + ", ".join(usb.get("serial_ports")[:4]))
                 if usb.get("esp_host"):
-                    fmt.out(f"  Host:   {usb.get('esp_host')}")
+                    host_line = f"  Host:   {usb.get('esp_host')}"
+                    if usb.get("pump_tcp_port"):
+                        host_line += f"  PUMP-TCP :{usb.get('pump_tcp_port')}"
+                    fmt.out(host_line)
                 if usb.get("playing_name"):
                     fmt.out(f"  Play:   {usb.get('playing_name')}")
                 if usb.get("stream_cap"):
@@ -1697,6 +1707,49 @@ Flags (vor dem Befehl angeben):
                     + (f"  fw={snap.get('fw')}" if snap.get("fw") else "")
                 )
             sys.exit(EXIT_OK if snap.get("online") else EXIT_ERROR)
+        if args.usb_cmd == "discover":
+            try:
+                from integration.esp_discover import discover
+                snap = discover(timeout_s=6.0, scan_subnet=True)
+            except Exception as e:
+                _exit_err(str(e))
+            if use_json:
+                fmt.print_json(snap)
+            else:
+                hosts = snap.get("hosts") or []
+                fmt.out(
+                    f"Scan: {snap.get('scanned', 0)} Hosts · "
+                    f"{snap.get('count', 0)} Treffer · {snap.get('ms', 0)} ms"
+                )
+                if snap.get("subnets"):
+                    fmt.out("  Netze: " + ", ".join(snap["subnets"]))
+                if not hosts:
+                    fmt.out("  (kein ESP — SoftAP oder STA im gleichen Netz?)")
+                for h in hosts:
+                    fmt.out(
+                        f"  {h.get('host')}  FW {h.get('fw') or '-'}  "
+                        f"OTG {'●' if h.get('otgUp') else '○'}  "
+                        f"TCP :{h.get('pumpTcpPort') or 9090}"
+                        + (f"  {h.get('name')}" if h.get("name") else "")
+                    )
+                if snap.get("saved_host"):
+                    fmt.out(f"  gespeichert: {snap.get('saved_host')}")
+            sys.exit(EXIT_OK if (snap.get("hosts") or []) else EXIT_ERROR)
+        if args.usb_cmd == "use":
+            try:
+                from integration.esp_discover import apply_host
+                r = apply_host(args.host, tcp_port=args.tcp_port)
+            except Exception as e:
+                _exit_err(str(e))
+            if use_json:
+                fmt.print_json(r)
+            else:
+                if not r.get("ok"):
+                    _exit_err(r.get("error") or "use fehlgeschlagen")
+                fmt.out(f"usb_esp_host → {r.get('usb_esp_host')}")
+                if r.get("hint"):
+                    fmt.out(f"  {r.get('hint')}")
+            sys.exit(EXIT_OK)
 
     # dab
     if args.cmd == "dab":

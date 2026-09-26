@@ -1,11 +1,9 @@
 [Unit]
-Description=PiDrive PUMP Bridge (UART ↔ esp32.pidrive Live-MP3 + Menü)
+Description=PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü)
 After=network.target pidrive_core.service
 Wants=network.target
-# Ohne ESP nicht starten — sonst Restart-Loop („Port fehlt“) und Boot-Last.
-# Hotplug: udev/rules.d/99-pidrive-esp.rules → SYSTEMD_WANTS
-ConditionPathExists=/dev/ttyACM0
-# Belegt /dev/ttyACM0 — nicht parallel zu minicom/screen
+# UART: udev SYSTEMD_WANTS bei ttyACM0. TCP/auto: ohne Port starten (Settings usb_pump_*).
+# Condition entfernt — Bridge wählt Transport selbst (auto: UART falls da, sonst TCP).
 
 [Service]
 UMask=0000
@@ -15,8 +13,9 @@ Group=dialout
 SupplementaryGroups=disk
 WorkingDirectory=/home/pidrive
 Environment=PYTHONPATH=/home/pidrive/pidrive/pidrive
+# Optional override: PUMP_TRANSPORT=tcp PUMP_HOST=192.168.4.1 PUMP_TCP_PORT=9090
 # Deploy: esp32.pidrive/tools/pump_bridge.py → /home/pidrive/pump_bridge.py
-ExecStart=/usr/bin/python3 -u /home/pidrive/pump_bridge.py --port /dev/ttyACM0 --interval 0.5 --bitrate 48k
+ExecStart=/usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport auto --interval 0.5 --bitrate 48k
 Restart=on-failure
 RestartSec=3
 StandardOutput=journal

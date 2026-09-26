@@ -10,7 +10,7 @@ bzw. Debian 12 Soft-Test (Proxmox LXC amd64).
 | Soft | `pidrive_core` + `pidrive_web` aktiv, `pidrivectl version/status`, WebUI `:8080` |
 | HW-Radio | RTL-Stick → FM/DAB/Scanner (nach DVB-Blacklist/Reboot) |
 | HW-BT | Pairing/AVRCP/A2DP zum Auto |
-| HW-ESP | `pump_bridge.py` aus **esp32.pidrive** unter `$HOME/pump_bridge.py` + UART |
+| HW-ESP | `pump_bridge.py` aus **esp32.pidrive** unter `$HOME/pump_bridge.py` (UART und/oder TCP :9090) |
 
 ## Soft vs Hardware
 
@@ -23,7 +23,7 @@ bzw. Debian 12 Soft-Test (Proxmox LXC amd64).
 | DAB+ / FM / Scanner | Binaries ggf. da | RTL-SDR |
 | USB-Defer / Hotplug-Release | Units ok | ESP/RTL/QinHeng |
 | `pidrive_pump` (Presence) | pollt, ESP offline | ESP SoftAP |
-| `pidrive_pump_bridge` | `ConditionPathExists` → inaktiv | `/dev/ttyACM0` + Script + ffmpeg |
+| `pidrive_pump_bridge` | startet; `auto` → UART oder TCP | Script + ffmpeg; ESP erreichbar (UART oder WLAN) |
 | Spotify Connect | librespot/OAuth manuell | Netz + Account |
 
 ## Bekannte Installer-Grenzen

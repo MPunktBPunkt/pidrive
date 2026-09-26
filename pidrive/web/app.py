@@ -154,6 +154,7 @@ def page_diagnostics():
     return render_template("diagnostics.html", vm=vm)
 
 @app.route("/avrcp")
+@app.route("/car")
 def page_avrcp():
     try:
         vm = build_view_model()
@@ -1574,6 +1575,75 @@ def api_avrcp():
         "exists": os.path.exists(AVRCP_FILE),
         "age": file_age(AVRCP_FILE),
     })
+
+
+@app.route("/api/esp/discover", methods=["GET", "POST"])
+def api_esp_discover():
+    """ESP32.pidrive im LAN suchen (SoftAP + mDNS + /24-Scan)."""
+    try:
+        from integration.esp_discover import discover
+        timeout = 5.0
+        scan = True
+        if request.method == "POST" and request.is_json:
+            body = request.get_json(silent=True) or {}
+            try:
+                timeout = float(body.get("timeout") or timeout)
+            except (TypeError, ValueError):
+                pass
+            if "scan" in body:
+                scan = bool(body.get("scan"))
+        else:
+            try:
+                timeout = float(request.args.get("timeout") or timeout)
+            except (TypeError, ValueError):
+                pass
+            if request.args.get("scan") in ("0", "false", "no"):
+                scan = False
+        timeout = max(1.0, min(20.0, timeout))
+        return jsonify(discover(timeout_s=timeout, scan_subnet=scan))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "hosts": []}), 500
+
+
+@app.route("/api/esp/host", methods=["GET", "POST"])
+def api_esp_host():
+    """Aktuellen ``usb_esp_host`` lesen oder nach Discovery speichern."""
+    try:
+        from settings import load_settings
+        from integration.esp_discover import apply_host, probe_host
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    if request.method == "GET":
+        s = load_settings()
+        host = str(s.get("usb_esp_host") or "").strip()
+        port = int(s.get("usb_esp_port") or 80)
+        snap = probe_host(host, port=port, timeout=1.2) if host else None
+        return jsonify({
+            "ok": True,
+            "usb_esp_host": host,
+            "usb_esp_port": port,
+            "usb_pump_tcp_port": int(s.get("usb_pump_tcp_port") or 9090),
+            "usb_pump_transport": s.get("usb_pump_transport") or "auto",
+            "online": bool(snap),
+            "status": snap,
+        })
+
+    body = request.get_json(silent=True) or {}
+    host = str(body.get("host") or body.get("usb_esp_host") or "").strip()
+    http_port = body.get("port") or body.get("usb_esp_port")
+    tcp_port = body.get("tcp_port") or body.get("usb_pump_tcp_port")
+    try:
+        http_port = int(http_port) if http_port is not None else None
+    except (TypeError, ValueError):
+        http_port = None
+    try:
+        tcp_port = int(tcp_port) if tcp_port is not None else None
+    except (TypeError, ValueError):
+        tcp_port = None
+    result = apply_host(host, http_port=http_port, tcp_port=tcp_port)
+    code = 200 if result.get("ok") else 400
+    return jsonify(result), code
 
 
 @app.route("/api/service")

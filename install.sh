@@ -1175,7 +1175,7 @@ else
 fi
 usermod -a -G plugdev "$REAL_USER" 2>/dev/null || true
 
-# ESP UART: Bridge nur starten wenn /dev/ttyACM0 da ist; Hotplug via udev
+# ESP UART Hotplug: udev startet Bridge nach; TCP/auto läuft auch ohne Port
 UDEV_ESP="/etc/udev/rules.d/99-pidrive-esp.rules"
 if [ -f "$INSTALL_DIR/udev/99-pidrive-esp.rules" ]; then
     cp "$INSTALL_DIR/udev/99-pidrive-esp.rules" "$UDEV_ESP"
@@ -1232,10 +1232,10 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" ]; then
         "$SERVICE_DIR/pidrive_pump_bridge.service"
     sed -i "s|ExecStart=/usr/bin/python3 -u /home/pidrive/pump_bridge.py|ExecStart=/usr/bin/python3 -u ${_BRIDGE_PY}|g" \
         "$SERVICE_DIR/pidrive_pump_bridge.service"
-    # Hotplug via udev; enable damit WantedBy/SYSTEMD_WANTS greift (ConditionPathExists)
+    # Hotplug via udev + TCP/auto ohne UART-Port
     _sys_enable pidrive_pump_bridge.service || true
     if [ -f "$_BRIDGE_PY" ]; then
-        ok "ESP Bridge: pidrive_pump_bridge.service → $_BRIDGE_PY"
+        ok "ESP Bridge: pidrive_pump_bridge.service → $_BRIDGE_PY (UART/TCP auto)"
     else
         warn "ESP Bridge-Unit installiert, aber $_BRIDGE_PY fehlt"
         warn "  Deploy: esp32.pidrive/tools/pump_bridge.py → $_BRIDGE_PY"

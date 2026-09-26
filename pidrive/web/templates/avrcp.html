@@ -1,8 +1,24 @@
 {% extends "base.html" %}
-{% block title %}PiDrive — AVRCP Debug{% endblock %}
+{% block title %}PiDrive — Car{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">🚗 AVRCP Status (BMW iDrive)
+  <div class="card-title">🚗 ESP im Netz
+    <span id="espScanMeta" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
+  </div>
+  <div id="espCurrent" style="font-size:13px;margin-bottom:10px">Lade…</div>
+  <div class="btn-row" style="margin-bottom:10px">
+    <button class="btn primary" id="espScanBtn" onclick="espScan()">🔍 Suchen</button>
+    <button class="btn" onclick="espLoadCurrent()">Aktualisieren</button>
+  </div>
+  <div id="espResults" style="font-size:13px">–</div>
+  <p class="hint" style="margin-top:10px;font-size:12px;color:var(--muted)">
+    Sucht SoftAP <code>192.168.4.1</code>, mDNS <code>pidrive-*</code> (avahi) und das lokale /24.
+    „Übernehmen“ setzt <code>usb_esp_host</code> für Status-Poll und PUMP-TCP.
+  </p>
+</div>
+
+<div class="card">
+  <div class="card-title">🚗 AVRCP (BMW iDrive)
     <span id="snapAvrcp" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
   </div>
   <div id="avrcpBlock" style="font-size:13px">Lade…</div>
@@ -15,13 +31,133 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="/static/js/page-avrcp.js"></script><script>
+<script src="/static/js/page-avrcp.js"></script>
+<script>
+function _esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function _logText(j) {
   if (typeof j.stdout === 'string' && j.stdout.length) return j.stdout;
   if (Array.isArray(j.lines)) return j.lines.join('\n');
   if (typeof j.log === 'string') return j.log;
   return JSON.stringify(j, null, 2);
 }
+
+async function espLoadCurrent() {
+  const box = document.getElementById('espCurrent');
+  try {
+    const r = await fetch('/api/esp/host');
+    const j = await r.json();
+    if (!j.ok) {
+      if (box) box.textContent = 'Fehler: ' + (j.error || '?');
+      return;
+    }
+    const st = j.status || {};
+    const on = !!j.online;
+    if (box) {
+      box.innerHTML =
+        `<b>Gespeichert:</b> ${j.usb_esp_host ? _esc(j.usb_esp_host) : '—'} ` +
+        `· HTTP :${j.usb_esp_port||80} · PUMP-TCP :${j.usb_pump_tcp_port||9090} ` +
+        `· Transport ${ _esc(j.usb_pump_transport||'auto') }<br>` +
+        `<b>Status:</b> ${on ? '🟢 online' : '⚪ offline'}` +
+        (st.fw ? (' · FW ' + _esc(st.fw)) : '') +
+        (st.name ? (' · ' + _esc(st.name)) : '') +
+        (st.softApSsid ? (' · SoftAP ' + _esc(st.softApSsid)) : '') +
+        (on ? `<br>OTG ${st.otgUp?'●':'○'} · PUMP ${st.pumpUp?'●':'○'} · TCP ${st.pumpTcp?'●':'○'} · MSC ${st.mscReady?'●':'○'}` : '');
+    }
+  } catch (e) {
+    if (box) box.textContent = 'Fehler: ' + e;
+  }
+}
+
+function _renderEspHits(hosts, meta) {
+  const box = document.getElementById('espResults');
+  const m = document.getElementById('espScanMeta');
+  if (m) {
+    m.textContent = meta
+      ? `· ${meta.count||0} Treffer · ${meta.scanned||0} geprüft · ${meta.ms||0} ms`
+      : '';
+  }
+  if (!box) return;
+  if (!hosts || !hosts.length) {
+    box.innerHTML = '<span style="color:var(--muted)">Kein ESP gefunden — SoftAP oder STA im gleichen Netz?</span>';
+    return;
+  }
+  let html = '<div style="display:flex;flex-direction:column;gap:8px">';
+  hosts.forEach((h, i) => {
+    const label = _esc(h.host || h.ip || '?');
+    const fw = h.fw ? _esc(h.fw) : '–';
+    const name = h.name ? _esc(h.name) : '';
+    const ssid = h.softApSsid ? (' · ' + _esc(h.softApSsid)) : '';
+    html += `<div style="border:1px solid var(--line-soft);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div>
+        <b>${label}</b>${name ? (' · ' + name) : ''}<br>
+        <span style="color:var(--muted);font-size:12px">FW ${fw}${ssid}
+        · PUMP-TCP ${h.pumpTcpPort || 9090}
+        · OTG ${h.otgUp?'●':'○'} MSC ${h.mscReady?'●':'○'}</span>
+      </div>
+      <button class="btn primary" data-i="${i}">Übernehmen</button>
+    </div>`;
+  });
+  html += '</div>';
+  box.innerHTML = html;
+  box.querySelectorAll('button[data-i]').forEach(btn => {
+    btn.onclick = () => espApply(hosts[Number(btn.getAttribute('data-i'))]);
+  });
+}
+
+async function espScan() {
+  const btn = document.getElementById('espScanBtn');
+  const box = document.getElementById('espResults');
+  if (btn) { btn.disabled = true; btn.textContent = 'Suche…'; }
+  if (box) box.textContent = 'Scan läuft (SoftAP + LAN /24)…';
+  try {
+    const r = await fetch('/api/esp/discover', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({timeout: 6, scan: true}),
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      if (box) box.textContent = 'Fehler: ' + (j.error || '?');
+      return;
+    }
+    _renderEspHits(j.hosts || [], j);
+    if (typeof showToast === 'function')
+      showToast((j.count || 0) + ' ESP gefunden');
+  } catch (e) {
+    if (box) box.textContent = 'Fehler: ' + e;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔍 Suchen'; }
+  }
+}
+
+async function espApply(hit) {
+  if (!hit || !hit.host) return;
+  try {
+    const r = await fetch('/api/esp/host', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        host: hit.host,
+        port: hit.port || 80,
+        tcp_port: hit.pumpTcpPort || 9090,
+      }),
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      if (typeof showToast === 'function') showToast('Fehler: ' + (j.error || '?'));
+      return;
+    }
+    if (typeof showToast === 'function')
+      showToast('Gespeichert: ' + j.usb_esp_host);
+    await espLoadCurrent();
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('Fehler: ' + e);
+  }
+}
+
 async function loadAvrcp() {
   try{
     const r=await fetch('/api/avrcp');const j=await r.json();
@@ -34,6 +170,8 @@ async function loadAvrcpLog() {
   try{const r=await fetch('/api/logs?target=avrcp');const j=await r.json();
     document.getElementById('avrcpLog').textContent=_logText(j);}catch(e){}
 }
-function onBaseRefresh() { loadAvrcp(); }
+function onBaseRefresh() { /* USB-Status kommt über espLoadCurrent bei Bedarf */ }
+espLoadCurrent();
 loadAvrcp();
-</script>{% endblock %}
+</script>
+{% endblock %}

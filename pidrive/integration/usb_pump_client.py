@@ -6,9 +6,12 @@ usb_pump_client.py — PiDrive ESP / PUMP Presence (U2)
 Erkennt den esp32.pidrive und schreibt /tmp/pidrive_usb_status.json,
 das ipc.write_status unter dem Key ``usb`` einbettet.
 
-UART bleibt bei der Lab-Bridge (`pump_bridge.py`). Dieser Prozess:
+UART bleibt bei der Lab-Bridge (`pump_bridge.py`) als Option; ab FW 0.4.15
+kann dieselbe Bridge PUMP auch über TCP (:9090 SoftAP/STA) fahren.
+
+Dieser Prozess:
   - prüft Serial-Nodes (/dev/ttyACM*, by-id)
-  - pollt SoftAP/STA ``GET /api/status`` (otg/pump/stream/fw)
+  - pollt SoftAP/STA ``GET /api/status`` (otg/pump/stream/fw/pumpTcp*)
   - optional ``--uart``: HELLO nur wenn Port freigegeben (nicht parallel zur Bridge)
 
 systemd: ``pidrive_pump.service`` (optional).
@@ -198,6 +201,9 @@ def build_snapshot(
         "esp_host": host,
         "fw": fw or "",
         "pump_up": bool(http.get("pumpUp")) if http else False,
+        "pump_tcp": bool(http.get("pumpTcp")) if http else False,
+        "pump_tcp_port": int(http.get("pumpTcpPort") or 0) if http else 0,
+        "pump_tcp_up": bool(http.get("pumpTcpUp")) if http else False,
         "otg_up": bool(http.get("otgUp")) if http else False,
         "otg_suspended": bool(http.get("otgSuspended")) if http else False,
         "uart_up": bool(http.get("uartUp")) if http else False,

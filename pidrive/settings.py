@@ -29,11 +29,13 @@ _DEFAULTS = {
     "audio_sink_name":    "",            # Leer = automatisch erkennen
     "audio_card_index":   -1,            # -1 = automatisch
     "volume":             90,
-    # USB-MSC / esp32.pidrive (U1/U2 — Status-Poll; UART bleibt bei pump_bridge)
+    # USB-MSC / esp32.pidrive (U1/U2 — Status-Poll + PUMP UART/TCP)
     "usb_esp_host":       "192.168.178.89",
     "usb_esp_port":       80,
+    "usb_pump_transport": "auto",      # auto | uart | tcp
     "usb_pump_port":      "/dev/ttyACM0",
     "usb_pump_baud":      115200,
+    "usb_pump_tcp_port":  9090,        # ESP PumpServer TCP (SoftAP/STA)
     "usb_poll_s":         2.0,
     # FM
     "fm_freq":            "98.5",

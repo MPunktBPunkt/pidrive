@@ -67,5 +67,5 @@ Mit ESP32 (CDC + ggf. MSC) kam der Pi nach Reboot teils **nicht** wieder ins WLA
 Ohne ESP, nur RTL-SDR: Boot ~**22 s**, Core+Web parallel ok.
 
 Maßnahmen:
-- `pidrive_pump_bridge`: `ConditionPathExists=/dev/ttyACM0` (kein Restart-Loop ohne Port)
+- `pidrive_pump_bridge`: startet ohne UART-Zwang (`--transport auto`); TCP :9090 wenn kein `/dev/ttyACM0`
 - `udev/99-pidrive-esp.rules`: Bridge beim Einstecken nachstarten

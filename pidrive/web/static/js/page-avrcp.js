@@ -1,9 +1,6 @@
-// page-avrcp.js — Seitenlogik für avrcp.html
-// Polling, Initialisierung und UI-Logik für diese Seite.
-// Eingebunden nur auf avrcp.html
+// page-avrcp.js — Seitenlogik für Car (/car, /avrcp)
+// Inline-Logik steckt in avrcp.html; hier nur Marker für Cache-Busting.
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Seite initialisieren
-  console.log('PiDrive page-avrcp.js geladen');
-  // TODO: Seitenspezifische Initialisierung hier
+  console.log('PiDrive page-avrcp.js (Car) geladen');
 });

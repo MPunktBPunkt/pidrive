@@ -493,9 +493,9 @@ trigger/td_radio → modules/webradio.py → mpv
     └── PipeWire / Monitor → Bridge-Input
             │
             ▼
-pump_bridge.py  (pidrive_pump_bridge.service, UART /dev/ttyACM0)
+pump_bridge.py  (pidrive_pump_bridge.service, UART /dev/ttyACM0 **oder** TCP :9090)
     ├── pollt /tmp/pidrive_menu.json → menu_set an ESP
-    ├── ffmpeg → MP3 frames → UART audio_data
+    ├── ffmpeg → MP3 frames → UART/TCP audio_data
     └── stop ohne status_cover (sonst „keine Einträge“ am BMW)
             │
             ▼
@@ -513,11 +513,14 @@ integration/usb_pump_client.py  (pidrive_pump.service)
 pidrivectl usb status
 pidrivectl audio route usb_gadget
 systemctl status pidrive_pump_bridge
+# SoftAP:
+python3 ~/pump_bridge.py --transport tcp --host 192.168.4.1
 curl -s http://192.168.4.1/api/status   # SoftAP, oder STA-IP des ESP
 ```
 
 Lab-Protokoll: [`USB-MSC-STREAM-LISTING-2026-09-18.md`](../betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) ·
-Pfad: [`PFAD-ESP32-PIDRIVE.md`](../planung/PFAD-ESP32-PIDRIVE.md).
+Pfad: [`PFAD-ESP32-PIDRIVE.md`](../planung/PFAD-ESP32-PIDRIVE.md) ·
+WLAN: [`LAB-MENU-WLAN.md`](../betrieb/LAB-MENU-WLAN.md).
 
 ---
 
