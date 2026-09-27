@@ -1808,6 +1808,35 @@ def api_dab_errfile():
         return jsonify({"ok": False, "error": str(e), "file": target})
 
 
+@app.route("/api/update", methods=["GET", "POST"])
+def api_update():
+    """OTA: GET = prüfen, POST apply=true = Update starten (über Core-CMD)."""
+    try:
+        from modules import update as _upd
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"update-Modul: {e}"}), 500
+
+    if request.method == "GET":
+        try:
+            info = _upd.check_for_update(fetch=True)
+            return jsonify({"ok": bool(info.get("ok", True)), **info})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)}), 500
+
+    body = request.get_json(silent=True) or {}
+    if not body.get("apply"):
+        return jsonify({"ok": False, "error": "POST braucht {\"apply\": true}"}), 400
+    try:
+        write_cmd("update")
+        return jsonify({
+            "ok": True,
+            "started": True,
+            "hint": "Update läuft im Core — Seite in ~30 s neu laden",
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/api/system/resources")
 def api_system_resources():
     import subprocess as _sp2

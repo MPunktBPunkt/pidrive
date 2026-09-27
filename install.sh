@@ -1,5 +1,5 @@
 #!/bin/bash
-PIDRIVE_VERSION="0.11.169"
+PIDRIVE_VERSION="0.11.170"
 
 # ============================================================
 # PiDrive Install Script

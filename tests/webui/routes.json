@@ -1,6 +1,9 @@
 {
   "version": 1,
   "allowed_commands": [
+    "airband_monitor_start",
+    "airband_monitor_stop",
+    "airband_tune_save",
     "audio_all",
     "audio_bt",
     "audio_hdmi",
@@ -27,12 +30,15 @@
     "fm_next",
     "fm_prev",
     "fm_scan",
+    "fm_tune_save",
     "gain_dab_auto",
     "gain_fm_auto",
     "left",
     "lib_browse",
     "library_stop",
     "play_spotify",
+    "pmr_monitor_start",
+    "pmr_monitor_stop",
     "radio_stop",
     "reboot",
     "right",
@@ -81,17 +87,34 @@
     "scanner_gain:",
     "set_scanner_squelch:",
     "set_ppm:",
+    "airband_gain_step:",
+    "airband_sr_step:",
+    "airband_gain:",
+    "airband_sr:",
+    "airband_hp_step:",
+    "airband_lp_step:",
+    "fm_hp_step:",
+    "fm_lp_step:",
     "webradio_play:",
     "local_play:",
     "play_dab:",
     "play_fm:",
     "play_web:",
     "favorites_play:",
-    "vol_set:"
+    "vol_set:",
+    "audio_eq:",
+    "audio_nr:"
   ],
   "routes": [
     {
       "path": "/bluetooth",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/menu",
       "methods": [
         "GET"
       ],
@@ -120,6 +143,13 @@
     },
     {
       "path": "/avrcp",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/car",
       "methods": [
         "GET"
       ],
@@ -217,6 +247,14 @@
       "file": "pidrive/web/app.py"
     },
     {
+      "path": "/api/update",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
       "path": "/api/diagnose",
       "methods": [
         "GET"
@@ -288,10 +326,46 @@
       "file": "pidrive/web/app.py"
     },
     {
+      "path": "/api/ppm_calibrate/start",
+      "methods": [
+        "POST",
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/ppm_calibrate/status",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/scanner/airband-stations",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
       "path": "/api/scanner/settings",
       "methods": [
         "GET",
         "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/scanner/airband-monitor",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/scanner/pmr-monitor",
+      "methods": [
+        "GET"
       ],
       "file": "pidrive/web/app.py"
     },
@@ -335,6 +409,22 @@
       "path": "/api/avrcp",
       "methods": [
         "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/esp/discover",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
+      "path": "/api/esp/host",
+      "methods": [
+        "GET",
+        "POST"
       ],
       "file": "pidrive/web/app.py"
     },
@@ -405,6 +495,22 @@
       "path": "/api/audio/listen",
       "methods": [
         "GET"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/audio/eq",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_audio.py"
+    },
+    {
+      "path": "/api/audio/nr",
+      "methods": [
+        "GET",
+        "POST"
       ],
       "file": "pidrive/web/api/routes_audio.py"
     },

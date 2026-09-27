@@ -14,8 +14,17 @@ def test_decide_usb_gadget_skips_pa(monkeypatch):
     assert d["requested"] == "usb_gadget"
     assert d["effective"] == "usb_gadget"
     assert d["reason"] == "usb_gadget_requested"
-    assert d["sink"] == ""
+    assert d["sink"] == ""  # ohne PA kein lokaler Monitor-Sink
     assert d["pa_ok"] is True
+
+
+def test_decide_usb_gadget_sets_local_sink_when_pa_ok(monkeypatch):
+    monkeypatch.setattr("modules.audio._pa_ok", lambda: True)
+    monkeypatch.setattr("modules.audio._ensure_klinke_sink", lambda: None)
+    monkeypatch.setattr("modules.audio.get_alsa_sink", lambda: "alsa_output.1.analog-stereo")
+    d = decide_audio_route({"audio_output": "usb_gadget"}, source="dab")
+    assert d["effective"] == "usb_gadget"
+    assert d["sink"] == "alsa_output.1.analog-stereo"
 
 
 def test_write_status_includes_usb(tmp_path, monkeypatch):

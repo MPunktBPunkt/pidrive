@@ -42,6 +42,7 @@ ALLOWED_COMMANDS = {
     "stop",  # Alias → radio_stop (Web/CLI Kompatibilität)
     "audio_klinke", "audio_hdmi", "audio_bt", "audio_all", "audio_usb_gadget",
     "vol_up", "vol_set", "vol_down",
+    "audio_eq_apply",
     "gain_fm_auto", "gain_dab_auto",
     "dab_scan", "dab_scan_replace", "fm_scan",
     "fm_next", "fm_prev", "dab_next", "dab_prev",
@@ -74,4 +75,6 @@ ALLOWED_COMMAND_PREFIXES = (
     "play_dab:", "play_fm:", "play_web:",
     "favorites_play:",
     "vol_set:",
+    "audio_eq:",
+    "audio_nr:",
 )

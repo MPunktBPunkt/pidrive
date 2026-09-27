@@ -452,7 +452,19 @@ def _airband_af_string(settings=None, S=None):
     if lp <= hp:
         lp = min(AIRBAND_LP_STEPS, key=lambda x: abs(x - (hp + 500)))
         lp = max(lp, hp + 500)
-    return f"lavfi=[highpass=f={hp},lowpass=f={lp},volume={AIRBAND_AF_VOLUME_DB}dB]"
+    base = [
+        f"highpass=f={hp}",
+        f"lowpass=f={lp}",
+        f"volume={AIRBAND_AF_VOLUME_DB}dB",
+    ]
+    try:
+        from modules.audio_eq import compose_lavfi, build_eq_filters
+        return compose_lavfi(base, build_eq_filters(settings, source="airband"))
+    except Exception:
+        return (
+            f"lavfi=[highpass=f={hp},lowpass=f={lp},"
+            f"volume={AIRBAND_AF_VOLUME_DB}dB]"
+        )
 
 
 def _airband_default_dict(settings=None):
@@ -920,7 +932,14 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
                 # Live HP/LP aus airband_tune / Settings (Default 250–3000 Hz)
                 _mpv_af = _airband_af_string(settings, S=S)
             else:
-                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
+                try:
+                    from modules.audio_eq import compose_lavfi, build_eq_filters
+                    _mpv_af = compose_lavfi(
+                        ["highpass=f=250", "lowpass=f=3200", "volume=12dB"],
+                        build_eq_filters(settings, source=band_id or "scanner"),
+                    )
+                except Exception:
+                    _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3200,volume=12dB]"
         else:
             # Schmalband-FM (PMR etc.)
             _rtl_sr = 24000
@@ -930,7 +949,14 @@ def play_freq(freq_mhz, name, bandwidth_hz, S, settings=None,
             _rtl_extra = ["-F", "9", "-A", "std", "-t", "1"]
             if _rtl_offset_enabled(settings):
                 _rtl_extra += ["-E", "offset"]
-            _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3700,volume=10dB]"
+            try:
+                from modules.audio_eq import compose_lavfi, build_eq_filters
+                _mpv_af = compose_lavfi(
+                    ["highpass=f=250", "lowpass=f=3700", "volume=10dB"],
+                    build_eq_filters(settings, source=band_id or "scanner"),
+                )
+            except Exception:
+                _mpv_af = "lavfi=[highpass=f=250,lowpass=f=3700,volume=10dB]"
 
         # Prio C: shell=True → Popen-Pipe
         import os as _sc_os

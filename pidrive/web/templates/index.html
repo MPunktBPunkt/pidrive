@@ -72,6 +72,19 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
 .vol-pct { font-size: 13px; color: #58a6ff; min-width: 36px; text-align: right;
   font-variant-numeric: tabular-nums; }
 .vol-audio-route { font-size: 10px; color: #3a6090; text-align: center; margin-top: 6px; }
+.eq-section { margin-top: 14px; padding: 10px 12px; background: #0a1628; border: 1px solid #1a3050;
+  border-radius: 6px; }
+.eq-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.eq-title { font-size: 12px; color: #8eb4e0; letter-spacing: .04em; text-transform: uppercase; }
+.eq-nr { font-size: 12px; color: #c8d8f0; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.eq-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.eq-presets button { font-size: 11px; padding: 4px 8px; background: #0d2040; border: 1px solid #1e3d6e;
+  color: #c8d8f0; border-radius: 4px; cursor: pointer; }
+.eq-presets button.active { border-color: #58a6ff; color: #58a6ff; background: #122a4a; }
+.eq-bands label { display: block; font-size: 11px; color: #8eb4e0; margin-bottom: 6px; }
+.eq-bands input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; background: #1e3d6e;
+  border-radius: 2px; margin-top: 4px; }
+.eq-hint { font-size: 10px; color: #3a6090; margin-top: 4px; }
 .transport { display: flex; gap: 8px; margin-top: 12px; }
 .tbtn { flex: 1; padding: 12px 6px; background: #0d2040; border: 1px solid #1e3d6e;
   color: #8ab8e0; font-size: 20px; cursor: pointer; border-radius: 6px;
@@ -209,6 +222,34 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
       <button class="vol-btn" onclick="sendCmd('vol_up')">+</button>
     </div>
     <div class="vol-audio-route" id="volRoute">Ausgang: –</div>
+
+    <div class="eq-section" data-eq-root>
+      <div class="eq-head">
+        <span class="eq-title">Klang</span>
+        <label class="eq-nr" title="Leichte Rauschunterdrückung (afftdn) — gut für Sprache/schwaches FM">
+          <input type="checkbox" class="eq-nr-input" onchange="onEqNrToggle(this.checked)"> NR
+        </label>
+      </div>
+      <div class="eq-presets" data-eq-presets></div>
+      <div class="eq-bands">
+        <label>Bass <span class="eq-bass-lbl">0</span>
+          <input type="range" class="eq-bass" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-bass-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+        <label>Mitten <span class="eq-mid-lbl">0</span>
+          <input type="range" class="eq-mid" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-mid-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+        <label>Höhen <span class="eq-treble-lbl">0</span>
+          <input type="range" class="eq-treble" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-treble-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+      </div>
+      <div class="eq-hint" data-eq-hint>Live — Sender startet kurz neu</div>
+    </div>
 
     <div class="transport">
       <button class="tbtn" onclick="prevStation()">⏮</button>
@@ -407,6 +448,36 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
     <div class="pmr-status" id="pmrDebugStatus" style="margin-top:2px;font-size:11px;opacity:.85"></div>
   </div>
   <div class="scan-card">
+    <h4>Klang</h4>
+    <div class="eq-section" data-eq-root style="margin-top:0;padding:0;background:transparent;border:none">
+      <div class="eq-head">
+        <span class="eq-title">Tone / NR</span>
+        <label class="eq-nr" title="Leichte Rauschunterdrückung (afftdn) — gut für Sprache/schwaches FM">
+          <input type="checkbox" class="eq-nr-input" onchange="onEqNrToggle(this.checked)"> NR
+        </label>
+      </div>
+      <div class="eq-presets" data-eq-presets></div>
+      <div class="eq-bands">
+        <label>Bass <span class="eq-bass-lbl">0</span>
+          <input type="range" class="eq-bass" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-bass-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+        <label>Mitten <span class="eq-mid-lbl">0</span>
+          <input type="range" class="eq-mid" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-mid-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+        <label>Höhen <span class="eq-treble-lbl">0</span>
+          <input type="range" class="eq-treble" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-treble-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+      </div>
+      <div class="eq-hint" data-eq-hint>Live — Sender startet kurz neu</div>
+    </div>
+  </div>
+  <div class="scan-card">
     <h4>Squelch</h4>
     <div class="scan-row">
       <span class="scan-label" id="sqLabel">50</span>
@@ -443,6 +514,7 @@ function switchTab(name) {
     loadAirAutoTune();
     startPmrBackendPoll();
     startAirBackendPoll();
+    try { loadEq(); } catch (e) { /* ignore */ }
   }
   else { stopPmrWatch(); stopPmrBackendPoll(); stopAirBackendPoll(); }
 }
@@ -782,6 +854,105 @@ async function loadPlaylist(date, btn) {
 
 function onVolSliderInput(v) { _volDragging = true; document.getElementById('volPct').textContent = v + '%'; }
 function onVolSliderCommit(v) { _volDragging = false; sendCmd('vol_set:' + v); }
+
+function eqRoots() {
+  return Array.from(document.querySelectorAll('[data-eq-root]'));
+}
+
+function eqReadBands(fromEl) {
+  const root = (fromEl && fromEl.closest)
+    ? fromEl.closest('[data-eq-root]')
+    : (eqRoots()[0] || null);
+  if (!root) return null;
+  return {
+    bass: parseInt(root.querySelector('.eq-bass').value, 10),
+    mid: parseInt(root.querySelector('.eq-mid').value, 10),
+    treble: parseInt(root.querySelector('.eq-treble').value, 10),
+    nr: !!root.querySelector('.eq-nr-input').checked,
+  };
+}
+
+async function loadEq() {
+  try {
+    const r = await fetch('/api/audio/eq');
+    const j = await r.json();
+    if (!j || !j.ok) return;
+    const presetHtml = (j.presets || []).map(p =>
+      `<button type="button" data-id="${p.id}" class="${p.id === j.preset ? 'active' : ''}"
+        onclick="setEqPreset('${p.id}')">${p.label}</button>`
+    ).join('');
+    eqRoots().forEach(root => {
+      const box = root.querySelector('[data-eq-presets]');
+      if (box) box.innerHTML = presetHtml;
+      const b = root.querySelector('.eq-bass');
+      const m = root.querySelector('.eq-mid');
+      const t = root.querySelector('.eq-treble');
+      const nr = root.querySelector('.eq-nr-input');
+      const bl = root.querySelector('.eq-bass-lbl');
+      const ml = root.querySelector('.eq-mid-lbl');
+      const tl = root.querySelector('.eq-treble-lbl');
+      if (b) { b.value = j.bass; if (bl) bl.textContent = j.bass; }
+      if (m) { m.value = j.mid; if (ml) ml.textContent = j.mid; }
+      if (t) { t.value = j.treble; if (tl) tl.textContent = j.treble; }
+      if (nr) nr.checked = !!j.nr;
+      const hint = root.querySelector('[data-eq-hint]');
+      if (hint) hint.textContent = (j.label || j.preset) + ' · Live-Apply';
+    });
+  } catch (e) { /* ignore */ }
+}
+
+async function setEqPreset(id) {
+  try {
+    const r = await fetch('/api/audio/eq', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({preset: id}),
+    });
+    const j = await r.json();
+    if (j && j.ok) {
+      if (typeof showToast === 'function') showToast('EQ: ' + (j.label || id) + ' (Apply…)');
+      loadEq();
+    } else if (typeof showToast === 'function') {
+      showToast('EQ fehlgeschlagen');
+    }
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('EQ Fehler');
+  }
+}
+
+async function onEqBandsCommit(fromEl) {
+  const body = eqReadBands(fromEl);
+  if (!body) return;
+  try {
+    const r = await fetch('/api/audio/eq', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    if (j && j.ok) {
+      if (typeof showToast === 'function') showToast('Klang angewendet');
+      loadEq();
+    }
+  } catch (e) { /* ignore */ }
+}
+
+async function onEqNrToggle(on) {
+  try {
+    await fetch('/api/audio/nr', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({enabled: !!on}),
+    });
+    if (typeof showToast === 'function') showToast(on ? 'NR an (Apply…)' : 'NR aus (Apply…)');
+    loadEq();
+  } catch (e) { /* ignore */ }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  try { loadEq(); } catch (e) { /* ignore */ }
+});
+
 function toggleMute() {
   _isMuted = !_isMuted;
   sendCmd(_isMuted ? 'vol_set:0' : 'vol_set:' + _lastVol);

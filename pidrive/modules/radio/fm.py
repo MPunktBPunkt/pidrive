@@ -142,7 +142,12 @@ def _fm_af_string(settings=None, S=None):
     lp = _get_fm_lp(settings, S=S)
     if lp <= hp:
         lp = max(hp + 1000, 8000)
-    return f"lavfi=[highpass=f={hp},lowpass=f={lp}]"
+    base = [f"highpass=f={hp}", f"lowpass=f={lp}"]
+    try:
+        from modules.audio_eq import compose_lavfi, build_eq_filters
+        return compose_lavfi(base, build_eq_filters(settings, source="fm"))
+    except Exception:
+        return f"lavfi=[highpass=f={hp},lowpass=f={lp}]"
 
 
 def _fm_default_dict(settings=None):
@@ -444,9 +449,10 @@ def play_station(station, S, settings=None):
         if "--ao=pulse" not in _mpv_extra and not any(a.startswith("--ao=") for a in _mpv_extra):
             _mpv_extra = ["--ao=pulse"] + _mpv_extra
 
-        # Audio-Filter: HP/LP gegen Rauschen (Live aus fm_tune / Defaults)
+        # Audio-Filter: HP/LP gegen Rauschen + globales EQ/NR
         _mpv_af = _fm_af_string(settings, S=S)
-        if _mpv_af and not any(a.startswith("--af=") for a in _mpv_extra):
+        if _mpv_af:
+            _mpv_extra = [a for a in _mpv_extra if not str(a).startswith("--af=")]
             _mpv_extra = [f"--af={_mpv_af}"] + _mpv_extra
 
         # Gain und PPM aus Settings aufbauen

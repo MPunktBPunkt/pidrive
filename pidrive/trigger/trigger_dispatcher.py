@@ -85,6 +85,7 @@ _EXACT_TRIGGERS = frozenset({
     "fm_tune_save",
     "lib_browse", "favorites_add_current",
     "reboot", "shutdown", "sys_info", "sys_version", "update", "audio_select",
+    "audio_eq_apply",
 })
 
 _TRIGGER_PREFIXES = (
@@ -101,6 +102,7 @@ _TRIGGER_PREFIXES = (
     "airband_gain_step:", "airband_sr_step:", "airband_gain:", "airband_sr:",
     "airband_hp_step:", "airband_lp_step:",
     "fm_hp_step:", "fm_lp_step:",
+    "audio_eq:", "audio_nr:",
 )
 
 

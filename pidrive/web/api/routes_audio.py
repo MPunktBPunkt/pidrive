@@ -177,3 +177,89 @@ def api_audio_listen():
         direct_passthrough=True,
     )
 
+
+@audio_bp.route("/api/audio/eq", methods=["GET", "POST"])
+def api_audio_eq():
+    """Tone-Presets / 3-Band + NR lesen oder setzen."""
+    try:
+        from settings import load_settings as _ls, save_settings as _ss
+        from modules import audio_eq as _aeq
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    s = _ls()
+    if request.method == "GET":
+        st = _aeq.get_state(s)
+        st["ok"] = True
+        st["hint"] = "Live-Apply bei Änderung (Sender startet kurz neu)"
+        return jsonify(st)
+
+    body = request.get_json(silent=True) or {}
+    try:
+        if body.get("preset"):
+            st = _aeq.apply_preset(s, str(body["preset"]))
+        else:
+            st = _aeq.set_bands(
+                s,
+                bass=body.get("bass"),
+                mid=body.get("mid"),
+                treble=body.get("treble"),
+                nr=body.get("nr") if "nr" in body else None,
+                preset="custom" if any(
+                    k in body for k in ("bass", "mid", "treble", "nr")
+                ) else None,
+            )
+        _ss(s)
+        # Core: Preset-Trigger (inkl. Live-Apply) oder nur Apply nach Band-Save
+        try:
+            with open("/tmp/pidrive_cmd", "a", encoding="utf-8") as f:
+                if body.get("preset"):
+                    f.write(f"audio_eq:{st['preset']}\n")
+                else:
+                    f.write("audio_eq_apply\n")
+        except Exception:
+            pass
+        st["ok"] = True
+        st["hint"] = "wird auf laufende Quelle angewendet (kurz neu starten)"
+        return jsonify(st)
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@audio_bp.route("/api/audio/nr", methods=["GET", "POST"])
+def api_audio_nr():
+    """Rauschunterdrückung lesen / setzen."""
+    try:
+        from settings import load_settings as _ls, save_settings as _ss
+        from modules import audio_eq as _aeq
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    s = _ls()
+    if request.method == "GET":
+        st = _aeq.get_state(s)
+        return jsonify({"ok": True, "nr": st["nr"], "preset": st["preset"]})
+
+    body = request.get_json(silent=True) or {}
+    if "enabled" in body:
+        enabled = bool(body.get("enabled"))
+    elif "nr" in body:
+        enabled = bool(body.get("nr"))
+    else:
+        enabled = not bool(s.get("audio_nr", False))
+    st = _aeq.set_nr(s, enabled)
+    _ss(s)
+    try:
+        with open("/tmp/pidrive_cmd", "a", encoding="utf-8") as f:
+            f.write(f"audio_nr:{'on' if st.get('nr') else 'off'}\n")
+    except Exception:
+        pass
+    return jsonify({
+        "ok": True,
+        "nr": st["nr"],
+        "preset": st["preset"],
+        "hint": "wird auf laufende Quelle angewendet (kurz neu starten)",
+    })
+

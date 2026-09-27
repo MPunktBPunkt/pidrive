@@ -106,6 +106,69 @@ def handle(cmd, menu_state, store, S, settings, bg):
             audio.set_volume(_lvl, settings)
         except (ValueError, IndexError):
             log.warn(f"vol_set: ungültiger Wert: {cmd}")
+    elif cmd.startswith("audio_eq:"):
+        _name = cmd.split(":", 1)[1].strip()
+        def _eq_set():
+            try:
+                from modules import audio_eq as _aeq
+                from settings import save_settings as _ss
+                st = _aeq.apply_preset(settings, _name)
+                _ss(settings)
+                applied = _aeq.restart_current_playback(S, settings, reason="eq")
+                log.info(
+                    f"[AUDIO] eq preset={st.get('preset')} bass={st.get('bass')} "
+                    f"mid={st.get('mid')} treble={st.get('treble')} nr={st.get('nr')} "
+                    f"apply={applied}"
+                )
+                try:
+                    import ipc as _ipc
+                    _ipc.write_progress(
+                        "Audio",
+                        f"EQ: {st.get('label')}",
+                        color="green",
+                    )
+                except Exception:
+                    pass
+            except Exception as e:
+                log.warn(f"audio_eq: {e}")
+        bg(_eq_set)
+    elif cmd.startswith("audio_nr:"):
+        _nr = cmd.split(":", 1)[1].strip().lower()
+        def _nr_set():
+            try:
+                from modules import audio_eq as _aeq
+                from settings import save_settings as _ss
+                if _nr in ("toggle", "flip"):
+                    cur = bool(settings.get("audio_nr", False))
+                    st = _aeq.set_nr(settings, not cur)
+                else:
+                    st = _aeq.set_nr(settings, _nr in ("1", "on", "true", "yes", "an"))
+                _ss(settings)
+                applied = _aeq.restart_current_playback(S, settings, reason="nr")
+                log.info(f"[AUDIO] nr={'on' if st.get('nr') else 'off'} apply={applied}")
+                try:
+                    import ipc as _ipc
+                    _ipc.write_progress(
+                        "Audio",
+                        "NR an" if st.get("nr") else "NR aus",
+                        color="green",
+                    )
+                except Exception:
+                    pass
+            except Exception as e:
+                log.warn(f"audio_nr: {e}")
+        bg(_nr_set)
+    elif cmd == "audio_eq_apply":
+        def _eq_apply():
+            try:
+                from modules import audio_eq as _aeq
+                from settings import load_settings as _ls
+                settings.update(_ls())
+                applied = _aeq.restart_current_playback(S, settings, reason="apply")
+                log.info(f"[AUDIO] eq apply={applied}")
+            except Exception as e:
+                log.warn(f"audio_eq_apply: {e}")
+        bg(_eq_apply)
 
     # ── WiFi / BT ─────────────────────────────────────────────────────────
     elif cmd in ("wifi_on", "wifi_off", "wifi_toggle"):

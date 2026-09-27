@@ -196,8 +196,11 @@ def main():
   pidrivectl volume 70           Direkt auf 70%% setzen
   pidrivectl volume set 70       Lautstaerke direkt setzen
 
-  pidrivectl audio route klinke  Audio-Ausgang: klinke | bt | hdmi
+  pidrivectl audio route klinke  Audio-Ausgang: klinke | bt | hdmi | usb_gadget
   pidrivectl audio status        Aktuellen Ausgang anzeigen
+  pidrivectl audio eq list       Tone-Presets (flat|bass+|voice|airband|noisy-fm)
+  pidrivectl audio eq set voice  Preset setzen + Live-Apply
+  pidrivectl audio nr on|off     Rauschunterdrückung + Live-Apply
 
   pidrivectl dab status          DAB+ Empfangsstatus (Lock, PCM, Fehler)
   pidrivectl dab scan            DAB+ Sendersuchlauf starten
@@ -356,12 +359,28 @@ Flags (vor dem Befehl angeben):
     spec_sub.add_parser("last", help="Letztes Spektrum-/Scan-Ergebnis")
 
     # ── audio ─────────────────────────────────────────────────────────────
-    p_audio = sub.add_parser("audio", help="Audio-Ausgang")
+    p_audio = sub.add_parser("audio", help="Audio-Ausgang / Klang")
     audio_sub = p_audio.add_subparsers(dest="audio_cmd")
     p_route = audio_sub.add_parser("route")
     p_route.add_argument("mode", choices=["klinke", "bt", "hdmi", "auto", "usb_gadget", "usb"])
     audio_sub.add_parser("status")
     audio_sub.add_parser("test", help="Testton abspielen (3s)")
+    p_eq = audio_sub.add_parser("eq", help="Tone-Presets / 3-Band EQ")
+    eq_sub = p_eq.add_subparsers(dest="eq_cmd")
+    eq_sub.add_parser("list", help="Verfügbare Presets")
+    eq_sub.add_parser("status", help="Aktueller EQ/NR")
+    p_eq_set = eq_sub.add_parser("set", help="Preset setzen (flat|bass+|voice|airband|noisy-fm)")
+    p_eq_set.add_argument("preset")
+    p_eq_bands = eq_sub.add_parser("bands", help="Bänder manuell (−6…+6 dB)")
+    p_eq_bands.add_argument("--bass", type=int, default=None)
+    p_eq_bands.add_argument("--mid", type=int, default=None)
+    p_eq_bands.add_argument("--treble", type=int, default=None)
+    p_nr = audio_sub.add_parser("nr", help="Rauschunterdrückung")
+    nr_sub = p_nr.add_subparsers(dest="nr_cmd")
+    nr_sub.add_parser("on")
+    nr_sub.add_parser("off")
+    nr_sub.add_parser("status")
+    nr_sub.add_parser("toggle")
 
     # ── usb / ESP ─────────────────────────────────────────────────────────
     p_usb = sub.add_parser("usb", help="ESP32 USB-MSC / PUMP")
@@ -1628,6 +1647,114 @@ Flags (vor dem Befehl angeben):
             fmt.out("─"*48 + "\n")
             sys.exit(EXIT_OK)
 
+        elif args.audio_cmd == "eq":
+            from settings import load_settings as _ls, save_settings as _ss
+            from modules import audio_eq as _aeq
+            s = _ls()
+            eq_cmd = getattr(args, "eq_cmd", None) or "status"
+            if eq_cmd == "list":
+                rows = [
+                    {"id": k, "label": v["label"], "bass": v["bass"],
+                     "mid": v["mid"], "treble": v["treble"], "nr": v["nr"]}
+                    for k, v in _aeq.PRESETS.items()
+                ]
+                if use_json:
+                    fmt.print_json({"presets": rows})
+                else:
+                    fmt.out("Tone-Presets (wirken beim nächsten Play):")
+                    for r in rows:
+                        nr = " NR" if r["nr"] else ""
+                        fmt.out(
+                            f"  {r['id']:<10} {r['label']:<10} "
+                            f"B{r['bass']:+d} M{r['mid']:+d} T{r['treble']:+d}{nr}"
+                        )
+                sys.exit(EXIT_OK)
+            if eq_cmd == "set":
+                try:
+                    st = _aeq.apply_preset(s, args.preset)
+                except ValueError as e:
+                    fmt.err(str(e))
+                    sys.exit(2)
+                _ss(s)
+                # Core-Settings sync via trigger (falls Core läuft)
+                try:
+                    svc.send(f"audio_eq:{st['preset']}")
+                except Exception:
+                    pass
+                if use_json:
+                    fmt.print_json({"ok": True, **st})
+                else:
+                    fmt.out(
+                        f"EQ: {st['label']}  "
+                        f"B{st['bass']:+d} M{st['mid']:+d} T{st['treble']:+d}  "
+                        f"NR={'an' if st['nr'] else 'aus'}"
+                    )
+                    fmt.out("  (Live-Apply: laufende Quelle startet kurz neu)")
+                sys.exit(EXIT_OK)
+            if eq_cmd == "bands":
+                st = _aeq.set_bands(
+                    s,
+                    bass=args.bass,
+                    mid=args.mid,
+                    treble=args.treble,
+                    preset="custom",
+                )
+                _ss(s)
+                if use_json:
+                    fmt.print_json({"ok": True, **st})
+                else:
+                    fmt.out(
+                        f"EQ custom  B{st['bass']:+d} M{st['mid']:+d} T{st['treble']:+d}  "
+                        f"NR={'an' if st['nr'] else 'aus'}"
+                    )
+                sys.exit(EXIT_OK)
+            # status (default)
+            st = _aeq.get_state(s)
+            if use_json:
+                fmt.print_json(st)
+            else:
+                fmt.out(
+                    f"EQ: {st.get('label') or st['preset']}  "
+                    f"B{st['bass']:+d} M{st['mid']:+d} T{st['treble']:+d}  "
+                    f"NR={'an' if st['nr'] else 'aus'}"
+                )
+            sys.exit(EXIT_OK)
+
+        elif args.audio_cmd == "nr":
+            from settings import load_settings as _ls, save_settings as _ss
+            from modules import audio_eq as _aeq
+            s = _ls()
+            nr_cmd = getattr(args, "nr_cmd", None) or "status"
+            if nr_cmd == "on":
+                st = _aeq.set_nr(s, True)
+                _ss(s)
+                try:
+                    svc.send("audio_nr:on")
+                except Exception:
+                    pass
+            elif nr_cmd == "off":
+                st = _aeq.set_nr(s, False)
+                _ss(s)
+                try:
+                    svc.send("audio_nr:off")
+                except Exception:
+                    pass
+            elif nr_cmd == "toggle":
+                st = _aeq.set_nr(s, not bool(s.get("audio_nr", False)))
+                _ss(s)
+                try:
+                    svc.send("audio_nr:toggle")
+                except Exception:
+                    pass
+            else:
+                st = _aeq.get_state(s)
+            if use_json:
+                fmt.print_json({"nr": st.get("nr"), "preset": st.get("preset")})
+            else:
+                fmt.out(f"NR: {'an' if st.get('nr') else 'aus'}  (Preset {st.get('preset')})")
+                if nr_cmd in ("on", "off", "toggle"):
+                    fmt.out("  (Live-Apply: laufende Quelle startet kurz neu)")
+            sys.exit(EXIT_OK)
 
         elif args.audio_cmd == "status":
             try:

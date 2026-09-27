@@ -384,6 +384,7 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         _scanner_band("cb",      "CB-Funk (DE/EU)"),
         _scanner_band("vhf",     "VHF"),
         _scanner_band("uhf",     "UHF"),
+        _scanner_band("airband", "Airband (AM)"),
     ])
 
     spotify_node = _folder("spotify", "Spotify", [
@@ -450,6 +451,15 @@ def build_tree(store: StationStore, S: dict, settings: dict) -> MenuNode:
         MenuNode(id="ao_usb",    label="USB (ESP)",     type="action", action="audio_usb_gadget"),
         MenuNode(id="ao_volup",  label="Lauter",        type="action", action="vol_up"),
         MenuNode(id="ao_voldown",label="Leiser",        type="action", action="vol_down"),
+        _folder("ao_eq", "Klang / EQ", [
+            MenuNode(id="eq_flat",   label="Flat",      type="action", action="audio_eq:flat"),
+            MenuNode(id="eq_bass",   label="Bass+",     type="action", action="audio_eq:bass+"),
+            MenuNode(id="eq_voice",  label="Voice",     type="action", action="audio_eq:voice"),
+            MenuNode(id="eq_air",    label="Airband",   type="action", action="audio_eq:airband"),
+            MenuNode(id="eq_noisy",  label="Noisy FM",  type="action", action="audio_eq:noisy-fm"),
+            MenuNode(id="eq_nr_on",  label="NR an",     type="action", action="audio_nr:on"),
+            MenuNode(id="eq_nr_off", label="NR aus",    type="action", action="audio_nr:off"),
+        ]),
     ])
 
     # ── 4. Verbindungen (BT + WiFi) ─────────────────────────────────────────

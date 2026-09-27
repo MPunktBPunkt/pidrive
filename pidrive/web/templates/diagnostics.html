@@ -2,6 +2,19 @@
 {% block title %}PiDrive — Diagnose{% endblock %}
 {% block content %}
 <div class="card">
+  <div class="card-title">⬆ Update (GitHub)
+    <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
+      origin/main · pidrivectl update
+    </span>
+  </div>
+  <div id="updStatus" style="font-size:13px;margin-bottom:10px;line-height:1.5">Lade Versionsinfo…</div>
+  <div class="btn-row" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">
+    <button class="btn" id="updCheckBtn" onclick="checkUpdate()">Prüfen</button>
+    <button class="btn primary" id="updApplyBtn" onclick="applyUpdate()" disabled>Update einspielen</button>
+  </div>
+  <pre id="updLog" style="background:#050d1a;padding:10px;font-size:11px;max-height:160px;overflow-y:auto;color:var(--muted);white-space:pre-wrap;border:1px solid var(--line-soft);display:none"></pre>
+</div>
+<div class="card">
   <div class="card-title">📋 Logs <span id="snapLogs" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span></div>
   <div class="btn-row" style="margin-bottom:8px">
     <button class="btn" onclick="loadLog('core')">Core Log</button>
@@ -212,6 +225,77 @@ async function stopSmoke() {
   }catch(e){}
 }
 
+async function checkUpdate() {
+  const st = document.getElementById('updStatus');
+  const log = document.getElementById('updLog');
+  const applyBtn = document.getElementById('updApplyBtn');
+  const checkBtn = document.getElementById('updCheckBtn');
+  if (checkBtn) checkBtn.disabled = true;
+  if (st) st.textContent = 'Prüfe GitHub…';
+  try {
+    const r = await fetch('/api/update');
+    const j = await r.json();
+    if (!j || j.ok === false) {
+      if (st) st.innerHTML = '<span style="color:var(--red)">Fehler: ' +
+        (j && j.error ? j.error : 'unbekannt') + '</span>';
+      if (applyBtn) applyBtn.disabled = true;
+      return;
+    }
+    const local = (j.local_version || '?') + ' (' + (j.local_commit || '?') + ')';
+    const remote = (j.remote_version || '?') + ' (' + (j.remote_commit || '?') + ')';
+    let html = '<b>Lokal:</b> ' + local + '<br><b>GitHub:</b> ' + remote;
+    if (j.available) {
+      html += '<br><span style="color:var(--yellow)">⬆ Update verfügbar — ' +
+        (j.behind || '?') + ' Commit(s) hinterher</span>';
+      if (applyBtn) applyBtn.disabled = false;
+    } else {
+      html += '<br><span style="color:var(--green)">✓ Bereits aktuell</span>';
+      if (applyBtn) applyBtn.disabled = true;
+    }
+    if (st) st.innerHTML = html;
+    if (log) {
+      if (j.commits && j.commits.length) {
+        log.style.display = 'block';
+        log.textContent = j.commits.join('\n');
+      } else {
+        log.style.display = 'none';
+        log.textContent = '';
+      }
+    }
+  } catch (e) {
+    if (st) st.innerHTML = '<span style="color:var(--red)">Fehler: ' + e + '</span>';
+  } finally {
+    if (checkBtn) checkBtn.disabled = false;
+  }
+}
+
+async function applyUpdate() {
+  if (!confirm('Update von GitHub einspielen und Services neu starten?')) return;
+  const st = document.getElementById('updStatus');
+  const applyBtn = document.getElementById('updApplyBtn');
+  if (applyBtn) applyBtn.disabled = true;
+  if (st) st.textContent = 'Update gestartet — Core lädt origin/main… Seite in ~30 s neu laden.';
+  try {
+    const r = await fetch('/api/update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({apply: true}),
+    });
+    const j = await r.json();
+    if (j && j.ok) {
+      if (typeof showToast === 'function') showToast('Update gestartet');
+      setTimeout(() => { location.reload(); }, 25000);
+    } else {
+      if (st) st.innerHTML = '<span style="color:var(--red)">Start fehlgeschlagen: ' +
+        ((j && j.error) || '?') + '</span>';
+      if (applyBtn) applyBtn.disabled = false;
+    }
+  } catch (e) {
+    if (st) st.innerHTML = '<span style="color:var(--red)">Fehler: ' + e + '</span>';
+    if (applyBtn) applyBtn.disabled = false;
+  }
+}
+
 let _sysTick = 0;
 function onBaseRefresh() {
   // Systemressourcen max. alle ~6s (5 Polls), Source-State bei jedem Poll
@@ -219,5 +303,5 @@ function onBaseRefresh() {
   if (_sysTick % 5 === 1) loadSysRes();
   loadSourceState();
 }
-loadLog('core'); loadSysRes(); loadSourceState(); loadSmoke();
+loadLog('core'); loadSysRes(); loadSourceState(); loadSmoke(); checkUpdate();
 </script>{% endblock %}

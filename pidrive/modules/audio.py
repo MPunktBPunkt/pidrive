@@ -524,13 +524,21 @@ def decide_audio_route(settings=None, source: str = "") -> dict:
     if requested in ("usb", "esp", "usb_gadget"):
         requested = "usb_gadget"
 
-    # USB-Gadget → PUMP → ESP → BMW: kein lokaler PipeWire-Sink nötig
+    # USB-Gadget → PUMP → ESP → BMW: lokale Quellen weiter über Pulse (Monitor für Bridge).
+    # Sink = Klinke (falls vorhanden), damit Default-Sink.monitor Audio liefert.
     if requested == "usb_gadget":
+        alsa_sink = ""
+        try:
+            if _pa_ok():
+                _ensure_klinke_sink()
+                alsa_sink = get_alsa_sink() or ""
+        except Exception:
+            alsa_sink = ""
         return {
             "requested": "usb_gadget",
             "effective": "usb_gadget",
             "reason": "usb_gadget_requested",
-            "sink": "",
+            "sink": alsa_sink,
             "source": source,
             "pa_ok": True,
         }
@@ -604,8 +612,15 @@ def apply_audio_route(decision: dict):
     source    = decision.get("source", "")
 
     if effective == "usb_gadget":
-        # Kein PA-Default-Sink für BMW-Pfad; lokale Quellen weiter über Bridge/PUMP
-        pass
+        # Lokale Senke setzen, damit Bridge Default-Sink.monitor abgreifen kann
+        _local = sink or ""
+        if not _local:
+            try:
+                _local = get_alsa_sink() or ""
+            except Exception:
+                _local = ""
+        if _local:
+            set_default_sink(_local)
     elif sink:
         set_default_sink(sink)
 
@@ -639,6 +654,12 @@ def build_player_args(decision: dict, source: str = "") -> list:
     effective = decision.get("effective", "none"); sink = decision.get("sink", "")
     if effective == "bt" and sink:
         return ["PULSE_SERVER=unix:/var/run/pulse/native" + f" PULSE_SINK={sink}", "--ao=pulse"]
+    elif effective == "usb_gadget":
+        # BMW über ESP — lokal trotzdem Pulse (Klinke/Null), damit Monitor → Bridge läuft
+        env = "PULSE_SERVER=unix:/var/run/pulse/native"
+        if sink:
+            env += f" PULSE_SINK={sink}"
+        return [env, "--ao=pulse"]
     elif effective in ("klinke", "auto") and source in ("fm", "scanner"):
         # v0.10.55: PA System-Mode ist aktiv → PA hält ALSA-Card exklusiv.
         # mpv muss durch PA routen, nicht ALSA-direkt (sonst: Device busy → kein Ton).
@@ -659,14 +680,32 @@ def build_player_args(decision: dict, source: str = "") -> list:
 
 
 def get_mpv_args(settings=None, source: str = "") -> list:
-    """v0.10.55: Wrapper — nutzt decide_audio_route() + apply_audio_route()."""
+    """v0.10.55: Wrapper — nutzt decide_audio_route() + apply_audio_route().
+
+    Hängt bei Bedarf ``--af=lavfi=[…]`` aus audio_eq (Tone/NR) an.
+    """
     d = decide_audio_route(settings=settings, source=source)
     if not d.get("pa_ok", True):
         src_tag = ("source=" + source).ljust(17) if source else "source=-         "
         log.error("[AUDIO] " + src_tag + " effective=none reason=audio_inactive")
         return ["--ao=pulse"]
     apply_audio_route(d)
-    return build_player_args(d, source)
+    args = build_player_args(d, source)
+    if settings is None:
+        try:
+            from settings import load_settings as _ls
+            settings = _ls()
+        except Exception:
+            settings = {}
+    try:
+        from modules.audio_eq import ensure_af_on_args
+        # FM/Scanner bringen eigene Basisfilter mit — hier nur globales EQ/NR,
+        # sofern der Aufrufer nicht selbst --af= setzt.
+        if not any(isinstance(a, str) and a.startswith("--af=") for a in args):
+            args = ensure_af_on_args(args, settings, source=source or "")
+    except Exception as e:
+        log.warn(f"[AUDIO] eq/nr af skip: {e}")
+    return args
 
 def set_output(mode: str, settings: dict):
     mode = mode.lower().replace("audio_", "").strip()

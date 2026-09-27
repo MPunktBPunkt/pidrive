@@ -72,6 +72,12 @@ _DEFAULTS = {
     "fm_lp_hz":                 12000,  # FM Rauschfilter lowpass (schwache Sender)
     "fm_rtl_sr":                170000, # rtl_fm -s für WBFM (wbfm-Preset / Doku ~170k)
     "rtl_offset_tuning":        True,   # rtl_fm -E offset (DC-Spike meiden)
+    # Globaler Tone / NR (mpv lavfi — wirkt beim nächsten Play)
+    "audio_eq_preset":          "flat",  # flat|bass+|voice|airband|noisy-fm|custom
+    "audio_eq_bass":            0,       # −6…+6 dB
+    "audio_eq_mid":             0,
+    "audio_eq_treble":          0,
+    "audio_nr":                 False,   # afftdn leichte Rauschunterdrückung
     # RTL-SDR
     "ppm_correction":     0,             # Stick-spezifisch; Pi Allgäu typ. ~49
     # Spektrum-Scan Defaults (pidrivectl spectrum)

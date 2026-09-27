@@ -422,10 +422,32 @@ def _play_station_locked(station, S, settings=None):
         # v0.11.102: Direktes ALSA wie manuelles `sudo welle-cli` (ohne PA-Plugin).
         # pidrive_core.service setzt PULSE_SERVER global — fuer welle-cli entfernen,
         # sonst blockiert das PipeWire-ALSA-Plugin den Decode/PCM-Pfad.
+        # Ausnahme usb_gadget: Ton muss über Pulse laufen, damit pump_bridge
+        # Default-Sink.monitor → ESP weiterleiten kann (sonst stumm am BMW).
         _welle_env = dict(os.environ)
-        _welle_env.pop("PULSE_SERVER", None)
-        _welle_env.pop("PIPEWIRE_RUNTIME_DIR", None)
-        _welle_env.pop("PULSE_SINK", None)
+        _usb_gadget = (
+            (_adec.get("effective") == "usb_gadget")
+            or str((settings or {}).get("audio_output") or "").lower()
+            in ("usb_gadget", "usb", "esp")
+        )
+        if _usb_gadget:
+            _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
+            _sink = (_adec.get("sink") or "").strip()
+            if not _sink:
+                try:
+                    _sink = (_audio.get_alsa_sink() or "").strip()
+                except Exception:
+                    _sink = ""
+            if _sink:
+                _welle_env["PULSE_SINK"] = _sink
+            log.info(
+                f"DAB: usb_gadget → Pulse-Monitor-Pfad"
+                f" PULSE_SINK={_sink or '(default)'}"
+            )
+        else:
+            _welle_env.pop("PULSE_SERVER", None)
+            _welle_env.pop("PIPEWIRE_RUNTIME_DIR", None)
+            _welle_env.pop("PULSE_SINK", None)
 
         # /etc/asound.conf prüfen und bei Bedarf korrigieren
         # (ohne asound.conf → ALSA default = Card 0 = HDMI → kein Ton)
@@ -466,7 +488,8 @@ def _play_station_locked(station, S, settings=None):
         _write_play_debug({
             "audio_decision": _adec,
             "welle_cmd": _welle_cmd,
-            "welle_direct_alsa": True,
+            "welle_direct_alsa": not _usb_gadget,
+            "welle_usb_gadget_pulse": _usb_gadget,
             "pulse_server_in_env": "PULSE_SERVER" in _welle_env,
             "pulse_sink_in_env": "PULSE_SINK" in _welle_env,
             "pa_default_sink_before_start": _pa_default,
@@ -478,7 +501,8 @@ def _play_station_locked(station, S, settings=None):
 
         log.info(
             f"DAB play: START name={name!r} programme={_prog!r} channel={ch} sid={sid!r} gain={_gain} "
-            f"session={session_id} | ALSA=direct PULSE_SERVER={'✗' if 'PULSE_SERVER' not in _welle_env else '✓'} "
+            f"session={session_id} | ALSA={'pulse' if _usb_gadget else 'direct'} "
+            f"PULSE_SERVER={'✓' if 'PULSE_SERVER' in _welle_env else '✗'} "
             f"PA_Default={_pa_default or '(nicht gesetzt)'}"
         )
 

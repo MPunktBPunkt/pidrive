@@ -490,12 +490,13 @@ pidrivectl play web "Rock Antenne"   (oder Favorit / SoftAP lab/play)
 trigger/td_radio → modules/webradio.py → mpv
     │
     ├── settings["audio_output"] = usb_gadget   (Menü: Audio → USB (ESP))
-    └── PipeWire / Monitor → Bridge-Input
+    └── PipeWire Default-Sink (+ .monitor)
             │
             ▼
 pump_bridge.py  (pidrive_pump_bridge.service, UART /dev/ttyACM0 **oder** TCP :9090)
     ├── pollt /tmp/pidrive_menu.json → menu_set an ESP
-    ├── ffmpeg → MP3 frames → UART/TCP audio_data
+    ├── Webradio: ffmpeg ← HTTP-URL  |  DAB/FM: ffmpeg ← Pulse .monitor
+    ├── sticky ID3/APIC (0x56) + MP3 frames (0x55)
     └── stop ohne status_cover (sonst „keine Einträge“ am BMW)
             │
             ▼
