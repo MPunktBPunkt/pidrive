@@ -551,9 +551,12 @@ def api_webui_smoke_stop():
 
 @app.route("/api/grep")
 def api_grep():
-    """Fehler/Warnungen aus aktuellen Logs (journal + /var/log/pidrive), nicht aus Quellcode.
+    """Fehler/Warnungen aus aktuellen Logs (journal + App-Logs), nicht Quellcode.
 
     Query: since=15m|1h|6h|24h|boot  (default 1h)
+
+    Hinweis: ``avrcp_raw.log`` wird bewusst ausgelassen (Rohdaten-Dump, oft MB
+    voller Altlasten) — dortige Fehler erscheinen bei Bedarf im journal.
     """
     import shlex
     since_raw = (request.args.get("since") or "1h").strip().lower()
@@ -590,15 +593,24 @@ def api_grep():
     if j_out:
         parts.append(f"=== journal ({since_raw}) ===\n{j_out}")
 
+    # Nur App-/Core-Logs — kein avrcp_raw.log (55MB Rohdump mit historischen Treffern)
     log_dir = "/var/log/pidrive"
+    log_files = " ".join(
+        shlex.quote(f"{log_dir}/{n}")
+        for n in ("pidrive.log", "core.log", "bt_agent.log", "avrcp.log", "display.log")
+    )
+    # Nur die letzten ~400 Zeilen je Datei → entspricht „aktuell“, nicht 2024er Spam
     file_cmd = (
-        f"grep -Ehn {shlex.quote(pattern)} {shlex.quote(log_dir)}/*.log "
-        f"2>/dev/null | tail -n 100"
+        f"for f in {log_files}; do "
+        f"[ -f \"$f\" ] || continue; "
+        f"tail -n 400 \"$f\" | grep -Ehn {shlex.quote(pattern)} "
+        f"| sed \"s|^|$f:|\"; "
+        f"done | tail -n 100"
     )
     fr = safe_run(file_cmd)
     f_out = (fr.get("stdout") or "").strip()
     if f_out:
-        parts.append(f"=== {log_dir}/*.log ===\n{f_out}")
+        parts.append(f"=== app-logs (tail) ===\n{f_out}")
 
     if not parts:
         text = (

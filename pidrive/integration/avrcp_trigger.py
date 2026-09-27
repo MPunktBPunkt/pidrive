@@ -530,7 +530,8 @@ def monitor_dbus():
                  "type=signal,interface=org.bluez.MediaControl1",
                  "type=signal,interface=org.freedesktop.DBus.Properties,member=PropertiesChanged,path=/org/bluez/hci0"],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, bufsize=4096)
+                text=True, bufsize=4096,
+                start_new_session=True)  # killpg im finally braucht Prozessgruppe
 
             log.info("AVRCP: dbus-monitor PID=" + str(proc.pid) + " gestartet")
             _raw_log(f"dbus-monitor PID={proc.pid}")

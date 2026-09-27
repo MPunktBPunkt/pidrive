@@ -316,7 +316,12 @@ def _save_bt_last_device(settings, mac, name):
         pass
 
 
+_A2DP_KLINKE_WARN_COOLDOWN_S = 1800  # 30 Min — sonst alle ~5 Min dieselbe Meldung
+_last_a2dp_klinke_warn_ts = 0.0
+
+
 def _ensure_a2dp_stack_or_recover(*, allow_bluetooth_restart=False, wait_seconds=10):
+    global _last_a2dp_klinke_warn_ts
     ready, reason = a2dp_stack_ready()
     if ready:
         return True
@@ -331,10 +336,16 @@ def _ensure_a2dp_stack_or_recover(*, allow_bluetooth_restart=False, wait_seconds
     except Exception:
         _ao = ""
     if _ao in ("klinke", "hdmi", "usb_gadget", "usb", "jack", "analog"):
-        log.warn(
+        now = time.time()
+        msg = (
             f"BT connect: A2DP-Stack nicht bereit ({reason}) — "
             f"Recovery übersprungen (audio_output={_ao})"
         )
+        if now - _last_a2dp_klinke_warn_ts >= _A2DP_KLINKE_WARN_COOLDOWN_S:
+            log.warn(msg)
+            _last_a2dp_klinke_warn_ts = now
+        else:
+            log.debug(msg)
         return False
     log.warn("BT connect: A2DP-Stack noch nicht bereit — WirePlumber-Recovery (ohne bluetooth)")
     return try_recover_a2dp_stack(include_bluetooth=allow_bluetooth_restart)
