@@ -232,14 +232,29 @@ def apply_update(restart: bool = True) -> dict:
 
 
 def _restart_services():
-    """Services neu starten — NOPASSWD-Pfade auf dem Pi bevorzugen."""
+    """Services neu starten — Web zuerst, dann Core (sonst stirbt der OTA-Thread
+    vor dem Web-Restart und die UI bleibt auf dem alten Stand)."""
+    # Ein systemd-Aufruf: Reihenfolge web→core; detach falls wir im Core laufen.
     for cmd in (
-        "sudo -n /bin/systemctl restart pidrive_core",
-        "sudo -n /bin/systemctl restart pidrive_web",
-        "sudo -n /usr/bin/systemctl restart pidrive_core",
-        "sudo -n /usr/bin/systemctl restart pidrive_web",
+        "sudo -n /bin/systemctl restart pidrive_web pidrive_core",
+        "sudo -n /usr/bin/systemctl restart pidrive_web pidrive_core",
+        # Fallback einzeln (Web zuerst)
+        "sudo -n /bin/systemctl restart pidrive_web; sudo -n /bin/systemctl restart pidrive_core",
+        "sudo -n /usr/bin/systemctl restart pidrive_web; sudo -n /usr/bin/systemctl restart pidrive_core",
     ):
-        _run(cmd, capture=True, timeout=30)
+        if _run(cmd, capture=True, timeout=45):
+            return
+    # Letzter Versuch: reboot-frei über nohup (Core darf sterben, Web-Restart läuft weiter)
+    _run(
+        "nohup sudo -n /bin/systemctl restart pidrive_web >/dev/null 2>&1 &",
+        capture=True,
+        timeout=5,
+    )
+    _run(
+        "nohup sudo -n /bin/systemctl restart pidrive_core >/dev/null 2>&1 &",
+        capture=True,
+        timeout=5,
+    )
 
 
 def do_update():
