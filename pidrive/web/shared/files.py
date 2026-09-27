@@ -29,7 +29,11 @@ def read_json_meta(path, default=None, stale_after_s=None):
         return default, {"ok": False, "reason": "missing", "age": None}
     try:
         with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            raw = f.read()
+        if not raw.strip():
+            # Leere Datei (z.B. nach Crash/Truncation) — stiller Default, kein Spam
+            return default, {"ok": False, "reason": "empty", "age": age}
+        data = json.loads(raw)
     except Exception as e:
         warn_once(f"files.read_json:{path}", f"web.shared.files.read_json({path}): {e}")
         return default, {"ok": False, "reason": "corrupt", "age": age}
