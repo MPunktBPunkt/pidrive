@@ -171,8 +171,12 @@ def handle(cmd, menu_state, store, S, settings, bg):
         bg(_eq_apply)
 
     # ── WiFi / BT ─────────────────────────────────────────────────────────
-    elif cmd in ("wifi_on", "wifi_off", "wifi_toggle"):
+    elif cmd == "wifi_toggle":
         bg(lambda: wifi.wifi_toggle(S))
+    elif cmd == "wifi_on":
+        bg(lambda: wifi.wifi_set(S, True))
+    elif cmd == "wifi_off":
+        bg(lambda: wifi.wifi_set(S, False))
     elif cmd in ("bt_on", "bt_off", "bt_toggle"):
         bg(lambda: bluetooth.bt_toggle(S))
     elif cmd == "wifi_scan":

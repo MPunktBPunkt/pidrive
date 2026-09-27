@@ -34,17 +34,29 @@ def _has_nmcli():
         return False
 
 
-def wifi_toggle(S):
-    if S.get("wifi"):
-        log.info("WiFi toggle: OFF")
+def wifi_set(S, enabled: bool):
+    """WLAN hart ein- oder ausschalten (kein Toggle)."""
+    want = bool(enabled)
+    if want and S.get("wifi"):
+        return
+    if (not want) and (not S.get("wifi")) and (not S.get("wifi_ssid")):
+        _bg("rfkill block wifi")  # idempotent absichern
+        return
+    if want:
+        log.info("WiFi set: ON")
+        _bg("rfkill unblock wifi; ip link set wlan0 up")
+        S["wifi"] = True
+    else:
+        log.info("WiFi set: OFF")
         _bg("rfkill block wifi")
         S["wifi"] = False
         S["wifi_ssid"] = ""
-    else:
-        log.info("WiFi toggle: ON")
-        _bg("rfkill unblock wifi; ip link set wlan0 up")
     S["ts"] = 0
     S["menu_rev"] = S.get("menu_rev", 0) + 1
+
+
+def wifi_toggle(S):
+    wifi_set(S, not bool(S.get("wifi")))
 
 
 def scan_networks(S, settings):

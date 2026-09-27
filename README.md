@@ -131,13 +131,14 @@ Beim Hotspot-Verbinden zeigt PiDrive kurz die SSH-IP auf dem BMW-Display.
 | Bereich | Befehle |
 |---------|---------|
 | **Status** | `status` · `now` · `quick` · `version` · `playlist` |
-| **Wiedergabe** | `play web\|dab\|fm\|spotify\|local` · `stop` |
-| **DAB** | `dab scan` · `dab status` · `dab live` · `dab stop` · `test dab` |
+| **Wiedergabe** | `play web\|dab\|fm\|spotify\|local` · `stop [--radio-only]` · `fm/web/dab next\|prev` |
+| **DAB** | `dab scan [--replace]` · `dab status` · `dab live` · `dab stop` · `test dab` |
+| **FM / Web** | `fm scan` · `fm next\|prev` · `web next\|prev` · `gain fm\|dab\|scanner` |
 | **Scanner** | `scanner pmr446 scan` · `scanner monitor start\|stop\|status\|log` |
-| **Spektrum** | `spectrum scan` · `spectrum peek` · `spectrum last` |
-| **Audio** | `audio route …` · `audio test` · `volume set/up/down` |
-| **BT** | `bt scan` · `pair` · `connect` · `known` · `status` |
-| **System** | `system` · `system diagnose` · `log` · `test all` |
+| **Spektrum** | `spectrum scan` · `spectrum peek` · `spectrum last` · `rtlsdr reset` |
+| **Audio** | `audio route …` · `audio test` · `volume set/up/down` · `audio eq/nr` |
+| **Netz** | `wifi status\|on\|off\|scan\|connect` · `bt scan\|pair\|connect\|backup\|restore\|forget` |
+| **System** | `system` · `system diagnose` · `update` · `log` · `test all` |
 
 Ausführliche Hilfe: `pidrivectl --help`
 

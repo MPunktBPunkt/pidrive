@@ -73,7 +73,7 @@ ALLOWED_COMMAND_PREFIXES = (
     "webradio_play:",
     "local_play:",
     "play_dab:", "play_fm:", "play_web:",
-    "favorites_play:",
+    "favorites_play:", "favorites_add:", "favorites_remove:",
     "vol_set:",
     "audio_eq:",
     "audio_nr:",

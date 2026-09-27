@@ -49,10 +49,24 @@ SKIP_CMDS_DEFAULT = {
     "bt_forget", "bt_restore",  # pairing-risk
     "dab_scan", "dab_scan_replace", "fm_scan",  # lange RF-Scans
     "rtlsdr_reset",  # stört laufende Wiedergabe stark
+    # Async-Start → überholt settle/flows (auch in --full)
+    "airband_monitor_start", "pmr_monitor_start",
 }
 SKIP_CMD_PREFIXES = (
     "bt_forget:", "bt_repair:", "wifi_connect:",
     "dab_scan_channels:",
+)
+# Vor Flows: alles was Wiedergabe/Scan asynchron startet (HTTP ok in ms, Effekt später)
+FLOW_RACE_CMDS = {
+    "spotify_toggle", "play_spotify",
+    "web_next", "web_prev",
+    "fm_next", "fm_prev",
+    "dab_next", "dab_prev",
+}
+FLOW_RACE_PREFIXES = (
+    "play_", "favorites_play",
+    "scan_up:", "scan_down:", "scan_next:", "scan_prev:",
+    "scan_jump:", "scan_step:", "scan_setfreq:", "scan_setch:", "scan_inputfreq:",
 )
 
 SENDCMD_RE = re.compile(
@@ -191,12 +205,22 @@ def discover() -> Tuple[Set[str], Set[str], Set[str], Set[str]]:
     return cmds, dyn, fetches, pages
 
 
-def cmd_should_skip(cmd: str, full: bool) -> bool:
-    if full:
-        return cmd in ("reboot", "shutdown")  # immer skip hard kill
-    if cmd in SKIP_CMDS_DEFAULT:
+def cmd_should_skip(cmd: str, full: bool = False) -> bool:
+    """Disruptive/langsame CMDs nie feuern (auch nicht in --full).
+
+    --full testet mehr Endpunkte, aber nicht Reboot/Scans/Monitor-Starts —
+    die würden Flows (play_fm etc.) asynchron überschreiben.
+    """
+    if cmd in ("reboot", "shutdown") or cmd in SKIP_CMDS_DEFAULT:
         return True
     return any(cmd.startswith(p) for p in SKIP_CMD_PREFIXES)
+
+
+def cmd_is_flow_race(cmd: str) -> bool:
+    """True wenn CMD Playback/Scan im Hintergrund startet (Race mit Flows)."""
+    if cmd in FLOW_RACE_CMDS:
+        return True
+    return any(cmd.startswith(p) for p in FLOW_RACE_PREFIXES)
 
 
 def get_core(base: str) -> dict:
@@ -236,8 +260,15 @@ def wait_source(base: str, want: str, timeout: float = 8.0,
         name = str(last.get("station") or last.get("name") or "").lower()
         if want_l == "idle" and src in ("idle", "") and not last.get("playing") and not last.get("transition"):
             return last
-        src_ok = want_l in src or want_l in typ or (want_l == "fm" and ("fm" in src or typ == "fm"))
-        src_ok = src_ok or (want_l in ("web", "webradio") and ("web" in src or "webradio" in src))
+        # Exakte Source-Tokens — kein Substring ("fm" darf nicht gegen Zufallstreffer)
+        if want_l == "fm":
+            src_ok = src == "fm" or typ == "fm"
+        elif want_l in ("web", "webradio"):
+            src_ok = src in ("web", "webradio") or "web" in typ
+        elif want_l == "dab":
+            src_ok = src == "dab" or "dab" in typ
+        else:
+            src_ok = want_l == src or want_l == typ
         if src_ok:
             if not needle or needle in name:
                 return last
@@ -405,11 +436,9 @@ def main() -> int:
         if args.quick and cmd not in ("radio_stop", "vol_up", "vol_down", "audio_klinke",
                                        "fm_next", "fm_prev", "spotify_toggle"):
             continue
-        # Vor Flows keine Play/Spotify-Starts (Race mit SM-Checks)
-        if not args.quick and (
-            cmd.startswith(("play_", "favorites_play")) or cmd in ("spotify_toggle", "play_spotify")
-        ):
-            rep.add(Result(f"CMD {cmd}", "SKIP", "covered by flows"))
+        # Vor Flows keine Play/Next/Scan-Starts (HTTP ok in ms, Effekt asynchron)
+        if not args.quick and cmd_is_flow_race(cmd):
+            rep.add(Result(f"CMD {cmd}", "SKIP", "covered by flows / race"))
             continue
         ok, j, ms = post_cmd(base, cmd)
         tested_cmds.add(cmd)
@@ -455,8 +484,7 @@ def main() -> int:
     else:
         rep.add(Result("api/lists content", "FAIL", str(lists)))
 
-    # Play-Cmds: Accept nur prüfen wenn --quick; sonst Flows (kein Race)
-    PLAY_PREFIXES = ("play_fm:", "play_dab:", "play_web:", "favorites_play:")
+    # Dyn-Prefixes: Play/Scan → Flows (kein Race); Rest Accept-Test
     for prefix in sorted(dyn | set(dyn_examples)):
         if args.quick and prefix not in ("play_fm:", "vol_set:", "play_dab:"):
             continue
@@ -468,8 +496,8 @@ def main() -> int:
         if cmd_should_skip(cmd, args.full):
             rep.add(Result(f"CMD {cmd}", "SKIP", "risky"))
             continue
-        if any(cmd.startswith(p) for p in PLAY_PREFIXES) and not args.quick:
-            rep.add(Result(f"CMD {cmd}", "SKIP", "covered by flows"))
+        if not args.quick and cmd_is_flow_race(cmd):
+            rep.add(Result(f"CMD {cmd}", "SKIP", "covered by flows / race"))
             continue
         ok, j, ms = post_cmd(base, cmd)
         if ok:
@@ -480,15 +508,22 @@ def main() -> int:
             rep.add(Result(f"CMD {cmd}", st, str(err), ms))
         time.sleep(0.15)
 
-    # Vor Flows: hart idle (auch nach spotify_toggle etc.)
+    # Vor Flows: hart idle (Scanner/Web-Rest von CMD-Pass abwürgen)
     if not args.quick:
         print("\n-- settle idle before flows --", flush=True)
+        post_cmd(base, "scanner_stop")
         post_cmd(base, "radio_stop")
-        time.sleep(0.8)
-        snap = wait_idle(base, 12)
+        time.sleep(1.2)
+        snap = wait_idle(base, 15)
+        # Zweiter Stop falls web_next/scan noch nachgezogen haben
+        if (snap.get("source") or "idle").lower() not in ("idle", "") or snap.get("transition"):
+            post_cmd(base, "scanner_stop")
+            post_cmd(base, "radio_stop")
+            time.sleep(1.0)
+            snap = wait_source(base, "idle", 12)
         idle_ok = (snap.get("source") or "idle").lower() in ("idle", "") and not snap.get("transition")
         rep.add(Result("settle idle", "PASS" if idle_ok else "WARN", str(snap)))
-        time.sleep(0.3)
+        time.sleep(0.5)
 
     if args.quick:
         _finish(rep, args.json_out)
@@ -534,7 +569,7 @@ def main() -> int:
     ms = (time.time() - t0) * 1000
     rep.note_state(f"play_fm:{f0}", snap, ms)
     freq_ok = f0.split(".")[0] in str(snap.get("station") or snap.get("name") or "")
-    if ok and ("fm" in (snap.get("source") or "").lower() or (snap.get("type") or "").upper() == "FM"):
+    if ok and ((snap.get("source") or "").lower() == "fm" or (snap.get("type") or "").upper() == "FM"):
         rep.add(Result("flow play_fm first", "PASS" if freq_ok else "WARN",
                        f"{snap.get('station') or snap.get('name')} src={snap.get('source')} {ms:.0f}ms", ms))
     else:
@@ -616,7 +651,7 @@ def main() -> int:
         snap = wait_source(base, "fm", 8)
         elapsed = time.time() - t0
         rep.note_state("dab→fm", snap, elapsed * 1000)
-        if "fm" in (snap.get("source") or "").lower() or (snap.get("type") or "").upper() == "FM":
+        if (snap.get("source") or "").lower() == "fm" or (snap.get("type") or "").upper() == "FM":
             rep.add(Result("flow dab→fm switch", "PASS",
                            f"{elapsed:.1f}s {snap.get('station')}", elapsed * 1000))
         else:

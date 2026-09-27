@@ -94,6 +94,7 @@ _TRIGGER_PREFIXES = (
     "fm_gain:", "dab_gain:", "ppm:", "squelch:", "scanner_gain:",
     "dab_scan_channels:", "reload_stations:", "webradio_play:",
     "play_dab:", "play_fm:", "play_web:", "favorites_play:", "local_play:",
+    "favorites_add:", "favorites_remove:",
     "fav_toggle:",
     "fm_step:",
     "scan_up:", "scan_down:", "scan_next:", "scan_prev:",

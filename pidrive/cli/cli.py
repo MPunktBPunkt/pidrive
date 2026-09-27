@@ -11,13 +11,14 @@ Befehle:
   play dab <name>         DAB+-Sender starten
   play web <name>         Webradio-Sender starten
   play fm  <name|freq>    FM-Sender starten
-  stop                    Wiedergabe stoppen
+  stop [--radio-only]     Wiedergabe stoppen
 
   station list dab|fm|web Senderliste anzeigen
 
   favorites list          Favoritenliste anzeigen
   favorites play <nr|name>Favorit starten
-  favorites add current   Aktuellen Sender zu Favoriten hinzufügen
+  favorites add [name]    Aktuellen (oder genannten) Sender merken
+  favorites remove <nr|name>
 
   bt status               Bluetooth-Status
   bt scan                 Geräte scannen
@@ -26,6 +27,8 @@ Befehle:
   bt connect <mac|name>   Mit Gerät verbinden
   bt disconnect           Bluetooth trennen
   bt reconnect            Letztes Gerät neu verbinden
+  bt backup|restore       Pairing-Keys sichern/wiederherstellen
+  bt forget <mac|name>    Gerät vergessen
   bt on / off             Bluetooth ein-/ausschalten
 
   volume                  Lautstärke anzeigen
@@ -42,12 +45,19 @@ Befehle:
   usb use <ip>            usb_esp_host speichern
 
   dab status              DAB+-Status (Lock, PCM, DLS)
-  dab scan                DAB-Sendersuchlauf starten
+  dab scan [--replace]    DAB-Sendersuchlauf starten
+  dab next|prev           Nächster/vorheriger DAB-Sender
+
+  fm scan|next|prev       UKW-Scan / Sender wechseln
+  web next|prev           Webradio wechseln
+  wifi status|on|off|scan|connect <ssid>
+  rtlsdr status|reset     RTL-SDR Status / Reset
+  gain status|fm|dab|scanner <db>
 
   system info             System-Informationen
   system resources        RAM, Speicher, Uptime
-  system reboot           Neustart
-  system shutdown         Herunterfahren
+  system reboot [--yes]   Neustart (mit Bestätigung)
+  system shutdown [--yes] Herunterfahren (mit Bestätigung)
 
   log [core|app|display]  Log anzeigen
 
@@ -204,6 +214,17 @@ def main():
 
   pidrivectl dab status          DAB+ Empfangsstatus (Lock, PCM, Fehler)
   pidrivectl dab scan            DAB+ Sendersuchlauf starten
+  pidrivectl dab scan --replace  Scan und bestehende Liste ersetzen
+  pidrivectl fm scan             UKW-Sendersuchlauf
+  pidrivectl fm next|prev        Nächster/vorheriger FM-Sender
+  pidrivectl web next|prev       Nächster/vorheriger Webradio-Sender
+  pidrivectl wifi status|scan    WLAN Status / Scan
+  pidrivectl wifi connect SSID   Mit WLAN verbinden
+  pidrivectl rtlsdr reset        RTL-SDR Stick resetten
+  pidrivectl gain status         RF-Gain anzeigen
+  pidrivectl gain fm 30          FM-Gain setzen (−1=Auto)
+  pidrivectl bt backup|restore   Pairing-Keys sichern/wiederherstellen
+  pidrivectl stop --radio-only   Nur Radio stoppen (Spotify weiter)
 
   pidrivectl ppm                 Aktuellen PPM-Offset anzeigen
   pidrivectl ppm set 49          PPM-Offset setzen (RTL-SDR Kalibrierung)
@@ -267,7 +288,9 @@ Flags (vor dem Befehl angeben):
     sub.add_parser("now",    help="Was laeuft gerade? (Titel + DLS)")
     sub.add_parser("quick",  help="Kompakte Einzeile: Quelle, Titel, Vol, BT")
     sub.add_parser("version", help="Version anzeigen")
-    sub.add_parser("stop",   help="Radio + Spotify stoppen")
+    p_stop = sub.add_parser("stop", help="Radio + Spotify stoppen")
+    p_stop.add_argument("--radio-only", action="store_true",
+                        help="Nur Radio stoppen (Spotify laufen lassen)")
 
     # ── play ──────────────────────────────────────────────────────────────
     p_play = sub.add_parser("play", help="Sender/Quelle starten")
@@ -315,6 +338,14 @@ Flags (vor dem Befehl angeben):
     bt_sub.add_parser("reconnect")
     bt_sub.add_parser("on")
     bt_sub.add_parser("off")
+    bt_sub.add_parser("backup", help="Pairing-Keys sichern")
+    p_bt_rest = bt_sub.add_parser("restore", help="Pairing-Keys wiederherstellen")
+    p_bt_rest.add_argument("--yes", "-y", action="store_true",
+                           help="Ohne Nachfrage wiederherstellen")
+    p_bt_forget = bt_sub.add_parser("forget", help="Gerät vergessen (BlueZ + known)")
+    p_bt_forget.add_argument("query", help="MAC-Adresse oder Name")
+    p_bt_forget.add_argument("--yes", "-y", action="store_true",
+                             help="Ohne Nachfrage vergessen")
 
     # ── volume ────────────────────────────────────────────────────────────
     p_vol = sub.add_parser("volume", help="Lautstärke")
@@ -396,7 +427,9 @@ Flags (vor dem Befehl angeben):
     p_dab = sub.add_parser("dab", help="DAB+")
     dab_sub = p_dab.add_subparsers(dest="dab_cmd")
     dab_sub.add_parser("status")
-    dab_sub.add_parser("scan")
+    p_dab_scan = dab_sub.add_parser("scan", help="DAB+ Sendersuchlauf")
+    p_dab_scan.add_argument("--replace", action="store_true",
+                            help="Bestehende Senderliste ersetzen (dab_scan_replace)")
     dab_sub.add_parser("next")
     dab_sub.add_parser("prev")
     dab_sub.add_parser("stop")   # Alias fuer radio_stop
@@ -405,6 +438,54 @@ Flags (vor dem Befehl angeben):
     p_dab_live.add_argument("--once", action="store_true")
     p_dab_live.add_argument("--changes", action="store_true")
     p_dab_live.add_argument("--interval", type=float, default=1.0)
+
+    # ── fm ────────────────────────────────────────────────────────────────
+    p_fm = sub.add_parser("fm", help="UKW/FM")
+    fm_sub = p_fm.add_subparsers(dest="fm_cmd")
+    fm_sub.add_parser("scan", help="UKW-Sendersuchlauf (fm_scan)")
+    fm_sub.add_parser("next", help="Nächster FM-Sender")
+    fm_sub.add_parser("prev", help="Vorheriger FM-Sender")
+    fm_sub.add_parser("stop", help="Radio stoppen")
+    fm_sub.add_parser("tune-save", help="HP/LP-Filter als Default speichern")
+    p_fm_hp = fm_sub.add_parser("hp-step", help="Hochpass ±1 Schritt")
+    p_fm_hp.add_argument("delta", type=int, nargs="?", default=1,
+                         help="+1 oder -1 (Default +1)")
+    p_fm_lp = fm_sub.add_parser("lp-step", help="Tiefpass ±1 Schritt")
+    p_fm_lp.add_argument("delta", type=int, nargs="?", default=1,
+                         help="+1 oder -1 (Default +1)")
+    p_fm_step = fm_sub.add_parser("step", help="Frequenz relativ tunen")
+    p_fm_step.add_argument("mhz", type=float, help="Delta MHz, z.B. 0.1 oder -0.1")
+
+    # ── web (Webradio next/prev) ──────────────────────────────────────────
+    p_web = sub.add_parser("web", help="Webradio next/prev")
+    web_sub = p_web.add_subparsers(dest="web_cmd")
+    web_sub.add_parser("next", help="Nächster Webradio-Sender")
+    web_sub.add_parser("prev", help="Vorheriger Webradio-Sender")
+
+    # ── wifi ──────────────────────────────────────────────────────────────
+    p_wifi = sub.add_parser("wifi", help="WLAN")
+    wifi_sub = p_wifi.add_subparsers(dest="wifi_cmd")
+    wifi_sub.add_parser("status", help="WLAN-Status / SSID")
+    wifi_sub.add_parser("on", help="WLAN einschalten")
+    wifi_sub.add_parser("off", help="WLAN ausschalten")
+    wifi_sub.add_parser("toggle", help="WLAN umschalten")
+    wifi_sub.add_parser("scan", help="Netzwerke scannen")
+    p_wifi_c = wifi_sub.add_parser("connect", help="Mit SSID verbinden")
+    p_wifi_c.add_argument("ssid", help="Netzwerkname")
+
+    # ── rtlsdr ────────────────────────────────────────────────────────────
+    p_rtl = sub.add_parser("rtlsdr", help="RTL-SDR Stick")
+    rtl_sub = p_rtl.add_subparsers(dest="rtlsdr_cmd")
+    rtl_sub.add_parser("status", help="Lock/Owner-Status")
+    rtl_sub.add_parser("reset", help="Stick resetten (USB re-enumerate)")
+
+    # ── gain ──────────────────────────────────────────────────────────────
+    p_gain = sub.add_parser("gain", help="RF-Gain (FM/DAB/Scanner)")
+    gain_sub = p_gain.add_subparsers(dest="gain_cmd")
+    gain_sub.add_parser("status", help="Aktuelle Gain-Werte")
+    for _gsrc in ("fm", "dab", "scanner"):
+        _pg = gain_sub.add_parser(_gsrc, help=f"{_gsrc.upper()} Gain setzen")
+        _pg.add_argument("db", type=int, help="dB oder -1 = Auto/AGC")
 
     # ── scanner ──────────────────────────────────────────────────────────
     p_scanner = sub.add_parser("scanner", help="RTL-SDR Funk-Scanner")
@@ -428,6 +509,11 @@ Flags (vor dem Befehl angeben):
         _sc_sub2.add_parser("prev", help="vorheriges Preset/Kanal (ohne Suche)")
         if _scb == "airband":
             _sc_sub2.add_parser("list", help="Airband-Presets aus config/airband_stations.json")
+            _sc_sub2.add_parser("tune-save", help="Gain/SR/HP/LP als Default speichern")
+            _p_ahp = _sc_sub2.add_parser("hp-step", help="Airband Hochpass ±1")
+            _p_ahp.add_argument("delta", type=int, nargs="?", default=1)
+            _p_alp = _sc_sub2.add_parser("lp-step", help="Airband Tiefpass ±1")
+            _p_alp.add_argument("delta", type=int, nargs="?", default=1)
             _p_amon = _sc_sub2.add_parser(
                 "monitor", help="Airband Dauer-Überwachung (Preset-AM)"
             )
@@ -475,8 +561,12 @@ Flags (vor dem Befehl angeben):
     sys_sub = p_sys.add_subparsers(dest="sys_cmd")
     sys_sub.add_parser("info")
     sys_sub.add_parser("resources")
-    sys_sub.add_parser("reboot")
-    sys_sub.add_parser("shutdown")
+    p_sys_reb = sys_sub.add_parser("reboot", help="Neustart")
+    p_sys_reb.add_argument("--yes", "-y", action="store_true",
+                           help="Ohne Nachfrage neu starten")
+    p_sys_shut = sys_sub.add_parser("shutdown", help="Herunterfahren")
+    p_sys_shut.add_argument("--yes", "-y", action="store_true",
+                            help="Ohne Nachfrage herunterfahren")
     sys_sub.add_parser("diagnose")
     sys_sub.add_parser("spotify-oauth", help="Spotify OAuth einmalig einrichten")
 
@@ -664,9 +754,12 @@ Flags (vor dem Befehl angeben):
     if args.cmd == "stop":
         svc.require_online()
         svc.send("radio_stop")
-        svc.send("spotify_off")
-        if use_json: fmt.print_json({"ok": True})
-        else: fmt.out("Gestoppt.")
+        if not getattr(args, "radio_only", False):
+            svc.send("spotify_off")
+        if use_json:
+            fmt.print_json({"ok": True, "radio_only": bool(getattr(args, "radio_only", False))})
+        else:
+            fmt.out("Gestoppt." + (" (nur Radio)" if getattr(args, "radio_only", False) else ""))
         sys.exit(EXIT_OK)
 
     # play
@@ -861,27 +954,10 @@ Flags (vor dem Befehl angeben):
                 if use_json: fmt.print_json(r)
                 else: fmt.out("Aktueller Sender zu Favoriten hinzugefuegt.")
         elif args.fav_cmd == "remove":
-            import json as _jf, os as _of
-            _cfg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "favorites.json")
-            try:
-                with open(_cfg) as _ff: _fd = _jf.load(_ff)
-            except Exception: _fd = {"version":1,"favorites":[]}
-            _fl = _fd.get("favorites", [])
-            _n = args.name
-            if _n.isdigit():
-                _i = int(_n) - 1
-                if 0 <= _i < len(_fl): _rm = _fl.pop(_i)
-                else: _exit_err("Nummer " + _n + " nicht gefunden", EXIT_NOTFOUND)
-            else:
-                _new = [x for x in _fl if x.get("name","").lower() != _n.lower()]
-                if len(_new) == len(_fl): _exit_err("Nicht gefunden: " + _n, EXIT_NOTFOUND)
-                _rm = {"name": _n}; _fl = _new
-            _fd["favorites"] = _fl
-            try:
-                with open(_cfg,"w") as _ff: _jf.dump(_fd, _ff, indent=2)
-            except Exception as _e: _exit_err(str(_e), EXIT_ERROR)
-            if use_json: fmt.print_json({"ok":True,"removed":_rm.get("name","?")})
-            else: fmt.out("Favorit entfernt: " + _rm.get("name","?"))
+            svc.require_online()
+            r = svc.send("favorites_remove:" + args.name)
+            if use_json: fmt.print_json(r)
+            else: fmt.out("Favorit entfernt: " + args.name)
         sys.exit(EXIT_OK)
 
     # bt
@@ -1158,6 +1234,48 @@ Flags (vor dem Befehl angeben):
                     if agent.get("ready"):
                         fmt.out("  Agent: bereit (kann Geraete pairen)")
                 if d.get("bt_device"): fmt.out(f"  Gerät: {d['bt_device']}")
+        elif args.bt_cmd == "backup":
+            r = svc.send("bt_backup")
+            if use_json:
+                fmt.print_json(r)
+            else:
+                fmt.out("BT-Backup gestartet (Pairing-Keys → config/bt_pairs).")
+        elif args.bt_cmd == "restore":
+            if not getattr(args, "yes", False) and not use_json:
+                try:
+                    ans = input("BT-Pairings wiederherstellen und bluetoothd neu starten? [j/N] ").strip().lower()
+                except EOFError:
+                    ans = ""
+                if ans not in ("j", "y", "ja", "yes"):
+                    fmt.out("Abgebrochen.")
+                    sys.exit(EXIT_OK)
+            r = svc.send("bt_restore")
+            if use_json:
+                fmt.print_json(r)
+            else:
+                fmt.out("BT-Restore gestartet.")
+        elif args.bt_cmd == "forget":
+            dev = svc.bt_resolve(args.query)
+            if not dev:
+                _exit_err("BT-Gerät nicht gefunden: " + repr(args.query), EXIT_NOTFOUND)
+            mac = dev["mac"]
+            name = dev.get("name") or mac
+            if not getattr(args, "yes", False) and not use_json:
+                try:
+                    ans = input(f"Gerät vergessen: {name} ({mac})? [j/N] ").strip().lower()
+                except EOFError:
+                    ans = ""
+                if ans not in ("j", "y", "ja", "yes"):
+                    fmt.out("Abgebrochen.")
+                    sys.exit(EXIT_OK)
+            r = svc.send("bt_forget:" + mac)
+            if use_json:
+                fmt.print_json(r)
+            else:
+                fmt.out(f"BT vergessen: {name} ({mac})")
+        else:
+            fmt.err("Unbekannter BT-Befehl. Siehe: pidrivectl bt --help")
+            sys.exit(EXIT_USAGE)
         sys.exit(EXIT_OK)
 
     # volume
@@ -1886,10 +2004,12 @@ Flags (vor dem Befehl angeben):
             else: fmt.print_dab_status(d)
         elif args.dab_cmd == "scan":
             svc.require_online()
-            r = svc.send("dab_scan")
+            _scan_trig = "dab_scan_replace" if getattr(args, "replace", False) else "dab_scan"
+            r = svc.send(_scan_trig)
             if use_json:
                 fmt.print_json(r); sys.exit(EXIT_OK)
-            fmt.out("DAB-Sendersuchlauf gestartet (ca. 2-3 Minuten)…")
+            _mode = "mit Ersetzen der Liste" if getattr(args, "replace", False) else "merge"
+            fmt.out(f"DAB-Sendersuchlauf gestartet ({_mode}, ca. 2-3 Minuten)…")
             fmt.out("  Ctrl+C: Monitor beenden (Scan laeuft weiter im Hintergrund)")
             import time as _ts, json as _js
             _prev_found = 0; _prev_chs = set(); _start_ts = _ts.time()
@@ -1970,6 +2090,184 @@ Flags (vor dem Befehl angeben):
             except KeyboardInterrupt:
                 fmt.out("\nMonitor beendet.")
         sys.exit(EXIT_OK)
+
+    # fm
+    if args.cmd == "fm":
+        if not args.fm_cmd:
+            fmt.err("Nutze: pidrivectl fm scan|next|prev|stop|tune-save|hp-step|lp-step|step")
+            sys.exit(EXIT_USAGE)
+        svc.require_online()
+        if args.fm_cmd == "scan":
+            r = svc.send("fm_scan")
+            if use_json:
+                fmt.print_json(r)
+            else:
+                fmt.out("FM-Sendersuchlauf gestartet (läuft im Hintergrund).")
+                fmt.out("  Status: pidrivectl station list fm")
+        elif args.fm_cmd == "next":
+            svc.send("fm_next")
+            fmt.out("FM: nächster Sender.")
+        elif args.fm_cmd == "prev":
+            svc.send("fm_prev")
+            fmt.out("FM: vorheriger Sender.")
+        elif args.fm_cmd == "stop":
+            svc.send("radio_stop")
+            fmt.out("FM gestoppt.")
+        elif args.fm_cmd == "tune-save":
+            svc.send("fm_tune_save")
+            fmt.out("FM Tune (HP/LP) als Default gespeichert.")
+        elif args.fm_cmd == "hp-step":
+            dlt = int(getattr(args, "delta", 1) or 1)
+            svc.send(f"fm_hp_step:{dlt}")
+            fmt.out(f"FM HP-Step {dlt:+d}")
+        elif args.fm_cmd == "lp-step":
+            dlt = int(getattr(args, "delta", 1) or 1)
+            svc.send(f"fm_lp_step:{dlt}")
+            fmt.out(f"FM LP-Step {dlt:+d}")
+        elif args.fm_cmd == "step":
+            mhz = float(args.mhz)
+            svc.send(f"fm_step:{mhz:+g}")
+            fmt.out(f"FM Frequenz-Schritt {mhz:+g} MHz")
+        else:
+            fmt.err(f"Unbekannt: fm {args.fm_cmd}")
+            sys.exit(EXIT_USAGE)
+        sys.exit(EXIT_OK)
+
+    # web
+    if args.cmd == "web":
+        if not args.web_cmd:
+            fmt.err("Nutze: pidrivectl web next|prev")
+            sys.exit(EXIT_USAGE)
+        svc.require_online()
+        if args.web_cmd == "next":
+            svc.send("web_next")
+            fmt.out("Webradio: nächster Sender.")
+        elif args.web_cmd == "prev":
+            svc.send("web_prev")
+            fmt.out("Webradio: vorheriger Sender.")
+        else:
+            fmt.err(f"Unbekannt: web {args.web_cmd}")
+            sys.exit(EXIT_USAGE)
+        sys.exit(EXIT_OK)
+
+    # wifi
+    if args.cmd == "wifi":
+        wcmd = getattr(args, "wifi_cmd", None) or "status"
+        if wcmd == "status":
+            d = svc.get_status()
+            ssid = d.get("wifi_ssid") or ""
+            on = bool(d.get("wifi")) or bool(ssid)
+            if use_json:
+                fmt.print_json({"wifi": on, "ssid": ssid})
+            else:
+                fmt.out(f"WiFi: {'an' if on else 'aus'}"
+                        + (f" — {ssid}" if ssid else ""))
+            sys.exit(EXIT_OK)
+        svc.require_online()
+        if wcmd == "on":
+            svc.send("wifi_on")
+            fmt.out("WiFi: einschalten.")
+        elif wcmd == "off":
+            svc.send("wifi_off")
+            fmt.out("WiFi: ausschalten.")
+        elif wcmd == "toggle":
+            svc.send("wifi_toggle")
+            fmt.out("WiFi: umschalten.")
+        elif wcmd == "scan":
+            svc.send("wifi_scan")
+            if use_json:
+                fmt.print_json({"ok": True})
+            else:
+                fmt.out("WiFi-Scan gestartet…")
+                import time as _tw, json as _jw
+                for _ in range(25):
+                    _tw.sleep(0.8)
+                    try:
+                        nets = _jw.load(open("/tmp/pidrive_wifi_nets.json")).get("networks") or []
+                        if nets:
+                            for n in nets:
+                                fmt.out(f"  · {n.get('ssid','?')}")
+                            fmt.out(f"  {len(nets)} Netz(e)")
+                            break
+                    except Exception:
+                        pass
+                else:
+                    fmt.out("  (noch keine Ergebnisse — erneut scannen oder Log prüfen)")
+        elif wcmd == "connect":
+            ssid = args.ssid
+            svc.send("wifi_connect:" + ssid)
+            fmt.out(f"WiFi: verbinde mit {ssid!r}…")
+        else:
+            fmt.err("Nutze: wifi status|on|off|toggle|scan|connect <ssid>")
+            sys.exit(EXIT_USAGE)
+        sys.exit(EXIT_OK)
+
+    # rtlsdr
+    if args.cmd == "rtlsdr":
+        rcmd = getattr(args, "rtlsdr_cmd", None) or "status"
+        if rcmd == "status":
+            import json as _jr
+            st = {}
+            for _p in ("/tmp/pidrive_rtlsdr.json", "/tmp/pidrive_rtlsdr_owner.json"):
+                try:
+                    st.update(_jr.load(open(_p)))
+                except Exception:
+                    pass
+            if use_json:
+                fmt.print_json(st or {"ok": False, "error": "keine Statusdatei"})
+            else:
+                if not st:
+                    fmt.out("RTL-SDR: kein Status verfügbar")
+                else:
+                    fmt.out(f"RTL-SDR: owner={st.get('owner') or st.get('source') or '?'}"
+                            + (f"  locked={st.get('locked')}" if "locked" in st else "")
+                            + (f"  device={st.get('device') or st.get('serial') or ''}" if (st.get('device') or st.get('serial')) else ""))
+            sys.exit(EXIT_OK)
+        if rcmd == "reset":
+            svc.require_online()
+            r = svc.send("rtlsdr_reset")
+            if use_json:
+                fmt.print_json(r)
+            else:
+                fmt.out("RTL-SDR Reset gestartet.")
+            sys.exit(EXIT_OK)
+        fmt.err("Nutze: rtlsdr status|reset")
+        sys.exit(EXIT_USAGE)
+
+    # gain
+    if args.cmd == "gain":
+        gcmd = getattr(args, "gain_cmd", None) or "status"
+        if gcmd == "status":
+            try:
+                from settings import load_settings as _lgs
+                s = _lgs()
+            except Exception as e:
+                _exit_err(str(e))
+            out = {
+                "fm": s.get("fm_gain"),
+                "dab": s.get("dab_gain"),
+                "scanner": s.get("scanner_gain"),
+            }
+            if use_json:
+                fmt.print_json(out)
+            else:
+                def _g(v):
+                    return "Auto" if v in (-1, None) else f"{v} dB"
+                fmt.out(f"Gain  FM={_g(out['fm'])}  DAB={_g(out['dab'])}  Scanner={_g(out['scanner'])}")
+            sys.exit(EXIT_OK)
+        if gcmd in ("fm", "dab", "scanner"):
+            svc.require_online()
+            db = int(args.db)
+            trig = {"fm": "fm_gain:", "dab": "dab_gain:", "scanner": "scanner_gain:"}[gcmd]
+            svc.send(trig + str(db))
+            label = "Auto (AGC)" if db == -1 else f"{db} dB"
+            if use_json:
+                fmt.print_json({"ok": True, "source": gcmd, "gain": db})
+            else:
+                fmt.out(f"{gcmd.upper()} Gain → {label}")
+            sys.exit(EXIT_OK)
+        fmt.err("Nutze: gain status | gain fm|dab|scanner <db|-1>")
+        sys.exit(EXIT_USAGE)
 
     # scanner
     if args.cmd == "scanner":
@@ -2177,6 +2475,20 @@ Flags (vor dem Befehl angeben):
                     fmt.err(str(e))
                     sys.exit(EXIT_ERROR)
                 sys.exit(EXIT_OK)
+            elif sc_action == "tune-save" and band == "airband":
+                svc.require_online()
+                svc.send("airband_tune_save")
+                fmt.out("  Airband Tune als Default gespeichert")
+            elif sc_action == "hp-step" and band == "airband":
+                svc.require_online()
+                dlt = int(getattr(args, "delta", 1) or 1)
+                svc.send(f"airband_hp_step:{dlt}")
+                fmt.out(f"  Airband HP-Step {dlt:+d}")
+            elif sc_action == "lp-step" and band == "airband":
+                svc.require_online()
+                dlt = int(getattr(args, "delta", 1) or 1)
+                svc.send(f"airband_lp_step:{dlt}")
+                fmt.out(f"  Airband LP-Step {dlt:+d}")
             elif sc_action == "monitor" and band == "airband":
                 air_act = getattr(args, "air_mon_action", None)
                 if air_act == "start":
@@ -2232,7 +2544,7 @@ Flags (vor dem Befehl angeben):
                 fmt.out(f"  ✓ {band} Freq {args.f} MHz")
             else:
                 fmt.err(f"Unbekannte Aktion. Nutze: scan | ch N | freq F | next | prev | stop"
-                        + (" | list | monitor" if band == "airband" else ""))
+                        + (" | list | monitor | tune-save | hp-step | lp-step" if band == "airband" else ""))
             sys.exit(EXIT_OK)
         sys.exit(EXIT_OK)
 
@@ -2334,10 +2646,26 @@ Flags (vor dem Befehl angeben):
             else: fmt.print_resources(r)
         elif args.sys_cmd == "reboot":
             svc.require_online()
+            if not getattr(args, "yes", False) and not use_json:
+                try:
+                    ans = input("Pi wirklich neu starten? [j/N] ").strip().lower()
+                except EOFError:
+                    ans = ""
+                if ans not in ("j", "y", "ja", "yes"):
+                    fmt.out("Abgebrochen.")
+                    sys.exit(EXIT_OK)
             fmt.out("Starte neu…")
             svc.send("reboot")
         elif args.sys_cmd == "shutdown":
             svc.require_online()
+            if not getattr(args, "yes", False) and not use_json:
+                try:
+                    ans = input("Pi wirklich herunterfahren? [j/N] ").strip().lower()
+                except EOFError:
+                    ans = ""
+                if ans not in ("j", "y", "ja", "yes"):
+                    fmt.out("Abgebrochen.")
+                    sys.exit(EXIT_OK)
             fmt.out("Herunterfahren…")
             svc.send("shutdown")
         elif args.sys_cmd == "diagnose":

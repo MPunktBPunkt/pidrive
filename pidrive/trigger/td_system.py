@@ -95,6 +95,84 @@ def handle(cmd, menu_state, store, S, settings, bg):
         except Exception as _fe:
             log.warn("favorites_add_current: " + str(_fe))
 
+    elif cmd.startswith("favorites_add:"):
+        # favorites_add:<name> — Sender aus Listen suchen und merken
+        _q = cmd.split(":", 1)[1].strip()
+        if not _q:
+            return handle("favorites_add_current", menu_state, store, S, settings, bg)
+        try:
+            _ql = _q.lower()
+            _match = None
+            _src = ""
+            for _s, _lst in (("fm", store.fm or []), ("dab", store.dab or []),
+                             ("webradio", store.webradio or [])):
+                for _st in _lst:
+                    _nm = str(_st.get("name") or "")
+                    if _nm.lower() == _ql or _ql in _nm.lower():
+                        _match = _st
+                        _src = _s
+                        break
+                if _match:
+                    break
+            if not _match:
+                ipc.write_progress("Favorit", f"Nicht gefunden: {_q[:20]}", color="orange")
+                time.sleep(1); ipc.clear_progress()
+            else:
+                _name = _match.get("name") or _q
+                _fid = str(_match.get("id") or f"{_src}_{_name.lower().replace(' ', '_')[:24]}")
+                favorites.add({"id": _fid, "name": _name, "source": _src, "meta": dict(_match)})
+                if _src == "fm":
+                    store.set_favorite_fm(_fid, True)
+                elif _src == "dab":
+                    store.set_favorite_dab(_fid, True)
+                elif _src == "webradio":
+                    store.set_favorite_web(_fid, True)
+                try:
+                    import main_core as _mc
+                    _mc.rebuild_tree(menu_state, store, S, settings)
+                except Exception as _rte:
+                    log.warn(f"rebuild_tree: {_rte}")
+        except Exception as _fe:
+            log.warn("favorites_add: " + str(_fe))
+
+    elif cmd.startswith("favorites_remove:"):
+        _q = cmd.split(":", 1)[1].strip()
+        try:
+            _favs = favorites.get_all()
+            _target = None
+            if _q.isdigit():
+                _i = int(_q) - 1
+                if 0 <= _i < len(_favs):
+                    _target = _favs[_i]
+            else:
+                _ql = _q.lower()
+                _target = next((f for f in _favs
+                                if f.get("id") == _q
+                                or str(f.get("name") or "").lower() == _ql), None)
+                if not _target:
+                    _target = next((f for f in _favs
+                                    if _ql in str(f.get("name") or "").lower()), None)
+            if not _target:
+                ipc.write_progress("Favorit", f"Nicht gefunden: {_q[:20]}", color="orange")
+                time.sleep(1); ipc.clear_progress()
+            else:
+                _fid = _target.get("id") or ""
+                _src = _target.get("source") or ""
+                favorites.remove(_fid)
+                if _src == "fm":
+                    store.set_favorite_fm(_fid, False)
+                elif _src == "dab":
+                    store.set_favorite_dab(_fid, False)
+                elif _src == "webradio":
+                    store.set_favorite_web(_fid, False)
+                try:
+                    import main_core as _mc
+                    _mc.rebuild_tree(menu_state, store, S, settings)
+                except Exception as _rte:
+                    log.warn(f"rebuild_tree: {_rte}")
+        except Exception as _fe:
+            log.warn("favorites_remove: " + str(_fe))
+
     # ── System ──────────────────────────────────────────────────────────────
     elif cmd == "reboot":
         ipc.write_progress("Neustart", "In 3 Sekunden ...", color="orange")
