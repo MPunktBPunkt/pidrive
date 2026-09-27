@@ -2,25 +2,6 @@
 {% block title %}PiDrive — RF / DAB Tools{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="card-title">📻 DAB+ Status
-    <span id="snapRf" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
-  </div>
-  <div id="dabStatusBlock" style="font-size:13px">Lade…</div>
-  <div class="btn-row" style="margin-top:8px">
-    <button class="btn" onclick="loadDabStatus()">Aktualisieren</button>
-    <button class="btn" onclick="sendCmd('dab_scan')">DAB Scan</button>
-  </div>
-</div>
-<div class="card">
-  <div class="card-title">📡 RTL-SDR Diagnose</div>
-  <div id="rtlsdrBlock" style="font-size:13px">Lade…</div>
-  <div class="btn-row" style="margin-top:8px">
-    <button class="btn" onclick="loadRtlsdr()">Status lesen</button>
-    <button class="btn" onclick="resetRtlsdr()">Reset</button>
-    <button class="btn" onclick="refreshRtlsdr()">Refresh</button>
-  </div>
-</div>
-<div class="card">
   <div class="card-title">🔭 Spektrum
     <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
       Snapshot = Mitte · Range = Start–Stop
@@ -123,6 +104,25 @@
   <div id="specExportHint" style="font-size:11px;color:var(--muted);margin-bottom:6px"></div>
   <canvas id="specCanvas" width="720" height="220" style="width:100%;max-width:720px;height:220px;background:#050d1a;border:1px solid var(--line-soft);display:none;margin-bottom:8px"></canvas>
   <pre id="specPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:250px;overflow:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
+</div>
+<div class="card">
+  <div class="card-title">📻 DAB+ Status
+    <span id="snapRf" style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px"></span>
+  </div>
+  <div id="dabStatusBlock" style="font-size:13px">Lade…</div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn" onclick="loadDabStatus()">Aktualisieren</button>
+    <button class="btn" onclick="sendCmd('dab_scan')">DAB Scan</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">📡 RTL-SDR Diagnose</div>
+  <div id="rtlsdrBlock" style="font-size:13px">Lade…</div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn" onclick="loadRtlsdr()">Status lesen</button>
+    <button class="btn" onclick="resetRtlsdr()">Reset</button>
+    <button class="btn" onclick="refreshRtlsdr()">Refresh</button>
+  </div>
 </div>
 <div class="card">
   <div class="card-title">🎛 PPM Kalibrierung</div>

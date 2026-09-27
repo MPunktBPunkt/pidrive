@@ -344,6 +344,45 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
 <!-- ═══ SCANNER TAB ══════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="tab-scanner">
   <div class="scan-card">
+    <h4>Klang</h4>
+    <div class="eq-section" data-eq-root style="margin-top:0;padding:0;background:transparent;border:none">
+      <div class="eq-head">
+        <span class="eq-title">Tone / NR</span>
+        <label class="eq-nr" title="Leichte Rauschunterdrückung (afftdn) — gut für Sprache/schwaches FM">
+          <input type="checkbox" class="eq-nr-input" onchange="onEqNrToggle(this.checked)"> NR
+        </label>
+      </div>
+      <div class="eq-presets" data-eq-presets></div>
+      <div class="eq-bands">
+        <label>Bass <span class="eq-bass-lbl">0</span>
+          <input type="range" class="eq-bass" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-bass-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+        <label>Mitten <span class="eq-mid-lbl">0</span>
+          <input type="range" class="eq-mid" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-mid-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+        <label>Höhen <span class="eq-treble-lbl">0</span>
+          <input type="range" class="eq-treble" min="-6" max="6" value="0"
+                 oninput="this.closest('[data-eq-root]').querySelector('.eq-treble-lbl').textContent=this.value"
+                 onchange="onEqBandsCommit(this)">
+        </label>
+      </div>
+      <div class="eq-hint" data-eq-hint>Live — Sender startet kurz neu</div>
+    </div>
+  </div>
+  <div class="scan-card">
+    <h4>Squelch</h4>
+    <div class="scan-row">
+      <span class="scan-label" id="sqLabel">50</span>
+      <input type="range" id="sqSlider" min="0" max="100" value="50"
+             oninput="document.getElementById('sqLabel').textContent=this.value"
+             onchange="sendCmd('set_scanner_squelch:'+this.value)">
+    </div>
+  </div>
+  <div class="scan-card">
     <h4>FM Scanner</h4>
     <div class="scan-row">
       <span class="scan-label">Freq MHz</span>
@@ -446,45 +485,6 @@ input[type="range"].vol-slider::-webkit-slider-thumb {
     <div class="pmr-status" id="pmrStatus">Tipp: Walkie senden → aktive Kanäle werden grün</div>
     <div class="pmr-status" id="pmrBackendStatus" style="margin-top:2px"></div>
     <div class="pmr-status" id="pmrDebugStatus" style="margin-top:2px;font-size:11px;opacity:.85"></div>
-  </div>
-  <div class="scan-card">
-    <h4>Klang</h4>
-    <div class="eq-section" data-eq-root style="margin-top:0;padding:0;background:transparent;border:none">
-      <div class="eq-head">
-        <span class="eq-title">Tone / NR</span>
-        <label class="eq-nr" title="Leichte Rauschunterdrückung (afftdn) — gut für Sprache/schwaches FM">
-          <input type="checkbox" class="eq-nr-input" onchange="onEqNrToggle(this.checked)"> NR
-        </label>
-      </div>
-      <div class="eq-presets" data-eq-presets></div>
-      <div class="eq-bands">
-        <label>Bass <span class="eq-bass-lbl">0</span>
-          <input type="range" class="eq-bass" min="-6" max="6" value="0"
-                 oninput="this.closest('[data-eq-root]').querySelector('.eq-bass-lbl').textContent=this.value"
-                 onchange="onEqBandsCommit(this)">
-        </label>
-        <label>Mitten <span class="eq-mid-lbl">0</span>
-          <input type="range" class="eq-mid" min="-6" max="6" value="0"
-                 oninput="this.closest('[data-eq-root]').querySelector('.eq-mid-lbl').textContent=this.value"
-                 onchange="onEqBandsCommit(this)">
-        </label>
-        <label>Höhen <span class="eq-treble-lbl">0</span>
-          <input type="range" class="eq-treble" min="-6" max="6" value="0"
-                 oninput="this.closest('[data-eq-root]').querySelector('.eq-treble-lbl').textContent=this.value"
-                 onchange="onEqBandsCommit(this)">
-        </label>
-      </div>
-      <div class="eq-hint" data-eq-hint>Live — Sender startet kurz neu</div>
-    </div>
-  </div>
-  <div class="scan-card">
-    <h4>Squelch</h4>
-    <div class="scan-row">
-      <span class="scan-label" id="sqLabel">50</span>
-      <input type="range" id="sqSlider" min="0" max="100" value="50"
-             oninput="document.getElementById('sqLabel').textContent=this.value"
-             onchange="sendCmd('set_scanner_squelch:'+this.value)">
-    </div>
   </div>
   <div class="scan-row">
     <button class="btn danger" onclick="sendCmd('scanner_stop')">Scanner Stop</button>
