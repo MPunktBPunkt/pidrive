@@ -25,11 +25,21 @@
   <pre id="logPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:400px;overflow-y:auto;color:var(--text);white-space:pre-wrap;border:1px solid var(--line-soft)">Log wird geladen…</pre>
 </div>
 <div class="card">
-  <div class="card-title">🔍 Grep (Fehler)</div>
-  <div class="btn-row" style="margin-bottom:8px">
-    <button class="btn" onclick="loadGrep()">Fehler suchen</button>
+  <div class="card-title">🔍 Grep (Fehler)
+    <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
+      aus journal + /var/log/pidrive — nicht Quellcode
+    </span>
   </div>
-  <pre id="grepPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:200px;overflow-y:auto;color:var(--red);white-space:pre-wrap;border:1px solid var(--line-soft)">–</pre>
+  <div class="btn-row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">
+    <button class="btn" onclick="loadGrep('15m')">15 Min</button>
+    <button class="btn primary" onclick="loadGrep('1h')">1 Std</button>
+    <button class="btn" onclick="loadGrep('6h')">6 Std</button>
+    <button class="btn" onclick="loadGrep('24h')">24 Std</button>
+    <button class="btn" onclick="loadGrep('boot')">seit Boot</button>
+    <button class="btn" onclick="clearGrep()">Leeren</button>
+  </div>
+  <div id="grepMeta" style="font-size:11px;color:var(--muted);margin-bottom:6px">–</div>
+  <pre id="grepPre" style="background:#050d1a;padding:10px;font-size:11px;max-height:280px;overflow-y:auto;color:var(--red);white-space:pre-wrap;border:1px solid var(--line-soft)">Noch nicht gesucht — Zeitraum wählen.</pre>
 </div>
 <div class="card">
   <div class="card-title">💾 Systemressourcen</div>
@@ -93,10 +103,34 @@ async function loadLog(target) {
     _stamp('snapLogs');
   } catch(e){pre.textContent='Fehler: '+e;}
 }
-async function loadGrep() {
+async function loadGrep(since) {
   const pre=document.getElementById('grepPre');
+  const meta=document.getElementById('grepMeta');
   if(!pre) return;
-  try{const r=await fetch('/api/grep');const j=await r.json();pre.textContent=_logText(j);}catch(e){pre.textContent='Fehler: '+e;}
+  since = since || '1h';
+  pre.textContent='Suche in Logs ('+since+')…';
+  if(meta) meta.textContent='…';
+  try{
+    const r=await fetch('/api/grep?since='+encodeURIComponent(since));
+    const j=await r.json();
+    const text=_logText(j);
+    pre.textContent=text;
+    pre.style.color = (j.matches===0 || (text||'').indexOf('keine Fehler')>=0)
+      ? 'var(--green)' : 'var(--red)';
+    if(meta){
+      const n = (j.matches!=null) ? j.matches : '?';
+      meta.textContent = 'Zeitraum: '+since+' · Treffer: '+n+' · '+new Date().toLocaleTimeString();
+    }
+  }catch(e){
+    pre.textContent='Fehler: '+e;
+    pre.style.color='var(--red)';
+  }
+}
+function clearGrep() {
+  const pre=document.getElementById('grepPre');
+  const meta=document.getElementById('grepMeta');
+  if(pre){ pre.textContent='(geleert — erneut Zeitraum wählen für frische Suche)'; pre.style.color='var(--muted)'; }
+  if(meta) meta.textContent='–';
 }
 async function loadSysRes() {
   try{const r=await fetch('/api/system/resources');const j=await r.json();

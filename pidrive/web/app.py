@@ -551,19 +551,72 @@ def api_webui_smoke_stop():
 
 @app.route("/api/grep")
 def api_grep():
+    """Fehler/Warnungen aus aktuellen Logs (journal + /var/log/pidrive), nicht aus Quellcode.
+
+    Query: since=15m|1h|6h|24h|boot  (default 1h)
+    """
     import shlex
-    # BASE_DIR ist pidrive/web — Paketwurzel ist _PKG_ROOT (V5)
-    target = str(_PKG_ROOT)
-    if not os.path.isdir(target):
-        return jsonify({
-            "ok": False,
-            "code": 1,
-            "stdout": "",
-            "stderr": f"Pfad nicht gefunden: {target}",
-            "cmd": "grep",
-        })
-    cmd = 'grep -Ern ' + shlex.quote('ERROR|WARNING|Fehler') + ' ' + shlex.quote(target)
-    return jsonify(safe_run(cmd))
+    since_raw = (request.args.get("since") or "1h").strip().lower()
+    since_map = {
+        "15m": "15 min ago",
+        "1h": "1 hour ago",
+        "6h": "6 hours ago",
+        "24h": "24 hours ago",
+        "boot": None,  # --boot
+    }
+    if since_raw not in since_map:
+        since_raw = "1h"
+    since_arg = since_map[since_raw]
+
+    pattern = r"ERROR|WARNING|Fehler|Traceback|CRITICAL|Exception"
+    units = ("pidrive_core", "pidrive_web", "pidrive_avrcp", "pidrive_btagent")
+    unit_flags = " ".join(f"-u {u}" for u in units)
+
+    if since_raw == "boot":
+        j_cmd = (
+            f"journalctl {unit_flags} --boot --no-pager -o short-iso 2>/dev/null"
+            f" | grep -E {shlex.quote(pattern)} | tail -n 200"
+        )
+    else:
+        j_cmd = (
+            f"journalctl {unit_flags} --since={shlex.quote(since_arg)} "
+            f"--no-pager -o short-iso 2>/dev/null"
+            f" | grep -E {shlex.quote(pattern)} | tail -n 200"
+        )
+
+    jr = safe_run(j_cmd)
+    parts = []
+    j_out = (jr.get("stdout") or "").strip()
+    if j_out:
+        parts.append(f"=== journal ({since_raw}) ===\n{j_out}")
+
+    log_dir = "/var/log/pidrive"
+    file_cmd = (
+        f"grep -Ehn {shlex.quote(pattern)} {shlex.quote(log_dir)}/*.log "
+        f"2>/dev/null | tail -n 100"
+    )
+    fr = safe_run(file_cmd)
+    f_out = (fr.get("stdout") or "").strip()
+    if f_out:
+        parts.append(f"=== {log_dir}/*.log ===\n{f_out}")
+
+    if not parts:
+        text = (
+            f"(keine Fehler/Warnungen in den Logs seit {since_raw} — "
+            f"Liste ist aktuell leer)"
+        )
+    else:
+        text = "\n\n".join(parts)
+
+    return jsonify({
+        "ok": True,
+        "code": 0,
+        "stdout": text,
+        "stderr": "",
+        "cmd": j_cmd,
+        "since": since_raw,
+        "matches": len([ln for ln in text.splitlines() if ln.strip() and not ln.startswith("===")]),
+    })
 
 
 @app.route("/api/rtlsdr")
