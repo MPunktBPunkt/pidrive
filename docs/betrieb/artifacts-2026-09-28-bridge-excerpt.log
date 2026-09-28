@@ -1,0 +1,143 @@
+Sep 28 15:42:31 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:42:31 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:42:31 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:42:33 python3[3011450]: [tx] {"t":"menu_set","rev":463,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:42:36 python3[3011450]: [tx] {"t":"menu_set","rev":463,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:42:38 python3[3011450]: [tx] {"t":"menu_set","rev":464,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:42:46 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"idle unplug"}
+Sep 28 15:42:46 python3[3011450]: [msc] msc.phase idle unplug
+Sep 28 15:42:56 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"scan plug"}
+Sep 28 15:42:56 python3[3011450]: [msc] msc.phase scan plug
+Sep 28 15:42:57 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.first_read","detail":"1005 ms"}
+Sep 28 15:42:57 python3[3011450]: [msc] msc.first_read 1005 ms
+Sep 28 15:43:02 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"quiet cache?"}
+Sep 28 15:43:02 python3[3011450]: [msc] msc.phase quiet cache?
+Sep 28 15:43:02 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1605632B age=2002ms"}
+Sep 28 15:43:02 python3[3011450]: [msc] msc.quiet file=1605632B age=2002ms
+Sep 28 15:43:35 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:43:35 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:43:35 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:43:37 python3[3011450]: [tx] {"t":"menu_set","rev":465,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:43:45 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:43:45 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:43:45 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:43:47 python3[3011450]: [tx] {"t":"menu_set","rev":465,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:44:10 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:44:10 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:44:10 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:44:12 python3[3011450]: [tx] {"t":"menu_set","rev":465,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:44:12 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"9476702390901929266"}
+Sep 28 15:44:12 python3[3011450]: [trace] t=0ms play_uid=9476702390901929266
+Sep 28 15:44:12 python3[3011450]: [tx] {"t":"audio_stop"}
+Sep 28 15:44:12 python3[3011450]: [inject] activate:9476702390901929266
+Sep 28 15:44:13 python3[3011450]: [nav] action/back → activate:9476702390901929266
+Sep 28 15:44:13 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Sep 28 15:44:13 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Sep 28 15:44:14 python3[3011450]: [tx] {"t":"menu_set","rev":467,"page":0,"items":[{"uid":"4859771028461442081","name":"Zurueck","kind":"action"},{"uid":"16911468023234866628","name":"FM Radio","kind":"folder"},{"uid":"359171257049235588","name":"DAB+","kind":"folder"},{"uid":"pump:page_next","name":"Mehr... (+4)","kind":"action"}]}
+Sep 28 15:44:14 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1605632B age=73778ms"}
+Sep 28 15:44:14 python3[3011450]: [msc] msc.quiet file=1605632B age=73778ms
+Sep 28 15:44:24 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"16911468023234866628"}
+Sep 28 15:44:24 python3[3011450]: [trace] t=0ms play_uid=16911468023234866628
+Sep 28 15:44:24 python3[3011450]: [tx] {"t":"audio_stop"}
+Sep 28 15:44:24 python3[3011450]: [inject] activate:16911468023234866628
+Sep 28 15:44:25 python3[3011450]: [nav] folder/- → activate:16911468023234866628
+Sep 28 15:44:25 python3[3011450]: [tx] {"t":"menu_set","rev":469,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:44:25 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Sep 28 15:44:25 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Sep 28 15:44:31 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:44:31 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:44:31 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:44:32 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"16911468023234866628"}
+Sep 28 15:44:32 python3[3011450]: [trace] t=0ms play_uid=16911468023234866628
+Sep 28 15:44:32 python3[3011450]: [inject] activate:16911468023234866628
+Sep 28 15:44:33 python3[3011450]: [nav] stale/unknown uid activate:16911468023234866628
+Sep 28 15:44:33 python3[3011450]: [tx] {"t":"audio_start","uid":"16911468023234866628","codec":"mp3","br":"48k","cSrc":"default","cPath":"default.jpg","cTry":"stations/16911468023234866628.jpg"}
+Sep 28 15:44:33 python3[3011450]: [trace] audio_start sent uid=16911468023234866628 cover=default
+Sep 28 15:44:34 python3[3011450]: [audio] ffmpeg pulse:alsa_output.platform-fe00b840.mailbox.stereo-fallback.monitor @ 48k
+Sep 28 15:44:34 python3[3011450]: [tx] {"t":"menu_set","rev":471,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:44:34 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"start","uid":"16911468023234866628","id3":true}
+Sep 28 15:44:34 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': '16911468023234866628', 'id3': True}
+Sep 28 15:44:46 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:44:46 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:44:46 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:44:48 python3[3011450]: [tx] {"t":"menu_set","rev":471,"page":0,"items":[{"uid":"9476702390901929266","name":"Zurueck","kind":"action"},{"uid":"5679408291292205592","name":"Naechster Sender","kind":"action"},{"uid":"15773435517741805152","name":"Vorheriger Sender","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+6)","kind":"action"}]}
+Sep 28 15:44:54 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"pump:page_next"}
+Sep 28 15:44:54 python3[3011450]: [trace] t=0ms play_uid=pump:page_next
+Sep 28 15:44:54 python3[3011450]: [tx] {"t":"menu_set","rev":471,"page":1,"items":[{"uid":"684127012167276656","name":"Sender","kind":"folder"},{"uid":"13301670732996602360","name":"Suchlauf starten","kind":"action"},{"uid":"18339641579200987139","name":"+ 0.1 MHz","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+3)","kind":"action"}]}
+Sep 28 15:44:54 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1605632B age=11745ms"}
+Sep 28 15:44:54 python3[3011450]: [msc] msc.quiet file=1605632B age=11745ms
+Sep 28 15:44:57 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"scan boot"}
+Sep 28 15:44:57 python3[3011450]: [msc] msc.phase scan boot
+Sep 28 15:44:58 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"684127012167276656"}
+Sep 28 15:44:58 python3[3011450]: [trace] t=0ms play_uid=684127012167276656
+Sep 28 15:44:58 python3[3011450]: [tx] {"t":"audio_stop"}
+Sep 28 15:44:58 python3[3011450]: [inject] activate:684127012167276656
+Sep 28 15:44:59 python3[3011450]: [nav] folder/- → activate:684127012167276656
+Sep 28 15:44:59 python3[3011450]: [tx] {"t":"menu_set","rev":473,"page":0,"items":[{"uid":"16932289105042527414","name":"Zurueck","kind":"action"},{"uid":"188988624349687751","name":"Sender A-M","kind":"folder"},{"uid":"203333952560118293","name":"Sender N-Z","kind":"folder"}]}
+Sep 28 15:44:59 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Sep 28 15:44:59 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Sep 28 15:45:05 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:45:05 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:45:05 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:45:07 python3[3011450]: [tx] {"t":"menu_set","rev":473,"page":0,"items":[{"uid":"16932289105042527414","name":"Zurueck","kind":"action"},{"uid":"188988624349687751","name":"Sender A-M","kind":"folder"},{"uid":"203333952560118293","name":"Sender N-Z","kind":"folder"}]}
+Sep 28 15:45:15 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:45:15 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:45:15 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:45:17 python3[3011450]: [tx] {"t":"menu_set","rev":473,"page":0,"items":[{"uid":"16932289105042527414","name":"Zurueck","kind":"action"},{"uid":"188988624349687751","name":"Sender A-M","kind":"folder"},{"uid":"203333952560118293","name":"Sender N-Z","kind":"folder"}]}
+Sep 28 15:45:23 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:45:23 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:45:23 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:45:24 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"188988624349687751"}
+Sep 28 15:45:24 python3[3011450]: [trace] t=0ms play_uid=188988624349687751
+Sep 28 15:45:24 python3[3011450]: [tx] {"t":"audio_stop"}
+Sep 28 15:45:24 python3[3011450]: [inject] activate:188988624349687751
+Sep 28 15:45:25 python3[3011450]: [nav] folder/- → activate:188988624349687751
+Sep 28 15:45:25 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Sep 28 15:45:25 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Sep 28 15:45:25 python3[3011450]: [tx] {"t":"menu_set","rev":475,"page":0,"items":[{"uid":"17092572655233380602","name":"Zurueck","kind":"action"},{"uid":"8459731247190444814","name":"Antenne Bayern  104.4 MHz","kind":"station"},{"uid":"7954708905983732813","name":"Hitradio RT1  90.2 MHz","kind":"station"},{"uid":"pump:page_next","name":"Mehr... (+13)","kind":"action"}]}
+Sep 28 15:45:28 python3[3011450]: [tx] {"t":"menu_set","rev":475,"page":0,"items":[{"uid":"17092572655233380602","name":"Zurueck","kind":"action"},{"uid":"8459731247190444814","name":"Antenne Bayern  104.4 MHz","kind":"station"},{"uid":"7954708905983732813","name":"Hitradio RT1  90.2 MHz","kind":"station"},{"uid":"pump:page_next","name":"Mehr... (+13)","kind":"action"}]}
+Sep 28 15:45:28 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1638400B age=31328ms"}
+Sep 28 15:45:28 python3[3011450]: [msc] msc.quiet file=1638400B age=31328ms
+Sep 28 15:45:35 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"8459731247190444814"}
+Sep 28 15:45:35 python3[3011450]: [trace] t=0ms play_uid=8459731247190444814
+Sep 28 15:45:35 python3[3011450]: [inject] activate:8459731247190444814
+Sep 28 15:45:35 python3[3011450]: [tx] {"t":"audio_stop"}
+Sep 28 15:45:35 python3[3011450]: [tx] {"t":"audio_start","uid":"8459731247190444814","codec":"mp3","br":"48k","cSrc":"default","cPath":"default.jpg","cTry":"stations/fm_antennebayern.jpg|stations/uid_8459731247190444814.jpg|stations/antenne_bayern"}
+Sep 28 15:45:35 python3[3011450]: [trace] audio_start sent uid=8459731247190444814 cover=default
+Sep 28 15:45:36 python3[3011450]: [audio] ffmpeg pulse:alsa_output.platform-fe00b840.mailbox.stereo-fallback.monitor @ 48k
+Sep 28 15:45:36 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Sep 28 15:45:36 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Sep 28 15:45:40 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.23-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:45:40 python3[3011450]: [hello_ack] ver=0.4.23-dev slots=4 page=True tcp=True
+Sep 28 15:45:40 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:45:42 python3[3011450]: [tx] {"t":"menu_set","rev":476,"page":0,"items":[{"uid":"17092572655233380602","name":"Zurueck","kind":"action"},{"uid":"8459731247190444814","name":"Antenne Bayern  104.4 MHz","kind":"station"},{"uid":"7954708905983732813","name":"Hitradio RT1  90.2 MHz","kind":"station"},{"uid":"pump:page_next","name":"Mehr... (+13)","kind":"action"}]}
+Sep 28 15:50:49 python3[3011450]: [rx] {"t":"hello_ack","ver":"0.4.24-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Sep 28 15:50:49 python3[3011450]: [hello_ack] ver=0.4.24-dev slots=4 page=True tcp=True
+Sep 28 15:50:49 python3[3011450]: [bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu sync deferred)
+Sep 28 15:50:51 python3[3011450]: [tx] {"t":"menu_set","rev":478,"page":0,"items":[{"uid":"17092572655233380602","name":"Zurueck","kind":"action"},{"uid":"8459731247190444814","name":"Antenne Bayern  104.4 MHz","kind":"station"},{"uid":"7954708905983732813","name":"Hitradio RT1  90.2 MHz","kind":"station"},{"uid":"pump:page_next","name":"Mehr... (+13)","kind":"action"}]}
+Sep 28 15:50:54 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1612288B age=7440ms"}
+Sep 28 15:50:54 python3[3011450]: [msc] msc.quiet file=1612288B age=7440ms
+Sep 28 15:51:22 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"idle unplug"}
+Sep 28 15:51:22 python3[3011450]: [msc] msc.phase idle unplug
+Sep 28 15:52:12 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"scan plug"}
+Sep 28 15:52:12 python3[3011450]: [msc] msc.phase scan plug
+Sep 28 15:52:13 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.first_read","detail":"1004 ms"}
+Sep 28 15:52:13 python3[3011450]: [msc] msc.first_read 1004 ms
+Sep 28 15:52:16 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"quiet cache?"}
+Sep 28 15:52:16 python3[3011450]: [msc] msc.phase quiet cache?
+Sep 28 15:52:16 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=557056B age=2003ms"}
+Sep 28 15:52:16 python3[3011450]: [msc] msc.quiet file=557056B age=2003ms
+Sep 28 15:52:18 python3[3011450]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"play Hitradio RT1  90.2 MHz"}
+Sep 28 15:52:18 python3[3011450]: [msc] msc.phase play Hitradio RT1  90.2 MHz
+Sep 28 15:52:18 python3[3011450]: [rx] {"t":"event","op":"play_uid","uid":"7954708905983732813"}
+Sep 28 15:52:18 python3[3011450]: [trace] t=0ms play_uid=7954708905983732813
+Sep 28 15:52:18 python3[3011450]: [inject] activate:7954708905983732813
+Sep 28 15:52:18 python3[3011450]: [tx] {"t":"audio_stop"}
+Sep 28 15:52:18 python3[3011450]: [tx] {"t":"audio_start","uid":"7954708905983732813","codec":"mp3","br":"48k","cSrc":"default","cPath":"default.jpg","cTry":"stations/fm_rt1_allgaeu.jpg|stations/uid_7954708905983732813.jpg|stations/hitradio_rt1_90_"}
+Sep 28 15:52:18 python3[3011450]: [trace] audio_start sent uid=7954708905983732813 cover=default
+Sep 28 15:52:19 python3[3011450]: [audio] ffmpeg pulse:alsa_output.platform-fe00b840.mailbox.stereo-fallback.monitor @ 48k
+Sep 28 15:52:19 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Sep 28 15:52:19 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Sep 28 15:52:19 python3[3011450]: [rx] {"t":"audio_ack","ok":true,"op":"start","uid":"7954708905983732813","id3":true}
+Sep 28 15:52:19 python3[3011450]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': '7954708905983732813', 'id3': True}
+Sep 28 15:52:46 python3[3011450]: [audio] ffmpeg exit 0

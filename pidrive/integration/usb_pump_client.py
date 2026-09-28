@@ -176,8 +176,11 @@ def build_snapshot(
     http = _http_esp_status(host, port) if host else None
 
     stream = {}
+    msc = {}
     if isinstance(http, dict):
-        stream = (http.get("msc") or {}).get("stream") or http.get("stream") or {}
+        msc = http.get("msc") or {}
+        stream = msc.get("stream") or http.get("stream") or {}
+    host_scsi = (msc.get("host") or {}) if isinstance(msc, dict) else {}
 
     online = bool(http) or bool(serials)
     uart_hello = None
@@ -208,6 +211,13 @@ def build_snapshot(
         "otg_suspended": bool(http.get("otgSuspended")) if http else False,
         "uart_up": bool(http.get("uartUp")) if http else False,
         "msc_ready": bool(http.get("mscReady")) if http else False,
+        "msc_phase": str(msc.get("phase") or "") if msc else "",
+        "play_reject": int(msc.get("playRejectCount") or 0) if msc else 0,
+        "play_guess": int(msc.get("playGuessCount") or 0) if msc else 0,
+        "host_hint": str(host_scsi.get("hint") or ""),
+        "host_inquiry": int(host_scsi.get("inquiry") or 0),
+        "host_tur": int(host_scsi.get("tur") or 0),
+        "bytes_file": int(msc.get("bytesFile") or 0) if msc else 0,
         "playing_name": (http.get("playingName") or "") if http else "",
         "playing_uid": (http.get("playingUid") or "") if http else "",
         "id3_len": int(stream.get("id3Len") or 0),
@@ -253,14 +263,21 @@ def main(argv: list[str] | None = None) -> int:
         f"port={settings.get('usb_pump_port')!r} interval={interval}s",
         flush=True,
     )
+    last_phase = None
     while True:
         snap = poll_once(try_uart=args.uart)
         tag = "UP" if snap.get("online") else "down"
+        phase = snap.get("msc_phase") or "-"
         print(
             f"[usb_pump] {tag} http={snap.get('http_ok')} serial={snap.get('serial_present')} "
-            f"otg={snap.get('otg_up')} pump={snap.get('pump_up')} fw={snap.get('fw') or '-'}",
+            f"otg={snap.get('otg_up')} pump={snap.get('pump_up')} phase={phase} "
+            f"rej={snap.get('play_reject')} guess={snap.get('play_guess')} "
+            f"hint={snap.get('host_hint') or '-'} fw={snap.get('fw') or '-'}",
             flush=True,
         )
+        if phase != last_phase and phase and phase != "-":
+            print(f"[usb_pump] phase→ {phase}", flush=True)
+            last_phase = phase
         time.sleep(interval)
 
 

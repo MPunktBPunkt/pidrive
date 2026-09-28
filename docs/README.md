@@ -30,8 +30,9 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/FRISCH-INSTALL.md](betrieb/FRISCH-INSTALL.md) | Soft-Smoke vs HW; Proxmox Bookworm-CT | Betrieb, Entwickler | 2026-09-24 |
 | [betrieb/LAB-MENU-WLAN.md](betrieb/LAB-MENU-WLAN.md) | Dev: Pi `/menu` + ESP SoftAP/STA ohne Auto | Betrieb, Entwickler | 2026-09-25 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
+| [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | **Review-Paket** Feld: Listing ok, Live=Stub; Artefakte JSON/Log | Review, ESP/USB | 2026-09-28 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
-| [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: BMW Play-Detection → Live-Stream | Entwickler, ESP/USB | 2026-09-22 |
+| [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: BMW Play-Detection → Live-Stream | Entwickler, ESP/USB | 2026-09-28 |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest | Betrieb, QA | 2026-09-16 |
 | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | Erster erfolgreicher Connect BMW 38304 | Abnahme / Entwickler | 2026-09-16 |

@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "menu": {
+    "count": 4,
+    "rev": 478,
+    "fromNvs": true,
+    "playingUid": "7954708905983732813",
+    "playingName": "Hitradio RT1  90.2 MHz",
+    "items": [
+      {
+        "path": "STATIONS/01.MP3",
+        "name": "Zurueck",
+        "uid": "17092572655233380602",
+        "kind": "action",
+        "playing": false
+      },
+      {
+        "path": "STATIONS/02.MP3",
+        "name": "Antenne Bayern  104.4 MHz",
+        "uid": "8459731247190444814",
+        "kind": "station",
+        "playing": false
+      },
+      {
+        "path": "STATIONS/03.MP3",
+        "name": "Hitradio RT1  90.2 MHz",
+        "uid": "7954708905983732813",
+        "kind": "station",
+        "playing": true
+      },
+      {
+        "path": "STATIONS/04.MP3",
+        "name": "Mehr... (+13)",
+        "uid": "pump:page_next",
+        "kind": "action",
+        "playing": false
+      }
+    ]
+  }
+}
