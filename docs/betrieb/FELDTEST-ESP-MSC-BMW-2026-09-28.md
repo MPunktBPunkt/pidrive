@@ -203,7 +203,7 @@ D) Navigation
 | Nach `play.guess` + warmem Buffer | **dieselben Slot-LBAs**, Inhalt aus StreamBuffer | On-the-fly-Ersatz des Bits am gleichen „Dateipfad“ |
 | Slot-Größe deklariert groß (512 KiB) | HU darf lange lesen / seeken | Platz für Live-Stream, nicht nur 6 KiB Song |
 
-**Implizite Annahme (jetzt Review-kritisch):** Der Host **liest nach der Auswahl erneut vom Stick** (oder konsumiert keinen fertigen Stub-Cache als Endprodukt). Wenn die HU den Stub-Head cached und als kompletten Track abspielt, hört man Testton — unabhängig davon, ob Bridge/ffmpeg grün sind. Genau das ist das aktuelle Feldproblem (§10).
+**Implizite Annahme (Feld widerlegt):** Der Host **liest nach der Auswahl erneut vom Stick**. Beim NBT gilt eher: aggressiver Prefetch → Cache → Playlist aus Stub **ohne** Re-Read. Overlay braucht deshalb **Warmup + Pacing + gültige Frames über die volle Länge**, nicht nur „nach Guess Bits austauschen“.
 
 ### 3.7 Was am Dension-Vorbild bewusst übernommen / abweicht
 
@@ -211,7 +211,7 @@ D) Navigation
 |---------|------------------------|---------------------|
 | Eine Quelle (DAB), flache Liste | Viele Quellen, Favoriten-Fenster (3 Slots) | 3 Slots + Zurueck ok |
 | On-the-fly-MP3 = einziger Ton | ebenfalls (`usb_gadget`) | Overlay oft underrun / ungenutzt |
-| Mehrere Sekunden Vorpuffer | ESP StreamBuffer + Warmup | `bufferMs≈0`, Underruns hoch |
+| Mehrere Sekunden Vorpuffer (ABSA 15–40 s) | ESP StreamBuffer + Warmup | `bufferMs≈0`, Underruns hoch |
 | HU-Config-Files / FW-Matrix | Empirie an einem NBT Evo | Auto-Play + Stub-Cache dominant |
 | Stable Senderliste | Dynamisches Menü + Remount | Remount/Serial (`PD0001`) nötig |
 
@@ -222,7 +222,21 @@ D) Navigation
 3. Next/Prev bzw. andere Datei → neuer `play_uid`, neuer Stream, kein Dauer-Stub.  
 4. BT-Pfad bleibt wählbar und unangetastet, wenn `audio_output=bt`.
 
-Externe Vorbilder und Open-Source-Analoga: [§17 Vergleichsprojekte](#17-vergleichsprojekte-extern).
+### 3.9 Konzept-Entscheidung (nach Vergleichs-Review Grok)
+
+**Produktziel nicht aufgeben** (USB = UI + Ton, Hierarchie-Menü, Pi = Gehirn, ESP = Gadget).  
+**Technische Annahmen korrigieren** — das ist die eigentliche Überarbeitung:
+
+| Behalten | Aufgeben / ersetzen |
+|----------|---------------------|
+| Multi-Level-Menü über MSC | Annahme „Host re-read nach Play“ |
+| Remote-Audio Pi→ESP (WLAN/UART) | Annahme „48 KiB + bufferMs=0 reichen“ |
+| Play-Detect → Overlay | Stub = kurzer Testton + 0xFF |
+| Serial-Bump bei Identitätswechsel | Serial nur sporadisch / Lab-Remount |
+
+PiDrive will bewusst **mehr** als Dension (Hierarchie + viele Quellen über denselben Stick). Die Kosten dafür sind Baustelle A (UID-State) und B (Puffer/Pacing/Silence+Xing) — **Lücken schließen, nicht flach werden**. Optional später: „flacher Favoriten-Modus“ als Fallback-Profil, nicht als Ersatz des Zielbilds.
+
+Externe Vorbilder: [§17](#17-vergleichsprojekte-extern) · Abweichungsanalyse: [§17.6](#176-warum-pidrive-anders-wehtut-grok).
 
 ---
 
@@ -712,6 +726,20 @@ Recherche 2026-09-28. Relevanz für Review: gleiche Grundidee (Host sieht USB-St
 2. **Serial/Identity-Change** (vanheusden) ist bewährtes Mittel gegen HU-Cache — wir brauchen Serial **pro Attach**, nicht nur Lab-Remount.  
 3. **HU-spezifisches Timing/Config** (Dension K-Files) existiert kommerziell; wir steuern empirisch gegen Auto-Play/Readahead.  
 4. Open-Source-Vorbilder streamen oft **eine** große Datei; PiDrive braucht zusätzlich Menü-Semantik — deshalb Baustelle A (UID-State) und B (Overlay) getrennt halten.
+
+### 17.6 Warum PiDrive anders „wehtut“ (Grok)
+
+Vorbilder lösen dasselbe Grundproblem, aber **flach + lokal + stark gepuffert**. PiDrive weicht in fünf Punkten ab — genau dort sitzen A und B:
+
+| Abweichung | Vorbilder | PiDrive Ist | Folge |
+|------------|-----------|-------------|-------|
+| **A Menü** | flach / stabil | Multi-Level + `page_next` + UID-State auf Bridge | Baustelle A (stale UID nach TCP-Reconnect) |
+| **B Overlay** | 15–40 s Puffer, lange Datei, Host an Echtzeit | 48 KiB Ring, `bufferMs≈0`, absoluter Offset, kein Pacing | Burst → Cache → 0 Live-Bytes |
+| **C Transport** | Tuner/Stream lokal im Gerät | Pi → WLAN-TCP → ESP | Reconnect killt State **und** Frames |
+| **D Identität** | Serial/Image-Wechsel systematisch | oft `PD0001` (Bump erst 0.4.25) | HU-Cache-Treffer |
+| **E Stub** | Silence + Xing über volle Länge | 6,5 KiB Testton + 0xFF | Playlist rast durch Stub |
+
+**Kernsatz:** PiDrive will Dension-Ton **plus** Hierarchie-Menü über denselben fragilen Link. Vorbilder opfern Menü-Tiefe **oder** legen Puffer/Identität so aus, dass Cache/Reconnect den Hörpfad nicht killen. Fixes A+B schließen die Lücken, **ohne** das Produktziel aufzugeben ([§3.9](#39-konzept-entscheidung-nach-vergleichs-review-grok)).
 
 ---
 

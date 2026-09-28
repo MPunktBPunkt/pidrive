@@ -342,11 +342,18 @@ Protokoll: **PUMP** (Arbeitstitel; Umbenennung im Pflichtenheft erlaubt).
 | BT parallel belassen | **Konzept-Ja** (§2, §3) |
 | USB = Ton+UI | **Konzept-Ja** |
 | Chip ESP32-S3 | **Konzept-Ja** |
-| PUMP V1 = UART/CDC | **Tendenz-Ja** |
+| Hierarchie-Menü (nicht nur flach) | **Konzept-Ja** — kostet Nav-State/Grace (Baustelle A); flach nur als optionales Fallback-Profil |
+| PUMP V1 = UART/CDC | **Tendenz-Ja**; WLAN-Feld braucht Snapshot+Grace + robusten Link |
 | Encode auf Pi | **Tendenz-Ja** |
-| MVP flache Stationsliste | **Empfehlung**, Owner Q-USB-4 |
-| Repo/Firmware starten | **Nein** vor G-USB-0 |
+| Annahme „Host re-read nach Play“ | **verworfen** (NBT cached Stub) → Silence+Xing, Pacing, Warmup (Baustelle B) |
+| Dension-ABSA-Puffer (Mehrsekunden) | **übernehmen als Pflicht** vor Live-Overlay; 0 ms ist falsch |
+| Serial/Identity pro Attach | **Pflicht** (vanheusden-Muster) |
+| MVP flache Stationsliste | **Einstieg ok**, Zielbild bleibt Hierarchie |
+| Repo/Firmware starten | erledigt; Feld 2026-09-28 |
 | Pflichtenheft | nach Gates — Skizze in PFAD §4 |
+
+**Konzept-Review 2026-09-28:** Produktziel behalten; Annahmen zu Host-Read, Puffer und Stub korrigieren. Details: [FELDTEST §3.9 / §17.6](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#39-konzept-entscheidung-nach-vergleichs-review-grok).
+
 
 ---
 
