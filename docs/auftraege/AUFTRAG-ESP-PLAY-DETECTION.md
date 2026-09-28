@@ -54,10 +54,10 @@ Listing-Leere durch FAT-Mutation ist **gelöst** (static FAT ab 0.4.12; Root-Des
 - [x] Bridge: Navigations-Snapshot über TCP-Reconnect **behalten** / sofort resent
 - [x] Grace-Period: UIDs 180 s nach Verlassen der Seite weiter auflösbar (`uid_grace`)
 - [x] `menu sync deferred` → Snapshot-Resync; unknown UID startet **kein** Blind-Audio mehr
-- [ ] Feldtest: SoftAP-direkt oder UART priorisieren (weniger STA-Reconnects)
-- [ ] Test: volle Menütiefe ohne Reconnect; dann Reconnect provozieren und Lookup loggen (`[nav] grace hit` / kein `unknown uid` für Folder)
+- [ ] **Feldtest A/B/C** (siehe Feldbericht §15.1) — einzige Abnahme vor Baustelle B
+- [ ] SoftAP-direkt oder UART für den Test priorisieren (weniger STA-Reconnects)
 
-### I2b — Baustelle B (P0 nach A bzw. parallel messbar)
+### I2b — Baustelle B (erst nach A/B/C grün)
 
 - [ ] Pulse-Monitor vs. FM/DAB-Pipeline messen (`tools/check_pulse_monitor.sh`)
 - [ ] Stub: Silence-Frames + Xing/Info über Slot-Länge (nicht entkernen)
@@ -65,6 +65,8 @@ Listing-Leere durch FAT-Mutation ist **gelöst** (static FAT ab 0.4.12; Root-Des
 - [ ] Pacing: bei leerem Ring Silence statt Nullen; Host ggf. busy/retry
 - [ ] Cursor / feste ID3 statt rein absolutem Ring-Offset
 - [ ] Warmup vor Overlay (`bufferTargetMs`); Serial **pro Attach** — FW **0.4.25** bumpt bei Unplug
+
+**Architektur-Hinweis:** Grace ist Fallback. Zielbild später: atomarer `MenuSnapshot` (rev, page, nodes mit uid/action/parent). TCP-Reconnect ≠ USB-Serial-Bump — Ursachen getrennt halten.
 
 ### I3 — Warmup / Overlay-Härtung
 

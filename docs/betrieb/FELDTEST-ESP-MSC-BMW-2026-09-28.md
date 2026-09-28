@@ -515,11 +515,20 @@ Hauptmenü → FM Radio / DAB+ → Mehr… (page_next) → Sender → Sender A-M
 
 ### Empfohlene Reihenfolge (Konsens)
 
-1. ~~Bridge: Nav-Snapshot + Grace-Period~~ → **umgesetzt** in `esp32.pidrive/tools/pump_bridge.py` (Feldtest)  
+1. ~~Bridge: Nav-Snapshot + Grace-Period~~ → **umgesetzt** in `esp32.pidrive/tools/pump_bridge.py` (**Feldtest A/B/C** — siehe §15.1)  
 2. Link: Feldtests SoftAP-direkt oder UART (weniger Reconnects bei schlechtem STA-RSSI).  
 3. Audio-Messung: `tools/check_pulse_monitor.sh` während FM.  
 4. MSC: Readahead-Messung → Pacing + Cursor/ID3; Silence+Xing.  
 5. ~~Serial pro Plug~~ → **0.4.25** bumpt bei Unplug (Feldtest).
+
+### Zwei Zustände — strikt getrennt (nicht vermischen)
+
+```
+TCP/WLAN-Reconnect  →  Bridge Nav-/UID-State   (Baustelle A — Grace + Snapshot)
+USB Unplug/Attach   →  BMW MediaStore-Cache    (Serial PD0002… — Baustelle B-adjacent)
+```
+
+Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Architektur. Langfristig: atomarer `MenuSnapshot` (rev, page, nodes mit uid/action/parent). Grace vor dem Test **nicht** entfernen.
 
 ### Umgesetzt 2026-09-28 Abend (Code)
 
@@ -529,6 +538,8 @@ Hauptmenü → FM Radio / DAB+ → Mehr… (page_next) → Sender → Sender A-M
 | Menu-Snapshot resent | `try_reconnect` | statt `menu sync deferred` + State-Wipe |
 | Kein Blind-Audio bei unknown | `play_uid` | verhindert Pulse-Start auf Folder-UIDs |
 | Serial bei Unplug | `UsbMscGadget::applyUsbIdentity` 0.4.25 | nächster Attach ≠ `PD0001` |
+
+**Nächster Schritt laut Multi-Review (Grok/Gemini/GPT):** ausschließlich strukturierter Feldtest A/B/C — **kein** Overlay-/Silence-/Pacing-Patch vorher.
 
 ---
 
@@ -592,7 +603,26 @@ Hauptmenü → FM Radio / DAB+ → Mehr… (page_next) → Sender → Sender A-M
 
 ## 15. Repro / Mess-Checkliste
 
-### Vorbereitung
+### 15.1 Feldtest Baustelle A (einzige Frage jetzt)
+
+> Bleibt die Menü-UID-Zuordnung nach TCP-Reconnect konsistent, und lässt sich `Mehr…` über alle Seiten bis zum letzten Eintrag durchlaufen?
+
+**Voraussetzungen:** Bridge mit Grace/Snapshot-Code · ideal SoftAP-direkt oder UART · FW ≥ 0.4.25 · Log:
+
+```bash
+journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace hit|unknown uid|stale|menu_set|page|reconnected'
+```
+
+| Test | Ablauf | Erwartung |
+|------|--------|-----------|
+| **A** Navigation ohne absichtlichen Reconnect | Top → FM → Mehr → Sender → A-M → … | möglichst **kein** `[nav] grace hit` (Normalweg = aktueller Snapshot). Braucht der Happy Path schon Grace → Snapshot-State noch unsauber |
+| **B** Reconnect bei offenem Menü | Menü sichtbar → TCP trennen/wiederherstellen → denselben Eintrag wählen | `hello_ack` → `menu snapshot resent` → UID gefunden (`grace hit` ok) · **kein** `unknown uid` / früher `stale/unknown` |
+| **C** `Mehr…` bis Ende | page 0 → 1 (`+n`) → 2 → … bis kein Mehr | `menu_set … page=0/1/2…` stabil; kein Abbruch durch Sync-Fehler |
+
+**Baustelle A geschlossen nur wenn:** A+C grün und B ohne `unknown uid` auf Folder/bekannten UIDs.  
+**Danach erst** Baustelle B (Pulse-Check → Silence/Xing/Pacing). Audio-Ohr in A/B/C **nicht** als Abnahme werten.
+
+### Vorbereitung (Status-Snapshot)
 
 ```bash
 curl -s http://192.168.178.89/api/status | jq '{fw:.version,phase:.msc.phase,guess:.msc.playGuessCount,rej:.msc.playRejectCount,stream:.msc.stream,slots:[.msc.slotMap[].name]}'
@@ -711,12 +741,17 @@ Quellen: Claude (Artefakt-Detailanalyse), GPT (Bridge-Log / Menü-State), Gemini
 3. MSC Readahead-Messung → Pacing / Cursor / Silence+Xing  
 4. Serial pro Attach  
 
-### 18.3 Korrekturen am früheren Review-Text (erledigt in diesem Dokument)
+### 18.4 Review der Cursor-Fixes (Grok / Gemini / GPT, Abend)
 
-- Auftragshypothese „kein `play.guess`“ für diesen Feldtest **gestrichen**  
-- A1 → pass; A4 (Nav ohne stale) neu  
-- H3 Detector relativiert; H6 Reconnect ergänzt  
-- I2 „Stub entkernen“ ersetzt durch Silence+Xing + Pacing  
+Konsens: Baustelle A richtig getroffen; B bewusst unangetastet = methodisch korrekt.
+
+| Aussage | Konsens |
+|---------|---------|
+| Snapshot nach `hello_ack` = struktureller Fix für deferred-Lücke | ja |
+| Grace 180 s = pragmatischer Fallback, langfristig atomarer MenuSnapshot | ja — Grace für Feldtest behalten |
+| Unknown → kein Blind-Audio | ja |
+| Serial-Bump = USB/MediaStore, getrennt von TCP-Nav | ja |
+| Nächster Schritt nur Feldtest A/B/C, kein Overlay-Patch | ja |
 
 ---
 
