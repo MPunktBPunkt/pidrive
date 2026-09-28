@@ -1,7 +1,8 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Nicht:** fertige Lösungsskizze als Vorgabe — Optionen sind als Review-Fragen formuliert.
+**Stand Diagnose:** 2026-09-28 Abend — nach Multi-Review (Claude / GPT / Gemini / Grok): **zwei getrennte Baustellen** (Menü-State nach TCP-Reconnect · Live-Audio vs. HU-Cache). Play-Detect ist für diesen Feldtest **nicht** der Engpass.  
+**Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
 |------|------|
@@ -12,6 +13,7 @@
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
 | Repos | `pidrive` (Doku/Bridge-Client) · `esphub/esp32.pidrive` (FW, uncommitted Stand 0.4.24) |
 | Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
+| Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
 | Konzept (Soll) | [KONZEPT-USB-MSC](../planung/KONZEPT-USB-MSC.md) |
 | Runtime-Flow | [RUNTIME_FLOWS § USB](../architektur/RUNTIME_FLOWS.md) |
@@ -50,34 +52,42 @@
 14. [Review-Fragen & Optionen](#14-review-fragen--optionen)  
 15. [Repro / Mess-Checkliste](#15-repro--mess-checkliste)  
 16. [Abnahme](#16-abnahme)  
-17. [Vergleichsprojekte (extern)](#17-vergleichsprojekte-extern)
+17. [Vergleichsprojekte (extern)](#17-vergleichsprojekte-extern)  
+18. [Multi-Review-Konsens](#18-multi-review-konsens-2026-09-28-abend)
 
 ---
 
 ## 1. Executive Summary
 
-### Symptom (aktuell)
+### Zwei Baustellen (strikt trennen)
 
-Am BMW erscheinen korrekte Menüdateien (`Zurueck`, `Antenne Bayern  104.4 MHz`, `Hitradio RT1  90.2 MHz`) auf Stick **`PD0001`**. Die drei Dateien werden **automatisch nacheinander** abgespielt. Hörbar ist der **Stub-Testton** (Demo-MP3), nicht Live-FM/Web vom Pi — obwohl Pi zeitweise denselben Sender spielt und ESP `stream.active=true` melden kann.
+| ID | Problem | Status Feld | Primärhebel |
+|----|---------|-------------|-------------|
+| **A** | Menü-Navigation / Bridge-UID-State nach TCP-Reconnect | teilweise — Navigation funktioniert, bricht bei `stale/unknown uid` | Bridge: Snapshot behalten + Grace-Period; Link stabilisieren |
+| **B** | Live-Audio vs. NBT-Cache/Readahead | **fail** — Stub-Testton aus HU-Cache | MSC: Silence+Xing, Pacing, Cursor/ID3; Warmup; Pulse-Quelle prüfen |
+
+### Symptom (Ohr / UX)
+
+Am BMW erscheinen korrekte Menüdateien (`Zurueck`, `Antenne Bayern  104.4 MHz`, `Hitradio RT1  90.2 MHz`) auf Stick **`PD0001`**. Die Dateien werden **automatisch** abgespielt; hörbar ist der **Stub-Testton**, nicht Live. Parallel: Menü lässt sich über mehrere Ebenen navigieren (`FM` → `Mehr…` → `Sender` → `A-M` → Stationen), bricht aber bei häufigen Bridge-Reconnects mit `stale/unknown uid` ab.
 
 ### Was technisch schon grün ist
 
-- USB-Enumeration, MSC-Ready, FAT-Root/DIR lesbar (`bytesDir > 0`)  
-- LFN-Namen aus PiDrive-Menü  
-- Serial/Volume-Bump → HU sieht „neuen“ Stick  
-- PUMP-TCP Pi↔ESP  
-- Teilweise `play.guess` → Bridge `audio_start` → ffmpeg → `audio_ack start`
+- USB-Enumeration, MSC-Ready, FAT-Root/DIR (`bytesDir > 0`); Slot-Geometrie konsistent (Cluster 4/260/516/772 ↔ LBA 57/1081/2105/3129)  
+- LFN-Namen, Serial/Volume-Bump (`PDnnnn`)  
+- **Play-Detect feuert** (`play.guess` / `play_uid` mehrfach, auch Auto-Play ~6 s nach Plug)  
+- `pump:page_next` und Mehr-Ebenen-Menü (wenn TCP stabil)  
+- Bridge-Kette `activate` → `audio_start` → `audio_ack start` (Software bis Overlay-Armierung)
 
 ### Was rot / kritisch ist
 
-- HU **Auto-Play + Stub-Cache** dominiert das Hörereignis  
-- Nach Index: `msc.quiet` („cache?“), wenig echte Play-Reads  
-- Wenn Overlay armed: **`stream.underruns` extrem hoch**, `bufferMs=0`, ffmpeg endet oft schnell → kein stabiler Live-Bitstream zum Host  
-- SoftAP-Navigation aktualisiert ESP-Menü sofort; BMW-Liste nur nach Remount/Re-Plug
+- **Baustelle B:** Nach Guess ~1 s Full-Speed-Read (~1 MiB, 4 KiB/~4 ms), danach **keine** File-Reads mehr — Ohr = HU-Cache (Stub). `streamBytes == underruns` → **0 Live-Bytes** an den Host. Overlay/ffmpeg oft zu spät für das Lesefenster.  
+- **Baustelle A:** ~10 TCP-Reconnects / 3 min (RSSI −76 dBm), `menu sync deferred`, danach `stale/unknown uid` für UIDs, die kurz zuvor gültig waren.  
+- Snapshot ~15:55 ist **~5 min Nachlauf** (`bufferMs=0`, voller Ring, `ffmpeg exit 0` ≠ Zustand im Play-Fenster).  
+- Serial bleibt bei Replug oft `PD0001` → HU-Cache-Treffer möglich.
 
-### Ein-Satz-Diagnose
+### Ein-Satz-Diagnose (aktualisiert)
 
-> Der NBT behandelt den ESP wie einen USB-Stick mit drei kurzen MP3s (Index → Cache → Playlist); PiDrive’s Live-Overlay hängt an USB-Re-Reads und einem warmen StreamBuffer — beides greift im aktuellen HU-Verhalten nicht zuverlässig.
+> Play-Detect und Menüpfad funktionieren grundsätzlich; kaputt sind (A) Bridge-Navigationszustand nach WLAN-Reconnect und (B) NBT-Readahead/Cache, der Stub spielt ohne den Live-Overlay zu konsumieren.
 
 ---
 
@@ -91,6 +101,7 @@ Am BMW erscheinen korrekte Menüdateien (`Zurueck`, `Antenne Bayern  104.4 MHz`,
 | U4 | Navigation Nächster/Zurück am BMW wirkt nicht | `play.guess=0` während Cache-Play |
 | U5 | SoftAP zu Sender navigiert; BMW zeigt alte Dateien, kein Live-Ton | Vor Serial-Bump |
 | U6 | **`PD0001` sichtbar**, Namen Antenne/Hitradio/Zurück korrekt, **wieder Testton-Auto-Play** | Nach 0.4.24 Remount |
+| U7 | Navigation über mehrere Ebenen möglich (FM → Mehr → Sender → A-M), bricht aber „mitten im Menü“ | Bridge 15:44–15:45; `stale/unknown uid` nach Reconnect |
 
 ---
 
@@ -252,7 +263,7 @@ Externe Vorbilder und Open-Source-Analoga: [§17 Vergleichsprojekte](#17-verglei
 | `indexSettled_` | Rest | `0xFF` |
 | `stream.active` & passender Slot | beliebig | `StreamBuffer::readAt(fileOff)` |
 
-Stub ≈ 6,5 KiB gültige kurze MP3 (Testton). Das reicht der HU zum „fertigen Song“ aus dem Cache.
+Stub ≈ 6,5 KiB gültige kurze MP3 (Testton), Rest **0xFF** (ungültige Frames). Der Decoder springt weiter → Playlist rauscht durch. Besser: **gültige Silence-Frames + Xing/Info über die volle Slot-Länge** (nicht „Stub entkernen“ → leere Dateien können aus der HU-Liste fliegen).
 
 ---
 
@@ -341,22 +352,31 @@ Pro Slot: `bytes`, `fromHead`, `midFile`, `maxSeq`, `lastAgeMs` — zeigen Index
 
 ## 7. Live-Snapshot-Interpretation
 
-Aus Status ~15:55 und Events nach Re-Plug (~15:52):
+> **Korrektur (Multi-Review):** Status-JSON ~15:55 ist **~5 min nach** dem Play-Ereignis (`msSincePlug` ≈ 324 600). `bufferMs=0`, Ring-Füllstand und `ffmpeg exit 0` sind **Nachlauf**, nicht der Zustand im Lesefenster ~15:52.
+
+### 7.1 Play-Fenster Hitradio (~15:52, aus Events + Trace + Bridge)
+
+| Signal | Wert | Lesart |
+|--------|------|--------|
+| Plug → Quiet | scan → first_read ~1 s → quiet ~file=557 KiB | Index |
+| `play.guess` | Hitradio, ~6 s nach Plug, **ohne** manuelle Auswahl | Detector auf HU-Auto-Play |
+| Leseburst nach Guess | ~95,9–97,1 s: ~1 MiB, 4 KiB alle ~4 ms | Full-Speed-Readahead, kein Pacing |
+| Danach File-Reads | **keine** (auch Minuten später `lastReadLba` noch im Prefetch-Slot) | Ohr = **HU-Cache** |
+| Overlay-Latenz | audio_stop/start + ffmpeg erst ~1,5–2,5 s nach Guess | Lesefenster auf Stream-Slot < 1 s → Overlay verpasst Consume |
+| `streamBytes` vs `underruns` | **gleich** (z. B. 79872) | **0** Live-Bytes an Host geliefert |
+| Ring | 48 KiB, absolut adressiert | Nach >48 KiB Dateioffset ist ID3-Kopf weg → späte Re-Reads = Leere |
+
+### 7.2 Snapshot ~15:55 (Nachlauf — nicht überbewerten)
 
 | Signal | Wert | Lesart |
 |--------|------|--------|
 | Namen | Zurueck / Antenne / Hitradio | LFN + Remount ok |
-| `bytesFile` | ~0,5–1,6 MiB | starker Index |
-| `msc.quiet` | nach ~2 s Pause | Cache-Fenster |
-| `play.guess` | Hitradio UID | Detector feuerte |
-| `audio.start` + ffmpeg | ja | Bridge-Pfad ok |
-| `stream.active` | true (zeitweise) | Overlay armed |
-| `underruns` | ~8e4 | Live-Bytes fehlen am Read |
-| `bufferMs` | 0 | kein Vorpuffer |
-| `ffmpeg exit 0` | ~27 s nach Start | Forwarder tot |
-| Nutzer hört | Testton-Playlist | Cache/Stub dominiert |
+| `stream.active` / `underruns` / `bufferMs` | zeitweise true / ~8e4 / 0 | Nachlauf nach Timeout |
+| `ffmpeg exit 0` | ~27 s nach Start | Forwarder tot; bei 48 kbit/s ≈ 154 KB — Ursache offen (Quelle/EOF?) |
 
-**Wichtig für Review:** Es gibt Phasen, in denen die **Software-Kette bis `audio_start` grün** ist, das **Ohr aber trotzdem Stub** hört. Das trennt „Detector/Bridge kaputt“ von „Host-Cache / Overlay-Consume kaputt“.
+**Wichtig:** Software-Kette bis `audio_ack start` kann **grün** sein, während das Ohr Stub hört — und der Snapshot den Play-Moment nicht mehr abbildet.
+
+---
 
 ---
 
@@ -391,9 +411,10 @@ Git: Änderungen in `esp32.pidrive` **lokal uncommitted** (Stand Review). `HostS
 
 - `hold_menu_until` (~3 s): `menu_set` während Stream unterdrückt (Remount killt TCP) — Kommentar im Code.  
 - `audio.start()` → immer erst `stop()` → Ack `op=stop` dann `op=start` ist normal.  
-- Pulse-Monitor: `ffmpeg pulse:…mailbox…monitor @ 48k` — Abhängigkeit vom aktuellen Default-Sink.
+- Pulse-Monitor: `ffmpeg pulse:…mailbox…monitor @ 48k` — bei FM/DAB über `hw:1,0` kann der Monitor **Stille** sein (vor Overlay-Fixes messen).  
+- **`menu sync deferred` nach TCP-Reconnect** + gelöschter/leerer Nav-State → `stale/unknown uid` (Baustelle A).
 
-### 9.3 Exemplarische Bridge-Sequenz (15:52 Hitradio)
+### 9.3 Exemplarische Bridge-Sequenz (15:52 Hitradio) — Audio
 
 Siehe [artifacts-…-bridge-excerpt.log](artifacts-2026-09-28-bridge-excerpt.log):
 
@@ -403,41 +424,73 @@ Siehe [artifacts-…-bridge-excerpt.log](artifacts-2026-09-28-bridge-excerpt.log
 4. `audio_stop` / `audio_start`  
 5. `ffmpeg …`  
 6. `audio_ack stop` dann `audio_ack start`  
-7. später `ffmpeg exit 0`
+7. später `ffmpeg exit 0` (Nachlauf)
+
+### 9.4 Menü-Navigation (15:44–15:45) — Baustelle A
+
+Nachgewiesen funktionsfähig (wenn TCP hält):
+
+```
+Hauptmenü → FM Radio / DAB+ → Mehr… (page_next) → Sender → Sender A-M → Antenne / Hitradio
+```
+
+| Zeit | Ereignis | Bedeutung |
+|------|----------|-----------|
+| 15:44:14 | `menu_set` FM/DAB | Ordner-Ebene |
+| 15:44:24 | `play_uid` FM-Folder, `nav folder` ok | UID gültig |
+| 15:44:31 | `reconnected` + `menu sync deferred` | State-Risiko |
+| 15:44:32–33 | dieselbe UID → **`stale/unknown uid`** | Nav-State nach Reconnect inkonsistent |
+| 15:44:54 | `play_uid pump:page_next` → `menu_set page=1` | Paging ok |
+| 15:45:05…40 | weitere Reconnects (~1/min+) | Race BMW-Menü ↔ Bridge ↔ Audio |
+| 15:45:35 | Station Antenne + `audio_start` | dann wieder Reconnect während Start |
+
+**Race (vereinfacht):** BMW zeigt Menü X → TCP reconnect → Bridge invalidiert UID-Map → deferred `menu_set` → BMW sendet alte UID → `stale/unknown`.
 
 ---
 
-## 10. Ursachenmodell (warum Testton)
+## 10. Ursachenmodell
 
-### Hypothese H1 — Cache-Auto-Play (primär, starke Evidenz)
+### Baustelle B — warum Testton (Audio)
 
-- Index liest Stub-Heads (+ Pad) → `msc.quiet`  
-- HU spielt kurze MP3s aus MediaStore **ohne** kontinuierliche USB-Reads  
-- Ohr = Stub; ESP sieht wenig Play-Traffic  
+#### H1 — Cache-Auto-Play + kurzes Lesefenster (primär, starke Evidenz)
 
-**Evidenz:** Nutzer-Auto-Play; `msc.quiet cache?`; hohe `bytesFile` vor Quiet; Testton trotz korrekter LFN.
+- Index / Auto-Play liest Stub → `msc.quiet`  
+- Nach Guess: ~1 s Full-Speed-Burst, dann **keine** USB-File-Reads mehr  
+- Ohr = MediaStore-Cache (Stub); Live-Overlay wird nicht konsumiert  
 
-### Hypothese H2 — Overlay armed, Host konsumiert nicht / underrunt (sekundär, starke Evidenz)
+**Evidenz:** Trace 95,9–97,1 s; `lastReadLba` Minuten später; Nutzer-Auto-Play.
 
-- `play.guess` + `stream.active` + ID3 ok  
-- `underruns` enorm, `bufferMs=0`, ffmpeg exit  
-- Selbst bei USB-Reads: leerer Ring → kein Radio  
+#### H2 — Overlay zu spät / Ring liefert 0 Live-Bytes (stark, gekoppelt an H1)
 
-**Evidenz:** Status-Snapshot Hitradio; Bridge-Log.
+- `streamBytes == underruns` → nie ein Live-Byte am Host  
+- Warmup/ffmpeg-Start ~1,5–2,5 s nach Guess > Lesefenster  
+- Absoluter Offset + 48 KiB-Ring: ID3-Kopf nach Durchlauf weg  
 
-### Hypothese H3 — Detector zu streng / zu spät (teilweise)
+#### H3 — Detector zu streng (für diesen Feldtest **relativiert / nicht Engpass**)
 
-- Viele Rejects im Index; Guess erst nach Quiet  
-- Kann echte Plays verpassen oder erst mitten in der Playlist treffen  
+- Guess kam; `playMinSeqBytes→2048` bringt für Audio nichts  
+- Feintuning zurückstellen  
 
-### Hypothese H4 — SoftAP vs. BMW-Liste desynchron (gelöst für Namen via Remount; UX bleibt)
+#### H5 — Pulse-Monitor = Stille bei FM/DAB (offen, prüfen)
 
-- ESP-Menü ≠ BMW-Anzeige ohne Remount/Serial-Bump  
+- ffmpeg auf `mailbox.stereo-fallback` Monitor; Decoder ggf. `hw:1,0`  
+- Messung: `ffmpeg -f pulse -i <monitor> -t 5 -af volumedetect -f null -` während FM + stderr loggen  
+
+### Baustelle A — warum Menü „nicht durchkommt“
+
+#### H4 — SoftAP/BMW-Liste desynchron (teilweise gelöst via Remount; UX bleibt)
+
+#### H6 — TCP-Reconnect verwirft Nav-State (primär für Menü, starke Evidenz)
+
+- Viele Reconnects, `menu sync deferred`, `stale/unknown uid` für zuvor gültige UIDs  
+- `rev` zählt weiter → Format ok, Sync kaputt  
 
 ### Verworfen / relativiert
 
-- „Nur Favoriten-`*`“ als alleinige Ursache für leere Liste (Root-Destroy war der Killer).  
-- „512 KiB reichen gegen Cache“ — **widerlegt** im Feld (HU indexiert trotzdem großzügig / spielt Stub-Head).
+- „Play-Detect ist der Engpass“ — **widerlegt** für 2026-09-28 Nachmittag.  
+- „FAT/Slot-Geometrie inkonsistent“ — **nachgerechnet ok**.  
+- „512 KiB reichen gegen Cache“ — **widerlegt**.  
+- „Stub komplett entkernen“ — **riskant** (HU kann Dateien verwerfen); Silence+Xing bevorzugen.
 
 ---
 
@@ -448,12 +501,24 @@ Siehe [artifacts-…-bridge-excerpt.log](artifacts-2026-09-28-bridge-excerpt.log
 | Leere USB-Liste (Root-Destroy) | gelöst 0.4.19 |
 | Illegal `*` in LFN | gelöst 0.4.18 + Bridge |
 | Menü-Namen am BMW | gelöst mit Remount/Serial 0.4.20/24 |
-| Stick-Identität erneuern | gelöst `PDnnnn` |
-| Live-Audio hörbar | **offen (P0)** |
-| Auto-Play Stub-Playlist | **offen (P0)** |
-| Overlay-Underruns / ffmpeg-Halt | **offen (P0)** |
-| Play-Detect Feintuning | offen (P1) |
+| Stick-Identität erneuern (Lab-Remount) | gelöst `PDnnnn` — **Serial pro Attach (NVS) noch offen** |
+| Play-Detect (`play.guess` / Auto-Play) | **ok für diesen Feldtest** |
+| Mehr-Ebenen-Menü + `page_next` | **ok**, wenn TCP stabil |
+| Nav-State nach TCP-Reconnect (`stale/unknown`) | **offen (P0 Baustelle A)** |
+| WLAN-Reconnect-Rate Feld | **offen (P0 Link)** |
+| Live-Audio hörbar (nicht Stub-Cache) | **offen (P0 Baustelle B)** |
+| Overlay-Pacing / Cursor / Silence+Xing | **offen (P0/P1 B)** |
+| Pulse-Quelle vs. ALSA-Decoder | **offen (Messung vor großen B-Fixes)** |
+| Play-Detect Feintuning (`minSeqBytes`) | **zurückgestellt** |
 | Remount-UX ohne manuelles USB | offen (P2) |
+
+### Empfohlene Reihenfolge (Konsens)
+
+1. Bridge: Nav-Snapshot über Reconnect + Grace-Period für alte UIDs; kein blindes State-Wipe bei `menu sync deferred`.  
+2. Link: Feldtests SoftAP-direkt oder UART (weniger Reconnects bei schlechtem STA-RSSI).  
+3. Audio-Messung: Pulse-Monitor vs. FM-Pipeline (volumedetect + ffmpeg-stderr).  
+4. MSC: Readahead-Messung (große Silence-Datei); dann Pacing + Cursor/ID3-Stabilität; Silence+Xing statt Testton/0xFF.  
+5. Serial pro Plug hochzählen (NVS).
 
 ---
 
@@ -494,18 +559,24 @@ Siehe [artifacts-…-bridge-excerpt.log](artifacts-2026-09-28-bridge-excerpt.log
 
 ---
 
-## 14. Review-Fragen & Optionen
+## 14. Review-Fragen & nächste Experimente
 
-*(Zur Bewertung — keine Prioritätsfestlegung durch dieses Dokument.)*
+### Priorisierte Experimente
 
-1. Ist der richtige Primärhebel **Stub-Bitstream** (kein abspielbarer Testton im Cache), **HU-Playlist-Vermeidung** (weniger/eine Datei), oder **erzwungener Re-Read** (Größe/Header/Fehler)?  
-2. Wie korrelieren wir **zwingend** `audio_start` → erster Overlay-Host-Read → `underruns`-Delta? Fehlt Telemetrie?  
-3. Ist `ffmpeg exit 0` nach ~30 s Symptom (Monitor-EOF) oder Bug (TCP/Bridge)?  
-4. Soll SoftAP-Play **ohne** BMW-Re-Read als Abnahme zählen (Lab) oder nur Ohr am USB?  
-5. Remount bei jedem `menu_set`: akzeptabler UX-Tradeoff vs. Sticky-Listing?  
-6. Brauchen wir getrennte Profiles: `desk/phone` vs. `nbt-autoplay`?  
-7. Ist 512 KiB Slot + 2 MiB Image die richtige Größenordnung oder Richtung Multi-MiB/„endlose“ Datei?  
-8. Sollte `indexSettled_` anders definiert werden (z. B. nach N Bytes Index statt Quiet)?  
+1. **Bridge ohne Reconnect:** volle Menütiefe navigieren; TCP muss halten → Beweis „Menü ok, Sync kaputt“.  
+2. **Reconnect provozieren:** aktueller BMW-Screen vs. Bridge-Menü/`rev` vs. `play_uid`-Lookup loggen.  
+3. **Pulse-volumedetect** während FM: liefert Monitor Pegel oder Stille?  
+4. **1-GiB Silence/FAT32-Messung:** wie viel/wie schnell liest der NBT? → Readahead-Tiefe.  
+5. **Pacing-Spike:** bei leerem Ring Silence statt Nullen; ggf. TinyUSB busy/retry.  
+6. **Cursor/ID3 fest** statt rein absolutem Offset.
+
+### Offene Fragen
+
+1. Wie korrelieren wir zwingend Guess → erster Overlay-Host-Read → `underruns`-Delta (Telemetrie im Play-Fenster, nicht 5 min später)?  
+2. Ist `ffmpeg exit 0` nach ~27 s Monitor-EOF, Stille-Quelle, oder TCP/Bridge?  
+3. Remount bei jedem `menu_set`: akzeptabel vs. Sticky-Listing?  
+4. Ein vs. drei Dateien am Stick gegen Auto-Playlist?  
+5. SoftAP-Play ohne BMW-Re-Read nur Lab-Abnahme?
 
 ---
 
@@ -550,9 +621,10 @@ curl -s http://192.168.178.89/api/status | jq .msc.stream
 
 | ID | Kriterium | Stand |
 |----|-----------|-------|
-| A1 | Auswahl → `play.guess` + UID | teilweise |
-| A2 | Live-Audio ≤ wenige Sekunden, nicht Stub | **fail** |
-| A3 | Listing während Stream sichtbar | pass (static FAT) |
+| A1 | Auswahl/Auto-Play → `play.guess` + UID | **pass** (mehrfach; auch Auto-Play) |
+| A2 | Live-Audio ≤ wenige Sekunden, nicht Stub | **fail** (Baustelle B) |
+| A3 | Listing während Stream sichtbar | **pass** (static FAT) |
+| A4 | ≥2 Menüebenen + `page_next` **ohne** `stale/unknown` bei stabiler TCP-Session | **teilweise** (Navi ok, Reconnect bricht) |
 
 ---
 
@@ -596,10 +668,45 @@ Recherche 2026-09-28. Relevanz für Review: gleiche Grundidee (Host sieht USB-St
 
 ### 17.5 Review-Takeaways aus den Vergleichen
 
-1. **Puffer vor dem Host** (Dension ABSA, Patent Ringbuffer, Hackaday Chunks) ist industrieüblich — unser Feld mit `bufferMs≈0` / massiven Underruns widerspricht dem erfolgreichen Muster.  
-2. **Serial/Identity-Change** (vanheusden) ist bewährtes Mittel gegen HU-Cache — wir nutzen `PDnnnn` bereits für Menü-Refresh.  
-3. **HU-spezifisches Timing/Config** (Dension K-Files) existiert kommerziell; wir haben nur ein Auto und müssen empirisch gegen Auto-Play/Stub-Cache steuern.  
-4. Open-Source-Vorbilder streamen oft **eine** große Datei; PiDrive braucht zusätzlich **Menü-Semantik** (mehrere UIDs + Play-Detect) — das ist der schwerere Teil.
+1. **Puffer vor dem Host** (Dension ABSA, Patent Ringbuffer, Hackaday Chunks) ist industrieüblich — unser Feld mit 0 Live-Bytes / verpasstem Lesefenster widerspricht dem erfolgreichen Muster.  
+2. **Serial/Identity-Change** (vanheusden) ist bewährtes Mittel gegen HU-Cache — wir brauchen Serial **pro Attach**, nicht nur Lab-Remount.  
+3. **HU-spezifisches Timing/Config** (Dension K-Files) existiert kommerziell; wir steuern empirisch gegen Auto-Play/Readahead.  
+4. Open-Source-Vorbilder streamen oft **eine** große Datei; PiDrive braucht zusätzlich Menü-Semantik — deshalb Baustelle A (UID-State) und B (Overlay) getrennt halten.
+
+---
+
+## 18. Multi-Review-Konsens (2026-09-28 Abend)
+
+Quellen: Claude (Artefakt-Detailanalyse), GPT (Bridge-Log / Menü-State), Gemini (Lösungsabriss + Vergleichsprojekte), Grok (Abgleich aller drei). **Gemeinsames Ergebnis:**
+
+### 18.1 Was alle bestätigen
+
+| Aussage | Konsens |
+|---------|---------|
+| Listing/LFN/`PD0001` ok | ja |
+| Play-Detect feuert (auch Auto-Play) — **nicht** der Engpass | ja |
+| `page_next` + Mehr-Ebenen-Menü funktionieren grundsätzlich | ja |
+| Live-Audio: NBT-Readahead/Cache, Overlay nie/zu spät konsumiert, `streamBytes==underruns` | ja |
+| Snapshot ~15:55 = Nachlauf | ja |
+| FAT/Geometrie nicht die Ursache | ja |
+| Bridge-Reconnect → `stale/unknown uid` = eigener Bug | ja |
+| Zwei Baustellen strikt trennen; Menü-State **vor** großen MSC-Audio-Umbauten | ja |
+| Stub nicht „entkernen“ → Silence+Xing | ja |
+| Pulse-Monitor vor Overlay-Fixes prüfen | ja |
+
+### 18.2 Priorität (Konsens-Reihenfolge)
+
+1. Bridge Nav-Snapshot + Grace-Period; Link SoftAP/UART für Feld  
+2. Pulse-Messung  
+3. MSC Readahead-Messung → Pacing / Cursor / Silence+Xing  
+4. Serial pro Attach  
+
+### 18.3 Korrekturen am früheren Review-Text (erledigt in diesem Dokument)
+
+- Auftragshypothese „kein `play.guess`“ für diesen Feldtest **gestrichen**  
+- A1 → pass; A4 (Nav ohne stale) neu  
+- H3 Detector relativiert; H6 Reconnect ergänzt  
+- I2 „Stub entkernen“ ersetzt durch Silence+Xing + Pacing  
 
 ---
 
@@ -621,8 +728,8 @@ Recherche 2026-09-28. Relevanz für Review: gleiche Grundidee (Host sieht USB-St
 - [USB-MSC-STREAM-LISTING-2026-09-18](USB-MSC-STREAM-LISTING-2026-09-18.md)  
 - [LAB-MENU-WLAN](LAB-MENU-WLAN.md)  
 - esp32.pidrive: `docs/planung/PLAY-DETECTION.md`, `PUMP.md`, `COVER-ID3.md`, `STATE.md`  
-- **Extern:** [§17 Vergleichsprojekte](#17-vergleichsprojekte-extern)
+- **Extern:** [§17 Vergleichsprojekte](#17-vergleichsprojekte-extern) · [§18 Multi-Review](#18-multi-review-konsens-2026-09-28-abend)
 
 ---
 
-*Ende Review-Paket. Bei Review-Start: Artefakt-JSONs + Bridge-Log mitlesen; FW-Diff `UsbMscGadget.*` 0.4.17→0.4.24 lokal.*
+*Ende Review-Paket. Artefakte + Bridge-Log mitlesen; Diagnose-Stand = §1 + §18 (nicht mehr „Play-Detect ist der Engpass“).*
