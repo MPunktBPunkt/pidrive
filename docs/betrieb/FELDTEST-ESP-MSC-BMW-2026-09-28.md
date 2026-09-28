@@ -412,7 +412,7 @@ Git: Änderungen in `esp32.pidrive` **lokal uncommitted** (Stand Review). `HostS
 - `hold_menu_until` (~3 s): `menu_set` während Stream unterdrückt (Remount killt TCP) — Kommentar im Code.  
 - `audio.start()` → immer erst `stop()` → Ack `op=stop` dann `op=start` ist normal.  
 - Pulse-Monitor: `ffmpeg pulse:…mailbox…monitor @ 48k` — bei FM/DAB über `hw:1,0` kann der Monitor **Stille** sein (vor Overlay-Fixes messen).  
-- **`menu sync deferred` nach TCP-Reconnect** + gelöschter/leerer Nav-State → `stale/unknown uid` (Baustelle A).
+- **TCP-Reconnect:** früher `menu sync deferred` + State-Wipe → `stale/unknown`; jetzt Snapshot-Resync + UID-Grace (Feldtest).
 
 ### 9.3 Exemplarische Bridge-Sequenz (15:52 Hitradio) — Audio
 
@@ -501,11 +501,12 @@ Hauptmenü → FM Radio / DAB+ → Mehr… (page_next) → Sender → Sender A-M
 | Leere USB-Liste (Root-Destroy) | gelöst 0.4.19 |
 | Illegal `*` in LFN | gelöst 0.4.18 + Bridge |
 | Menü-Namen am BMW | gelöst mit Remount/Serial 0.4.20/24 |
-| Stick-Identität erneuern (Lab-Remount) | gelöst `PDnnnn` — **Serial pro Attach (NVS) noch offen** |
+| Stick-Identität erneuern (Lab-Remount) | gelöst `PDnnnn`; Unplug-Bump **0.4.25** |
 | Play-Detect (`play.guess` / Auto-Play) | **ok für diesen Feldtest** |
 | Mehr-Ebenen-Menü + `page_next` | **ok**, wenn TCP stabil |
-| Nav-State nach TCP-Reconnect (`stale/unknown`) | **offen (P0 Baustelle A)** |
-| WLAN-Reconnect-Rate Feld | **offen (P0 Link)** |
+| Nav-State nach TCP-Reconnect (`stale/unknown`) | **Fix im Bridge-Code** (Grace + Snapshot) — Feldtest offen |
+| Serial pro Attach | **0.4.25** bumpt bei Unplug — Feldtest offen |
+| WLAN-Reconnect-Rate Feld | **offen (P0 Link)** — SoftAP/UART bevorzugen |
 | Live-Audio hörbar (nicht Stub-Cache) | **offen (P0 Baustelle B)** |
 | Overlay-Pacing / Cursor / Silence+Xing | **offen (P0/P1 B)** |
 | Pulse-Quelle vs. ALSA-Decoder | **offen (Messung vor großen B-Fixes)** |
@@ -514,11 +515,20 @@ Hauptmenü → FM Radio / DAB+ → Mehr… (page_next) → Sender → Sender A-M
 
 ### Empfohlene Reihenfolge (Konsens)
 
-1. Bridge: Nav-Snapshot über Reconnect + Grace-Period für alte UIDs; kein blindes State-Wipe bei `menu sync deferred`.  
+1. ~~Bridge: Nav-Snapshot + Grace-Period~~ → **umgesetzt** in `esp32.pidrive/tools/pump_bridge.py` (Feldtest)  
 2. Link: Feldtests SoftAP-direkt oder UART (weniger Reconnects bei schlechtem STA-RSSI).  
-3. Audio-Messung: Pulse-Monitor vs. FM-Pipeline (volumedetect + ffmpeg-stderr).  
-4. MSC: Readahead-Messung (große Silence-Datei); dann Pacing + Cursor/ID3-Stabilität; Silence+Xing statt Testton/0xFF.  
-5. Serial pro Plug hochzählen (NVS).
+3. Audio-Messung: `tools/check_pulse_monitor.sh` während FM.  
+4. MSC: Readahead-Messung → Pacing + Cursor/ID3; Silence+Xing.  
+5. ~~Serial pro Plug~~ → **0.4.25** bumpt bei Unplug (Feldtest).
+
+### Umgesetzt 2026-09-28 Abend (Code)
+
+| Fix | Wo | Wirkung |
+|-----|-----|---------|
+| UID-Grace 180 s | `pump_bridge.py` | Folder/Station nach Drill-down/Reconnect weiter als `folder`/`station` erkannt (`[nav] grace hit`) |
+| Menu-Snapshot resent | `try_reconnect` | statt `menu sync deferred` + State-Wipe |
+| Kein Blind-Audio bei unknown | `play_uid` | verhindert Pulse-Start auf Folder-UIDs |
+| Serial bei Unplug | `UsbMscGadget::applyUsbIdentity` 0.4.25 | nächster Attach ≠ `PD0001` |
 
 ---
 

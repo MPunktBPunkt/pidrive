@@ -51,20 +51,20 @@ Listing-Leere durch FAT-Mutation ist **gelöst** (static FAT ab 0.4.12; Root-Des
 
 ### I2a — Baustelle A zuerst (P0)
 
-- [ ] Bridge: Navigations-Snapshot über TCP-Reconnect **behalten**
-- [ ] Grace-Period: UIDs aus letztem `menu_set` nach Reconnect weiter akzeptieren
-- [ ] `menu sync deferred` ersetzen durch atomaren Snapshot + sofortiges `menu_set` des aktuellen Stands
+- [x] Bridge: Navigations-Snapshot über TCP-Reconnect **behalten** / sofort resent
+- [x] Grace-Period: UIDs 180 s nach Verlassen der Seite weiter auflösbar (`uid_grace`)
+- [x] `menu sync deferred` → Snapshot-Resync; unknown UID startet **kein** Blind-Audio mehr
 - [ ] Feldtest: SoftAP-direkt oder UART priorisieren (weniger STA-Reconnects)
-- [ ] Test: volle Menütiefe ohne Reconnect; dann Reconnect provozieren und Lookup loggen
+- [ ] Test: volle Menütiefe ohne Reconnect; dann Reconnect provozieren und Lookup loggen (`[nav] grace hit` / kein `unknown uid` für Folder)
 
 ### I2b — Baustelle B (P0 nach A bzw. parallel messbar)
 
-- [ ] Pulse-Monitor vs. FM/DAB-Pipeline messen (`volumedetect` + ffmpeg-stderr)
+- [ ] Pulse-Monitor vs. FM/DAB-Pipeline messen (`tools/check_pulse_monitor.sh`)
 - [ ] Stub: Silence-Frames + Xing/Info über Slot-Länge (nicht entkernen)
 - [ ] Readahead-Messung (große Silence-Datei / FAT32)
 - [ ] Pacing: bei leerem Ring Silence statt Nullen; Host ggf. busy/retry
 - [ ] Cursor / feste ID3 statt rein absolutem Ring-Offset
-- [ ] Warmup vor Overlay (`bufferTargetMs`); Serial **pro Attach** hochzählen (NVS)
+- [ ] Warmup vor Overlay (`bufferTargetMs`); Serial **pro Attach** — FW **0.4.25** bumpt bei Unplug
 
 ### I3 — Warmup / Overlay-Härtung
 
