@@ -1,9 +1,9 @@
 # Auftrag: ESP USB-MSC — Menü-State & Live-Stream am BMW
 
-**Stand:** 2026-09-28 Abend · aktiv  
+**Stand:** 2026-09-28 spät · aktiv  
 **Repos:** `esp32.pidrive` (Firmware) + `tools/pump_bridge.py` · Abnahme im Fahrzeug  
-**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · FW **0.4.24-dev**  
-**Multi-Review:** Feldbericht §18 (Claude / GPT / Gemini / Grok)  
+**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · FW-Ziel **0.4.25-dev**  
+**Multi-Review:** Feldbericht §18 · Plan-Schärfung §15.0–15.2 / §18.5  
 **Rohanalyse (alt):** [`../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt`](../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt)
 
 ---
@@ -14,73 +14,57 @@ Zwei getrennte Baustellen:
 
 | ID | Symptom |
 |----|---------|
-| **A** | Menü-Navigation bricht „mitten durch“; Bridge loggt `stale/unknown uid` nach TCP-Reconnect |
-| **B** | BMW zeigt korrekte Dateien (`PD0001`), spielt aber **Stub-Testton** aus dem HU-Cache — kein Live-FM/Web über MSC |
-
-**Feld 2026-09-28:** Listing/LFN/Serial ok; `play.guess`/`play_uid` mehrfach (auch Auto-Play); Overlay liefert **0 Live-Bytes** an den Host (`streamBytes == underruns`); Bridge-Reconnects häufig (RSSI −76 dBm).
+| **A** | Menü-Navigation bricht „mitten durch“; Bridge loggte `stale/unknown uid` nach TCP-Reconnect |
+| **B** | BMW zeigt korrekte Dateien, spielt **Stub-Testton** / Auto-Playlist — kein Live über MSC |
 
 ## Diagnose (aktuell)
 
 | Frühere Hypothese | Stand |
 |-------------------|--------|
-| Host-Reads erfüllen Play-Detect nicht → kein `play.guess` | **widerlegt** für diesen Feldtest — Detector feuert |
-| Stub-Cache + HU-Readahead → Overlay nie konsumiert | **bestätigt** (Baustelle B) |
-| TCP-Reconnect verwirft Nav-State → `stale/unknown` | **bestätigt** (Baustelle A, Primär für Menü-UX) |
-
-Listing-Leere durch FAT-Mutation ist **gelöst** (static FAT ab 0.4.12; Root-Destroy Fix **0.4.19**) — nicht erneut anfassen. Slot-Geometrie ist konsistent — nicht die Ursache.
+| Host-Reads erfüllen Play-Detect nicht → kein `play.guess` | **widerlegt** für Feld 2026-09-28 |
+| Stub-Cache + HU-Readahead → Overlay nie konsumiert | **bestätigt** (B) |
+| TCP-Reconnect verwirft Nav-State → stale/unknown | **bestätigt** (A) — Code-Fix da, Feldtest offen |
 
 ---
 
 ## Iterationen
 
-### I0 — Sichtbarkeit (Firmware 0.4.14–0.4.24)
+### I0 / I1
 
-- [x] Reject-Reason-Logging (`play.reject`)
-- [x] Heuristik-Schwellen runtime/NVS-parametrierbar (Config/WebUI)
-- [x] Bridge `[trace]` Timeline `play_uid → audio.start`
-- [x] Host-Analyse / `msc.phase` / Feld-Korrelation
-- [x] BMW-Trace mit Events (Feld 2026-09-28) → siehe Feldbericht
-- [x] Diagnose von „Play-Detect-Engpass“ auf **A+B** umgestellt
+Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt; `playMinSeqBytes`-Feintuning **zurückgestellt**.
 
-### I1 — Feld-A/B (teils erledigt)
+### I2a — Baustelle A (Code da, Feldtest offen)
 
-1. [x] `playPlugWindowMs` 2500 → 500 (+ `indexSettled_`, 0.4.22)
-2. [ ] ~~`playMinSeqBytes` 6000 → 2048~~ — **zurückgestellt** (bringt für Audio nichts)
-3. [~] SoftAP `/api/lab/play` — Stream armed, BMW hört Stub (Cache)
-4. [x] Slot ≥512 KiB (0.4.21) — reicht allein nicht gegen Cache
+- [x] Snapshot resent nach `hello_ack`; UID-Grace 180 s; kein Blind-Audio bei unknown  
+- [x] Serial-Bump bei Unplug (0.4.25)  
+- [ ] **Feldtest A/B/C + Serial-D** ([§15.0–15.1](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#150-mini-checkliste-vor-jedem-feldtest))  
+- [ ] Produkt-PUMP-Link festlegen: SoftAP \| STA \| UART (Abnahme A5)  
+- [ ] Folgeauftrag: atomarer `MenuSnapshot` (Grace = Übergang)
 
-### I2a — Baustelle A zuerst (P0)
+### I2b — Baustelle B (erst nach A grün; streng B0→B5)
 
-- [x] Bridge: Navigations-Snapshot über TCP-Reconnect **behalten** / sofort resent
-- [x] Grace-Period: UIDs 180 s nach Verlassen der Seite weiter auflösbar (`uid_grace`)
-- [x] `menu sync deferred` → Snapshot-Resync; unknown UID startet **kein** Blind-Audio mehr
-- [ ] **Feldtest A/B/C** (siehe Feldbericht §15.1) — einzige Abnahme vor Baustelle B
-- [ ] SoftAP-direkt oder UART für den Test priorisieren (weniger STA-Reconnects)
+- [ ] **B0** Pulse (`tools/check_pulse_monitor.sh`)  
+- [ ] **B1** Readahead-Messung (1 lange Silence-Datei)  
+- [ ] **B2** Silence+Xing volle Slot-Länge  
+- [ ] **B3** Pacing (Silence/Busy statt Nullen)  
+- [ ] **B4** Cursor / fester ID3-Kopf  
+- [ ] **B5** Warmup vor Overlay  
+- [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)
 
-### I2b — Baustelle B (erst nach A/B/C grün)
+### I3
 
-- [ ] Pulse-Monitor vs. FM/DAB-Pipeline messen (`tools/check_pulse_monitor.sh`)
-- [ ] Stub: Silence-Frames + Xing/Info über Slot-Länge (nicht entkernen)
-- [ ] Readahead-Messung (große Silence-Datei / FAT32)
-- [ ] Pacing: bei leerem Ring Silence statt Nullen; Host ggf. busy/retry
-- [ ] Cursor / feste ID3 statt rein absolutem Ring-Offset
-- [ ] Warmup vor Overlay (`bufferTargetMs`); Serial **pro Attach** — FW **0.4.25** bumpt bei Unplug
-
-**Architektur-Hinweis:** Grace ist Fallback. Zielbild später: atomarer `MenuSnapshot` (rev, page, nodes mit uid/action/parent). TCP-Reconnect ≠ USB-Serial-Bump — Ursachen getrennt halten.
-
-### I3 — Warmup / Overlay-Härtung
-
-- Overlay erst bei warmem Buffer; Underrun-/ffmpeg-Stabilität
+Warmup/Underrun-Härtung = B5; nicht vor B0/B1.
 
 ## Abnahme
 
-| ID | Kriterium | Stand 2026-09-28 |
-|----|-----------|------------------|
-| A1 | Dateiauswahl/Auto-Play → `play.guess` mit UID | **pass** |
-| A2 | innerhalb weniger Sekunden Live-Audio (nicht Stub-Testton) | **offen** (B) |
-| A3 | Listing bleibt während Stream sichtbar | **ok** |
-| A4 | ≥2 Menüebenen + `page_next` ohne `stale/unknown` bei stabiler TCP-Session | **teilweise** (A) |
+| ID | Kriterium | Stand |
+|----|-----------|-------|
+| A1 | `play.guess` + UID | **pass** |
+| A2 | Live nach Warmup/Play-Read (Zahl festlegen) | **offen** (B0→B5) |
+| A3 | Listing während Stream | **ok** |
+| A4 | A/B/C ohne `unknown uid` | **offen** |
+| A5 | Produkt-PUMP-Link dokumentiert | **offen** |
 
 ## Nicht jetzt
 
-Volles Score-`looksLikePlayV2`, Host-Profil-Framework, PiDrive-Menü-Umbau, Play-Detect-Feintuning (`minSeqBytes`).
+Play-Detect-Feintuning, Silence/Xing **vor** B0/B1, Host-Profil-Framework, PiDrive-Menü-Umbau.

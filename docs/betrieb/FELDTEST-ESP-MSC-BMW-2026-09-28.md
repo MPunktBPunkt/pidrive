@@ -11,7 +11,8 @@
 | ESP STA | `192.168.178.89` · SoftAP `pidrive-2BC568` / `192.168.4.1` |
 | Pi | `192.168.178.105` · `pidrive_pump_bridge` · PUMP-TCP `:9090` |
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
-| Repos | `pidrive` (Doku/Bridge-Client) · `esphub/esp32.pidrive` (FW, uncommitted Stand 0.4.24) |
+| PUMP-Link Produkt | **offen** — SoftAP \| STA \| UART festlegen (§15.0); Feldtest ideal SoftAP/UART |
+| Repos | `pidrive` (Doku/Bridge-Client) · `esphub/esp32.pidrive` (FW 0.4.25 + Bridge-Grace auf `main`) |
 | Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
 | Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
@@ -596,77 +597,83 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 
 ## 14. Review-Fragen & nächste Experimente
 
-### Priorisierte Experimente
+### Priorisierte Experimente (messgetrieben)
 
-1. **Bridge ohne Reconnect:** volle Menütiefe navigieren; TCP muss halten → Beweis „Menü ok, Sync kaputt“.  
-2. **Reconnect provozieren:** aktueller BMW-Screen vs. Bridge-Menü/`rev` vs. `play_uid`-Lookup loggen.  
-3. **Pulse-volumedetect** während FM: liefert Monitor Pegel oder Stille?  
-4. **1-GiB Silence/FAT32-Messung:** wie viel/wie schnell liest der NBT? → Readahead-Tiefe.  
-5. **Pacing-Spike:** bei leerem Ring Silence statt Nullen; ggf. TinyUSB busy/retry.  
-6. **Cursor/ID3 fest** statt rein absolutem Offset.
+1. **Feldtest A/B/C** (§15.1) — Menü/UID; Ton egal.  
+2. **Serial-Mini-Check** (§15.1 D) — Unplug → neue `PDnnnn`.  
+3. **B0→B1** (§15.2) — Pulse + Readahead-Messung **vor** Silence-Code.  
+4. **B2…B5** erst nach B0/B1.  
+5. **Geometrie-Experiment:** ein großer Slot vs. 3×512 KiB (Messpunkt).  
+6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
 
 ### Offene Fragen
 
-1. Wie korrelieren wir zwingend Guess → erster Overlay-Host-Read → `underruns`-Delta (Telemetrie im Play-Fenster, nicht 5 min später)?  
-2. Ist `ffmpeg exit 0` nach ~27 s Monitor-EOF, Stille-Quelle, oder TCP/Bridge?  
+1. Produkt-PUMP-Link: SoftAP vs. STA vs. UART?  
+2. A2-Zielzeit: „wenige Sekunden“ vs. Warmup/ABSA-ähnlich — Zahl festlegen (Vorschlag: ≤5 s nach erstem Play-Read *oder* nach Warmup-OK).  
 3. Remount bei jedem `menu_set`: akzeptabel vs. Sticky-Listing?  
-4. Ein vs. drei Dateien am Stick gegen Auto-Playlist?  
-5. SoftAP-Play ohne BMW-Re-Read nur Lab-Abnahme?
+4. Actions (`Zurueck`/`Mehr`) als kurze MP3s in derselben Playlist — Struktur ändern?
 
 ---
 
 ## 15. Repro / Mess-Checkliste
 
-### 15.1 Feldtest Baustelle A (einzige Frage jetzt)
+### 15.0 Mini-Checkliste vor jedem Feldtest
 
-> Bleibt die Menü-UID-Zuordnung nach TCP-Reconnect konsistent, und lässt sich `Mehr…` über alle Seiten bis zum letzten Eintrag durchlaufen?
-
-**Voraussetzungen:** Bridge mit Grace/Snapshot-Code · ideal SoftAP-direkt oder UART · FW ≥ 0.4.25 · Log:
+1. Neue `pump_bridge.py` deployed + `systemctl restart pidrive_pump_bridge`  
+2. FW am ESP: `curl -s http://<esp>/api/status | jq .version` — ideal **`0.4.25-dev`** (sonst Serial-Bump = „nicht getestet“)  
+3. Log-Filter läuft (unten)  
+4. Reconnect-Methode für Pass B festgelegt: **`systemctl restart pidrive_pump_bridge`** (bevorzugt; nicht „WLAN kurz weg“)  
+5. Protokoll-Spalten: Grace-Hits **A** vs. **B** getrennt · `snapshot resent` ja/nein · `unknown` ja/nein · Blind-`audio_start` nach unknown ja/nein · C: BMW-Anzeige vs. `page=`
 
 ```bash
-journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace hit|unknown uid|stale|menu_set|page|reconnected'
+journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace hit|unknown uid|menu_set|page|reconnected|audio_start|ffmpeg'
 ```
 
-| Test | Ablauf | Erwartung |
-|------|--------|-----------|
-| **A** Navigation ohne absichtlichen Reconnect | Top → FM → Mehr → Sender → A-M → … | möglichst **kein** `[nav] grace hit` (Normalweg = aktueller Snapshot). Braucht der Happy Path schon Grace → Snapshot-State noch unsauber |
-| **B** Reconnect bei offenem Menü | Menü sichtbar → TCP trennen/wiederherstellen → denselben Eintrag wählen | `hello_ack` → `menu snapshot resent` → UID gefunden (`grace hit` ok) · **kein** `unknown uid` / früher `stale/unknown` |
-| **C** `Mehr…` bis Ende | page 0 → 1 (`+n`) → 2 → … bis kein Mehr | `menu_set … page=0/1/2…` stabil; kein Abbruch durch Sync-Fehler |
+**Link:** Spontane Reconnects bei schlechtem STA (−76 dBm) sind **kein** Snapshot-Fail — als „A unter realem Link“ markieren. Ideal SoftAP-direkt oder UART für A/C.
 
-**Baustelle A geschlossen nur wenn:** A+C grün und B ohne `unknown uid` auf Folder/bekannten UIDs.  
-**Danach erst** Baustelle B (Pulse-Check → Silence/Xing/Pacing). Audio-Ohr in A/B/C **nicht** als Abnahme werten.
+### 15.1 Feldtest Baustelle A (jetzt)
 
-### Vorbereitung (Status-Snapshot)
+> Nur Menü-/UID-Stabilität. **Ton/Stub egal** — sonst vermischt man A und B.
+
+| Test | Ablauf | Erwartung / Schärfung |
+|------|--------|------------------------|
+| **A** Happy Path | Top → FM → Mehr → Sender → A-M → … **ohne** absichtlichen Reconnect | möglichst **0** `[nav] grace hit`. Grace zählen. Viele Grace-Hits in A = **bedingt grün** (Snapshot nach Drill-down unvollständig), nicht voll grün. **Kein** `unknown uid`. |
+| **B** Reconnect | Menü offen → `systemctl restart pidrive_pump_bridge` → warten bis `hello_ack` **und** `menu snapshot resent` → **dann** denselben Eintrag. Ideal einmal **Folder**-UID (kritisch wie 15:44) und einmal Station | `snapshot resent` · UID gefunden (normal oder `grace hit`) · **kein** `unknown uid` · bei `unknown` **kein** `audio_start`/ffmpeg (Blind-Audio = Fail) |
+| **C** Paging | `Mehr…` bis kein Mehr mehr; notieren was BMW zeigt („Seite 2: 3 Sender, kein Mehr“) vs. Log `page=` | `menu_set … page=0/1/2…` und HU-Inhalt passen; kein Sync-Abbruch |
+| **D** Serial (separat) | Einmal Unplug/Replug; Stick-ID notieren | `PD0001`→`PD0002` (nur wenn FW≥0.4.25). Nicht mit A/B/C vermengen. Fehlt FW → „Serial nicht getestet“. |
+
+**Urteil A:**
+
+| Ergebnis | Folge |
+|----------|--------|
+| A+B+C voll grün (+ D optional) | Baustelle A fürs Fahrzeug **zu** → §15.2 B0 |
+| A bedingt grün (viele Grace), B+C grün | A ok für Feld, Folgeauftrag MenuSnapshot |
+| nur B rot | **nur** Bridge nachschärfen — kein Silence/Xing/Pacing |
+| A schon rot | Snapshot/Lookup grundlegend — kein B-Code |
+| Stub-Ton weiterhin | **kein** Fail von A/B/C |
+
+### 15.2 Baustelle B — Sequenz B0→B5 (erst nach A grün)
+
+Messgetrieben. **Kein** Silence/Xing/Pacing parallel zu B0/B1.
+
+| ID | Frage | Abbruch / Pass |
+|----|--------|----------------|
+| **B0** | Pulse-Monitor = Stille bei laufendem FM/DAB? (`tools/check_pulse_monitor.sh`) | ja → Quelle fixen, sonst Overlay sinnlos |
+| **B1** | 1 lange Silence-/FAT32-Datei: wie viel/wie schnell liest der NBT? Liest er *nach* dem ersten Burst noch? | Readahead-Tiefe + „endet Consume nach Burst?“ dokumentieren |
+| **B2** | Silence+Xing über **volle** Slot-Länge (kein 6,5 KiB+0xFF) | Auto-Play rast nicht in Sekunden durch; Decoder hält Track |
+| **B3** | Pacing: leerer Ring → Silence/Busy statt Nullen | Host bleibt am USB; `streamBytes` ≫ underruns |
+| **B4** | Cursor oder fester ID3-Kopf | Re-Read/Seek liefert gültigen Stream |
+| **B5** | Warmup vor `stream.active` (Sekunden, nicht 0; ABSA-Idee) | first overlay byte vor Ende des Lesefensters |
+
+**Optional parallel/nach B1:** Geometrie-Messung „1 großer Slot = aktuelle Auswahl“ vs. 3×512 KiB — ob der NBT länger am USB bleibt.
+
+**Dension-Ableitung (nicht 1:1 UX):** Puffer + lange nie endende Datei + Config — **nicht** „Station in &lt;2 s ohne Warmup“. Abnahme A2 muss eine Zahl bekommen (Warmup erlaubt), sonst bleibt A2 definitionsgemäß ewig rot. Actions (`Zurueck`/`Mehr`) möglichst nicht als kurze Playlist-MP3s neben Sendern.
+
+### 15.3 Legacy-Lab (Audio-Ohr — nur nach B)
 
 ```bash
-curl -s http://192.168.178.89/api/status | jq '{fw:.version,phase:.msc.phase,guess:.msc.playGuessCount,rej:.msc.playRejectCount,stream:.msc.stream,slots:[.msc.slotMap[].name]}'
-curl -s -X DELETE http://192.168.178.89/api/events
-# optional:
-curl -s -X POST http://192.168.178.89/api/lab/remount
-```
-
-### Am BMW
-
-1. USB-Medien verlassen, 10 s warten, neu öffnen (Stick-ID notieren).  
-2. **Nicht** Sofort-Skip: warten bis Liste steht.  
-3. Beobachten: Auto-Play ja/nein? Ton Stub oder Live?  
-4. Parallel Pi:  
-   `journalctl -u pidrive_pump_bridge -f | grep -E 'msc|play_uid|audio|ffmpeg'`
-
-### Erfolg nur wenn
-
-- Ohr = Live-Sender **und**  
-- `stream.underruns` steigt nicht explosionsartig **und**  
-- nach `audio_start` File-Reads auf dem Stream-Slot weiterlaufen (`slotMap[].bytes` / Trace)
-
-### Lab-Bypass (isoliert Audio-Pfad)
-
-```bash
-curl -s -X POST http://192.168.178.89/api/lab/play \
-  -H 'Content-Type: application/json' \
-  -d '{"uid":"<station-uid>"}'
-curl -s http://192.168.178.89/api/status | jq .msc.stream
-# SoftAP /api/lab/listen — Browser; BMW-Ohr separat bewerten
+curl -s http://192.168.178.89/api/status | jq '{fw:.version,phase:.msc.phase,stream:.msc.stream,slots:[.msc.slotMap[].name]}'
+# SoftAP lab/play — BMW-Ohr separat; underruns + weiterlaufende File-Reads
 ```
 
 ---
@@ -675,10 +682,11 @@ curl -s http://192.168.178.89/api/status | jq .msc.stream
 
 | ID | Kriterium | Stand |
 |----|-----------|-------|
-| A1 | Auswahl/Auto-Play → `play.guess` + UID | **pass** (mehrfach; auch Auto-Play) |
-| A2 | Live-Audio ≤ wenige Sekunden, nicht Stub | **fail** (Baustelle B) |
-| A3 | Listing während Stream sichtbar | **pass** (static FAT) |
-| A4 | ≥2 Menüebenen + `page_next` **ohne** `stale/unknown` bei stabiler TCP-Session | **teilweise** (Navi ok, Reconnect bricht) |
+| A1 | Auswahl/Auto-Play → `play.guess` + UID | **pass** |
+| A2 | Live-Audio nach Warmup/Play-Read (Zahl noch festlegen; Vorschlag ≤5 s) | **fail** — Sequenz B0→B5 |
+| A3 | Listing während Stream sichtbar | **pass** |
+| A4 | ≥2 Ebenen + `page_next` ohne `unknown uid` (A/B/C) | **offen** — Feldtest |
+| A5 | Produkt-PUMP-Link dokumentiert | **offen** |
 
 ---
 
@@ -741,6 +749,28 @@ Vorbilder lösen dasselbe Grundproblem, aber **flach + lokal + stark gepuffert**
 
 **Kernsatz:** PiDrive will Dension-Ton **plus** Hierarchie-Menü über denselben fragilen Link. Vorbilder opfern Menü-Tiefe **oder** legen Puffer/Identität so aus, dass Cache/Reconnect den Hörpfad nicht killen. Fixes A+B schließen die Lücken, **ohne** das Produktziel aufzugeben ([§3.9](#39-konzept-entscheidung-nach-vergleichs-review-grok)).
 
+### 17.7 Dension vs. Auto-Play / was wir *nicht* mitübernehmen
+
+Dension **schaltet** Auto-Play nicht ab: nach Scan startet oft der erste Sender — **gewollt**. Jede Datei ist aber ein **gepufferter Dauer-Stream** (ABSA 15–40 s, K-Config), kein kurzer Stub. Track-Wechsel = neuer Buffer, **kein** Radio-Feeling.
+
+| Übernehmen | Nicht übernehmen / klarstellen |
+|------------|--------------------------------|
+| Puffer vor Host, Identity-Wechsel, lange gültige Frames | UX „Umschalten in &lt;2 s ohne Warmup“ als Dension-Versprechen |
+| Beweis: MSC+Live-MP3 am Auto-Host geht (auch AP8224/Hackaday) | Beweis gilt für **Schicht B (Bitstream)**, nicht für Multi-Level-UID-State (Schicht A) |
+| Actions als eigene virtuelle Dateien | Actions als **kurze** Stub-MP3s in derselben Playlist wie Sender |
+
+NBT-Auto-Playlist (Zurück/Mehr als Songs) löst man nicht über Namen, sondern über **weniger/längere gültige Tracks** + Pacing (B2–B4).
+
+### 17.8 Kritische Lücken (Grok) — bewusst offen
+
+| Lücke | Haltung |
+|-------|---------|
+| Grace = Pflaster, kein Nav-Modell | Feldtest-OK; Folgeauftrag `MenuSnapshot` |
+| Serial nur Unplug | Mini-Check D; später monotonic Attach+Remount+NVS |
+| B war Wunschliste | jetzt **B0→B5** messgetrieben (§15.2) |
+| Link untergewichtet | Meta: Produkt-PUMP-Link **offen** (A5) |
+| 3 Slots vs. 1 Datei | Geometrie-Experiment nach B1 |
+
 ---
 
 ## 18. Multi-Review-Konsens (2026-09-28 Abend)
@@ -780,6 +810,15 @@ Konsens: Baustelle A richtig getroffen; B bewusst unangetastet = methodisch korr
 | Unknown → kein Blind-Audio | ja |
 | Serial-Bump = USB/MediaStore, getrennt von TCP-Nav | ja |
 | Nächster Schritt nur Feldtest A/B/C, kein Overlay-Patch | ja |
+
+### 18.5 Plan-Schärfung (Grok, spät)
+
+- Pass A: Grace-Hits **zählen**; viele = bedingt grün  
+- Pass B: `systemctl restart` Bridge; warten auf Snapshot; Folder-UID priorisieren; Blind-`audio_start` = Fail  
+- Pass C: BMW-Anzeige vs. `page=` notieren  
+- Serial = eigener Mini-Check D  
+- B als **B0→B5**, nicht parallele Patches  
+- Produkt-Link und A2-Zeitzahl noch festlegen  
 
 ---
 
