@@ -1,0 +1,7 @@
+# NOPASSWD for Pass B reconnect tests (install once with sudo):
+#   sudo install -m 440 scripts/sudoers-pidrive-pump-bridge /etc/sudoers.d/pidrive-pump-bridge
+#   sudo visudo -cf /etc/sudoers.d/pidrive-pump-bridge
+pidrive ALL=NOPASSWD: /bin/systemctl start pidrive_pump_bridge
+pidrive ALL=NOPASSWD: /bin/systemctl stop pidrive_pump_bridge
+pidrive ALL=NOPASSWD: /bin/systemctl restart pidrive_pump_bridge
+pidrive ALL=NOPASSWD: /bin/systemctl status pidrive_pump_bridge

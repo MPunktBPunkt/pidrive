@@ -553,8 +553,19 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 | Menu-Snapshot resent | `try_reconnect` | statt `menu sync deferred` + State-Wipe |
 | Kein Blind-Audio bei unknown | `play_uid` | verhindert Pulse-Start auf Folder-UIDs |
 | Serial bei Unplug | `UsbMscGadget::applyUsbIdentity` 0.4.25 | nächster Attach ≠ `PD0001` |
+| Nav Play-Detect | `evaluatePlay` / `isNavSlot` **0.4.26** | action/folder: `navMinSeqBytes=4096`; Cooldown blockiert keine Nav |
 
-**Nächster Schritt laut Multi-Review (Grok/Gemini/GPT):** ausschließlich strukturierter Feldtest A/B/C — **kein** Overlay-/Silence-/Pacing-Patch vorher.
+### Vorbereitung Autotest (2026-09-30)
+
+1. **OTA 0.4.26** (sonst Nav-Fix fehlt): SoftAP `/ota-upload` oder Hub mit  
+   `esp32.pidrive/dist/pidrive.0.4.26-dev.ota.esp32s3.bin` · prüfen: `curl -s http://192.168.178.89/api/status | jq .version`
+2. **Bridge:** Grace-Code liegt auf dem Pi (`/home/pidrive/pump_bridge.py`). Fallback-Autostart: `scripts/ensure_pump_bridge.sh` (+ Cron). Ideal: einmal  
+   `sudo install -m 440 scripts/sudoers-pidrive-pump-bridge /etc/sudoers.d/pidrive-pump-bridge`  
+   dann `sudo systemctl restart pidrive_pump_bridge` (Pass B).
+3. **Pass A:** nach `msc.quiet` gezielt **Zurueck** (ohne Lab) — erwarten `play.guess` + neue Namen.  
+4. Dann Pass B (Bridge-Restart) / C (Paging) / D (Serial Unplug→`PDnnnn`).
+
+**Nächster Schritt:** Feldtest A/B/C mit **0.4.26** — **kein** Overlay-/Silence-/Pacing-Patch vorher.
 
 ---
 
@@ -620,7 +631,7 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 ### 15.0 Mini-Checkliste vor jedem Feldtest
 
 1. Neue `pump_bridge.py` deployed + `systemctl restart pidrive_pump_bridge`  
-2. FW am ESP: `curl -s http://<esp>/api/status | jq .version` — ideal **`0.4.25-dev`** (sonst Serial-Bump = „nicht getestet“)  
+2. FW am ESP: `curl -s http://<esp>/api/status | jq .version` — ideal **`0.4.26-dev`** (Nav-Fix + Serial-Bump)  
 3. Log-Filter läuft (unten)  
 4. Reconnect-Methode für Pass B festgelegt: **`systemctl restart pidrive_pump_bridge`** (bevorzugt; nicht „WLAN kurz weg“)  
 5. Protokoll-Spalten: Grace-Hits **A** vs. **B** getrennt · `snapshot resent` ja/nein · `unknown` ja/nein · Blind-`audio_start` nach unknown ja/nein · C: BMW-Anzeige vs. `page=`
