@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-09-30 Nachmittag — `hello_ok_until`-Fix deployed; nächster Feldtest A/B/C mit **0.4.26-dev** (§11.1). Baustelle B weiter offen.  
+**Stand Diagnose:** 2026-09-30 Abend — Feldtest A–D mit **0.4.26-dev** + `hello_ok_until`-Fix (§11.3). Baustelle A weitgehend Lab-grün; HU-Cache + Serial-Persistenz offen. Baustelle B unangetastet.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -606,7 +606,29 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 `session_ok = (hello_ok_until == 0) or (now <= hello_ok_until)` → nach Ablauf der 60 s war `menu_set` **dauerhaft blockiert**, bis Prozess-Neustart. Folge: Pi-Menü wechselt, ESP-Slots bleiben alt (Feld 2026-09-30).  
 **Fix (2026-09-30 Nachmittag):** `hello_ok_until = 0` nach gutem `hello_ack`, sonst `-1`; `session_ok = (hello_ok_until == 0)`. Deploy: `/home/pidrive/pump_bridge.py` auf dem Pi.
 
-**Nächster Feldtest:** ESP online → FW `0.4.26-dev` prüfen → Pass A (Stub egal) → B (Bridge-Restart + Snapshot) → C Paging → optional D Serial. BMW-Namen oft erst nach **OTG-Replug**. Kein Overlay-/Silence-Patch.
+### 11.3 Feldtest 2026-09-30 Abend (~16:37–17:05) — A–D mit Fix
+
+| Schritt | Ergebnis |
+|---------|----------|
+| FW / Bridge | `0.4.26-dev`; Fix deployed; `hello_ack` + `menu_ack` |
+| Listing Root | BMW: Rock Antenne / Rock Antenne Bayern / Radio BOB! (Menue oft unsichtbar) |
+| Lab `page_next` → Favoriten-Ordner → Lab Zurück | Nav-Kette ok; nach OTG BMW zeigt jeweilige Ebene |
+| Manuell Sender nach Quiet / Pass B | **kein** `play_uid` — HU-Cache |
+| Pass B Bridge-Restart + Lab `fav1` | `play_uid` + `audio_start` + ffmpeg + `stream.active`; **kein** `unknown` |
+| Pass C Lab + OTG | BMW: **Favoriten / Quellen / Stop** |
+| Volume-Name | BMW zeigt Gerät `PIDRIVE` / `PD0001` — Dateiliste erst nach Öffnen des Sticks |
+| Pass D Serial | **fail/bedingt:** nach OTG oft ESP-**Reboot** (`boot` + Uptime ~1 min); `remountGen_` nur RAM → Unplug liefert erneut `next=PD0001`; Display bleibt PD0001 |
+
+**Pass-Urteil Abend:**
+
+| Pass | Urteil | Hinweis |
+|------|--------|---------|
+| **A** | **bedingt grün** | Lab-Nav + OTG-Listing ok; HU-`play_uid` nach Quiet weiter rot |
+| **B** | **grün (Software)** | Restart + Lab-Station; manuell am BMW nicht bewertbar (Cache) |
+| **C** | **grün** | Lab `page=1` + BMW nach OTG |
+| **D** | **rot/bedingt** | Bump-Code feuert, aber Gen nicht NVS-persistent; OTG-Strom → Reset |
+
+**Nächste Code-Schritte:** (1) `remountGen_` in NVS persistieren (+ ggf. ESP-Versorgung unabhängig von Host-OTG). (2) Baustelle B erst nach A-Nachzug: B0→B5. Kein Overlay-Patch parallel.
 
 ### 11.2 Lab-Rolle zweiter ESP (Review 2026-09-30)
 
@@ -661,6 +683,8 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~08:22–08:30 | HU Autoplay Stub; manuell kein `play_uid`; `hello_ok_until` blockiert `menu_set` |
 | ~08:33 | Lab `page_next` → Favoriten/Quellen/Stop; BMW erst nach **OTG Replug** |
 | ~08:38 | ESP abgesteckt (Fahrt); Doku §11.1 |
+| ~16:20 | `hello_ok_until`-Fix deployed auf Pi |
+| ~16:37–17:05 | Feld A–D Abend (§11.3): C grün am BMW; B Lab grün; D Serial nicht bootfest |
 
 ---
 
@@ -669,12 +693,11 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 ### Priorisierte Experimente (messgetrieben)
 
 1. ~~Fix `hello_ok_until`~~ — **deployed** 2026-09-30.  
-2. Pass A/B nachziehen (§15.1); BMW-Namen nur nach OTG erwarten.  
-3. Menü-Export an **v1 Snapshot/Slots** halten ([§3.10](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)) — kein Vollbaum.  
-4. **Serial/OTG** systematisch: Remount vs. Replug vs. `PDnnnn`.  
-5. **B0→B1** (§15.2); optional ESP2+Debian-Host-Sim ([§11.2](#112-lab-rolle-zweiter-esp-review-2026-09-30)).  
-6. **B2…B5** erst nach B0/B1.  
-7. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
+2. **Serial-Gen in NVS** (+ Strompfad OTG prüfen) — Pass D sonst dauerhaft PD0001 nach Reboot.  
+3. Menü-Export an **v1 Snapshot/Slots** halten ([§3.10](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)).  
+4. **B0→B1** (§15.2); optional ESP2+Debian-Host-Sim ([§11.2](#112-lab-rolle-zweiter-esp-review-2026-09-30)).  
+5. **B2…B5** erst nach B0/B1.  
+6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
 
 ### Offene Fragen
 
@@ -755,7 +778,7 @@ curl -s http://192.168.178.89/api/status | jq '{fw:.version,phase:.msc.phase,str
 | A1 | Auswahl/Auto-Play → `play.guess` + UID | **pass** |
 | A2 | Live-Audio nach Warmup/Play-Read (Zahl noch festlegen; Vorschlag ≤5 s) | **fail** — Sequenz B0→B5 |
 | A3 | Listing während Stream sichtbar | **pass** |
-| A4 | ≥2 Ebenen + `page_next` ohne `unknown uid` (A/B/C) | **bedingt** 2026-09-30 — Lab-Paging grün; HU-`play_uid`/OTG-Pflicht; `hello_ok_until`-Bug |
+| A4 | ≥2 Ebenen + `page_next` ohne `unknown uid` (A/B/C) | **bedingt grün** 2026-09-30 Abend (§11.3) — Lab+OTG; HU-Cache; Serial-D rot |
 | A5 | Produkt-PUMP-Link dokumentiert | **offen** |
 
 ---
