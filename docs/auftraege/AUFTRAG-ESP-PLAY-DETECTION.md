@@ -2,7 +2,7 @@
 
 **Stand:** 2026-09-30 Abend · aktiv  
 **Repos:** `esp32.pidrive` (Firmware) + `tools/pump_bridge.py` · Abnahme im Fahrzeug  
-**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §3.10 v1 · §11.1–11.3 Feld · §11.2 ESP2 · §15 Messplan · FW **0.4.26-dev**  
+**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §3.10 v1 · §11.1–11.3 Feld · §11.2 ESP2 · §15 Messplan · FW **0.4.28-dev**  
 **Rohanalyse (alt):** [`../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt`](../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt)
 
 ---
@@ -27,7 +27,8 @@ Zwei getrennte Baustellen:
 | `hello_ok_until` blockiert `menu_set` nach 60 s | **behoben** 2026-09-30 |
 | BMW zeigt neue MSC-Namen ohne OTG-Replug | **widerlegt** — Unplug nötig |
 | Voller PiDrive-Dateibaum auf MSC | **verworfen** — v1 Snapshot/Slots |
-| Serial `PDnnnn` steigt pro Unplug am Display | **teilweise widerlegt** Abend 09-30 — `remountGen_` RAM-only; OTG-Reboot → wieder PD0001 |
+| Serial `PDnnnn` steigt pro Unplug am Display | **NVS-Fix 0.4.27** — Feld Pass D noch offen; Lab `.88` Identity sticky |
+| Pulse-Monitor = Stille bei FM/DAB | **widerlegt Lab 09-30** — Monitor trägt Webradio (−15 dB); Car-Only user-Pulse masked, System-Pulse ok |
 
 ---
 
@@ -51,14 +52,14 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 
 ### I2b — Baustelle B (erst nach A-Rest; streng B0→B5)
 
-- [ ] **B0** Pulse (`tools/check_pulse_monitor.sh`)  
-- [ ] **B1** Readahead-Messung (1 lange Silence-Datei)  
-- [ ] **B2** Silence+Xing volle Slot-Länge  
+- [x] **B0** Pulse — Lab 09-30: System-Pulse-Monitor ok (Tone/Webradio); siehe Feldbericht §15.2  
+- [x] **B1** Readahead Lab-Host `.88`: 512 KiB Slot @ ~0,57 MB/s in 0,9 s; danach **0** Reads (wie NBT-Burst)  
+- [x] **B2** Silence+Xing volle Slot-Länge — FW **0.4.28-dev** (Lab verifiziert; Feld Auto-Play)  
 - [ ] **B3** Pacing (Silence/Busy statt Nullen)  
 - [ ] **B4** Cursor / fester ID3-Kopf  
 - [ ] **B5** Warmup vor Overlay  
 - [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)  
-- [ ] Optional parallel: ESP2@Debian + Host-Burst-Sim ([§11.2](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#112-lab-rolle-zweiter-esp-review-2026-09-30))
+- [x] Optional parallel: ESP2 Lab **`.88`** pidrive 0.4.28 + Host-Burst am Proxmox
 
 ### I3
 

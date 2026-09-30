@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-09-30 Abend — Feldtest A–D mit **0.4.26-dev** + `hello_ok_until`-Fix (§11.3). Baustelle A weitgehend Lab-grün; HU-Cache + Serial-Persistenz offen. Baustelle B unangetastet.  
+**Stand Diagnose:** 2026-09-30 Abend — Feld A–D mit **0.4.26**; Lab ESP2 **`.88` = 0.4.28-dev**. Baustelle A: NVS-Serial 0.4.27. Baustelle B: **B0–B2 Lab erledigt**, B3–B5 offen.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -753,9 +753,9 @@ Messgetrieben. **Kein** Silence/Xing/Pacing parallel zu B0/B1.
 
 | ID | Frage | Abbruch / Pass |
 |----|--------|----------------|
-| **B0** | Pulse-Monitor = Stille bei laufendem FM/DAB? (`tools/check_pulse_monitor.sh`) | ja → Quelle fixen, sonst Overlay sinnlos |
-| **B1** | 1 lange Silence-/FAT32-Datei: wie viel/wie schnell liest der NBT? Liest er *nach* dem ersten Burst noch? | Readahead-Tiefe + „endet Consume nach Burst?“ dokumentieren |
-| **B2** | Silence+Xing über **volle** Slot-Länge (kein 6,5 KiB+0xFF) | Auto-Play rast nicht in Sekunden durch; Decoder hält Track |
+| **B0** | Pulse-Monitor = Stille bei laufendem FM/DAB? (`tools/check_pulse_monitor.sh`) | **Lab 09-30 pass:** System-Pulse Monitor trägt Tone (−22 dB) und Webradio (−15 dB). User-PipeWire Car-Only masked — Bridge nutzt `/var/run/pulse/native`. |
+| **B1** | 1 lange Silence-/FAT32-Datei: wie viel/wie schnell liest der NBT? Liest er *nach* dem ersten Burst noch? | **Lab-Host `.88`:** 512 KiB Slot in **0,91 s** (~0,57 MB/s, 4 KiB-Chunks); danach **5 s idle = 0 Reads**. Entspricht Feld „Burst dann stille“. |
+| **B2** | Silence+Xing über **volle** Slot-Länge (kein 6,5 KiB+0xFF) | **FW 0.4.28-dev** — Lab: ID3+Info + CBR-Silence-Frames (`fffb3064`), kein 0xFF-Pad. **Feld Auto-Play** noch offen. |
 | **B3** | Pacing: leerer Ring → Silence/Busy statt Nullen | Host bleibt am USB; `streamBytes` ≫ underruns |
 | **B4** | Cursor oder fester ID3-Kopf | Re-Read/Seek liefert gültigen Stream |
 | **B5** | Warmup vor `stream.active` (Sekunden, nicht 0; ABSA-Idee) | first overlay byte vor Ende des Lesefensters |
