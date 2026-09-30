@@ -2,8 +2,7 @@
 
 **Stand:** 2026-09-30 · aktiv  
 **Repos:** `esp32.pidrive` (Firmware) + `tools/pump_bridge.py` · Abnahme im Fahrzeug  
-**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.1 · FW live **0.4.26-dev**  
-**Multi-Review:** Feldbericht §18 · Plan-Schärfung §15.0–15.2 / §18.5  
+**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §3.10 v1-Zielbild · §11.1 Feld · §11.2 ESP2-Lab · §15 Messplan · FW **0.4.26-dev**  
 **Rohanalyse (alt):** [`../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt`](../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt)
 
 ---
@@ -27,6 +26,7 @@ Zwei getrennte Baustellen:
 | Action/Zurueck: minSeq 6000 + Cooldown nach Auto-Play | **bestätigt** 2026-09-29 — Fix **0.4.26** |
 | `hello_ok_until` blockiert `menu_set` nach 60 s | **bestätigt** 2026-09-30 — Fix offen (`pump_bridge.py`) |
 | BMW zeigt neue MSC-Namen ohne OTG-Replug | **widerlegt** Feld 2026-09-30 — Unplug nötig |
+| Voller PiDrive-Dateibaum auf MSC | **verworfen** — v1 = Snapshot/Slots ([Feld §3.10](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)) |
 
 ---
 
@@ -44,6 +44,7 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] Feldtest 2026-09-30 mit 0.4.26 — A bedingt, C Lab grün, D bedingt ([§11.1](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#111-feldtest-2026-09-30-vormittag-0426))  
 - [ ] **Fix `hello_ok_until`** in `pump_bridge.py` + Redeploy Pi  
 - [ ] Pass A/B nachziehen (HU-`play_uid` weiter Cache-limitiert)  
+- [ ] MSC-Export an **v1 Snapshot/Slots** halten (kein Vollbaum)  
 - [ ] Produkt-PUMP-Link festlegen: SoftAP \| STA \| UART (Abnahme A5)  
 - [ ] Folgeauftrag: atomarer `MenuSnapshot` (Grace = Übergang)
 
@@ -55,7 +56,8 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [ ] **B3** Pacing (Silence/Busy statt Nullen)  
 - [ ] **B4** Cursor / fester ID3-Kopf  
 - [ ] **B5** Warmup vor Overlay  
-- [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)
+- [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)  
+- [ ] Optional parallel: ESP2@Debian + Host-Burst-Sim ([§11.2](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#112-lab-rolle-zweiter-esp-review-2026-09-30))
 
 ### I3
 
@@ -73,4 +75,4 @@ Warmup/Underrun-Härtung = B5; nicht vor B0/B1.
 
 ## Nicht jetzt
 
-Host-Profil-Framework, PiDrive-Menü-Umbau, Silence/Xing **vor** B0/B1.
+Vollbaum-MSC, allgemeine Architektur-Reviews, Silence/Xing **vor** B0/B1 / vor A-Fix.

@@ -342,17 +342,19 @@ Protokoll: **PUMP** (Arbeitstitel; Umbenennung im Pflichtenheft erlaubt).
 | BT parallel belassen | **Konzept-Ja** (§2, §3) |
 | USB = Ton+UI | **Konzept-Ja** |
 | Chip ESP32-S3 | **Konzept-Ja** |
-| Hierarchie-Menü (nicht nur flach) | **Konzept-Ja** — kostet Nav-State/Grace (Baustelle A); flach nur als optionales Fallback-Profil |
+| Hierarchie-Menü (nicht nur flach) | **Konzept-Ja langfristig**; **v1 = reduziertes Snapshot-/Slot-Modell** (2–3 Ebenen, 4 Slots, Soft-Paging) — siehe Feldbericht [§3.10](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü) |
 | PUMP V1 = UART/CDC | **Tendenz-Ja**; WLAN-Feld braucht Snapshot+Grace + robusten Link |
 | Encode auf Pi | **Tendenz-Ja** |
 | Annahme „Host re-read nach Play“ | **verworfen** (NBT cached Stub) → Silence+Xing, Pacing, Warmup (Baustelle B) |
 | Dension-ABSA-Puffer (Mehrsekunden) | **übernehmen als Pflicht** vor Live-Overlay; 0 ms ist falsch |
-| Serial/Identity pro Attach | **Pflicht** (vanheusden-Muster) |
-| MVP flache Stationsliste | **Einstieg ok**, Zielbild bleibt Hierarchie |
-| Repo/Firmware starten | erledigt; Feld 2026-09-28 |
+| Serial/Identity pro Attach | **Pflicht** (vanheusden); HU-Namenswechsel oft erst nach OTG-Replug |
+| Vollständiger PiDrive-Dateibaum auf MSC | **verworfen** (Review 2026-09-30) |
+| MVP flache Stationsliste / Snapshot-Root | **v1-Soll** (Favoriten/Quellen/Stop/Mehr… + Paging) |
+| Zweiter ESP an Debian | **Lab-Experimental** parallel zu Auto-Stable (Feldbericht §11.2) |
+| Repo/Firmware starten | erledigt; Feld 2026-09-28 / 09-30 |
 | Pflichtenheft | nach Gates — Skizze in PFAD §4 |
 
-**Konzept-Review 2026-09-28:** Produktziel behalten; Annahmen zu Host-Read, Puffer und Stub korrigieren. Details: [FELDTEST §3.9 / §17.6](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#39-konzept-entscheidung-nach-vergleichs-review-grok).
+**Konzept-Review 2026-09-28 + Schärfung 2026-09-30:** Produktziel USB=UI+Ton behalten; Annahmen zu Host-Read/Puffer/Stub korrigieren; lieferbares v1 = Snapshot/Slots, kein Vollbaum. Details: [FELDTEST §3.9–3.10 / §11 / §17.6](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#39-konzept-entscheidung-nach-vergleichs-review-grok).
 
 
 ---

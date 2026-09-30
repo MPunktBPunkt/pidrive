@@ -225,17 +225,32 @@ D) Navigation
 
 ### 3.9 Konzept-Entscheidung (nach Vergleichs-Review Grok)
 
-**Produktziel nicht aufgeben** (USB = UI + Ton, Hierarchie-Menü, Pi = Gehirn, ESP = Gadget).  
+**Produktziel nicht aufgeben** (USB = UI + Ton, Pi = Gehirn, ESP = Gadget).  
 **Technische Annahmen korrigieren** — das ist die eigentliche Überarbeitung:
 
 | Behalten | Aufgeben / ersetzen |
 |----------|---------------------|
-| Multi-Level-Menü über MSC | Annahme „Host re-read nach Play“ |
+| Multi-Level-Menü über MSC (langfristig) | Annahme „Host re-read nach Play“ |
 | Remote-Audio Pi→ESP (WLAN/UART) | Annahme „48 KiB + bufferMs=0 reichen“ |
 | Play-Detect → Overlay | Stub = kurzer Testton + 0xFF |
 | Serial-Bump bei Identitätswechsel | Serial nur sporadisch / Lab-Remount |
 
-PiDrive will bewusst **mehr** als Dension (Hierarchie + viele Quellen über denselben Stick). Die Kosten dafür sind Baustelle A (UID-State) und B (Puffer/Pacing/Silence+Xing) — **Lücken schließen, nicht flach werden**. Optional später: „flacher Favoriten-Modus“ als Fallback-Profil, nicht als Ersatz des Zielbilds.
+### 3.10 Zielbild v1 (Review-Konsens 2026-09-30) — *BMW-robustes MSC-Menü*
+
+Reviews (Folge-Runde) bestätigen A/B und schärfen das **lieferbare** v1 — kein neuer Architekturpfad:
+
+| Regel | Inhalt |
+|-------|--------|
+| Geometrie | fest (Slots/FAT); Semantik nur per Snapshot/`menu_set` |
+| Sichtbar | ≤4 Slots, Soft-Paging (`PAGE_CONTENT=3` + Nav) |
+| Tiefe | bevorzugt 2–3 Ebenen; kein voller PiDrive-Dateibaum |
+| Root-Beispiel | Favoriten · Quellen · Stop · Mehr… |
+| Dynamik | FM/DAB/Suche nur als **feste Slots + Paging**, nicht frei mutierende Listen |
+| Namen | kurz, FAT-sicher, Reihenfolge möglichst stabil |
+| HU-Update | neue Namen oft erst nach **OTG-Replug / Serial-Bump** — Produktverhalten, nicht nur Lab-Workaround |
+| Nicht über MSC | hochvolatile Detailzustände, WebUI-only-Bereiche |
+
+**Lesart zu §3.9:** Hierarchie bleibt Konzept-Ziel; **v1 = bewusst reduziertes Snapshot-/Slot-Modell** (Code ist schon so). Volle PiDrive-Spiegelung ist verworfen. Folge: Baustelle A schließen → Menü-Export an v1 halten → B messgetrieben.
 
 Externe Vorbilder: [§17](#17-vergleichsprojekte-extern) · Abweichungsanalyse: [§17.6](#176-warum-pidrive-anders-wehtut-grok).
 
@@ -591,7 +606,18 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 `session_ok = (hello_ok_until == 0) or (now <= hello_ok_until)` → nach Ablauf der 60 s ist `menu_set` **dauerhaft blockiert**, bis Prozess-Neustart. Folge: Pi-Menü wechselt, ESP-Slots bleiben alt (im Feld beobachtet).  
 **Fix (offen):** nach erfolgreichem Sync `hello_ok_until = 0` setzen bzw. Gate nur als kurze Post-Reconnect-Sperre invertieren — in `esp32.pidrive/tools/pump_bridge.py`.
 
-**Nächster Schritt:** `hello_ok_until`-Fix deployen → Pass A/B nachziehen → erst dann §15.2 B0. Kein Overlay-/Silence-Patch vorher.
+**Nächster Schritt:** `hello_ok_until`-Fix deployen → Pass A/B nachziehen → Menü-Export an [§3.10 v1](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü) halten → erst dann §15.2 B0. Kein Overlay-/Silence-Patch vorher.
+
+### 11.2 Lab-Rolle zweiter ESP (Review 2026-09-30)
+
+Kein Extra-Konzept-Doc — nur Arbeitsaufteilung:
+
+| Gerät | Rolle |
+|-------|--------|
+| **ESP1 (Auto)** | stabiler Stand; A-Fixes/`hello_ok_until`; Pass A–D; keine wilden B-Experimente |
+| **ESP2 (Debian)** | Instrumentierung; Silence/Pacing/Geometrie; Host-Burst-Simulator |
+
+Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). Es vorsortiert FAT/Slot/Overlay/`streamBytes`. Vorhanden/anzulehnen: `msc_host_test.py` (esp32.pidrive); sinnvoll neu: kleines `nbt_host_sim` mit Modi `scan` / `autoplay` / `manual_select` / `readahead_burst` — erst parallel zu B0/B1, nicht vor A-Fix.
 
 ---
 
@@ -644,10 +670,10 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 
 1. **Fix `hello_ok_until`** (Bridge) — sonst bleiben Menü-Wechsel nach ~60 s stecken.  
 2. Pass A/B nachziehen (§15.1) mit Fix; BMW-Namen nur nach OTG erwarten.  
-3. **Serial-Mini-Check** (§15.1 D) am Display notieren.  
-4. **B0→B1** (§15.2) — Pulse + Readahead-Messung **vor** Silence-Code.  
-5. **B2…B5** erst nach B0/B1.  
-6. **Geometrie-Experiment:** ein großer Slot vs. 3×512 KiB (Messpunkt).  
+3. Menü-Export an **v1 Snapshot/Slots** halten ([§3.10](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)) — kein Vollbaum.  
+4. **Serial/OTG** systematisch: Remount vs. Replug vs. `PDnnnn`.  
+5. **B0→B1** (§15.2); optional ESP2+Debian-Host-Sim ([§11.2](#112-lab-rolle-zweiter-esp-review-2026-09-30)).  
+6. **B2…B5** erst nach B0/B1.  
 7. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
 
 ### Offene Fragen

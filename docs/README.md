@@ -1,10 +1,11 @@
 # PiDrive — Dokumentationsindex
 
-**Stand:** v0.11.143 · 2026-09-19
+**Stand:** v0.11.178 · 2026-09-30
 
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
+**USB-MSC / BMW (aktuell):** Einstieg = [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) (Diagnose, v1-Zielbild §3.10, Feld §11, Messplan §15) · Arbeit = [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) · Soll-Architektur = [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md). Kein weiteres Review-Dokument anlegen.
 ---
 
 ## Dokumente
@@ -30,15 +31,15 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/FRISCH-INSTALL.md](betrieb/FRISCH-INSTALL.md) | Soft-Smoke vs HW; Proxmox Bookworm-CT | Betrieb, Entwickler | 2026-09-24 |
 | [betrieb/LAB-MENU-WLAN.md](betrieb/LAB-MENU-WLAN.md) | Dev: Pi `/menu` + ESP SoftAP/STA ohne Auto | Betrieb, Entwickler | 2026-09-25 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
-| [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | **Review-Paket** Feld: Baustelle A=Reconnect/UID, B=HU-Cache/Audio; Multi-Review | Review, ESP/USB | 2026-09-28 |
+| [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | **USB-MSC Review+Feld** (A/B, v1 Snapshot-Menü, ESP2-Lab-Hinweis) | Review, ESP/USB | 2026-09-30 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
-| [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: BMW Play-Detection → Live-Stream | Entwickler, ESP/USB | 2026-09-28 |
+| [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: Menü-State + Live-Stream (Checkliste) | Entwickler, ESP/USB | 2026-09-30 |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest | Betrieb, QA | 2026-09-16 |
 | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | Erster erfolgreicher Connect BMW 38304 | Abnahme / Entwickler | 2026-09-16 |
 | [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe | Entwickler | 2026-09-16 |
 | [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | Idee — USB-MSC-Menü / on-the-fly-MP3 | Planung | 2026-09-17 |
-| [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC | Planung | 2026-09-17 |
+| [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC + Entscheidungsstand | Planung | 2026-09-30 |
 | [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → esp32.pidrive / PUMP | Planung | 2026-09-18 |
 | [../assets/usb-msc-covers/README.md](../assets/usb-msc-covers/README.md) | USB-MSC Cover-Spec | Planung / Design | 2026-09-17 |
 | [auftraege/README.md](auftraege/README.md) | Aktive Arbeitsaufträge | Entwickler | 2026-09-22 |
