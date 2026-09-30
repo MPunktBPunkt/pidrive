@@ -636,10 +636,12 @@ Kein Extra-Konzept-Doc — nur Arbeitsaufteilung:
 
 | Gerät | Rolle |
 |-------|--------|
-| **ESP1 (Auto)** | stabiler Stand; A-Fixes/`hello_ok_until`; Pass A–D; keine wilden B-Experimente |
-| **ESP2 (Debian)** | Instrumentierung; Silence/Pacing/Geometrie; Host-Burst-Simulator |
+| **ESP1 (Auto)** | `192.168.178.89` · stabiler Fahrzeugstand; A-Fixes; Pass A–D; keine wilden B-Experimente |
+| **ESP2 (Lab)** | Ziel-IP **`192.168.178.88`** (MAC `68B6B329339C`) · Debian/Proxmox-Host für Burst-/Silence-/Geometrie-Tests ohne Auto |
 
-Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). Es vorsortiert FAT/Slot/Overlay/`streamBytes`. Vorhanden/anzulehnen: `msc_host_test.py` (esp32.pidrive); sinnvoll neu: kleines `nbt_host_sim` mit Modi `scan` / `autoplay` / `manual_select` / `readahead_burst` — erst parallel zu B0/B1, nicht vor A-Fix.
+**Stand Lab-Hardware 2026-09-30:** `.88` antwortet noch als **`Ergometer-S3` / `fwType=ergo`** — für PiDrive-Lab erst **pidrive-FW** (z. B. 0.4.26 OTA/USB) flashen. USB am Proxmox (`192.168.178.108`) aktuell **kein** Espressif in `lsusb` (Kabel/Port prüfen; CT DebianCursor ohne USB-Passthrough — Tests besser am PVE-Host oder SoftAP/STA).
+
+Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). Es vorsortiert FAT/Slot/Overlay/`streamBytes`. Vorhanden/anzulehnen: `msc_host_test.py` (esp32.pidrive); sinnvoll neu: kleines `nbt_host_sim` mit Modi `scan` / `autoplay` / `manual_select` / `readahead_burst` — erst parallel zu B0/B1, nicht vor Serial-NVS-Fix.
 
 ---
 
