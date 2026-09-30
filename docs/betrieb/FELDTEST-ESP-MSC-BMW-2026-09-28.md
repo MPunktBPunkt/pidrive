@@ -695,7 +695,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 ### Priorisierte Experimente (messgetrieben)
 
 1. ~~Fix `hello_ok_until`~~ — **deployed** 2026-09-30.  
-2. **Serial-Gen in NVS** (+ Strompfad OTG prüfen) — Pass D sonst dauerhaft PD0001 nach Reboot.  
+2. ~~**Serial-Gen in NVS**~~ — FW **0.4.27-dev** (Feld: OTA + Pass D Unplug→PD0002 nach Reboot).  
 3. Menü-Export an **v1 Snapshot/Slots** halten ([§3.10](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)).  
 4. **B0→B1** (§15.2); optional ESP2+Debian-Host-Sim ([§11.2](#112-lab-rolle-zweiter-esp-review-2026-09-30)).  
 5. **B2…B5** erst nach B0/B1.  

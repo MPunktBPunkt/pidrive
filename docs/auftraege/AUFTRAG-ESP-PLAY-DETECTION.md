@@ -44,7 +44,7 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] Nav Play-Detect 0.4.26  
 - [x] Fix `hello_ok_until` + Redeploy Pi  
 - [x] Feld A–D Abend ([§11.3](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#113-feldtest-2026-09-30-abend-16371705--ad-mit-fix)): A bedingt, B/C Lab+OTG grün, D rot/bedingt  
-- [ ] **`remountGen_` in NVS** (+ OTG-Strompfad prüfen)  
+- [x] **`remountGen_` in NVS** — FW **0.4.27-dev** (Feldtest Pass D nach OTA)  
 - [ ] MSC-Export an **v1 Snapshot/Slots** halten (kein Vollbaum)  
 - [ ] Produkt-PUMP-Link festlegen: SoftAP \| STA \| UART (Abnahme A5)  
 - [ ] Folgeauftrag: atomarer `MenuSnapshot` (Grace = Übergang)
