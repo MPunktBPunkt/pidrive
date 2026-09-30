@@ -361,9 +361,4 @@ Protokoll: **PUMP** (Arbeitstitel; Umbenennung im Pflichtenheft erlaubt).
 
 ## 15. Nächste Dokumente
 
-| Dokument | Wann |
-|----------|------|
-| `fahrzeug/BMW-USB-MSC-PROBE.md` | nach Stick-Spike |
-| `esp32.pidrive` Repo + `PFLICHTENHEFT.md` | nach G-USB-0/1 |
-| `planung/UMBAU-USB-MSC.md` | mit Pflichtenheft-Skeleton |
-| Dieses Konzept → V0.3 | nach Probe-Ergebnissen / Owner-OKs |
+Keine neuen Review-Dokumente. Pflege: Feldbericht + dieses Konzept + Auftrag. Historische Ideen (`BMW-USB-MSC-PROBE`, `UMBAU-USB-MSC`) nur bei Bedarf, nicht parallel.
