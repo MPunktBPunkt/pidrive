@@ -55,11 +55,11 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] **B0** Pulse — Lab 09-30: System-Pulse-Monitor ok (Tone/Webradio); siehe Feldbericht §15.2  
 - [x] **B1** Readahead Lab-Host `.88`: 512 KiB Slot @ ~0,57 MB/s in 0,9 s; danach **0** Reads (wie NBT-Burst)  
 - [x] **B2** Silence+Xing volle Slot-Länge — FW **0.4.28-dev** (Lab verifiziert; Feld Auto-Play)  
-- [ ] **B3** Pacing (Silence/Busy statt Nullen)  
+- [x] **B3** Pacing Underrun→Silence — FW **0.4.29-dev** (Lab: paced read `underruns≈0` bei ~Realtime)  
 - [ ] **B4** Cursor / fester ID3-Kopf  
-- [ ] **B5** Warmup vor Overlay  
+- [x] **B5** Warmup vor Overlay — FW **0.4.29** `msc.overlay_warm` ab 8 KiB Ring  
 - [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)  
-- [x] Optional parallel: ESP2 Lab **`.88`** pidrive 0.4.28 + Host-Burst am Proxmox
+- [x] Optional parallel: ESP2 Lab **`.88`** + Host-Burst/`lab_overlay_consume.py` am Proxmox
 
 ### I3
 

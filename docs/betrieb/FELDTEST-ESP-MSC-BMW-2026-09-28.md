@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-09-30 Abend — Feld A–D mit **0.4.26**; Lab ESP2 **`.88` = 0.4.28-dev**. Baustelle A: NVS-Serial 0.4.27. Baustelle B: **B0–B2 Lab erledigt**, B3–B5 offen.  
+**Stand Diagnose:** 2026-09-30 Abend — Feld A–D mit **0.4.26**; Lab ESP2 **`.88` = 0.4.29-dev**. Baustelle B: **B0–B3+B5 Lab**, B4/Feld-Ohr offen.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -756,11 +756,11 @@ Messgetrieben. **Kein** Silence/Xing/Pacing parallel zu B0/B1.
 | **B0** | Pulse-Monitor = Stille bei laufendem FM/DAB? (`tools/check_pulse_monitor.sh`) | **Lab 09-30 pass:** System-Pulse Monitor trägt Tone (−22 dB) und Webradio (−15 dB). User-PipeWire Car-Only masked — Bridge nutzt `/var/run/pulse/native`. |
 | **B1** | 1 lange Silence-/FAT32-Datei: wie viel/wie schnell liest der NBT? Liest er *nach* dem ersten Burst noch? | **Lab-Host `.88`:** 512 KiB Slot in **0,91 s** (~0,57 MB/s, 4 KiB-Chunks); danach **5 s idle = 0 Reads**. Entspricht Feld „Burst dann stille“. |
 | **B2** | Silence+Xing über **volle** Slot-Länge (kein 6,5 KiB+0xFF) | **FW 0.4.28-dev** — Lab: ID3+Info + CBR-Silence-Frames (`fffb3064`), kein 0xFF-Pad. **Feld Auto-Play** noch offen. |
-| **B3** | Pacing: leerer Ring → Silence/Busy statt Nullen | Host bleibt am USB; `streamBytes` ≫ underruns |
+| **B3** | Pacing: leerer Ring → Silence/Busy statt Nullen | **FW 0.4.29:** Underrun→Silence-Frames. Lab paced (~Realtime): zuerst `underruns=0`, `streamBytes` wächst. Burst 96 KiB: live≈12 KiB + Silence-Rest. |
 | **B4** | Cursor oder fester ID3-Kopf | Re-Read/Seek liefert gültigen Stream |
-| **B5** | Warmup vor `stream.active` (Sekunden, nicht 0; ABSA-Idee) | first overlay byte vor Ende des Lesefensters |
+| **B5** | Warmup vor `stream.active` (Sekunden, nicht 0; ABSA-Idee) | **FW 0.4.29:** `startStream` erst ab **8 KiB** Ring (`msc.overlay_warm`); vorher B2-Silence am Slot. |
 
-**Optional parallel/nach B1:** Geometrie-Messung „1 großer Slot = aktuelle Auswahl“ vs. 3×512 KiB — ob der NBT länger am USB bleibt.
+**Lab 2026-09-30 Abend (ESP2 `.88` am Proxmox):** Bridge → `.88`; `tools/lab_overlay_consume.py`. Hinweis: aggressives Linux-`usb-storage`-Burst kann ESP USB-Reset/Reboot auslösen — NBT-Lastprofil anders; Feld trotzdem nötig.
 
 **Dension-Ableitung (nicht 1:1 UX):** Puffer + lange nie endende Datei + Config — **nicht** „Station in &lt;2 s ohne Warmup“. Abnahme A2 muss eine Zahl bekommen (Warmup erlaubt), sonst bleibt A2 definitionsgemäß ewig rot. Actions (`Zurueck`/`Mehr`) möglichst nicht als kurze Playlist-MP3s neben Sendern.
 
