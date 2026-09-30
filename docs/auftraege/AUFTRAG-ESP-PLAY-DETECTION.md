@@ -24,7 +24,7 @@ Zwei getrennte Baustellen:
 | Stub-Cache + HU-Readahead → Overlay nie konsumiert | **bestätigt** (B) |
 | TCP-Reconnect verwirft Nav-State → stale/unknown | **bestätigt** (A) — Snapshot/Grace ok; Feld 2026-09-30 bedingt |
 | Action/Zurueck: minSeq 6000 + Cooldown nach Auto-Play | **bestätigt** 2026-09-29 — Fix **0.4.26** |
-| `hello_ok_until` blockiert `menu_set` nach 60 s | **bestätigt** 2026-09-30 — Fix offen (`pump_bridge.py`) |
+| `hello_ok_until` blockiert `menu_set` nach 60 s | **behoben** 2026-09-30 Nachmittag (`pump_bridge.py` auf Pi deployed) |
 | BMW zeigt neue MSC-Namen ohne OTG-Replug | **widerlegt** Feld 2026-09-30 — Unplug nötig |
 | Voller PiDrive-Dateibaum auf MSC | **verworfen** — v1 = Snapshot/Slots ([Feld §3.10](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)) |
 
@@ -42,7 +42,7 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] Serial-Bump bei Unplug (0.4.25)  
 - [x] Nav Play-Detect: `navMinSeqBytes=4096`, Cooldown nicht für action/folder (0.4.26)  
 - [x] Feldtest 2026-09-30 mit 0.4.26 — A bedingt, C Lab grün, D bedingt ([§11.1](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#111-feldtest-2026-09-30-vormittag-0426))  
-- [ ] **Fix `hello_ok_until`** in `pump_bridge.py` + Redeploy Pi  
+- [x] **Fix `hello_ok_until`** in `pump_bridge.py` + Redeploy Pi (2026-09-30)  
 - [ ] Pass A/B nachziehen (HU-`play_uid` weiter Cache-limitiert)  
 - [ ] MSC-Export an **v1 Snapshot/Slots** halten (kein Vollbaum)  
 - [ ] Produkt-PUMP-Link festlegen: SoftAP \| STA \| UART (Abnahme A5)  

@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-09-30 Vormittag — Feldtest A/C mit **0.4.26-dev** (siehe §11.1). Weiterhin **zwei Baustellen**; neuer Bridge-Bug `hello_ok_until` (§11.1).  
+**Stand Diagnose:** 2026-09-30 Nachmittag — `hello_ok_until`-Fix deployed; nächster Feldtest A/B/C mit **0.4.26-dev** (§11.1). Baustelle B weiter offen.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -602,11 +602,11 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 | **C** Paging | **grün (Lab)** | `menu_set page=1` Ordnerliste; BMW-Sicht erst nach OTG |
 | **D** Serial | **bedingt grün** | Bump gesehen, nicht systematisch am Display notiert |
 
-**Neuer Bridge-Bug — `hello_ok_until`:** Nach `try_reconnect` setzt die Bridge `hello_ok_until = now+60`.  
-`session_ok = (hello_ok_until == 0) or (now <= hello_ok_until)` → nach Ablauf der 60 s ist `menu_set` **dauerhaft blockiert**, bis Prozess-Neustart. Folge: Pi-Menü wechselt, ESP-Slots bleiben alt (im Feld beobachtet).  
-**Fix (offen):** nach erfolgreichem Sync `hello_ok_until = 0` setzen bzw. Gate nur als kurze Post-Reconnect-Sperre invertieren — in `esp32.pidrive/tools/pump_bridge.py`.
+**Neuer Bridge-Bug — `hello_ok_until`:** Nach `try_reconnect` setzte die Bridge früher `hello_ok_until = now+60`.  
+`session_ok = (hello_ok_until == 0) or (now <= hello_ok_until)` → nach Ablauf der 60 s war `menu_set` **dauerhaft blockiert**, bis Prozess-Neustart. Folge: Pi-Menü wechselt, ESP-Slots bleiben alt (Feld 2026-09-30).  
+**Fix (2026-09-30 Nachmittag):** `hello_ok_until = 0` nach gutem `hello_ack`, sonst `-1`; `session_ok = (hello_ok_until == 0)`. Deploy: `/home/pidrive/pump_bridge.py` auf dem Pi.
 
-**Nächster Schritt:** `hello_ok_until`-Fix deployen → Pass A/B nachziehen → Menü-Export an [§3.10 v1](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü) halten → erst dann §15.2 B0. Kein Overlay-/Silence-Patch vorher.
+**Nächster Feldtest:** ESP online → FW `0.4.26-dev` prüfen → Pass A (Stub egal) → B (Bridge-Restart + Snapshot) → C Paging → optional D Serial. BMW-Namen oft erst nach **OTG-Replug**. Kein Overlay-/Silence-Patch.
 
 ### 11.2 Lab-Rolle zweiter ESP (Review 2026-09-30)
 
@@ -668,8 +668,8 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 
 ### Priorisierte Experimente (messgetrieben)
 
-1. **Fix `hello_ok_until`** (Bridge) — sonst bleiben Menü-Wechsel nach ~60 s stecken.  
-2. Pass A/B nachziehen (§15.1) mit Fix; BMW-Namen nur nach OTG erwarten.  
+1. ~~Fix `hello_ok_until`~~ — **deployed** 2026-09-30.  
+2. Pass A/B nachziehen (§15.1); BMW-Namen nur nach OTG erwarten.  
 3. Menü-Export an **v1 Snapshot/Slots** halten ([§3.10](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)) — kein Vollbaum.  
 4. **Serial/OTG** systematisch: Remount vs. Replug vs. `PDnnnn`.  
 5. **B0→B1** (§15.2); optional ESP2+Debian-Host-Sim ([§11.2](#112-lab-rolle-zweiter-esp-review-2026-09-30)).  
