@@ -1,18 +1,18 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-09-28 Abend — nach Multi-Review (Claude / GPT / Gemini / Grok): **zwei getrennte Baustellen** (Menü-State nach TCP-Reconnect · Live-Audio vs. HU-Cache). Play-Detect ist für diesen Feldtest **nicht** der Engpass.  
+**Stand Diagnose:** 2026-09-30 Vormittag — Feldtest A/C mit **0.4.26-dev** (siehe §11.1). Weiterhin **zwei Baustellen**; neuer Bridge-Bug `hello_ok_until` (§11.1).  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
 |------|------|
-| Datum | 2026-09-28 (Feld ~07:40–15:55 Europe/Berlin) |
-| FW live am Auto | **`0.4.24-dev`** |
+| Datum | 2026-09-28 (Feld ~07:40–15:55) · **Nachtest 2026-09-30 ~08:10–08:40** |
+| FW live am Auto | **`0.4.26-dev`** (OTA 2026-09-30; vorher 0.4.24) |
 | ESP STA | `192.168.178.89` · SoftAP `pidrive-2BC568` / `192.168.4.1` |
-| Pi | `192.168.178.105` · `pidrive_pump_bridge` · PUMP-TCP `:9090` |
+| Pi | `192.168.178.105` · `pump_bridge.py` manuell (+ `ensure_pump_bridge.sh`) · PUMP-TCP `:9090` |
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
 | PUMP-Link Produkt | **offen** — SoftAP \| STA \| UART festlegen (§15.0); Feldtest ideal SoftAP/UART |
-| Repos | `pidrive` (Doku/Bridge-Client) · `esphub/esp32.pidrive` (FW 0.4.25 + Bridge-Grace auf `main`) |
+| Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.26** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
 | Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
 | Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
@@ -565,7 +565,33 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 3. **Pass A:** nach `msc.quiet` gezielt **Zurueck** (ohne Lab) — erwarten `play.guess` + neue Namen.  
 4. Dann Pass B (Bridge-Restart) / C (Paging) / D (Serial Unplug→`PDnnnn`).
 
-**Nächster Schritt:** Feldtest A/B/C mit **0.4.26** — **kein** Overlay-/Silence-/Pacing-Patch vorher.
+### 11.1 Feldtest 2026-09-30 Vormittag (0.4.26)
+
+| Schritt | Ergebnis |
+|---------|----------|
+| OTA `0.4.24` → **`0.4.26-dev`** | ok (`POST /ota-upload`); `hello_ack` + Menu-Snapshot |
+| BMW Autoplay Stub (Zurueck / Nächster / Vorheriger / Favoriten) | **erwartet** — Baustelle B; `playGuessCount=0` nach Quiet |
+| Manuelle Senderwahl am BMW | **kein** `play_uid` — HU spielt aus Cache, kein Re-Read |
+| Lab-Play `Zurueck` | Nav greift (`action/back` → Pi-Menü Quellen); ESP-Slots folgten erst nach Bridge-Neustart |
+| Lab-Play `pump:page_next` („Menue“) | `page→1` → Slots **Favoriten / Quellen / Stop / Mehr…** (`menu_ack` ok) |
+| BMW zeigt neue Namen | **nur nach OTG Unplug/Replug** — Lab-Remount / Medienwechsel allein unzureichend |
+| Serial | Unplug-Events `next=PD0002`/`PD0003` gesehen (D bedingt ok) |
+| STA RSSI | ~−74…−75 dBm; vereinzelte TCP-Reconnects |
+
+**Pass-Urteil:**
+
+| Pass | Urteil | Hinweis |
+|------|--------|---------|
+| **A** Happy Path am BMW | **bedingt / rot für HU-`play_uid`** | Nav-Software ok per Lab; HU liefert nach Quiet kaum Guess |
+| **B** Bridge-Restart | **teils grün** | Snapshot/Grace ok; siehe Bug unten |
+| **C** Paging | **grün (Lab)** | `menu_set page=1` Ordnerliste; BMW-Sicht erst nach OTG |
+| **D** Serial | **bedingt grün** | Bump gesehen, nicht systematisch am Display notiert |
+
+**Neuer Bridge-Bug — `hello_ok_until`:** Nach `try_reconnect` setzt die Bridge `hello_ok_until = now+60`.  
+`session_ok = (hello_ok_until == 0) or (now <= hello_ok_until)` → nach Ablauf der 60 s ist `menu_set` **dauerhaft blockiert**, bis Prozess-Neustart. Folge: Pi-Menü wechselt, ESP-Slots bleiben alt (im Feld beobachtet).  
+**Fix (offen):** nach erfolgreichem Sync `hello_ok_until = 0` setzen bzw. Gate nur als kurze Post-Reconnect-Sperre invertieren — in `esp32.pidrive/tools/pump_bridge.py`.
+
+**Nächster Schritt:** `hello_ok_until`-Fix deployen → Pass A/B nachziehen → erst dann §15.2 B0. Kein Overlay-/Silence-Patch vorher.
 
 ---
 
@@ -603,6 +629,12 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 | 15:50 | OTA **0.4.24**, Lab-Remount `ser=PD0001` |
 | 15:51–15:52 | User USB-Zyklus; Quiet; `play.guess` Hitradio; audio_start; Underruns; Testton bleibt |
 | 15:55 | Doku + Artefakte |
+| **2026-09-30** | | |
+| ~08:12 | Pi online; ESP erst SoftAP/STA später `.89` |
+| ~08:19 | OTA **0.4.26-dev**; Bridge `hello_ack` + Snapshot |
+| ~08:22–08:30 | HU Autoplay Stub; manuell kein `play_uid`; `hello_ok_until` blockiert `menu_set` |
+| ~08:33 | Lab `page_next` → Favoriten/Quellen/Stop; BMW erst nach **OTG Replug** |
+| ~08:38 | ESP abgesteckt (Fahrt); Doku §11.1 |
 
 ---
 
@@ -610,12 +642,13 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 
 ### Priorisierte Experimente (messgetrieben)
 
-1. **Feldtest A/B/C** (§15.1) — Menü/UID; Ton egal.  
-2. **Serial-Mini-Check** (§15.1 D) — Unplug → neue `PDnnnn`.  
-3. **B0→B1** (§15.2) — Pulse + Readahead-Messung **vor** Silence-Code.  
-4. **B2…B5** erst nach B0/B1.  
-5. **Geometrie-Experiment:** ein großer Slot vs. 3×512 KiB (Messpunkt).  
-6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
+1. **Fix `hello_ok_until`** (Bridge) — sonst bleiben Menü-Wechsel nach ~60 s stecken.  
+2. Pass A/B nachziehen (§15.1) mit Fix; BMW-Namen nur nach OTG erwarten.  
+3. **Serial-Mini-Check** (§15.1 D) am Display notieren.  
+4. **B0→B1** (§15.2) — Pulse + Readahead-Messung **vor** Silence-Code.  
+5. **B2…B5** erst nach B0/B1.  
+6. **Geometrie-Experiment:** ein großer Slot vs. 3×512 KiB (Messpunkt).  
+7. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
 
 ### Offene Fragen
 
@@ -696,7 +729,7 @@ curl -s http://192.168.178.89/api/status | jq '{fw:.version,phase:.msc.phase,str
 | A1 | Auswahl/Auto-Play → `play.guess` + UID | **pass** |
 | A2 | Live-Audio nach Warmup/Play-Read (Zahl noch festlegen; Vorschlag ≤5 s) | **fail** — Sequenz B0→B5 |
 | A3 | Listing während Stream sichtbar | **pass** |
-| A4 | ≥2 Ebenen + `page_next` ohne `unknown uid` (A/B/C) | **offen** — Feldtest |
+| A4 | ≥2 Ebenen + `page_next` ohne `unknown uid` (A/B/C) | **bedingt** 2026-09-30 — Lab-Paging grün; HU-`play_uid`/OTG-Pflicht; `hello_ok_until`-Bug |
 | A5 | Produkt-PUMP-Link dokumentiert | **offen** |
 
 ---
