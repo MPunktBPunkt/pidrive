@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-01 — Auto-Feld mit **0.4.29** (B2 Stille statt Testton; Overlay grün, HU-Cache); Lab **`.88` = 0.4.30-dev** (**B4** SoftAP+MSC pass).  
+**Stand Diagnose:** 2026-10-01 — Auto-Feld mit **0.4.29** (B2 Stille statt Testton; Overlay grün, HU-Cache); Lab **`.88` = 0.4.31-dev** (**B4** sequential cursor SoftAP pass).  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -640,8 +640,10 @@ Grace 180 s ist robuster **Fallback** für den Feldtest, nicht die End-Archite
 | Auto offline (Fahrt) | Bridge temporär auf Lab `.88` |
 | Lab **0.4.30-dev** B4 SoftAP | `tools/lab_b4_reread.py` **PASS** (ID3 sticky, `headResyncs`, `underrunΔ=0` nach Scroll) |
 | Lab B4 MSC (Proxmox `/dev/sda`) | Head-reread nach Scroll: `streamBytes+=8192`, **`underruns+=0`**, `headResyncs` steigt |
+| Lab **0.4.31-dev** sequential cursor | SoftAP Reads off=4 KiB…80 KiB: **underrun=0, live_ratio=1.0**; Status `cursorArmed`/`hostAbsCursor` |
+| Lab paced MSC burst | Aggressiver Linux-Burst kann ESP-USB-Reset auslösen (Stream weg) — SoftAP-Pfad ist die stabile Lab-Messung |
 
-**Lesart:** Software-Kette bis Overlay ist grün; A2 am Auto bleibt Cache/kein Re-Read. B4 liefert gültigen Stream **wenn** die HU erneut vom Dateianfang liest.
+**Lesart:** Software-Kette bis Overlay ist grün; A2 am Auto bleibt Cache/kein Re-Read. B4.31 liefert gültigen Stream bei Head-Re-Read **und** sequentieller Weiterlese. Bridge Lab aktuell → `.88`.
 
 ### 11.2 Lab-Rolle zweiter ESP (Review 2026-09-30)
 
@@ -703,6 +705,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | **2026-10-01** | | |
 | ~08:06–08:12 | Auto `.89` 0.4.29; B2 Stille; Guess+Overlay ohne Live-Ohr (Cache) |
 | ~08:12+ | Auto offline; Lab OTA **0.4.30**; B4 SoftAP+MSC pass (§11.4) |
+| ~09:15+ | Lab **0.4.31** sequential cursor SoftAP pass; paced MSC-Burst unzuverlässig (§11.4) |
 
 ---
 
@@ -773,7 +776,7 @@ Messgetrieben. **Kein** Silence/Xing/Pacing parallel zu B0/B1.
 | **B1** | 1 lange Silence-/FAT32-Datei: wie viel/wie schnell liest der NBT? Liest er *nach* dem ersten Burst noch? | **Lab-Host `.88`:** 512 KiB Slot in **0,91 s** (~0,57 MB/s, 4 KiB-Chunks); danach **5 s idle = 0 Reads**. Entspricht Feld „Burst dann stille“. |
 | **B2** | Silence+Xing über **volle** Slot-Länge (kein 6,5 KiB+0xFF) | **FW 0.4.28-dev** — Lab: ID3+Info + CBR-Silence-Frames (`fffb3064`), kein 0xFF-Pad. **Feld Auto-Play** noch offen. |
 | **B3** | Pacing: leerer Ring → Silence/Busy statt Nullen | **FW 0.4.29:** Underrun→Silence-Frames. Lab paced (~Realtime): zuerst `underruns=0`, `streamBytes` wächst. Burst 96 KiB: live≈12 KiB + Silence-Rest. |
-| **B4** | Cursor oder fester ID3-Kopf | **FW 0.4.30-dev** Lab pass: SoftAP `overlay_read` nach Scroll `headResyncs+1`, `underrunΔ=0`, ID3@0; MSC head-reread `underruns+=0`. Feld-Ohr offen. |
+| **B4** | Cursor oder fester ID3-Kopf | **FW 0.4.31-dev** SoftAP sequential past head: `underrun=0`, live_ratio=1 (80 KiB). 0.4.30 nur Head-Remap. Feld-Ohr offen. |
 | **B5** | Warmup vor `stream.active` (Sekunden, nicht 0; ABSA-Idee) | **FW 0.4.29:** `startStream` erst ab **8 KiB** Ring (`msc.overlay_warm`); vorher B2-Silence am Slot. |
 
 **Lab 2026-09-30 Abend (ESP2 `.88` am Proxmox):** Bridge → `.88`; `tools/lab_overlay_consume.py`. Hinweis: aggressives Linux-`usb-storage`-Burst kann ESP USB-Reset/Reboot auslösen — NBT-Lastprofil anders; Feld trotzdem nötig.

@@ -2,7 +2,7 @@
 
 **Stand:** 2026-10-01 · aktiv  
 **Repos:** `esp32.pidrive` (Firmware) + `tools/pump_bridge.py` · Abnahme im Fahrzeug  
-**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §3.10 v1 · §11.1–11.4 Feld · §11.2 ESP2 · §15 Messplan · FW **0.4.30-dev**  
+**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §3.10 v1 · §11.1–11.4 Feld · §11.2 ESP2 · §15 Messplan · FW **0.4.31-dev**  
 **Rohanalyse (alt):** [`../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt`](../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt)
 
 ---
@@ -56,7 +56,7 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] **B1** Readahead Lab-Host `.88`: 512 KiB Slot @ ~0,57 MB/s in 0,9 s; danach **0** Reads (wie NBT-Burst)  
 - [x] **B2** Silence+Xing volle Slot-Länge — FW **0.4.28-dev** (Lab verifiziert; Feld Auto-Play)  
 - [x] **B3** Pacing Underrun→Silence — FW **0.4.29-dev** (Lab: paced read `underruns≈0` bei ~Realtime)  
-- [x] **B4** Cursor / fester ID3-Kopf — FW **0.4.30-dev** (Lab SoftAP+MSC; Feld-Ohr offen)  
+- [x] **B4** Cursor / fester ID3-Kopf — FW **0.4.31-dev** (Lab SoftAP+MSC; Feld-Ohr offen)  
 - [x] **B5** Warmup vor Overlay — FW **0.4.29** `msc.overlay_warm` ab 8 KiB Ring  
 - [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)  
 - [x] Optional parallel: ESP2 Lab **`.88`** + Host-Burst/`lab_overlay_consume.py` am Proxmox
