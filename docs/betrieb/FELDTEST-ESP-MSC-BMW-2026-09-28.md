@@ -656,7 +656,7 @@ Kein Extra-Konzept-Doc — nur Arbeitsaufteilung:
 
 **Stand Lab-Hardware 2026-09-30:** `.88` antwortet noch als **`Ergometer-S3` / `fwType=ergo`** — für PiDrive-Lab erst **pidrive-FW** (z. B. 0.4.26 OTA/USB) flashen. USB am Proxmox (`192.168.178.108`) aktuell **kein** Espressif in `lsusb` (Kabel/Port prüfen; CT DebianCursor ohne USB-Passthrough — Tests besser am PVE-Host oder SoftAP/STA).
 
-Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). Es vorsortiert FAT/Slot/Overlay/`streamBytes`. Vorhanden/anzulehnen: `msc_host_test.py` (esp32.pidrive); sinnvoll neu: kleines `nbt_host_sim` mit Modi `scan` / `autoplay` / `manual_select` / `readahead_burst` — erst parallel zu B0/B1, nicht vor Serial-NVS-Fix.
+Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). Es vorsortiert FAT/Slot/Overlay/`streamBytes`. **Phase‑1 NBT-Replay-Harness** (2026-10-01): `tools/nbt_suite.py` auf Proxmox via SG_IO — Baseline PASS/WARN, lab-safe ≤16 KiB/Burst (größere consecutive Slot-Reads rebooten den ESP). Auftrag: [esp32.pidrive AUFTRAG-NBT-REPLAY-HARNESS](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-NBT-REPLAY-HARNESS.md).
 
 ---
 
