@@ -737,7 +737,8 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 2. FW am ESP: `curl -s http://<esp>/api/status | jq .version` — ideal **`0.4.26-dev`** (Nav-Fix + Serial-Bump)  
 3. Log-Filter läuft (unten)  
 4. Reconnect-Methode für Pass B festgelegt: **`systemctl restart pidrive_pump_bridge`** (bevorzugt; nicht „WLAN kurz weg“)  
-5. Protokoll-Spalten: Grace-Hits **A** vs. **B** getrennt · `snapshot resent` ja/nein · `unknown` ja/nein · Blind-`audio_start` nach unknown ja/nein · C: BMW-Anzeige vs. `page=`
+5. Protokoll-Spalten: Grace-Hits **A** vs. **B** getrennt · `snapshot resent` ja/nein · `unknown` ja/nein · Blind-`audio_start` nach unknown ja/nein · C: BMW-Anzeige vs. `page=`  
+6. **Sync-Marker pro Pass:** Handy-Uhrzeit notieren + eine Aktion, die in ESP/Bridge/Notiz landet (OTG-Replug oder Lab-Play/`overlay_read`). Danach Trace/Status sichern (`uptime`, `msSincePlug`, `usbSerial`, `remountGen`). Ohne Marker sind Handy-Zeit und ESP-`millis()` nach Reboot nicht mehr sicher zuordenbar.
 
 ```bash
 journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace hit|unknown uid|menu_set|page|reconnected|audio_start|ffmpeg'
