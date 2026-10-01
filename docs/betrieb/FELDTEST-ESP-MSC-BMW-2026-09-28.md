@@ -745,9 +745,28 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 
 ### 11.6 Feldabend 2026-10-01 ~19:48–20:07 (0.4.34)
 
-- **Reboot-Fix 0.4.34** (Critical→Mutex): `hello_ack` wieder ok; Lab-Smoke `msc.reads` grün.
-- **Ton aus:** mehrfach `play.guess` ok, aber (a) `pump.tcp.down` verpasst `play_uid`/ffmpeg, (b) `msc.overlay_warm … pre≈182 KiB` dann **0 Live-Reads** (`streamBytes=0`) — HU-Silence-Cache.
-- Artefakte: [`artifacts-2026-10-01-abend/`](artifacts-2026-10-01-abend/) · FW-Follow-up **0.4.35** play_uid-Replay auf hello; B6 Cache-Hebel offen.
+Zwei getrennte Ursachen, beide gemessen:
+
+| Problem | Messwert | Follow-up |
+|---------|----------|-----------|
+| PUMP-Lücke | Guess während `pump.tcp.down` → kein `play_uid`/ffmpeg | **0.4.35** `play_uid`-Replay auf `hello` (Lab-Smoke grün) |
+| Lesefenster vor Warmup | `msc.overlay_warm … pre=182272`, danach **0** Slot-Reads | B6: Warm früher / Prefetch / Cache-Key — Lab: `feld_prefetch_then_warm_gentle` |
+
+**Pass-Tabelle (Uhr lokal):**
+
+| Zeit | Aktion | Log-Lesart |
+|------|--------|------------|
+| 19:49 | Bayern | Guess oft verpasst; parallel BOB-Overlay; `pre≈215 KiB` (frühere Session) |
+| 19:57 | Bayern | `play.guess fav1`, aber PUMP down — kein Audio |
+| 20:01 | (Ohr Bayern) | Log: **`fav0` Rock Antenne** Guess + großer Burst; danach `pump.tcp.down` |
+| **20:03** | **Radio BOB** | `play.guess fav2` + ffmpeg ok; **`pre=182272`**; `streamBytes=0`; Rote-LED-Reaktion |
+| ~20:06 | Rock Antenne (Ohr) | **kein** neues `play.guess` — HU im Cache, LED hört auf zu blinken |
+
+**Zahlen-Split 20:03 BOB** (`overlay_warm` @ esp_ms 37981): vor Warm Slot-Reads (jsonl) fav2≈346 KiB + fav0≈178 KiB; **nach Warm 0**; Status-Zähler `preWarmHostBytes=182272` (nur Silence am pending-uid).
+
+- Artefakte: [`artifacts-2026-10-01-abend/`](artifacts-2026-10-01-abend/) (inkl. 173-Zeilen `*-pre-195505.jsonl`)
+- Traces: `esp32.pidrive/tools/traces/feld_bob_2003_prewarm` · `feld_1949_session` · `feld_prefetch_then_warm_gentle`
+- **0.4.34** Reboot-Fix (Critical→Mutex); **0.4.35** play_uid-Replay — morgen Auto-OTA
 
 
 ```bash
