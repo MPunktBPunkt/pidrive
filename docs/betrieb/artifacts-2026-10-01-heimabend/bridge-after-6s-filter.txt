@@ -1,0 +1,30 @@
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 17192 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 15678 B / 2s
+[audio] forwarded 13249 B / 2s
+[audio] forwarded 4305 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 17554 B / 2s
+[audio] forwarded 12072 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 7531 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 15663 B / 2s
+[audio] forwarded 12072 B / 2s
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+[audio] forwarded 3225 B / 2s
+[rx] {"t":"event","op":"play_uid","uid":"fav0"}
+[trace] t=0ms play_uid=fav0

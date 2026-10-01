@@ -1,0 +1,22 @@
+548	boot	0.4.31-dev
+811	usb.otg.up	car-host
+812	msc.phase	scan plug
+1868	play.reject	not_from_head uid=fav0 from=120 +4096B age=1057ms prefetch
+1879	msc.prefetch	fav0
+2331	play.reject	plug_window uid=fav0 from=57 +4096B age=1520ms
+2418	play.reject	not_from_head uid=fav0 from=1073 +4096B age=1607ms prefetch
+2672	play.reject	plug_window uid=fav1 from=1081 +4096B age=1861ms
+2975	play.reject	not_from_head uid=fav1 from=1113 +4096B age=2164ms prefetch
+2986	msc.prefetch	fav1
+3366	play.reject	plug_window uid=pump:page_next from=3129 +4096B age=2555ms
+3384	play.reject	not_from_head uid=fav0 from=305 +4096B age=2573ms prefetch
+5557	msc.phase	quiet cache?
+5557	msc.quiet	file=1260032B age=2000ms
+6285	play.reject	not_from_head uid=fav0 from=409 +4096B age=5474ms prefetch
+6295	msc.prefetch	fav0
+8451	msc.quiet	file=1436160B age=2000ms
+82460	play.guess	fav1
+96281	play.reject	not_from_head uid=fav0 from=729 +4096B age=95470ms prefetch
+96294	msc.prefetch	fav0
+98450	msc.quiet	file=1612288B age=2000ms
+117391	play.guess	fav1

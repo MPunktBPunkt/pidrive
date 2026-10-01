@@ -707,7 +707,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~08:12+ | Auto offline; Lab OTA **0.4.30**; B4 SoftAP+MSC pass (§11.4) |
 | ~09:15+ | Lab **0.4.31** sequential cursor SoftAP pass; paced MSC-Burst unzuverlässig (§11.4) |
 | ~13:40–14:00 | NBT-Replay-Harness Phase 1 + Suite Baseline; Sync-Marker-Protokoll |
-| ~17:00+ | **Heimabend** (§11.5): OTA `.89` → 0.4.31, Bridge, Ohr-Test B4, Read-Muster notieren |
+| ~17:00+ | **Heimabend** (§11.5): OTA `.89` → 0.4.31; Bridge-Cron `.88`-Falle; kurz Live+ID3 ~6 s dann HU-Cache-Loop; Artefakte + Synth-Trace |
 
 ---
 
@@ -729,6 +729,19 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | 7 | Trace sichern | `/api/status` → `msc.trace` + diag-jsonl rotieren; Pass-Notiz mit Uhrzeit |
 
 **Danach (nicht heute flashen):** [AUFTRAG-MSC-READS-STREAMING](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-MSC-READS-STREAMING.md).
+
+### Ergebnis Heimabend (Ohr + Mess)
+
+| Beobachtung | Messung / Lesart |
+|-------------|------------------|
+| Zuerst kein Ton | Bridge-Cron zeigte auf Lab **`.88`** → `.89` ohne PUMP; behoben |
+| OTG + Senderwahl ohne Guess | viele `play.reject` (`plug_window`/`not_from_head`), dann `msc.quiet` Cache |
+| **Kurz Ton + ID3-Cover** (fav1) | Overlay warm; HU las Live (`streamBytes≈168 KiB`) |
+| Nach ~6 s weg; erneute Wahl = dieselben ~6 s | **HU-Cache** — keine fortlaufenden File-Reads |
+| `msc.trace` | in Snapshots **leer** → kein 1:1-LBA-Replay; Synthese `feld_heimabend_6s_cache` |
+
+**Artefakte:** [`artifacts-2026-10-01-heimabend/`](artifacts-2026-10-01-heimabend/)  
+**Nächster Code:** `msc.reads`-Streaming (nicht Callback) → echte Traces; Play-Detect nach Index/Quiet schärfen.
 
 ```bash
 # Status / Trace-Snapshot

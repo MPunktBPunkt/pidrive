@@ -1,0 +1,383 @@
+{"ts":1790601463.4092696,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790601464.4140644,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790601600.1989288,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790601605.0934145,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790601606.1588187,"code":"msc.first_read","detail":"1005 ms"}
+{"ts":1790601889.5381503,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790601895.9358912,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790601896.9450853,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790601897.4640937,"code":"msc.phase","detail":"index Antenne Bayern  104.4 MHz"}
+{"ts":1790601897.464302,"code":"play.reject","detail":"plug_window uid=8459731247190444814 from=171 +4096B age=1523ms"}
+{"ts":1790601898.661144,"code":"play.reject","detail":"seq_short uid=17092572655233380602 from=43 +4096B age=2711ms"}
+{"ts":1790601898.6613388,"code":"msc.phase","detail":"play Zurueck"}
+{"ts":1790601899.6737516,"code":"play.reject","detail":"cooldown uid=17092572655233380602 from=43 +12288B age=2740ms"}
+{"ts":1790602200.9596543,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790602201.9749396,"code":"msc.first_read","detail":"1005 ms"}
+{"ts":1790602202.7075577,"code":"msc.phase","detail":"index Sender A-M"}
+{"ts":1790602202.7179222,"code":"play.reject","detail":"plug_window uid=188988624349687751 from=171 +4096B age=1742ms"}
+{"ts":1790602203.7229927,"code":"play.reject","detail":"seq_short uid=16932289105042527414 from=43 +4096B age=2746ms"}
+{"ts":1790602203.7334177,"code":"msc.phase","detail":"play Zurueck"}
+{"ts":1790602204.7456741,"code":"play.reject","detail":"cooldown uid=16932289105042527414 from=43 +12288B age=2779ms"}
+{"ts":1790602708.4444735,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790602712.2194827,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790602713.226753,"code":"msc.first_read","detail":"1003 ms"}
+{"ts":1790602713.2866533,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=120 +4096B age=1056ms prefetch"}
+{"ts":1790602713.7776031,"code":"play.reject","detail":"plug_window uid=5679408291292205592 from=1081 +4096B age=1542ms"}
+{"ts":1790602713.9549549,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=729 +4096B age=1723ms prefetch"}
+{"ts":1790602714.3975465,"code":"play.reject","detail":"plug_window uid=15773435517741805152 from=2105 +4096B age=2170ms"}
+{"ts":1790602714.6750011,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=725 +2048B age=2445ms prefetch"}
+{"ts":1790602715.7906363,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=537 +4096B age=3558ms prefetch"}
+{"ts":1790602715.9467697,"code":"play.reject","detail":"plug_window uid=9476702390901929266 from=57 +4096B age=3715ms"}
+{"ts":1790602716.088104,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=569 +4096B age=3857ms prefetch"}
+{"ts":1790602966.82653,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790602976.8103244,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790602977.83797,"code":"msc.first_read","detail":"1005 ms"}
+{"ts":1790602977.882418,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=120 +4096B age=1061ms prefetch"}
+{"ts":1790602978.3851511,"code":"play.reject","detail":"plug_window uid=9476702390901929266 from=57 +4096B age=1572ms"}
+{"ts":1790602979.3818493,"code":"play.reject","detail":"plug_window uid=5679408291292205592 from=1081 +4096B age=2555ms"}
+{"ts":1790602979.5549548,"code":"play.reject","detail":"plug_window uid=9476702390901929266 from=65 +4096B age=2737ms prefetch"}
+{"ts":1790602980.0441055,"code":"play.reject","detail":"plug_window uid=15773435517741805152 from=2105 +4096B age=3222ms"}
+{"ts":1790602980.3331697,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=725 +2048B age=3497ms prefetch"}
+{"ts":1790602982.575813,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790602982.5760376,"code":"msc.quiet","detail":"file=1605632B age=2002ms"}
+{"ts":1790603054.3604078,"code":"msc.quiet","detail":"file=1605632B age=73778ms"}
+{"ts":1790603094.7994008,"code":"msc.quiet","detail":"file=1605632B age=11745ms"}
+{"ts":1790603097.1516325,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790603097.2110052,"code":"play.reject","detail":"not_from_head uid=684127012167276656 from=120 +4096B age=17739ms prefetch"}
+{"ts":1790603128.9408417,"code":"msc.quiet","detail":"file=1638400B age=31328ms"}
+{"ts":1790603454.2269645,"code":"msc.quiet","detail":"file=1612288B age=7440ms"}
+{"ts":1790603482.1816676,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790603532.2629604,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790603533.266963,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790603533.3323236,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=120 +4096B age=1060ms prefetch"}
+{"ts":1790603533.888088,"code":"play.reject","detail":"plug_window uid=8459731247190444814 from=1081 +4096B age=1615ms"}
+{"ts":1790603534.0689902,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=729 +4096B age=1798ms prefetch"}
+{"ts":1790603536.3389635,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790603536.3393853,"code":"msc.quiet","detail":"file=557056B age=2003ms"}
+{"ts":1790603538.550239,"code":"play.reject","detail":"seq_short uid=7954708905983732813 from=2105 +4096B age=6267ms"}
+{"ts":1790603538.5506432,"code":"msc.phase","detail":"play Hitradio RT1  90.2 MHz"}
+{"ts":1790603539.9385211,"code":"play.reject","detail":"cooldown uid=7954708905983732813 from=2105 +12288B age=6295ms"}
+{"ts":1790603539.9501452,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=725 +2048B age=6562ms prefetch"}
+{"ts":1790603539.9505994,"code":"play.reject","detail":"seq_short uid=17092572655233380602 from=57 +4096B age=7061ms"}
+{"ts":1790603539.9508474,"code":"play.reject","detail":"cooldown uid=17092572655233380602 from=57 +8192B age=7079ms"}
+{"ts":1790603539.9614549,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=569 +4096B age=7219ms prefetch"}
+{"ts":1790671280.138685,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790671283.3419683,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790671284.348307,"code":"msc.first_read","detail":"1005 ms"}
+{"ts":1790671284.4128594,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=120 +4096B age=1058ms prefetch"}
+{"ts":1790671284.8552856,"code":"play.reject","detail":"plug_window uid=7954708905983732813 from=2105 +4096B age=1504ms"}
+{"ts":1790671285.1392903,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=725 +2048B age=1781ms prefetch"}
+{"ts":1790671285.864062,"code":"play.reject","detail":"plug_window uid=17092572655233380602 from=57 +4096B age=2514ms"}
+{"ts":1790671285.9970503,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=569 +4096B age=2656ms prefetch"}
+{"ts":1790671286.4108868,"code":"play.reject","detail":"plug_window uid=8459731247190444814 from=1081 +4096B age=3059ms"}
+{"ts":1790671286.5913324,"code":"play.reject","detail":"plug_window uid=17092572655233380602 from=65 +4096B age=3242ms prefetch"}
+{"ts":1790671362.8869796,"code":"msc.quiet","detail":"file=1605632B age=75930ms"}
+{"ts":1790671363.5004628,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790671363.5615034,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=120 +4096B age=80215ms prefetch"}
+{"ts":1790671363.9710019,"code":"play.reject","detail":"seq_short uid=7954708905983732813 from=2105 +4096B age=80620ms"}
+{"ts":1790671363.9712336,"code":"msc.phase","detail":"play Hitradio RT1  90.2 MHz"}
+{"ts":1790671365.3706546,"code":"play.reject","detail":"cooldown uid=7954708905983732813 from=2105 +12288B age=80650ms"}
+{"ts":1790671365.3709862,"code":"play.reject","detail":"seq_short uid=17092572655233380602 from=65 +4096B age=80922ms prefetch"}
+{"ts":1790671365.3712595,"code":"play.reject","detail":"cooldown uid=17092572655233380602 from=65 +8192B age=80940ms"}
+{"ts":1790671365.3820798,"code":"play.reject","detail":"seq_short uid=8459731247190444814 from=1081 +4096B age=81048ms"}
+{"ts":1790671365.3823981,"code":"play.reject","detail":"cooldown uid=8459731247190444814 from=1081 +8192B age=81065ms"}
+{"ts":1790671365.382764,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=725 +2048B age=81242ms prefetch"}
+{"ts":1790671365.3831713,"code":"play.reject","detail":"seq_short uid=17092572655233380602 from=57 +4096B age=82029ms"}
+{"ts":1790671365.3938901,"code":"play.reject","detail":"cooldown uid=17092572655233380602 from=57 +8192B age=82047ms"}
+{"ts":1790671365.5448797,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=569 +4096B age=82193ms prefetch"}
+{"ts":1790672061.6734312,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790672064.2750087,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790672065.278616,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790672065.348626,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=120 +4096B age=1056ms prefetch"}
+{"ts":1790672065.8340406,"code":"play.reject","detail":"plug_window uid=7954708905983732813 from=2105 +4096B age=1549ms"}
+{"ts":1790672066.1469972,"code":"play.reject","detail":"not_from_head uid=17092572655233380602 from=725 +2048B age=1864ms prefetch"}
+{"ts":1790672123.6173491,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=120 +4096B age=55685ms prefetch"}
+{"ts":1790672123.8866794,"code":"play.reject","detail":"plug_window uid=16932289105042527414 from=57 +4096B age=55957ms"}
+{"ts":1790672124.1772318,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=120 +4096B age=56244ms prefetch"}
+{"ts":1790672269.7070415,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790672271.0230596,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790672272.034059,"code":"msc.first_read","detail":"1006 ms"}
+{"ts":1790672272.0905035,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=120 +4096B age=1055ms prefetch"}
+{"ts":1790672272.4766355,"code":"play.reject","detail":"plug_window uid=188988624349687751 from=1081 +4096B age=1446ms"}
+{"ts":1790672272.5737138,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=753 +4096B age=1543ms prefetch"}
+{"ts":1790672272.7392893,"code":"play.reject","detail":"plug_window uid=16932289105042527414 from=57 +4096B age=1707ms"}
+{"ts":1790672272.8831587,"code":"play.reject","detail":"plug_window uid=16932289105042527414 from=65 +4096B age=1850ms prefetch"}
+{"ts":1790672273.1656914,"code":"play.reject","detail":"plug_window uid=203333952560118293 from=2105 +4096B age=2134ms"}
+{"ts":1790672273.1911306,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=569 +4096B age=2164ms prefetch"}
+{"ts":1790672273.9965434,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=409 +73728B age=2964ms prefetch"}
+{"ts":1790672276.2799635,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790672276.2801757,"code":"msc.quiet","detail":"file=1605632B age=2018ms"}
+{"ts":1790672277.0442061,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790749048.831698,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=729 +4096B age=2093ms prefetch"}
+{"ts":1790749049.316686,"code":"play.reject","detail":"plug_window uid=203333952560118293 from=2105 +4096B age=2559ms"}
+{"ts":1790749049.5787675,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=725 +2048B age=2834ms prefetch"}
+{"ts":1790749050.0575018,"code":"play.reject","detail":"plug_window uid=16932289105042527414 from=57 +4096B age=3313ms"}
+{"ts":1790749050.0579019,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790749051.0827167,"code":"play.reject","detail":"cooldown uid=16932289105042527414 from=57 +16384B age=3350ms"}
+{"ts":1790749051.0832496,"code":"play.reject","detail":"not_from_head uid=16932289105042527414 from=569 +4096B age=3480ms prefetch"}
+{"ts":1790749055.1004505,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=120 +4096B age=8365ms prefetch"}
+{"ts":1790749055.650801,"code":"play.reject","detail":"plug_window uid=9476702390901929266 from=57 +4096B age=8898ms"}
+{"ts":1790749240.3565679,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790749240.3670478,"code":"msc.quiet","detail":"file=1612288B age=2039ms"}
+{"ts":1790749275.5651615,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790749283.6061082,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790749284.613584,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790749284.6761825,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=120 +4096B age=1059ms prefetch"}
+{"ts":1790749285.3359795,"code":"play.reject","detail":"plug_window uid=5679408291292205592 from=1081 +4096B age=1715ms"}
+{"ts":1790749285.5147827,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=729 +4096B age=1896ms prefetch"}
+{"ts":1790749285.942044,"code":"play.reject","detail":"plug_window uid=15773435517741805152 from=2105 +4096B age=2322ms"}
+{"ts":1790749286.215116,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=725 +2048B age=2597ms prefetch"}
+{"ts":1790749286.7081003,"code":"play.reject","detail":"plug_window uid=9476702390901929266 from=57 +4096B age=3090ms"}
+{"ts":1790749286.8513153,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=569 +4096B age=3232ms prefetch"}
+{"ts":1790749289.1121976,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790749289.1124775,"code":"msc.quiet","detail":"file=1605632B age=2003ms"}
+{"ts":1790749393.9757829,"code":"msc.quiet","detail":"file=1605632B age=106866ms"}
+{"ts":1790749478.932214,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790749487.5799086,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790749488.586402,"code":"msc.first_read","detail":"1006 ms"}
+{"ts":1790749488.6467597,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=120 +4096B age=1057ms prefetch"}
+{"ts":1790749489.1854868,"code":"play.reject","detail":"plug_window uid=5679408291292205592 from=1081 +4096B age=1594ms"}
+{"ts":1790749489.3673968,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=729 +4096B age=1778ms prefetch"}
+{"ts":1790749489.7412465,"code":"play.reject","detail":"plug_window uid=15773435517741805152 from=2105 +4096B age=2154ms"}
+{"ts":1790749490.0231297,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=725 +2048B age=2430ms prefetch"}
+{"ts":1790749490.5053859,"code":"play.reject","detail":"plug_window uid=9476702390901929266 from=57 +4096B age=2910ms"}
+{"ts":1790749490.637159,"code":"play.reject","detail":"not_from_head uid=9476702390901929266 from=569 +4096B age=3052ms prefetch"}
+{"ts":1790749492.9030993,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790749492.90331,"code":"msc.quiet","detail":"file=1605632B age=2003ms"}
+{"ts":1790749647.7332087,"code":"msc.quiet","detail":"file=1605632B age=156831ms"}
+{"ts":1790749648.34131,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790749648.457348,"code":"play.reject","detail":"not_from_head uid=4859771028461442081 from=120 +4096B age=160867ms prefetch"}
+{"ts":1790749648.4677434,"code":"msc.phase","detail":"play Zurueck"}
+{"ts":1790749649.4806623,"code":"play.reject","detail":"not_from_head uid=4859771028461442081 from=512 +4096B age=160900ms prefetch"}
+{"ts":1790749649.4809299,"code":"play.reject","detail":"already_playing uid=4859771028461442081 from=64 +4096B age=161108ms"}
+{"ts":1790749649.481077,"code":"play.reject","detail":"not_from_head uid=4859771028461442081 from=512 +4096B age=161126ms prefetch"}
+{"ts":1790749649.4914763,"code":"play.reject","detail":"already_playing uid=4859771028461442081 from=57 +4096B age=161574ms"}
+{"ts":1790749680.253186,"code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=192665ms prefetch"}
+{"ts":1790749750.5380347,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790750119.9741561,"code":"msc.quiet","detail":"file=1612288B age=360545ms"}
+{"ts":1790750123.1412656,"code":"msc.quiet","detail":"file=1612288B age=363718ms"}
+{"ts":1790750195.40906,"code":"play.reject","detail":"plug_window uid=14037496848256783396 from=57 +4096B age=1581ms"}
+{"ts":1790750195.5143816,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=1073 +4096B age=1680ms prefetch"}
+{"ts":1790750195.9791007,"code":"play.reject","detail":"plug_window uid=1628800432581751424 from=1081 +4096B age=2144ms"}
+{"ts":1790750196.0710468,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=753 +4096B age=2240ms prefetch"}
+{"ts":1790750196.4429085,"code":"play.reject","detail":"plug_window uid=7194960129032930190 from=2105 +4096B age=2619ms"}
+{"ts":1790750196.4781358,"code":"play.reject","detail":"not_from_head uid=1628800432581751424 from=1241 +4096B age=2650ms prefetch"}
+{"ts":1790750197.1030307,"code":"play.reject","detail":"plug_window uid=pump:page_next from=3129 +4096B age=3271ms"}
+{"ts":1790750199.103925,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790750199.1041367,"code":"msc.quiet","detail":"file=1612288B age=2003ms"}
+{"ts":1790779090.7421353,"code":"msc.quiet","detail":"file=557056B age=86699ms"}
+{"ts":1790779137.0378125,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=135080ms"}
+{"ts":1790779137.0382378,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1790779138.1932127,"code":"play.reject","detail":"cooldown uid=fav1 from=1081 +12288B age=135108ms"}
+{"ts":1790779138.1935737,"code":"play.reject","detail":"seq_short uid=fav0 from=65 +4096B age=135283ms prefetch"}
+{"ts":1790779138.1937847,"code":"play.reject","detail":"cooldown uid=fav0 from=65 +8192B age=135301ms"}
+{"ts":1790779138.1939702,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=135782ms"}
+{"ts":1790779138.2046425,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +8192B age=135799ms"}
+{"ts":1790779138.2050316,"code":"play.reject","detail":"not_from_head uid=fav0 from=725 +2048B age=136070ms prefetch"}
+{"ts":1790779144.8384612,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790779271.9631808,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790779274.7914526,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790779275.8088229,"code":"msc.first_read","detail":"1006 ms"}
+{"ts":1790779275.857789,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1059ms prefetch"}
+{"ts":1790779276.3951995,"code":"play.reject","detail":"plug_window uid=fav0 from=57 +4096B age=1599ms"}
+{"ts":1790779277.313185,"code":"play.reject","detail":"plug_window uid=fav2 from=2105 +4096B age=2515ms"}
+{"ts":1790779277.5946276,"code":"play.reject","detail":"not_from_head uid=fav0 from=725 +2048B age=2791ms prefetch"}
+{"ts":1790779277.9907131,"code":"play.reject","detail":"plug_window uid=fav1 from=1081 +4096B age=3183ms"}
+{"ts":1790779278.1240096,"code":"play.reject","detail":"plug_window uid=fav0 from=65 +4096B age=3319ms prefetch"}
+{"ts":1790779280.486616,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790779280.487066,"code":"msc.quiet","detail":"file=1605632B age=2003ms"}
+{"ts":1790779338.0669794,"code":"msc.quiet","detail":"file=1605632B age=59592ms"}
+{"ts":1790779341.277088,"code":"msc.quiet","detail":"file=1605632B age=62797ms"}
+{"ts":1790779343.928206,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790779343.981955,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=120 +4096B age=69183ms prefetch"}
+{"ts":1790779343.9927945,"code":"msc.phase","detail":"play Favoriten"}
+{"ts":1790779345.0057352,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=512 +4096B age=69225ms prefetch"}
+{"ts":1790779345.0059433,"code":"play.reject","detail":"already_playing uid=14037496848256783396 from=64 +4096B age=69534ms"}
+{"ts":1790779345.0060918,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=512 +4096B age=69553ms prefetch"}
+{"ts":1790779354.195606,"code":"play.reject","detail":"not_from_head uid=13172798796519771797 from=120 +4096B age=79399ms prefetch"}
+{"ts":1790779368.22211,"code":"play.reject","detail":"plug_window uid=3428222402667302393 from=2105 +4096B age=93416ms"}
+{"ts":1790779368.4913049,"code":"play.reject","detail":"not_from_head uid=13172798796519771797 from=725 +2048B age=93691ms prefetch"}
+{"ts":1790779378.4896188,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790779414.1308703,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790779417.465038,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790779418.4743335,"code":"msc.first_read","detail":"1006 ms"}
+{"ts":1790779418.5350707,"code":"play.reject","detail":"not_from_head uid=13172798796519771797 from=120 +4096B age=1059ms prefetch"}
+{"ts":1790779419.2646086,"code":"play.reject","detail":"plug_window uid=8229407486047634580 from=1081 +4096B age=1784ms"}
+{"ts":1790779419.4421287,"code":"play.reject","detail":"not_from_head uid=13172798796519771797 from=729 +4096B age=1966ms prefetch"}
+{"ts":1790779419.814221,"code":"play.reject","detail":"plug_window uid=3428222402667302393 from=2105 +4096B age=2338ms"}
+{"ts":1790779420.0860615,"code":"play.reject","detail":"not_from_head uid=13172798796519771797 from=725 +2048B age=2613ms prefetch"}
+{"ts":1790779420.5981953,"code":"play.reject","detail":"plug_window uid=13172798796519771797 from=57 +4096B age=3105ms"}
+{"ts":1790779420.8749294,"code":"play.reject","detail":"not_from_head uid=13172798796519771797 from=569 +4096B age=3248ms prefetch"}
+{"ts":1790779422.9860656,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790779422.9864461,"code":"msc.quiet","detail":"file=1605632B age=2003ms"}
+{"ts":1790779562.7751086,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790779562.7753885,"code":"msc.quiet","detail":"file=1605632B age=2003ms"}
+{"ts":1790779628.857174,"code":"msc.quiet","detail":"file=1605632B age=68087ms"}
+{"ts":1790779631.098576,"code":"msc.quiet","detail":"file=1605632B age=70329ms"}
+{"ts":1790779666.6760964,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790780040.3191807,"code":"msc.quiet","detail":"file=1605632B age=47195ms"}
+{"ts":1790780043.4520888,"code":"msc.quiet","detail":"file=1605632B age=50359ms"}
+{"ts":1790780086.27501,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790780276.3249187,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790780281.462968,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790780282.4699628,"code":"msc.first_read","detail":"1006 ms"}
+{"ts":1790780282.5253937,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=120 +4096B age=1056ms prefetch"}
+{"ts":1790780283.0902817,"code":"play.reject","detail":"plug_window uid=1628800432581751424 from=1081 +4096B age=1615ms"}
+{"ts":1790780283.264644,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=729 +4096B age=1796ms prefetch"}
+{"ts":1790780283.6974156,"code":"play.reject","detail":"plug_window uid=7194960129032930190 from=2105 +4096B age=2229ms"}
+{"ts":1790780283.9740844,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=725 +2048B age=2504ms prefetch"}
+{"ts":1790780284.48709,"code":"play.reject","detail":"plug_window uid=14037496848256783396 from=57 +4096B age=3016ms"}
+{"ts":1790780284.6179771,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=569 +4096B age=3159ms prefetch"}
+{"ts":1790780286.8832288,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790780286.8834314,"code":"msc.quiet","detail":"file=1605632B age=2003ms"}
+{"ts":1790780635.541844,"code":"msc.phase","detail":"scan dir"}
+{"ts":1790780635.6125622,"code":"msc.phase","detail":"play Stop"}
+{"ts":1790780636.6251774,"code":"play.reject","detail":"already_playing uid=7194960129032930190 from=2105 +8192B age=354162ms"}
+{"ts":1790780636.6254315,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=725 +2048B age=354437ms prefetch"}
+{"ts":1790780639.2730262,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=357809ms prefetch"}
+{"ts":1790780664.7331774,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790780698.2880561,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790780701.4869752,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790780702.498973,"code":"msc.first_read","detail":"1005 ms"}
+{"ts":1790780702.5640743,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1061ms prefetch"}
+{"ts":1790780703.1582685,"code":"play.reject","detail":"plug_window uid=fav0 from=57 +4096B age=1653ms"}
+{"ts":1790780704.1684134,"code":"play.reject","detail":"plug_window uid=fav2 from=2105 +4096B age=2663ms"}
+{"ts":1790780704.4430249,"code":"play.reject","detail":"not_from_head uid=fav0 from=725 +2048B age=2937ms prefetch"}
+{"ts":1790780704.837624,"code":"play.reject","detail":"plug_window uid=fav1 from=1081 +4096B age=3332ms"}
+{"ts":1790780704.9682746,"code":"play.reject","detail":"plug_window uid=fav0 from=65 +4096B age=3468ms prefetch"}
+{"ts":1790780707.3797424,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790780707.3802123,"code":"msc.quiet","detail":"file=1605632B age=2044ms"}
+{"ts":1790782515.7491019,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790782515.7492926,"code":"msc.quiet","detail":"file=557056B age=2002ms"}
+{"ts":1790782592.4030867,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790786484.1575081,"code":"msc.quiet","detail":"file=429568B age=278284ms"}
+{"ts":1790786504.245573,"code":"msc.quiet","detail":"file=429568B age=298375ms"}
+{"ts":1790786523.218459,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=338627ms"}
+{"ts":1790786523.2394235,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=338649ms"}
+{"ts":1790786533.1454778,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790786533.1907887,"code":"play.reject","detail":"seq_short uid=fav0 from=64 +4096B age=8078ms prefetch"}
+{"ts":1790786533.1911607,"code":"msc.phase","detail":"play Rock Antenne"}
+{"ts":1790786534.368122,"code":"play.reject","detail":"cooldown uid=fav0 from=64 +12288B age=8108ms"}
+{"ts":1790786822.5193455,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790786825.569201,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=17336ms"}
+{"ts":1790786825.5794837,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=17358ms"}
+{"ts":1790786827.5078223,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +98816B age=19279ms"}
+{"ts":1790786854.1075583,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790786857.0400488,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=27888ms"}
+{"ts":1790786857.4106936,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=28261ms"}
+{"ts":1790786858.4970531,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +16896B age=29350ms"}
+{"ts":1790786859.305576,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +28672B age=30150ms"}
+{"ts":1790786860.3909857,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +37376B age=31238ms"}
+{"ts":1790786861.5604548,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +49664B age=32411ms"}
+{"ts":1790786869.2929435,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790786869.293123,"code":"msc.quiet","detail":"file=49152B age=2003ms"}
+{"ts":1790834734.2647135,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790834734.2651596,"code":"msc.quiet","detail":"file=1083904B age=2003ms"}
+{"ts":1790834786.5407445,"code":"play.reject","detail":"not_from_head uid=fav0 from=969 +4096B age=56895ms prefetch"}
+{"ts":1790834788.721004,"code":"msc.quiet","detail":"file=1260032B age=2000ms"}
+{"ts":1790834793.546145,"code":"play.reject","detail":"not_from_head uid=fav0 from=649 +4096B age=63900ms prefetch"}
+{"ts":1790834795.70475,"code":"msc.quiet","detail":"file=1436160B age=2000ms"}
+{"ts":1790834940.1818073,"code":"play.reject","detail":"not_from_head uid=fav0 from=729 +4096B age=210537ms prefetch"}
+{"ts":1790834942.34136,"code":"msc.quiet","detail":"file=1612288B age=2000ms"}
+{"ts":1790834998.0926442,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790835001.5990143,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790835002.6022258,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790835002.6651673,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1060ms prefetch"}
+{"ts":1790835003.1122048,"code":"play.reject","detail":"plug_window uid=fav2 from=2105 +4096B age=1505ms"}
+{"ts":1790835003.437514,"code":"play.reject","detail":"not_from_head uid=fav0 from=969 +4096B age=1830ms prefetch"}
+{"ts":1790835005.6068866,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790835005.6073444,"code":"msc.quiet","detail":"file=557056B age=2003ms"}
+{"ts":1790835009.8765926,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=8265ms"}
+{"ts":1790835009.8770235,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1790835011.0475411,"code":"play.reject","detail":"cooldown uid=fav1 from=1081 +12288B age=8293ms"}
+{"ts":1790835011.0478146,"code":"play.reject","detail":"seq_short uid=fav0 from=65 +4096B age=8442ms prefetch"}
+{"ts":1790835011.0480266,"code":"play.reject","detail":"cooldown uid=fav0 from=65 +8192B age=8460ms"}
+{"ts":1790835090.5620496,"code":"play.reject","detail":"not_from_head uid=fav0 from=537 +4096B age=88951ms prefetch"}
+{"ts":1790835090.6938818,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=89095ms"}
+{"ts":1790835090.7046435,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=89110ms"}
+{"ts":1790835090.830977,"code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=89224ms prefetch"}
+{"ts":1790835745.1087744,"code":"msc.phase","detail":"scan boot"}
+{"ts":1790838864.0324152,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=3159110ms"}
+{"ts":1790838864.0498972,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=3159131ms"}
+{"ts":1790838866.2365584,"code":"msc.quiet","detail":"file=245760B age=2005ms"}
+{"ts":1790838867.2870924,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=3162359ms"}
+{"ts":1790838867.2974405,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=3162381ms"}
+{"ts":1790838867.3971682,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=3162468ms"}
+{"ts":1790838868.0771024,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=3163158ms"}
+{"ts":1790838869.4531317,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +12800B age=3164524ms"}
+{"ts":1790838870.8224804,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +20992B age=3165893ms"}
+{"ts":1790838872.1834042,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +29184B age=3167260ms"}
+{"ts":1790838873.5451596,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +37376B age=3168627ms"}
+{"ts":1790838874.9243994,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +45568B age=3169995ms"}
+{"ts":1790838876.2876608,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +53760B age=3171365ms"}
+{"ts":1790838877.666634,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +61952B age=3172731ms"}
+{"ts":1790838879.0246055,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +70144B age=3174099ms"}
+{"ts":1790838880.3925796,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +78336B age=3175468ms"}
+{"ts":1790838881.76714,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +86528B age=3176837ms"}
+{"ts":1790838883.7643955,"code":"msc.quiet","detail":"file=344064B age=2000ms"}
+{"ts":1790839013.1466854,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=18800ms"}
+{"ts":1790839023.762079,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +33280B age=8943ms"}
+{"ts":1790839025.1263506,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +41472B age=10307ms"}
+{"ts":1790839026.491886,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +49664B age=11672ms"}
+{"ts":1790839027.8563366,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +57856B age=13037ms"}
+{"ts":1790839029.2228398,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +66048B age=14402ms"}
+{"ts":1790839030.586872,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +74240B age=15767ms"}
+{"ts":1790839031.9523318,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +82432B age=17133ms"}
+{"ts":1790839033.323315,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +90624B age=18497ms"}
+{"ts":1790855149.5281386,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=16134555ms"}
+{"ts":1790855149.644488,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=16134668ms"}
+{"ts":1790855157.5927417,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +233472B age=6298ms prefetch"}
+{"ts":1790855158.4614358,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +274432B age=7165ms prefetch"}
+{"ts":1790855159.2599375,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +315392B age=7966ms prefetch"}
+{"ts":1790855160.0822635,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +368640B age=8795ms prefetch"}
+{"ts":1790855160.9231403,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +417792B age=9624ms prefetch"}
+{"ts":1790855161.761572,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +466944B age=10477ms prefetch"}
+{"ts":1790855162.6152759,"code":"play.reject","detail":"not_from_head uid=fav0 from=73 +516096B age=11320ms prefetch"}
+{"ts":1790855164.6050363,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790855164.6054254,"code":"msc.quiet","detail":"file=516096B age=2003ms"}
+{"ts":1790855256.30157,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=105006ms"}
+{"ts":1790855256.3854346,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=105089ms"}
+{"ts":1790855258.4421248,"code":"msc.quiet","detail":"file=528384B age=2000ms"}
+{"ts":1790855286.649242,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=135349ms"}
+{"ts":1790855286.7197263,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=135432ms"}
+{"ts":1790855288.7168963,"code":"msc.quiet","detail":"file=536576B age=2000ms"}
+{"ts":1790855291.929114,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=140643ms"}
+{"ts":1790855292.0275257,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=140736ms"}
+{"ts":1790855292.9629576,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +36864B age=141665ms"}
+{"ts":1790855293.8807302,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +61440B age=142585ms"}
+{"ts":1790855296.574361,"code":"msc.quiet","detail":"file=618496B age=2000ms"}
+{"ts":1790855474.976232,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=323678ms"}
+{"ts":1790855573.2142484,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=96584ms"}
+{"ts":1790855573.2735612,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=96640ms"}
+{"ts":1790855575.3217003,"code":"msc.quiet","detail":"file=73728B age=2000ms"}
+{"ts":1790855603.4471033,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=126813ms"}
+{"ts":1790855603.5086253,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=126873ms"}
+{"ts":1790855605.4987345,"code":"msc.quiet","detail":"file=81920B age=2000ms"}
+{"ts":1790855608.6566224,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=132021ms"}
+{"ts":1790855608.7166886,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=132086ms"}
+{"ts":1790855609.6773396,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +36864B age=133042ms"}
+{"ts":1790855610.5991323,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +61440B age=133964ms"}
+{"ts":1790855613.319606,"code":"msc.quiet","detail":"file=163840B age=2000ms"}
+{"ts":1790855660.0868406,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=183459ms"}
+{"ts":1790855660.2629666,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=183628ms"}
+{"ts":1790855662.5629642,"code":"msc.quiet","detail":"file=180224B age=2000ms"}
+{"ts":1790855690.0042603,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=213379ms"}
+{"ts":1790855726.72131,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=35032ms"}
+{"ts":1790855726.7668035,"code":"msc.phase","detail":"play Rock Antenne"}
+{"ts":1790855727.9420013,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=35176ms"}
+{"ts":1790855739.786116,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=48105ms"}
+{"ts":1790855828.3937967,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=86934ms"}
+{"ts":1790855828.51557,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=87051ms"}
+{"ts":1790855830.800472,"code":"msc.quiet","detail":"file=45056B age=2000ms"}
+{"ts":1790855899.5738668,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=158111ms"}
+{"ts":1790855933.4429283,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=32203ms"}
+{"ts":1790855933.486869,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1790855938.9028227,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=37671ms"}
+{"ts":1790855983.1273208,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=81889ms"}
+{"ts":1790855983.190235,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=81950ms"}
+{"ts":1790856053.9078615,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=152671ms"}
+{"ts":1790856054.0912478,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=152851ms"}
+{"ts":1790856084.5462973,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=183304ms"}
+{"ts":1790856084.6055472,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=183364ms"}
+{"ts":1790856134.0629082,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=232828ms"}
+{"ts":1790856134.1334167,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=232894ms"}
