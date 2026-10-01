@@ -764,8 +764,10 @@ Zwei getrennte Ursachen, beide gemessen:
 
 **Zahlen-Split 20:03 BOB** (`overlay_warm` @ esp_ms 37981): vor Warm Slot-Reads (jsonl) fav2≈346 KiB + fav0≈178 KiB; **nach Warm 0**; Status-Zähler `preWarmHostBytes=182272` (nur Silence am pending-uid).
 
+**Zwei pre-Warm-Messpunkte (nicht vermischen):** `pre=182272` (BOB 20:03, alleiniger Favorit-Burst) vs. `pre≈215040` (BOB-Pass in der längeren ~19:49-Session mit Parallel-Traffic auf fav0) — beide „HU liest Silence vor Live“, unterschiedliche Randbedingungen.
+
 - Artefakte: [`artifacts-2026-10-01-abend/`](artifacts-2026-10-01-abend/) (inkl. 173-Zeilen `*-pre-195505.jsonl`)
-- Traces: `esp32.pidrive/tools/traces/feld_bob_2003_prewarm` · `feld_1949_session` · `feld_prefetch_then_warm_gentle`
+- Traces: `feld_bob_2003_prewarm` (kumulatives `t_ms`, Export-Fix) · `feld_1949_session` · Lab-Regression `feld_prefetch_then_warm_gentle` (`nbt_suite` id `prefetch_then_warm`)
 - **0.4.34** Reboot-Fix (Critical→Mutex); **0.4.35** play_uid-Replay — morgen Auto-OTA
 
 

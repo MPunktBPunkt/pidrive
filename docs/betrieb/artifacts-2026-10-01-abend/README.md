@@ -27,6 +27,7 @@
 
 ## Lab-Traces (exportiert)
 
-- `feld_bob_2003_prewarm.replay.json`
-- `feld_1949_session.replay.json`
-- `feld_prefetch_then_warm_gentle.replay.json` (~180 KiB @ 4 KiB/150 ms, SG-sicher)
+- `feld_bob_2003_prewarm.replay.json` — kumulatives `t_ms` (Export-Fix: nicht `+= gap`)
+- `feld_bob_2003_prewarm_head.replay.json` — erste 7×4 KiB, SG-Smoke für Timing
+- `feld_1949_session.replay.json` — 173 Burst-Zeilen; Meta `pre≈215040` (anderer Pass als 182272)
+- `feld_prefetch_then_warm_gentle.replay.json` (~180 KiB @ 4 KiB/150 ms) — `nbt_suite` Szenario `prefetch_then_warm`
