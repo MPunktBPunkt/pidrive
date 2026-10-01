@@ -1,0 +1,3 @@
+{"ts":1790877797.2133667,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=34441ms"}
+{"ts":1790877798.4181569,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +12288B age=34465ms"}
+{"ts":1790877798.4653058,"code":"play.reject","detail":"not_from_head uid=fav0 from=969 +4096B age=34784ms prefetch"}

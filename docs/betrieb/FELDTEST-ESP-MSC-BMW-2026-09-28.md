@@ -743,6 +743,13 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 **Artefakte:** [`artifacts-2026-10-01-heimabend/`](artifacts-2026-10-01-heimabend/)  
 **Nächster Code:** ~~`msc.reads`-Streaming~~ **0.4.32-dev Lab** (Drain/`msc_reads.jsonl`/Exporter) — OTA Auto `.89` offen; Play-Detect nach Index/Quiet weiter schärfen.
 
+### 11.6 Feldabend 2026-10-01 ~19:48–20:07 (0.4.34)
+
+- **Reboot-Fix 0.4.34** (Critical→Mutex): `hello_ack` wieder ok; Lab-Smoke `msc.reads` grün.
+- **Ton aus:** mehrfach `play.guess` ok, aber (a) `pump.tcp.down` verpasst `play_uid`/ffmpeg, (b) `msc.overlay_warm … pre≈182 KiB` dann **0 Live-Reads** (`streamBytes=0`) — HU-Silence-Cache.
+- Artefakte: [`artifacts-2026-10-01-abend/`](artifacts-2026-10-01-abend/) · FW-Follow-up **0.4.35** play_uid-Replay auf hello; B6 Cache-Hebel offen.
+
+
 ```bash
 # Status / Trace-Snapshot
 curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,plug:.msc.msSincePlug,phase:.msc.phase,stream:.stream,trace:(.msc.trace|length)}'
