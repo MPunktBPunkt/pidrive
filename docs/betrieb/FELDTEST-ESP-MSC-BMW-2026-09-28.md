@@ -770,6 +770,19 @@ Zwei getrennte Ursachen, beide gemessen:
 - Traces: `feld_bob_2003_prewarm` (kumulatives `t_ms`, Export-Fix) · `feld_1949_session` · Lab-Regression `feld_prefetch_then_warm_gentle` (`nbt_suite` id `prefetch_then_warm`)
 - **0.4.34** Reboot-Fix (Critical→Mutex); **0.4.35** play_uid-Replay — morgen Auto-OTA
 
+### 11.7 Lab 0.4.36 — B6-Pfad + Suite-Automation
+
+| Metrik | B5 (Warmup=8 KiB) | Lab 0.4.36 (Warmup=0) |
+|--------|-------------------|------------------------|
+| `preWarmHostBytes` | ≈182 KiB | **0** |
+| Prefetch ~180 KiB | Silence-Slot, `streamBytes=0` | **Live-Pfad, `streamBytes=180224`** |
+| `live_ratio` | n/a | ≈0.29 (Underrun-Silence; Ring-Präfill nächster Hebel) |
+
+Suite (`nbt_report`/`nbt_suite`, Baseline `tools/reports/baseline-20261001-b6-036/` in esp32.pidrive):
+
+- `pre_warm_bytes` **PASS** · `stream_after_arm` **PASS** · `overlay_live` **WARN** (`live_ratio`)
+- Nächster Lab-/Pi-Hebel: Ring vor Burst füllen → `live_ratio` → 1.0
+
 
 ```bash
 # Status / Trace-Snapshot
