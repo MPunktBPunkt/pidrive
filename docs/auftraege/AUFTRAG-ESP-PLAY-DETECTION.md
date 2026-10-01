@@ -60,7 +60,8 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] **B5** Warmup vor Overlay — FW **0.4.29** `msc.overlay_warm` ab 8 KiB Ring  
 - [ ] Optional: 1-Slot-Geometrie vs. 3×512 KiB (Messung)  
 - [x] Optional parallel: ESP2 Lab **`.88`** + Host-Burst/`lab_overlay_consume.py` am Proxmox  
-- [x] **NBT-Replay-Harness** Phase 1 (SG_IO Suite, Traces ≤16 KiB lab-safe) — [esp32.pidrive AUFTRAG](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-NBT-REPLAY-HARNESS.md)
+- [x] **NBT-Replay-Harness** Phase 1 (SG_IO Suite, Traces ≤16 KiB lab-safe) — [esp32.pidrive AUFTRAG](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-NBT-REPLAY-HARNESS.md)  
+- [ ] Danach: [`msc.reads`-Streaming](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-MSC-READS-STREAMING.md) (Drain-Task, jsonl, echte Traces) — Format nach Feld-Ohr dimensionieren
 
 ### I3
 

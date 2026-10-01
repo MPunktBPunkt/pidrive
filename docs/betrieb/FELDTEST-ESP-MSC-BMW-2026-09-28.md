@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-01 — Auto-Feld mit **0.4.29** (B2 Stille statt Testton; Overlay grün, HU-Cache); Lab **`.88` = 0.4.31-dev** (**B4** sequential cursor SoftAP pass).  
+**Stand Diagnose:** 2026-10-01 Abend — Heimabend-Runbook §11.5; Lab **`.88` = 0.4.31-dev**; Auto **`.89`** OTA auf 0.4.31 offen.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -706,6 +706,37 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~08:06–08:12 | Auto `.89` 0.4.29; B2 Stille; Guess+Overlay ohne Live-Ohr (Cache) |
 | ~08:12+ | Auto offline; Lab OTA **0.4.30**; B4 SoftAP+MSC pass (§11.4) |
 | ~09:15+ | Lab **0.4.31** sequential cursor SoftAP pass; paced MSC-Burst unzuverlässig (§11.4) |
+| ~13:40–14:00 | NBT-Replay-Harness Phase 1 + Suite Baseline; Sync-Marker-Protokoll |
+| ~17:00+ | **Heimabend** (§11.5): OTA `.89` → 0.4.31, Bridge, Ohr-Test B4, Read-Muster notieren |
+
+---
+
+### 11.5 Heimabend 2026-10-01 — Runbook (Auto `.89`)
+
+**Ziel:** 0.4.31 im Auto, Ohr-Test nach Senderwechsel/Quiet, Read-Muster für `msc.reads`-Auftrag.
+
+**Bereit (Lab):** OTA-Bin `dist/pidrive.0.4.31-dev.ota.esp32s3.bin` · Bridge-Unit zielt auf `.89` · Harness Baseline grün (gentle).
+
+| # | Schritt | Check |
+|---|---------|--------|
+| 0 | Sync-Marker: Handy-Uhr + OTG kurz oder Lab-Play; Status sichern | `uptime` `msSincePlug` `usbSerial` `remountGen` |
+| 1 | `.89` online? | `curl -s http://192.168.178.89/api/status \| jq .version` |
+| 2 | Bridge starten | auf Pi: `sudo systemctl start pidrive_pump_bridge` → `pumpTcpUp` |
+| 3 | OTA 0.4.31 | SoftAP `POST /ota-upload` oder vom Pi mit gestagtem Bin |
+| 4 | Nach Reboot: Version + Serial | `0.4.31-dev`, `PDnnnn` sticky |
+| 5 | **Ohr** | Senderwahl / nach Quiet / Scroll: Live-Ton? Stub? Stille trotz Overlay? |
+| 6 | **Read-Muster notieren** (für msc.reads) | wenige große / viele 4 KiB / nur Head / Quiet-Dauer |
+| 7 | Trace sichern | `/api/status` → `msc.trace` + diag-jsonl rotieren; Pass-Notiz mit Uhrzeit |
+
+**Danach (nicht heute flashen):** [AUFTRAG-MSC-READS-STREAMING](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-MSC-READS-STREAMING.md).
+
+```bash
+# Status / Trace-Snapshot
+curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,plug:.msc.msSincePlug,phase:.msc.phase,stream:.stream,trace:(.msc.trace|length)}'
+
+# OTA vom Pi (Bin liegt unter /home/pidrive/dist/ nach Staging)
+# curl -sS -F "file=@/home/pidrive/dist/pidrive.0.4.31-dev.ota.esp32s3.bin" http://192.168.178.89/ota-upload
+```
 
 ---
 
@@ -734,7 +765,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 ### 15.0 Mini-Checkliste vor jedem Feldtest
 
 1. Neue `pump_bridge.py` deployed + `systemctl restart pidrive_pump_bridge`  
-2. FW am ESP: `curl -s http://<esp>/api/status | jq .version` — ideal **`0.4.26-dev`** (Nav-Fix + Serial-Bump)  
+2. FW am ESP: `curl -s http://<esp>/api/status | jq .version` — Ziel **`0.4.31-dev`** (B4 sequential cursor)  
 3. Log-Filter läuft (unten)  
 4. Reconnect-Methode für Pass B festgelegt: **`systemctl restart pidrive_pump_bridge`** (bevorzugt; nicht „WLAN kurz weg“)  
 5. Protokoll-Spalten: Grace-Hits **A** vs. **B** getrennt · `snapshot resent` ja/nein · `unknown` ja/nein · Blind-`audio_start` nach unknown ja/nein · C: BMW-Anzeige vs. `page=`  
