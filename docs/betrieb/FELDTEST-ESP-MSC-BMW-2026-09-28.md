@@ -741,7 +741,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | `msc.trace` | in Snapshots **leer** → kein 1:1-LBA-Replay; Synthese `feld_heimabend_6s_cache` |
 
 **Artefakte:** [`artifacts-2026-10-01-heimabend/`](artifacts-2026-10-01-heimabend/)  
-**Nächster Code:** `msc.reads`-Streaming (nicht Callback) → echte Traces; Play-Detect nach Index/Quiet schärfen.
+**Nächster Code:** ~~`msc.reads`-Streaming~~ **0.4.32-dev Lab** (Drain/`msc_reads.jsonl`/Exporter) — OTA Auto `.89` offen; Play-Detect nach Index/Quiet weiter schärfen.
 
 ```bash
 # Status / Trace-Snapshot
