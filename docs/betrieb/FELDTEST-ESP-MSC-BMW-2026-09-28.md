@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-02 — Auto **0.4.36-dev** (§11.8); Bridge-Guard-Fix (§11.9); Lab **`.88` = 0.4.36-dev**; nächster Hebel **60‑s-Feldtest**, nicht Präfill.  
+**Stand Diagnose:** 2026-10-02 — Auto **0.4.36-dev** (§11.8); Bridge-Guard-Fix (§11.9); **nächster Nachweis §15.3** (60 s Live-Reads vs. Cache, Sender isoliert).  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -843,10 +843,10 @@ Artefakte: [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/).
 **Nächste Schritte (Reihenfolge):**
 
 1. ~~Lab-Gegenprobe Guard~~ — **PASS** §11.9  
-2. Feld daheim: 60 s Hörpass je UID mit Sync-Marker + Status **sofort nach** Hören (`streamBytes`/`underruns`/`slotMap`/`play_uid`)  
+2. **60‑s-Feldtest** je UID (§15.3) — Reads **durchgehend**, Sender **isoliert**, Artefakte auf GitHub  
 3. Burst-Replay (512 KiB/~0,6 s Trace) im Lab; Suite vor Prefetch auf Ziel-UID+size armed  
 4. Präfill / größerer Ring **erst danach** (Erwartung live_ratio≤~0,27 ohne größeren Ring)  
-5. Architekturfrage dokumentieren: erzwingt die HU überhaupt wiederholte Live-Reads?
+5. Architekturfrage: erzwingt die HU überhaupt wiederholte Live-Reads?
 
 ```bash
 curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,stream:.stream,sb:.msc.streamBytes,under:.stream.underruns}'
@@ -866,7 +866,7 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 5. **B2…B5** erst nach B0/B1.  
 6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).  
 7. ~~Bridge `ignore rapid` / `last_audio_log`~~ — **fix** 2026-10-02 (§11.9).  
-8. **60‑s-Feldtest** mit Sync-Marker + Status nach jedem Hörpass (§11.8/11.9).  
+8. **60‑s-Feldtest** — Protokoll §15.3 · Tool `tools/feld_60s_live_pass.py` · Ergebnisse → GitHub.  
 9. Burst-Replay HU-Rate (~900 KiB/s) im Lab; erst dann Ring/Präfill.
 
 ### Offene Fragen
@@ -896,6 +896,38 @@ journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace 
 ```
 
 **Link:** Spontane Reconnects bei schlechtem STA (−76 dBm) sind **kein** Snapshot-Fail — als „A unter realem Link“ markieren. Ideal SoftAP-direkt oder UART für A/C.
+
+### 15.3 60‑s Live-Read-Feldtest (zentrale Frage 2026-10-02)
+
+> **Frage:** Liest die BMW-NBT **während laufender Wiedergabe** weiter Live-MSC-Daten (`streamBytes`↑, `msc.reads` nach dem Erst-Burst), oder nur **einmal Burst + Cache**?  
+> Das ist der aktuelle Kern von PiDrive — **nicht** die Ringgröße. Guard-Fix (§11.9) muss deployed sein.
+
+**Harte Regeln (GPT):**
+
+1. **`msc.reads`-Aufzeichnung über die gesamten 60 s** — Bridge auf `.89` läuft; `/tmp/pidrive_msc_reads.jsonl` wächst im Hörfenster (Tool prüft Offset-Delta). Kein „nur um play_uid herum“-Slice.
+2. **Jeder Sender getrennt** — eigener Pass/Ordner für `fav0` / `fav1` / `fav2`. Ein erfolgreicher fav0-Lauf ist **kein** Nachweis für fav1.
+3. **Sync-Marker + Ohr** in `EAR.txt`; Status vorher/während/nachher.
+
+**Ablauf (pro UID):**
+
+| Schritt | Aktion |
+|---------|--------|
+| 0 | Bridge → `.89`, Guard-Fix, ESP `0.4.36-dev`, WLAN Fritz (kein Hotspot-SSID-Klon) |
+| 1 | `python3 tools/feld_60s_live_pass.py --uid fav0 --note "HH:MM sync"` |
+| 2 | ENTER wenn bereit → im Auto Sender wählen → **60 s hören** (Tool pollt Status + jsonl-Größe) |
+| 3 | `EAR.txt` ausfüllen; Ordner unter `docs/betrieb/artifacts-YYYY-MM-DD-60s/fav0-…/` |
+| 4 | Schritt 1–3 für **fav1**, dann **fav2** (je neuem Aufruf) |
+| 5 | **Commit + Push** Artefakte + Kurzfazit in diesem Feldbericht (§11.x) |
+
+**Auswertung (pro Ordner isoliert):**
+
+| Muster | Lesart |
+|--------|--------|
+| `msc_reads` nur erste ~1 s, dann 0; `streamBytes_delta≈0`; Ton trotzdem da | **HU-Cache** (oder Stub) — Live-Pfad nicht konsumiert |
+| `msc_reads` über die 60 s verteilt; `streamBytes_delta` ≈ Hördauer×Bitrate | **Live-Reads** während Wiedergabe |
+| Bridge `ignore rapid` / `No route` im Slice | Pass ungültig — Link/Guard, nicht HU-Urteil |
+
+Tool: [`tools/feld_60s_live_pass.py`](../../tools/feld_60s_live_pass.py).
 
 ### 15.1 Feldtest Baustelle A (jetzt)
 
