@@ -82,8 +82,8 @@ REMOTE
 
 curl -sS "$ESP89/api/status" | python3 -c 'import sys,json;d=json.load(sys.stdin);print("pumpTcp",d.get("pumpTcpUp"),d.get("pumpTcpPeer"),"fw",d.get("version"))'
 echo
-echo "Ready for 60s passes:"
-echo "  python3 tools/feld_60s_live_pass.py --uid fav0 --note \"HH:MM sync\""
-echo "  python3 tools/feld_60s_live_pass.py --uid fav1 --note \"HH:MM sync\""
-echo "  python3 tools/feld_60s_live_pass.py --uid fav2 --note \"HH:MM sync\""
-echo "Then ask agent to commit artifacts + §11 update, or: git add docs/betrieb/artifacts-\$(date +%Y-%m-%d)-60s/"
+echo "Ready for B7 (≥150s, FW 0.4.36 — no FW change):"
+echo "  python3 tools/feld_150s_slot_pass.py --uid fav1 --note \"HH:MM OTG PDxxxx\""
+echo "  # then optional switches in same mount; fill EAR stopwatch"
+echo "Legacy 60s tool still available: tools/feld_60s_live_pass.py"
+echo "Then: git add docs/betrieb/artifacts-\$(date +%Y-%m-%d)-b7/ + §11 update"

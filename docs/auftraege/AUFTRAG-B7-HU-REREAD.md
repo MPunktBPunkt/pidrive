@@ -37,7 +37,21 @@ Kurz:
 - `readOverflow` = Telemetrie-Queue-Drops, **kein** USB-Fail.
 - `live_ratio` = Harness-KPI, kein Statusfeld.
 
-## Auftrag A — 150 s Einzelpass (Auto)
+## Vorbereitung (2026-10-02) — **keine FW-Änderung**
+
+| Item | Status |
+|------|--------|
+| FW Auto/Lab | **0.4.36-dev belassen** — kein OTA, kein Ring, kein Probe-Fork |
+| Zählersemantik | dokumentiert (`COUNTER-SEMANTICS.md`) |
+| Tool | `tools/feld_150s_slot_pass.py` (Poll 2 s, Orientierungsmarken, EAR-Stoppuhr) |
+| Homecoming | `tools/feld_prepare_homecoming.sh` → Bridge `.89`, FW-Check |
+
+```bash
+./tools/feld_prepare_homecoming.sh
+python3 tools/feld_150s_slot_pass.py --uid fav1 --note "HH:MM OTG PDxxxx"
+```
+
+---
 
 1. Frischer OTG-Replug, Sync-Marker **vor** Senderwahl.  
 2. Eine Station ≥150 s; Stoppuhr Ohr (Start/Stop).  
