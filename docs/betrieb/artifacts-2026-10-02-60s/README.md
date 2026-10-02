@@ -22,4 +22,6 @@
 | `fav1-bayern-1546` | ~15:46 Ohr Bayern | 60s poll: rc/sb eingefroren; Bridge forwarded weiter |
 | `EAR-1541-1542.txt` | Sync-Notizen | BOB/Rock Antenne: Bild + kurze Sekunden Ton |
 
+| `replug-1550-note` | OTG ~15:50 | gleiches Verhalten; Session-Ende |
+
 FW `0.4.36-dev` · Guard-Fix · Bridge Pi `.105` → ESP `.89:9090`.

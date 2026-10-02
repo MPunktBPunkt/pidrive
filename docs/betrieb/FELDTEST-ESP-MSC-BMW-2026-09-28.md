@@ -717,6 +717,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~10:30+ | Review Claude/GPT: Präfill-These widerlegt; Bridge `ignore rapid`-Bug (§11.9 Fix) |
 | ~14:56+ | Lab-Dryrun 60 s-Tool `fav0-145621`; Homecoming-Prep |
 | ~15:36–15:48 | **Feld 60 s** Auto (§11.10): fav2/fav1 + Replugs → **Burst+Cache**; Artefakte `artifacts-2026-10-02-60s/` |
+| ~15:50 | OTG Replug — gleiches Kurzton/Cover-Verhalten (§11.10 bestätigt); Session Ende |
 
 ---
 

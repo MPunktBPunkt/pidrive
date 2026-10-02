@@ -29,3 +29,5 @@ Liest die BMW NBT während Wiedergabe kontinuierlich Live-MSC-Daten?
 ## Fazit für Architektur
 
 HU konsumiert nach Auswahl einen kurzen MSC-Burst (Cover/ID3/Anfang), speichert/cached, liest den Live-Stream-Bereich **nicht** kontinuierlich nach. Dauerhaftes Live-Streaming über MSC-Readahead ist damit **kein** belastbarer Feld-Pfad ohne weiteres HU-/Protokoll-Umdenken.
+
+| `replug-1550-note` | OTG ~15:50 | gleiches Kurzton/Cover-Verhalten | Bestätigung §11.10; User Ende Session |
