@@ -39,6 +39,8 @@ Kurz:
 
 ## Vorbereitung (2026-10-02) — **keine FW-Änderung**
 
+Morgen-Checkliste: [`../betrieb/B7-MORGEN-CHECKLISTE.md`](../betrieb/B7-MORGEN-CHECKLISTE.md) · Ring/BT-Papier: [`../betrieb/POST-1110-RING-BT-NOTES.md`](../betrieb/POST-1110-RING-BT-NOTES.md)
+
 | Item | Status |
 |------|--------|
 | FW Auto/Lab | **0.4.36-dev belassen** — kein OTA, kein Ring, kein Probe-Fork |
@@ -51,7 +53,7 @@ Kurz:
 python3 tools/feld_150s_slot_pass.py --uid fav1 --note "HH:MM OTG PDxxxx"
 ```
 
----
+## Auftrag A — 150 s Einzelpass (Auto)
 
 1. Frischer OTG-Replug, Sync-Marker **vor** Senderwahl.  
 2. Eine Station ≥150 s; Stoppuhr Ohr (Start/Stop).  

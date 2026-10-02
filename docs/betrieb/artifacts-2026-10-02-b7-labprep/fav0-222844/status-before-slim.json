@@ -1,0 +1,70 @@
+{
+  "ts_wall": 1790972924.2644577,
+  "version": "0.4.36-dev",
+  "uptime": "25h 30min",
+  "playingUid": "fav0",
+  "playingName": "Rock Antenne",
+  "pumpTcpUp": false,
+  "pumpTcpPeer": "",
+  "usbSerial": "PD0006",
+  "remountGen": 6,
+  "phase": "play",
+  "readCount": 1271,
+  "lastReadLba": 760,
+  "bytesFile": 1703936,
+  "bytesRead": 1786880,
+  "streamBytes": 1224704,
+  "preWarmHostBytes": 0,
+  "readOverflow": 0,
+  "playRejectCount": 1231,
+  "msSincePlug": 91830892,
+  "stream": {
+    "active": true,
+    "uid": "fav0",
+    "size": 49152,
+    "underruns": 0,
+    "id3Len": 3511,
+    "hasCover": true,
+    "cursorArmed": true,
+    "hostAbsCursor": 14633775,
+    "headResyncs": 9
+  },
+  "slotMap": [
+    {
+      "uid": "fav0",
+      "name": "Rock Antenne",
+      "bytes": 516096,
+      "maxSeq": 360448,
+      "fromHead": 35,
+      "lba0": 57,
+      "lba1": 1080
+    },
+    {
+      "uid": "fav1",
+      "name": "Rock Antenne Bayern",
+      "bytes": 98304,
+      "maxSeq": 61440,
+      "fromHead": 21,
+      "lba0": 1081,
+      "lba1": 2104
+    },
+    {
+      "uid": "fav2",
+      "name": "Radio BOB!",
+      "bytes": 1089536,
+      "maxSeq": 180224,
+      "fromHead": 12,
+      "lba0": 2105,
+      "lba1": 3128
+    },
+    {
+      "uid": "pump:page_next",
+      "name": "Menue",
+      "bytes": 0,
+      "maxSeq": 0,
+      "fromHead": 0,
+      "lba0": 3129,
+      "lba1": 3141
+    }
+  ]
+}

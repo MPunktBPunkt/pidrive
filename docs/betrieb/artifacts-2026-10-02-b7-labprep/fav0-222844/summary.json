@@ -1,0 +1,79 @@
+{
+  "pass": "B7-150s",
+  "uid": "fav0",
+  "note": "lab smoke 22:28 no BMW",
+  "esp": "http://192.168.178.88",
+  "pi": "pidrive@192.168.178.105",
+  "bridge_log": "/tmp/pump_bridge_manual.log",
+  "seconds": 12.0,
+  "poll": 2.0,
+  "fw_required": "0.4.36-dev (no change)",
+  "orientation_s": [
+    28.0,
+    87.0,
+    120.0,
+    150.0
+  ],
+  "jsonl_offsets": {
+    "reads": 141447,
+    "diag": 22322,
+    "bridge": 1121694
+  },
+  "central_question": "After mount-scan cache, does NBT re-read MSC past slot/track orientation marks?",
+  "wall_start": 1790972924.9307919,
+  "wall_end": 1790972938.1796024,
+  "duration_s": 13.25,
+  "msc_reads_file_delta_B": 0,
+  "diag_file_delta_B": 0,
+  "bridge_file_delta_B": 366,
+  "analysis": {
+    "ok_samples": 7,
+    "live_samples": 0,
+    "readCount_delta": 0,
+    "streamBytes_delta": 0,
+    "readOverflow_delta": 0,
+    "first_live_t": null,
+    "last_live_t": null,
+    "playingUid_matches_pass_uid": true,
+    "playingUids_seen": [
+      "fav0"
+    ],
+    "orientation_snapshots": {
+      "t≈28s": {
+        "t_rel": 12.71,
+        "readCount": 1271,
+        "streamBytes": 1224704,
+        "lastReadLba": 760,
+        "playingUid": "fav0"
+      },
+      "t≈87s": {
+        "t_rel": 12.71,
+        "readCount": 1271,
+        "streamBytes": 1224704,
+        "lastReadLba": 760,
+        "playingUid": "fav0"
+      },
+      "t≈120s": {
+        "t_rel": 12.71,
+        "readCount": 1271,
+        "streamBytes": 1224704,
+        "lastReadLba": 760,
+        "playingUid": "fav0"
+      },
+      "t≈150s": {
+        "t_rel": 12.71,
+        "readCount": 1271,
+        "streamBytes": 1224704,
+        "lastReadLba": 760,
+        "playingUid": "fav0"
+      }
+    },
+    "verdict_hints": {
+      "reread_if": "readCount rises after t>~10s (past mount burst) especially near ~28s/~87s",
+      "cache_only_if": "readCount flat for full ≥150s after select while audio heard",
+      "uid_verdict_valid_if": "playingUid always == fav0",
+      "read_flat_still_valid_if_uid_mismatch": true
+    }
+  },
+  "playing_after": "fav0"
+}

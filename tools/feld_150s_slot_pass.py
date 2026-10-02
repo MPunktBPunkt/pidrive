@@ -168,7 +168,10 @@ def analyze_polls(polls: list[dict], expected_uid: str) -> dict:
     uid_ok = all(p.get("playingUid") == expected_uid for p in ok)
     uid_set = sorted({p.get("playingUid") for p in ok})
     markers = {}
+    tmax = float(ok[-1].get("t_rel") or 0)
     for t_mark in ORIENT_S:
+        if t_mark > tmax + 1.0:
+            continue  # don't fake marks beyond the actual listen window
         near = min(ok, key=lambda p: abs(float(p.get("t_rel") or 0) - t_mark))
         markers[f"t≈{t_mark:.0f}s"] = {
             "t_rel": near.get("t_rel"),

@@ -1,0 +1,23 @@
+{
+  "pass": "B7-150s",
+  "uid": "fav0",
+  "note": "lab smoke 22:28 no BMW",
+  "esp": "http://192.168.178.88",
+  "pi": "pidrive@192.168.178.105",
+  "bridge_log": "/tmp/pump_bridge_manual.log",
+  "seconds": 12.0,
+  "poll": 2.0,
+  "fw_required": "0.4.36-dev (no change)",
+  "orientation_s": [
+    28.0,
+    87.0,
+    120.0,
+    150.0
+  ],
+  "jsonl_offsets": {
+    "reads": 141447,
+    "diag": 22322,
+    "bridge": 1121694
+  },
+  "central_question": "After mount-scan cache, does NBT re-read MSC past slot/track orientation marks?"
+}

@@ -1,0 +1,4 @@
+UID pass label: fav0
+Sync/note: lab smoke 22:28 no BMW
+Lab-only 12s smoke of feld_150s_slot_pass.py against .88 — not a field verdict.
+Pipeline OK; readCount flat (no USB host burst during smoke).
