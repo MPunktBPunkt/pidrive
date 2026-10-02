@@ -2,7 +2,7 @@
 
 **Stand:** 2026-10-02 · aktiv  
 **Repos:** `esp32.pidrive` (Firmware) + `tools/pump_bridge.py` · Abnahme im Fahrzeug  
-**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §11.10 **Burst+Cache** · §11.9 Guard-Fix · §15.3 Protokoll · FW **0.4.36-dev**  
+**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §11.10 Mount-Scan+Cache · B7 [`AUFTRAG-B7-HU-REREAD.md`](AUFTRAG-B7-HU-REREAD.md) · §11.9 Guard-Fix · FW **0.4.36-dev**  
 **Rohanalyse (alt):** [`../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt`](../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt)
 
 ---
@@ -65,7 +65,8 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] **B6** Warmup=0 Prefetch-Live-Pfad — FW **0.4.36-dev** (`preWarm=0`, `streamBytes` bei Prefetch; `live_ratio`≈0.22 WARN) — [§11.7–11.8](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md)  
 - [x] Feldmorgen 2026-10-02: Auto OTA 0.4.36; Logs: fav1 `streamBytes=0`, Ring voll; Ohr unbewiesen — [§11.8](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · Artefakte `artifacts-2026-10-02-morgen/`  
 - [x] Bridge `ignore rapid` dauerhaft während Stream — **fix** `started_at` (§11.9)  
-- [x] **60‑s-Feldtest** je UID — §11.10 2026-10-02: **Burst+Cache** (keine Dauer-Live-Reads) · Artefakte `artifacts-2026-10-02-60s/`  
+- [x] **60‑s-Feldtest** — §11.10: Mount-Scan+Cache in Fenstern; Nachlesen über Slot-Grenzen → **B7**  
+- [ ] **B7 / 150 s** — [AUFTRAG-B7-HU-REREAD.md](AUFTRAG-B7-HU-REREAD.md)  
 - [ ] Burst-Replay HU-Rate im Lab; Suite Ziel-UID armed  
 - [ ] Ring-Präfill / größerer Ring **erst nach** Feldnachweis Live-Reads (Obergrenze live_ratio≈0,27 bei 48 KiB)  
 - [ ] Danach: [`msc.reads`-Streaming](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-MSC-READS-STREAMING.md) (Drain-Task, jsonl, echte Traces) — Format nach Feld-Ohr dimensionieren

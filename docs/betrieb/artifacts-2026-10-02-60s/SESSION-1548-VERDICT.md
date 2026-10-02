@@ -1,4 +1,4 @@
-# Feld 60s — Auto 2026-10-02 ~15:36–15:48 — Verdict
+# Feld 60s — Auto 2026-10-02 ~15:36–15:50 — Verdict
 
 **FW:** 0.4.36-dev · **ESP:** 192.168.178.89 · **Pi Bridge:** 192.168.178.105 → PUMP TCP :9090  
 **Guard-Fix:** deployed (switch/ignore rapid via started_at)
@@ -7,27 +7,26 @@
 
 Liest die BMW NBT während Wiedergabe kontinuierlich Live-MSC-Daten?
 
-**Antwort (Feld, dieser Nachmittag): Nein — Burst dann Cache.**
+**Antwort (eng):** In den beobachteten 60 s-Fenstern **nein** — Muster **Mount-Scan + Cache**.  
+**Nicht bewiesen:** dass die HU nach Verbrauch der gescannten Slot-Daten **niemals** erneut liest (dazu B7 / ≥150 s).
 
 ## Evidenz
 
 | Pass / Fenster | UID | Ohr | Metrik |
 |----------------|-----|-----|--------|
-| fav2-153656 | fav2 BOB | (später) Cover + kurze Sekunden Ton | 60s: readsΔ=0, streamBytesΔ=0 |
-| replug-1538-burst | fav0→fav1 | — | Live-Burst bis sb≈981KiB / reads=421, dann Stillstand |
-| fav1-153911 | fav1 Bayern | Cover + kurze Sekunden | 60s: sb flat 980992, reads flat |
-| Replug 15:41 / 15:44 | — | BOB & Rock Antenne / Bayern: Bild+kurze Ton | Bridge/PUMP flaky (reconnect loops); ESP `/api/status` ok |
-| fav1-bayern-1546 | ESP zeigt fav2 | Bayern kurz gehört | 60s poll: rc=421 sb=167936 **unverändert**, live_samples=0/55; Bridge forwarded audio weiter |
+| fav2-153656 | fav2 BOB | Cover + kurze Sekunden Ton | 60s: readsΔ=0, streamBytesΔ=0 (**nach** Burst) |
+| replug-1538-burst | fav0→fav1 | — | Burst bis reads=421; Folgestatus sb=980992, dann Stillstand |
+| fav1-153911 | fav1 Bayern | Cover + kurze Sekunden | ab t=0 flat rc=421 sb=980992 |
+| Replug 15:41 / 15:44 / 15:50 | — | BOB & Rock Antenne / Bayern: Bild+kurze Ton | Bestätigung Kurzton-Muster |
+| fav1-bayern-1546 | ESP zeigt fav2 | Bayern gehört | **Reads flat** (gültig); **UID-Mismatch** → Play-Detection-Auswertung ungültig |
 
-## Nebenbefunde
+## Zähler (Code-geprüft 2026-10-02)
 
-- `play.reject seq_short` (u.a. fav0 prefetch) + hoher `playRejectCount` (~392)
-- Viele Bridge-Reconnects (`hello_ack=missing` bursts) bei STA — Link-Rauschen, Messung über ESP HTTP `/api/status` robuster als PUMP allein
-- Formaler fav0-60s-Tool-Pass **fehlgeschlagen** (CLI/Outage 15:42); Ohr trotzdem: Rock Antenne Bild+kurze Sekunden (wie fav1/fav2)
-- Lab-Dryrun `fav0-145621` zeigt Tool kann Dauer-Reads sehen — BMW-Feld nicht
+- `streamBytes` ≠ Summe `slotMap.maxSeq` (980992 vs 786432 im fav1-153911-Snapshot).  
+- `streamBytes` = Live-Overlay-Bytes an Host; siehe `lab88-counter-semantics/COUNTER-SEMANTICS.md`.  
+- `readOverflow` = Telemetrie-Queue-Drops; flat im Poll = Hypothese „nicht in diesem Fenster“, nicht fertige Ursachenzuordnung.  
+- Kurzton/Cover mit Fragment/Cache **vereinbar**, Ring als Ursache **nicht bewiesen**.
 
-## Fazit für Architektur
+## Fazit
 
-HU konsumiert nach Auswahl einen kurzen MSC-Burst (Cover/ID3/Anfang), speichert/cached, liest den Live-Stream-Bereich **nicht** kontinuierlich nach. Dauerhaftes Live-Streaming über MSC-Readahead ist damit **kein** belastbarer Feld-Pfad ohne weiteres HU-/Protokoll-Umdenken.
-
-| `replug-1550-note` | OTG ~15:50 | gleiches Kurzton/Cover-Verhalten | Bestätigung §11.10; User Ende Session |
+MSC-Menü/ID3/Cover bleiben sinnvoll. Dauer-Live über MSC-Readahead ist für A2 **nicht** belegt. Nächster Schritt: [`AUFTRAG-B7-HU-REREAD.md`](../../auftraege/AUFTRAG-B7-HU-REREAD.md). Eigenes Probe-FW-Repo: **verworfen** (Lab-APIs + Harness reichen).

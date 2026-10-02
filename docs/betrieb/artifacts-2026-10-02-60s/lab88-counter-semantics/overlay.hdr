@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+Content-Type: application/octet-stream
+Cache-Control: no-store
+X-Stream-Uid: fav0
+X-File-Off: 0
+X-Stream-Id3: 3511
+X-Stream-AbsBase: 14633190
+X-Stream-AbsEnd: 14682342
+X-Stream-Size: 49152
+X-Underruns-Delta: 0
+X-Head-Resyncs-Delta: 1
+X-Head-Resyncs: 9
+Content-Length: 4096
+Connection: close
+

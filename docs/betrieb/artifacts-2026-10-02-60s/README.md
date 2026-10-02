@@ -2,7 +2,7 @@
 
 **Zentrale Frage:** Liest die BMW-NBT während der Wiedergabe kontinuierlich Live-MSC-Daten, oder nur Burst + Cache?
 
-**Feld-Urteil (Nachmittag ~15:36–15:48):** **Burst + Cache** — siehe [`SESSION-1548-VERDICT.md`](SESSION-1548-VERDICT.md) und Feldbericht §11.10.
+**Feld-Urteil (Nachmittag ~15:36–15:50):** **Mount-Scan + Cache** in den 60 s-Fenstern — siehe [`SESSION-1548-VERDICT.md`](SESSION-1548-VERDICT.md), Präzisierung §11.10, Zähler [`lab88-counter-semantics/`](lab88-counter-semantics/). Nachlesen später: offen (B7).
 
 ## Lab-Dryrun (Pipeline-Check)
 
