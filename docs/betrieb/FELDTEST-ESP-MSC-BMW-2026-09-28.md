@@ -927,7 +927,9 @@ journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace 
 | `msc_reads` über die 60 s verteilt; `streamBytes_delta` ≈ Hördauer×Bitrate | **Live-Reads** während Wiedergabe |
 | Bridge `ignore rapid` / `No route` im Slice | Pass ungültig — Link/Guard, nicht HU-Urteil |
 
-Tool: [`tools/feld_60s_live_pass.py`](../../tools/feld_60s_live_pass.py).
+Tool: [`tools/feld_60s_live_pass.py`](../../tools/feld_60s_live_pass.py).  
+Lab-Pipeline-Check 2026-10-02: `artifacts-2026-10-02-60s/fav0-145621` — paced Host, `streamBytes_delta=356352`, Reads über 60 s (**kein** BMW-Urteil).  
+Homecoming: [`tools/feld_prepare_homecoming.sh`](../../tools/feld_prepare_homecoming.sh) (wartet auf `.89`, OTA falls nötig, Bridge umschalten).
 
 ### 15.1 Feldtest Baustelle A (jetzt)
 

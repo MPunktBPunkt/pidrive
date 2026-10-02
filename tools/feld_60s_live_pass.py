@@ -35,7 +35,11 @@ DEFAULT_ESP = "http://192.168.178.89"
 DEFAULT_PI = "pidrive@192.168.178.105"
 READS = "/tmp/pidrive_msc_reads.jsonl"
 DIAG = "/tmp/pidrive_msc_diag.jsonl"
-BRIDGE_LOG = "/tmp/pump_bridge_manual.log"
+BRIDGE_LOG_CANDIDATES = (
+    "/tmp/pump_bridge_manual.log",
+    "/tmp/pump_bridge_lab88.log",
+    "/tmp/pump_bridge_89.log",
+)
 
 
 def http_json(url: str, timeout: float = 5.0) -> dict:
@@ -114,6 +118,17 @@ def remote_size(pi: str, path: str) -> int:
         return 0
 
 
+def pick_bridge_log(pi: str) -> str:
+    """Prefer the bridge log that currently grows / matches running host."""
+    best = BRIDGE_LOG_CANDIDATES[0]
+    best_sz = -1
+    for path in BRIDGE_LOG_CANDIDATES:
+        sz = remote_size(pi, path)
+        if sz > best_sz:
+            best, best_sz = path, sz
+    return best
+
+
 def extract_tail_bytes(pi: str, path: str, offset: int, dest: Path) -> int:
     """Copy bytes from offset to EOF of remote file into dest. Returns bytes copied."""
     size = remote_size(pi, path)
@@ -153,11 +168,18 @@ def main() -> int:
         help="default: docs/betrieb/artifacts-YYYY-MM-DD-60s under repo",
     )
     ap.add_argument(
+        "--bridge-log",
+        default="",
+        help="Pi path to bridge log (default: largest of manual/lab88/89)",
+    )
+    ap.add_argument(
         "--auto-start",
         action="store_true",
         help="do not wait for Enter — start timer immediately (lab)",
     )
     args = ap.parse_args()
+
+    bridge_log = args.bridge_log or pick_bridge_log(args.pi)
 
     repo = Path(__file__).resolve().parents[1]
     day = datetime.now().strftime("%Y-%m-%d")
@@ -166,7 +188,7 @@ def main() -> int:
     out = out_root / f"{args.uid}-{stamp}"
     out.mkdir(parents=True, exist_ok=False)
 
-    print(f"ESP {args.esp}", flush=True)
+    print(f"ESP {args.esp}  bridge_log={bridge_log}", flush=True)
     st0 = http_json(args.esp.rstrip("/") + "/api/status")
     write_json(out / "status-before.json", st0)
     write_json(out / "status-before-slim.json", slim_status(st0))
@@ -181,12 +203,13 @@ def main() -> int:
 
     off_reads = remote_size(args.pi, READS)
     off_diag = remote_size(args.pi, DIAG)
-    off_bridge = remote_size(args.pi, BRIDGE_LOG)
+    off_bridge = remote_size(args.pi, bridge_log)
     meta = {
         "uid": args.uid,
         "note": args.note,
         "esp": args.esp,
         "pi": args.pi,
+        "bridge_log": bridge_log,
         "seconds": args.seconds,
         "poll": args.poll,
         "wall_start": None,
@@ -248,7 +271,7 @@ def main() -> int:
 
     n_reads = extract_tail_bytes(args.pi, READS, off_reads, out / "pidrive_msc_reads.jsonl")
     n_diag = extract_tail_bytes(args.pi, DIAG, off_diag, out / "pidrive_msc_diag.jsonl")
-    n_br = extract_tail_bytes(args.pi, BRIDGE_LOG, off_bridge, out / "bridge-slice.log")
+    n_br = extract_tail_bytes(args.pi, bridge_log, off_bridge, out / "bridge-slice.log")
 
     # summarize reads
     read_rows = []

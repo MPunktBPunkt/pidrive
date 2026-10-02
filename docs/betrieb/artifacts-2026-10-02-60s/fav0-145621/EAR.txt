@@ -1,0 +1,5 @@
+UID: fav0
+Sync/note: lab-dryrun paced-msc 60s (Proxmox sg0 @ 6 KiB/s)
+Heard: N/A (lab host, not BMW)
+Result: PASS tool pipeline — streamBytes_delta=356352 == msc_reads_bytes_sum; reads throughout 60s; underruns=0
+NOT a BMW verdict.

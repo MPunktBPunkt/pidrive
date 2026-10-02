@@ -1,0 +1,37 @@
+{
+  "uid": "fav0",
+  "note": "lab-dryrun paced-msc 60s",
+  "esp": "http://192.168.178.88",
+  "pi": "pidrive@192.168.178.105",
+  "seconds": 60.0,
+  "poll": 2.0,
+  "wall_start": 1790945782.073119,
+  "wall_end": 1790945842.6360183,
+  "jsonl_offsets": {
+    "reads": 87813,
+    "diag": 15411,
+    "bridge": 408320
+  },
+  "central_question": "Does NBT keep reading live MSC data during playback, or burst-then-cache?",
+  "isolation_rule": "This folder is ONLY for this uid — do not mix with other passes.",
+  "note_at_start": "lab-dryrun paced-msc 60s",
+  "duration_s": 60.56,
+  "msc_reads_lines": 214,
+  "msc_reads_bytes_sum": 356352,
+  "msc_reads_file_delta_B": 24446,
+  "diag_file_delta_B": 5040,
+  "bridge_file_delta_B": 0,
+  "streamBytes_before": 868352,
+  "streamBytes_after": 1224704,
+  "streamBytes_delta": 356352,
+  "underruns_before": 0,
+  "underruns_after": 0,
+  "underruns_delta": 0,
+  "playing_after": "fav0",
+  "stream_uid_after": "fav0",
+  "verdict_hints": {
+    "live_consume_if": "streamBytes_delta >> 0 AND msc_reads continue after t~2s",
+    "cache_if": "msc_reads stop after initial burst AND streamBytes_delta≈0 while audio heard",
+    "isolation": "ONLY valid for fav0 — do not cite for other UIDs"
+  }
+}
