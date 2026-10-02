@@ -1,0 +1,11 @@
+=== stop ===
+{'ok': True, 'pumpUp': True}
+=== lab/play fav2 + prefetch rerun ===
+{'ok': True, 'playingUid': 'fav2', 'playingName': 'Radio BOB!', 'known': True, 'pumpUp': True}
+  wait fav2: play=fav2 stream=None active=None size=None id3=None
+  wait fav2: play=fav2 stream=fav2 active=True size=0 id3=3072
+  wait fav2: play=fav2 stream=fav2 active=True size=0 id3=3496
+  wait fav2: play=fav2 stream=fav2 active=True size=0 id3=3496
+  wait fav2: play=fav2 stream=fav2 active=True size=2048 id3=3496
+wrote /tmp/nbt_harness/reports/prefetch_then_warm__rerun__20261002.json
+reads=44 errors=0 fw=0.4.36-dev→0.4.36-dev transport=sg:/dev/sg0

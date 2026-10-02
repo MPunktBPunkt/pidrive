@@ -1,18 +1,18 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-01 Abend — Heimabend-Runbook §11.5; Lab **`.88` = 0.4.31-dev**; Auto **`.89`** OTA auf 0.4.31 offen.  
+**Stand Diagnose:** 2026-10-02 Morgen — Auto OTA **0.4.36-dev** (§11.8); Lab **`.88` = 0.4.36-dev**; Ring-Präfill / `live_ratio` offen.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
 |------|------|
-| Datum | 2026-09-28 (Feld ~07:40–15:55) · **Nachtest 2026-09-30 ~08:10–08:40** |
-| FW live am Auto | **`0.4.26-dev`** (OTA 2026-09-30; vorher 0.4.24) |
+| Datum | 2026-09-28 (Feld ~07:40–15:55) · Nachtests bis **2026-10-02 Morgen** |
+| FW live am Auto | **`0.4.36-dev`** (OTA 2026-10-02 ~07:25; vorher 0.4.34) |
 | ESP STA | `192.168.178.89` · SoftAP `pidrive-2BC568` / `192.168.4.1` |
 | Pi | `192.168.178.105` · `pump_bridge.py` manuell (+ `ensure_pump_bridge.sh`) · PUMP-TCP `:9090` |
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
 | PUMP-Link Produkt | **offen** — SoftAP \| STA \| UART festlegen (§15.0); Feldtest ideal SoftAP/UART |
-| Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.26** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
+| Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.36** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
 | Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
 | Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
@@ -708,6 +708,12 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~09:15+ | Lab **0.4.31** sequential cursor SoftAP pass; paced MSC-Burst unzuverlässig (§11.4) |
 | ~13:40–14:00 | NBT-Replay-Harness Phase 1 + Suite Baseline; Sync-Marker-Protokoll |
 | ~17:00+ | **Heimabend** (§11.5): OTA `.89` → 0.4.31; Bridge-Cron `.88`-Falle; kurz Live+ID3 ~6 s dann HU-Cache-Loop; Artefakte + Synth-Trace |
+| ~19:48–20:07 | **Feldabend** (§11.6): 0.4.34; PUMP-Lücke + preWarm≈182 KiB |
+| ~21:00+ | Lab **0.4.36** B6 + Suite (§11.7) |
+| **2026-10-02** | | |
+| ~07:25 | Auto OTA **0.4.36**; Bridge `.88`→`.89`; play_replay (§11.8) |
+| ~07:31 | Replug `PD0018`; Live `fav0`; Ohr später: fav0 sofort+ID3, fav1 Mitte, ~2 s-Loop |
+| ~08:05–08:16 | Lab Suite + Prefetch-Rerun + paced fav0/fav1; Artefakte morgen |
 
 ---
 
@@ -783,13 +789,41 @@ Suite (`nbt_report`/`nbt_suite`, Baseline `tools/reports/baseline-20261001-b6-03
 - `pre_warm_bytes` **PASS** · `stream_after_arm` **PASS** · `overlay_live` **WARN** (`live_ratio`)
 - Nächster Lab-/Pi-Hebel: Ring vor Burst füllen → `live_ratio` → 1.0
 
+### 11.8 Feldmorgen 2026-10-02 (~07:24–07:35 Auto) + Lab-Nacharbeit
+
+**OTA Auto `.89`:** `0.4.34-dev` → **`0.4.36-dev`** (`POST /ota-upload`); Serial sticky `PD0016` gen 16 → nach Remount/Replug **`PD0017`/`PD0018`**.
+
+| Uhr (lokal) | Ereignis |
+|-------------|----------|
+| ~07:25 | OTA ok; Bridge hing auf Lab **`.88`** (Cron/`pgrep`-Falle) → Kill + Restart auf `.89` |
+| ~07:27 | `pump.play_replay fav1` (0.4.35/36) → ffmpeg Bayern; HU aber oft Cache (`streamBytes=0`, LED aus) |
+| ~07:29 | BOB-Wahl ohne neue Reads; Lab-Remount erst nach `lab/stop` (sonst `msc.remount_skip streaming`) |
+| ~07:31 | OTG-Replug → `PD0018`; `play.guess fav0` Rock Antenne; Live-Consume `streamBytes≈465 KiB`, `preWarm=0` |
+| unterwegs | Ohr-Korrektur: **`fav0` sofort + ID3-Cover**; **`fav1` Ton erst Mitte**; ~2 s Spot-Loop |
+| Hotspot | gleiche SSID → ESP am Handy-LAN, **nicht** erreichbar als `192.168.178.89` vom Heimnetz |
+
+**Pi-Logs / Snapshots:** [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/) (`pump_bridge_manual.log`, `bridge-session-*`, `pidrive_msc_reads.jsonl`, `pidrive_msc_diag.jsonl`, Status/Events).
+
+**SlotMap ~07:28 (vor Replug):** `fav0` maxSeq≈356 KiB vs `fav1` maxSeq≈168 KiB — Bayern weniger sequentiell vom Head (passt zu Mitte-Ton).
+
+**Lab `.88` Nacharbeit (Proxmox `sg0`, Bridge auf `.88`):**
+
+| Test | Ergebnis |
+|------|----------|
+| Suite `20261002-080518` | `sequential_past_head` **PASS**; `prefetch_then_warm` **FAIL** (Suite-Race: Stream nicht auf `fav2` armed) |
+| Prefetch **rerun armed** | **WARN** wie B6-Baseline: `preΔ=0`, `streamΔ=180224`, **`live_ratio≈0.22`** |
+| Paced `fav0` / `fav1` (10 s @ 6 KiB/s) | beide **`live_ratio=1.0`**, ID3+Cover — Stream-Pfad ok; Mitte-Ton = **HU-Burst/Cache**, kein Bayern-Encoder-Bug |
+
+Artefakte Lab: [`artifacts-2026-10-02-morgen/nbt-lab88/`](artifacts-2026-10-02-morgen/nbt-lab88/).
+
+**Nächster Hebel:** Ring vor Burst füllen → `live_ratio`→1.0; Suite vor Prefetch hart auf Ziel-UID armed; Feld daheim mit Sync-Marker `fav0`/`fav1`/`fav2` getrennt. Bridge nach Lab-Lauf ggf. wieder auf `.89`.
 
 ```bash
 # Status / Trace-Snapshot
 curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,plug:.msc.msSincePlug,phase:.msc.phase,stream:.stream,trace:(.msc.trace|length)}'
 
 # OTA vom Pi (Bin liegt unter /home/pidrive/dist/ nach Staging)
-# curl -sS -F "file=@/home/pidrive/dist/pidrive.0.4.31-dev.ota.esp32s3.bin" http://192.168.178.89/ota-upload
+# curl -sS -F "file=@/home/pidrive/dist/pidrive.0.4.36-dev.ota.esp32s3.bin" http://192.168.178.89/ota-upload
 ```
 
 ---

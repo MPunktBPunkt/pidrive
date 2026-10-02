@@ -1,0 +1,28 @@
+[
+  {
+    "uid": "fav0",
+    "name": "Rock Antenne",
+    "lba0": 57,
+    "chunks": 15,
+    "streamBytes": 61440,
+    "underruns": 0,
+    "live": 61440,
+    "live_ratio": 1.0,
+    "id3Len": 3511,
+    "hasCover": true,
+    "headResyncs_delta": 8
+  },
+  {
+    "uid": "fav1",
+    "name": "Rock Antenne Bayern",
+    "lba0": 1081,
+    "chunks": 15,
+    "streamBytes": 61440,
+    "underruns": 0,
+    "live": 61440,
+    "live_ratio": 1.0,
+    "id3Len": 3044,
+    "hasCover": true,
+    "headResyncs_delta": 7
+  }
+]

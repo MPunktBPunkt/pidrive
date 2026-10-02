@@ -1,0 +1,133 @@
+{"ts":1790879583.1322694,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=906341ms"}
+{"ts":1790879583.2188382,"code":"msc.phase","detail":"play Radio BOB!"}
+{"ts":1790879583.3393157,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +12288B age=906586ms"}
+{"ts":1790879584.2104774,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +36864B age=907459ms"}
+{"ts":1790879585.138989,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +61440B age=908387ms"}
+{"ts":1790879585.9991875,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +86016B age=909249ms"}
+{"ts":1790879586.9000936,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +110592B age=910149ms"}
+{"ts":1790879587.7166617,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +131072B age=910955ms"}
+{"ts":1790879588.2562497,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +147456B age=911505ms"}
+{"ts":1790879589.159157,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +172032B age=912410ms"}
+{"ts":1790880250.9334214,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=1574176ms"}
+{"ts":1790880251.07065,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +8192B age=1574305ms"}
+{"ts":1790880671.7025833,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=1994939ms"}
+{"ts":1790880671.994651,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=1995231ms"}
+{"ts":1790880744.122933,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=2067353ms"}
+{"ts":1790880744.2273605,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=2067457ms"}
+{"ts":1790880774.711503,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=2097945ms"}
+{"ts":1790880774.8371565,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=2098076ms"}
+{"ts":1790880779.1611762,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=2102396ms"}
+{"ts":1790880779.317259,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=2102554ms"}
+{"ts":1790880787.1713789,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=2110401ms"}
+{"ts":1790880787.4730341,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +12288B age=2110707ms"}
+{"ts":1790880788.3092034,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +32768B age=2111543ms"}
+{"ts":1790880789.2036104,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +57344B age=2112438ms"}
+{"ts":1790880790.1202404,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +86016B age=2113357ms"}
+{"ts":1790880791.0376117,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +110592B age=2114274ms"}
+{"ts":1790880791.8786776,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +135168B age=2115105ms"}
+{"ts":1790880792.5044303,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +151552B age=2115739ms"}
+{"ts":1790880793.4065459,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +176128B age=2116640ms"}
+{"ts":1790881170.3863454,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=77157ms"}
+{"ts":1790881170.3970363,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +8192B age=77305ms"}
+{"ts":1790881170.669031,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +32768B age=78235ms"}
+{"ts":1790881171.543915,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +57344B age=79109ms"}
+{"ts":1790881172.4458265,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +81920B age=80008ms"}
+{"ts":1790881173.3453355,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +106496B age=80911ms"}
+{"ts":1790881174.1509542,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +126976B age=81718ms"}
+{"ts":1790881174.9945056,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +151552B age=82561ms"}
+{"ts":1790881175.8928018,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +176128B age=83459ms"}
+{"ts":1790881178.0799289,"code":"msc.quiet","detail":"file=401408B age=2035ms"}
+{"ts":1790881739.7373857,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=647299ms"}
+{"ts":1790881739.8253639,"code":"msc.phase","detail":"play Rock Antenne"}
+{"ts":1790881739.9403443,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=647510ms"}
+{"ts":1790881810.7167873,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=718274ms"}
+{"ts":1790881810.8677032,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=718419ms"}
+{"ts":1790881841.4477475,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=749007ms"}
+{"ts":1790881841.533916,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=749090ms"}
+{"ts":1790881845.9256082,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=753478ms"}
+{"ts":1790881846.030168,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=753587ms"}
+{"ts":1790881856.8670354,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=764416ms"}
+{"ts":1790881857.005885,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +8192B age=764559ms"}
+{"ts":1790881857.8982098,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +32768B age=765457ms"}
+{"ts":1790881858.910857,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +57344B age=766466ms"}
+{"ts":1790881859.8499436,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +86016B age=767409ms"}
+{"ts":1790881860.7592442,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +110592B age=768308ms"}
+{"ts":1790881861.6502056,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +135168B age=769207ms"}
+{"ts":1790881862.5225317,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +155648B age=770082ms"}
+{"ts":1790918821.8333962,"code":"play.reject","detail":"not_from_head uid=fav0 from=537 +4096B age=101975ms prefetch"}
+{"ts":1790918822.0100174,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=102127ms"}
+{"ts":1790918822.0211544,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=102148ms"}
+{"ts":1790918822.1530468,"code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=102298ms prefetch"}
+{"ts":1790919008.2381282,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=288354ms prefetch"}
+{"ts":1790919010.4473696,"code":"play.reject","detail":"plug_window uid=fav0 from=65 +4096B age=290583ms prefetch"}
+{"ts":1790919010.5738878,"code":"play.reject","detail":"plug_window uid=fav1 from=1081 +4096B age=290687ms"}
+{"ts":1790919010.7962394,"code":"play.reject","detail":"not_from_head uid=fav0 from=729 +4096B age=290892ms prefetch"}
+{"ts":1790919011.3238761,"code":"play.reject","detail":"plug_window uid=fav0 from=57 +4096B age=291442ms"}
+{"ts":1790919011.4639442,"code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=291573ms prefetch"}
+{"ts":1790919043.4488277,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790919047.992917,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790919048.820994,"code":"msc.first_read","detail":"1005 ms"}
+{"ts":1790919048.8947163,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1066ms prefetch"}
+{"ts":1790919049.6545856,"code":"play.reject","detail":"plug_window uid=fav1 from=1081 +4096B age=1841ms"}
+{"ts":1790919049.8341358,"code":"play.reject","detail":"not_from_head uid=fav0 from=729 +4096B age=2013ms prefetch"}
+{"ts":1790919052.0839276,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790919052.0841463,"code":"msc.quiet","detail":"file=557056B age=2003ms"}
+{"ts":1790919079.1805391,"code":"play.reject","detail":"not_from_head uid=fav0 from=537 +4096B age=31364ms prefetch"}
+{"ts":1790919079.3253114,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=31514ms"}
+{"ts":1790919079.325652,"code":"msc.phase","detail":"play Rock Antenne"}
+{"ts":1790919080.4776144,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=31537ms"}
+{"ts":1790919080.5015602,"code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=31657ms prefetch"}
+{"ts":1790919082.552691,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=34739ms"}
+{"ts":1790919082.5673835,"code":"play.reject","detail":"cooldown uid=fav2 from=2105 +8192B age=34756ms"}
+{"ts":1790919082.8090537,"code":"play.reject","detail":"not_from_head uid=fav0 from=725 +2048B age=34996ms prefetch"}
+{"ts":1790919228.5719767,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1790919228.6192782,"code":"msc.phase","detail":"scan plug"}
+{"ts":1790919228.6196914,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1790919229.4495614,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1790919229.47117,"code":"msc.quiet","detail":"file=557056B age=2041ms"}
+{"ts":1790919235.4706838,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=10542ms"}
+{"ts":1790919235.6008303,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1790919240.009672,"code":"play.reject","detail":"seq_short uid=fav0 from=65 +4096B age=10847ms prefetch"}
+{"ts":1790919240.010038,"code":"play.reject","detail":"cooldown uid=fav0 from=65 +8192B age=11016ms"}
+{"ts":1790921119.694476,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=40026857ms"}
+{"ts":1790921121.0616477,"code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=40027141ms"}
+{"ts":1790921190.758817,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=40097921ms"}
+{"ts":1790921190.882389,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=40098035ms"}
+{"ts":1790921221.4204552,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=40128581ms"}
+{"ts":1790921221.548765,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +8192B age=40128712ms"}
+{"ts":1790921227.2240815,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=40134377ms"}
+{"ts":1790921227.3259134,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +8192B age=40134482ms"}
+{"ts":1790921237.0920708,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=40144255ms"}
+{"ts":1790921237.2604969,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +8192B age=40144422ms"}
+{"ts":1790921238.0875475,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +32768B age=40145248ms"}
+{"ts":1790921238.9014833,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +53248B age=40146061ms"}
+{"ts":1790921239.809635,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +77824B age=40146970ms"}
+{"ts":1790921240.6379173,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +102400B age=40147797ms"}
+{"ts":1790921241.5332956,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +126976B age=40148694ms"}
+{"ts":1790921242.3792598,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +147456B age=40149540ms"}
+{"ts":1790921243.2055457,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +172032B age=40150369ms"}
+{"ts":1790921701.9371414,"code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=40609092ms"}
+{"ts":1790921702.1079931,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +8192B age=40609259ms"}
+{"ts":1790921702.9727972,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +32768B age=40610130ms"}
+{"ts":1790921703.8768444,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +57344B age=40611030ms"}
+{"ts":1790921704.8233016,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +81920B age=40611982ms"}
+{"ts":1790921705.6797621,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +106496B age=40612837ms"}
+{"ts":1790921706.5953298,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +131072B age=40613743ms"}
+{"ts":1790921707.471279,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +155648B age=40614629ms"}
+{"ts":1790921708.3834088,"code":"play.reject","detail":"already_playing uid=fav2 from=2105 +180224B age=40615533ms"}
+{"ts":1790921765.8081763,"code":"play.reject","detail":"seq_short uid=fav0 from=57 +2048B age=40672966ms"}
+{"ts":1790921766.5068734,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +6144B age=40673657ms"}
+{"ts":1790921767.8676603,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +12800B age=40675024ms"}
+{"ts":1790921769.237925,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +20992B age=40676395ms"}
+{"ts":1790921770.6071627,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +29184B age=40677764ms"}
+{"ts":1790921771.9802492,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +37376B age=40679137ms"}
+{"ts":1790921773.3516922,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +45568B age=40680509ms"}
+{"ts":1790921774.733612,"code":"play.reject","detail":"already_playing uid=fav0 from=57 +53760B age=40681880ms"}
+{"ts":1790921780.7665997,"code":"play.reject","detail":"seq_short uid=fav1 from=1081 +2048B age=40687921ms"}
+{"ts":1790921781.4632092,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +6144B age=40688610ms"}
+{"ts":1790921782.8249245,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +12800B age=40689976ms"}
+{"ts":1790921784.1861792,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +20992B age=40691344ms"}
+{"ts":1790921785.5571856,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +29184B age=40692712ms"}
+{"ts":1790921786.929282,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +37376B age=40694081ms"}
+{"ts":1790921788.2951612,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +45568B age=40695449ms"}
+{"ts":1790921789.6608653,"code":"play.reject","detail":"already_playing uid=fav1 from=1081 +53760B age=40696818ms"}

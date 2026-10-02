@@ -1,8 +1,8 @@
 # Auftrag: ESP USB-MSC — Menü-State & Live-Stream am BMW
 
-**Stand:** 2026-10-01 · aktiv  
+**Stand:** 2026-10-02 · aktiv  
 **Repos:** `esp32.pidrive` (Firmware) + `tools/pump_bridge.py` · Abnahme im Fahrzeug  
-**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §3.10 v1 · §11.1–11.4 Feld · §11.2 ESP2 · §15 Messplan · FW **0.4.31-dev**  
+**Feldbericht (einziger Review-Ort):** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) — §11.5–11.8 · FW Auto/Lab **0.4.36-dev** · nächster Hebel Ring-Präfill / `live_ratio`  
 **Rohanalyse (alt):** [`../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt`](../archiv/analysen/ANALYSE-ESP32-PLAY-DETECTION-GPT-2026-09-22.txt)
 
 ---
@@ -62,6 +62,9 @@ Siehe Feldbericht — Telemetrie, Plug-Window, 512 KiB Slots erledigt.
 - [x] Optional parallel: ESP2 Lab **`.88`** + Host-Burst/`lab_overlay_consume.py` am Proxmox  
 - [x] **NBT-Replay-Harness** Phase 1 (SG_IO Suite, Traces ≤16 KiB lab-safe) — [esp32.pidrive AUFTRAG](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-NBT-REPLAY-HARNESS.md)  
 - [x] Heimabend 0.4.31: kurz Live+ID3 ~6 s, dann HU-Cache-Loop — [Feldbericht §11.5](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · Artefakte · Synth-Trace `feld_heimabend_6s_cache`  
+- [x] **B6** Warmup=0 Prefetch-Live-Pfad — FW **0.4.36-dev** (`preWarm=0`, `streamBytes` bei Prefetch; `live_ratio`≈0.22 WARN) — [§11.7–11.8](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md)  
+- [x] Feldmorgen 2026-10-02: Auto OTA 0.4.36; Ohr `fav0` sofort+ID3, `fav1` Mitte, ~2 s-Loop; Lab paced beide `live_ratio=1.0` — Artefakte `artifacts-2026-10-02-morgen/`  
+- [ ] Ring-Präfill vor Burst → `live_ratio`→1.0 (klärt Mitte-Ton / 2 s-Loop)  
 - [ ] Danach: [`msc.reads`-Streaming](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/auftraege/AUFTRAG-MSC-READS-STREAMING.md) (Drain-Task, jsonl, echte Traces) — Format nach Feld-Ohr dimensionieren
 
 ### I3
@@ -73,7 +76,7 @@ Warmup/Underrun-Härtung = B5; nicht vor B0/B1.
 | ID | Kriterium | Stand |
 |----|-----------|-------|
 | A1 | `play.guess` + UID | **pass** Stationen; Lab Actions ok; HU nach Quiet oft kein Guess |
-| A2 | Live nach Warmup/Play-Read | **offen** — B0–B5 Lab; Feld: HU-Cache (10-01 Stille trotz Overlay) |
+| A2 | Live nach Warmup/Play-Read | **teilweise** — 10-02: `fav0` sofort+ID3; `fav1` Mitte; Burst `live_ratio`≈0.22; paced Lab 1.0 |
 | A3 | Listing während Stream | **ok** |
 | A4 | A/B/C ohne `unknown uid` | **bedingt grün** Abend 09-30 (§11.3) |
 | A5 | Produkt-PUMP-Link dokumentiert | **offen** |

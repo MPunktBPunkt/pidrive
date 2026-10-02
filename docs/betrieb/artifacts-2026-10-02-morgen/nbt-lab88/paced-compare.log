@@ -1,0 +1,49 @@
+===== paced fav0 =====
+{'ok': True, 'pumpUp': True}
+{'ok': True, 'playingUid': 'fav0', 'playingName': 'Rock Antenne', 'known': True, 'pumpUp': True}
+  arm fav0: stream=fav2 active=False size=49152 id3=3496
+  arm fav0: stream=fav0 active=True size=0 id3=2560
+  arm fav0: stream=fav0 active=True size=0 id3=3511
+  arm fav0: stream=fav0 active=True size=0 id3=3511
+  arm fav0: stream=fav0 active=True size=3072 id3=3511
+fw=0.4.36-dev uid=fav0 lba0=57 name=Rock Antenne
+{
+  "uid": "fav0",
+  "name": "Rock Antenne",
+  "lba0": 57,
+  "chunks": 15,
+  "streamBytes": 61440,
+  "underruns": 0,
+  "live": 61440,
+  "live_ratio": 1.0,
+  "id3Len": 3511,
+  "hasCover": true,
+  "headResyncs_delta": 8
+}
+===== paced fav1 =====
+{'ok': True, 'pumpUp': True}
+{'ok': True, 'playingUid': 'fav1', 'playingName': 'Rock Antenne Bayern', 'known': True, 'pumpUp': True}
+  arm fav1: stream=fav0 active=True size=49152 id3=3511
+  arm fav1: stream=fav0 active=True size=49152 id3=3511
+  arm fav1: stream=fav1 active=True size=0 id3=0
+  arm fav1: stream=fav1 active=True size=0 id3=3044
+  arm fav1: stream=fav1 active=True size=0 id3=3044
+  arm fav1: stream=fav1 active=True size=0 id3=3044
+  arm fav1: stream=fav1 active=True size=6144 id3=3044
+fw=0.4.36-dev uid=fav1 lba0=1081 name=Rock Antenne Bayern
+{
+  "uid": "fav1",
+  "name": "Rock Antenne Bayern",
+  "lba0": 1081,
+  "chunks": 15,
+  "streamBytes": 61440,
+  "underruns": 0,
+  "live": 61440,
+  "live_ratio": 1.0,
+  "id3Len": 3044,
+  "hasCover": true,
+  "headResyncs_delta": 7
+}
+==== compare ====
+fav0 Rock Antenne: live_ratio=1.000 streamB=61440 under=0 id3=3511 cover=True
+fav1 Rock Antenne Bayern: live_ratio=1.000 streamB=61440 under=0 id3=3044 cover=True

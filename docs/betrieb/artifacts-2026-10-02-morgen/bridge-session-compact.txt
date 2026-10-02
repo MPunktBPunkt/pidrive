@@ -1,0 +1,309 @@
+2026-10-02T07:26:59+02:00 started pid=354431 host=192.168.178.89
+[tx] {"t":"hello","ver":1}
+[rx] {"t":"hello_ack","ver":"0.4.36-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+[hello_ack] ver=0.4.36-dev slots=4 page=True tcp=True
+[rx] {"t":"event","op":"play_uid","uid":"fav1"}
+[trace] t=0ms play_uid=fav1
+[trace] t=50ms audio.start fav fav1
+[tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+[trace] audio_start sent uid=fav1 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne-bayern/stream/mp3 @ 48k
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav1","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav1', 'id3': True, 'warmup': 0}
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=537 +4096B age=101975ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=537 +4096B age=101975ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=102127ms"}
+[msc] play.reject seq_short uid=fav0 from=57 +4096B age=102127ms
+[rx] {"t":"event","op":"play_uid","uid":"fav0"}
+[trace] t=0ms play_uid=fav0
+[audio] ignore rapid fav0 (have fav1)
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=102148ms"}
+[msc] play.reject cooldown uid=fav0 from=57 +12288B age=102148ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=102298ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=569 +4096B age=102298ms prefetch
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 17192 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 17192 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 12593 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 18025 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 13096 B / 2s
+[audio] forwarded 4615 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 17711 B / 2s
+[audio] forwarded 10024 B / 2s
+[audio] forwarded 12226 B / 2s
+[audio] forwarded 10759 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 14639 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 13096 B / 2s
+[audio] forwarded 10602 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 11411 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 17554 B / 2s
+[audio] forwarded 8192 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 9832 B / 2s
+[audio] forwarded 12226 B / 2s
+[audio] forwarded 17711 B / 2s
+[audio] forwarded 9000 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 8554 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 17554 B / 2s
+[audio] forwarded 12072 B / 2s
+[audio] forwarded 11358 B / 2s
+[audio] forwarded 6507 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 17711 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 5486 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 18025 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 15144 B / 2s
+[audio] forwarded 4458 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 15507 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 13096 B / 2s
+[audio] forwarded 9578 B / 2s
+[audio] forwarded 12382 B / 2s
+[audio] forwarded 12591 B / 2s
+[audio] forwarded 12225 B / 2s
+[audio] forwarded 15144 B / 2s
+[audio] forwarded 10759 B / 2s
+[audio] forwarded 12226 B / 2s
+[audio] forwarded 9519 B / 2s
+[audio] forwarded 12225 B / 2s
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[audio] forwarded 7168 B / 2s
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=288354ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=120 +4096B age=288354ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav0 from=65 +4096B age=290583ms prefetch"}
+[msc] play.reject plug_window uid=fav0 from=65 +4096B age=290583ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav1 from=1081 +4096B age=290687ms"}
+[msc] play.reject plug_window uid=fav1 from=1081 +4096B age=290687ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=729 +4096B age=290892ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=729 +4096B age=290892ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav0 from=57 +4096B age=291442ms"}
+[msc] play.reject plug_window uid=fav0 from=57 +4096B age=291442ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=291573ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=569 +4096B age=291573ms prefetch
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"idle unplug"}
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"scan plug"}
+[rx] {"t":"event","op":"diag","code":"msc.first_read","detail":"1005 ms"}
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1066ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=120 +4096B age=1066ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav1 from=1081 +4096B age=1841ms"}
+[msc] play.reject plug_window uid=fav1 from=1081 +4096B age=1841ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=729 +4096B age=2013ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=729 +4096B age=2013ms prefetch
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"quiet cache?"}
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=557056B age=2003ms"}
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=537 +4096B age=31364ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=537 +4096B age=31364ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav0 from=57 +4096B age=31514ms"}
+[msc] play.reject seq_short uid=fav0 from=57 +4096B age=31514ms
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"play Rock Antenne"}
+[rx] {"t":"event","op":"play_uid","uid":"fav0"}
+[trace] t=0ms play_uid=fav0
+[trace] t=50ms audio.start fav fav0
+[tx] {"t":"audio_start","uid":"fav0","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne.jpg","cTry":"stations/web_rock_antenne.jpg|stations/rock_antenne.jpg"}
+[trace] audio_start sent uid=fav0 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne/stream/mp3 @ 48k
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav0 from=57 +12288B age=31537ms"}
+[msc] play.reject cooldown uid=fav0 from=57 +12288B age=31537ms
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav0","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav0', 'id3': True, 'warmup': 0}
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=569 +4096B age=31657ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=569 +4096B age=31657ms prefetch
+[audio] forwarded 9000 B / 2s
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav2 from=2105 +4096B age=34739ms"}
+[msc] play.reject seq_short uid=fav2 from=2105 +4096B age=34739ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav2 from=2105 +8192B age=34756ms"}
+[msc] play.reject cooldown uid=fav2 from=2105 +8192B age=34756ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=725 +2048B age=34996ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=725 +2048B age=34996ms prefetch
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 17192 B / 2s
+[bridge] link lost (timed out) — reconnect in 3.0s
+[tx] {"t":"hello","ver":1}
+[bridge] reconnected tcp:192.168.178.89:9090 hello_ack=missing (menu sync pending, grace=9)
+[audio] forwarded 5928 B / 2s
+[bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+[tx] {"t":"hello","ver":1}
+[rx] {"t":"hello_ack","ver":"0.4.36-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+[hello_ack] ver=0.4.36-dev slots=4 page=True tcp=True
+[bridge] reconnected tcp:192.168.178.89:9090 hello_ack=ok (menu snapshot resent rev=2735 grace=9)
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"idle unplug"}
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"scan plug"}
+[rx] {"t":"event","op":"diag","code":"msc.first_read","detail":"1004 ms"}
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"quiet cache?"}
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=557056B age=2041ms"}
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav1 from=1081 +4096B age=10542ms"}
+[msc] play.reject seq_short uid=fav1 from=1081 +4096B age=10542ms
+[rx] {"t":"event","op":"diag","code":"msc.phase","detail":"play Rock Antenne Bayern"}
+[rx] {"t":"event","op":"play_uid","uid":"fav1"}
+[trace] t=0ms play_uid=fav1
+[audio] ignore rapid fav1 (have fav0)
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav0 from=65 +4096B age=10847ms prefetch"}
+[msc] play.reject seq_short uid=fav0 from=65 +4096B age=10847ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav0 from=65 +8192B age=11016ms"}
+[msc] play.reject cooldown uid=fav0 from=65 +8192B age=11016ms
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s
+[bridge] reconnect failed: [Errno 113] No route to host
+[bridge] link lost (timed out) — reconnect in 3.0s

@@ -1,0 +1,50 @@
+{
+  "overall": "WARN",
+  "read_bytes_total": 16384,
+  "read_count": 4,
+  "first_read_ms": 1500,
+  "last_read_ms": 1950,
+  "max_read_gap_ms": 150,
+  "underrun_delta": 0,
+  "stream_bytes_delta": 4096,
+  "pre_warm_delta": 0,
+  "live_ratio": 1.0,
+  "head_resync_delta": -1,
+  "esp_reboot": false,
+  "fw_before": "0.4.36-dev",
+  "fw_after": "0.4.36-dev",
+  "verdicts": [
+    {
+      "id": "esp_reboot",
+      "result": "PASS",
+      "detail": "no uptime regression"
+    },
+    {
+      "id": "pre_warm_bytes",
+      "result": "PASS",
+      "detail": "pre\u0394=0 (target 0 @ warmup=0)"
+    },
+    {
+      "id": "stream_after_arm",
+      "result": "PASS",
+      "detail": "n/a (read_bytes=16384 < 64\u202fKiB; not a prefetch assert)"
+    },
+    {
+      "id": "overlay_live",
+      "result": "PASS",
+      "detail": "live_ratio=1.000"
+    },
+    {
+      "id": "head_resync",
+      "result": "WARN",
+      "detail": "headResyncs 1\u21920"
+    },
+    {
+      "id": "io_errors",
+      "result": "PASS",
+      "detail": "0 IO errors"
+    }
+  ],
+  "transport": "sg:/dev/sg0",
+  "trace": "b1_burst_quiet_gentle"
+}
