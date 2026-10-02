@@ -1,0 +1,4 @@
+Replug ~15:38 → PD0021.
+Watcher saw: scan→quiet→fav0 (sb=624640)→fav1 (sb=980992, reads=421).
+Then formal fav1-153911 60s pass: reads frozen at 421, streamBytes_delta=0.
+Interpretation: live MSC consume only in short post-select burst; no continuous reads during subsequent 60s listen window.

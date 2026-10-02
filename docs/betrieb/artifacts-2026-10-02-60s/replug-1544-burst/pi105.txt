@@ -1,0 +1,10 @@
+Pidrive
+Fri  2 Oct 15:45:52 CEST 2026
+inactive
+LISTEN 0      128          0.0.0.0:22        0.0.0.0:*                                        
+LISTEN 0      128             [::]:22           [::]:*                                        
+curl: (7) Failed to connect to 127.0.0.1 port 9090 after 0 ms: Could not connect to server
+
+Not found: /status
+curl: (28) Operation timed out after 2002 milliseconds with 0 bytes received
+

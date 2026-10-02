@@ -1,12 +1,12 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-02 — Auto **0.4.36-dev** (§11.8); Bridge-Guard-Fix (§11.9); **nächster Nachweis §15.3** (60 s Live-Reads vs. Cache, Sender isoliert).  
+**Stand Diagnose:** 2026-10-02 Nachmittag — Auto **0.4.36-dev**; **§11.10: HU = Burst+Cache** (keine Dauer-Live-Reads); Guard-Fix (§11.9).  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
 |------|------|
-| Datum | 2026-09-28 (Feld ~07:40–15:55) · Nachtests bis **2026-10-02 Morgen** |
+| Datum | 2026-09-28 (Feld ~07:40–15:55) · Nachtests bis **2026-10-02 ~15:48** |
 | FW live am Auto | **`0.4.36-dev`** (OTA 2026-10-02 ~07:25; vorher 0.4.34) |
 | ESP STA | `192.168.178.89` · SoftAP `pidrive-2BC568` / `192.168.4.1` |
 | Pi | `192.168.178.105` · `pump_bridge.py` manuell (+ `ensure_pump_bridge.sh`) · PUMP-TCP `:9090` |
@@ -715,6 +715,8 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~07:31 | Replug `PD0018`; Live `fav0`; Ohr später: fav0 sofort+ID3, fav1 Mitte, ~2 s-Loop |
 | ~08:05–08:16 | Lab Suite + Prefetch-Rerun + paced fav0/fav1; Artefakte morgen |
 | ~10:30+ | Review Claude/GPT: Präfill-These widerlegt; Bridge `ignore rapid`-Bug (§11.9 Fix) |
+| ~14:56+ | Lab-Dryrun 60 s-Tool `fav0-145621`; Homecoming-Prep |
+| ~15:36–15:48 | **Feld 60 s** Auto (§11.10): fav2/fav1 + Replugs → **Burst+Cache**; Artefakte `artifacts-2026-10-02-60s/` |
 
 ---
 
@@ -843,15 +845,37 @@ Artefakte: [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/).
 **Nächste Schritte (Reihenfolge):**
 
 1. ~~Lab-Gegenprobe Guard~~ — **PASS** §11.9  
-2. **60‑s-Feldtest** je UID (§15.3) — Reads **durchgehend**, Sender **isoliert**, Artefakte auf GitHub  
-3. Burst-Replay (512 KiB/~0,6 s Trace) im Lab; Suite vor Prefetch auf Ziel-UID+size armed  
-4. Präfill / größerer Ring **erst danach** (Erwartung live_ratio≤~0,27 ohne größeren Ring)  
-5. Architekturfrage: erzwingt die HU überhaupt wiederholte Live-Reads?
+2. ~~**60‑s-Feldtest** je UID (§15.3)~~ — **done** §11.10 → **Burst+Cache**  
+3. Architektur: ohne wiederholte Live-Reads kein Dauer-Stream über MSC-Readahead — Alternativen (Stub/Segment, Remount-Takt, Host-Verhalten) priorisieren  
+4. Burst-Replay (512 KiB/~0,6 s Trace) im Lab nur noch zur HU-Burst-Charakterisierung  
+5. Präfill / größerer Ring **nachrangig** (hilft Lab-`live_ratio`, nicht dem Feld-Cache)
 
 ```bash
 curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,stream:.stream,sb:.msc.streamBytes,under:.stream.underruns}'
 # curl -sS -F "file=@/home/pidrive/dist/pidrive.0.4.36-dev.ota.esp32s3.bin" http://192.168.178.89/ota-upload
 ```
+
+### 11.10 Feld-Nachmittag 60 s Live-Read vs. Cache (2026-10-02 ~15:36–15:48)
+
+**Setup:** FW `0.4.36-dev` · ESP `.89` · Bridge auf Pi `.105` → PUMP TCP `:9090` · Guard-Fix deployed · Menü fav0 Rock Antenne / fav1 Rock Antenne Bayern / fav2 Radio BOB!
+
+**Zentrale Frage (§15.3):** Dauer-Live-MSC-Reads während Wiedergabe?
+
+**Urteil: Burst + Cache — keine kontinuierlichen Live-Reads.** Ohr und Telemetrie deckungsgleich für die getesteten Sender.
+
+| Fenster | UID / Sync | Ohr | Metrik |
+|---------|------------|-----|--------|
+| `fav2-153656` | fav2 BOB schon gewählt ~15:36 | Cover + kurze Sekunden Ton (bestätigt nach Replug) | 60 s: `msc_reads_lines=0`, `streamBytes_delta=0` |
+| `replug-1538-burst` | OTG ~15:38 → PD0021 | — | Kurz Live: sb→≈981 KiB, reads→421, dann Stillstand |
+| `fav1-153911` | fav1 Bayern ~15:39 | Cover + kurze Sekunden | 60 s: sb flat `980992`, reads flat |
+| Replug 15:41 / 15:44 | alle Sender gewählt | BOB & Rock Antenne / Bayern: Bild + wenige Sekunden Ton | PUMP/Bridge zeitweise flaky (Reconnect-Loops); ESP `/api/status` stabil |
+| `fav1-bayern-1546` | ~15:46 Bayern gehört | wie oben | 60 s Poll: `readCount=421`, `streamBytes=167936` **unverändert** (0/55 live); Bridge `forwarded … B/2s` trotzdem |
+
+**Nebenbefunde:** `play.reject seq_short` / hoher `playRejectCount`; Serial nach Replugs PD0021→PD0023; formaler Tool-Pass fav0 ~15:42 aus (CLI/Outage) — Ohr trotzdem gleiches Kurzton-Muster. Lab-Dryrun `fav0-145621` zeigt: Tool sieht Dauer-Reads am paced Host — BMW-Feld nicht.
+
+**Artefakte:** [`artifacts-2026-10-02-60s/`](artifacts-2026-10-02-60s/) · Kurzfazit [`SESSION-1548-VERDICT.md`](artifacts-2026-10-02-60s/SESSION-1548-VERDICT.md).
+
+**Folge:** Frage 5 (§14) für diesen HU-Pfad **beantwortet** (Cache). Dauerhaftes Live-Audio über MSC-Readahead ist ohne weiteres Host-/Protokoll-Umdenken **kein** belastbarer Feld-Pfad; Ring-Präfill allein löst das nicht.
 
 ---
 
@@ -866,8 +890,8 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 5. **B2…B5** erst nach B0/B1.  
 6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).  
 7. ~~Bridge `ignore rapid` / `last_audio_log`~~ — **fix** 2026-10-02 (§11.9).  
-8. **60‑s-Feldtest** — Protokoll §15.3 · Tool `tools/feld_60s_live_pass.py` · Ergebnisse → GitHub.  
-9. Burst-Replay HU-Rate (~900 KiB/s) im Lab; erst dann Ring/Präfill.
+8. ~~**60‑s-Feldtest**~~ — **done** 2026-10-02 Nachmittag (§11.10): **Burst+Cache**.  
+9. Architektur-Alternativen ohne Dauer-Live-Reads (Segment/Stub/Remount-Takt); Burst-Replay nur noch zur Charakterisierung.
 
 ### Offene Fragen
 
@@ -875,7 +899,7 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 2. A2-Zielzeit: „wenige Sekunden“ vs. Warmup/ABSA-ähnlich — Zahl festlegen (Vorschlag: ≤5 s nach erstem Play-Read *oder* nach Warmup-OK).  
 3. Remount bei jedem `menu_set`: akzeptabel vs. Sticky-Listing?  
 4. Actions (`Zurueck`/`Mehr`) als kurze MP3s in derselben Playlist — Struktur ändern?  
-5. Liest die NBT während laufender Wiedergabe den Live-Bereich erneut, oder nur einmal + Cache?  
+5. ~~Liest die NBT während laufender Wiedergabe den Live-Bereich erneut, oder nur einmal + Cache?~~ — **Feld §11.10: einmal Burst + Cache** (kein Dauer-Live).  
 6. `headResyncs` hoch bei `underruns=0` (Lab paced) — Bedeutung?
 
 ---
@@ -929,6 +953,7 @@ journalctl -u pidrive_pump_bridge -f | grep -E 'hello_ack|snapshot resent|grace 
 
 Tool: [`tools/feld_60s_live_pass.py`](../../tools/feld_60s_live_pass.py).  
 Lab-Pipeline-Check 2026-10-02: `artifacts-2026-10-02-60s/fav0-145621` — paced Host, `streamBytes_delta=356352`, Reads über 60 s (**kein** BMW-Urteil).  
+**Feld-Ergebnis 2026-10-02 Nachmittag:** §11.10 — **Burst+Cache** (`artifacts-2026-10-02-60s/`, `SESSION-1548-VERDICT.md`).  
 Homecoming: [`tools/feld_prepare_homecoming.sh`](../../tools/feld_prepare_homecoming.sh) (wartet auf `.89`, OTA falls nötig, Bridge umschalten).
 
 ### 15.1 Feldtest Baustelle A (jetzt)

@@ -1,0 +1,5 @@
+usage: feld_60s_live_pass.py [-h] --uid UID [--esp ESP] [--pi PI]
+                             [--seconds SECONDS] [--poll POLL] [--note NOTE]
+                             [--out-root OUT_ROOT] [--bridge-log BRIDGE_LOG]
+                             [--auto-start]
+feld_60s_live_pass.py: error: the following arguments are required: --uid

@@ -1,0 +1,12 @@
+UID: fav1 (Rock Antenne Bayern)
+Sync/note: sync 15:38 after replug PD0021 Rock Antenne Bayern
+Wall: 2026-10-02T15:39:15 → 15:40:15
+
+Heard (user, session):
+  - Nach Replug: Bild + wenige Sekunden Ton (Lied), dann still
+  - Gleiches Muster später erneut bei Bayern (~15:46)
+
+Metrics:
+  - streamBytes_before=after=980992 (delta=0)
+  - msc_reads frozen (reads≈421 from post-replug burst); 0 new read lines in 60s
+  - See also replug-1538-burst/NOTE.txt

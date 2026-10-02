@@ -1,0 +1,5 @@
+15:41 OTG ab/an (user)
+15:41 Radio BOB: Bild + ein paar Sekunden Ton (Lied) — dann still
+15:42 Rock Antenne Bayern gewählt
+15:43 Rock Antenne: Bild + Ton für ein paar Sekunden — gleiches Muster wie BOB
+Bridge ab ~15:42: :9090 reset/empty, SSH refused (.89 und .88) — 60s-Pass nicht messbar

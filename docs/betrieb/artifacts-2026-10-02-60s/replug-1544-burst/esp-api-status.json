@@ -1,0 +1,7 @@
+{
+  "_note": "Original /api/status dump was truncated mid-transfer; see poll.jsonl and pi105.txt in this folder. credentials stripped.",
+  "version": "0.4.36-dev",
+  "playingUid": "fav2",
+  "playingName": "Radio BOB!",
+  "msc": {"readCount": 421, "streamBytes": 167936, "phase": "play", "remountGen": 23, "usbSerial": "PD0023", "playRejectCount": 392}
+}

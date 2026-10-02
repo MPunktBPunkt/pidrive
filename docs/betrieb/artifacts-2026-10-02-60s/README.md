@@ -2,15 +2,24 @@
 
 **Zentrale Frage:** Liest die BMW-NBT während der Wiedergabe kontinuierlich Live-MSC-Daten, oder nur Burst + Cache?
 
+**Feld-Urteil (Nachmittag ~15:36–15:48):** **Burst + Cache** — siehe [`SESSION-1548-VERDICT.md`](SESSION-1548-VERDICT.md) und Feldbericht §11.10.
+
 ## Lab-Dryrun (Pipeline-Check)
 
 | Pass | Ergebnis |
 |------|----------|
-| `fav0-145621` | Tool OK: `streamBytes_delta=356352`, 214 read-events over 60s, `underruns=0`. Paced MSC on Proxmox (not BMW). |
+| `fav0-145621` | Tool OK: `streamBytes_delta=356352`, 214 read-events over 60s, `underruns=0`. Paced MSC on Proxmox (**kein** BMW-Urteil). |
 
-## Auto (pending)
+## Auto Feld
 
-Wenn ESP `.89` online: `./tools/feld_prepare_homecoming.sh` dann je UID:
-`python3 tools/feld_60s_live_pass.py --uid fav0|fav1|fav2 --note "HH:MM"`
+| Pass / Ordner | UID / Sync | Kurz |
+|---------------|------------|------|
+| `fav2-153656` | fav2 BOB ~15:36 | 60s: readsΔ=0, sbΔ=0 |
+| `replug-1538-burst` | OTG ~15:38 | Burst bis sb≈981KiB / reads=421, dann stop |
+| `fav1-153911` | fav1 Bayern ~15:39 | 60s: sb flat 980992, reads flat |
+| `replug-1541-burst` | OTG ~15:41 | PUMP HTTP-Miss (Port = TCP); Outage-Fenster |
+| `replug-1544-burst` | OTG ~15:44 | ESP `/api/status` ok; playing fav2 nach Burst |
+| `fav1-bayern-1546` | ~15:46 Ohr Bayern | 60s poll: rc/sb eingefroren; Bridge forwarded weiter |
+| `EAR-1541-1542.txt` | Sync-Notizen | BOB/Rock Antenne: Bild + kurze Sekunden Ton |
 
-FW `0.4.36` liegt auf Pi `dist/` und Hub `iobroker.esp-hub/firmware/` (Auto war schon 0.4.36 — OTA nur falls nötig).
+FW `0.4.36-dev` · Guard-Fix · Bridge Pi `.105` → ESP `.89:9090`.

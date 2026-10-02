@@ -1,0 +1,13 @@
+UID: fav2 (Radio BOB!)
+Sync/note: sync 15:36 homecoming BOB already playing
+Wall: 2026-10-02T15:36:57 → 15:37:57
+FW: 0.4.36-dev · Bridge Guard-Fix · serial PD0021→ later PD0023 after replugs
+
+Heard (user):
+  - Bild (Cover) ja
+  - Ton nur wenige Sekunden / Lied-Anfang, dann weg (später bestätigt nach Replug 15:41)
+  - Kein Dauer-Live über 60s
+
+Metrics (tool summary):
+  - msc_reads_lines=0, streamBytes_delta=0 during formal 60s window
+  - Interpretation: already past burst; HU on cache (or silent after short clip)

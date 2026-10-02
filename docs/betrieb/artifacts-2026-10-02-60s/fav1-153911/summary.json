@@ -1,0 +1,38 @@
+{
+  "uid": "fav1",
+  "note": "sync 15:38 after replug PD0021 Rock Antenne Bayern",
+  "esp": "http://192.168.178.89",
+  "pi": "pidrive@192.168.178.105",
+  "bridge_log": "/tmp/pump_bridge_manual.log",
+  "seconds": 60.0,
+  "poll": 2.0,
+  "wall_start": 1790948355.0945776,
+  "wall_end": 1790948415.9528341,
+  "jsonl_offsets": {
+    "reads": 124492,
+    "diag": 21396,
+    "bridge": 435064
+  },
+  "central_question": "Does NBT keep reading live MSC data during playback, or burst-then-cache?",
+  "isolation_rule": "This folder is ONLY for this uid — do not mix with other passes.",
+  "note_at_start": "sync 15:38 after replug PD0021 Rock Antenne Bayern",
+  "duration_s": 60.86,
+  "msc_reads_lines": 0,
+  "msc_reads_bytes_sum": 0,
+  "msc_reads_file_delta_B": 0,
+  "diag_file_delta_B": 0,
+  "bridge_file_delta_B": 960,
+  "streamBytes_before": 980992,
+  "streamBytes_after": 980992,
+  "streamBytes_delta": 0,
+  "underruns_before": 0,
+  "underruns_after": 0,
+  "underruns_delta": 0,
+  "playing_after": "fav1",
+  "stream_uid_after": "fav1",
+  "verdict_hints": {
+    "live_consume_if": "streamBytes_delta >> 0 AND msc_reads continue after t~2s",
+    "cache_if": "msc_reads stop after initial burst AND streamBytes_delta≈0 while audio heard",
+    "isolation": "ONLY valid for fav1 — do not cite for other UIDs"
+  }
+}

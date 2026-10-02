@@ -1,0 +1,44 @@
+{"t": "2026-10-02T15:42:14.885", "elapsed": 1.068, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:15.855", "elapsed": 2.039, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:16.454", "elapsed": 2.637, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:17.091", "elapsed": 3.274, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:17.688", "elapsed": 3.871, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:18.297", "elapsed": 4.48, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:20.646", "elapsed": 6.829, "err": "{\"t\":\"event\",\"op\":\"msc.reads\",\"ms\":417658,\"gap\":4785,\"lba0\":1081,\"lba1\":1081,\"bytes\":4096,\"n\":1,\"kind\":2,\"ov\":177}\r\n"}
+{"t": "2026-10-02T15:42:21.163", "elapsed": 7.347, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:21.804", "elapsed": 7.987, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:22.400", "elapsed": 8.584, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:25.011", "elapsed": 11.194, "err": "timed out"}
+{"t": "2026-10-02T15:42:25.576", "elapsed": 11.759, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:26.193", "elapsed": 12.376, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:26.796", "elapsed": 12.979, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:29.407", "elapsed": 15.59, "err": "timed out"}
+{"t": "2026-10-02T15:42:29.921", "elapsed": 16.104, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:30.487", "elapsed": 16.67, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:31.100", "elapsed": 17.283, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:33.708", "elapsed": 19.891, "err": "timed out"}
+{"t": "2026-10-02T15:42:34.223", "elapsed": 20.407, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:34.783", "elapsed": 20.967, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:35.398", "elapsed": 21.582, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:38.009", "elapsed": 24.192, "err": "timed out"}
+{"t": "2026-10-02T15:42:38.577", "elapsed": 24.76, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:39.086", "elapsed": 25.27, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:39.704", "elapsed": 25.888, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:42.327", "elapsed": 28.51, "err": "timed out"}
+{"t": "2026-10-02T15:42:43.200", "elapsed": 29.383, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:43.845", "elapsed": 30.028, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:46.432", "elapsed": 32.615, "err": "timed out"}
+{"t": "2026-10-02T15:42:46.974", "elapsed": 33.157, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:47.514", "elapsed": 33.697, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:48.122", "elapsed": 34.305, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:50.817", "elapsed": 37.0, "err": "timed out"}
+{"t": "2026-10-02T15:42:51.399", "elapsed": 37.582, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:52.002", "elapsed": 38.185, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:52.602", "elapsed": 38.785, "err": "Remote end closed connection without response"}
+{"t": "2026-10-02T15:42:55.221", "elapsed": 41.404, "err": "timed out"}
+{"t": "2026-10-02T15:42:55.775", "elapsed": 41.958, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:56.492", "elapsed": 42.676, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:57.108", "elapsed": 43.291, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:57.622", "elapsed": 43.805, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:58.133", "elapsed": 44.316, "err": "[Errno 104] Connection reset by peer"}
+{"t": "2026-10-02T15:42:58.744", "elapsed": 44.928, "err": "Remote end closed connection without response"}

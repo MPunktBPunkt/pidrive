@@ -1,0 +1,19 @@
+command: "# Watch for activity while waiting for user - poll every 3s for up to 3 min\nfor i in $(seq 1 60); do\n  curl -sS --connect-timeout 2 http://192.168.178.89/api/status > /tmp/esp89w.json || { echo fail; sleep 3; continue; }\n  python3 - <<'PY'\nimport json\nd=json.load(open(\"/tmp/esp89w.json\"))\nm=d.get(\"msc\",{}); s=d.get(\"stream\") or {}\nprint(f\"play={d.get('playingUid')} stream={s.get('uid')} sb={m.get('streamBytes')} reads={m.get('readCount')} phase={m.get('phase')} ser={m.get('usbSerial')}\")\nPY\n  sleep 3\ndone\n"
+status: failed   
+play=fav2 stream=fav2 sb=0 reads=421 phase=play ser=PD0020
+play=fav2 stream=fav2 sb=0 reads=421 phase=play ser=PD0020
+play=fav2 stream=fav2 sb=0 reads=421 phase=play ser=PD0020
+fail
+play= stream=fav2 sb=0 reads=1 phase=scan ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=scan ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=quiet ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=quiet ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=quiet ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=quiet ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=quiet ser=PD0021
+play= stream=fav2 sb=342016 reads=165 phase=quiet ser=PD0021
+play=fav0 stream=fav0 sb=624640 reads=293 phase=play ser=PD0021
+play=fav0 stream=fav0 sb=624640 reads=293 phase=play ser=PD0021
+play=fav0 stream=fav0 sb=624640 reads=293 phase=play ser=PD0021
+play=fav1 stream=fav0 sb=980992 reads=421 phase=play ser=PD0021
+play=fav1 stream=fav1 sb=980992 reads=421 phase=play ser=PD0021

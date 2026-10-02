@@ -1,0 +1,18 @@
+{
+  "uid": "fav2",
+  "note": "sync 15:36 homecoming BOB already playing",
+  "esp": "http://192.168.178.89",
+  "pi": "pidrive@192.168.178.105",
+  "bridge_log": "/tmp/pump_bridge_manual.log",
+  "seconds": 60.0,
+  "poll": 2.0,
+  "wall_start": null,
+  "wall_end": null,
+  "jsonl_offsets": {
+    "reads": 112259,
+    "diag": 20451,
+    "bridge": 410150
+  },
+  "central_question": "Does NBT keep reading live MSC data during playback, or burst-then-cache?",
+  "isolation_rule": "This folder is ONLY for this uid — do not mix with other passes."
+}
