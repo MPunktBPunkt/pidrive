@@ -1,0 +1,42 @@
+  pump up peer=192.168.178.105
+=== hard stop ===
+{'ok': True, 'pumpUp': True}
+{'ok': True, 'pumpUp': True}
+  stream_off? active=False uid=fav1
+=== A delayed switch: fav0 6s → fav1 (must switch) ===
+{'ok': True, 'playingUid': 'fav0', 'playingName': 'Rock Antenne', 'known': True, 'pumpUp': True}
+  wait fav0: play=fav0 stream=fav1 active=False size=49152
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=4096
+  hold 6s…
+  still fav0? uid=fav0 size=49152
+{'ok': True, 'playingUid': 'fav1', 'playingName': 'Rock Antenne Bayern', 'known': True, 'pumpUp': True}
+  wait fav1: play=fav1 stream=fav0 active=True size=49152
+  wait fav1: play=fav1 stream=fav0 active=True size=49152
+  wait fav1: play=fav1 stream=fav0 active=True size=49152
+  wait fav1: play=fav1 stream=fav0 active=True size=49152
+  wait fav1: play=fav1 stream=fav1 active=True size=0
+  wait fav1: play=fav1 stream=fav1 active=True size=0
+  wait fav1: play=fav1 stream=fav1 active=True size=0
+  wait fav1: play=fav1 stream=fav1 active=True size=1024
+PASS A: delayed fav0→fav1 while streaming
+=== B immediate switch: fav1 → fav0 within 2s ===
+{'ok': True, 'playingUid': 'fav0', 'playingName': 'Rock Antenne', 'known': True, 'pumpUp': True}
+AFTER_IMMEDIATE dt=2.1s stream=fav1 play=fav0
+PASS B: immediate switch blocked/debounce (stream still fav1)
+  wait 5s then retry fav0…
+{'ok': True, 'playingUid': 'fav0', 'playingName': 'Rock Antenne', 'known': True, 'pumpUp': True}
+  wait fav0: play=fav0 stream=fav1 active=True size=49152
+  wait fav0: play=fav0 stream=fav1 active=True size=49152
+  wait fav0: play=fav0 stream=fav1 active=True size=49152
+  wait fav0: play=fav0 stream=fav1 active=True size=49152
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=0
+  wait fav0: play=fav0 stream=fav0 active=True size=8192
+PASS B2: fav0 switch after debounce window
+ALL GUARD TESTS PASS

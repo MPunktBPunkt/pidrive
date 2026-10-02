@@ -42,3 +42,8 @@ Paced `fav0` vs `fav1`: siehe `nbt-lab88/paced-fav0-fav1.json` / `paced-compare.
 1. Ring vor Burst füllen → `live_ratio` → 1.0 (klärt Mitte-Ton + 2 s-Loop mit)
 2. Suite: vor `prefetch_then_warm` hart auf Ziel-UID armed warten (heutiger False-FAIL)
 3. Feld daheim: Sync-Marker + Replug + Ohr `fav0`/`fav1`/`fav2` getrennt
+
+## Guard-Fix Lab (~10:31)
+
+- Bridge `started_at` Debounce deployed — `lab_guard_switch_test.log` **PASS** (`switch … age=9s`, `ignore rapid … age=2.3s<4s`)
+- Prefetch nach Fix: `prefetch_then_warm__guardfix__20261002.summary.json`

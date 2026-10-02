@@ -1,0 +1,43 @@
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"event","op":"play_uid","uid":"fav0"}
+[trace] t=0ms play_uid=fav0
+[tx] {"t":"audio_start","uid":"fav0","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne.jpg","cTry":"stations/web_rock_antenne.jpg|stations/rock_antenne.jpg"}
+[trace] audio_start sent uid=fav0 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne/stream/mp3 @ 48k
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav0","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav0', 'id3': True, 'warmup': 0}
+[audio] forwarded 9000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[rx] {"t":"event","op":"play_uid","uid":"fav1"}
+[trace] t=0ms play_uid=fav1
+[audio] switch fav0 → fav1 (age=9.0s)
+[tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+[trace] audio_start sent uid=fav1 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne-bayern/stream/mp3 @ 48k
+[audio] forwarded 18000 B / 2s
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav1","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav1', 'id3': True, 'warmup': 0}
+[rx] {"t":"event","op":"play_uid","uid":"fav0"}
+[trace] t=0ms play_uid=fav0
+[audio] ignore rapid fav0 (have fav1 age=2.3s<4s)
+[audio] forwarded 9000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[rx] {"t":"event","op":"play_uid","uid":"fav0"}
+[trace] t=0ms play_uid=fav0
+[audio] switch fav1 → fav0 (age=9.4s)
+[tx] {"t":"audio_start","uid":"fav0","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne.jpg","cTry":"stations/web_rock_antenne.jpg|stations/rock_antenne.jpg"}
+[trace] audio_start sent uid=fav0 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne/stream/mp3 @ 48k
+[audio] forwarded 2048 B / 2s
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav0","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav0', 'id3': True, 'warmup': 0}

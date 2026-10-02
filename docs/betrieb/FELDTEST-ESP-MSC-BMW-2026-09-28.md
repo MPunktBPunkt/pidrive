@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-02 Morgen — Auto OTA **0.4.36-dev** (§11.8); Lab **`.88` = 0.4.36-dev**; Ring-Präfill / `live_ratio` offen.  
+**Stand Diagnose:** 2026-10-02 — Auto **0.4.36-dev** (§11.8); Bridge-Guard-Fix (§11.9); Lab **`.88` = 0.4.36-dev**; nächster Hebel **60‑s-Feldtest**, nicht Präfill.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -714,6 +714,7 @@ Debian ersetzt den NBT **nicht** (Cache/Autoplay/Reattach bleiben Auto-Themen). 
 | ~07:25 | Auto OTA **0.4.36**; Bridge `.88`→`.89`; play_replay (§11.8) |
 | ~07:31 | Replug `PD0018`; Live `fav0`; Ohr später: fav0 sofort+ID3, fav1 Mitte, ~2 s-Loop |
 | ~08:05–08:16 | Lab Suite + Prefetch-Rerun + paced fav0/fav1; Artefakte morgen |
+| ~10:30+ | Review Claude/GPT: Präfill-These widerlegt; Bridge `ignore rapid`-Bug (§11.9 Fix) |
 
 ---
 
@@ -791,38 +792,64 @@ Suite (`nbt_report`/`nbt_suite`, Baseline `tools/reports/baseline-20261001-b6-03
 
 ### 11.8 Feldmorgen 2026-10-02 (~07:24–07:35 Auto) + Lab-Nacharbeit
 
-**OTA Auto `.89`:** `0.4.34-dev` → **`0.4.36-dev`** (`POST /ota-upload`); Serial sticky `PD0016` gen 16 → nach Remount/Replug **`PD0017`/`PD0018`**.
+**OTA Auto `.89`:** `0.4.34-dev` → **`0.4.36-dev`** (`POST /ota-upload`); Serial sticky `PD0016` → Remount/Replug **`PD0017`/`PD0018`** (Logs: **zwei** Replugs ~07:30:43 und ~07:33:48).
 
-| Uhr (lokal) | Ereignis |
-|-------------|----------|
-| ~07:25 | OTA ok; Bridge hing auf Lab **`.88`** (Cron/`pgrep`-Falle) → Kill + Restart auf `.89` |
-| ~07:27 | `pump.play_replay fav1` (0.4.35/36) → ffmpeg Bayern; HU aber oft Cache (`streamBytes=0`, LED aus) |
-| ~07:29 | BOB-Wahl ohne neue Reads; Lab-Remount erst nach `lab/stop` (sonst `msc.remount_skip streaming`) |
-| ~07:31 | OTG-Replug → `PD0018`; `play.guess fav0` Rock Antenne; Live-Consume `streamBytes≈465 KiB`, `preWarm=0` |
-| unterwegs | Ohr-Korrektur: **`fav0` sofort + ID3-Cover**; **`fav1` Ton erst Mitte**; ~2 s Spot-Loop |
-| Hotspot | gleiche SSID → ESP am Handy-LAN, **nicht** erreichbar als `192.168.178.89` vom Heimnetz |
+| Uhr (Pi) | Ereignis | Beleg |
+|----------|----------|-------|
+| ~07:25 | OTA ok; Bridge hing auf Lab **`.88`** → Restart auf `.89` | § Session-Start |
+| 07:26:59 | Bridge `hello_ack 0.4.36`; `play_uid fav1` → `audio_start` `warmup:0` `id3:true` | `bridge-session-*` |
+| 07:27+ | HU liest fav0-Slot ~512 KiB / ~0,5 s; Bridge `ignore rapid fav0 (have fav1)` | `msc_reads` + Bridge |
+| 07:28–07:29 | Stream **fav1** aktiv, Ring **voll** (`size=49152`), `underruns=0`, **`streamBytes=0`** | `esp89-status-072809/072917` |
+| ~07:31 | Replug `PD0018`; `play.guess fav0` → `audio_start fav0` | Bridge + Events |
+| ~07:33:55 | HU `play_uid fav1`, Bridge **`ignore rapid fav1 (have fav0)`** — **kein** neuer ffmpeg | Bridge Z.~1306 |
+| danach | 54× `No route to host` (Auto außer Fritz-Reichweite / Hotspot) | Bridge |
 
-**Pi-Logs / Snapshots:** [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/) (`pump_bridge_manual.log`, `bridge-session-*`, `pidrive_msc_reads.jsonl`, `pidrive_msc_diag.jsonl`, Status/Events).
+**Ohr (unterwegs, kein Sync-Marker / kein Status danach):** `fav0` sofort+ID3; `fav1` Ton erst Mitte; ~2 s Spot-Loop — **nicht log-zeitlich verankert**. Letzter Status-Snapshot 07:31:15 **vor** dem fav0-Hörfenster; der in einer früheren Fassung genannte `streamBytes≈465 KiB` ist in den Artefakt-JSONs **nicht** nachprüfbar.
 
-**SlotMap ~07:28 (vor Replug):** `fav0` maxSeq≈356 KiB vs `fav1` maxSeq≈168 KiB — Bayern weniger sequentiell vom Head (passt zu Mitte-Ton).
+**Log-Folgerungen (Review Claude/GPT 2026-10-02):**
 
-**Lab `.88` Nacharbeit (Proxmox `sg0`, Bridge auf `.88`):**
+- fav1 SlotMap `bytes=167936` schon **vor** Bridge-Start und danach unverändert → dieser Read hatte **keine** Live-Daten; HU hat fav1 im Fenster nicht erneut gelesen (Cache-Hypothese, nicht bewiesen dauerhaft).
+- Ring war bei fav1 **voll und unberührt** (`streamBytes=0`) → These „Ring leer / Präfill zuerst“ für dieses Fenster **widerlegt**.
+- Präfill allein: Ring 48 KiB / Prefetch 180 KiB ⇒ `live_ratio`-Obergrenze ≈**0,27** (Lab ~0,22 liegt nah dran) — kein Feld-Fix für HU-Burst-Cache.
+- `ov` in `msc.reads` = Export-Queue-`overflow`-Snapshot (`readOverflowCount_`), nicht mit Status-`readOverflow` verwechseln.
+
+**Lab `.88` (Proxmox `sg0`):**
 
 | Test | Ergebnis |
 |------|----------|
-| Suite `20261002-080518` | `sequential_past_head` **PASS**; `prefetch_then_warm` **FAIL** (Suite-Race: Stream nicht auf `fav2` armed) |
-| Prefetch **rerun armed** | **WARN** wie B6-Baseline: `preΔ=0`, `streamΔ=180224`, **`live_ratio≈0.22`** |
-| Paced `fav0` / `fav1` (10 s @ 6 KiB/s) | beide **`live_ratio=1.0`**, ID3+Cover — Stream-Pfad ok; Mitte-Ton = **HU-Burst/Cache**, kein Bayern-Encoder-Bug |
+| Suite `20261002-080518` | `sequential_past_head` **PASS**; `prefetch_then_warm` **FAIL** = Suite-Race (Stream nicht auf Ziel-UID) |
+| Prefetch **rerun armed** | **WARN** B6: `preΔ=0`, `streamΔ=180224`, `live_ratio≈0.22` |
+| Paced fav0/fav1 | beide `live_ratio=1.0`, ID3+Cover — Stream-Pfad Lab ok |
+| Paced `headResyncs_delta` 7–8 bei `underruns=0` | **offen** |
 
-Artefakte Lab: [`artifacts-2026-10-02-morgen/nbt-lab88/`](artifacts-2026-10-02-morgen/nbt-lab88/).
+Artefakte: [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/).
 
-**Nächster Hebel:** Ring vor Burst füllen → `live_ratio`→1.0; Suite vor Prefetch hart auf Ziel-UID armed; Feld daheim mit Sync-Marker `fav0`/`fav1`/`fav2` getrennt. Bridge nach Lab-Lauf ggf. wieder auf `.89`.
+**Abnahme A2:** **nicht** als bestanden führen — Lab-Pfad ja, Feld-Live-Ohr unbewiesen.
+
+### 11.9 Bridge `ignore rapid`-Bug + Fix (2026-10-02)
+
+**Bug:** Debounce nutzte `last_audio_log` (alle 2 s durch `forwarded … B / 2s` aktualisiert) → während laufendem Stream praktisch **dauerhafte** Sperre für Senderwechsel. Feld: `ignore rapid fav1 (have fav0)` trotz HU-Guess.
+
+**Fix** (`esp32.pidrive/tools/pump_bridge.py`): Fenster `RAPID_SWITCH_S=4` ab `AudioFwd.started_at` (echter `audio.start`); Log `ignore rapid … age=` bzw. `switch A → B`. Deploy: `/home/pidrive/pump_bridge.py` + Bridge-Restart.
+
+**Lab-Gegenprobe `.88` (2026-10-02 ~10:31):** **PASS** — Artefakte `nbt-lab88/lab_guard_switch_*`
+
+| Case | Bridge-Log | Ergebnis |
+|------|------------|----------|
+| fav0 stream 6 s (mit `forwarded`) → fav1 | `switch fav0 → fav1 (age=9.0s)` | Switch trotz Heartbeat |
+| fav1 → fav0 nach 2 s | `ignore rapid fav0 (have fav1 age=2.3s<4s)` | Debounce hält |
+| danach nochmal fav0 | `switch fav1 → fav0 (age=9.4s)` | Switch nach Fenster |
+
+**Nächste Schritte (Reihenfolge):**
+
+1. ~~Lab-Gegenprobe Guard~~ — **PASS** §11.9  
+2. Feld daheim: 60 s Hörpass je UID mit Sync-Marker + Status **sofort nach** Hören (`streamBytes`/`underruns`/`slotMap`/`play_uid`)  
+3. Burst-Replay (512 KiB/~0,6 s Trace) im Lab; Suite vor Prefetch auf Ziel-UID+size armed  
+4. Präfill / größerer Ring **erst danach** (Erwartung live_ratio≤~0,27 ohne größeren Ring)  
+5. Architekturfrage dokumentieren: erzwingt die HU überhaupt wiederholte Live-Reads?
 
 ```bash
-# Status / Trace-Snapshot
-curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,plug:.msc.msSincePlug,phase:.msc.phase,stream:.stream,trace:(.msc.trace|length)}'
-
-# OTA vom Pi (Bin liegt unter /home/pidrive/dist/ nach Staging)
+curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,stream:.stream,sb:.msc.streamBytes,under:.stream.underruns}'
 # curl -sS -F "file=@/home/pidrive/dist/pidrive.0.4.36-dev.ota.esp32s3.bin" http://192.168.178.89/ota-upload
 ```
 
@@ -837,14 +864,19 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 3. Menü-Export an **v1 Snapshot/Slots** halten ([§3.10](#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)).  
 4. **B0→B1** (§15.2); optional ESP2+Debian-Host-Sim ([§11.2](#112-lab-rolle-zweiter-esp-review-2026-09-30)).  
 5. **B2…B5** erst nach B0/B1.  
-6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).
+6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).  
+7. ~~Bridge `ignore rapid` / `last_audio_log`~~ — **fix** 2026-10-02 (§11.9).  
+8. **60‑s-Feldtest** mit Sync-Marker + Status nach jedem Hörpass (§11.8/11.9).  
+9. Burst-Replay HU-Rate (~900 KiB/s) im Lab; erst dann Ring/Präfill.
 
 ### Offene Fragen
 
 1. Produkt-PUMP-Link: SoftAP vs. STA vs. UART?  
 2. A2-Zielzeit: „wenige Sekunden“ vs. Warmup/ABSA-ähnlich — Zahl festlegen (Vorschlag: ≤5 s nach erstem Play-Read *oder* nach Warmup-OK).  
 3. Remount bei jedem `menu_set`: akzeptabel vs. Sticky-Listing?  
-4. Actions (`Zurueck`/`Mehr`) als kurze MP3s in derselben Playlist — Struktur ändern?
+4. Actions (`Zurueck`/`Mehr`) als kurze MP3s in derselben Playlist — Struktur ändern?  
+5. Liest die NBT während laufender Wiedergabe den Live-Bereich erneut, oder nur einmal + Cache?  
+6. `headResyncs` hoch bei `underruns=0` (Lab paced) — Bedeutung?
 
 ---
 
