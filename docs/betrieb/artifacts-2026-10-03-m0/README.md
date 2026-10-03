@@ -1,15 +1,16 @@
 # Artefakte M0 — Lab Messintegrität 2026-10-03
 
-**ESP:** `.88` · FW `0.4.37-dev` · Bridge Pi `.105` · Host Proxmox `.108`  
+**ESP:** `.88` · Bridge Pi `.105` · Host Proxmox `.108`  
 **Tool:** `tools/m0_lab_mount_sweep.py`  
 **Auftrag:** [`../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
 
 ## Ergebnis
 
-| Pass | Ordner | Verdict | ΔreadCount | Σ burst.n | emitΔ = lines |
-|------|--------|---------|------------|-----------|---------------|
-| Lernlauf (falsche Absolut-Gleichung / leerer Export) | `lab88-140905/` | FAIL (lehrreich) | — | — | — |
-| **M0 Abnahme** | **`lab88-141005/`** | **PASS ×2** | 296 / 295 | 296 / 295 | ja |
+| Pass | Ordner | FW | Verdict | ΔreadCount | Σ burst.n | emitΔ = lines |
+|------|--------|-----|---------|------------|-----------|---------------|
+| Lernlauf (falsche Absolut-Gleichung / leerer Export) | `lab88-140905/` | 0.4.37 | FAIL (lehrreich) | — | — | — |
+| **M0 Abnahme** | **`lab88-141005/`** | 0.4.37 | **PASS ×2** | 296 / 295 | 296 / 295 | ja |
+| **M0 Reconfirm L3** | **`lab88-l3-m0-1542/`** | **0.4.42** | **PASS ×2** | **457 / 457** | 457 / 457 | ja |
 
 **Gleichung (normativ für Soft-Remount-Fenster):**
 
@@ -17,7 +18,7 @@
 
 Zusätzlich bestätigt: `ΔreadsEmit = Anzahl JSONL-Burst-Zeilen`.
 
-Streubreite Lab-Host-Nudge: 296 vs 295 (~deterministisch).
+Streubreite: 296 vs 295 (0.4.37); unter L3/0.4.42 **457/457** (identisch).
 
 ## Code-/Betriebs-Hinweise aus dem Lauf
 

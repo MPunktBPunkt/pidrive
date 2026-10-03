@@ -76,8 +76,9 @@ nicht: `readCount = Anzahl JSONL-Zeilen`.
 |------|----------|
 | `lab88-140905` | Lernlauf FAIL (Absolut-Gleichung / leerer Export) |
 | `lab88-141005` | **PASS×2**: Δrc 296/295 = Σn; emitΔ = Zeilen |
+| **`lab88-l3-m0-1542`** | **PASS×2 auf L3/0.4.42**: Δrc **457/457** = Σn; emitΔ = Zeilen; Spread same |
 
-**Status M0:** geschlossen für Lab. Feld weiterhin: leerer Export = Fail des Transporturteils; Session-Δ verwenden.
+**Status M0:** geschlossen für Lab (auch unter L3-Geometrie 8 MiB). Feld weiterhin: leerer Export = Fail des Transporturteils; Session-Δ verwenden.
 
 ---
 

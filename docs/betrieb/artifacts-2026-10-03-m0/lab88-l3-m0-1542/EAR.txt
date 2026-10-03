@@ -1,0 +1,5 @@
+M0 remount-sweep on L3 geometry (0.4.42-dev, fav0=8MiB) — lab88-l3-m0-1542
+all_pass=True spread={457,457} same=True
+run1: PASS Δrc=457 Σn=457 lines=405 emitΔ=405 emit==lines
+run2: PASS Δrc=457 Σn=457 lines=401 emitΔ=401 emit==lines
+Confirms Δ-equation still holds after L3 unequal slots / FAT16 16MiB.
