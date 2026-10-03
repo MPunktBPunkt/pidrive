@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-02 Abend — Auto **0.4.36-dev**; **§11.10 Mount-Scan+Cache** (60 s); Nachlesen offen → **B7**; Guard-Fix (§11.9).  
+**Stand Diagnose:** 2026-10-03 — Auto **0.4.36-dev**; **§11.11 B7-A Cache-only** (PD0029); Lab `.88` = **0.4.37 L0**; nächster Auto-Schritt = L0-OTA.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -891,6 +891,22 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 
 **Folge:** Dauer-Live über MSC-Readahead **nicht** als Feld-A2 führen. Nächster Schritt: Zählersemantik (done) → **B7-A/B/C** ([AUFTRAG-B7](../auftraege/AUFTRAG-B7-HU-REREAD.md)) → bei fehlender Nachlese **nicht** sofort BT, sondern Geometrie/L-Leiter ([AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). BT-Audio bleibt parallele NBT-Quelle / Fallback nach Plateau-Gate.
 
+### 11.11 Feld B7 2026-10-03 — 150 s + Autoplay-Cache (PD0028/PD0029)
+
+**Setup:** FW `0.4.36-dev` · `.89` · Bridge `.105` · Lab `.88` parallel schon `0.4.37` L0 (nicht geflasht).
+
+| Fenster | Serial | Ohr / UI | Metrik |
+|---------|--------|----------|--------|
+| Replug ~12:31 „keine Wahl“ | PD0028 | Autoplay Bayern→Rock→BOB: Cover+Kurzton | Scan-Burst; Trackwechsel mit Reads; Live begrenzt |
+| **B7-A** ~12:38–12:41 fav0 Rock Antenne | **PD0029** | Stille, **kein** Cover, Fortschrittsbalken ~halb | `playingUid` leer; nach Mount `rc` flat (~380); `sb=0` |
+| Danach Playlist | PD0029 | BOB / Bayern **ohne** Ton/Bild | zeitweise `rc`↑ beim Wechsel (Stub), kein Live |
+
+**Urteil:** B7-A bestätigt **Cache-only** auf Ist-Geometrie — keine fortlaufenden MSC-Play-Reads ≥150 s. UID-Match ungültig (kein Guess); Read-Flat gültig.
+
+**Artefakte:** [`artifacts-2026-10-03-b7/`](artifacts-2026-10-03-b7/)
+
+**Folge:** L0 OTA Auto (`0.4.37-dev`, FAT16/4 MiB) → L-Leiter; kein Ring-OTA.
+
 ---
 
 ## 14. Review-Fragen & nächste Experimente
@@ -905,8 +921,8 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 6. **Folgeauftrag:** atomarer `MenuSnapshot` (Grace = Übergang).  
 7. ~~Bridge `ignore rapid` / `last_audio_log`~~ — **fix** 2026-10-02 (§11.9).  
 8. ~~**60‑s-Feldtest**~~ — **done** 2026-10-02 Nachmittag (§11.10): Mount-Scan+Cache in 60 s-Fenstern; Nachlesen über Slot-Grenzen **offen**.  
-9. **B7 / 150 s** — [AUFTRAG-B7-HU-REREAD](../auftraege/AUFTRAG-B7-HU-REREAD.md); kein separates Probe-FW-Repo.  
-10. Architektur (Segment/Clip/BT) **erst nach** B7; BT = getrennte NBT-Quelle.
+9. ~~**B7 / 150 s**~~ — **B7-A done** 2026-10-03 (§11.11): Cache-only Ist-Geometrie; B7-B/C optional.  
+10. **L0 Auto-OTA** (`0.4.37`) → L-Leiter; Architektur/BT erst nach Plateau-Gate.
 
 ### Offene Fragen
 

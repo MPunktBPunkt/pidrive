@@ -231,10 +231,10 @@ Konzeptziel USB=UI+Ton bleibt, bis M3+Gate das Gegenteil belegt. BT jetzt **nich
 
 1. [ ] M0 nur bei `readOverflow`/fehlenden Burst-Samples — sonst skip  
 2. [ ] **L0 im Lab** starten (FAT16/4 KiB), Auto noch 0.4.36 — **Lab `.88` = 0.4.37-dev, sectorCount=8192 (2026-10-03 Smoke)**  
-3. [ ] B7-A fahren (Baseline; „keine Play-Reads“ erwartbar)  
-4. [ ] B7-B Armed-Replug (Erwartung ≤~8 s Live)  
-5. [ ] B7-C nur mit Klassifizierung hart werten; sonst Meta-only  
-6. [ ] §11.11 + Verweis hierher  
+3. [x] B7-A fahren (Baseline; „keine Play-Reads“ erwartbar) — **2026-10-03 PD0029 Cache-only**  
+4. [ ] B7-B Armed-Replug (Erwartung ≤~8 s Live) — optional  
+5. [ ] B7-C nur mit Klassifizierung hart werten; sonst Meta-only — optional  
+6. [x] §11.11 + Verweis hierher  
 7. [ ] Nach B7: L0-OTA → L1–L4 statisch + Pace → M3b Live → M4  
 
 Owner: Auto `.89` / Lab `.88` / Bridge Pi — B7-Checkliste.

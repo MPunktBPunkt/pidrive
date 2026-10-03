@@ -1,0 +1,23 @@
+{
+  "pass": "B7-150s",
+  "uid": "fav0",
+  "note": "12:38 OTG PD0029 B7-A Rock Antenne fav0",
+  "esp": "http://192.168.178.89",
+  "pi": "pidrive@192.168.178.105",
+  "bridge_log": "/tmp/pump_bridge_manual.log",
+  "seconds": 150.0,
+  "poll": 2.0,
+  "fw_required": "0.4.36-dev (no change)",
+  "orientation_s": [
+    28.0,
+    87.0,
+    120.0,
+    150.0
+  ],
+  "jsonl_offsets": {
+    "reads": 177854,
+    "diag": 25890,
+    "bridge": 2561263
+  },
+  "central_question": "After mount-scan cache, does NBT re-read MSC past slot/track orientation marks?"
+}

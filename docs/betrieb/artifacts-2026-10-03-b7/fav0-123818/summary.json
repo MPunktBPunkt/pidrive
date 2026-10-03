@@ -1,0 +1,79 @@
+{
+  "pass": "B7-150s",
+  "uid": "fav0",
+  "note": "12:38 OTG PD0029 B7-A Rock Antenne fav0",
+  "esp": "http://192.168.178.89",
+  "pi": "pidrive@192.168.178.105",
+  "bridge_log": "/tmp/pump_bridge_manual.log",
+  "seconds": 150.0,
+  "poll": 2.0,
+  "fw_required": "0.4.36-dev (no change)",
+  "orientation_s": [
+    28.0,
+    87.0,
+    120.0,
+    150.0
+  ],
+  "jsonl_offsets": {
+    "reads": 177854,
+    "diag": 25890,
+    "bridge": 2561263
+  },
+  "central_question": "After mount-scan cache, does NBT re-read MSC past slot/track orientation marks?",
+  "wall_start": 1791023899.7542477,
+  "wall_end": 1791024050.557264,
+  "duration_s": 150.8,
+  "msc_reads_file_delta_B": 0,
+  "diag_file_delta_B": 0,
+  "bridge_file_delta_B": 3723,
+  "analysis": {
+    "ok_samples": 62,
+    "live_samples": 3,
+    "readCount_delta": -41,
+    "streamBytes_delta": -342016,
+    "readOverflow_delta": 89,
+    "first_live_t": 4.97,
+    "last_live_t": 11.74,
+    "playingUid_matches_pass_uid": false,
+    "playingUids_seen": [
+      ""
+    ],
+    "orientation_snapshots": {
+      "t≈28s": {
+        "t_rel": 28.49,
+        "readCount": 380,
+        "streamBytes": 0,
+        "lastReadLba": 1065,
+        "playingUid": ""
+      },
+      "t≈87s": {
+        "t_rel": 85.99,
+        "readCount": 380,
+        "streamBytes": 0,
+        "lastReadLba": 1065,
+        "playingUid": ""
+      },
+      "t≈120s": {
+        "t_rel": 119.06,
+        "readCount": 380,
+        "streamBytes": 0,
+        "lastReadLba": 1065,
+        "playingUid": ""
+      },
+      "t≈150s": {
+        "t_rel": 150.36,
+        "readCount": 380,
+        "streamBytes": 0,
+        "lastReadLba": 1065,
+        "playingUid": ""
+      }
+    },
+    "verdict_hints": {
+      "reread_if": "readCount rises after t>~10s (past mount burst) especially near ~28s/~87s",
+      "cache_only_if": "readCount flat for full ≥150s after select while audio heard",
+      "uid_verdict_valid_if": "playingUid always == fav0",
+      "read_flat_still_valid_if_uid_mismatch": true
+    }
+  },
+  "playing_after": ""
+}

@@ -1,0 +1,15 @@
+12:31:17
+Plan: OTG reconnect ~12:31, NO station select. Capture scan-only.
+polling…
+t=0.1s SERIAL None → PD0028 gen=28 phase=idle rc=421
+t=0.1s rc None→421 sb=739328 phase=idle play=
+t=3.4s rc 421→0 sb=0 phase=scan play=
+t=5.0s rc 0→106 sb=262144 phase=scan play=
+t=6.6s rc 106→165 sb=342016 phase=scan play=
+t=21.6s rc 165→293 sb=342016 phase=play play=fav1
+t=108.7s rc 293→390 sb=342016 phase=play play=fav0
+t=110.3s rc 390→421 sb=342016 phase=play play=fav0
+12:33:57 USER: Bayern ended → Autoplay Rock Antenne
+--- END ---
+serial=PD0028 rc=421 sb=342016 phase=play play=fav0
+12:35:43 USER: Rock Antenne ended → Autoplay Radio BOB (cover + few s tone)

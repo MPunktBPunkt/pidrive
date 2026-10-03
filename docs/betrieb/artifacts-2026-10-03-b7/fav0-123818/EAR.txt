@@ -1,0 +1,23 @@
+UID pass label: fav0
+Sync/note: 12:38 OTG PD0029 B7-A Rock Antenne fav0
+Wall: 2026-10-03T12:38:19.754248 → 2026-10-03T12:40:50.557264
+FW: 0.4.36-dev (must stay 0.4.36 — no OTA for B7)
+
+Stoppuhr (Pflicht):
+  - Select-Zeitpunkt (Uhr):
+  - Ton-Start (s nach Select):
+  - Ton-Ende / still (s nach Select):
+  - Cover ja/nein:
+  - Gehörte Station == fav0? ja/nein
+
+Bei Stationswechsel-Pass (Auftrag B) extra Marker pro Wechsel.
+
+--- filled from field voice notes ---
+Select: ~12:38–12:39 Rock Antenne (letzte Datei / fav0 beabsichtigt), Serial PD0029
+Ton-Start: keiner (Stille)
+Ton-Ende: n/a — kein Ton
+Cover: nein
+Gehörte Station == fav0?: UI zeigte Rock Antenne Fortschritt (~halb durch), aber kein Audio/Cover
+ESP: kein playingUid, rc flat 380 nach Mount-Burst, sb=0 — Cache-Play ohne Re-Read
+12:41:23 After Rock Antenne: jumped to Radio BOB — no tone, no cover (same as Rock).
+12:42 BOB ended (silent) → jump Rock Antenne Bayern — no cover, no tone. ESP still no play/reads.
