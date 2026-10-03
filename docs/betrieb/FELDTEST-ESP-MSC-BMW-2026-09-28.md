@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-03 Auto-M3 **A_then_E** — Play ~8 min Δrc=0 bei L3 8 MiB ([`AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md)). Nächster Plan: [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md). FW Auto zuletzt **0.4.42-dev** L3. Ring/BT eingefroren.  
+**Stand Diagnose:** 2026-10-03 Auto-M3 **A_then_E (Fenster)**; Addendum Coverage/playingUid ([`AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md)). Plan Rev.2 M3seq Q1–Q3. Ring/BT eingefroren.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
