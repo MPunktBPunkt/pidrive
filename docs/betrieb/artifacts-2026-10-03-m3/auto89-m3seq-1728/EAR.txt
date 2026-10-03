@@ -1,0 +1,12 @@
+M3seq-lite Auto title-switch 2026-10-03
+Operator:
+- 17:29 PD0035 ohne OTG: RA/Bayern/BOB — kein LED-Blinken; Δrc=0
+- 17:31 PD0036 nach OTG: schneller Durchlauf (~0.5s), dann Wiederholung
+- 17:35 durch — Operator meldet PD0037 (Status jetzt: PD0037)
+
+Status end: ver=0.4.42-dev serial=PD0037 gen=37
+phase=play rc=2284 emit=819 ov=367
+stream=False lastLba=18505
+
+Note: ov>0 after OTG = export gap while WiFi down; interpret Δ carefully within connected windows.
+Primary M3-static (17:14-17:22) remains separate: Δrc=0 while progress bar advanced.

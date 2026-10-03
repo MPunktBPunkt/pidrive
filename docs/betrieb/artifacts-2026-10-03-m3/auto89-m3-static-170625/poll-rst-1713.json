@@ -1,0 +1,19 @@
+[
+  {
+    "t": "17:13:54",
+    "ver": "0.4.42-dev",
+    "up": "2s",
+    "serial": "PD0035",
+    "gen": 35,
+    "plugged": true,
+    "phase": "scan",
+    "rc": 104,
+    "emit": 0,
+    "ov": 0,
+    "stream": false,
+    "tcp": false,
+    "sectors": 32768,
+    "rssi": -76,
+    "msSincePlug": 1849
+  }
+]

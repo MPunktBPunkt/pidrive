@@ -52,4 +52,5 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 ~~M3 Lab bis L3 (8 MiB) + Marker/Pace/FAT16~~ → **done** (`SESSION-LAB-2026-10-03.md`).  
 ~~Lab-Langpace 360 s~~ → **done** (`lab88-l3-langpace-1535/`, 12 Kreuzungen ≈30 s).  
 ~~L3 BPB+fsck Cluster-Nachweis~~ → **done** PASS_GEOMETRY_LAB (`lab88-l3-fat-verify-1615/`).  
-**Jetzt:** Auto-M3 wenn `.89` online — OTA 0.4.42 + Gate in [`AUTO-M3-READINESS-2026-10-03.md`](AUTO-M3-READINESS-2026-10-03.md).
+~~Auto-M3-statisch~~ → **done A_then_E** ([`AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md)).  
+**Jetzt:** M3seq kurze Dateien / Titelwechsel — Plan [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md). Ring/BT weiter eingefroren.

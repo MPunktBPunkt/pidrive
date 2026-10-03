@@ -1,0 +1,9 @@
+{"ts":1791040438.3025,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +2662400B age=5844ms prefetch"}
+{"ts":1791040439.1278305,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +3522560B age=6646ms prefetch"}
+{"ts":1791040439.884988,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +4345856B age=7447ms prefetch"}
+{"ts":1791040440.6887007,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +5201920B age=8249ms prefetch"}
+{"ts":1791040440.7098472,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791040440.7201076,"code":"msc.quiet","detail":"file=7184384B age=3ms"}
+{"ts":1791040441.4875116,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +6062080B age=9049ms prefetch"}
+{"ts":1791040443.1527617,"code":"play.reject","detail":"not_from_head uid=fav0 from=3697 +4096B age=10714ms prefetch"}
+{"ts":1791040445.2335265,"code":"msc.quiet","detail":"file=8421376B age=2000ms"}

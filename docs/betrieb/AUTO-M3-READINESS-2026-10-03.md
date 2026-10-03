@@ -162,18 +162,16 @@ Keine Aussage „NBT liest live“ aus `readCount` allein.
 
 ---
 
-## 7. Offene Punkte bis Feldtermin
+## 7. Offene Punkte — Stand nach Feld
 
-1. **`.89` online:** Ist-FW auslesen; OTA 0.4.42; BPB-Verify wiederholen.  
-2. Bridge-Cron/Unit fest auf `.89` (nicht `.88`).  
-3. Operator-Protokoll (HU-Zeiten) vorbereiten.  
-4. Optional später: Decoder-Test PDMK-Bytes 4..9 — nicht blockierend für M3-statisch.
+1. ~~`.89` OTA 0.4.42~~ → **done** 2026-10-03.  
+2. ~~Auto-M3-statisch~~ → **A_then_E** ([`artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md)).  
+3. **Als Nächstes:** M3seq — [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md).  
+4. Optional: Decoder-Test PDMK; Feld-BPB-Reverify.
 
 ---
 
-## 8. Gesamturteil Cursor
+## 8. Gesamturteil (nach Feld)
 
-Lab-Methodik und L3-FAT16-Nachweis (BPB+Cluster+fsck) sind **feldtauglich vorbereitet**.  
-Nächster Schritt: **gültiger Auto-M3-Pass** auf `.89` mit identischer Geometrie/Testdatei — **kein** Architekturumbau.
-
-Zentrale Frage unverändert: Was fordert die NBT nach dem initialen Sweep während nachgewiesener Wiedergabe?
+Lab-Methodik hat gehalten. Auto-M3-statisch zeigt: **Sweep, dann Cache-Play ohne MSC-Nachlesen** (A_then_E).  
+Nächster Architekturhebel ist **nicht** Ring/Live, sondern ob **Titelwechsel/Remount** Bytes erzwingt.

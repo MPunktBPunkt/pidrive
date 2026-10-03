@@ -1,0 +1,4 @@
+41172 /tmp/pidrive_msc_reads.jsonl
+  867 /tmp/pidrive_msc_diag.jsonl
+42039 total
+2026-10-03T17:14:04+02:00

@@ -1,0 +1,9 @@
+2026-10-03T17:29:13+02:00
+SHORT title-switch attempt after M3-static A/E
+17:29 operator: title-switch PD0035 OHNE OTG — kein LED-Blinken
+17:30 operator: wiederholt MIT OTG ab/an
+2026-10-03T17:30:49+02:00
+17:31 operator: PD0036 nach OTG; Title-switch zu schnell (~0.5s); wiederholt jetzt mit Pause
+2026-10-03T17:32:23+02:00
+17:35 operator: durch — PD0037 (geschrieben od0037)
+2026-10-03T17:34:00+02:00

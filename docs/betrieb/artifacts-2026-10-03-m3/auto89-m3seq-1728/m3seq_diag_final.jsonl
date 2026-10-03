@@ -1,0 +1,43 @@
+{"ts":1791040438.3025,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +2662400B age=5844ms prefetch"}
+{"ts":1791040439.1278305,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +3522560B age=6646ms prefetch"}
+{"ts":1791040439.884988,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +4345856B age=7447ms prefetch"}
+{"ts":1791040440.6887007,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +5201920B age=8249ms prefetch"}
+{"ts":1791040440.7098472,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791040440.7201076,"code":"msc.quiet","detail":"file=7184384B age=3ms"}
+{"ts":1791040441.4875116,"code":"play.reject","detail":"not_from_head uid=fav0 from=3977 +6062080B age=9049ms prefetch"}
+{"ts":1791040443.1527617,"code":"play.reject","detail":"not_from_head uid=fav0 from=3697 +4096B age=10714ms prefetch"}
+{"ts":1791040445.2335265,"code":"msc.quiet","detail":"file=8421376B age=2000ms"}
+{"ts":1791040973.7499018,"code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=541314ms"}
+{"ts":1791040973.7604241,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1791040973.792761,"code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=541345ms"}
+{"ts":1791040978.0375073,"code":"play.reject","detail":"seq_short uid=fav2 from=17489 +4096B age=545586ms"}
+{"ts":1791040978.048051,"code":"play.reject","detail":"cooldown uid=fav2 from=17489 +8192B age=545604ms"}
+{"ts":1791041462.4215035,"code":"play.reject","detail":"not_from_head uid=fav0 from=5585 +1736704B age=8680ms prefetch"}
+{"ts":1791041463.2773652,"code":"play.reject","detail":"not_from_head uid=fav0 from=5585 +2596864B age=9482ms prefetch"}
+{"ts":1791041464.024076,"code":"play.reject","detail":"not_from_head uid=fav0 from=5585 +3448832B age=10283ms prefetch"}
+{"ts":1791041464.9804513,"code":"play.reject","detail":"not_from_head uid=fav0 from=5585 +4304896B age=11086ms prefetch"}
+{"ts":1791041465.897303,"code":"play.reject","detail":"not_from_head uid=fav0 from=5585 +5156864B age=11888ms prefetch"}
+{"ts":1791041467.9756584,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791041467.996355,"code":"msc.quiet","detail":"file=9476608B age=2003ms"}
+{"ts":1791041574.2344172,"code":"msc.phase","detail":"idle unplug"}
+{"ts":1791041576.8515062,"code":"msc.phase","detail":"scan plug"}
+{"ts":1791041577.6989584,"code":"msc.first_read","detail":"1004 ms"}
+{"ts":1791041577.7828455,"code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1061ms prefetch"}
+{"ts":1791041578.309944,"code":"play.reject","detail":"plug_window uid=fav1 from=16465 +4096B age=1609ms"}
+{"ts":1791041580.553473,"code":"play.reject","detail":"not_from_head uid=fav0 from=561 +4096B age=3761ms prefetch"}
+{"ts":1791041580.581459,"code":"play.reject","detail":"plug_window uid=fav0 from=81 +4096B age=3902ms"}
+{"ts":1791041580.7124581,"code":"play.reject","detail":"not_from_head uid=fav0 from=593 +4096B age=4020ms prefetch"}
+{"ts":1791041581.5012088,"code":"play.reject","detail":"not_from_head uid=fav0 from=1313 +491520B age=4821ms prefetch"}
+{"ts":1791041582.3746922,"code":"play.reject","detail":"not_from_head uid=fav0 from=2577 +323584B age=5624ms prefetch"}
+{"ts":1791041583.104991,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +229376B age=6424ms prefetch"}
+{"ts":1791041583.9191313,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +1077248B age=7226ms prefetch"}
+{"ts":1791041584.8050182,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +1925120B age=8026ms prefetch"}
+{"ts":1791041585.6204543,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +2768896B age=8826ms prefetch"}
+{"ts":1791041586.511462,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +3637248B age=9629ms prefetch"}
+{"ts":1791041587.1217897,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +4452352B age=10430ms prefetch"}
+{"ts":1791041587.977144,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +5304320B age=11233ms prefetch"}
+{"ts":1791041590.1749852,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791041590.1751847,"code":"msc.quiet","detail":"file=8704000B age=2003ms"}
+{"ts":1791041610.0991309,"code":"play.reject","detail":"seq_short uid=fav2 from=17489 +4096B age=33414ms"}
+{"ts":1791041610.1096349,"code":"msc.phase","detail":"play Radio BOB!"}
+{"ts":1791041610.1412613,"code":"play.reject","detail":"cooldown uid=fav2 from=17489 +12288B age=33447ms"}

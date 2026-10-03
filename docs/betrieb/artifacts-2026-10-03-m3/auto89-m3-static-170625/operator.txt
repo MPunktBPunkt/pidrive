@@ -1,0 +1,23 @@
+17:08 local — Operator: sieht PD0033; OTG ab/an; wählt Rock Antenne; wartet ab.
+2026-10-03T17:08:11+02:00
+17:11 operator: file läuft noch, ohne Ton und Bild
+2026-10-03T17:11:15+02:00
+ESP_STILL_OFFLINE 17:11:21
+17:11+ operator: PD0035; file läuft ohne Ton/Bild
+2026-10-03T17:11:26+02:00
+17:11–17:12 Operator: PD0035; File läuft ohne Ton/Bild.
+Telemetrie: .89 WLAN unreachable (Pi+WS); SoftAP unreachable.
+Stale /tmp/esp89.json on Pi was 0.4.34/PD0014 — NOT used as evidence.
+Lab .88 still 0.4.42 PD0020 (irrelevant to auto pass).
+17:13 operator: PD0035 — RST Knopf am ESP
+2026-10-03T17:13:54+02:00
+17:14 GATE OK after RST — await HU Rock Antenne play
+17:14 operator: Rock Antenne gewählt; File spielt ohne Ton und Bild
+2026-10-03T17:15:32+02:00
+17:17 operator: läuft noch (ohne Ton/Bild)
+17:19 operator: läuft noch
+17:21 operator: läuft noch; Fortschrittsbalken optisch ~25%
+17:22 operator: Radio will sich abschalten
+2026-10-03T17:22:34+02:00
+17:23 operator: Radio wieder ein; verschiedene Files gewählt (NEUES Fenster, getrennt von Play 17:14-17:22)
+2026-10-03T17:23:39+02:00

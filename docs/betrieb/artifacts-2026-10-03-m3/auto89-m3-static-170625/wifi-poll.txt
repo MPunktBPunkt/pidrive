@@ -1,0 +1,6 @@
+17:12:11 down <urlopen error [Errno 113] No route to host>
+17:12:35 down <urlopen error timed out>
+17:13:00 down <urlopen error timed out>
+17:13:25 down <urlopen error timed out>
+17:13:50 down <urlopen error timed out>
+17:13:55 UP ver=0.4.42-dev serial=PD0035 rc=543 emit=0 phase=scan stream=False plugged=True

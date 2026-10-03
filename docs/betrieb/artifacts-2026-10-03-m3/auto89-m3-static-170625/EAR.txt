@@ -1,0 +1,5 @@
+Auto-M3-static PD0035 2026-10-03
+OTA 0.4.42 L3; bridge --no-audio; RST 17:13 → PD0035
+Play Rock Antenne 17:14–17:22 ohne Ton/Bild; Balken ~25%@17:21
+Play window: rc 2087→2087 Δ0 emit Δ0 ov=0 phase quiet — VALID A_then_E
+17:23+ reselect / M3seq: see auto89-m3seq-1728 and AUTO-M3-FELD-2026-10-03.md
