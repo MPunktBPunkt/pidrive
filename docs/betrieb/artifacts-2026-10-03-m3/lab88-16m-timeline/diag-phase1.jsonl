@@ -1,0 +1,2 @@
+{"ts":1791033383.9858317,"code":"play.reject","detail":"plug_window uid=fav0 from=88 +4096B age=52137ms prefetch"}
+{"ts":1791033384.7895606,"code":"play.reject","detail":"not_from_head uid=fav0 from=288 +319488B age=52940ms prefetch"}

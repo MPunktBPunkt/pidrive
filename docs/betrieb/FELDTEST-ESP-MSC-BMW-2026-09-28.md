@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-03 — Auto **0.4.39** L0; **M0 Lab PASS**; nächster Schritt **M3** (A–E); Plateau-Gate gestrichen; Ring/BT eingefroren.  
+**Stand Diagnose:** 2026-10-03 — Lab `.88` = **0.4.41-dev FAT16 16 MiB** + PDMK-Marker; M0 PASS; M3 Lab-Host A/E+paced; Auto-Feld ausstehend. Ring/BT eingefroren.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |

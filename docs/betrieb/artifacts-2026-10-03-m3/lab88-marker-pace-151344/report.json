@@ -1,0 +1,108 @@
+{
+  "ts": "2026-10-03T13:15:16.314166+00:00",
+  "version": "0.4.40-dev",
+  "serial": "PD0014",
+  "stream_active_before": false,
+  "pre_verify": [
+    {
+      "idx": 0,
+      "ok": true,
+      "got": "50444d4b0000"
+    },
+    {
+      "idx": 1,
+      "ok": true,
+      "got": "50444d4b0001"
+    },
+    {
+      "idx": 2,
+      "ok": true,
+      "got": "50444d4b0002"
+    }
+  ],
+  "markers": [
+    {
+      "idx": 0,
+      "file_off": 252,
+      "lba": 61
+    },
+    {
+      "idx": 1,
+      "file_off": 180120,
+      "lba": 412
+    },
+    {
+      "idx": 2,
+      "file_off": 360144,
+      "lba": 764
+    },
+    {
+      "idx": 3,
+      "file_off": 540168,
+      "lba": 1116
+    },
+    {
+      "idx": 4,
+      "file_off": 720192,
+      "lba": 1467
+    },
+    {
+      "idx": 5,
+      "file_off": 900216,
+      "lba": 1819
+    }
+  ],
+  "expected_t_at_kib_s": [
+    {
+      "idx": 0,
+      "t_est_s": 0.04
+    },
+    {
+      "idx": 1,
+      "t_est_s": 29.32
+    },
+    {
+      "idx": 2,
+      "t_est_s": 58.62
+    },
+    {
+      "idx": 3,
+      "t_est_s": 87.92
+    },
+    {
+      "idx": 4,
+      "t_est_s": 117.22
+    },
+    {
+      "idx": 5,
+      "t_est_s": 146.52
+    }
+  ],
+  "pace_seconds": 90.0,
+  "kib_s": 6.0,
+  "rows": 132,
+  "marker_crossings": [
+    {
+      "t": 0.719,
+      "marker": 0,
+      "file_off": 4096,
+      "lba": 69
+    },
+    {
+      "t": 30.276,
+      "marker": 1,
+      "file_off": 180224,
+      "lba": 413
+    },
+    {
+      "t": 60.39,
+      "marker": 2,
+      "file_off": 360448,
+      "lba": 765
+    }
+  ],
+  "delta_readCount": 1062,
+  "classification_note": "Lab-Host paced cursor crossings \u2014 proves measurement can bind time\u2194marker. Not NBT A\u2013E.",
+  "ok_pre": true,
+  "crossed": 3
+}

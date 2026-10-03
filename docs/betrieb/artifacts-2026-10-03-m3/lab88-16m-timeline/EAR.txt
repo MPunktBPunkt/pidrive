@@ -1,0 +1,5 @@
+M3 lab timeline 151621
+phase1 Δrc=221 Σn=221 balance=True
+phase2 idle 45.0s Δrc=0
+phase3 paced 30.0s Δrc=352
+class A_then_forced_C: Sweep+quiet, then paced host reads produced new LBAs (cooperative host ≠ NBT).

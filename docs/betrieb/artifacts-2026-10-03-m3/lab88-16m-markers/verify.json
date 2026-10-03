@@ -1,0 +1,84 @@
+{
+  "version": "0.4.41-dev",
+  "serial": "PD0015",
+  "uid": "fav0",
+  "lba0": 81,
+  "slot_bytes": 4194304,
+  "markers_checked": 8,
+  "markers_ok": 8,
+  "all_ok": true,
+  "results": [
+    {
+      "idx": 0,
+      "file_off": 252,
+      "stamp_off": 256,
+      "lba": 81,
+      "expect": "50444d4b0000",
+      "got": "50444d4b0000",
+      "ok": true
+    },
+    {
+      "idx": 1,
+      "file_off": 180120,
+      "stamp_off": 180124,
+      "lba": 432,
+      "expect": "50444d4b0001",
+      "got": "50444d4b0001",
+      "ok": true
+    },
+    {
+      "idx": 2,
+      "file_off": 360144,
+      "stamp_off": 360148,
+      "lba": 784,
+      "expect": "50444d4b0002",
+      "got": "50444d4b0002",
+      "ok": true
+    },
+    {
+      "idx": 3,
+      "file_off": 540168,
+      "stamp_off": 540172,
+      "lba": 1136,
+      "expect": "50444d4b0003",
+      "got": "50444d4b0003",
+      "ok": true
+    },
+    {
+      "idx": 4,
+      "file_off": 720192,
+      "stamp_off": 720196,
+      "lba": 1487,
+      "expect": "50444d4b0004",
+      "got": "50444d4b0004",
+      "ok": true
+    },
+    {
+      "idx": 5,
+      "file_off": 900216,
+      "stamp_off": 900220,
+      "lba": 1839,
+      "expect": "50444d4b0005",
+      "got": "50444d4b0005",
+      "ok": true
+    },
+    {
+      "idx": 6,
+      "file_off": 1080240,
+      "stamp_off": 1080244,
+      "lba": 2190,
+      "expect": "50444d4b0006",
+      "got": "50444d4b0006",
+      "ok": true
+    },
+    {
+      "idx": 7,
+      "file_off": 1260108,
+      "stamp_off": 1260112,
+      "lba": 2542,
+      "expect": "50444d4b0007",
+      "got": "50444d4b0007",
+      "ok": true
+    }
+  ]
+}
