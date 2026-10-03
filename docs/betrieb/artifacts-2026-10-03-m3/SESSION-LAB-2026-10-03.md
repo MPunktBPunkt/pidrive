@@ -121,9 +121,19 @@ Tool: `tools/m3_lab_marker_pace.py`
 |------|-----|----------------|
 | `lab88-marker-pace-151344` | 0.4.40 | ~0.7 s / **30.3 s** / **60.4 s** |
 | `lab88-l3-1526/marker-pace` | 0.4.42 | ~0.7 s / **30.1 s** / **60.1 s** / **90.1 s** |
+| **`lab88-l3-langpace-1535`** | **0.4.42** | **12 Kreuzungen** m0–m11, spacing_mean **29.979 s** (360 s Fenster) |
 
 Erwartung bei 6 KiB/s ≈ Marker-Offsets / 6000 — Übereinstimmung gut (D).  
 Das belegt die **Messmethode** für spätere NBT-Cursor-Korrelation (Ebenen 1–3), nicht Live-Verwertbarkeit (Ebene 4).
+
+### 4.4b Langpace L3 (D) — `lab88-l3-langpace-1535/`
+- Dauer 360 s @ 6 KiB/s, stream OFF, fav0=8 MiB.  
+- Pre-Verify PDMK idx 0/1/2 OK.  
+- **12/12** Kreuzungen im Fenster (Marker 0…11); Marker 12 (~351 s Soll) knapp außerhalb der effektiven Cursorreichweite.  
+- Spacing: mean **29.979 s**, min 29.38, max 30.05 — Raster stabil über ~5,5 min.  
+- Fehler vs. 30‑s-Gitter ab m0: |err| ≤ 0,62 s, driftend Richtung 0.  
+- `ΔreadCount` (Tool-Fenster) **4230** ≈ Sektoren der gepaced Payload (~1,9 MiB Cursor).  
+- Tool-Anpassung: `nmark` jetzt dauer-/slotbasiert (kein Hard-Cap 12).
 
 ### 4.5 ffmpeg-Assets
 `mp3/L1.mp3`, `mp3/L2.mp3` + `*.markers.json` — hörbare Beeps für spätere Ohr-Tests.  
@@ -190,7 +200,7 @@ Ungleiche Slot-Größen über `MscGeo::kSlotSectors0/1/2` + angepasstes `slotRan
 ## 9. Offene Lab-Fragen / nächste Schritte
 
 1. **Auto-Feld M3:** dieselbe Timeline+Marker-Methodik am NBT → echtes A–E.  
-2. Optional Lab: längerer Pace über viele Marker (8 MiB ≈ 23 min @ 6 KiB/s für Vollfile).  
+2. ~~Optional Lab-Langpace~~ → **done** 360 s / 12 Kreuzungen (`lab88-l3-langpace-1535`). Vollfile 8 MiB ≈ 23 min nur bei Bedarf.  
 3. Optional: Xing-Varianten-Reihe 2 (erst nach Feld-Muster).  
 4. L4 (50 MiB): neue Disk-Größe + FAT16-Validierung; nicht vor Feld-Bedarf.  
 5. Ring/BT weiter eingefroren.
@@ -201,7 +211,7 @@ Ungleiche Slot-Größen über `MscGeo::kSlotSectors0/1/2` + angepasstes `slotRan
 
 | Repo | Thema | Hinweis |
 |------|--------|---------|
-| `esp32.pidrive` | 0.4.40 Marker, 0.4.41 16M, 0.4.42 L3 | siehe `git log` |
-| `pidrive` | M0/M3 Artefakte + Tools + diese Session | `artifacts-2026-10-03-m0/`, `…-m3/`, diese Datei |
+| `esp32.pidrive` | 0.4.40 Marker, 0.4.41 16M, 0.4.42 L3 | `eaa65f7` (0.4.42) |
+| `pidrive` | M0/M3 Artefakte + Tools + diese Session | `764c1f5` + Langpace-Nachzug |
 
 **Lab live nach Session:** `.88` = **0.4.42-dev** L3 FAT16, Bridge auf `.88`, Host sieht 16 MiB FAT16.

@@ -69,7 +69,9 @@ def main() -> int:
     slot = next(s for s in st["msc"]["slotMap"] if s["uid"] == "fav0")
     lba0, lba1 = int(slot["lba0"]), int(slot["lba1"])
     slot_bytes = (lba1 - lba0 + 1) * 512
-    nmark = min(12, slot_bytes // INTERVAL + 1)
+    # Cover markers reachable in this pace window (+2 slack), capped by slot size.
+    bytes_reach = int(args.seconds * args.kib_s * 1024) + 2 * INTERVAL
+    nmark = min(slot_bytes // INTERVAL + 1, max(4, bytes_reach // INTERVAL + 2))
 
     markers = []
     for i in range(nmark):

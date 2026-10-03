@@ -200,7 +200,8 @@ Unverändert nachrangig: Ring/Pacing nur nach C/D; Remount/BT nur nach A/E + Seq
 7. [x] L0-16M **FAT16** Lab — FW **0.4.41**; 16 MiB / 4 MiB-Slots  
 8. [x] **L3** Lab — FW **0.4.42**; fav0=**8 MiB**; Marker 12/12; Timeline+Pace (`lab88-l3-1526/`, Session-Doku)  
 9. [ ] M3 Auto-Feld A–E  
-10. [ ] Optional Lab-Langpace / Xing-Reihe 2  
+10. [x] Optional Lab-Langpace 360 s — 12 Kreuzungen, spacing≈30 s (`lab88-l3-langpace-1535/`)  
+11. [ ] Optional Xing-Reihe 2 (erst nach Feld-Muster)  
 11. [ ] Ring/BT weiter eingefroren  
 
 Owner: Lab `.88` = **0.4.42** L3; Doku: `artifacts-2026-10-03-m3/SESSION-LAB-2026-10-03.md`.

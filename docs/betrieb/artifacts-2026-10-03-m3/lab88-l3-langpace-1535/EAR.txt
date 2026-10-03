@@ -1,0 +1,20 @@
+L3 Langpace 360s @ 6 KiB/s — lab88-l3-langpace-1535
+FW 0.4.42-dev serial=PD0018 stream_off pre_ok=True
+crossings=12 (marker 0..11) Δrc=4230
+spacing_mean=29.979s min=29.382 max=30.047 (Soll ~30s)
+last file_off=1982464 (~1.89 MiB of 8.0)
+crossings (t / marker / off / err_vs_30s_lattice):
+  t=  0.698s  m= 0  off=   4096  err=+0.000s
+  t= 30.080s  m= 1  off= 180224  err=-0.618s
+  t= 60.119s  m= 2  off= 360448  err=-0.579s
+  t= 90.157s  m= 3  off= 540672  err=-0.541s
+  t=120.195s  m= 4  off= 720896  err=-0.503s
+  t=150.241s  m= 5  off= 901120  err=-0.457s
+  t=180.276s  m= 6  off=1081344  err=-0.422s
+  t=210.307s  m= 7  off=1261568  err=-0.391s
+  t=240.341s  m= 8  off=1441792  err=-0.357s
+  t=270.380s  m= 9  off=1622016  err=-0.318s
+  t=300.427s  m=10  off=1802240  err=-0.271s
+  t=330.470s  m=11  off=1982464  err=-0.228s
+Note: Lab-Host paced — not NBT A–E. Proves long-window time↔marker bind on L3.
+Tool nmark now duration-based (no hard cap 12).

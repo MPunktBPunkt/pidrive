@@ -1,0 +1,4 @@
+/dev/sda: DOS/MBR boot sector, code offset 0x3c+2, OEM-ID "mkfs.fat", sectors/cluster 8, root entries 512, sectors 32768 (volumes <=32 MB), Media descriptor 0xf8, sectors/FAT 16, sectors/track 16, serial number 0x41ed56f, label: "PIDRIVE    ", FAT (16 bit)
+32768
+NAME MAJ:MIN RM     SIZE RO TYPE MOUNTPOINTS
+sda    8:0    1 16777216  1 disk 

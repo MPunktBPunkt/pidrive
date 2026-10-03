@@ -1,0 +1,252 @@
+{
+  "ts": "2026-10-03T13:40:25.791868+00:00",
+  "version": "0.4.42-dev",
+  "serial": "PD0018",
+  "stream_active_before": false,
+  "pre_verify": [
+    {
+      "idx": 0,
+      "ok": true,
+      "got": "50444d4b0000"
+    },
+    {
+      "idx": 1,
+      "ok": true,
+      "got": "50444d4b0001"
+    },
+    {
+      "idx": 2,
+      "ok": true,
+      "got": "50444d4b0002"
+    }
+  ],
+  "markers": [
+    {
+      "idx": 0,
+      "file_off": 252,
+      "lba": 81
+    },
+    {
+      "idx": 1,
+      "file_off": 180120,
+      "lba": 432
+    },
+    {
+      "idx": 2,
+      "file_off": 360144,
+      "lba": 784
+    },
+    {
+      "idx": 3,
+      "file_off": 540168,
+      "lba": 1136
+    },
+    {
+      "idx": 4,
+      "file_off": 720192,
+      "lba": 1487
+    },
+    {
+      "idx": 5,
+      "file_off": 900216,
+      "lba": 1839
+    },
+    {
+      "idx": 6,
+      "file_off": 1080240,
+      "lba": 2190
+    },
+    {
+      "idx": 7,
+      "file_off": 1260108,
+      "lba": 2542
+    },
+    {
+      "idx": 8,
+      "file_off": 1440132,
+      "lba": 2893
+    },
+    {
+      "idx": 9,
+      "file_off": 1620156,
+      "lba": 3245
+    },
+    {
+      "idx": 10,
+      "file_off": 1800180,
+      "lba": 3596
+    },
+    {
+      "idx": 11,
+      "file_off": 1980204,
+      "lba": 3948
+    },
+    {
+      "idx": 12,
+      "file_off": 2160228,
+      "lba": 4300
+    },
+    {
+      "idx": 13,
+      "file_off": 2340252,
+      "lba": 4651
+    },
+    {
+      "idx": 14,
+      "file_off": 2520120,
+      "lba": 5003
+    },
+    {
+      "idx": 15,
+      "file_off": 2700144,
+      "lba": 5354
+    }
+  ],
+  "expected_t_at_kib_s": [
+    {
+      "idx": 0,
+      "t_est_s": 0.04
+    },
+    {
+      "idx": 1,
+      "t_est_s": 29.32
+    },
+    {
+      "idx": 2,
+      "t_est_s": 58.62
+    },
+    {
+      "idx": 3,
+      "t_est_s": 87.92
+    },
+    {
+      "idx": 4,
+      "t_est_s": 117.22
+    },
+    {
+      "idx": 5,
+      "t_est_s": 146.52
+    },
+    {
+      "idx": 6,
+      "t_est_s": 175.82
+    },
+    {
+      "idx": 7,
+      "t_est_s": 205.1
+    },
+    {
+      "idx": 8,
+      "t_est_s": 234.4
+    },
+    {
+      "idx": 9,
+      "t_est_s": 263.7
+    },
+    {
+      "idx": 10,
+      "t_est_s": 293.0
+    },
+    {
+      "idx": 11,
+      "t_est_s": 322.3
+    },
+    {
+      "idx": 12,
+      "t_est_s": 351.6
+    },
+    {
+      "idx": 13,
+      "t_est_s": 380.9
+    },
+    {
+      "idx": 14,
+      "t_est_s": 410.18
+    },
+    {
+      "idx": 15,
+      "t_est_s": 439.48
+    }
+  ],
+  "pace_seconds": 360.0,
+  "kib_s": 6.0,
+  "rows": 528,
+  "marker_crossings": [
+    {
+      "t": 0.698,
+      "marker": 0,
+      "file_off": 4096,
+      "lba": 89
+    },
+    {
+      "t": 30.08,
+      "marker": 1,
+      "file_off": 180224,
+      "lba": 433
+    },
+    {
+      "t": 60.119,
+      "marker": 2,
+      "file_off": 360448,
+      "lba": 785
+    },
+    {
+      "t": 90.157,
+      "marker": 3,
+      "file_off": 540672,
+      "lba": 1137
+    },
+    {
+      "t": 120.195,
+      "marker": 4,
+      "file_off": 720896,
+      "lba": 1489
+    },
+    {
+      "t": 150.241,
+      "marker": 5,
+      "file_off": 901120,
+      "lba": 1841
+    },
+    {
+      "t": 180.276,
+      "marker": 6,
+      "file_off": 1081344,
+      "lba": 2193
+    },
+    {
+      "t": 210.307,
+      "marker": 7,
+      "file_off": 1261568,
+      "lba": 2545
+    },
+    {
+      "t": 240.341,
+      "marker": 8,
+      "file_off": 1441792,
+      "lba": 2897
+    },
+    {
+      "t": 270.38,
+      "marker": 9,
+      "file_off": 1622016,
+      "lba": 3249
+    },
+    {
+      "t": 300.427,
+      "marker": 10,
+      "file_off": 1802240,
+      "lba": 3601
+    },
+    {
+      "t": 330.47,
+      "marker": 11,
+      "file_off": 1982464,
+      "lba": 3953
+    }
+  ],
+  "delta_readCount": 4230,
+  "classification_note": "Lab-Host paced cursor crossings \u2014 proves measurement can bind time\u2194marker. Not NBT A\u2013E.",
+  "ok_pre": true,
+  "crossed": 12
+}

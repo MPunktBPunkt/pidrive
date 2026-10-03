@@ -16,6 +16,7 @@
 | `lab88-16m-markers/` | 0.4.41 | Host **FAT16**; PDMK 8/8; 4 MiB-Slots |
 | `lab88-16m-timeline/` | 0.4.41 | Idle Δ0; paced forced-C |
 | **`lab88-l3-1526/`** | **0.4.42** | **fav0=8 MiB**; FAT16; PDMK **12/12**; Timeline A/E+paced; Pace 0/30/60/90 s |
+| **`lab88-l3-langpace-1535/`** | **0.4.42** | **360 s** Langpace; **12** Kreuzungen m0–m11; spacing_mean **29.979 s** |
 
 ## L3-Geometrie (0.4.42)
 
@@ -38,4 +39,4 @@ Cursor-nahe Reads nur unter **Lab-Paced-Consume @ 6 KiB/s**.
 
 ## Nächstes
 
-Auto-Feld mit gleicher Methodik — oder Lab-Langpace über mehr Marker. Ring/BT eingefroren.
+Auto-Feld mit gleicher Methodik. Lab-Langpace 360 s erledigt. Ring/BT eingefroren.
