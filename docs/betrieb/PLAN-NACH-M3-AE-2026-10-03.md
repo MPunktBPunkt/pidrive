@@ -1,69 +1,65 @@
-# Plan nach Auto-M3 — A_then_E (Rev.2, 2026-10-03)
+# Plan nach Auto-M3 — A_then_E (Rev.3, 2026-10-03)
 
-**Basis:** [`AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md) · Korrektur [`AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md) · Semantik [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)
+**Basis:** [`GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md) · Addendum · Semantik [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)
 
-**Enger Befund:** `A_then_E_within_observed_window`; Cache-Erschöpfung nicht erreicht; `playingUid` im Play-Fenster leer (status-10 = Reselect).
+**Enger Befund (D):** `A_then_E_within_observed_window`.  
+**Vollscan 8 MiB unique:** wahrscheinlich (**H**), nicht D.  
+**Export-Unique ~4 MiB:** Untergrenze, **kein** Cache-Inhalt.
 
 ---
 
-## 1. Drei Fragen (nicht vermischen)
+## 0. Vor dem Feld: Lab-Kalibrierung (P0, Pflicht)
+
+### Kalibrierung A — Pre-Connect
+Bridge vor Plug verifizieren **und** Separatlauf mit Read-Beginn während Connect.  
+Soll: bekannte LBA/Anzahl vs Status vs JSONL → Anteil vor Export-Ready.
+
+### Kalibrierung B — Burst (`kBurstGapMs=50`)
+Kontrollierte Bursts nach Bridge-up; Abstände um 50 ms; Intervalle+Zähler prüfen.
+
+Negatives Q2 ohne A+B gilt **nicht** als HU-Beweis.
+
+---
+
+## 1. Drei Fragen
 
 | ID | Frage |
 |----|--------|
-| **Q1** Select-Trigger | Erzeugt manuelle Auswahl ohne Remount neue MSC-Reads? |
-| **Q2** Track-Ende | Erzeugt natürliches Titelende / Auto-Next neue Reads? |
-| **Q3** Frische | Liest die HU dabei **geänderte** Daten (nicht nur Cache)? |
+| **Q1** | Select ohne Remount → neue MSC-Reads? |
+| **Q2** | Natürliches Trackende / Auto-Next → neue Reads? |
+| **Q3** | Dabei frische (geänderte) Inhalte? |
 
-Klassifikation ergänzend zu A–E:
-
-| Code | Bedeutung |
-|------|-----------|
-| **S0** | Select ohne neue Reads |
-| **S1** | nur Menü/FAT/Dir |
-| **S2** | Nutzdaten Zielslot |
-| **S3** | Reads bei natürlichem Übergang |
-| **S4** | Frische Inhalte bestätigt |
-| **SR** | Reads nur nach Remount |
+**S0–SR** pro Arm (nicht ein Gesamtlabel).
 
 ---
 
-## 2. Drei Arme (eigene Artefaktordner)
+## 2. Feldarme
 
-1. **Arm1 — Select:** Mount → Idle 30 s → A/B/C je ≥15 s; kein OTG.  
-2. **Arm2 — Trackende:** kurze hörbare Titel, Autoplay/Reihenfolge, **nicht** manuell umschalten.  
-3. **Arm3 — Remount:** Soft-Remount zwischen Selects; Kausalität, kein Produkt-Claim.
+1. **Arm1 Select** — Idle 30 s → A/B/C; kein OTG.  
+2. **Arm2 Trackende** — kurze **hörbare** Titel; nicht manuell umschalten.  
+3. **Arm3 Remount** — Soft-Remount separat.
 
-Bridge `--no-audio` für Baseline. Kurze Dateien **verkürzen** Laufzeit, erzwingen **keine** Frische.
+Bridge vor Messfenster up. Kurze Dateien erzwingen **keine** Frische.
 
----
-
-## 3. Lab vorher
-
-- Hörbare Marker pro Slot + MP3-Parser-Check  
-- `m3_trace_coverage.py` gegen Volltrace (Status ≈ JSONL)  
-- Geometrie/Slots unverändert reproduzierbar  
+### Optional P1b
+fav1 512 KiB (~87 s) passiv Trackende — Indikator, kein Q2-Ersatz.
 
 ---
 
-## 4. Entscheidung nach M3seq
+## 3. Nach M3seq
 
-| Ergebnis | Nächster Schritt |
-|----------|------------------|
-| S0 und kein S3 | Chunk ohne Remount schwach → Arm3 / Produkt Remount skizzieren |
-| nur S1 | kein Audio-Read-Nachweis |
-| S2 oder S3 | dann Q3 Frische |
-| S4 | Chunk-Pfad detaillieren (Timing, UX) |
-| nur SR | Remount-Pfad bewerten |
-| ungültige Trace | wiederholen, keine Architektur |
+| Ergebnis | Folge |
+|----------|--------|
+| S4 | Chunk vertiefen |
+| nur SR | Remount skizzieren |
+| S0∧¬S3 | Chunk ohne Stimulus schwach |
+| kalibriert negativ | BT-Hybrid als Produktoption diskutieren |
 
----
-
-## 5. Optional parallel (nicht statt M3seq)
-
-**Langpass Pfad A:** ≥20 min Play, Export von Plug an vollständig, Coverage live; Ziel jenseits `maxSeq`/bekannter Gaps. Ring bleibt aus.
+**Langpass:** erst danach; bei Vollscan-H eher **≥25 min** @48 k + Marge — ersetzt M3seq nicht.  
+**L4:** eigene Frage nach FAT-Validierung.
 
 ---
 
-## 6. Eingefroren
+## 4. Eingefroren
 
-Ring, PSRAM, Pacing, Remount-Implementierung, BT-Hybrid, Live als M3-Ersatz, L4 parallel, Play-Detect als alleiniger Transportnachweis.
+Ring, PSRAM, Pacing, Remount-Impl, BT-Hybrid-Code, Live-als-M3, L4 parallel.

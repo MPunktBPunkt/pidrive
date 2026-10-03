@@ -18,7 +18,7 @@
 | **`lab88-l3-1526/`** | **0.4.42** | **fav0=8 MiB**; FAT16; PDMK **12/12**; Timeline A/E+paced; Pace 0/30/60/90 s |
 | **`lab88-l3-langpace-1535/`** | **0.4.42** | **360 s** Langpace; **12** Kreuzungen m0–m11; spacing_mean **29.979 s** |
 | **`lab88-l3-fat-verify-1615/`** | **0.4.42** | BPB+`fsck.fat`: **4087 Cluster = FAT16** (Margin +2); fav0 SHA dokumentiert |
-| **`AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md`** | — | fav0/fav1 Timing gelöst; Coverage/maxSeq; Semantik |
+| **`GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`** | — | Cursor-Gesamtbericht inkl. Mistral/Claude-Bilanz; Kalibrierung A+B |
 | **`AUTO-M3-FELD-2026-10-03.md`** | **0.4.42 Auto** | Feld **A_then_E**: Play ~8 min Δrc=0; Artefakte `auto89-m3-static-170625/`, seq `auto89-m3seq-1728/` |
 
 ## L3-Geometrie (0.4.42)

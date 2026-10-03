@@ -53,4 +53,5 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 ~~Lab-Langpace 360 s~~ → **done** (`lab88-l3-langpace-1535/`, 12 Kreuzungen ≈30 s).  
 ~~L3 BPB+fsck Cluster-Nachweis~~ → **done** PASS_GEOMETRY_LAB (`lab88-l3-fat-verify-1615/`).  
 ~~Auto-M3-statisch~~ → **done A_then_E (Fenster)** + Addendum Kritik.  
-**Jetzt:** M3seq Q1–Q3 — Plan Rev.2 [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md). Semantik [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md).
+**Jetzt:** Lab-Kalibrierung A+B, dann M3seq Q1–Q3 — Plan Rev.3 [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md).  
+Gesamtbericht: [`artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md).
