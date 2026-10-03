@@ -1,41 +1,40 @@
 # Artefakte M3 — Lab 2026-10-03 (ohne Auto)
 
 **Kontext:** Nutzer nicht im Auto → nur Lab `.88` / Proxmox `.108`.  
-**FW:** `0.4.37-dev` L0 · Bridge `.105` · **Inhalt:** weiterhin `Mp3Silence` (markierte MP3s als Assets vorbereitet, noch nicht in ESP injiziert).
+**FW Lab:** **`0.4.40-dev`** FAT12 L0 + **PDMK-Marker** in `Mp3Silence` (alle ~30 s / 180 KiB).  
+**Bridge:** `.105` · Host `.108`
 
-## Assets
+## Assets (ffmpeg, für spätere Hörtests)
 
 | Datei | Größe | Marker |
 |-------|------:|--------|
-| `mp3/L1.mp3` + `L1.markers.json` | ~524 KiB | alle 30 s |
+| `mp3/L1.mp3` + `L1.markers.json` | ~524 KiB | alle 30 s (hörbar) |
 | `mp3/L2.mp3` + `L2.markers.json` | ~2.0 MiB | alle 30 s |
 
-Generator: `tools/m3_make_marked_mp3.py`
+ESP-Slot nutzt vorerst **algorithmische** PDMK-Stamps (nicht die ffmpeg-Dateien).
 
-## Timeline-Pass `lab88-timeline-142120/`
+## Marker-Verify `lab88-markers-1503/`
 
-Tool: `tools/m3_lab_host_timeline.py`
+Tool: `tools/m3_lab_verify_markers.py`  
+**PASS:** 6/6 Marker `PDMK`+idx auf fav0 (Stream muss **aus** sein — sonst Overlay statt Silence).
 
-| Phase | Ergebnis |
-|-------|----------|
-| 1 Sweep (Remount+Nudge) | Δrc=167 = Σn; ~0,7 s Burst; Bilanz ok |
-| 2 Idle 90 s | **Δrc=0** — keine weiteren Reads |
-| 3 Paced 60 s @ 6 KiB/s fav0 | Δrc=704 = Σn; LBA 57→755 |
+## Timeline `lab88-timeline-142120/` (vorher, 0.4.37 Silence)
 
-**Lab-Host-Klassifikation:** `A_then_forced_C`  
-→ Nach Sweep wie Cache/fertig (A/E); cursor-nahe Reads **nur**, wenn der Lab-Host bewusst paced nachliest.  
-**Nicht** BMW-NBT-A–E.
+Sweep→Idle A/E; Paced forced-C (Lab-Host ≠ NBT).
 
-Ebenen: 1 ja · 2 ungeklärt · 3 nur unter Lab-Pacing · 4 nein (kein Live).
+## Timeline `lab88-timeline-markers-1503/` (0.4.40 + Marker)
+
+Gleiche Methodik nach Marker-OTA — siehe `report.json`.
 
 ## Folgerung
 
-1. Messpipeline (Sweep-Ende / Idle / Paced) funktioniert mit M0-Gleichung.  
-2. Linux-Host allein belegt nicht NBT-Verhalten — bestätigt nur: ohne Nachlese-Stimulus = still.  
-3. Nächste Lab-Schritte: markierte MP3 in Slot bringen (kleine FW-/Payload-Änderung) **oder** Feld M3 am Auto mit gleicher Timeline-Methodik.  
-4. Kein Ring/BT.
+1. Messpipeline + M0-Bilanz ok.  
+2. Marker im Slot **lab-verifiziert** (Ebene-1-Anker für spätere Cursor-Korrelation).  
+3. Lab-Host nach Sweep idle = A/E; paced = forced C — **kein** NBT-Urteil.  
+4. Nächstes: Feld A–E am Auto **oder** Lab L3-Geometrie; kein Ring/BT.
 
 ## Tools
 
 - `tools/m3_make_marked_mp3.py`
 - `tools/m3_lab_host_timeline.py`
+- `tools/m3_lab_verify_markers.py`

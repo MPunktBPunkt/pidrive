@@ -1,0 +1,6 @@
+M3 lab timeline 150342
+phase1 Δrc=128 Σn=0 balance=False
+phase2 idle 60.0s Δrc=0
+phase3 paced 45.0s Δrc=536
+class A_then_forced_C: Sweep+quiet, then paced host reads produced new LBAs (cooperative host ≠ NBT).
+NOTE: bridge was down during this pass — classification from status ΔreadCount; JSONL empty (export path). Marker verify PASS separate.
