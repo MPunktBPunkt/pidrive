@@ -48,4 +48,5 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 
 ## Nächster konkreter Schritt
 
-**M0 im Lab:** Mount-Sweep zweimal, Burst-JSONL wächst, Gleichung `readCount = Σ n + drops` pro Session dokumentieren — dann M3 L1.
+~~M0 Lab-Mount-Sweep~~ → **done PASS** (`artifacts-2026-10-03-m0/lab88-141005`).  
+**Jetzt:** M3 L1/L2 Lab (statische markierte MP3, Muster A–E).

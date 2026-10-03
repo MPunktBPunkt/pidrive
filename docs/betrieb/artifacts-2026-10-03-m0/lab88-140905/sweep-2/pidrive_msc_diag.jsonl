@@ -1,0 +1,5 @@
+{"ts":1791029353.696885,"code":"msc.quiet","detail":"file=204800B age=6804868ms"}
+{"ts":1791029355.7481291,"code":"msc.phase","detail":"scan boot"}
+{"ts":1791029355.835304,"code":"play.reject","detail":"not_from_head uid=fav2 from=5104 +4096B age=6827172ms prefetch"}
+{"ts":1791029358.3392859,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791029358.3397405,"code":"msc.quiet","detail":"file=368640B age=2003ms"}

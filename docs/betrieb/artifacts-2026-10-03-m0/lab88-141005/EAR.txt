@@ -1,0 +1,4 @@
+M0 lab mount-sweep 141005
+all_pass=True spread={'values': [296, 295], 'same': False}
+run1: PASS Δrc=296 Σn=296 lines=169 emitΔ=169 emit==lines=True
+run2: PASS Δrc=295 Σn=295 lines=210 emitΔ=210 emit==lines=True

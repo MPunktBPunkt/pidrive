@@ -1,0 +1,4 @@
+M0 lab mount-sweep 140905
+all_pass=False spread={'values': [193, 346], 'same': False}
+run1: FAIL_EMPTY_EXPORT rc=193 Σn=0 lines=0 emitΔ=0
+run2: FAIL_BALANCE rc=346 Σn=153 lines=118 emitΔ=118

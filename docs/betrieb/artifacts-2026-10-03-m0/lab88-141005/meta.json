@@ -1,0 +1,24 @@
+{
+  "esp": "http://192.168.178.88",
+  "pi": "pidrive@192.168.178.105",
+  "pre": {
+    "version": "0.4.37-dev",
+    "uptime": "1h 54min",
+    "ip": "192.168.178.88",
+    "usbSerial": "PD0009",
+    "remountGen": 9,
+    "plugCount": 1,
+    "msSincePlug": 6876995,
+    "phase": "play",
+    "readCount": 378,
+    "readsEmit": 137,
+    "readOverflow": 0,
+    "bytesRead": 1275904,
+    "bytesFile": 466944,
+    "pumpTcpUp": true,
+    "pumpTcpPeer": "192.168.178.105",
+    "otgUp": true,
+    "sessionKey": "0.4.37-dev|PD0009|9|1h 54min"
+  },
+  "note": "M0 mount-sweep; equation readCount = \u03a3(burst.n) + drops"
+}

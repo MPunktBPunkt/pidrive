@@ -28,3 +28,11 @@ Verified in `esp32.pidrive` `UsbMscGadget.cpp` / `.h` / `StreamBuffer.h` on 2026
 - Host replay: `tools/nbt_suite.py` / `nbt_replay.py` (needs Proxmox `/dev/sg0`).
 
 **Decision:** No separate probe-FW repo — instrumentation + remount/config APIs already cover HU analysis scaffolding; BMW cache questions remain Auto-only (B7/150s).
+
+## `msc.readCount` / `msc.readsEmit` (M0 Lab 2026-10-03)
+
+- `readCount`: SCSI-/Host-Read-Ereignisse; Reset nur an **USB-Plug-Kante** (`onUsbPlugged`), **nicht** bei Soft-`remountMedia`.
+- `readsEmit`: Anzahl **Burst-Flushes** an den Pump-Client (`noteReadsEmitted` nach `flushReadBurst`); Aggregation `kBurstGapMs=50`, `kBurstMaxN=32`.
+- Normative Fenster-Gleichung: **`ΔreadCount = Σ(burst.n) + ΔreadOverflow`**.
+- Zusätzlich: **`ΔreadsEmit = Anzahl JSONL-Zeilen`** im gleichen Fenster (Lab PASS).
+- Ohne verbundenen `pump_bridge`: `readsEmit` bleibt 0 und `/tmp/pidrive_msc_reads.jsonl` wächst nicht — trotz steigendem `readCount`.

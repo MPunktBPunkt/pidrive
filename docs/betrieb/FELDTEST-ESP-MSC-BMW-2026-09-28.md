@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-03 Abend — Auto **0.4.39-dev** FAT12 L0; §11.11/§11.12; **Übergabe Rev.4:** M0 → M3 (A–E), Plateau-Gate gestrichen; Ring/BT eingefroren.  
+**Stand Diagnose:** 2026-10-03 — Auto **0.4.39** L0; **M0 Lab PASS**; nächster Schritt **M3** (A–E); Plateau-Gate gestrichen; Ring/BT eingefroren.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -946,7 +946,7 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 8. ~~**60‑s-Feldtest**~~ — **done** 2026-10-02 Nachmittag (§11.10): Mount-Scan+Cache in 60 s-Fenstern; Nachlesen über Slot-Grenzen **offen**.  
 9. ~~**B7 / 150 s**~~ — **B7-A done** 2026-10-03 (§11.11): Cache-only Ist-Geometrie; B7-B/C optional.  
 10. ~~**L0 Auto-OTA**~~ — **done** 2026-10-03 (§11.12): Listing ok (`0.4.39` FAT12); Play weiter Cache; Lesevolumen skaliert mit Angebot.  
-11. **M0 Messintegrität** — `readCount` vs Burst-`readsEmit` / Export / Session ([AUFTRAG-M0](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)).  
+11. ~~**M0 Messintegrität**~~ — **Lab PASS** 2026-10-03 (`artifacts-2026-10-03-m0/`): `ΔreadCount = Σ(burst.n)`; `ΔreadsEmit` = JSONL-Zeilen.  
 12. **M3 L-Leiter** — Sweep-Ende→Play; Muster **A–E**; markierte Frames; **kein** Plateau-Gate ([Auftrag Rev.4](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). Lab → Feld-Hypothese.  
 13. Ring/Pacing/BT erst nach A–E ([UEBERGABE](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)).
 

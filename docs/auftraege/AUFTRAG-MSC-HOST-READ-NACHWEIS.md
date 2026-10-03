@@ -191,7 +191,7 @@ Unverändert nachrangig: Ring/Pacing nur nach C/D; Remount/BT nur nach A/E + Seq
 
 ## 10. Sofort-Checkliste
 
-1. [ ] **M0** — Zählsemantik + Export + Session (AUFTRAG-M0)  
+1. [x] **M0** — Lab PASS 2026-10-03 (`artifacts-2026-10-03-m0/`, Δrc=Σn)  
 2. [x] B7-A Baseline — 2026-10-03  
 3. [x] L0 Listing Auto 0.4.39 — §11.12  
 4. [ ] M3 L1/L2 Lab mit A–E + Marker  
@@ -199,4 +199,4 @@ Unverändert nachrangig: Ring/Pacing nur nach C/D; Remount/BT nur nach A/E + Seq
 6. [ ] Feld nur Hypothesen-Bestätigung nach Lab  
 7. [ ] Ring/BT weiter eingefroren  
 
-Owner: Lab `.88` zuerst; Auto `.89` erst nach M0+M3-Lab.
+Owner: Lab `.88` zuerst; Auto `.89` erst nach M3-Lab.

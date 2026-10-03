@@ -41,22 +41,54 @@ Polls vor Session-Marker **nicht** mit neuer Session verrechnen.
 
 ### 3. Exportpfad-Integrität
 
-1. Wo schreibt Bridge `/tmp/pidrive_msc_reads.jsonl`? Wann startet Handler?  
-2. Warum B7-A-Datei 0 Bytes trotz `readCount`? (Handler down, Offset-Slice, OTA, Restart)  
-3. Session-Ende: Zeilenzahl / `Σ n` vs. `readCount` als Checksumme ins Summary.
+1. Wo schreibt Bridge `/tmp/pidrive_msc_reads.jsonl` **und** `/tmp/pidrive_msc_diag.jsonl`? (beide Handler — B7-A hatte **beide** 0 Bytes → gemeinsamer Ausfallpunkt prüfen)  
+2. Warum B7-A leer trotz `readCount`? (`readsHandler_`/`Pump` down, Offset-Slice, OTA, Bridge nur auf anderem Host)  
+3. Session-Ende: Zeilenzahl / `Σ n` vs. `readCount` als Checksumme ins Summary.  
+4. Leerer Export = **Fail** des Passes für jedes Transporturteil (Tools müssen das markieren).
+
+**Code-Hinweis:** `readsEmit` steigt nur über `noteReadsEmitted()` im Pump-Pfad — **ohne** verbundenen `pump_bridge` bleibt `readsEmit=0` trotz `readCount↑`. M0-Lab braucht Bridge→ESP **vor** dem Sweep.
 
 ### 4. Trace-Inhalt
 
-Zwei reproduzierbare Lab-Mount-Sweeps mit **nicht-leerem** Trace; LBA grob klassifizierbar (FAT/DIR/Head/Body).
+Zwei reproduzierbare Lab-Mount-Sweeps mit **nicht-leerem** Trace; LBA grob klassifizierbar (FAT/DIR/Head/Body).  
+Doppel-Lauf zusätzlich für **Streubreite**: gleiche `readCount`? (Auto-Replug oft deterministisch ~421 — Lab-Vergleich für M3-Übertragbarkeit.)
+
+### 5. Session-ID (minimal)
+
+`bootMs`/`uptime` + `usbSerial` (+ FW) reichen — **kein** neues NVS-Feld. Bilanz nur Pi-Tooling (`Σ burst.n` im Summary).
+
+## Gleichung (normativ)
+
+```
+ΔreadCount = Σ(burst.n) + Δdrops   # Soft-Remount / Beobachtungsfenster
+```
+
+Absolut-`readCount` nur nach **USB-Plug-Reset** (Code: `onUsbPlugged`). Soft-`remountMedia` setzt Counter **nicht** zurück.
+
+**nicht** `readCount = Anzahl JSONL-Zeilen + drops`.  
+`readsEmit` = Burst-Flushes (`kBurstGapMs=50`); `ΔreadsEmit` sollte = JSONL-Zeilen im Fenster.  
+`readOverflow=0` ≠ Vollständigkeitsbeweis ohne Σ-Bilanz.
+
+## Lab-Ergebnis 2026-10-03
+
+Siehe [`../betrieb/artifacts-2026-10-03-m0/`](../betrieb/artifacts-2026-10-03-m0/) — **PASS** (2×): Δrc 296/295 = Σn; emitΔ = Zeilen; diag>0.
 
 ## Abnahme
 
-- [ ] Gleichung pro Session erfüllt (Batch-`n` korrekt einbezogen)  
-- [ ] Zwei Mount-Sweeps repro; Trace-Dateien >0 und inhaltlich stimmig  
-- [ ] Session-Grenze in Tools/Docs verankert (kein stiller Cross-Boot-Delta)  
-- [ ] Leerer Export im Feld = Fail des Passes für Transporturteil (explizit markieren)
+- [x] Gleichung pro Session/Fenster erfüllt (Batch-`n` korrekt einbezogen) — Lab 2026-10-03  
+- [x] Zwei Mount-Sweeps repro; Trace-Dateien >0 und inhaltlich stimmig  
+- [x] Session-Grenze / Δ-Semantik in Tools/Docs verankert  
+- [x] Leerer Export = Fail (explizit; Lernlauf `lab88-140905`)  
+- [x] `diag`-JSONL im Lab-Sweep >0  
 
 **Danach erst M3.**
+
+## Praxis-Hinweise (Mistral + Lab)
+
+1. **reads + diag** prüfen (gemeinsamer Bridge-Ausfall).  
+2. Doppel-Lauf → Streubreite notieren (hier 296 vs 295).  
+3. Session-ID minimal: `uptime`/`usbSerial`/`remountGen`/`FW` — kein NVS.  
+4. Tool: `tools/m0_lab_mount_sweep.py`.
 
 ## Nicht-Ziele
 
