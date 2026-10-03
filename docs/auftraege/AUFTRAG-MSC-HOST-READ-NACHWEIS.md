@@ -202,7 +202,7 @@ Unverändert nachrangig: Ring/Pacing nur nach C/D; Remount/BT nur nach A/E + Seq
 9. [x] Optional Lab-Langpace 360 s — 12 Kreuzungen (`lab88-l3-langpace-1535/`)  
 10. [x] L3 FAT16 BPB+fsck — 4087 Cluster, PASS_GEOMETRY_LAB (`lab88-l3-fat-verify-1615/`)  
 11. [x] **Auto-M3-statisch** — A_then_E Fenster; Addendum [`AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md`](../betrieb/artifacts-2026-10-03-m3/AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md)  
-12. [ ] **Lab-Kalibrierung A+B** (Pre-Connect + Burst-50 ms) vor Feld-M3seq  
+12. [x] **Lab-Kalibrierung A+B** (Pre-Connect + Burst-50 ms) — PASS [`lab88-export-calib-1835/`](../betrieb/artifacts-2026-10-03-m3/lab88-export-calib-1835/)  
 13. [ ] **M3seq** Q1–Q3 / Arm1–3 — Plan Rev.3 [`../betrieb/PLAN-NACH-M3-AE-2026-10-03.md`](../betrieb/PLAN-NACH-M3-AE-2026-10-03.md)  
 14. [ ] Optional fav1 Trackende-Indikator / Langpass ≥25 min (nach M3seq)  
 15. [ ] Optional L4 Cache-Limit (nach FAT-Validierung)  

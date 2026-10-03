@@ -1,0 +1,16 @@
+{
+  "version": "0.4.42-dev",
+  "uptime": "3h 0min",
+  "usbSerial": "PD0026",
+  "remountGen": 26,
+  "plugged": true,
+  "phase": "play",
+  "readCount": 35394,
+  "readsEmit": 11754,
+  "readOverflow": 0,
+  "bytesFile": 55425024,
+  "bytesRead": 57445376,
+  "lastReadLba": 536,
+  "pumpTcpUp": false,
+  "msSincePlug": 10826117
+}

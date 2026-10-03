@@ -18,6 +18,7 @@
 | **`lab88-l3-1526/`** | **0.4.42** | **fav0=8 MiB**; FAT16; PDMK **12/12**; Timeline A/E+paced; Pace 0/30/60/90 s |
 | **`lab88-l3-langpace-1535/`** | **0.4.42** | **360 s** Langpace; **12** Kreuzungen m0–m11; spacing_mean **29.979 s** |
 | **`lab88-l3-fat-verify-1615/`** | **0.4.42** | BPB+`fsck.fat`: **4087 Cluster = FAT16** (Margin +2); fav0 SHA dokumentiert |
+| **`lab88-export-calib-1835/`** | **0.4.42** | **Kalib A+B PASS**: Pre-Connect-Lücke `export_frac=0`; Burst 10/50/100 ms vollständig; M0 `Δrc=Σn` |
 | **`GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`** | — | Cursor-Gesamtbericht inkl. Mistral/Claude-Bilanz; Kalibrierung A+B |
 | **`AUTO-M3-FELD-2026-10-03.md`** | **0.4.42 Auto** | Feld **A_then_E**: Play ~8 min Δrc=0; Artefakte `auto89-m3-static-170625/`, seq `auto89-m3seq-1728/` |
 
@@ -38,8 +39,8 @@ Cursor-nahe Reads nur unter **Lab-Paced-Consume @ 6 KiB/s**.
 
 ## Tools
 
-`m0_lab_mount_sweep.py` · `m3_make_marked_mp3.py` · `m3_lab_verify_markers.py` · `m3_lab_host_timeline.py` · `m3_lab_marker_pace.py`
+`m0_lab_mount_sweep.py` · `m3_make_marked_mp3.py` · `m3_lab_verify_markers.py` · `m3_lab_host_timeline.py` · `m3_lab_marker_pace.py` · **`m3_lab_export_calib.py`**
 
 ## Nächstes
 
-→ Feldauswertung [`AUTO-M3-FELD-2026-10-03.md`](AUTO-M3-FELD-2026-10-03.md) · Plan [`../PLAN-NACH-M3-AE-2026-10-03.md`](../PLAN-NACH-M3-AE-2026-10-03.md).
+→ Feld **M3seq** Q1–Q3 (Plan Rev.3); Lab-Kalib A+B erledigt (`lab88-export-calib-1835/`).

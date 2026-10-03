@@ -21,7 +21,7 @@ Die Nacharbeiten (`playingUid`-Timing, Zählersemantik, Coverage-Tool) schließe
 
 **Review-Bilanz:** Mistral hat den Identitäts- und Semantik-Stand richtig aufgenommen, setzt aber Export-Coverage (~4 MiB) unzulässig mit Cache-Inhalt gleich. Claude korrigiert das zu Recht und liefert eine **starke, aber nicht direkte** Vollscan-Rekonstruktion; „spielt“ und „sicher komplette 8 MiB“ sind zu hart.
 
-**Nächster Schritt:** M3seq Rev.2 (Q1–Q3), vorher Lab-Kalibrierung **A (Pre-Connect)** und **B (Burst/50 ms)** getrennt. Ring/PSRAM/Pacing/BT/Live eingefroren.
+**Nächster Schritt:** M3seq Rev.3 (Q1–Q3). Lab-Kalibrierung **A+B PASS** (`lab88-export-calib-1835/`). Ring/PSRAM/Pacing/BT/Live eingefroren.
 
 ---
 
@@ -144,20 +144,13 @@ UI-Balken ≠ hörbare Wiedergabe ≠ Decoderposition.
 
 ## 6. Lösungspfad (geschärft)
 
-### P0 Lab-Kalibrierung (vor Feld) — **zwei getrennte Fälle**
+### P0 Lab-Kalibrierung (vor Feld) — **PASS 2026-10-03** (`lab88-export-calib-1835/`)
 
-**Kalibrierung A — Pre-Connect**
+**Kalibrierung A — Pre-Connect** — A1 Control vollständig; A2 Blind `export_frac=0`, `ov=0`.
 
-1. Bridge/TCP **vor** Plug verifizieren.  
-2. Separat: Read-Beginn **während** Connect provozieren.  
-3. Bilanz: Soll-Reads/LBA vs Status vs JSONL; Anteil vor Export-Ready.
+**Kalibrierung B — Burst** — Gaps 10/50/100 ms je `Δrc=Σn`, vollständig.
 
-**Kalibrierung B — Burst**
-
-1. Bekannte LBA-Bursts, Abstände um `kBurstGapMs=50`.  
-2. Prüfen Aggregation/Queue/Export (Anzahl **und** Intervalle).
-
-Negatives Q2 ohne A+B = **ungültig** als „HU liest nicht“.
+Negatives Q2 ohne A+B = **ungültig** als „HU liest nicht“ — A+B lab-erledigt.
 
 ### P1 Feld M3seq Rev.2
 

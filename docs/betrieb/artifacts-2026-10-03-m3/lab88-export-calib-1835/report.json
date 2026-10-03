@@ -1,0 +1,184 @@
+{
+  "ts": "2026-10-03T16:27:52.990526+00:00",
+  "esp": "http://192.168.178.88",
+  "note": "Lab export calibration A (pre-connect) + B (burst gaps)",
+  "arms": {
+    "A1_bridge_up_control": {
+      "stimulus": {
+        "calls": 8,
+        "sectors": 64,
+        "gap_s": 0.08
+      },
+      "before": {
+        "version": "0.4.42-dev",
+        "uptime": "2h 59min",
+        "usbSerial": "PD0024",
+        "remountGen": 24,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35074,
+        "readsEmit": 11731,
+        "readOverflow": 0,
+        "bytesFile": 55261184,
+        "bytesRead": 57281536,
+        "lastReadLba": 756,
+        "pumpTcpUp": true,
+        "msSincePlug": 10796831
+      },
+      "after": {
+        "version": "0.4.42-dev",
+        "uptime": "3h 0min",
+        "usbSerial": "PD0025",
+        "remountGen": 25,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35138,
+        "readsEmit": 11754,
+        "readOverflow": 0,
+        "bytesFile": 55293952,
+        "bytesRead": 57314304,
+        "lastReadLba": 244,
+        "pumpTcpUp": true,
+        "msSincePlug": 10800825
+      },
+      "delta_readCount": 64,
+      "delta_readsEmit": 23,
+      "delta_overflow": 0,
+      "jsonl_lines": 23,
+      "sum_burst_n": 64,
+      "sum_bytes": 32768,
+      "balance_ok": true,
+      "export_complete_vs_rc": true
+    },
+    "A2_pre_connect_gap": {
+      "stimulus_while_bridge_down": {
+        "calls": 32,
+        "sectors": 256,
+        "gap_s": 0.0
+      },
+      "before": {
+        "version": "0.4.42-dev",
+        "uptime": "3h 0min",
+        "usbSerial": "PD0025",
+        "remountGen": 25,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35138,
+        "readsEmit": 11754,
+        "readOverflow": 0,
+        "bytesFile": 55293952,
+        "bytesRead": 57314304,
+        "lastReadLba": 244,
+        "pumpTcpUp": false,
+        "msSincePlug": 10824276
+      },
+      "after_blind_reads": {
+        "version": "0.4.42-dev",
+        "uptime": "3h 0min",
+        "usbSerial": "PD0026",
+        "remountGen": 26,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35394,
+        "readsEmit": 11754,
+        "readOverflow": 0,
+        "bytesFile": 55425024,
+        "bytesRead": 57445376,
+        "lastReadLba": 536,
+        "pumpTcpUp": false,
+        "msSincePlug": 10826117
+      },
+      "after_bridge_up": {
+        "version": "0.4.42-dev",
+        "uptime": "3h 0min",
+        "usbSerial": "PD0026",
+        "remountGen": 26,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35394,
+        "readsEmit": 11754,
+        "readOverflow": 0,
+        "bytesFile": 55425024,
+        "bytesRead": 57445376,
+        "lastReadLba": 536,
+        "pumpTcpUp": true,
+        "msSincePlug": 10834309
+      },
+      "delta_rc_while_down": 256,
+      "delta_rc_total": 256,
+      "delta_readsEmit_after_connect": 0,
+      "delta_overflow": 0,
+      "jsonl_lines_after_connect": 0,
+      "sum_burst_n": 0,
+      "sum_bytes": 0,
+      "reads_not_in_export_estimate": 256,
+      "export_fraction_of_blind_rc": 0.0,
+      "interpretation": "If export_fraction << 1 and overflow small: reads never queued (pre-bridge gap), not classic overflow. Operator: keep bridge up before plug/remount stimulus."
+    },
+    "B_burst_gaps": [
+      {
+        "gap_ms": 10,
+        "stimulus": {
+          "calls": 6,
+          "sectors": 48,
+          "gap_s": 0.01
+        },
+        "delta_readCount": 48,
+        "delta_overflow": 0,
+        "jsonl_lines": 16,
+        "sum_burst_n": 48,
+        "sum_bytes": 24576,
+        "balance_ok": true,
+        "unique_lba0": 16,
+        "export_complete": true,
+        "bridge_alive": true
+      },
+      {
+        "gap_ms": 50,
+        "stimulus": {
+          "calls": 6,
+          "sectors": 48,
+          "gap_s": 0.05
+        },
+        "delta_readCount": 48,
+        "delta_overflow": 0,
+        "jsonl_lines": 14,
+        "sum_burst_n": 48,
+        "sum_bytes": 24576,
+        "balance_ok": true,
+        "unique_lba0": 14,
+        "export_complete": true,
+        "bridge_alive": true
+      },
+      {
+        "gap_ms": 100,
+        "stimulus": {
+          "calls": 6,
+          "sectors": 48,
+          "gap_s": 0.1
+        },
+        "delta_readCount": 48,
+        "delta_overflow": 0,
+        "jsonl_lines": 15,
+        "sum_burst_n": 48,
+        "sum_bytes": 24576,
+        "balance_ok": true,
+        "unique_lba0": 15,
+        "export_complete": true,
+        "bridge_alive": true
+      }
+    ]
+  },
+  "verdict": {
+    "A1_control_export_ok": true,
+    "A2_pre_connect_loss": 0.0,
+    "A2_confirms_pre_bridge_gap": true,
+    "B_all_gaps_complete": true,
+    "B_by_gap": {
+      "10": true,
+      "50": true,
+      "100": true
+    },
+    "operator_rule": "Bridge TCP up BEFORE remount/plug/host stimulus for quantitative M3seq."
+  }
+}

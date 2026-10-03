@@ -1,0 +1,5 @@
+export-calib 182752 ver=0.4.42-dev
+A1 bridge-up control complete=True d_rc=64 sum_n=64 ov=0
+A2 pre-connect export_frac=0.0 blind_rc=256 sum_n=0 ov=0 gap_confirmed=True
+B gaps: 10ms complete=True d_rc=48 n=48, 50ms complete=True d_rc=48 n=48, 100ms complete=True d_rc=48 n=48
+Bridge TCP up BEFORE remount/plug/host stimulus for quantitative M3seq.
