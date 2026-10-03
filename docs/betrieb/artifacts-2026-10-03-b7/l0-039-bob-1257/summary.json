@@ -1,0 +1,48 @@
+{
+  "t": "12:58-bob-wait",
+  "ver": "0.4.39-dev",
+  "serial": "PD0032",
+  "uptime": "4min 44s",
+  "playing": "",
+  "guess": 0,
+  "reject": 780,
+  "streamBytes": 0,
+  "readCount": 806,
+  "bytesFile": 3193344,
+  "phase": "quiet",
+  "streamActive": false,
+  "slots": [
+    {
+      "uid": "fav0",
+      "name": "Rock Antenne",
+      "bytes": 2158592,
+      "fromHead": 4,
+      "midFile": 523,
+      "lastAgeMs": 221975
+    },
+    {
+      "uid": "fav1",
+      "name": "Rock Antenne Bayern",
+      "bytes": 344064,
+      "fromHead": 2,
+      "midFile": 82,
+      "lastAgeMs": 274048
+    },
+    {
+      "uid": "fav2",
+      "name": "Radio BOB!",
+      "bytes": 684032,
+      "fromHead": 2,
+      "midFile": 165,
+      "lastAgeMs": 274175
+    },
+    {
+      "uid": "pump:page_next",
+      "name": "Menue",
+      "bytes": 6656,
+      "fromHead": 2,
+      "midFile": 0,
+      "lastAgeMs": 274004
+    }
+  ]
+}

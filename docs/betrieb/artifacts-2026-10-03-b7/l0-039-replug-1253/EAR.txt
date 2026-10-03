@@ -1,0 +1,3 @@
+12:54:07 OTG reconnect 0.4.39 FAT12 L0 — expect 3 files
+12:54 USER: all 3 files visible again on PD0032 (0.4.39 FAT12 L0)
+12:56 USER: selected all files — LED activity few sec, NO cover, NO tone

@@ -1,0 +1,7 @@
+12:57 USER: erster Sender gewählt = Radio BOB!, warte 30s
+12:58:16–12:58:42 poll: play='', guess=0, reject=780 frozen, streamBytes=0,
+  bytesFile=3193344 frozen, readCount=806 frozen, phase=quiet, cover empty
+12:58 END: slotMap lastAgeMs ~222–274s (keine neuen Host-Reads seit ~12:54er Burst)
+  Radio BOB! = fav2 (nicht fav0); fav0=Rock Antenne hat meiste Bytes aus Prefetch
+  stream.active=false, play.guess nie, kein Ton/Cover erwartet
+Verdict: HU-Select 12:57 hat keine neuen MSC-File-Reads ausgelöst (Cache/Stille).

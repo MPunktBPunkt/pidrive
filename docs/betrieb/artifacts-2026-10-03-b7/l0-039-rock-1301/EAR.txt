@@ -1,0 +1,6 @@
+13:01 USER: Rock Antenne gewählt (HU 3. Stelle), 30s gewartet — kein Ton
+13:01 USER: bei Auswahl keine blinkende LED am ESP
+ESP: play='', guess=0, stream inactive, phase quiet; counters flat vs 12:58
+Slot-Namen ESP: fav0=Rock Antenne, fav1=Rock Antenne Bayern, fav2=Radio BOB!
+HU-Reihenfolge offenbar umgekehrt/anders als Slot-Index (Bob oben, Rock unten).
+LED quiet = keine USB-Reads → HU spielt aus Prefetch-Cache (Stille-Stub), kein Live-Overlay.

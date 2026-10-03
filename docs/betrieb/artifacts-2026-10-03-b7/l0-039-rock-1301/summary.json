@@ -1,0 +1,74 @@
+{
+  "t": "13:01-rock-antenne-wait",
+  "ver": "0.4.39-dev",
+  "serial": "PD0032",
+  "uptime": "8min 11s",
+  "playing": "",
+  "guess": 0,
+  "reject": 780,
+  "streamBytes": 0,
+  "readCount": 806,
+  "bytesFile": 3193344,
+  "phase": "quiet",
+  "streamActive": false,
+  "led": "otg",
+  "slots": [
+    {
+      "uid": "fav0",
+      "name": "Rock Antenne",
+      "bytes": 2158592,
+      "fromHead": 4,
+      "midFile": 523,
+      "lastAgeMs": 428828
+    },
+    {
+      "uid": "fav1",
+      "name": "Rock Antenne Bayern",
+      "bytes": 344064,
+      "fromHead": 2,
+      "midFile": 82,
+      "lastAgeMs": 480901
+    },
+    {
+      "uid": "fav2",
+      "name": "Radio BOB!",
+      "bytes": 684032,
+      "fromHead": 2,
+      "midFile": 165,
+      "lastAgeMs": 481028
+    },
+    {
+      "uid": "pump:page_next",
+      "name": "Menue",
+      "bytes": 6656,
+      "fromHead": 2,
+      "midFile": 0,
+      "lastAgeMs": 480857
+    }
+  ],
+  "eventCodes": {
+    "boot": 1,
+    "msc.identity": 1,
+    "msc.ready": 1,
+    "msc.slots": 1,
+    "msc.media_on": 1,
+    "usb.uart.init": 1,
+    "pump.init": 1,
+    "softap.up": 2,
+    "wifi.up": 1,
+    "pump.tcp": 1,
+    "mdns.up": 1,
+    "ready": 1,
+    "usb.otg.up": 1,
+    "msc.phase": 2,
+    "msc.scsi.inquiry": 1,
+    "msc.first_read": 1,
+    "play.reject": 9,
+    "msc.prefetch": 5,
+    "pump.tcp.up": 1,
+    "pump.hello": 1,
+    "menu.set": 5,
+    "msc.quiet": 3
+  },
+  "verdict": "no play.guess; no new MSC reads on select; HU silent from cache; LED quiet matches no USB xfer"
+}

@@ -1,0 +1,5928 @@
+[
+  {
+    "t": 0.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 1.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 2.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 4.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 5.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 6.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 8.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0029",
+    "gen": 29,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 11.2,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 12.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "idle",
+    "rc": 0,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 13.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "scan",
+    "rc": 14,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 16384,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 4096,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 15.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "scan",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 16.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 18.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 19.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 20.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 22.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 23.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 24.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 26.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 27.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 28.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 30.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 31.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 32.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 34.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 35.6,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 37.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 38.6,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 40.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 42.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 43.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 44.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 45.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 47.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 48.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 49.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 51.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 52.4,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 53.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 55.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 56.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 57.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 59.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 60.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 61.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 63.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 64.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 66.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 67.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 68.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 70.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 71.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 72.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 74.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 75.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 76.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 78.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 79.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 80.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 82.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 84.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 85.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 86.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 87.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 89.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 90.4,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 91.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 93.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 94.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 95.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 97.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 98.6,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 99.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 101.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 102.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 104.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 105.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 106.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 108.2,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 109.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 111.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 112.4,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 113.9,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 115.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 116.5,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 117.8,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 119.1,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 120.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 121.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 123.0,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 124.3,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 125.7,
+    "ok": true,
+    "ver": "0.4.37-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 129.1,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 132.4,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 135.6,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 138.8,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 142.0,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 145.2,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 148.4,
+    "ok": false,
+    "ver": null,
+    "serial": null,
+    "gen": null,
+    "phase": null,
+    "rc": null,
+    "sb": null,
+    "play": null,
+    "name": null,
+    "sectors": null,
+    "slots": []
+  },
+  {
+    "t": 149.7,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "scan",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 151.0,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 152.2,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 153.5,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 154.9,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 156.2,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 157.5,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 158.9,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 160.2,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 161.6,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 163.0,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 164.4,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 165.7,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 167.0,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 168.4,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 169.7,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 171.1,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 172.4,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 173.8,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 175.3,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 176.6,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 178.0,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  },
+  {
+    "t": 179.3,
+    "ok": true,
+    "ver": "0.4.38-dev",
+    "serial": "PD0030",
+    "gen": 30,
+    "phase": "quiet",
+    "rc": 37,
+    "sb": 0,
+    "play": "",
+    "name": "",
+    "sectors": 8192,
+    "slots": [
+      {
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "lba0": 57,
+        "lba1": 2104,
+        "kib": 1024,
+        "bytes": 36864,
+        "maxSeq": 8192
+      },
+      {
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "lba0": 2105,
+        "lba1": 4152,
+        "kib": 1024,
+        "bytes": 8192,
+        "maxSeq": 4096
+      },
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 4153,
+        "lba1": 6200,
+        "kib": 1024,
+        "bytes": 0,
+        "maxSeq": 0
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 6201,
+        "lba1": 6213,
+        "kib": 6,
+        "bytes": 0,
+        "maxSeq": 0
+      }
+    ]
+  }
+]
