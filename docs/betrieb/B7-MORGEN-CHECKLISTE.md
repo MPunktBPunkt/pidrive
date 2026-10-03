@@ -1,59 +1,56 @@
-# B7 — Checkliste (M1, ohne Geometrie-FW)
+# B7 — Checkliste (M1; L0 nur Lab)
 
-**FW:** `0.4.36-dev` belassen · **Tool:** `tools/feld_150s_slot_pass.py`  
-**Aufträge:** [AUFTRAG-B7-HU-REREAD.md](../auftraege/AUFTRAG-B7-HU-REREAD.md) · Überordnung [AUFTRAG-MSC-HOST-READ-NACHWEIS.md](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)
+**FW Auto:** `0.4.36-dev` · **Tool:** `tools/feld_150s_slot_pass.py`  
+**Aufträge:** [AUFTRAG-B7-HU-REREAD.md](../auftraege/AUFTRAG-B7-HU-REREAD.md) · [AUFTRAG-MSC-HOST-READ-NACHWEIS.md](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)
 
-Vorbereitet 2026-10-02 Abend: Lab-Smoke OK · Pi hat OTA-Bin + Guard-Fix · Bridge vor Fahrt neu auf `.89`.
-
-## Vor dem Auto (Laptop)
+## Vor dem Auto
 
 ```bash
 cd ~/projects/pidrive
 ./tools/feld_prepare_homecoming.sh
-# wartet auf .89, prüft 0.4.36, Bridge → .89
 ```
 
-Optional M0-Blick: nach Replug/`msc.quiet` einmal `readOverflow` und ob `msc_reads`-Trace den Burst trägt. Bei massiven Drops → Telemetrie-Fix **vor** strengem Architektururteil (Überordnung M0).
+M0: nur bei `readOverflow` / lückenhaftem Burst-Trace — Drops **Anzahl + LBA** notieren. Sonst skip.
 
-## B7-A — eine Station ≥150 s (Live vor Select)
+**Lab parallel ok:** L0-Geometrie auf `.88` bauen; **kein** L0-OTA auf `.89` vor Ende von B7-A/B/C.
 
-1. OTG **frisch** ab/an, Uhrzeit + `usbSerial` notieren.  
-2. Bridge/Quelle so weit, dass Live-MP3 **bereit** ist (nicht erst nach dem Burst starten).  
-3. Tool starten **bevor** Senderwahl:
+## B7-A — ≥150 s Baseline (Live vor Select)
+
+1. OTG frisch, Uhr + `usbSerial`.  
+2. Live-MP3 bereit.  
+3. Tool:
 
 ```bash
 python3 tools/feld_150s_slot_pass.py --uid fav1 --note "HH:MM OTG PDxxxx B7-A"
 ```
 
-4. ENTER → **sofort** fav1 wählen → ≥150 s hören.  
-5. Stoppuhr in `EAR.txt`: Ton-Start / Ton-Ende (s nach Select).  
-6. Console `OK` (nicht `UID≠`). Bei `UID≠`: Play-Detection ungültig, Read-Flat trotzdem notieren.  
-7. In EAR: Scan vs. Play kurz trennen (wann letzter `readCount`-Anstieg?).
+4. ENTER → sofort fav1 → ≥150 s.  
+5. EAR: Ton-Start/Ende + **UI-Position** (iDrive-Zeit falls sichtbar).  
+6. `OK` vs `UID≠`; Read-Flat trotzdem notieren.  
+7. Wann letzter `readCount`-Anstieg? (Scan vs. Play)
 
-**Orientierung (nur Rechnung):** ~28 s / ~87 s — Marker im Log, keine Garantie.
+**Erwartung:** keine Play-Reads → Baseline, kein Fail.
 
-## B7-B — Armed-Replug (getrennt)
+## B7-B — Armed-Replug
 
-1. Stream auf Ziel-UID armed (Bridge/`lab/play`), dann OTG Replug.  
-2. Sofort dieselbe Datei wählen; Burst-Fenster + `streamBytesΔ` notieren.  
-3. Eigenes Artefakt-Ordner-Note `B7-B`.
+1. Stream armed → OTG Replug → Datei.  
+2. `streamBytesΔ` + Ohr-Dauer.  
+3. Note `B7-B`.
 
-## B7-C — Wechsel / Ordner (nur wenn A UID-OK oder bewusst Meta-only)
+**Erwartung:** ≤ ~8 s Live (48 KiB-Ring-Deckel) — kein Misserfolg.
 
-Ohne Replug: Ordnerwechsel + fav0 → fav1 → fav2; pro Wechsel Uhrzeit, Ohr, `readCount`/`playingUid`.  
-Directory-Reads **nicht** als Live-Audio werten.
+## B7-C — Wechsel / Ordner
+
+fav0→fav1→fav2 + Ordner; Uhr, Ohr, `readCount`/`playingUid`.  
+Hartes Payload-Urteil nur mit Read-Klassen (M0); sonst Meta-only.
 
 ## Danach
 
-```bash
-# Artefakte unter docs/betrieb/artifacts-YYYY-MM-DD-b7/
-# Feldbericht §11.11 + Verweis auf AUFTRAG-MSC-HOST-READ-NACHWEIS
-```
-
-**Wenn keine Play-Nachlese:** nächster Schritt = **L0-Geometrie-Auftrag** in `esp32.pidrive` (Überordnung M2), **nicht** Ring-OTA und nicht sofort BT.
+Artefakte `docs/betrieb/artifacts-YYYY-MM-DD-b7/` · Feldbericht §11.11.  
+Nächster Auto-Schritt nach Baseline: **L0-OTA** → statische L-Leiter (nicht Ring, nicht BT).
 
 ## Nicht tun
 
-- Kein OTA / kein Ring / kein Remount-Spam während des Hörfensters  
-- Kein L3/L4-FW parallel  
-- Kein zweites Tool parallel auf dieselbe ESP-Status-URL (unnötig)
+- Kein Ring-/L0-OTA während Hörfenster  
+- Kein Live als Variable der späteren L-Messung  
+- Kein zweites Status-Poll-Tool parallel
