@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-03 Nachmittag — Auto **0.4.39-dev** FAT12 L0; **§11.11 B7-A** + **§11.12 L0 Listing/Cache**; nächster Schritt = **M3 L-Leiter** (Play-Reads erzwingen), kein Ring.  
+**Stand Diagnose:** 2026-10-03 Abend — Auto **0.4.39-dev** FAT12 L0; §11.11/§11.12; **Übergabe Rev.4:** M0 → M3 (A–E), Plateau-Gate gestrichen; Ring/BT eingefroren.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
@@ -13,6 +13,7 @@
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
 | PUMP-Link Produkt | **offen** — SoftAP \| STA \| UART festlegen (§15.0); Feldtest ideal SoftAP/UART |
 | Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.39** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
+| Leitauftrag | [`AUFTRAG-MSC-HOST-READ-NACHWEIS`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) **Rev. 4** · M0 [`AUFTRAG-M0-MESSINTEGRITAET`](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md) · [`UEBERGABE-MSC-BEWERTUNG-2026-10-03`](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md) |
 | Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
 | Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
@@ -921,11 +922,13 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 
 **Slot vs. HU:** ESP `fav0`=Rock Antenne, `fav1`=Bayern, `fav2`=Radio BOB! — HU-Reihenfolge offenbar anders (BOB oben, Rock unten).
 
-**Urteil:** L0 erfüllt **Listing**-Gate. Play-Pfad bleibt **Mount-Scan + HU-Cache**: nach Prefetch keine MSC-Reads bei Select → kein `play.guess` → kein Live-Overlay. LED quiet = kein USB-Xfer (nicht nur Detect-Bug).
+**Urteil:** L0 erfüllt **Listing**-Gate. Play-Pfad bleibt **Mount-Scan + HU-Cache**: nach Prefetch keine MSC-Reads bei Select → kein `play.guess` → kein Live-Overlay. LED quiet = kein USB-Xfer (nicht nur Detect-Bug). Lesevolumen skaliert mit Angebot (~3,19 MB File-Bytes) — **kein** nachgewiesenes fixes Cache-Plateau.
 
 **Artefakte:** `l0-039-replug-1253/`, `l0-039-bob-1257/`, `l0-039-rock-1301/` unter [`artifacts-2026-10-03-b7/`](artifacts-2026-10-03-b7/) · Commit `8193fa9`.
 
-**Folge:** **M3 L-Leiter** (statische große/markierte MP3, Plateau > Cache) und/oder Detect nach Prefetch bei Mid-Seq — Lab zuerst; Feld erst mit Play-Read-Nachweis. Kein Ring/BT.
+**Telemetrie-Hinweis:** `readCount=806` vs `readsEmit=218` bei `readOverflow=0` — Code: Burst-Aggregation (`kBurstGapMs=50`); Gleichung Σ`n` noch Lab-nachweisen. B7-A `pidrive_msc_reads.jsonl` war **leer** → Exportpfad Teil von M0.
+
+**Folge:** **M0 Messintegrität** → **M3** Sweep-Ende/Play-Phase (Muster A–E); Plateau-Gate gestrichen. Kein Ring/BT. Siehe [UEBERGABE-MSC-BEWERTUNG-2026-10-03](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md).
 
 ---
 
@@ -942,9 +945,10 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 7. ~~Bridge `ignore rapid` / `last_audio_log`~~ — **fix** 2026-10-02 (§11.9).  
 8. ~~**60‑s-Feldtest**~~ — **done** 2026-10-02 Nachmittag (§11.10): Mount-Scan+Cache in 60 s-Fenstern; Nachlesen über Slot-Grenzen **offen**.  
 9. ~~**B7 / 150 s**~~ — **B7-A done** 2026-10-03 (§11.11): Cache-only Ist-Geometrie; B7-B/C optional.  
-10. ~~**L0 Auto-OTA**~~ — **done** 2026-10-03 (§11.12): Listing ok (`0.4.39` FAT12); Play weiter Cache.  
-11. **M3 L-Leiter** (statisch) — Slot/Datei **über** Einlese-Plateau; Play-Reads + Pace messen; optional Detect Mid-Seq nach Prefetch-Cooldown. Lab → dann Auto.  
-12. Ring/Pacing/BT erst nach Plateau-Gate ([AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)).
+10. ~~**L0 Auto-OTA**~~ — **done** 2026-10-03 (§11.12): Listing ok (`0.4.39` FAT12); Play weiter Cache; Lesevolumen skaliert mit Angebot.  
+11. **M0 Messintegrität** — `readCount` vs Burst-`readsEmit` / Export / Session ([AUFTRAG-M0](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)).  
+12. **M3 L-Leiter** — Sweep-Ende→Play; Muster **A–E**; markierte Frames; **kein** Plateau-Gate ([Auftrag Rev.4](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). Lab → Feld-Hypothese.  
+13. Ring/Pacing/BT erst nach A–E ([UEBERGABE](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)).
 
 ### Offene Fragen
 
@@ -952,7 +956,7 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 2. A2-Zielzeit: „wenige Sekunden“ vs. Warmup/ABSA-ähnlich — Zahl festlegen (Vorschlag: ≤5 s nach erstem Play-Read *oder* nach Warmup-OK).  
 3. Remount bei jedem `menu_set`: akzeptabel vs. Sticky-Listing?  
 4. Actions (`Zurueck`/`Mehr`) als kurze MP3s in derselben Playlist — Struktur ändern?  
-5. Liest die NBT während Wiedergabe erneut? — **§11.11/11.12:** auf ≤1 M-Slots **nein** (Cache + LED quiet); **offen** erst bei Datei **über** Einlese-Plateau (M3).  
+5. Liest die NBT während Wiedergabe erneut? — **§11.11/11.12:** auf ≤1 M-Slots nach Prefetch oft **nein**; Lesevolumen skaliert mit Angebot → **kein fixes Plateau**. Offen: Muster A–E nach Sweep-Ende (M3).  
 6. `headResyncs` hoch bei `underruns=0` (Lab paced) — Bedeutung?
 
 ---

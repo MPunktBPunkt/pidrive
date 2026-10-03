@@ -1,29 +1,29 @@
 # Folgeauftrag B7 — HU-Reread / 150 s + Architekturgrenze
 
-**Stand:** 2026-10-03 · aktiv (Rev. 2)  
+**Stand:** 2026-10-03 · B7-A **done** (Baseline); Überordnung Rev. 4 → **M0 vor M3**  
 **Überordnung:** [`AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](AUFTRAG-MSC-HOST-READ-NACHWEIS.md) (M1)  
-**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10  
-**FW:** `esp32.pidrive` 0.4.36-dev · Lab `.88` · Auto `.89`
+**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10–§11.12  
+**FW:** Auto inzwischen `0.4.39` L0; B7-A war `0.4.36` · Lab `.88` · Auto `.89`
 
 ---
 
 ## Ausgangslage
 
-Feld §11.10: Mount-Scan + Cache in den beobachteten 60 s-Fenstern (Fenster oft **nach** Burst).  
-Kontinuierliches MSC-Readahead **nicht belegt**. Nachlesen über Slot-/Track-Grenzen **ungeprüft**.
+Feld §11.10–§11.12: Mount-Scan + Prefetch; Lesevolumen skaliert mit Angebot.  
+**B7-A** = Baseline kleine Geometrie, **kein** Endurteil gegen USB-Live.  
+Kontinuierliche Play-Reads **nicht belegt**. Plateau-Gate **gestrichen** (Überordnung Rev. 4).
 
-**Problemformulierung:** unklar, ob bei **wesentlich größerer** Datei während Wiedergabe weitere MSC-Reads kommen. Heutige ~2 MiB-Geometrie erklärt „alles cachen“ als rational — Überordnung §0.  
-**Zusatz:** weitere Reads ≠ Live (Pace-Frage); L-Leiter später **statisch**, nicht Live — Überordnung §0.1–0.2.
+**Problemformulierung:** nach Sweep-Ende neue Sektoren während Wiedergabe? Muster A–E — nicht „Datei > Plateau“.
 
 ## Entscheidung: kein separates Probe-FW-Repo
 
 Bestehende Lab-APIs + NBT-Harness reichen. BMW-Cache-Fragen = Auto-exklusiv.
 
-Optional in `esp32.pidrive`: Counter-Reset / Trace — nur bei Bedarf. **M0** nur bei realen Burst-Drops (quantifiziert: Anzahl + LBA-Bereich).
+**M0** ist jetzt **Pflicht vor M3** (Zählsemantik/Export/Session) — [`AUFTRAG-M0-MESSINTEGRITAET.md`](AUFTRAG-M0-MESSINTEGRITAET.md).
 
 ## Zählersemantik
 
-[`../betrieb/artifacts-2026-10-02-60s/lab88-counter-semantics/COUNTER-SEMANTICS.md`](../betrieb/artifacts-2026-10-02-60s/lab88-counter-semantics/COUNTER-SEMANTICS.md) — `streamBytes` = Live-Overlay; `readOverflow` = Telemetrie-Drops.
+[`../betrieb/artifacts-2026-10-02-60s/lab88-counter-semantics/COUNTER-SEMANTICS.md`](../betrieb/artifacts-2026-10-02-60s/lab88-counter-semantics/COUNTER-SEMANTICS.md) — ergänzen: `readsEmit` = Burst-Zeilen (`kBurstGapMs=50`), nicht SCSI-Count.
 
 ## Vorbereitung — Auto bleibt 0.4.36 für M1
 

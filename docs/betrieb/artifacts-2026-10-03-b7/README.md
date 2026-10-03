@@ -25,10 +25,11 @@ HU zeigt offenbar **umgekehrt** (BOB oben, Rock Antenne unten) — Select trifft
 2. **Play:** HU prefetch’t mid-file (`play.reject` `not_from_head`/`plug_window`), geht in `quiet cache?`, spielt Stub **ohne** weitere MSC-Reads → **kein** `play.guess`, **kein** Live-Overlay, **kein** Ton/Cover.  
 3. **LED quiet bei Select** = kein USB-Xfer → bestätigt Cache-Wiedergabe, kein Detect-Bug allein.
 
-**Nächster Schritt (nicht Ring):** Play-Pfad öffnen — z. B. Detect auch bei fortlaufendem Mid-File nach Prefetch armieren **oder** Geometrie/Stub so, dass HU nicht die ganze Slot-Datei cachen kann und erneut from-head / sequentiell liest. L-Leiter erst wenn Play-Reads nachweisbar.
+**Nächster Schritt (nicht Ring):** **M0** Messintegrität → **M3** Sweep-Ende/Play (A–E). Plateau-Gate gestrichen. Siehe [`UEBERGABE-MSC-BEWERTUNG-2026-10-03`](../UEBERGABE-MSC-BEWERTUNG-2026-10-03.md).
 
 ## Weiter (kurz)
 
-1. Docs/Artefakte gepusht (dieser Ordner).  
-2. FW-Idee: `playDetect` nach Prefetch-Cooldown Mid-Seq akzeptieren **oder** Slot-Größe/Stub so erhöhen, dass Cache nicht reicht.  
-3. Feld erst wieder nach Lab-Smoke der Detect-/Geometrie-Änderung.
+1. Docs/Artefakte gepusht.  
+2. M0 Lab: Burst-Gleichung + nicht-leerer Trace.  
+3. M3 L1/L2 markierte MP3; Feld erst danach.
+

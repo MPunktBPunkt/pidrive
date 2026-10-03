@@ -1,12 +1,17 @@
 # Auftrag — MSC Host-Read-Nachweis (B7 → L-Leiter → Architektur)
 
-**Stand:** 2026-10-03 · aktiv (Rev. 3: B7-A + L0 Listing done → **M3** als Nächstes)  
-**Anlass:** Multi-KI-Konsens + Speicher-/Cache-Hypothese (HU-Cache endlich; 2‑MiB-Stick erklärt „nie Nachlesen“ nicht als Absolutgrenze)  
+**Stand:** 2026-10-03 · aktiv (**Rev. 4** — GPT-Übergabe + Mistral-Nachtrag)  
+**Anlass:** Multi-KI-Konsens; L0 zeigt: Lesevolumen skaliert mit Angebot → **kein fixes Cache-Plateau**  
 **Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10–§11.12  
+**Übergabe:** [`../betrieb/UEBERGABE-MSC-BEWERTUNG-2026-10-03.md`](../betrieb/UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)  
+**M0:** [`AUFTRAG-M0-MESSINTEGRITAET.md`](AUFTRAG-M0-MESSINTEGRITAET.md)  
 **Teilauftrag B7:** [`AUFTRAG-B7-HU-REREAD.md`](AUFTRAG-B7-HU-REREAD.md)  
 **Ring/BT-Papier:** [`../betrieb/POST-1110-RING-BT-NOTES.md`](../betrieb/POST-1110-RING-BT-NOTES.md)
 
-**Feld-Stand 2026-10-03:** M1 B7-A = Cache-only Ist-Geometrie. M2 L0 Auto `0.4.39` FAT12 = **Listing ok**, Play weiter Prefetch→Cache (`play.guess=0`, LED quiet bei Select). **Nächster Gate:** M3 L-Leiter (statisch, Länge > Plateau).
+**Feld-Stand 2026-10-03:**  
+- **M1 B7-A** = Baseline kleine Ist-Geometrie (Cache-only im Pass; kein Beweis „NBT liest nie nach“).  
+- **M2 L0** Auto `0.4.39` FAT12 = Listing ok; Prefetch ~3,19 MB; Select danach oft ohne neue Reads / `play.guess=0`.  
+- **Nächster Gate:** **M0 Messintegrität** → dann **M3** (Sweep-Ende → Play-Phase), **nicht** „Datei > Plateau“.
 
 ---
 
@@ -14,229 +19,184 @@
 
 **Alt (zu stark):** Das NBT cached den initialen Burst und liest danach nicht weiter.
 
-**Neu:** Das NBT liest beim Mount einen initialen Datenbestand weitgehend ein. Ob es bei einer **wesentlich größeren** und weiterhin abspielbaren Datei während der Wiedergabe weitere MSC-Reads anfordert, ist **noch nicht nachgewiesen**.
+**Neu:** Das NBT liest beim Mount große Teile der deklarierten Dateien **schnell** ein (~0,8 MB/s, typisch 4 KiB-Reads). Ob es **nach erkennbarem Sweep-Ende** während Wiedergabe **neue, zuvor ungelesene** Sektoren anfordert — und wo relativ zur Wiedergabeposition — ist **nicht nachgewiesen**.
 
-Aktuelle Geometrie (~2 MiB, 4×512 KiB, Mount-Scan ~1,6 MiB) macht „alles cachen“ für die HU **rational**. Der Befund „keine weiteren Reads“ in 60 s-Fenstern gilt für diesen Stick — nicht automatisch für Dateien über der Cache-Grenze.
+L0 zeigt: Mid-File-Reads und Dateibytes **skalieren ~proportional** mit Slot-/Angebotsgröße (~2× bei 2× Slot). Das spricht für **Datei-Sweep / Index**, nicht für ein festes Cache-Limit. Eine größere Datei erzwingt also **nicht** automatisch Play-Reads.
 
-Zusätzlich unterscheiden: **Indexlauf** (ID3/Xing/Dauer: Anfang/Ende) vs. **Wiedergabe-Cache** (Payload bis Plateau). Messung muss Scan-LBAs von Play-LBAs trennen.
+### 0.1 Vier Ebenen (nicht vermischen)
 
-### 0.1 Lücke: Read-Ahead ≠ Live-Daten
+| # | Ebene | Bedeutung |
+|---|--------|-----------|
+| 1 | **Host-Read** | HU fordert Sektoren an |
+| 2 | **Read-Ahead / Scan** | Reads weit vor Wiedergabe / Indexlauf |
+| 3 | **Play-Read** | Während Wiedergabe neue, positionsrelevante Sektoren |
+| 4 | **Live-Verwertbarkeit** | Sektor enthält bereits gültige Live-Audiodaten |
 
-Selbst wenn die HU bei großer Datei fortlaufend liest, tut sie das typisch mit **~1 MB/s** (Scan-Messung). Live-Audio braucht nur **~6 KiB/s**. Die HU fragt damit oft Sektoren an, deren Live-Inhalt **noch nicht existiert** — Overlay liefert dann nur Stille/Platzhalter.
+Nachweis auf 1/2 ≠ Nachweis auf 3/4. `play.guess=0` ≠ „keine Reads“.
 
-**Folge:** „Weitere Reads“ sind **notwendig, aber nicht hinreichend** für Live-Radio. Dension löst das mit ABSA (15–40 s Puffer). Vor Ring-Umbau (M4) muss M3 klären:
+### 0.2 Read-Ahead ≠ Live-Daten
 
-> Folgt die **Lesegeschwindigkeit** dem Abspieltempo, oder läuft sie voraus?
+Host-Rate ~0,8 MB/s ≫ Live-Erzeugung ~6 KiB/s. Reads können Sektoren fordern, deren Live-Inhalt noch fehlt → Overlay = Stille/Stub. Ring allein löst das nicht; Fall **D** (Vorauslauf) → später Pacing/Vorpuffer (M4).
 
-- **Tempo-Folge** → Ring + Vorlauf/Verzögerung kann reichen.  
-- **Vorauslauf** → zusätzlich **Pacing** (Antworten verzögern) oder großer Vorpuffer nötig.
+### 0.3 L-Leiter ohne Live-Pfad
 
-### 0.2 Lücke: L-Leiter ohne Live-Pfad
-
-Die Frage „liest die HU fortlaufend?“ braucht **keine** Bridge und kein WLAN. Live-Overlay vermischt Variablen.
-
-**M3 = statische, synthetische MP3-Frames**, Inhalt zeitlich hörbar markiert (z. B. alle 30 s anderer Ton/Beep). Dann: gelesene LBA ↔ gehörte Position korrelieren. Live-Overlay erst **nach** bekanntem Leseverhalten (Übergang zu Produkt-Stream).
+M3 = **statische**, gültige, markierte MP3-Frames. Keine Bridge, kein Overlay als Messvariable. Transportmessung **unabhängig** von `play.guess`.
 
 ---
 
-## 1. Entscheidungsbaum (nach Messungen, nicht nach einer Beobachtung)
+## 1. Entscheidungsbaum (nach Messungen)
 
 ```mermaid
 flowchart TD
-    A["M1: B7 Ist-Geometrie"] --> B{"Weitere File-Reads?"}
-    B -->|"Ja"| C["Nachlese + Pace analysieren"]
-    B -->|"Nein / erwartet"| D["M2 Geometrie + M3 L-Leiter"]
-
-    C --> E{"Reads folgen Audio-Cursor?"}
-    E -->|"Ja"| PACE{"Lesen ≈ Abspieltempo?"}
-    E -->|"Nein"| G["Cache-/Loop untersuchen"]
-
-    PACE -->|"Ja"| F["Ring + Vorlauf"]
-    PACE -->|"Nein / voraus"| PACING["Pacing und/oder großer Vorpuffer"]
-
-    D --> H{"NBT liest große Datei fortlaufend?"}
-    H -->|"Ja"| I["Pace-Frage + dann Live-Overlay"]
-    H -->|"Nein / Plateau unter Testlänge"| J{"getestete Länge > Einlese-Plateau?"}
-
-    J -->|"Nein"| D
-    J -->|"Ja"| K["Remount-Karussell prüfen"]
-
-    I --> L{"Dauerhafte UX ohne Unterbrechung?"}
-    L -->|"Ja"| M["USB-Live-Streaming weiter"]
-    L -->|"Nein"| K
-
-    K --> N{"Remount zuverlässig / UX ok?"}
-    N -->|"Ja"| O["Timeshift-/Chunk-Prototyp"]
-    N -->|"Nein"| P["BT-Hybrid bewusst"]
-
-    O --> Q["Produktentscheidung"]
-    P --> Q
-    F --> Q
+    M0["M0 Messintegrität"] --> M1done["M1 B7-A Baseline done"]
+    M1done --> M2done["M2 L0 Listing done"]
+    M2done --> M3["M3 L-Leiter Lab"]
+    M3 --> CLS{"Muster A–E"}
+    CLS -->|C cursor-nah| LIVE["M3b Live + Ring aus Lücken"]
+    CLS -->|D voraus| PACING["M4 Pacing / Vorpuffer"]
+    CLS -->|A Vollscan / E keine Reads| SEQ["Sequenz-Nebenversuch → ggf. Remount"]
+    CLS -->|B Scan+Nachlese| ANAL["Korrelation schärfen"]
+    CLS -->|nicht repro| M0
+    LIVE --> Q["Produktentscheidung"]
     PACING --> Q
-    M --> Q
+    SEQ --> Q
 ```
 
-**Gate vor Szenario „auch große Dateien nur einmal“:** nur gültig, wenn getestete Länge **über** dem gemessenen Einlese-Plateau lag. Sonst: zu kleine Testdatei → Fehlschluss.
+**Gestrichen:** Gate „getestete Länge > Einlese-Plateau“ als alleinige Abbruchbedingung.
+
+**Neues Gate:** Identifizierbares **Sweep-Ende** → während Wiedergabe **neue** Sektoren? Cursor-nah (**C**) vs. voraus (**D**) vs. keine (**A/E**).
 
 ---
 
 ## 2. Maßnahmen (Reihenfolge)
 
-| ID | Name | Repo / Ort | FW-Änderung? | Gate zum Weiter |
-|----|------|------------|--------------|-----------------|
-| **M0** | Telemetrie absichern | `esp32.pidrive` | ja (klein) | Drops **quantifiziert** (Anzahl + LBA-Bereich); sonst Ist reicht |
-| **M1** | B7-A / B7-B / B7-C | Auto + Tools hier | **nein** (0.4.36) | Baseline-Messpaket; UID-OK wo nötig |
-| **M2** | Geometrie-Vorstufe L0 | `esp32.pidrive` | ja (eigenes FW) | **done Auto 0.4.39:** Disk/Listing ok; Play-Reads noch nicht |
-| **M3** | L-Leiter L1→L4 (**statisch**) | Auto + Lab | L1 Ist; L2+ braucht M2 | Plateau + Play-Reads + **Pace** |
-| **M3b** | Live-Overlay erst danach | Bridge + ESP | ggf. klein | Leseverhalten bekannt |
-| **M4** | Ring/PSRAM / Pacing | nach M3 Pace | ja | aus Tempo- vs. Voraus-Messung |
-| **M5** | Fallback Remount / BT | Produkt | je nach Ergebnis | UX-Zahlen |
+| ID | Name | Status / Gate |
+|----|------|----------------|
+| **M0** | Messintegrität (`readCount`/`readsEmit`/Export/Session) | **jetzt zuerst** — siehe AUFTRAG-M0 |
+| **M1** | B7-A/B/C | A **done** (Baseline); B/C optional |
+| **M2** | L0 Geometrie | **done** Auto 0.4.39 Listing |
+| **M3** | L-Leiter L1→L4 **statisch** + Muster **A–E** | nach M0; Lab zuerst |
+| **M3seq** | Autoplay-Sequenz (kurze Dateien) | Lab-Nebenversuch, kein Architekturpfad |
+| **M3det** | Mid-Seq-Detect nach Prefetch | Lab parallel; **nicht** Gate für Transport |
+| **M3b** | Live-Overlay | erst nach C oder D verstanden |
+| **M4** | Ring / Pacing / PSRAM | nach Pace-Klassifikation |
+| **M5** | Remount / BT | nach M3 A/E + Sequenz-Fail |
 
-**Parallel erlaubt:** L0 **im Lab** entwickeln, während B7 noch aussteht — OTA ins Auto **erst nach** B7-Fahrt. Verstößt nicht gegen „kein Geometrie-FW während des Feldfensters“.
-
-**Nicht parallel:** Ring vor Pace-Nachweis; Remount/BT als Ersatz für L-Leiter; Live-Overlay als Variable in M3.
-
----
-
-## 3. M0 — Telemetrie (nur wenn nötig)
-
-Ziel: Host-Reads beweisbar klassifizieren. **Nur anfassen, wenn Burst-Samples tatsächlich droppen.**
-
-Selbsttest: Mount-Scan mit typisch ~421 Reads — reproduzierbar; danach `readOverflow` und Trace prüfen.
-
-| Arbeit | Akzeptanz |
-|--------|-----------|
-| `readOverflow` | Drops **quantifiziert**: Anzahl **und** betroffener LBA-Bereich (nicht nur „erklärt“) |
-| Ideal | `readOverflow_delta≈0` durch Mount-Burst **oder** Drop-Liste lückenlos den fehlenden LBAs zuordenbar |
-| Read-Arten | FAT / DIR / Slot-Head / Slot-Body / Meta (Xing-Seek) — Filter Payload möglich |
-| LBA ↔ Slot-Offset ↔ Cursor | Scan- vs. Play-Fenster trennbar |
-
-**B7-C hängt hart an M0:** ohne DIR/FAT-vs-Body-Klassifizierung sehen Directory-Reads wie Audio-Reads aus. Wenn Klassifizierung fehlt: B7-C nur grob (Ohr + `playingUid`), kein Transport-Urteil.
-
-Kein Ring-Umbau in M0. Kein Probe-Fork-Repo.
+**Eingefroren:** Ring, PSRAM-Streaming, Remount-Karussell, BT-Hybrid-Festlegung.
 
 ---
 
-## 4. M1 — B7 scharf (Details in AUFTRAG-B7)
+## 3. M0 — siehe eigener Auftrag
 
-Drei **getrennte** Messungen auf **0.4.36-dev**:
+Kurz: Zuerst prüfen, ob `readsEmit` **Burst-Zeilen** zählt (`kBurstGapMs=50`, Code bestätigt) — Hypothese 806/218≈3,7. Dann Session-ID, Exportpfad (leere `pidrive_msc_reads.jsonl` in B7-A!), Gleichung:
 
-| Pass | Frage | Erwartung / Hinweis |
-|------|-------|---------------------|
-| **B7-A** | Weitere File-Reads bei ≥150 s? | Sehr wahrscheinlich **keine Play-Reads** (2 MiB komplett im Cache). Wert = **saubere Baseline**, nicht Endurteil |
-| **B7-B** | Armed-Replug: Live im Burst? | Physikalische Obergrenze: 48 KiB Ring ≈ **~8 s** Live @ 6 KiB/s. „Nur ~8 s“ = **erwarteter Deckel**, kein Misserfolg |
-| **B7-C** | Ordnerwechsel / erneute Auswahl | Payload vs. Meta — ideal mit M0-Klassen; sonst kein hartes Audio-Urteil |
+`readCount = Σ(n in exportierten Bursts) + gezählte Drops`  
+pro **einer** Session-ID.
 
-Auswertung: Scan-LBAs, Play-LBAs, `streamBytesΔ`, Ohr-Stoppuhr, **UI-Position** (iDrive-Anzeige / Stoppuhr-Marke), UID-Match getrennt.
+Ohne M0: keine LBA-Verteilungsinterpretation als Play-Verhalten.
 
 ---
 
-## 5. M2 — Geometrie-Vorstufe (L0)
+## 4. M1 — B7 (Kurz)
 
-**Kollision:** L3/L4 passen nicht in ~2 MiB-FAT12-Image.
-
-Regel **0.4.12:** Geometrie/FAT/Dir **immutable nach Setup**; Payload synthetisch oder später Overlay.
-
-| Anforderung | Entscheidung |
-|-------------|--------------|
-| FS für 8–50 MiB | **FAT16, 4 KiB-Cluster** (nicht FAT12 mit exotisch großen Clustern) — HU-üblicher, Tabelle algorithmisch |
-| Cluster-Kette | algorithmisch, nicht im RAM halten |
-| Menü | 1 langer Mess-Slot + minimale Nav; oder L2 = 1-Datei-Stick als Zwischenmessung |
-| Xing/CBR | glaubwürdige Dauer |
-| Indexzeit | Zeit bis Menü/Titel pro Stufe |
-
-**Lab jetzt:** L0 in `esp32.pidrive` entwickeln + Lab-Smoke `.88`.  
-**Auto:** OTA erst **nach** B7-Fahrt (Baseline auf 0.4.36 ungestört).
-
-Erste L0-Ziele: **4 MiB** und **16 MiB** Disk/Slot.
+| Pass | Einordnung |
+|------|------------|
+| **B7-A** | Baseline Ist-Geometrie; Session-Grenze/Kaltstart beachten; **kein** Beweis gegen USB-Live |
+| **B7-B/C** | optional; C hart nur mit Read-Klassen |
 
 ---
 
-## 6. M3 — L-Leiter (statisch; nur Länge als Variable)
+## 5. M2 — L0 (erledigt)
 
-**Inhalt:** gültige synthetische MP3-Frames, **zeitlich markiert** (z. B. alle 30 s anderer Ton). **Kein** Live-Overlay, **keine** Bridge als Messvariable.
+FAT12 L0 4 MiB / 1 M-Slots Auto: Listing 3 Dateien. Prefetch skaliert. Play-Pfad offen → M3.
 
-| Stufe | Größe | Voraussetzung | Ziel |
-|-------|-------|---------------|------|
-| **L1** | 512 KiB | Ist-FW | Referenz / Baseline |
-| **L2** | ~2 MiB | Ist oder L0-klein | größerer Slot |
-| **L3** | 8 MiB | **M2** | fortlaufende Reads? Plateau? |
-| **L4** | 50 MiB | **M2** + FAT16 | Langzeit / Cache-Grenze |
-
-Pro Stufe Artefakt:
-
-1. `bytesRead` / `readCount` über Zeit (Plateau)  
-2. LBA-Mengen: Scan vs. Play  
-3. Indexzeit (Mount → Liste/Titel)  
-4. Ohr + **UI-Position** (Stoppuhr / iDrive-Zeit) ↔ LBA / Dateioffset  
-5. **Pace:** Leserate vs. Abspieltempo (folgen vs. voraus) — **vor M4**  
-6. Erfolg nur wenn während Wiedergabe **zuvor ungelesene** Sektoren kommen
-
-### M3b — Live-Overlay (erst danach)
-
-Wenn fortlaufende Reads + Pace bekannt: Live-Pfad einschalten. Dann Ringgröße / Pacing / ABSA-ähnlich aus Messung (M4).
-
-Langfrist: ~10 h @ 48 kbit/s ≈ 216 MB → Endmodell „deklariert riesig, on-demand“. L4 = Messhebel.
+Für L3/L4 später: FAT16-Geometrie **im Lab validieren**, bevor 50 MiB.
 
 ---
 
-## 7. M4 — Ring / Pacing erst nach Pace-Nachweis
+## 6. M3 — L-Leiter (Rev. 4)
 
-- 48 KiB beibehalten, bis M3 fortlaufende Host-Reads **und** Pace-Klassifikation hat.  
-- Tempo-Folge → Ringkapazität aus gemessenen Lücken.  
-- Vorauslauf → Pacing und/oder großer Vorpuffer (Dension-ABSA-Muster), nicht blind Ring aufblasen.  
-- PSRAM erst wenn Kapazität die gemessene Lücke nicht hält.
+### 6.1 Testdatei
 
----
+Gültige synthetische MP3: konsistente Frames, plausible Bitrate/Dauer, kontrolliertes Xing, **Marker alle ~30 s** mit bekanntem Dateioffset. **Kein** Stub+Padding.
 
-## 8. M5 — Fallbacks (nachrangig)
+### 6.2 Stufen
 
-| Pfad | Wann | Produktfrage |
-|------|------|--------------|
-| Remount-/Chunk-Karussell | L-Leiter: Plateau erreicht, keine Play-Nachlese; Remount erzeugt Reads | Ton-Dauer, Mount-Lücke — anderes Produkt als Dension-Live |
-| BT-Hybrid | Remount unzuverlässig **oder** UX inakzeptabel | USB = Menü/Cover; BT = Ton; getrennte Quellen; explizite UX |
+| Stufe | Größe | Zweck |
+|-------|-------|--------|
+| L1 | 512 KiB | Referenz |
+| L2 | ~2 MiB | bekannte Größenordnung |
+| L3 | 8 MiB | größerer Sweep; nach Geometrie-OK |
+| L4 | 50 MiB | Langzeit; **erst nach FAT16-Validierung** |
 
-Konzeptziel USB=UI+Ton bleibt, bis M3+Gate das Gegenteil belegt. BT jetzt **nicht** festlegen.
+Länge = Hauptvariable; Format/Marker/Header zwischen Stufen gleich. Xing-Varianten = **Reihe 2** erst nach Reihe 1 (nur Lab).
 
----
+### 6.3 Pflichtmessgrößen
 
-## 9. Explizit nicht tun (jetzt)
+| Größe | Bedeutung |
+|-------|-----------|
+| `readRate` | Host-Bytes/s |
+| `readOffset` / LBA | was gelesen wird |
+| `playOffset` | aus Audio-Marker (nicht blind UI-Balken) |
+| `readAheadDistance` | readOffset − playOffset |
+| Sweep-Ende | Zeitpunkt / letzter LBA des initialen Sweeps |
 
-| Maßnahme | Warum nicht |
-|----------|-------------|
-| Ring sofort / PSRAM-Streaming | Host-Read- und Pace-Variable nicht adressiert |
-| Remount als Hauptpfad | UX/Re-Enum ungeklärt |
-| Ordnerwechsel als Audio-Trigger | Directory-Reads ≠ File-Transport |
-| READ künstlich offenhalten | erzeugt keine Host-Anforderungen |
-| Live-Overlay in der L-Leiter | vermischt Leseverhalten mit Transport |
-| L3/L4 ohne Geometrie | unmöglich auf 2‑MiB-Image |
-| B7-A „keine Reads“ = USB tot | Baseline auf winzigem Stick, kein Plateau-Gate |
-| B7-B „nur ~8 s“ = Fail | Ring-Deckel @ 48 KiB, erwartet |
-| BT-Hybrid jetzt | M1+M3 fehlen |
-| M0 „auf Verdacht“ | nur bei realen Burst-Drops |
+Transport **ohne** `play.guess` auswerten.
 
----
+### 6.4 Muster A–E (Abnahme)
 
-## 10. Abnahme-Kernfragen
+| Code | Muster | Folge |
+|------|--------|--------|
+| **A** | Vollständiger Scan vor/zu Beginn | Sequenz / Remount prüfen |
+| **B** | Scan + spätere Reads ohne Cursor-Korrelation | Korrelation schärfen |
+| **C** | Cursor-nahe Play-Reads | M3b Live; Ring aus Lücken |
+| **D** | Fortlaufende Reads, weit voraus | M4 Pacing/Vorpuffer |
+| **E** | Keine Payload-Reads nach Sweep | wie A |
 
-1. Veranlasst eine geeignete MSC-Dateistruktur (Länge ≫ Einlese-Plateau, gültiger Header) den NBT zu **fortlaufenden** File-Reads?  
-2. Folgt die Lesegeschwindigkeit dem Abspieltempo oder läuft sie voraus?  
-3. Erst danach: reicht Ring+Vorlauf, oder braucht es Pacing — und dann Live-Overlay?
+### 6.5 Nebenversuche (getrennt)
 
-- **Ja zu 1+2 (Tempo)** → USB-Live mit gemessenem Ring.  
-- **Ja zu 1, Voraus** → Pacing/großer Puffer, dann Live.  
-- **Nein zu 1** (nach Gate) → Remount → sonst BT-Hybrid.
+- **M3seq:** kurze Dateien, Slot-ID-Marker, Autoplay, LBA↔Titelwechsel.  
+- **M3det:** Mid-Seq nach Prefetch-Cooldown — UX/Detect, nicht Transport-Gate.
 
 ---
 
-## 11. Sofort-Checkliste
+## 7. M4 / M5
 
-1. [ ] M0 nur bei `readOverflow`/fehlenden Burst-Samples — sonst skip  
-2. [ ] **L0 im Lab** starten (FAT16/4 KiB), Auto noch 0.4.36 — **Lab `.88` = 0.4.37-dev, sectorCount=8192 (2026-10-03 Smoke)**  
-3. [x] B7-A fahren (Baseline; „keine Play-Reads“ erwartbar) — **2026-10-03 PD0029 Cache-only**  
-4. [ ] B7-B Armed-Replug (Erwartung ≤~8 s Live) — optional  
-5. [ ] B7-C nur mit Klassifizierung hart werten; sonst Meta-only — optional  
-6. [x] §11.11 + Verweis hierher  
-7. [ ] Nach B7: L0-OTA → L1–L4 statisch + Pace → M3b Live → M4  
+Unverändert nachrangig: Ring/Pacing nur nach C/D; Remount/BT nur nach A/E + Sequenz-Negativ.
 
-Owner: Auto `.89` / Lab `.88` / Bridge Pi — B7-Checkliste.
+---
+
+## 8. Explizit nicht tun (jetzt)
+
+| Maßnahme | Warum |
+|----------|--------|
+| Ring / PSRAM | kein Pace-Nachweis |
+| Live-Overlay in M3 | vermischt Ebenen |
+| Remount/BT als Hauptpfad | Produkt vorzeitig |
+| Play-Detect als einzige Read-Messung | Zirkelschluss |
+| „Datei > Plateau“ als einziges Gate | Plateau nicht belegt |
+| L3/L4 ohne FAT-Validierung | Geometrie-Risiko |
+| Autoplay-Reads als bewiesen | Kausalität fehlt |
+| M3 vor M0 | Vertrauensintervall unbekannt |
+
+---
+
+## 9. Abnahme-Kernfragen
+
+1. Nach Sweep-Ende: neue, zuvor ungelesene Sektoren während Wiedergabe? → A–E.  
+2. Bei C/D: Leserate ≈ Abspieltempo oder voraus?  
+3. Erst dann: Live-Overlay / Ring / Pacing.
+
+---
+
+## 10. Sofort-Checkliste
+
+1. [ ] **M0** — Zählsemantik + Export + Session (AUFTRAG-M0)  
+2. [x] B7-A Baseline — 2026-10-03  
+3. [x] L0 Listing Auto 0.4.39 — §11.12  
+4. [ ] M3 L1/L2 Lab mit A–E + Marker  
+5. [ ] M3 L3 nach Geometrie-OK; L4 nach FAT16  
+6. [ ] Feld nur Hypothesen-Bestätigung nach Lab  
+7. [ ] Ring/BT weiter eingefroren  
+
+Owner: Lab `.88` zuerst; Auto `.89` erst nach M0+M3-Lab.
