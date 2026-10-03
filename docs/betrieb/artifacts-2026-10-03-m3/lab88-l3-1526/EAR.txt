@@ -1,0 +1,7 @@
+15:28 OTA 0.4.42-dev L3 FAT16 16MiB fav0=8MiB (+2×512KiB)
+15:28 Host file -s: FAT (16 bit), sectors=32768
+15:28 geometry: fav0 8.0 MiB, fav1/fav2 0.5 MiB
+15:28 PDMK verify 12/12 on fav0 (stream off)
+15:30 Timeline: Sweep Δ221 balance ok; Idle 60s Δ0; Paced 45s Δ528 → A_then_forced_C
+15:32 Marker-pace 120s @6KiB/s: crossings t≈0.7 / 30.1 / 60.1 / 90.1 s
+Session detail: ../SESSION-LAB-2026-10-03.md

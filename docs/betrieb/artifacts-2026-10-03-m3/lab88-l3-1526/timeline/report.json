@@ -1,0 +1,127 @@
+{
+  "ts": "2026-10-03T13:30:30.707039+00:00",
+  "esp": "http://192.168.178.88",
+  "geometry": "L0 lab 4MiB / 1MiB slots (static Mp3Silence)",
+  "session": {
+    "before": {
+      "version": "0.4.42-dev",
+      "uptime": "35s",
+      "usbSerial": "PD0017",
+      "remountGen": 17,
+      "phase": "play",
+      "readCount": 3870,
+      "readsEmit": 0,
+      "readOverflow": 0,
+      "bytesFile": 15482880,
+      "streamActive": false,
+      "fav0_lba0": 81,
+      "fav0_lba1": 16464,
+      "pumpTcpUp": true
+    },
+    "sweep_end": {
+      "version": "0.4.42-dev",
+      "uptime": "40s",
+      "usbSerial": "PD0018",
+      "remountGen": 18,
+      "phase": "play",
+      "readCount": 4091,
+      "readsEmit": 211,
+      "readOverflow": 0,
+      "bytesFile": 16199680,
+      "streamActive": false,
+      "fav0_lba0": 81,
+      "fav0_lba1": 16464,
+      "pumpTcpUp": true
+    },
+    "after_idle": {
+      "version": "0.4.42-dev",
+      "uptime": "1min 41s",
+      "usbSerial": "PD0018",
+      "remountGen": 18,
+      "phase": "play",
+      "readCount": 4091,
+      "readsEmit": 211,
+      "readOverflow": 0,
+      "bytesFile": 16199680,
+      "streamActive": false,
+      "fav0_lba0": 81,
+      "fav0_lba1": 16464,
+      "pumpTcpUp": true
+    },
+    "after_paced": {
+      "version": "0.4.42-dev",
+      "uptime": "2min 27s",
+      "usbSerial": "PD0018",
+      "remountGen": 18,
+      "phase": "play",
+      "readCount": 4619,
+      "readsEmit": 400,
+      "readOverflow": 0,
+      "bytesFile": 16470016,
+      "streamActive": false,
+      "fav0_lba0": 81,
+      "fav0_lba1": 16464,
+      "pumpTcpUp": true
+    }
+  },
+  "phase1_sweep": {
+    "delta_readCount": 221,
+    "bursts": {
+      "lines": 211,
+      "sum_n": 221,
+      "sum_bytes": 872960,
+      "esp_ms0": 37053,
+      "esp_ms1": 38037,
+      "esp_span_ms": 984,
+      "lba_min": 0,
+      "lba_max": 32762
+    },
+    "balance_ok": true
+  },
+  "phase2_idle": {
+    "delta_readCount": 0,
+    "bursts": {
+      "lines": 0,
+      "sum_n": 0,
+      "sum_bytes": 0,
+      "esp_ms0": null,
+      "esp_ms1": null,
+      "esp_span_ms": 0,
+      "lba_min": null,
+      "lba_max": null
+    },
+    "idle_s": 60.0
+  },
+  "phase3_paced": {
+    "delta_readCount": 528,
+    "bursts": {
+      "lines": 189,
+      "sum_n": 528,
+      "sum_bytes": 270336,
+      "esp_ms0": 103009,
+      "esp_ms1": 147399,
+      "esp_span_ms": 44390,
+      "lba_min": 81,
+      "lba_max": 603
+    },
+    "paced_s": 45.0,
+    "kib_s": 6.0,
+    "meta": {
+      "raw": "bytes 270336",
+      "ok": true
+    }
+  },
+  "classification": {
+    "code": "A_then_forced_C",
+    "detail": "Sweep+quiet, then paced host reads produced new LBAs (cooperative host \u2260 NBT).",
+    "levels": {
+      "1_host_read": true,
+      "2_read_ahead": "unknown_without_play_cursor",
+      "3_play_read": true,
+      "4_live_usable": false
+    },
+    "note": "Lab-Host classification only \u2014 not BMW NBT A\u2013E",
+    "idle_s": 60.0
+  },
+  "equation_check_phase1": "\u0394readCount == \u03a3(burst.n)"
+}

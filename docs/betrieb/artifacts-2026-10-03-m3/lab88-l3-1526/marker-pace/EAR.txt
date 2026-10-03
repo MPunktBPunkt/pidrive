@@ -1,0 +1,6 @@
+marker-pace 153030 ver=0.4.42-dev
+pre_ok=True crossings=4 Δrc=1414
+t=0.698s marker=0 off=4096
+t=30.071s marker=1 off=180224
+t=60.119s marker=2 off=360448
+t=90.147s marker=3 off=540672

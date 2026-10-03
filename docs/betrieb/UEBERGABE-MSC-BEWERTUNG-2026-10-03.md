@@ -48,5 +48,6 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 
 ## Nächster konkreter Schritt
 
-~~M0 Lab-Mount-Sweep~~ → **done PASS** (`artifacts-2026-10-03-m0/lab88-141005`).  
-**Jetzt:** M3 L1/L2 Lab (statische markierte MP3, Muster A–E).
+~~M0 Lab-Mount-Sweep~~ → **done PASS**.  
+~~M3 Lab bis L3 (8 MiB) + Marker/Pace/FAT16~~ → **done** (`SESSION-LAB-2026-10-03.md`).  
+**Jetzt:** Auto-Feld M3 (gleiche Methodik) sobald wieder am BMW — oder Lab-Langpace optional.

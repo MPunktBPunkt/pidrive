@@ -196,10 +196,11 @@ Unverändert nachrangig: Ring/Pacing nur nach C/D; Remount/BT nur nach A/E + Seq
 3. [x] L0 Listing Auto 0.4.39 — §11.12  
 4. [x] M3 Lab-Host-Timeline + L1/L2-MP3-Assets — 2026-10-03  
 5. [x] M3 PDMK-Marker im Slot — FW **0.4.40** Lab; verify 6/6  
-6. [x] M3 Marker↔Pace-Korrelation Lab — ~30 s crossings (`lab88-marker-pace-151344`)  
-7. [x] L0-16M **FAT16** Lab — FW **0.4.41**; 16 MiB / 4 MiB-Slots; host `FAT (16 bit)`  
-8. [ ] M3 Auto-Feld A–E  
-9. [ ] Optional Lab: 8 MiB-Einzelslot (L3-Datei)  
-10. [ ] Ring/BT weiter eingefroren  
+6. [x] M3 Marker↔Pace-Korrelation Lab — ~30 s crossings  
+7. [x] L0-16M **FAT16** Lab — FW **0.4.41**; 16 MiB / 4 MiB-Slots  
+8. [x] **L3** Lab — FW **0.4.42**; fav0=**8 MiB**; Marker 12/12; Timeline+Pace (`lab88-l3-1526/`, Session-Doku)  
+9. [ ] M3 Auto-Feld A–E  
+10. [ ] Optional Lab-Langpace / Xing-Reihe 2  
+11. [ ] Ring/BT weiter eingefroren  
 
-Owner: Lab `.88` = **0.4.41** FAT16-16M; Auto wenn wieder Feld.
+Owner: Lab `.88` = **0.4.42** L3; Doku: `artifacts-2026-10-03-m3/SESSION-LAB-2026-10-03.md`.

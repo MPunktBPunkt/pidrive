@@ -1,0 +1,42 @@
+{
+  "version": "0.4.42-dev",
+  "slots": [
+    {
+      "uid": "fav0",
+      "name": "Rock Antenne",
+      "lba0": 81,
+      "lba1": 16464,
+      "sectors": 16384,
+      "bytes": 8388608,
+      "MiB": 8.0
+    },
+    {
+      "uid": "fav1",
+      "name": "Rock Antenne Bayern",
+      "lba0": 16465,
+      "lba1": 17488,
+      "sectors": 1024,
+      "bytes": 524288,
+      "MiB": 0.5
+    },
+    {
+      "uid": "fav2",
+      "name": "Radio BOB!",
+      "lba0": 17489,
+      "lba1": 18512,
+      "sectors": 1024,
+      "bytes": 524288,
+      "MiB": 0.5
+    },
+    {
+      "uid": "pump:page_next",
+      "name": "Menue",
+      "lba0": 18513,
+      "lba1": 18525,
+      "sectors": 13,
+      "bytes": 6656,
+      "MiB": 0.006
+    }
+  ],
+  "ready_events": "FAT16 L3 16MiB fav0=8M"
+}
