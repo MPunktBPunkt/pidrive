@@ -1,0 +1,168 @@
+{
+  "source": "docs/betrieb/artifacts-2026-10-03-m3/auto89-m3-static-170625/pidrive_msc_reads.jsonl",
+  "warning": "Coverage is only as complete as the JSONL export. Compare unique/cumulative to status bytesFile and slotMap.bytes; if status >> JSONL, export was incomplete (overflow/bridge gap).",
+  "parts": {
+    "all": {
+      "n_bursts": 439,
+      "slots": {
+        "fav0": {
+          "name": "Rock Antenne",
+          "file_size": 8388608,
+          "cumulative_span_bytes": 4132864,
+          "unique_covered_bytes": 4132864,
+          "coverage_frac": 0.4927,
+          "min_offset": 1851392,
+          "max_offset_exclusive": 8384512,
+          "n_merged_intervals": 2,
+          "n_gaps": 1,
+          "gap_bytes_total": 2400256,
+          "largest_gaps": [
+            {
+              "from": 1929216,
+              "to": 4329472,
+              "hole": 2400256
+            }
+          ],
+          "unread_prefix_bytes": 1851392,
+          "unread_suffix_bytes": 4096
+        },
+        "fav1": {
+          "name": "Rock Antenne Bayern",
+          "file_size": 524288,
+          "cumulative_span_bytes": 524288,
+          "unique_covered_bytes": 524288,
+          "coverage_frac": 1.0,
+          "min_offset": 0,
+          "max_offset_exclusive": 524288,
+          "n_merged_intervals": 1,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 0,
+          "unread_suffix_bytes": 0
+        },
+        "fav2": {
+          "name": "Radio BOB!",
+          "file_size": 524288,
+          "cumulative_span_bytes": 524288,
+          "unique_covered_bytes": 524288,
+          "coverage_frac": 1.0,
+          "min_offset": 0,
+          "max_offset_exclusive": 524288,
+          "n_merged_intervals": 1,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 0,
+          "unread_suffix_bytes": 0
+        }
+      }
+    },
+    "pre_gap": {
+      "n_bursts": 362,
+      "slots": {
+        "fav0": {
+          "name": "Rock Antenne",
+          "file_size": 8388608,
+          "cumulative_span_bytes": 4132864,
+          "unique_covered_bytes": 4132864,
+          "coverage_frac": 0.4927,
+          "min_offset": 1851392,
+          "max_offset_exclusive": 8384512,
+          "n_merged_intervals": 2,
+          "n_gaps": 1,
+          "gap_bytes_total": 2400256,
+          "largest_gaps": [
+            {
+              "from": 1929216,
+              "to": 4329472,
+              "hole": 2400256
+            }
+          ],
+          "unread_prefix_bytes": 1851392,
+          "unread_suffix_bytes": 4096
+        },
+        "fav1": {
+          "name": "Rock Antenne Bayern",
+          "file_size": 524288,
+          "cumulative_span_bytes": 0,
+          "unique_covered_bytes": 0,
+          "coverage_frac": 0.0,
+          "min_offset": null,
+          "max_offset_exclusive": null,
+          "n_merged_intervals": 0,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 524288,
+          "unread_suffix_bytes": 524288
+        },
+        "fav2": {
+          "name": "Radio BOB!",
+          "file_size": 524288,
+          "cumulative_span_bytes": 0,
+          "unique_covered_bytes": 0,
+          "coverage_frac": 0.0,
+          "min_offset": null,
+          "max_offset_exclusive": null,
+          "n_merged_intervals": 0,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 524288,
+          "unread_suffix_bytes": 524288
+        }
+      }
+    },
+    "post_gap": {
+      "n_bursts": 77,
+      "slots": {
+        "fav0": {
+          "name": "Rock Antenne",
+          "file_size": 8388608,
+          "cumulative_span_bytes": 0,
+          "unique_covered_bytes": 0,
+          "coverage_frac": 0.0,
+          "min_offset": null,
+          "max_offset_exclusive": null,
+          "n_merged_intervals": 0,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 8388608,
+          "unread_suffix_bytes": 8388608
+        },
+        "fav1": {
+          "name": "Rock Antenne Bayern",
+          "file_size": 524288,
+          "cumulative_span_bytes": 524288,
+          "unique_covered_bytes": 524288,
+          "coverage_frac": 1.0,
+          "min_offset": 0,
+          "max_offset_exclusive": 524288,
+          "n_merged_intervals": 1,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 0,
+          "unread_suffix_bytes": 0
+        },
+        "fav2": {
+          "name": "Radio BOB!",
+          "file_size": 524288,
+          "cumulative_span_bytes": 524288,
+          "unique_covered_bytes": 524288,
+          "coverage_frac": 1.0,
+          "min_offset": 0,
+          "max_offset_exclusive": 524288,
+          "n_merged_intervals": 1,
+          "n_gaps": 0,
+          "gap_bytes_total": 0,
+          "largest_gaps": [],
+          "unread_prefix_bytes": 0,
+          "unread_suffix_bytes": 0
+        }
+      }
+    }
+  }
+}

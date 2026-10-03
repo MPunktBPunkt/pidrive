@@ -1,0 +1,140 @@
+{
+  "method": "Union of [file_off, file_off+bytes) from kind=2 bursts; split at ms gap>60s (reselect)",
+  "code_semantics": {
+    "slotMap.bytes": "cumulative SCSI file-read bytes into slot (includes repeats); reset on USB plug",
+    "bytesFile": "cumulative all Region::File bytes; reset on plug",
+    "maxSeq": "max contiguous seqBytes_ for slot (resets if LBA jump>16 or file change); NOT unique coverage",
+    "midFile": "hit count for reads with lba > headLbaSlop from slot start",
+    "playingUid": "MenuStore play guess from evaluatePlay OK path \u2014 NOT HU UI selection; empty if no play.guess",
+    "msc.quiet file=N": "bytesFile_ at quiet transition (cumulative), not unique coverage"
+  },
+  "play_window_identity": {
+    "status_09_to_14_playingUid": "empty",
+    "status_14_mtime": "17:22:34",
+    "status_10_mtime": "17:23:39 post-reselect \u2014 DO NOT use for play-window identity",
+    "operator": "Rock Antenne selected 17:14; ESP play.guess never fired in window (playGuessCount=0)"
+  },
+  "pre_reselect_coverage": {
+    "label": "pre_reselect",
+    "n_bursts": 362,
+    "slots": {
+      "fav0": {
+        "name": "Rock Antenne",
+        "file_size": 8388608,
+        "cumulative_covered_span_bytes": 4132864,
+        "unique_covered_bytes": 4132864,
+        "coverage_frac": 0.4927,
+        "min_offset": 1851392,
+        "max_offset_exclusive": 8384512,
+        "n_merged_intervals": 2,
+        "n_gaps": 1,
+        "gap_bytes_total": 2400256,
+        "largest_gaps": [
+          {
+            "from": 1929216,
+            "to": 4329472,
+            "hole": 2400256
+          }
+        ],
+        "unread_prefix_bytes": 1851392,
+        "unread_suffix_bytes": 4096
+      },
+      "fav1": {
+        "name": "Rock Antenne Bayern",
+        "file_size": 524288,
+        "cumulative_covered_span_bytes": 0,
+        "unique_covered_bytes": 0,
+        "coverage_frac": 0.0,
+        "min_offset": null,
+        "max_offset_exclusive": null,
+        "n_merged_intervals": 0,
+        "n_gaps": 0,
+        "gap_bytes_total": 0,
+        "largest_gaps": [],
+        "unread_prefix_bytes": 524288,
+        "unread_suffix_bytes": 524288
+      },
+      "fav2": {
+        "name": "Radio BOB!",
+        "file_size": 524288,
+        "cumulative_covered_span_bytes": 0,
+        "unique_covered_bytes": 0,
+        "coverage_frac": 0.0,
+        "min_offset": null,
+        "max_offset_exclusive": null,
+        "n_merged_intervals": 0,
+        "n_gaps": 0,
+        "gap_bytes_total": 0,
+        "largest_gaps": [],
+        "unread_prefix_bytes": 524288,
+        "unread_suffix_bytes": 524288
+      }
+    }
+  },
+  "reselect_coverage": {
+    "label": "reselect",
+    "n_bursts": 77,
+    "slots": {
+      "fav0": {
+        "name": "Rock Antenne",
+        "file_size": 8388608,
+        "cumulative_covered_span_bytes": 0,
+        "unique_covered_bytes": 0,
+        "coverage_frac": 0.0,
+        "min_offset": null,
+        "max_offset_exclusive": null,
+        "n_merged_intervals": 0,
+        "n_gaps": 0,
+        "gap_bytes_total": 0,
+        "largest_gaps": [],
+        "unread_prefix_bytes": 8388608,
+        "unread_suffix_bytes": 8388608
+      },
+      "fav1": {
+        "name": "Rock Antenne Bayern",
+        "file_size": 524288,
+        "cumulative_covered_span_bytes": 524288,
+        "unique_covered_bytes": 524288,
+        "coverage_frac": 1.0,
+        "min_offset": 0,
+        "max_offset_exclusive": 524288,
+        "n_merged_intervals": 1,
+        "n_gaps": 0,
+        "gap_bytes_total": 0,
+        "largest_gaps": [],
+        "unread_prefix_bytes": 0,
+        "unread_suffix_bytes": 0
+      },
+      "fav2": {
+        "name": "Radio BOB!",
+        "file_size": 524288,
+        "cumulative_covered_span_bytes": 524288,
+        "unique_covered_bytes": 524288,
+        "coverage_frac": 1.0,
+        "min_offset": 0,
+        "max_offset_exclusive": 524288,
+        "n_merged_intervals": 1,
+        "n_gaps": 0,
+        "gap_bytes_total": 0,
+        "largest_gaps": [],
+        "unread_prefix_bytes": 0,
+        "unread_suffix_bytes": 0
+      }
+    }
+  },
+  "scan_boundary": {
+    "status_maxSeq_fav0": 6389760,
+    "trace_unique_max_offset_fav0": 8384512,
+    "trace_unique_covered_fav0": 4132864,
+    "trace_coverage_frac": 0.4927,
+    "unread_prefix": 1851392,
+    "unread_suffix": 4096,
+    "gap_bytes_total": 2400256,
+    "horizons_s_at_6KiB_s": {
+      "unique_covered": 688.8,
+      "max_offset": 1397.4,
+      "maxSeq_status": 1065.0
+    },
+    "interpretation": "NOT a full 8MiB contiguous read. Unique coverage and maxSeq measure different things. Long Pass should target beyond verified unique coverage / maxSeq with explicit goals."
+  }
+}

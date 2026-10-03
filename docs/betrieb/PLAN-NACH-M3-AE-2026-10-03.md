@@ -1,69 +1,69 @@
-# Plan nach Auto-M3 — A_then_E (2026-10-03)
+# Plan nach Auto-M3 — A_then_E (Rev.2, 2026-10-03)
 
-**Basis:** [`artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md)  
-**Befund:** NBT Evo · L3 8 MiB · ~8 min Wiedergabe mit UI-Balken · **ΔreadCount=0** nach initialem Sweep → **A_then_E**.
+**Basis:** [`AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md) · Korrektur [`AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-ADDENDUM-KRITIK-2026-10-03.md) · Semantik [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)
 
----
-
-## 1. Was damit entschieden ist
-
-| Entscheidung | Status |
-|--------------|--------|
-| Fortlaufende MSC-Reads als Live-Pfad (Ebene 3/4) unter statischer L3-Datei | **nicht gestützt** |
-| Plateau-/Cache-Gate als einzige Erklärung | weiterhin unnötig; Volumen skaliert beim Sweep, Play cached |
-| Sofort Ring / PSRAM / BT-Hybrid bauen | **nein** |
+**Enger Befund:** `A_then_E_within_observed_window`; Cache-Erschöpfung nicht erreicht; `playingUid` im Play-Fenster leer (status-10 = Reselect).
 
 ---
 
-## 2. Was als Nächstes kommt (Priorität)
+## 1. Drei Fragen (nicht vermischen)
 
-### P0 — M3seq: kurze Dateien + Titelwechsel (Feld, eigene Session)
+| ID | Frage |
+|----|--------|
+| **Q1** Select-Trigger | Erzeugt manuelle Auswahl ohne Remount neue MSC-Reads? |
+| **Q2** Track-Ende | Erzeugt natürliches Titelende / Auto-Next neue Reads? |
+| **Q3** Frische | Liest die HU dabei **geänderte** Daten (nicht nur Cache)? |
 
-**Frage:** Erzwingt ein HU-Titelwechsel *nach* abgeschlossenem Prefetch neue, slot-spezifische Reads — oder bleibt alles im Cache?
+Klassifikation ergänzend zu A–E:
 
-**Setup (kurz):**
-- FW weiter `0.4.42` L3 **oder** Lab-Env mit 3× **sehr kurzen** Slots (z. B. 64–128 KiB), eindeutig benannt.  
-- Bridge `--no-audio`, Stream off.  
-- Protokoll: Mount → 30 s Idle → Select A (20 s) → Select B (20 s) → Select C (20 s); LED + Zeiten.  
-- Einmal **ohne** OTG, einmal **mit** Soft-Remount *zwischen* Selects (separat markiert).
-
-**Erfolgskriterien:**
-- Gültige Session (Export, ov erklärt, Serial stabil im Fenster).  
-- Klassifikation: Reads nur Prefetch (**E** bei Select) vs. Select-triggered (**B**/schwach) vs. cursor-nah (**C** — unwahrscheinlich).
-
-**Nicht mischen** mit Live-Overlay oder langem 8 MiB-Play.
-
-### P1 — Remount als Produktoption (Design only)
-
-Nur skizzieren, **nicht** implementieren bevor P0 negativ klar ist:
-- Bei Senderwechsel: Soft-Remount / Serial-Bump → HU neu listen + Prefetch.  
-- UX-Kosten (Unterbrechung, Delay) vs. Nutzen (frische Bytes).
-
-### P2 — Lab: kurze-Slot-Geometrie
-
-Optional vor nächstem Feldtermin:
-- Env oder Flag für 3 kurze Messdateien mit PDMK dicht (nicht 30 s).  
-- Lab-Host-Timeline: Idle vs. „Select“-Nudge analog.
-
-### Später / eingefroren
-
-- Ringbuffer / PSRAM / Pacing  
-- BT-Hybrid  
-- Armed/Live-Pass (braucht C/D)  
-- L4 50 MiB  
-- Mehrordner-Hierarchie (Nice-to-have nach P0)
+| Code | Bedeutung |
+|------|-----------|
+| **S0** | Select ohne neue Reads |
+| **S1** | nur Menü/FAT/Dir |
+| **S2** | Nutzdaten Zielslot |
+| **S3** | Reads bei natürlichem Übergang |
+| **S4** | Frische Inhalte bestätigt |
+| **SR** | Reads nur nach Remount |
 
 ---
 
-## 3. Betriebsregeln für den nächsten Feldtermin
+## 2. Drei Arme (eigene Artefaktordner)
 
-1. Vorher: `.89` = gewünschte FW; Bridge `--no-audio` für statische/seq Passes; `ensure_pump_bridge` nicht unbemerkt auf Audio zurücksetzen.  
-2. Nach OTG: WLAN-Reconnect abwarten (RST falls nötig) **bevor** Messfenster zählt.  
-3. Overflow nach Plug → Fenster erst ab Bridge-up bilanzieren.  
-4. Jeder Versuch: neues Artefaktverzeichnis, Operator-Zeiten, A–E + Evidenzebene.
+1. **Arm1 — Select:** Mount → Idle 30 s → A/B/C je ≥15 s; kein OTG.  
+2. **Arm2 — Trackende:** kurze hörbare Titel, Autoplay/Reihenfolge, **nicht** manuell umschalten.  
+3. **Arm3 — Remount:** Soft-Remount zwischen Selects; Kausalität, kein Produkt-Claim.
+
+Bridge `--no-audio` für Baseline. Kurze Dateien **verkürzen** Laufzeit, erzwingen **keine** Frische.
 
 ---
 
-## 4. Ein-Satz-Zielbild
+## 3. Lab vorher
 
-Zuerst klären, ob **Titelwechsel** überhaupt MSC weckt; wenn nein, ist Remount (oder ein anderer Host-Stimulus) die Produktfrage — nicht ein größerer Ring.
+- Hörbare Marker pro Slot + MP3-Parser-Check  
+- `m3_trace_coverage.py` gegen Volltrace (Status ≈ JSONL)  
+- Geometrie/Slots unverändert reproduzierbar  
+
+---
+
+## 4. Entscheidung nach M3seq
+
+| Ergebnis | Nächster Schritt |
+|----------|------------------|
+| S0 und kein S3 | Chunk ohne Remount schwach → Arm3 / Produkt Remount skizzieren |
+| nur S1 | kein Audio-Read-Nachweis |
+| S2 oder S3 | dann Q3 Frische |
+| S4 | Chunk-Pfad detaillieren (Timing, UX) |
+| nur SR | Remount-Pfad bewerten |
+| ungültige Trace | wiederholen, keine Architektur |
+
+---
+
+## 5. Optional parallel (nicht statt M3seq)
+
+**Langpass Pfad A:** ≥20 min Play, Export von Plug an vollständig, Coverage live; Ziel jenseits `maxSeq`/bekannter Gaps. Ring bleibt aus.
+
+---
+
+## 6. Eingefroren
+
+Ring, PSRAM, Pacing, Remount-Implementierung, BT-Hybrid, Live als M3-Ersatz, L4 parallel, Play-Detect als alleiniger Transportnachweis.
