@@ -20,8 +20,9 @@
 | **`lab88-l3-fat-verify-1615/`** | **0.4.42** | BPB+`fsck.fat`: **4087 Cluster = FAT16** (Margin +2); fav0 SHA dokumentiert |
 | **`lab88-export-calib-1835/`** | **0.4.42** | **Kalib A+B PASS**: Pre-Connect-Lücke `export_frac=0`; Burst 10/50/100 ms vollständig; M0 `Δrc=Σn` |
 | **`lab88-m3seq-rehearsal-1905/`** | **0.4.42** | Lab-M3seq-Rehearsal: Idle quiet; Select-fav1 ohne Remount; Remount passiv Δ0 / +Nudge Δ256 |
-| **`auto89-m3seq-2042/`** | **0.4.42 Auto** | **Feld-M3seq:** Q1 Rock-Select Burst dann A_then_E; Q2 Auto-Next Δrc=0; Remount-Scan dann Select ohne Reads |
-| **`GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`** | — | Cursor-Gesamtbericht inkl. Mistral/Claude-Bilanz; Kalibrierung A+B |
+| **`auto89-m3seq-2042/`** | **0.4.42 Auto** | Feld-M3seq Rohdaten; siehe Trace-Korrektur-Bericht |
+| **`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`** | — | **Normativ:** Q2 warm-konfundiert; Select/Resume-Vollreads; Sequenz vs BT |
+| **`GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`** | — | älterer Gesamtbericht (vor Trace-Korrektur) |
 | **`AUTO-M3-FELD-2026-10-03.md`** | **0.4.42 Auto** | Feld **A_then_E**: Play ~8 min Δrc=0; Artefakte `auto89-m3-static-170625/`, seq `auto89-m3seq-1728/` |
 
 ## L3-Geometrie (0.4.42)
@@ -45,4 +46,5 @@ Cursor-nahe Reads nur unter **Lab-Paced-Consume @ 6 KiB/s**.
 
 ## Nächstes
 
-→ Auswertung Feld-M3seq [`auto89-m3seq-2042/REPORT.md`](auto89-m3seq-2042/REPORT.md). Q3 Frische optional; Freeze bleibt.
+→ Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · Plan Rev.4.  
+P0 Menü-Lock → P1 kalter Auto-Next → parallel Q3-Lab + BT-UX. Ring Freeze bis P1 grün.

@@ -53,5 +53,7 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 ~~Lab-Langpace 360 s~~ → **done** (`lab88-l3-langpace-1535/`, 12 Kreuzungen ≈30 s).  
 ~~L3 BPB+fsck Cluster-Nachweis~~ → **done** PASS_GEOMETRY_LAB (`lab88-l3-fat-verify-1615/`).  
 ~~Auto-M3-statisch~~ → **done A_then_E (Fenster)** + Addendum Kritik.  
-**Jetzt:** Feld-M3seq ausgewertet [`artifacts-2026-10-03-m3/auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/). Q2 negativ; Freeze. Q3 optional.  
-Gesamtbericht: [`artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md).
+~~Feld-M3seq~~ → **done** [`auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/).  
+**Trace-Korrektur 2026-10-04:** Q2-Δrc=0 war warm-konfundiert; Select/Resume-Vollreads belegt; Architektur-Negativ zurückgezogen.  
+**Jetzt:** P0 Menü-Lock → P1 kalter Auto-Next → parallel Q3-Lab + BT-UX. Freeze Ring bis P1 grün.  
+Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · Plan Rev.4.

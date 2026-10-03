@@ -1,77 +1,62 @@
-# Plan nach Auto-M3 — A_then_E (Rev.3, 2026-10-03)
+# Plan nach Auto-M3seq — Trace-Korrektur (Rev.4, 2026-10-04)
 
-**Basis:** [`GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md) · Addendum · Semantik [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)
-
-**Enger Befund (D):** `A_then_E_within_observed_window`.  
-**Vollscan 8 MiB unique:** wahrscheinlich (**H**), nicht D.  
-**Export-Unique ~4 MiB:** Untergrenze, **kein** Cache-Inhalt.
+**Normativer Gesamtbericht:** [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md)  
+**Semantik:** [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)  
+**Feld:** [`auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/) · Gegenindiz [`replug-1231-noselect/`](artifacts-2026-10-03-b7/replug-1231-noselect/)
 
 ---
 
-## 0. Vor dem Feld: Lab-Kalibrierung (P0, Pflicht) — **PASS 2026-10-03**
+## 0. Enger Befund (nach Voll-Trace, V)
 
-Artefakte: [`artifacts-2026-10-03-m3/lab88-export-calib-1835/`](artifacts-2026-10-03-m3/lab88-export-calib-1835/) · Tool `tools/m3_lab_export_calib.py`
+| Aussage | Status |
+|---------|--------|
+| Warmes Auto-Next / Trackende → Δrc=0 | ✅ gültig gemessen, **kein** Architektur-Negativ |
+| Select / Erstabspiel → Voll-Burst (~1 MB/s) | ✅ mehrfach (V) |
+| Mount-Scan = nur Köpfe (+ ggf. eine volle kleine Datei) | ✅ (V) |
+| Remount → Resume-Vollread ohne Select | ✅ (V) |
+| Kaltes Auto-Next liest | 🔜 P1 (Morgenpass Indiz positiv) |
+| Payload-Frische (Q3) | 🔜 Lab |
+| MSC-Live als unendliche Overlay-Datei | weiterhin ungestützt |
+| MSC-Sequenz (N Chunk-Dateien) | bedingt first-class bis P1 |
 
-### Kalibrierung A — Pre-Connect — **PASS**
-- **A1** Bridge-up: `Δrc=64 = Σn`, `ov=0`, Export vollständig.  
-- **A2** Blind (TCP down): `blind_rc=256`, `export_frac=0.0`, `ov=0`, `ΔreadsEmit=0` → Pre-Connect-Lücke bestätigt (kein Overflow).
-
-### Kalibrierung B — Burst (`kBurstGapMs=50`) — **PASS**
-Gaps **10 / 50 / 100 ms**: je `Δrc=48 = Σn`, `ov=0`, Export vollständig. Aggregation nur Zeilenzahl (14–16), nicht Vollständigkeit.
-
-**Operator:** Bridge-TCP up **vor** Remount/Plug/Stimulus. Negatives Q2 ohne A+B gilt **nicht** als HU-Beweis — A+B sind jetzt lab-erledigt.
-
-### Lab-M3seq-Rehearsal — **PASS 2026-10-03** (`lab88-m3seq-rehearsal-1905/`)
-Idle quiet · Select-fav1 ohne Remount (`Δrc=Σn`, Slot-bytes↑) · Soft-Remount passiv Δ0 / mit Host-Nudge Δ256.  
-**Kein** BMW-Q1–Q3-Ersatz; Instrumentation-Baseline für Feldarme.
-
-### Feld-M3seq — **2026-10-03** (`auto89-m3seq-2042/`)
-- **Q1:** Rock-Select → einmal großer File-Burst, dann A_then_E.  
-- **Q2:** Trackende/Auto-Next → **Δrc=0** (tcp up, ov=0).  
-- **Arm3:** Remount-Scan, danach Selects ohne Reads/LED.  
-- **Q3:** nicht ausgeführt.
+**Arbeitsmodell:** Eine Datei, ein Voll-Read beim ersten Start pro Mount.
 
 ---
 
-## 1. Drei Fragen
+## 1. Lab-Kalibrierung — unverändert PASS
 
-| ID | Frage |
-|----|--------|
-| **Q1** | Select ohne Remount → neue MSC-Reads? |
-| **Q2** | Natürliches Trackende / Auto-Next → neue Reads? |
-| **Q3** | Dabei frische (geänderte) Inhalte? |
-
-**S0–SR** pro Arm (nicht ein Gesamtlabel).
+A+B + M3seq-Rehearsal: siehe Rev.3. Operator: Bridge vor Plug. Neu: **Pre-Flight-Warmheits-Check** vor jedem Trigger-Fenster.
 
 ---
 
-## 2. Feldarme
+## 2. Offene Fragen (neu priorisiert)
 
-1. **Arm1 Select** — Idle 30 s → A/B/C; kein OTG.  
-2. **Arm2 Trackende** — kurze **hörbare** Titel; nicht manuell umschalten.  
-3. **Arm3 Remount** — Soft-Remount separat.
-
-Bridge vor Messfenster up. Kurze Dateien erzwingen **keine** Frische.
-
-### Optional P1b
-fav1 512 KiB (~87 s) passiv Trackende — Indikator, kein Q2-Ersatz.
+| ID | Frage | Nächster Nachweis |
+|----|--------|-------------------|
+| **Q2c** | Liest kaltes Auto-Next Body-LBAs — und wann relativ zum Übergang? | P1 Feld 15 min |
+| **Q3** | Liefert der Start-Read frische Bytes (A→B)? | P2a Lab |
+| **Q1** | Select-Trigger | ✅ erledigt |
+| **Q2w** | Warmes Auto-Next | ✅ Δrc=0, konfundiert für Kälte |
 
 ---
 
-## 3. Nach M3seq
+## 3. Arbeitsplan
 
-| Ergebnis | Folge |
-|----------|--------|
-| S4 | Chunk vertiefen |
-| nur SR | Remount skizzieren |
-| S0∧¬S3 | Chunk ohne Stimulus schwach |
-| kalibriert negativ | BT-Hybrid als Produktoption diskutieren |
+| Prio | Arbeit | Done wenn |
+|------|--------|-----------|
+| **P0** | Menü-Lock / MSC-Session-Lock | Pi-UI überschreibt MSC-Namen nicht während USB-Session; Regressionstest |
+| **P1** | Kalter Auto-Next Feld | Trace: kaltes Ziel, Timing, Δrc/LBA; Warmheits-Preflight dokumentiert |
+| **P2a** | Q3 Lab A/B | Hash-Kette + Marker, B-Bytes belegt |
+| **P2b** | BT-Abnahme inkl. Quellwechsel-UX | Checkliste pro Punkt |
+| **P3** | Sequenz-Prototyp | nur nach P1 grün; dann Ring ≥ 1 Chunk erlaubt |
+| **P4** | Connected-Apps / 6NR | nur Notiz/Check, kein Sprint |
 
-**Langpass:** erst danach; bei Vollscan-H eher **≥25 min** @48 k + Marge — ersetzt M3seq nicht.  
-**L4:** eigene Frage nach FAT-Validierung.
+**Entscheidungsregel:** P1+P2a grün → Hauptpfad Sequenz (A), BT als Fallback. Sonst → BT-Hybrid (B). Pfad C nur wenn B-UX scheitert und 6NR aktiv.
 
 ---
 
-## 4. Eingefroren
+## 4. Eingefroren (bis P1 grün)
 
-Ring, PSRAM, Pacing, Remount-Impl, BT-Hybrid-Code, Live-als-M3, L4 parallel.
+Ring-Vergrößerung, PSRAM-Streaming, Pacing, Remount-Karussell-Impl, Live-Overlay-Optimierung, AAIdrive-Port.
+
+**Ausnahme nach P1 grün:** einmaliger, begründeter Ring ≥ Chunk-Größe für Sequenz-Prototyp.

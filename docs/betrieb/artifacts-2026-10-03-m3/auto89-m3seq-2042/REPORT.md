@@ -89,10 +89,12 @@ Nur ein `play_uid` in der gesamten Bridge-Session: **`fav0`**.
 
 ## 6. Folge (I)
 
-- Chunk/Live-Overlay ohne Host-Re-Read nach Sweep/Select **weiter unwahrscheinlich** für diesen NBT.  
-- Remount allein erzeugt Scan, **kein** nachhaltiges Play-Read.  
-- **Freeze** Ring/PSRAM/BT/Pacing unverändert.  
-- Nächste Schritte optional: Q3 Frische nur mit festem Protokoll; Menü-Lock gegen Pi-UI-Überschreiben vor Feld.
+> **Korrektur 2026-10-04:** Die Architektur-Lesart „Q2 negativ ⇒ kein Nachschub“ ist **zurückgezogen**. Trace-Vollauswertung: alle drei Dateien waren vor dem Q2-Fenster warm; Select/Resume-Vollreads mehrfach belegt. Normativ: [`../GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](../GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md).
+
+- Unendliches Live-Overlay ohne Host-Re-Read bleibt unwahrscheinlich.  
+- **Sequenz-Modell** (kalte Datei beim Start) ist wieder Kandidat — entscheidet P1 kalter Auto-Next.  
+- **Freeze** Ring/PSRAM/Pacing bis P1 grün.  
+- P0: Menü-Lock gegen Pi-UI-Überschreiben.
 
 ## 7. Dateien
 
