@@ -1,10 +1,12 @@
 # Auftrag — MSC Host-Read-Nachweis (B7 → L-Leiter → Architektur)
 
-**Stand:** 2026-10-03 · aktiv (Rev. 2: Pace-Frage + L-Leiter ohne Live)  
+**Stand:** 2026-10-03 · aktiv (Rev. 3: B7-A + L0 Listing done → **M3** als Nächstes)  
 **Anlass:** Multi-KI-Konsens + Speicher-/Cache-Hypothese (HU-Cache endlich; 2‑MiB-Stick erklärt „nie Nachlesen“ nicht als Absolutgrenze)  
-**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10  
+**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10–§11.12  
 **Teilauftrag B7:** [`AUFTRAG-B7-HU-REREAD.md`](AUFTRAG-B7-HU-REREAD.md)  
 **Ring/BT-Papier:** [`../betrieb/POST-1110-RING-BT-NOTES.md`](../betrieb/POST-1110-RING-BT-NOTES.md)
+
+**Feld-Stand 2026-10-03:** M1 B7-A = Cache-only Ist-Geometrie. M2 L0 Auto `0.4.39` FAT12 = **Listing ok**, Play weiter Prefetch→Cache (`play.guess=0`, LED quiet bei Select). **Nächster Gate:** M3 L-Leiter (statisch, Länge > Plateau).
 
 ---
 
@@ -84,7 +86,7 @@ flowchart TD
 |----|------|------------|--------------|-----------------|
 | **M0** | Telemetrie absichern | `esp32.pidrive` | ja (klein) | Drops **quantifiziert** (Anzahl + LBA-Bereich); sonst Ist reicht |
 | **M1** | B7-A / B7-B / B7-C | Auto + Tools hier | **nein** (0.4.36) | Baseline-Messpaket; UID-OK wo nötig |
-| **M2** | Geometrie-Vorstufe L0 | `esp32.pidrive` | ja (eigenes FW) | Disk ≥ Zielslot; Listing ok; **Lab jetzt**, Auto-OTA nach B7 |
+| **M2** | Geometrie-Vorstufe L0 | `esp32.pidrive` | ja (eigenes FW) | **done Auto 0.4.39:** Disk/Listing ok; Play-Reads noch nicht |
 | **M3** | L-Leiter L1→L4 (**statisch**) | Auto + Lab | L1 Ist; L2+ braucht M2 | Plateau + Play-Reads + **Pace** |
 | **M3b** | Live-Overlay erst danach | Bridge + ESP | ggf. klein | Leseverhalten bekannt |
 | **M4** | Ring/PSRAM / Pacing | nach M3 Pace | ja | aus Tempo- vs. Voraus-Messung |

@@ -1,18 +1,18 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-03 — Auto **0.4.36-dev**; **§11.11 B7-A Cache-only** (PD0029); Lab `.88` = **0.4.37 L0**; nächster Auto-Schritt = L0-OTA.  
+**Stand Diagnose:** 2026-10-03 Nachmittag — Auto **0.4.39-dev** FAT12 L0; **§11.11 B7-A** + **§11.12 L0 Listing/Cache**; nächster Schritt = **M3 L-Leiter** (Play-Reads erzwingen), kein Ring.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
 |------|------|
-| Datum | 2026-09-28 (Feld ~07:40–15:55) · Nachtests bis **2026-10-02 ~15:48** |
-| FW live am Auto | **`0.4.36-dev`** (OTA 2026-10-02 ~07:25; vorher 0.4.34) |
-| ESP STA | `192.168.178.89` · SoftAP `pidrive-2BC568` / `192.168.4.1` |
+| Datum | 2026-09-28 (Feld ~07:40–15:55) · Nachtests bis **2026-10-03 ~13:01** |
+| FW live am Auto | **`0.4.39-dev`** FAT12 L0 4 MiB / 1 M-Slots (OTA 2026-10-03; vorher 0.4.36) |
+| ESP STA | `192.168.178.89` · SoftAP `pidrive-2BC568` / `192.168.4.1` · Serial **PD0032** |
 | Pi | `192.168.178.105` · `pump_bridge.py` manuell (+ `ensure_pump_bridge.sh`) · PUMP-TCP `:9090` |
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
 | PUMP-Link Produkt | **offen** — SoftAP \| STA \| UART festlegen (§15.0); Feldtest ideal SoftAP/UART |
-| Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.36** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
+| Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.39** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
 | Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
 | Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
@@ -905,7 +905,27 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 
 **Artefakte:** [`artifacts-2026-10-03-b7/`](artifacts-2026-10-03-b7/)
 
-**Folge:** L0 OTA Auto (`0.4.37-dev`, FAT16/4 MiB) → L-Leiter; kein Ring-OTA.
+**Folge:** ~~L0 OTA Auto~~ → **done** Nachmittag (§11.12); dann L-Leiter; kein Ring-OTA.
+
+### 11.12 Feld L0 2026-10-03 Nachmittag — Listing ok, Play weiter Cache (PD0032)
+
+**Setup:** FW **`0.4.39-dev`** FAT12 L0 4 MiB / 1 M-Slots · `.89` · Bridge `.105` · Serial **PD0032**  
+(Zwischen: `0.4.37` Lab FAT16-Fehlzuordnung → `0.4.38` Dir-Clear → `0.4.39` FAT12.)
+
+| Fenster | Ohr / UI | ESP |
+|---------|----------|-----|
+| Replug ~12:54 | **3 Dateien** wieder gelistet | Prefetch mid-file; `play.reject` (`not_from_head`/`plug_window`); `guess=0` |
+| ~12:56 alle Dateien gewählt | LED kurz aktiv, **kein** Ton/Cover | Deep File-Reads (~3 MiB), danach quiet |
+| 12:57 „Radio BOB!“ 30 s | kein Ton | Counter **flat**; phase `quiet`; nur `menu.set` |
+| 13:01 Rock Antenne (HU **3. Stelle**) 30 s | kein Ton; **LED nicht blinkend** | unverändert: `guess=0`, `sb=0`, `readCount` frozen |
+
+**Slot vs. HU:** ESP `fav0`=Rock Antenne, `fav1`=Bayern, `fav2`=Radio BOB! — HU-Reihenfolge offenbar anders (BOB oben, Rock unten).
+
+**Urteil:** L0 erfüllt **Listing**-Gate. Play-Pfad bleibt **Mount-Scan + HU-Cache**: nach Prefetch keine MSC-Reads bei Select → kein `play.guess` → kein Live-Overlay. LED quiet = kein USB-Xfer (nicht nur Detect-Bug).
+
+**Artefakte:** `l0-039-replug-1253/`, `l0-039-bob-1257/`, `l0-039-rock-1301/` unter [`artifacts-2026-10-03-b7/`](artifacts-2026-10-03-b7/) · Commit `8193fa9`.
+
+**Folge:** **M3 L-Leiter** (statische große/markierte MP3, Plateau > Cache) und/oder Detect nach Prefetch bei Mid-Seq — Lab zuerst; Feld erst mit Play-Read-Nachweis. Kein Ring/BT.
 
 ---
 
@@ -922,7 +942,9 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 7. ~~Bridge `ignore rapid` / `last_audio_log`~~ — **fix** 2026-10-02 (§11.9).  
 8. ~~**60‑s-Feldtest**~~ — **done** 2026-10-02 Nachmittag (§11.10): Mount-Scan+Cache in 60 s-Fenstern; Nachlesen über Slot-Grenzen **offen**.  
 9. ~~**B7 / 150 s**~~ — **B7-A done** 2026-10-03 (§11.11): Cache-only Ist-Geometrie; B7-B/C optional.  
-10. **L0 Auto-OTA** (`0.4.37`) → L-Leiter; Architektur/BT erst nach Plateau-Gate.
+10. ~~**L0 Auto-OTA**~~ — **done** 2026-10-03 (§11.12): Listing ok (`0.4.39` FAT12); Play weiter Cache.  
+11. **M3 L-Leiter** (statisch) — Slot/Datei **über** Einlese-Plateau; Play-Reads + Pace messen; optional Detect Mid-Seq nach Prefetch-Cooldown. Lab → dann Auto.  
+12. Ring/Pacing/BT erst nach Plateau-Gate ([AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)).
 
 ### Offene Fragen
 
@@ -930,7 +952,7 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 2. A2-Zielzeit: „wenige Sekunden“ vs. Warmup/ABSA-ähnlich — Zahl festlegen (Vorschlag: ≤5 s nach erstem Play-Read *oder* nach Warmup-OK).  
 3. Remount bei jedem `menu_set`: akzeptabel vs. Sticky-Listing?  
 4. Actions (`Zurueck`/`Mehr`) als kurze MP3s in derselben Playlist — Struktur ändern?  
-5. Liest die NBT während Wiedergabe erneut? — **§11.10:** in 60 s-Fenstern nach Mount-Scan **keine** weiteren Reads; **ob jemals nach Slot-/Track-Ende** = offen (B7).  
+5. Liest die NBT während Wiedergabe erneut? — **§11.11/11.12:** auf ≤1 M-Slots **nein** (Cache + LED quiet); **offen** erst bei Datei **über** Einlese-Plateau (M3).  
 6. `headResyncs` hoch bei `underruns=0` (Lab paced) — Bedeutung?
 
 ---
