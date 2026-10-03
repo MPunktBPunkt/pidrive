@@ -204,12 +204,14 @@ Ungleiche Slot-Größen über `MscGeo::kSlotSectors0/1/2` + angepasstes `slotRan
 ## 9. Offene Lab-Fragen / nächste Schritte
 
 1. ~~Auto-Feld M3~~ → **done A_then_E** 2026-10-03 ([`AUTO-M3-FELD-2026-10-03.md`](AUTO-M3-FELD-2026-10-03.md)).  
-2. **Nächster Plan:** M3seq kurze Dateien — [`../PLAN-NACH-M3-AE-2026-10-03.md`](../PLAN-NACH-M3-AE-2026-10-03.md).  
+2. **Nächster Plan:** Feld-M3seq kurze Dateien — [`../PLAN-NACH-M3-AE-2026-10-03.md`](../PLAN-NACH-M3-AE-2026-10-03.md).  
 3. ~~Optional Lab-Langpace~~ → **done** 360 s / 12 Kreuzungen (`lab88-l3-langpace-1535`).  
 4. ~~L3 FAT16 BPB/fsck~~ → **done** (`lab88-l3-fat-verify-1615/`, PASS_GEOMETRY_LAB).  
-5. Optional: Xing-Varianten-Reihe 2 (erst nach Sequenz-Klarheit).  
-6. L4 (50 MiB): erst nach Feld-Bedarf + neuer Geometrie-Abnahme.  
-7. Ring/BT weiter eingefroren.
+5. ~~Lab-Kalib A+B~~ → **done** (`lab88-export-calib-1835/`).  
+6. ~~Lab-M3seq-Rehearsal~~ → **done** Idle/Select/Remount (`lab88-m3seq-rehearsal-1905/`).  
+7. Optional: Xing-Varianten-Reihe 2 (erst nach Sequenz-Klarheit).  
+8. L4 (50 MiB): erst nach Feld-Bedarf + neuer Geometrie-Abnahme.  
+9. Ring/BT weiter eingefroren.
 
 ---
 

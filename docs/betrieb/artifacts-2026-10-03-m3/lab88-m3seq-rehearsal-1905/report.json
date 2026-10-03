@@ -1,0 +1,453 @@
+{
+  "ts": "2026-10-03T16:54:32.517522+00:00",
+  "esp": "http://192.168.178.88",
+  "note": "Lab M3seq rehearsal (Lab-Host \u2260 NBT). Arms: idle / select-no-remount / soft-remount.",
+  "arms": {
+    "arm0_idle": {
+      "stimulus": {
+        "kind": "idle",
+        "s": 30.0
+      },
+      "before": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0029",
+        "remountGen": 29,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35858,
+        "readsEmit": 11863,
+        "readOverflow": 0,
+        "bytesFile": 55621120,
+        "lastReadLba": 255,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 32768,
+            "maxSeq": 32768,
+            "fromHead": 13
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "after": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0029",
+        "remountGen": 29,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35858,
+        "readsEmit": 11863,
+        "readOverflow": 0,
+        "bytesFile": 55621120,
+        "lastReadLba": 255,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 32768,
+            "maxSeq": 32768,
+            "fromHead": 13
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "delta_readCount": 0,
+      "delta_readsEmit": 0,
+      "delta_overflow": 0,
+      "delta_remountGen": 0,
+      "jsonl_lines": 0,
+      "sum_burst_n": 0,
+      "balance_ok": true,
+      "slot_bytes_delta": {},
+      "lastReadLba_after": 255,
+      "label": "S0_idle_after_sweep",
+      "expect": "delta_readCount\u22480 (Lab-Host quiet after mount sweep)"
+    },
+    "arm1_select_no_remount": {
+      "stimulus": {
+        "calls": 8,
+        "sectors": 64,
+        "gap_s": 0.08,
+        "lba0": 16465
+      },
+      "before": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0029",
+        "remountGen": 29,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35858,
+        "readsEmit": 11863,
+        "readOverflow": 0,
+        "bytesFile": 55621120,
+        "lastReadLba": 255,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 32768,
+            "maxSeq": 32768,
+            "fromHead": 13
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "after": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0029",
+        "remountGen": 29,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35922,
+        "readsEmit": 11883,
+        "readOverflow": 0,
+        "bytesFile": 55653888,
+        "lastReadLba": 16528,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 65536,
+            "maxSeq": 32768,
+            "fromHead": 26
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "delta_readCount": 64,
+      "delta_readsEmit": 20,
+      "delta_overflow": 0,
+      "delta_remountGen": 0,
+      "jsonl_lines": 20,
+      "sum_burst_n": 64,
+      "balance_ok": true,
+      "slot_bytes_delta": {
+        "fav1": {
+          "before": 32768,
+          "after": 65536,
+          "delta": 32768
+        }
+      },
+      "lastReadLba_after": 16528,
+      "label": "S1_select_fav1_no_remount",
+      "expect": "delta_readCount>0, remountGen unchanged, fav1 slot.bytes\u2191",
+      "remount_unchanged": true,
+      "fav1_bytes_grew": true
+    },
+    "arm3a_remount_passive": {
+      "stimulus": {
+        "kind": "soft_remount_no_nudge",
+        "observe_s": 8
+      },
+      "before": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0029",
+        "remountGen": 29,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35922,
+        "readsEmit": 11883,
+        "readOverflow": 0,
+        "bytesFile": 55653888,
+        "lastReadLba": 16528,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 65536,
+            "maxSeq": 32768,
+            "fromHead": 26
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "after": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0030",
+        "remountGen": 30,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35922,
+        "readsEmit": 11883,
+        "readOverflow": 0,
+        "bytesFile": 55653888,
+        "lastReadLba": 16528,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 65536,
+            "maxSeq": 32768,
+            "fromHead": 26
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "delta_readCount": 0,
+      "delta_readsEmit": 0,
+      "delta_overflow": 0,
+      "delta_remountGen": 1,
+      "jsonl_lines": 0,
+      "sum_burst_n": 0,
+      "balance_ok": true,
+      "slot_bytes_delta": {},
+      "lastReadLba_after": 16528,
+      "label": "SR_soft_remount_passive",
+      "expect": "remountGen+1; Lab-Host \u0394rc may be 0 without nudge"
+    },
+    "arm3b_remount_nudged": {
+      "stimulus": {
+        "kind": "soft_remount_plus_nudge",
+        "nudge": "nudged:256"
+      },
+      "before": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0030",
+        "remountGen": 30,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 35922,
+        "readsEmit": 11883,
+        "readOverflow": 0,
+        "bytesFile": 55653888,
+        "lastReadLba": 16528,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55588352,
+            "maxSeq": 8388608,
+            "fromHead": 124
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 65536,
+            "maxSeq": 32768,
+            "fromHead": 26
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "after": {
+        "version": "0.4.42-dev",
+        "usbSerial": "PD0031",
+        "remountGen": 31,
+        "plugged": true,
+        "phase": "play",
+        "readCount": 36178,
+        "readsEmit": 11927,
+        "readOverflow": 0,
+        "bytesFile": 55743488,
+        "lastReadLba": 255,
+        "pumpTcpUp": true,
+        "playingUid": "",
+        "slots": {
+          "fav0": {
+            "lba0": 81,
+            "lba1": 16464,
+            "bytes": 55677952,
+            "maxSeq": 8388608,
+            "fromHead": 137
+          },
+          "fav1": {
+            "lba0": 16465,
+            "lba1": 17488,
+            "bytes": 65536,
+            "maxSeq": 32768,
+            "fromHead": 26
+          },
+          "fav2": {
+            "lba0": 17489,
+            "lba1": 18512,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          },
+          "pump:page_next": {
+            "lba0": 18513,
+            "lba1": 18525,
+            "bytes": 0,
+            "maxSeq": 0,
+            "fromHead": 0
+          }
+        }
+      },
+      "delta_readCount": 256,
+      "delta_readsEmit": 44,
+      "delta_overflow": 0,
+      "delta_remountGen": 1,
+      "jsonl_lines": 44,
+      "sum_burst_n": 256,
+      "balance_ok": true,
+      "slot_bytes_delta": {
+        "fav0": {
+          "before": 55588352,
+          "after": 55677952,
+          "delta": 89600
+        }
+      },
+      "lastReadLba_after": 255,
+      "label": "SR_soft_remount_nudged",
+      "expect": "remountGen+1 and delta_readCount>0 after host nudge",
+      "sweep_end_rc": 36178
+    }
+  },
+  "verdict": {
+    "arm0_idle_quiet": true,
+    "arm1_select_reads": true,
+    "arm1_fav1_attribution": true,
+    "arm3a_remount_gen_only": true,
+    "arm3a_passive_quiet_ok": true,
+    "arm3b_remount_scan": true,
+    "lab_host_note": "Lab-Host: Select-ohne-Remount instrumentierbar; Soft-Remount allein erzeugt hier keine Reads (Nudge n\u00f6tig). BMW Q1\u2013Q3 bleiben Auto-only."
+  }
+}

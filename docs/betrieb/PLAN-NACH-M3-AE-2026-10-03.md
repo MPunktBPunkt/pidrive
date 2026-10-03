@@ -21,6 +21,9 @@ Gaps **10 / 50 / 100 ms**: je `Δrc=48 = Σn`, `ov=0`, Export vollständig. Ag
 
 **Operator:** Bridge-TCP up **vor** Remount/Plug/Stimulus. Negatives Q2 ohne A+B gilt **nicht** als HU-Beweis — A+B sind jetzt lab-erledigt.
 
+### Lab-M3seq-Rehearsal — **PASS 2026-10-03** (`lab88-m3seq-rehearsal-1905/`)
+Idle quiet · Select-fav1 ohne Remount (`Δrc=Σn`, Slot-bytes↑) · Soft-Remount passiv Δ0 / mit Host-Nudge Δ256.  
+**Kein** BMW-Q1–Q3-Ersatz; Instrumentation-Baseline für Feldarme.
 
 ---
 

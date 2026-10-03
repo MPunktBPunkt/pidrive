@@ -1,0 +1,6 @@
+m3seq-rehearsal 185432 ver=0.4.42-dev
+Arm0 idle Δrc=0 quiet=True
+Arm1 select fav1 Δrc=64 sum_n=64 remount_unchanged=True fav1_bytes↑=True balance=True
+Arm3a remount-passive Δrc=0 Δgen=1
+Arm3b remount+nudge Δrc=256 Δgen=1 sum_n=256 ov=0 balance=True
+Lab-Host: Select-ohne-Remount instrumentierbar; Soft-Remount allein erzeugt hier keine Reads (Nudge nötig). BMW Q1–Q3 bleiben Auto-only.
