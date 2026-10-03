@@ -1,0 +1,26 @@
+{
+  "mp3": "docs/betrieb/artifacts-2026-10-03-m3/mp3/L1.mp3",
+  "size_bytes": 536729,
+  "size_kib_target": 512,
+  "bitrate": "48k",
+  "marker_s": 30.0,
+  "bytes_per_s_est": 6000.0,
+  "markers": [
+    {
+      "t_s": 0.0,
+      "sample": 0,
+      "approx_file_off": 0
+    },
+    {
+      "t_s": 30.0,
+      "sample": 1323000,
+      "approx_file_off": 180000
+    },
+    {
+      "t_s": 60.0,
+      "sample": 2646000,
+      "approx_file_off": 360000
+    }
+  ],
+  "note": "approx_file_off assumes CBR; verify with decoder if used for A\u2013E cursor correlation"
+}

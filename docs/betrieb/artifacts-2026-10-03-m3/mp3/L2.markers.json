@@ -1,0 +1,71 @@
+{
+  "mp3": "docs/betrieb/artifacts-2026-10-03-m3/mp3/L2.mp3",
+  "size_bytes": 2109561,
+  "size_kib_target": 2048,
+  "bitrate": "48k",
+  "marker_s": 30.0,
+  "bytes_per_s_est": 6000.0,
+  "markers": [
+    {
+      "t_s": 0.0,
+      "sample": 0,
+      "approx_file_off": 0
+    },
+    {
+      "t_s": 30.0,
+      "sample": 1323000,
+      "approx_file_off": 180000
+    },
+    {
+      "t_s": 60.0,
+      "sample": 2646000,
+      "approx_file_off": 360000
+    },
+    {
+      "t_s": 90.0,
+      "sample": 3969000,
+      "approx_file_off": 540000
+    },
+    {
+      "t_s": 120.0,
+      "sample": 5292000,
+      "approx_file_off": 720000
+    },
+    {
+      "t_s": 150.0,
+      "sample": 6615000,
+      "approx_file_off": 900000
+    },
+    {
+      "t_s": 180.0,
+      "sample": 7938000,
+      "approx_file_off": 1080000
+    },
+    {
+      "t_s": 210.0,
+      "sample": 9261000,
+      "approx_file_off": 1260000
+    },
+    {
+      "t_s": 240.0,
+      "sample": 10584000,
+      "approx_file_off": 1440000
+    },
+    {
+      "t_s": 270.0,
+      "sample": 11907000,
+      "approx_file_off": 1620000
+    },
+    {
+      "t_s": 300.0,
+      "sample": 13230000,
+      "approx_file_off": 1800000
+    },
+    {
+      "t_s": 330.0,
+      "sample": 14553000,
+      "approx_file_off": 1980000
+    }
+  ],
+  "note": "approx_file_off assumes CBR; verify with decoder if used for A\u2013E cursor correlation"
+}

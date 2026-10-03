@@ -947,8 +947,8 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 9. ~~**B7 / 150 s**~~ — **B7-A done** 2026-10-03 (§11.11): Cache-only Ist-Geometrie; B7-B/C optional.  
 10. ~~**L0 Auto-OTA**~~ — **done** 2026-10-03 (§11.12): Listing ok (`0.4.39` FAT12); Play weiter Cache; Lesevolumen skaliert mit Angebot.  
 11. ~~**M0 Messintegrität**~~ — **Lab PASS** 2026-10-03 (`artifacts-2026-10-03-m0/`): `ΔreadCount = Σ(burst.n)`; `ΔreadsEmit` = JSONL-Zeilen.  
-12. **M3 L-Leiter** — Sweep-Ende→Play; Muster **A–E**; markierte Frames; **kein** Plateau-Gate ([Auftrag Rev.4](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). Lab → Feld-Hypothese.  
-13. Ring/Pacing/BT erst nach A–E ([UEBERGABE](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)).
+12. **M3 L-Leiter** — Lab-Host-Timeline **gestartet** 2026-10-03 (`artifacts-2026-10-03-m3/`): Sweep→Idle=A/E, Paced=forced C; markierte L1/L2-MP3 als Assets. NBT-A–E weiter Auto. Marker noch nicht im ESP-Slot.  
+13. Ring/Pacing/BT erst nach NBT A–E ([UEBERGABE](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)).
 
 ### Offene Fragen
 
