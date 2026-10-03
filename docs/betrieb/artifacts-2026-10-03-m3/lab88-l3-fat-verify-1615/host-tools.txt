@@ -1,0 +1,51 @@
+/dev/sda: DOS/MBR boot sector, code offset 0x3c+2, OEM-ID "mkfs.fat", sectors/cluster 8, root entries 512, sectors 32768 (volumes <=32 MB), Media descriptor 0xf8, sectors/FAT 16, sectors/track 16, serial number 0x41ed56f, label: "PIDRIVE    ", FAT (16 bit)
+32768
+fsck.fat 4.2 (2021-01-31)
+Checking we can access the last sector of the filesystem
+Boot sector contents:
+System ID "mkfs.fat"
+Media byte 0xf8 (hard disk)
+       512 bytes per logical sector
+      4096 bytes per cluster
+         1 reserved sector
+First FAT starts at byte 512 (sector 1)
+         2 FATs, 16 bit entries
+      8192 bytes per FAT (= 16 sectors)
+Root directory starts at byte 16896 (sector 33)
+       512 root directory entries
+Data area starts at byte 33280 (sector 65)
+      4087 data clusters (16740352 bytes)
+16 sectors/track, 2 heads
+         0 hidden sectors
+     32768 sectors total
+Volume label 'PD0020' stored in root directory and label 'PIDRIVE' stored in boot sector and different.
+  Auto-copying volume label from root directory to boot sector.
+Checking for unused clusters.
+
+Leaving filesystem unchanged.
+/dev/sda: 7 files, 2308/4087 clusters
+fsck.fat 4.2 (2021-01-31)
+Checking we can access the last sector of the filesystem
+Boot sector contents:
+System ID "mkfs.fat"
+Media byte 0xf8 (hard disk)
+       512 bytes per logical sector
+      4096 bytes per cluster
+         1 reserved sector
+First FAT starts at byte 512 (sector 1)
+         2 FATs, 16 bit entries
+      8192 bytes per FAT (= 16 sectors)
+Root directory starts at byte 16896 (sector 33)
+       512 root directory entries
+Data area starts at byte 33280 (sector 65)
+      4087 data clusters (16740352 bytes)
+16 sectors/track, 2 heads
+         0 hidden sectors
+     32768 sectors total
+Volume label 'PD0020' stored in root directory and label 'PIDRIVE' stored in boot sector and different.
+  Auto-copying volume label from root directory to boot sector.
+Checking for unused clusters.
+
+Leaving filesystem unchanged.
+/dev/sda: 7 files, 2308/4087 clusters
+NO_FSCK

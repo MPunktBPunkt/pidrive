@@ -1,0 +1,17 @@
+L3 FAT16 geometry verify — lab88-l3-fat-verify-1615
+Source: /dev/sda on .108 while .88 runs 0.4.42-dev L3
+BPB: bps=512 spc=8 reserved=1 fats=2 spf=16 root_ents=512 total=32768
+Derived: data_start=65 data_clusters=4087 type_by_MS=FAT16 margin_over_4085=+2
+fsck.fat -vn: 2 FATs 16-bit, 4087 data clusters, FAT16 — see fsck.fat-vn.txt
+Code MscGeometry L3 matches BPB (total/spc/spf/reserved/root/data_start).
+boot.sha256=709d3ce551234c2df537f3528658a437737c1b0bf39f0e8dd9ee4c0436b93b9a
+head96.sha256=6cbf61ee0db6a0fd834403f646bd27eac4487da29003dc91ad62e76b2ec71eb9
+fav0 identity:
+6b8826621f0829fe940f5b42be355edd452d0c49bae6a665c32dd063f56e2ed3  -
+2b96e820f2983b5bdeff733061bf43c80a4a439696b8536b81c0d928654c5a24  -
+head252_hex 49443304000000000022545353450000000e0000034c61766636312e372e3130
+at_256 b'PDMK\x00\x00\x00\x00\x00\x08'
+fav0_bytes 8388608
+Volume-label quirk: boot='PIDRIVE' root=usbSerial (fsck notes differ) — non-blocking.
+Verdict: PASS_GEOMETRY_LAB — FAT16 eindeutig (nicht FAT12); Margin nur +2 Cluster (knapp, aber nicht mehrdeutig).
+No FW geometry change before Auto-M3 (handover §8: change only if type ambiguous).

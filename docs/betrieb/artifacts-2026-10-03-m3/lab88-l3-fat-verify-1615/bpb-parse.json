@@ -1,0 +1,54 @@
+{
+  "source": "lab88 /dev/sda boot sector + independent BPB parse",
+  "bpb": {
+    "oem": "mkfs.fat",
+    "bytes_per_sector": 512,
+    "sectors_per_cluster": 8,
+    "cluster_bytes": 4096,
+    "reserved_sectors": 1,
+    "num_fats": 2,
+    "root_entries": 512,
+    "root_dir_sectors": 32,
+    "sectors_per_fat": 16,
+    "total_sectors": 32768,
+    "media": "0xf8",
+    "sectors_per_track": 16,
+    "heads": 2,
+    "hidden_sectors": 0,
+    "volume_label_boot": "PIDRIVE    ",
+    "fs_type_string_bpb": "FAT16   "
+  },
+  "derived": {
+    "fat0_lba": 1,
+    "fat1_lba": 17,
+    "root_lba": 33,
+    "data_start_lba": 65,
+    "data_sectors": 32703,
+    "data_clusters": 4087,
+    "fat_type_by_cluster_count_microsoft": "FAT16",
+    "margin_above_fat16_threshold_4085": 2,
+    "fat16_threshold_note": "Microsoft: FAT12 if clusters<4085; FAT16 if 4085<=clusters<65525"
+  },
+  "code_constants_MscGeometry_L3": {
+    "kVirtSectorCount": 32768,
+    "kSpc": 8,
+    "kFatSpf": 16,
+    "kRootSectors": 32,
+    "kDataStartLba": 65,
+    "kSlotSectors0": 16384
+  },
+  "consistency_code_vs_bpb": {
+    "total_sectors_match": true,
+    "spc_match": true,
+    "spf_match": true,
+    "reserved_match": true,
+    "root_secs_match": true,
+    "data_start_match": true
+  },
+  "verdict": {
+    "fat16_by_cluster_math": true,
+    "margin_clusters": 2,
+    "margin_assessment": "knapp (+2 \u00fcber 4085) aber nach Microsoft-Regel eindeutig FAT16; nicht mehrdeutig FAT12",
+    "field_release": "PASS_GEOMETRY_LAB"
+  }
+}

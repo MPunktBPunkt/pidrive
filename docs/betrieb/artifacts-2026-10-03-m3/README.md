@@ -17,6 +17,7 @@
 | `lab88-16m-timeline/` | 0.4.41 | Idle Δ0; paced forced-C |
 | **`lab88-l3-1526/`** | **0.4.42** | **fav0=8 MiB**; FAT16; PDMK **12/12**; Timeline A/E+paced; Pace 0/30/60/90 s |
 | **`lab88-l3-langpace-1535/`** | **0.4.42** | **360 s** Langpace; **12** Kreuzungen m0–m11; spacing_mean **29.979 s** |
+| **`lab88-l3-fat-verify-1615/`** | **0.4.42** | BPB+`fsck.fat`: **4087 Cluster = FAT16** (Margin +2); fav0 SHA dokumentiert |
 
 ## L3-Geometrie (0.4.42)
 
@@ -39,4 +40,4 @@ Cursor-nahe Reads nur unter **Lab-Paced-Consume @ 6 KiB/s**.
 
 ## Nächstes
 
-Auto-Feld mit gleicher Methodik. Lab-Langpace 360 s erledigt. Ring/BT eingefroren.
+→ [`AUTO-M3-READINESS-2026-10-03.md`](../AUTO-M3-READINESS-2026-10-03.md). Ring/BT eingefroren.

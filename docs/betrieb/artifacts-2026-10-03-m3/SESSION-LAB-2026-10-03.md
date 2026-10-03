@@ -52,6 +52,9 @@
 **Host-Bestätigung FAT16 (D):**  
 `file -s /dev/sda` → `FAT (16 bit)`, `sectors 32768`, `sectors/FAT 16` (Artefakte `lab88-16m-markers/host-fat.txt`, `lab88-l3-1526/host-fat.txt`).
 
+**BPB+fsck Freigabe (D) — `lab88-l3-fat-verify-1615/`:**  
+Reserviert=1, SPC=8, SPF=16, Root=32 Sektoren, Data-Start=65, **4087 Cluster** → Microsoft-FAT16 (Margin +2 über 4085). `fsck.fat -vn` bestätigt. Code↔BPB konsistent. Urteil **PASS_GEOMETRY_LAB** (knapp, nicht mehrdeutig). Details: [`AUTO-M3-READINESS-2026-10-03.md`](../AUTO-M3-READINESS-2026-10-03.md).
+
 ---
 
 ## 3. M0 — Messintegrität (Abschluss)
@@ -200,11 +203,12 @@ Ungleiche Slot-Größen über `MscGeo::kSlotSectors0/1/2` + angepasstes `slotRan
 
 ## 9. Offene Lab-Fragen / nächste Schritte
 
-1. **Auto-Feld M3:** dieselbe Timeline+Marker-Methodik am NBT → echtes A–E.  
+1. **Auto-Feld M3:** Readiness-Pack [`AUTO-M3-READINESS-2026-10-03.md`](../AUTO-M3-READINESS-2026-10-03.md); `.89` OTA 0.4.42 ausstehend (Gerät offline).  
 2. ~~Optional Lab-Langpace~~ → **done** 360 s / 12 Kreuzungen (`lab88-l3-langpace-1535`). Vollfile 8 MiB ≈ 23 min nur bei Bedarf.  
-3. Optional: Xing-Varianten-Reihe 2 (erst nach Feld-Muster).  
-4. L4 (50 MiB): neue Disk-Größe + FAT16-Validierung; nicht vor Feld-Bedarf.  
-5. Ring/BT weiter eingefroren.
+3. ~~L3 FAT16 BPB/fsck~~ → **done** (`lab88-l3-fat-verify-1615/`, PASS_GEOMETRY_LAB).  
+4. Optional: Xing-Varianten-Reihe 2 (erst nach Feld-Muster).  
+5. L4 (50 MiB): erst nach Feld-Bedarf + neuer Geometrie-Abnahme.  
+6. Ring/BT weiter eingefroren.
 
 ---
 

@@ -51,4 +51,5 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 ~~M0 Lab-Mount-Sweep~~ → **done PASS**.  
 ~~M3 Lab bis L3 (8 MiB) + Marker/Pace/FAT16~~ → **done** (`SESSION-LAB-2026-10-03.md`).  
 ~~Lab-Langpace 360 s~~ → **done** (`lab88-l3-langpace-1535/`, 12 Kreuzungen ≈30 s).  
-**Jetzt:** Auto-Feld M3 (gleiche Methodik) sobald wieder am BMW.
+~~L3 BPB+fsck Cluster-Nachweis~~ → **done** PASS_GEOMETRY_LAB (`lab88-l3-fat-verify-1615/`).  
+**Jetzt:** Auto-M3 wenn `.89` online — OTA 0.4.42 + Gate in [`AUTO-M3-READINESS-2026-10-03.md`](AUTO-M3-READINESS-2026-10-03.md).

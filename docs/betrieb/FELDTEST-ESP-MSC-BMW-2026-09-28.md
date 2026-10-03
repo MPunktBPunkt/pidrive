@@ -1,7 +1,7 @@
 # Review-Paket: ESP-MSC ↔ BMW NBT — Feld 2026-09-28
 
 **Zweck dieses Dokuments:** Alles Material für ein ausgiebiges Review (Problemverständnis, Telemetrie, Code-Anker, Artefakte, Hypothesen, offene Fragen, Abnahme).  
-**Stand Diagnose:** 2026-10-03 Lab — `.88` = **0.4.42-dev L3** (FAT16 16 MiB, fav0=8 MiB, PDMK); M0 PASS; M3 Lab inkl. Langpace 360 s (12×≈30 s) in [`SESSION-LAB-2026-10-03.md`](artifacts-2026-10-03-m3/SESSION-LAB-2026-10-03.md). Auto-Feld A–E ausstehend. Ring/BT eingefroren.  
+**Stand Diagnose:** 2026-10-03 — Lab L3 `0.4.42` + BPB/fsck PASS; Auto-M3-Prep [`AUTO-M3-READINESS-2026-10-03.md`](AUTO-M3-READINESS-2026-10-03.md). Letzter dok. Auto-FW **`0.4.39-dev` L0**; `.89` für OTA 0.4.42 noch offline. Ring/BT eingefroren.  
 **Nicht:** fertige Implementierung — nächste Schritte sind priorisiert, Alternativen bleiben nachvollziehbar.
 
 | Meta | Wert |
