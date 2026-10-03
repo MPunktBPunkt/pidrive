@@ -25,6 +25,12 @@ Gaps **10 / 50 / 100 ms**: je `Δrc=48 = Σn`, `ov=0`, Export vollständig. Ag
 Idle quiet · Select-fav1 ohne Remount (`Δrc=Σn`, Slot-bytes↑) · Soft-Remount passiv Δ0 / mit Host-Nudge Δ256.  
 **Kein** BMW-Q1–Q3-Ersatz; Instrumentation-Baseline für Feldarme.
 
+### Feld-M3seq — **2026-10-03** (`auto89-m3seq-2042/`)
+- **Q1:** Rock-Select → einmal großer File-Burst, dann A_then_E.  
+- **Q2:** Trackende/Auto-Next → **Δrc=0** (tcp up, ov=0).  
+- **Arm3:** Remount-Scan, danach Selects ohne Reads/LED.  
+- **Q3:** nicht ausgeführt.
+
 ---
 
 ## 1. Drei Fragen

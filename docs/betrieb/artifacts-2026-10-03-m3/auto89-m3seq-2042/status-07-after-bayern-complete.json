@@ -1,0 +1,997 @@
+{
+  "ok": true,
+  "version": "0.4.42-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-USB",
+  "ip": "192.168.178.89",
+  "softApSsid": "pidrive-2BC568",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B32BC568",
+  "uptime": "11min 10s",
+  "freeHeap": 115128,
+  "wifiRssi": -77,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.105",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 3703,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 2284,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 17481,
+    "bytesRead": 9342976,
+    "bytesMeta": 114688,
+    "bytesBoot": 12800,
+    "bytesFat": 44544,
+    "bytesDir": 57344,
+    "bytesFile": 9228288,
+    "prefetchHits": 1967,
+    "playRejectCount": 2252,
+    "playGuessCount": 1,
+    "streamSlot": -1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "readOverflow": 0,
+    "readsEmit": 1074,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 43,
+    "usbSerial": "PD0043",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 3,
+      "n2k": 0,
+      "n4k": 2281,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 3,
+      "tur": 258,
+      "turNotReady": 0,
+      "prevent": 7,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 998,
+      "msToCapacity": 1000,
+      "msToTur": 999,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 0,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": false
+    },
+    "msSincePlug": 508962,
+    "msSinceChange": 508962,
+    "msPlugToFirstRead": 1005,
+    "msPlugToPlayGuess": 37959,
+    "plugCount": 2,
+    "unplugCount": 1,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "1977938832270506073",
+        "name": "Zurueck",
+        "kind": "action",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 8179712,
+        "fromHead": 2,
+        "midFile": 1995,
+        "maxSeq": 5570560,
+        "lastAgeMs": 463262
+      },
+      {
+        "i": 1,
+        "uid": "18330258143618563731",
+        "name": "Ausgang klinke",
+        "kind": "info",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 524288,
+        "fromHead": 2,
+        "midFile": 126,
+        "maxSeq": 524288,
+        "lastAgeMs": 363391
+      },
+      {
+        "i": 2,
+        "uid": "16678805154550120858",
+        "name": "Auto",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 524288,
+        "fromHead": 2,
+        "midFile": 126,
+        "maxSeq": 524288,
+        "lastAgeMs": 506876
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Mehr... (+7)",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 307003,
+      "gap": 4,
+      "lba": 16721,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307007,
+      "gap": 4,
+      "lba": 16729,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307011,
+      "gap": 4,
+      "lba": 16737,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307015,
+      "gap": 4,
+      "lba": 16745,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307018,
+      "gap": 3,
+      "lba": 16753,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307022,
+      "gap": 4,
+      "lba": 16761,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307026,
+      "gap": 4,
+      "lba": 16769,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307030,
+      "gap": 4,
+      "lba": 16777,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307034,
+      "gap": 4,
+      "lba": 16785,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307038,
+      "gap": 4,
+      "lba": 16793,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307042,
+      "gap": 4,
+      "lba": 16801,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307046,
+      "gap": 4,
+      "lba": 16809,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307050,
+      "gap": 4,
+      "lba": 16817,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307054,
+      "gap": 4,
+      "lba": 16825,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307058,
+      "gap": 4,
+      "lba": 16833,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307062,
+      "gap": 4,
+      "lba": 16841,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307066,
+      "gap": 4,
+      "lba": 16849,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307069,
+      "gap": 3,
+      "lba": 16857,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307073,
+      "gap": 4,
+      "lba": 16865,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307077,
+      "gap": 4,
+      "lba": 16873,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307081,
+      "gap": 4,
+      "lba": 16881,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307085,
+      "gap": 4,
+      "lba": 16889,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307089,
+      "gap": 4,
+      "lba": 16897,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307093,
+      "gap": 4,
+      "lba": 16905,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307097,
+      "gap": 4,
+      "lba": 16913,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307100,
+      "gap": 3,
+      "lba": 16921,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307104,
+      "gap": 4,
+      "lba": 16929,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307108,
+      "gap": 4,
+      "lba": 16937,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307112,
+      "gap": 4,
+      "lba": 16945,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307116,
+      "gap": 4,
+      "lba": 16953,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307120,
+      "gap": 4,
+      "lba": 16961,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307124,
+      "gap": 4,
+      "lba": 16969,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307128,
+      "gap": 4,
+      "lba": 16977,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307132,
+      "gap": 4,
+      "lba": 16985,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307136,
+      "gap": 4,
+      "lba": 16993,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307140,
+      "gap": 4,
+      "lba": 17001,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307144,
+      "gap": 4,
+      "lba": 17009,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307148,
+      "gap": 4,
+      "lba": 17017,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307151,
+      "gap": 3,
+      "lba": 17025,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307155,
+      "gap": 4,
+      "lba": 17033,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307159,
+      "gap": 4,
+      "lba": 17041,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307163,
+      "gap": 4,
+      "lba": 17049,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307167,
+      "gap": 4,
+      "lba": 17057,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307171,
+      "gap": 4,
+      "lba": 17065,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307175,
+      "gap": 4,
+      "lba": 17073,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307179,
+      "gap": 4,
+      "lba": 17081,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307182,
+      "gap": 3,
+      "lba": 17089,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307186,
+      "gap": 4,
+      "lba": 17097,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307190,
+      "gap": 4,
+      "lba": 17105,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307194,
+      "gap": 4,
+      "lba": 17113,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307198,
+      "gap": 4,
+      "lba": 17121,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307202,
+      "gap": 4,
+      "lba": 17129,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307205,
+      "gap": 3,
+      "lba": 17137,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307209,
+      "gap": 4,
+      "lba": 17145,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307213,
+      "gap": 4,
+      "lba": 17153,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307217,
+      "gap": 4,
+      "lba": 17161,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307221,
+      "gap": 4,
+      "lba": 17169,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307225,
+      "gap": 4,
+      "lba": 17177,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307229,
+      "gap": 4,
+      "lba": 17185,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307233,
+      "gap": 4,
+      "lba": 17193,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307237,
+      "gap": 4,
+      "lba": 17201,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307240,
+      "gap": 3,
+      "lba": 17209,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307245,
+      "gap": 5,
+      "lba": 17217,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307249,
+      "gap": 4,
+      "lba": 17225,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307253,
+      "gap": 4,
+      "lba": 17233,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307256,
+      "gap": 3,
+      "lba": 17241,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307260,
+      "gap": 4,
+      "lba": 17249,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307264,
+      "gap": 4,
+      "lba": 17257,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307268,
+      "gap": 4,
+      "lba": 17265,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307272,
+      "gap": 4,
+      "lba": 17273,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307276,
+      "gap": 4,
+      "lba": 17281,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307280,
+      "gap": 4,
+      "lba": 17289,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307283,
+      "gap": 3,
+      "lba": 17297,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307287,
+      "gap": 4,
+      "lba": 17305,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307291,
+      "gap": 4,
+      "lba": 17313,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307295,
+      "gap": 4,
+      "lba": 17321,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307299,
+      "gap": 4,
+      "lba": 17329,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307303,
+      "gap": 4,
+      "lba": 17337,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307307,
+      "gap": 4,
+      "lba": 17345,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307311,
+      "gap": 4,
+      "lba": 17353,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307314,
+      "gap": 3,
+      "lba": 17361,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307318,
+      "gap": 4,
+      "lba": 17369,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307322,
+      "gap": 4,
+      "lba": 17377,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307326,
+      "gap": 4,
+      "lba": 17385,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307330,
+      "gap": 4,
+      "lba": 17393,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307334,
+      "gap": 4,
+      "lba": 17401,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307338,
+      "gap": 4,
+      "lba": 17409,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307342,
+      "gap": 4,
+      "lba": 17417,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307346,
+      "gap": 4,
+      "lba": 17425,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307350,
+      "gap": 4,
+      "lba": 17433,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307354,
+      "gap": 4,
+      "lba": 17441,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307358,
+      "gap": 4,
+      "lba": 17449,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307362,
+      "gap": 4,
+      "lba": 17457,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307366,
+      "gap": 4,
+      "lba": 17465,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307370,
+      "gap": 4,
+      "lba": 17473,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 307374,
+      "gap": 4,
+      "lba": 17481,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 670192,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 508965,
+      "plugCount": 2,
+      "unplugCount": 1,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 670192,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.105",
+      "sense": "tcp-client"
+    }
+  }
+}

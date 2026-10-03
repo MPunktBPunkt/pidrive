@@ -1,0 +1,9 @@
+EAR auto89-m3seq-2042 FW=0.4.42-dev Bridge=.89 --no-audio
+Q1 Rock@20:43 PD0042: idle rc=167 → play fav0 Δrc~+2000 then flat rc=2156 (A_then_E after select)
+Q2 Bayern complete + autoplay Rock PD0043: Δrc=0 ov=0 tcp=up (no track-end / auto-next MSC reads)
+Arm3 remount PD0045..48: scan then quiet; select(s) after scan Δrc=0 no LED
+Menu names corrupted by Pi UI (Zurueck/Ausgang/Auto)=slot0/1/2 bodies; LBA attribution used
+PD0048 plug: tcp briefly down ov=144 (export gap early scan only)
+play_uid session: only fav0
+Q3 freshness: not executed
+Freeze: no arch change
