@@ -1,6 +1,7 @@
 # Post-§11.10 — Ring-Rechnung & BT-Stand (Papier, 2026-10-02 Abend)
 
-Kein Firmware-Build. Grundlage für Architekturentscheidung **nach** B7.
+Kein Firmware-Build. Grundlage für Architekturentscheidung **nach** B7 / L-Leiter.  
+**Leitauftrag (2026-10-03):** [`../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) — Ring erst nach Host-Read-Nachweis; bei „keine Reads auf 2 MiB“ zuerst große Datei/Geometrie, nicht sofort BT.
 
 ## 1. Ringkapazität (Idealrechnung)
 

@@ -5,7 +5,7 @@
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
-**USB-MSC / BMW (aktuell):** Einstieg = [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) (Diagnose, v1-Zielbild §3.10, Feld §11, Messplan §15) · Arbeit = [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) · Soll-Architektur = [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md). Kein weiteres Review-Dokument anlegen.
+**USB-MSC / BMW (aktuell):** Einstieg = [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) (Diagnose, v1-Zielbild §3.10, Feld §11, Messplan §15) · **Leitauftrag** = [auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md](auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) (B7 → L-Leiter → Architektur) · Feld M1 = [auftraege/AUFTRAG-B7-HU-REREAD.md](auftraege/AUFTRAG-B7-HU-REREAD.md) · älterer Track = [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) · Soll-Architektur = [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md). Kein weiteres Review-Dokument anlegen.
 ---
 
 ## Dokumente
@@ -33,6 +33,8 @@ nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
 | [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | **USB-MSC Review+Feld** (A/B, v1 Snapshot-Menü, ESP2-Lab-Hinweis) | Review, ESP/USB | 2026-09-30 |
 | [betrieb/BluetoothError.md](betrieb/BluetoothError.md) | A2DP-/Bluetooth-Fehleranalyse | Betrieb, Entwickler | — |
+| [auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md](auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) | MSC Host-Read-Nachweis: B7, Geometrie, L-Leiter, Fallbacks | Entwickler, ESP/USB | 2026-10-03 |
+| [auftraege/AUFTRAG-B7-HU-REREAD.md](auftraege/AUFTRAG-B7-HU-REREAD.md) | B7 Feld: 150 s / Armed-Replug / Ordnerwechsel | Entwickler, Feld | 2026-10-03 |
 | [auftraege/AUFTRAG-ESP-PLAY-DETECTION.md](auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) | ESP: Menü-State + Live-Stream (Checkliste) | Entwickler, ESP/USB | 2026-09-30 |
 | [fahrzeug/iDriveBt.md](fahrzeug/iDriveBt.md) | BT/AVRCP/MPRIS2-Referenz fürs BMW-iDrive | Betrieb im Fahrzeug | — |
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest | Betrieb, QA | 2026-09-16 |

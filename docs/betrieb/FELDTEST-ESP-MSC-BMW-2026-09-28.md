@@ -847,9 +847,9 @@ Artefakte: [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/).
 
 1. ~~Lab-Gegenprobe Guard~~ — **PASS** §11.9  
 2. ~~**60‑s-Feldtest** je UID (§15.3)~~ — **done** §11.10 → **Burst+Cache**  
-3. Architektur: ohne wiederholte Live-Reads kein Dauer-Stream über MSC-Readahead — Alternativen (Stub/Segment, Remount-Takt, Host-Verhalten) priorisieren  
+3. **Leitauftrag** [AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md): M0 Telemetrie → **B7-A/B/C** → bei Bedarf Geometrie **L0** + L-Leiter → erst dann Ring/Remount/BT  
 4. Burst-Replay (512 KiB/~0,6 s Trace) im Lab nur noch zur HU-Burst-Charakterisierung  
-5. Präfill / größerer Ring **nachrangig** (hilft Lab-`live_ratio`, nicht dem Feld-Cache)
+5. Präfill / größerer Ring **nachrangig** (hilft Lab-`live_ratio`, nicht dem Feld-Cache; Überordnung M4)
 
 ```bash
 curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S).json | jq '{v:.version,up:.uptime,serial:.msc.usbSerial,gen:.msc.remountGen,stream:.stream,sb:.msc.streamBytes,under:.stream.underruns}'
@@ -889,7 +889,7 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 
 **Probe-FW:** Idee eines **eigenen** Analyse-Repos **verworfen** — Lab-APIs (`/api/lab/remount|play|overlay_read`, Play-Detect via `/api/config`) und NBT-Replay-Harness decken das ab; BMW-Nachlesen bleibt Auto-exklusiv (B7). Siehe [`docs/auftraege/AUFTRAG-B7-HU-REREAD.md`](../auftraege/AUFTRAG-B7-HU-REREAD.md).
 
-**Folge:** Dauer-Live über MSC-Readahead **nicht** als Feld-A2 führen. Nächster Schritt: Zählersemantik (done im Lab-Doku) → **150 s Einzelpass / B7** → Stationswechsel → erst dann Ring-/Architekturentscheidung. BT-Audio parallel dokumentarisch (USB und BT = getrennte NBT-Quellen).
+**Folge:** Dauer-Live über MSC-Readahead **nicht** als Feld-A2 führen. Nächster Schritt: Zählersemantik (done) → **B7-A/B/C** ([AUFTRAG-B7](../auftraege/AUFTRAG-B7-HU-REREAD.md)) → bei fehlender Nachlese **nicht** sofort BT, sondern Geometrie/L-Leiter ([AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). BT-Audio bleibt parallele NBT-Quelle / Fallback nach Plateau-Gate.
 
 ---
 
