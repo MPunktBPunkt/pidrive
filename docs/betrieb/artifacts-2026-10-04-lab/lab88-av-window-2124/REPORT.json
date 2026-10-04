@@ -1,0 +1,161 @@
+{
+  "ok": true,
+  "inside": [
+    {
+      "label": "in0",
+      "file_off": 165376,
+      "lba": 404,
+      "syncs": [
+        59,
+        215,
+        372,
+        529,
+        686,
+        842,
+        999,
+        1156,
+        1312,
+        1469,
+        1626,
+        1783
+      ],
+      "sync_n": 12,
+      "id3": false,
+      "ff_ratio": 0.006,
+      "prefix_hex": "55555555555555555555555555555555",
+      "path": "sample-in0-off165376.bin"
+    },
+    {
+      "label": "in1",
+      "file_off": 175104,
+      "lba": 423,
+      "syncs": [
+        153,
+        309,
+        466,
+        623,
+        780,
+        936,
+        1093,
+        1250,
+        1406,
+        1563,
+        1720,
+        1877
+      ],
+      "sync_n": 12,
+      "id3": false,
+      "ff_ratio": 0.006,
+      "prefix_hex": "bb83c00001a400000020000034800000",
+      "path": "sample-in1-off175104.bin"
+    },
+    {
+      "label": "in2",
+      "file_off": 184832,
+      "lba": 442,
+      "syncs": [
+        67,
+        70,
+        71,
+        90,
+        247,
+        268,
+        269,
+        403,
+        450,
+        451,
+        452,
+        560
+      ],
+      "sync_n": 12,
+      "id3": false,
+      "ff_ratio": 0.014,
+      "prefix_hex": "93e71894adce45845cba50f974d01f31",
+      "path": "sample-in2-off184832.bin"
+    }
+  ],
+  "outside": [
+    {
+      "label": "below",
+      "file_off": 90112,
+      "lba": 257,
+      "syncs": [
+        86,
+        242,
+        398,
+        554,
+        710,
+        866,
+        1022,
+        1178,
+        1334,
+        1490,
+        1646,
+        1802
+      ],
+      "sync_n": 12,
+      "id3": false,
+      "ff_ratio": 0.006,
+      "prefix_hex": "55555555555555555555555555555555",
+      "path": "sample-below-off90112.bin"
+    },
+    {
+      "label": "above",
+      "file_off": 270336,
+      "lba": 609,
+      "syncs": [
+        42,
+        198,
+        354,
+        510,
+        666,
+        822,
+        978,
+        1134,
+        1290,
+        1446,
+        1602,
+        1758
+      ],
+      "sync_n": 12,
+      "id3": false,
+      "ff_ratio": 0.006,
+      "prefix_hex": "55555555555555555555555555555555",
+      "path": "sample-above-off270336.bin"
+    }
+  ],
+  "metrics": {
+    "abs": [
+      155648,
+      204800
+    ],
+    "before": {
+      "streamBytes": 24576,
+      "underruns": 0,
+      "live": 24576
+    },
+    "after_inside": {
+      "streamBytes": 61440,
+      "underruns": 0,
+      "live": 61440
+    },
+    "after_outside": {
+      "streamBytes": 86016,
+      "underruns": 24576,
+      "live": 61440
+    },
+    "underrun_delta_outside": 24576,
+    "live_delta_inside": 36864
+  },
+  "decode_smoke": {
+    "sample": "sample-in0-off165376.bin",
+    "ok": true,
+    "rc": 0,
+    "wav_bytes": 88278
+  },
+  "verdict": {
+    "inside_mpeg_like": true,
+    "outside_contrast": true,
+    "note": "Supports window hypothesis in lab; not HU field proof."
+  }
+}

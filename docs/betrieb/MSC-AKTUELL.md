@@ -39,7 +39,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 ## 3. Nächste Schritte
 
 1. **Feld morgen — zwei getrennte Läufe:** (a) C′-Retry mit Gate/Watchdog; (b) AV mit Seed **aus**, echter Stream — Ziel `liveBytes>0` + Ton.  
-2. **AV Feld:** gleichen Nachweis wie Lab B unter HU-Reads (Fenster/`hostAbsCursor` vs absBase..absEnd).  
+2. **AV Feld:** `feld_av_correlate.py` — `hostAbs`/`fileOff` ∈ Fenster; **`liveBytes`/`underruns`** (Sync-Fingerprint allein reicht nicht, Lab 21:24).  
 3. Detect erst nach Hörbeweis. Freeze hält.
 
 ```

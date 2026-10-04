@@ -1,0 +1,4 @@
+lab AV window-bounds PASS 2026-10-04T21:25:05
+inside_ok=True outside_ok=True decode={'sample': 'sample-in0-off165376.bin', 'ok': True, 'rc': 0, 'wav_bytes': 88278}
+metrics={'abs': [155648, 204800], 'before': {'streamBytes': 24576, 'underruns': 0, 'live': 24576}, 'after_inside': {'streamBytes': 61440, 'underruns': 0, 'live': 61440}, 'after_outside': {'streamBytes': 86016, 'underruns': 24576, 'live': 61440}, 'underrun_delta_outside': 24576, 'live_delta_inside': 36864}
+OUT=docs/betrieb/artifacts-2026-10-04-lab/lab88-av-window-2124

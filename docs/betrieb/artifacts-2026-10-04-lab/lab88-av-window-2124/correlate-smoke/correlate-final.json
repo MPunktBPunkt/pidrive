@@ -1,0 +1,17 @@
+{
+  "play": "fav0",
+  "stream_uid": "fav0",
+  "stream_active": true,
+  "abs": [
+    135168,
+    184320
+  ],
+  "hostAbsCursor": 142848,
+  "host_in_window": true,
+  "streamBytes": 24576,
+  "underruns": 0,
+  "liveBytes": 24576,
+  "seed_active": false,
+  "seed_bytesServed": 32768,
+  "reads": null
+}

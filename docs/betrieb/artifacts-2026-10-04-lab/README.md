@@ -10,6 +10,7 @@
 | `lab88-detect-cold-1536/` | `cold_body_burst` Log **PASS** (Cold loggt, Warm feuert Detect) |
 | `detect-cold-vs-warm-offline/` | PD0056/57 → `not_from_head` Offline |
 | `GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md` | Q3b Lab PASS |
+| `lab88-av-window-2124/` | Fenster-Grenzen: innen `live↑`, außen `underruns↑`; Sync allein schwach |
 | `lab88-av-mpeg-2035/` | AV A+B **PASS**: Ring voll + MPEG Sync an Host-LBA (`liveBytes>0`) |
 | `lab88-seed-survive-2029/` | Seed Survive 30 s + Hit **PASS** (`0.4.45`, bytesServed +32 KiB) |
 | `lab88-q3b-1515/` | Q3b Prefill Oracles A/B/C **PASS** (fromOff=348160 / LBA 761) |
@@ -38,6 +39,8 @@ pct set 100 --dev1 path=/dev/sg0,mode=0660,gid=6
 `tools/m3_lab_detect_cold_body.py` — Lab: `cold_body_burst` Log vs Warm-Head.  
 `tools/m3_lab_seed_survive.py` — Lab: Seed bleibt aktiv über Settle (+ optional Host-Hit).  
 `tools/m3_lab_av_mpeg_at_host.py` — Lab AV A/B: Pump-MP3 → Ring → Host-dd MPEG-Fingerprint.  
+`tools/m3_lab_av_window_bounds.py` — Lab: innen/außen Fenster + Underrun-Kontrast.  
+`tools/feld_av_correlate.py` — Feld/Lab: `hostAbs`/Reads vs. Live-Fenster.  
 `tools/feld_q3b_next_prepare.sh` — Feld-Prepare mit GO-Gate (kein toter Seed wie 1738).  
 `tools/feld_q3b_seed_watchdog.py` — Feld: Seed-Watchdog bis `bytesServed↑`.  
 `tools/m3_offline_detect_cold_vs_warm.py` — Offline PD0056/57 Detect-Regel.  
