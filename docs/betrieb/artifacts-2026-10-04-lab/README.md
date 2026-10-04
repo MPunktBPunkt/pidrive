@@ -6,6 +6,7 @@
 | Ordner / Datei | Inhalt |
 |----------------|--------|
 | `GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md` | Konsolidierung Mistral/Claude/GPT + eigene Nachrechnung |
+| `GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md` | **Aktuelle Übergabe** nach P0-Deploy / Q3a PASS_WEAK |
 | `lab88-baseline-0818/` | Live-Baseline vor Device-Pass-through |
 | `lab88-q3a-0826/` | Q3a erster Lauf (`PASS_WEAK`, Sample außerhalb absBase) |
 | `lab88-q3a-0828/` | Q3a zweiter Lauf (`PASS_WEAK`, Sample im abs-Fenster; NOTES) |

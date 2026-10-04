@@ -2,9 +2,10 @@
 
 **Normativer Gesamtbericht (Trace):** [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md)  
 **Normativer Gesamtbericht (Review Mistral/Claude/GPT):** [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md)  
+**Übergabe P0/Q3a (aktuell):** [`GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md)  
 **Semantik:** [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)  
 **Feld:** [`auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/) · Gegenindiz [`replug-1231-noselect/`](artifacts-2026-10-03-b7/replug-1231-noselect/)  
-**Lab-Live:** [`artifacts-2026-10-04-lab/lab88-baseline-0818/`](artifacts-2026-10-04-lab/lab88-baseline-0818/)
+**Lab-Live:** [`artifacts-2026-10-04-lab/`](artifacts-2026-10-04-lab/)
 
 ---
 
@@ -51,9 +52,9 @@ A+B + M3seq-Rehearsal: siehe Rev.3/4. Operator: Bridge vor Plug.
 
 | Prio | Arbeit | Done wenn |
 |------|--------|-----------|
-| **P0** | Menü-Lock / MSC-Session-Lock | ✅ Lab-Provokation PASS [`lab88-p0-lock-0832/`](artifacts-2026-10-04-lab/lab88-p0-lock-0832/) (`pump_bridge --msc-lock`); Feld-Provokation noch offen |
-| **P1** | Kalter Auto-Next Feld ×2 | Trace kalt, Timing ±1,5 s, EAR-Preflight, A–E |
-| **P2a** | Q3a Lab A/B | Hash-Kette + Marker, B-Bytes belegt |
+| **P0** | Menü-Lock in **pump_bridge** (nicht ESP-FW) | ✅ Lab+Deploy PASS; **Feld-HU noch offen**; P0/P1 = getrennte USB-Sessions |
+| **P1** | Kalter Auto-Next Feld ×2 | Trace-Kaltstand (nicht nur bytes), ±1,5 s, EAR, A–E nur Diagnose; nach P0-Unplug |
+| **P2a** | Q3a Lab A/B | ⚠️ PASS_WEAK ([`lab88-q3a-0828/`](artifacts-2026-10-04-lab/lab88-q3a-0828/)); Oracle nachziehen |
 | **P2b** | BT-Abnahme inkl. Quellwechsel-UX | 4-Punkte-Checkliste |
 | **P2c** | L4 große Datei (64 MiB, gültiges Audio) | Read-Muster klassifiziert; **kein** P1-Blocker |
 | **P3** | Sequenz-Prototyp | nur nach P1×2 + Q3a grün; dann Ring ≥ 1 Chunk |
