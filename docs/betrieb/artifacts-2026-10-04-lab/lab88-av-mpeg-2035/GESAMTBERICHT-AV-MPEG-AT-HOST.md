@@ -23,9 +23,9 @@
 
 ## Deutung
 
-1. Mit Seed aus und gültigem Pump-MP3 liefert MSC **echte MPEG-Bytes** an den Host — nicht nur Silence/Underrun.  
-2. Feld-Muster `streamBytes==underruns` (live≈0) ist damit ein **Daten-/Fenster-Problem** (Producer/Cursor), kein generelles „MSC kann kein MPEG“.  
-3. Nächster Engpass für Auto: denselben Nachweis unter HU-Reads (Stufe C/D) — Ring muss am **HU-fileOff** gefüllt sein, nicht nur im Lab-dd-Fenster.
+1. Mit Seed aus und Pump-MP3 liefert MSC am **gezielt ins Live-Fenster gelegten** Host-dd MPEG-*kompatible* Bytes (Sync/ID3-Indiz) — nicht nur Silence/Underrun. Kein Decoder-/Hörtest.  
+2. Feld-Stille als reines „kein MPEG möglich“ ist widerlegt; **Cursor/Fenster** ist die beste **Hypothese** bis zur HU-Korrelation — nicht abschließend bewiesen.  
+3. Nächster Engpass: Stufe C/D im Auto — HU-`fileOff` × Fenster × Inhalt × Ohr.
 
 ## Freeze
 
