@@ -75,7 +75,7 @@ L4 positiv → A′ (Dension-Modus) parallel bewerten
 Pfad C nur wenn B-UX scheitert und 6NR aktiv
 ```
 
-**Feld 2026-10-04 (nach Kritik):** P0 **PASS**. P1 Body-Next **EVIDENCED / PASS_WEAK** (offline; nicht „unmeasurable“). `bufferMs` = **tote Telemetrie**. AV-Metrik: `streamBytes` vs `underruns` (PD0058: 0 Live-Bytes). Nächster Engpass: **Q3b/Prefill + Detect**, nicht Ring. Übergabe: [`artifacts-2026-10-04-feld/GESAMTBERICHT-KRITIK-MISTRAL-GPT-CLAUDE-2026-10-04.md`](artifacts-2026-10-04-feld/GESAMTBERICHT-KRITIK-MISTRAL-GPT-CLAUDE-2026-10-04.md).
+**Feld 2026-10-04 (nach Kritik + O1):** P0 **PASS**. P1 Body-Next **EVIDENCED / PASS_WEAK** (offline; nicht „unmeasurable“). `bufferMs` = **tote Telemetrie**. AV-Metrik: `streamBytes` vs `underruns` (PD0058: 0 Live-Bytes). O1 geschlossen: Prefill ab LBA **761** (Scan-Kopf …760; 1953 = first_event). Nächster Engpass: **Q3b/Prefill (Oracles A/B/C) + Detect-Log**, nicht Ring. Übergabe: [`artifacts-2026-10-04-feld/UEBERGABE-STAND-2026-10-04-O1-Q3b.md`](artifacts-2026-10-04-feld/UEBERGABE-STAND-2026-10-04-O1-Q3b.md).
 
 ---
 
