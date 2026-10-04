@@ -1,7 +1,8 @@
 # Gesamtbericht / Übergabe: P0 deployed, Q3a PASS_WEAK, P1 bereit
 
 **Stand:** 2026-10-04 · für die nächste KI  
-**Repos (V):** `pidrive` @ `15f05bb` = `origin/main` · `esp32.pidrive` @ `2bc9055` = `origin/main`  
+**Einstieg:** [`../../MSC-AKTUELL.md`](../../MSC-AKTUELL.md)  
+**Repos (V):** `pidrive` @ `origin/main` · `esp32.pidrive` @ `2bc9055` = `origin/main`  
 **FW:** Lab `.88` = `0.4.42-dev` (live PD0038) · Feld `.89` = `0.4.42-dev` L3 (**offline**, Timeout)  
 **Bridge:** `.105` · `/home/pidrive/pump_bridge.py` mit `MscSessionLock` · systemd **active**, Connect-Retry auf `.89`  
 **Plan:** Rev.5 · Review: [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md)  

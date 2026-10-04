@@ -1,7 +1,7 @@
 # Artefakte Lab / Review — 2026-10-04
 
 **ESP Lab:** `192.168.178.88` · FW `0.4.42-dev` · Host-CT `DebianCursor` `192.168.178.187` (Proxmox VMID 100)  
-**Normativ:** [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md) · Plan Rev.5
+**Einstieg:** [`../MSC-AKTUELL.md`](../MSC-AKTUELL.md) · **Übergabe:** [`GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) · Plan Rev.5
 
 | Ordner / Datei | Inhalt |
 |----------------|--------|

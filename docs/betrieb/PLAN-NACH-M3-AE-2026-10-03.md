@@ -1,8 +1,9 @@
 # Plan nach Auto-M3seq — Review-Konsolidierung (Rev.5, 2026-10-04)
 
-**Normativer Gesamtbericht (Trace):** [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md)  
-**Normativer Gesamtbericht (Review Mistral/Claude/GPT):** [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md)  
+**Einstieg:** [`MSC-AKTUELL.md`](MSC-AKTUELL.md)  
 **Übergabe P0/Q3a (aktuell):** [`GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md)  
+**Trace-Korrektur:** [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md)  
+**Review Mistral/Claude/GPT:** [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md)  
 **Semantik:** [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md)  
 **Feld:** [`auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/) · Gegenindiz [`replug-1231-noselect/`](artifacts-2026-10-03-b7/replug-1231-noselect/)  
 **Lab-Live:** [`artifacts-2026-10-04-lab/`](artifacts-2026-10-04-lab/)

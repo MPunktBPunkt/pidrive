@@ -1,8 +1,10 @@
 # Auto-M3 Readiness — 2026-10-03
 
-**Zweck:** Vorbereitung des nächsten BMW-Feldtests als **statischer, kontrollierter Hostvergleich** Lab-Host ↔ NBT Evo.  
-**Basis-Übergabe:** Chat-Übergabebericht „MSC-Strategie und M3-Feldtest“ (2026-10-03).  
-**Normativ:** [`AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) Rev.4 · [`SESSION-LAB-2026-10-03.md`](artifacts-2026-10-03-m3/SESSION-LAB-2026-10-03.md)
+> **ÜBERHOLT (2026-10-04).** Feldabend lief bereits `0.4.42-dev` L3; aktueller Einstieg = [`MSC-AKTUELL.md`](MSC-AKTUELL.md).  
+> Datei bleibt als Readiness-Snapshot vor dem Feldabend.
+
+**Zweck (historisch):** Vorbereitung des BMW-Feldtests als statischer Hostvergleich Lab ↔ NBT.  
+**Damalige Basis:** Chat-Übergabe 2026-10-03 · [`SESSION-LAB-2026-10-03.md`](artifacts-2026-10-03-m3/SESSION-LAB-2026-10-03.md)
 
 **Regel:** Abweichungen zwischen Übergabebericht und Repo/Artefaktstand werden hier **explizit** gemeldet — nicht stillschweigend angeglichen.
 

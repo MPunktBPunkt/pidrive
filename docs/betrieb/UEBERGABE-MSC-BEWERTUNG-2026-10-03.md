@@ -1,8 +1,11 @@
-# Übergabe — MSC-Bewertung 2026-10-03 (Maßnahmen)
+# Übergabe — MSC-Bewertung 2026-10-03 (Maßnahmen-Log)
 
-**Commit-Basis:** `3364878` (+ dieser Doc-Push)  
+> **Nicht mehr Einstieg.** Aktuell: [`MSC-AKTUELL.md`](MSC-AKTUELL.md) · [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md).  
+> Diese Datei bleibt als Maßnahmen-/Entscheidungslog ab 10-03 erhalten.
+
+**Commit-Basis (historisch 10-03):** `3364878`  
 **Quellen:** GPT-Übergabebericht + Claude-Rohdatenhinweise + Mistral-Nachtrag (Chat 2026-10-03)  
-**Normative Folge:** Auftrag Rev. **4** · [`../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) · [`../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
+**Folgeaufträge (älterer Track):** [`../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) · [`../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
 
 ---
 

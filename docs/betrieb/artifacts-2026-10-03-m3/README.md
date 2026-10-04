@@ -46,5 +46,5 @@ Cursor-nahe Reads nur unter **Lab-Paced-Consume @ 6 KiB/s**.
 
 ## Nächstes
 
-→ Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · Review [`../artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](../artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md) · Plan **Rev.5**.  
-P0 Provokation → P1×2 (±1,5 s) → parallel Q3a Lab + BT-UX + L4/P2c. Ring Freeze bis P1×2 grün.
+→ **Einstieg:** [`../../MSC-AKTUELL.md`](../../MSC-AKTUELL.md) · Übergabe [`../artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](../artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md).  
+Dieser Ordner = Belegkette Lab+Feld 10-03 (inkl. Trace-Korrektur). Lab-Blocker erledigt → weiter Auto P0-Feld + P1×2.
