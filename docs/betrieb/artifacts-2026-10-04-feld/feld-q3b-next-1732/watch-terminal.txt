@@ -1,0 +1,31 @@
+---
+pid: 243325
+cwd: "/home/martin/projects/pidrive"
+command: "OUT=/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-04-feld/feld-q3b-next-1732\necho \"OPERATOR 17:33: Bayern läuft, bald Ende/Auto-Next\" >> \"$OUT/EAR.txt\"\n# watch up to ~120s for fav0 + bytesServed rise + LED window\npython3 - <<'PY'\nimport json, time, urllib.request\nfrom pathlib import Path\nout = Path(\"/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-04-feld/feld-q3b-next-1732\")\nlog = out / \"watch_autonext.log\"\nprev_play = None\nprev_seed = None\nt0 = time.time()\nprint(\"watching for Rock fav0 / bytesServed...\", flush=True)\nwhile time.time() - t0 < 120:\n    try:\n        d = json.loads(urllib.request.urlopen(\"http://192.168.178.89/api/status\", timeout=3).read())\n    except Exception as e:\n        line = f\"{time.strftime('%H:%M:%S')} ERR {e}\"\n        print(line, flush=True)\n        open(log,\"a\").write(line+\"\\n\")\n        time.sleep(1)\n        continue\n    m = d[\"msc\"]; bs = m.get(\"bodySeed\") or {}\n    play = d.get(\"playingUid\") or \"-\"\n    seed = int(bs.get(\"bytesServed\") or 0)\n    cold = m.get(\"coldBodyBurstCount\")\n    stream = m.get(\"stream\") or {}\n    ud = stream.get(\"underruns\")\n    line = f\"{time.strftime('%H:%M:%S')} play={play} seedB={seed} cold={cold} underruns={ud} plugged={m.get('plugged')}\"\n    if play != prev_play or seed != prev_seed:\n        print(line, flush=True)\n        open(log,\"a\").write(line+\"\\n\")\n        if play == \"fav0\" and prev_play != \"fav0\":\n            print(\">>> ROCK / fav0 DETECTED\", flush=True)\n            open(log,\"a\").write(\">>> ROCK fav0\\n\")\n            # snapshot\n            (out/f\"status-rock-{time.strftime('%H%M%S')}.json\").write_text(json.dumps(d, indent=2))\n        prev_play, prev_seed = play, seed\n    else:\n        # heartbeat every 5s\n        if int(time.time()) % 5 == 0:\n            print(line, flush=True)\n    time.sleep(1)\nprint(\"watch window ended\", flush=True)\nPY\n# pull traces after watch\nscp -o BatchMode=yes -o ConnectTimeout=4 \\\n  pidrive@192.168.178.105:/tmp/pidrive_msc_reads.jsonl \\\n  pidrive@192.168.178.105:/tmp/pidrive_msc_diag.jsonl \\\n  \"$OUT/\" 2>&1 | tail -2\ncurl -sS -m4 http://192.168.178.89/api/status -o \"$OUT/status-05-after-watch.json\"\npython3 - <<'PY'\nimport json\nfrom pathlib import Path\nout=Path(\"/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-04-feld/feld-q3b-next-1732\")\nst=json.loads((out/\"status-05-after-watch.json\").read_text())\nm=st[\"msc\"]; bs=m.get(\"bodySeed\") or {}\nprint(\"FINAL\", st.get(\"playingUid\"), st.get(\"playingName\"), \"seed\", bs, \"cold\", m.get(\"coldBodyBurstCount\"))\nbase=json.loads((out/\"status-03-go.json\").read_text())\nb0=(base[\"msc\"].get(\"bodySeed\") or {}).get(\"bytesServed\") or 0\nprint(\"bytesServed delta\", (bs.get(\"bytesServed\") or 0)-b0)\nif (out/\"watch_autonext.log\").exists():\n    print(\"--- watch log ---\")\n    print((out/\"watch_autonext.log\").read_text())\nPY\n"
+title: "Watch Auto-Next to Rock and capture seed bytes"
+status: running  
+started_at: 2026-10-04T15:34:13.933Z
+running_for_ms: 61435    
+---
+watching for Rock fav0 / bytesServed...
+17:34:17 play=fav1 seedB=0 cold=2 underruns=278528 plugged=True
+17:34:20 play=fav1 seedB=0 cold=2 underruns=278528 plugged=True
+17:34:30 play=fav1 seedB=0 cold=2 underruns=278528 plugged=True
+17:34:31 play=fav0 seedB=417792 cold=3 underruns=278528 plugged=True
+>>> ROCK / fav0 DETECTED
+17:34:32 play=fav0 seedB=1585152 cold=3 underruns=278528 plugged=True
+17:34:33 play=fav0 seedB=2654208 cold=3 underruns=0 plugged=True
+17:34:34 play=fav0 seedB=3604480 cold=4 underruns=0 plugged=True
+17:34:35 play=fav0 seedB=3604480 cold=4 underruns=0 plugged=True
+17:34:38 play=fav0 seedB=3944448 cold=5 underruns=0 plugged=True
+17:34:39 play=fav0 seedB=5062656 cold=5 underruns=0 plugged=True
+17:34:40 play=fav0 seedB=6139904 cold=5 underruns=0 plugged=True
+17:34:41 play=fav0 seedB=7192576 cold=6 underruns=0 plugged=True
+17:34:42 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:34:45 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:34:50 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:34:55 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:35:00 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:35:05 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:35:10 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True
+17:35:15 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True

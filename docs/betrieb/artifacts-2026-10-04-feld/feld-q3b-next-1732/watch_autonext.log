@@ -1,0 +1,11 @@
+17:34:17 play=fav1 seedB=0 cold=2 underruns=278528 plugged=True
+17:34:31 play=fav0 seedB=417792 cold=3 underruns=278528 plugged=True
+>>> ROCK fav0
+17:34:32 play=fav0 seedB=1585152 cold=3 underruns=278528 plugged=True
+17:34:33 play=fav0 seedB=2654208 cold=3 underruns=0 plugged=True
+17:34:34 play=fav0 seedB=3604480 cold=4 underruns=0 plugged=True
+17:34:38 play=fav0 seedB=3944448 cold=5 underruns=0 plugged=True
+17:34:39 play=fav0 seedB=5062656 cold=5 underruns=0 plugged=True
+17:34:40 play=fav0 seedB=6139904 cold=5 underruns=0 plugged=True
+17:34:41 play=fav0 seedB=7192576 cold=6 underruns=0 plugged=True
+17:34:42 play=fav0 seedB=8040448 cold=6 underruns=0 plugged=True

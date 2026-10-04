@@ -1,0 +1,24 @@
+{"ts":1791127983.0657902,"code":"play.reject","detail":"not_from_head uid=fav1 from=16945 +4096B age=20992ms prefetch"}
+{"ts":1791127983.10823,"code":"cold_body_burst","detail":"s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+{"ts":1791127983.226148,"code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=21153ms"}
+{"ts":1791127983.2367322,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1791127984.3435109,"code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=21183ms"}
+{"ts":1791127984.378177,"code":"play.reject","detail":"not_from_head uid=fav1 from=16977 +4096B age=21308ms prefetch"}
+{"ts":1791128070.6740155,"code":"play.reject","detail":"not_from_head uid=fav0 from=561 +4096B age=108593ms prefetch"}
+{"ts":1791128070.7204716,"code":"cold_body_burst","detail":"s=0 lba=321..585 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128070.8249009,"code":"play.reject","detail":"seq_short uid=fav0 from=81 +4096B age=108756ms"}
+{"ts":1791128073.8161852,"code":"play.reject","detail":"cooldown uid=fav0 from=81 +12288B age=108773ms"}
+{"ts":1791128073.8515103,"code":"play.reject","detail":"not_from_head uid=fav0 from=593 +4096B age=108891ms prefetch"}
+{"ts":1791128073.969614,"code":"play.reject","detail":"not_from_head uid=fav0 from=3665 +65536B age=109693ms prefetch"}
+{"ts":1791128074.1193838,"code":"play.reject","detail":"not_from_head uid=fav0 from=4385 +155648B age=110495ms prefetch"}
+{"ts":1791128074.2768493,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +212992B age=111295ms prefetch"}
+{"ts":1791128074.3320947,"code":"cold_body_burst","detail":"s=0 lba=97..16457 n=710 B=2908160 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128074.4196088,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +557056B age=112098ms prefetch"}
+{"ts":1791128077.752615,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +1011712B age=115674ms prefetch"}
+{"ts":1791128077.8568752,"code":"cold_body_burst","detail":"s=0 lba=7793..7849 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128078.556363,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +1810432B age=116476ms prefetch"}
+{"ts":1791128079.3621957,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +2621440B age=117277ms prefetch"}
+{"ts":1791128080.1585188,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +3432448B age=118078ms prefetch"}
+{"ts":1791128080.7939415,"code":"cold_body_burst","detail":"s=0 lba=7793..13777 n=741 B=3035136 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128080.9529448,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +4222976B age=118878ms prefetch"}
+{"ts":1791128081.7523448,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +5038080B age=119679ms prefetch"}

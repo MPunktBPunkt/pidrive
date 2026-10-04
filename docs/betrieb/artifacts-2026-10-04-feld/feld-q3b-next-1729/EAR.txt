@@ -1,0 +1,16 @@
+FELD Q3b NEXT — prepared 2026-10-04T17:29:57+02:00
+FW target: 0.4.45-dev (seed WINS over live in body; bodySeed.bytesServed)
+Prefill: fav0 tag=B fromOff=348160 (LBA 761+)
+NO remount after seed.
+
+OPERATOR:
+1) Film UI-Timer + LED
+2) Play short track Bayern or BOB
+3) Auto-Next → Rock (~87s / LED burst)
+4) Note: audible music NOT expected (seed≠MP3)
+5) Report: clock of burst/LED, any noise/glitch, then "Ende"
+6) Success this run = bytesServed rises during burst + HU body LBAs in trace
+
+DO NOT: unplug USB, remount, menu rewrite
+Artifacts: /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-04-feld/feld-q3b-next-1729
+OPERATOR 17:32: kein Ton nirgends; RST neu
