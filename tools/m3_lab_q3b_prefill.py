@@ -224,38 +224,66 @@ def main() -> int:
         return {"pass": ok_all and bool(samples), "samples": samples}
 
     def host_burst(tag: str, after_ts: float) -> dict:
-        """Oracle B+C: issue cold-burst-like reads; verify MSC response bytes."""
+        """Lab Oracle B+C via controlled host reads (NOT an observed HU cold-burst).
+
+        Oracle B (lab): we ourselves issue dd READs after t_switch — proves the
+        host path accepted post-switch requests for those LBAs. Field Oracle B
+        must use a real HU USB trace instead.
+
+        Oracle C: MSC response bytes from dd must match the expected pattern
+        AND len(blob) == sectors*512 (short transfers fail).
+        """
         reads = []
         ok_c = True
         for abs_lba, nsec in BURST_READS:
             if abs_lba < lba0 or abs_lba + nsec - 1 > lba1:
                 continue
             file_off = (abs_lba - lba0) * SECTOR
+            expect_n = nsec * SECTOR
             t0 = time.time()
-            blob = dd_bytes(args.dev, abs_lba, nsec)
+            try:
+                blob = dd_bytes(args.dev, abs_lba, nsec)
+            except subprocess.CalledProcessError as e:
+                blob = b""
+                print(f"  dd fail lba={abs_lba}: {e}")
             t1 = time.time()
-            match = pattern_ok(blob, tag, file_off) if file_off >= args.from_off else None
+            len_ok = len(blob) == expect_n
+            match = None
             if file_off >= args.from_off:
+                match = bool(len_ok and pattern_ok(blob, tag, file_off))
                 ok_c = ok_c and bool(match)
+            elif not len_ok:
+                ok_c = False
             reads.append(
                 {
                     "lba": abs_lba,
                     "sectors": nsec,
+                    "expect_bytes": expect_n,
+                    "got_bytes": len(blob),
+                    "len_ok": len_ok,
                     "file_off": file_off,
-                    "sha16": sha16(blob),
+                    "sha16": sha16(blob) if blob else None,
                     "match_tag": match,
                     "ts": t0,
                     "after_switch": t0 >= after_ts,
                     "dt_ms": int((t1 - t0) * 1000),
+                    "oracle_b_note": "controlled_host_dd",
                 }
             )
-            (out / f"host_{tag}_lba{abs_lba}.bin").write_bytes(blob[: SAMPLE_SECTORS * SECTOR])
-        # Oracle B: all planned LBAs successfully read after switch
-        oracle_b = all(r["after_switch"] and r.get("n") != 0 for r in
-                       [{**r, "n": 1} for r in reads]) and len(reads) >= 3
+            if blob:
+                (out / f"host_{tag}_lba{abs_lba}.bin").write_bytes(
+                    blob[: SAMPLE_SECTORS * SECTOR]
+                )
+        # Lab Oracle B: planned LBAs successfully fully-read after switch
+        oracle_b = (
+            len(reads) >= 3
+            and all(r["after_switch"] and r["len_ok"] for r in reads)
+        )
         return {
             "oracle_b": oracle_b,
+            "oracle_b_kind": "lab_controlled_host_dd",
             "oracle_c": ok_c and bool(reads),
+            "oracle_c_coverage": "sampled_lbas_not_full_span",
             "reads": reads,
         }
 

@@ -1,0 +1,1004 @@
+{
+  "ok": true,
+  "version": "0.4.44-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "6s",
+  "freeHeap": 111484,
+  "wifiRssi": -39,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": false,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": false,
+  "pumpTcpPeer": "",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "1977938832270506073",
+  "playingName": "Zurueck",
+  "menuRev": 5002,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 199,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 856,
+    "bytesRead": 402944,
+    "bytesMeta": 112128,
+    "bytesBoot": 5632,
+    "bytesFat": 16384,
+    "bytesDir": 24576,
+    "bytesFile": 290816,
+    "prefetchHits": 151,
+    "playRejectCount": 155,
+    "playGuessCount": 1,
+    "streamSlot": -1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "bodySeed": {
+      "active": false,
+      "slot": -1,
+      "tag": "",
+      "fromOff": 348160
+    },
+    "coldBodyBurstCount": 2,
+    "readOverflow": 0,
+    "readsEmit": 0,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 42,
+    "usbSerial": "PD0042",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 115,
+      "n2k": 0,
+      "n4k": 84,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 2,
+      "tur": 42,
+      "turNotReady": 0,
+      "prevent": 32,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1056,
+      "msToCapacity": 1058,
+      "msToTur": 1058,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 0,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": false
+    },
+    "msSincePlug": 6178,
+    "msSinceChange": 6178,
+    "msPlugToFirstRead": 1060,
+    "msPlugToPlayGuess": 4402,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "1977938832270506073",
+        "name": "Zurueck",
+        "kind": "action",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 290816,
+        "fromHead": 9,
+        "midFile": 153,
+        "maxSeq": 188416,
+        "lastAgeMs": 1040
+      },
+      {
+        "i": 1,
+        "uid": "18330258143618563731",
+        "name": "Ausgang klinke",
+        "kind": "info",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 2,
+        "uid": "16678805154550120858",
+        "name": "Auto",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Mehr... (+7)",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 5902,
+      "gap": 514,
+      "lba": 761,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5903,
+      "gap": 1,
+      "lba": 762,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5904,
+      "gap": 1,
+      "lba": 763,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5905,
+      "gap": 1,
+      "lba": 764,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5916,
+      "gap": 11,
+      "lba": 765,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5916,
+      "gap": 0,
+      "lba": 766,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5917,
+      "gap": 1,
+      "lba": 767,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5918,
+      "gap": 1,
+      "lba": 768,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5930,
+      "gap": 12,
+      "lba": 769,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5931,
+      "gap": 1,
+      "lba": 770,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5932,
+      "gap": 1,
+      "lba": 771,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5932,
+      "gap": 0,
+      "lba": 772,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5933,
+      "gap": 1,
+      "lba": 773,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5934,
+      "gap": 1,
+      "lba": 774,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5934,
+      "gap": 0,
+      "lba": 775,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5935,
+      "gap": 1,
+      "lba": 776,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5947,
+      "gap": 12,
+      "lba": 777,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5948,
+      "gap": 1,
+      "lba": 778,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5948,
+      "gap": 0,
+      "lba": 779,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5949,
+      "gap": 1,
+      "lba": 780,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5949,
+      "gap": 0,
+      "lba": 781,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5950,
+      "gap": 1,
+      "lba": 782,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5951,
+      "gap": 1,
+      "lba": 783,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5951,
+      "gap": 0,
+      "lba": 784,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5964,
+      "gap": 13,
+      "lba": 785,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5965,
+      "gap": 1,
+      "lba": 786,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5965,
+      "gap": 0,
+      "lba": 787,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5966,
+      "gap": 1,
+      "lba": 788,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5967,
+      "gap": 1,
+      "lba": 789,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5967,
+      "gap": 0,
+      "lba": 790,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5968,
+      "gap": 1,
+      "lba": 791,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5969,
+      "gap": 1,
+      "lba": 792,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5982,
+      "gap": 13,
+      "lba": 793,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5982,
+      "gap": 0,
+      "lba": 794,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5983,
+      "gap": 1,
+      "lba": 795,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5984,
+      "gap": 1,
+      "lba": 796,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5984,
+      "gap": 0,
+      "lba": 797,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5985,
+      "gap": 1,
+      "lba": 798,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5986,
+      "gap": 1,
+      "lba": 799,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5986,
+      "gap": 0,
+      "lba": 800,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5998,
+      "gap": 12,
+      "lba": 801,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5999,
+      "gap": 1,
+      "lba": 802,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 5999,
+      "gap": 0,
+      "lba": 803,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6000,
+      "gap": 1,
+      "lba": 804,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6001,
+      "gap": 1,
+      "lba": 805,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6001,
+      "gap": 0,
+      "lba": 806,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6002,
+      "gap": 1,
+      "lba": 807,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6003,
+      "gap": 1,
+      "lba": 808,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6015,
+      "gap": 12,
+      "lba": 809,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6015,
+      "gap": 0,
+      "lba": 810,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6016,
+      "gap": 1,
+      "lba": 811,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6017,
+      "gap": 1,
+      "lba": 812,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6017,
+      "gap": 0,
+      "lba": 813,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6018,
+      "gap": 1,
+      "lba": 814,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6019,
+      "gap": 1,
+      "lba": 815,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6019,
+      "gap": 0,
+      "lba": 816,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6031,
+      "gap": 12,
+      "lba": 817,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6032,
+      "gap": 1,
+      "lba": 818,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6032,
+      "gap": 0,
+      "lba": 819,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6033,
+      "gap": 1,
+      "lba": 820,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6034,
+      "gap": 1,
+      "lba": 821,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6034,
+      "gap": 0,
+      "lba": 822,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6035,
+      "gap": 1,
+      "lba": 823,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6056,
+      "gap": 21,
+      "lba": 824,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6070,
+      "gap": 14,
+      "lba": 825,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6070,
+      "gap": 0,
+      "lba": 826,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6071,
+      "gap": 1,
+      "lba": 827,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6072,
+      "gap": 1,
+      "lba": 828,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6072,
+      "gap": 0,
+      "lba": 829,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6073,
+      "gap": 1,
+      "lba": 830,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6074,
+      "gap": 1,
+      "lba": 831,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6074,
+      "gap": 0,
+      "lba": 832,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6086,
+      "gap": 12,
+      "lba": 833,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6087,
+      "gap": 1,
+      "lba": 834,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6088,
+      "gap": 1,
+      "lba": 835,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6088,
+      "gap": 0,
+      "lba": 836,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6089,
+      "gap": 1,
+      "lba": 837,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6090,
+      "gap": 1,
+      "lba": 838,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6090,
+      "gap": 0,
+      "lba": 839,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6091,
+      "gap": 1,
+      "lba": 840,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6103,
+      "gap": 12,
+      "lba": 841,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6104,
+      "gap": 1,
+      "lba": 842,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6105,
+      "gap": 1,
+      "lba": 843,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6105,
+      "gap": 0,
+      "lba": 844,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6106,
+      "gap": 1,
+      "lba": 845,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6107,
+      "gap": 1,
+      "lba": 846,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6107,
+      "gap": 0,
+      "lba": 847,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6108,
+      "gap": 1,
+      "lba": 848,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6120,
+      "gap": 12,
+      "lba": 849,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6120,
+      "gap": 0,
+      "lba": 850,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6121,
+      "gap": 1,
+      "lba": 851,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6122,
+      "gap": 1,
+      "lba": 852,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6122,
+      "gap": 0,
+      "lba": 853,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6123,
+      "gap": 1,
+      "lba": 854,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6124,
+      "gap": 1,
+      "lba": 855,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 6124,
+      "gap": 0,
+      "lba": 856,
+      "n": 512,
+      "kind": "file",
+      "tag": "Zurueck"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 6521,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 6181,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 6521,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": false,
+      "peer": "",
+      "sense": "tcp-client"
+    }
+  }
+}

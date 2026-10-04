@@ -1,0 +1,96 @@
+{
+  "headLbaSlop": 12,
+  "file_lba0": 81,
+  "rule": "evaluatePlay: startLba > lbaStart+headLbaSlop \u2192 not_from_head",
+  "runs": {
+    "A": {
+      "cold0": {
+        "label": "cold_burst0",
+        "events": 151,
+        "bytes": 1982464,
+        "span": [
+          753,
+          4624
+        ],
+        "first_event_lba0": 1953,
+        "would_from_head_if_seq_starts_at_first_event": false,
+        "span_min_within_head_slop": false,
+        "evaluatePlay_approx": "not_from_head",
+        "note": "FW resets seq when LBA jumps >16; cold burst often starts mid-file \u2192 not_from_head"
+      },
+      "cold1": {
+        "label": "cold_burst1",
+        "events": 438,
+        "bytes": 6057984,
+        "span": [
+          4625,
+          16456
+        ],
+        "first_event_lba0": 4625,
+        "would_from_head_if_seq_starts_at_first_event": false,
+        "span_min_within_head_slop": false,
+        "evaluatePlay_approx": "not_from_head",
+        "note": "FW resets seq when LBA jumps >16; cold burst often starts mid-file \u2192 not_from_head"
+      },
+      "warm_window": {
+        "label": "scan_or_warm_window",
+        "events": 135,
+        "bytes": 385024,
+        "span": [
+          81,
+          16464
+        ],
+        "first_event_lba0": 0,
+        "would_from_head_if_seq_starts_at_first_event": true,
+        "span_min_within_head_slop": true,
+        "evaluatePlay_approx": "ok",
+        "note": "FW resets seq when LBA jumps >16; cold burst often starts mid-file \u2192 not_from_head"
+      }
+    },
+    "B": {
+      "cold0": {
+        "label": "cold_burst0",
+        "events": 151,
+        "bytes": 1982464,
+        "span": [
+          753,
+          4624
+        ],
+        "first_event_lba0": 1953,
+        "would_from_head_if_seq_starts_at_first_event": false,
+        "span_min_within_head_slop": false,
+        "evaluatePlay_approx": "not_from_head",
+        "note": "FW resets seq when LBA jumps >16; cold burst often starts mid-file \u2192 not_from_head"
+      },
+      "cold1": {
+        "label": "cold_burst1",
+        "events": 438,
+        "bytes": 6057984,
+        "span": [
+          4625,
+          16456
+        ],
+        "first_event_lba0": 4625,
+        "would_from_head_if_seq_starts_at_first_event": false,
+        "span_min_within_head_slop": false,
+        "evaluatePlay_approx": "not_from_head",
+        "note": "FW resets seq when LBA jumps >16; cold burst often starts mid-file \u2192 not_from_head"
+      },
+      "warm_window": {
+        "label": "scan_or_warm_window",
+        "events": 135,
+        "bytes": 385024,
+        "span": [
+          81,
+          16464
+        ],
+        "first_event_lba0": 0,
+        "would_from_head_if_seq_starts_at_first_event": true,
+        "span_min_within_head_slop": true,
+        "evaluatePlay_approx": "ok",
+        "note": "FW resets seq when LBA jumps >16; cold burst often starts mid-file \u2192 not_from_head"
+      }
+    }
+  },
+  "implication": "Cold Auto-Next body bursts (first_event ~1953, span min 753) cannot pass current Detect; warm/head touches near LBA 81..93 can. cold_body_burst logging (0.4.44-dev) surfaces these without policy change."
+}

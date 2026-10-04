@@ -1,0 +1,37 @@
+{
+  "verdict": "PASS",
+  "fw": "0.4.44-dev",
+  "serial": "PD0042",
+  "coldBodyBurstCount": [
+    1,
+    2
+  ],
+  "burst_events": [
+    {
+      "seq": 30,
+      "ms": 5479,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=761..824 n=64 B=32768 w=0 ev=not_from_head set=1 1977938832270506073"
+    }
+  ],
+  "play_reject_sample": [
+    {
+      "seq": 27,
+      "ms": 5348,
+      "code": "play.reject",
+      "detail": "not_from_head uid=1977938832270506073 from=761 +2048B age=4370ms prefetch"
+    }
+  ],
+  "play_guess_after_cold": [],
+  "play_guess_after_warm_contrast": [
+    {
+      "seq": 33,
+      "ms": 6682,
+      "code": "play.guess",
+      "detail": "1977938832270506073"
+    }
+  ],
+  "policy_unchanged_on_cold": true,
+  "warm_head_can_fire_detect": true,
+  "note": "log-only; Detect policy not changed; cold sim is host-dd not HU"
+}

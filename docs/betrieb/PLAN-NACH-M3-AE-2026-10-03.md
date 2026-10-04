@@ -75,7 +75,7 @@ L4 positiv → A′ (Dension-Modus) parallel bewerten
 Pfad C nur wenn B-UX scheitert und 6NR aktiv
 ```
 
-**Feld/Lab 2026-10-04 (Q3b):** P0 **PASS**. P1 Body-Next **EVIDENCED / PASS_WEAK**. `bufferMs` = **tote Telemetrie**. O1 zu (Prefill ab LBA **761**). **Q3b Lab PASS** (MSC-Datenebene, FW `0.4.43-dev` body_seed; Oracle B = Lab-Host). Nächster Engpass: **Detect-Log + Feld Ohr/Film**, nicht Ring. Übergabe: [`artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md).
+**Feld/Lab 2026-10-04 (Q3b+Detect-Log):** P0 **PASS**. P1 **PASS_WEAK**. O1 zu (Prefill ab **761**). **Q3b Lab PASS** (FW body_seed). **Detect:** `cold_body_burst` nur Log (FW `0.4.44-dev`, Lab PASS). Nächster Engpass: **Feld Ohr/Film + HU-Oracle B/C**, nicht Ring. Übergabe: [`artifacts-2026-10-04-lab/GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md).
 
 ---
 

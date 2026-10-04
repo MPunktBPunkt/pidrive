@@ -1,0 +1,276 @@
+{
+  "ok": true,
+  "nextSeq": 46,
+  "events": [
+    {
+      "seq": 1,
+      "ms": 604,
+      "code": "boot",
+      "detail": "0.4.44-dev"
+    },
+    {
+      "seq": 2,
+      "ms": 605,
+      "code": "msc.identity",
+      "detail": "nvs=PD0042"
+    },
+    {
+      "seq": 3,
+      "ms": 616,
+      "code": "msc.ready",
+      "detail": "FAT16 L3 16MiB fav0=8M"
+    },
+    {
+      "seq": 4,
+      "ms": 626,
+      "code": "msc.slots",
+      "detail": "slots=4"
+    },
+    {
+      "seq": 5,
+      "ms": 637,
+      "code": "msc.media_on",
+      "detail": "nvs"
+    },
+    {
+      "seq": 6,
+      "ms": 637,
+      "code": "usb.uart.init",
+      "detail": "activity-sense"
+    },
+    {
+      "seq": 7,
+      "ms": 647,
+      "code": "pump.init",
+      "detail": "line-json+bin uart/tcp"
+    },
+    {
+      "seq": 8,
+      "ms": 697,
+      "code": "softap.up",
+      "detail": "pidrive-29339C"
+    },
+    {
+      "seq": 9,
+      "ms": 977,
+      "code": "usb.otg.up",
+      "detail": "car-host"
+    },
+    {
+      "seq": 10,
+      "ms": 978,
+      "code": "msc.phase",
+      "detail": "scan plug"
+    },
+    {
+      "seq": 11,
+      "ms": 2019,
+      "code": "msc.scsi.inquiry",
+      "detail": "t=1041ms n=1"
+    },
+    {
+      "seq": 12,
+      "ms": 2020,
+      "code": "msc.first_read",
+      "detail": "1043 ms"
+    },
+    {
+      "seq": 13,
+      "ms": 2127,
+      "code": "play.reject",
+      "detail": "not_from_head uid=1977938832270506073 from=4096 +4096B age=1150ms prefetch"
+    },
+    {
+      "seq": 14,
+      "ms": 2138,
+      "code": "msc.prefetch",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 15,
+      "ms": 2206,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=120..8192 n=8 B=32768 w=0 ev=not_from_head set=0 1977938832270506073"
+    },
+    {
+      "seq": 16,
+      "ms": 2217,
+      "code": "softap.up",
+      "detail": "pidrive-29339C"
+    },
+    {
+      "seq": 17,
+      "ms": 2217,
+      "code": "wifi.up",
+      "detail": "192.168.178.88"
+    },
+    {
+      "seq": 18,
+      "ms": 2229,
+      "code": "pump.tcp",
+      "detail": ":9090"
+    },
+    {
+      "seq": 19,
+      "ms": 2231,
+      "code": "mdns.up",
+      "detail": "pidrive-29339C"
+    },
+    {
+      "seq": 20,
+      "ms": 2273,
+      "code": "ready",
+      "detail": "AP 192.168.4.1 STA 192.168.178.88"
+    },
+    {
+      "seq": 21,
+      "ms": 4424,
+      "code": "msc.phase",
+      "detail": "quiet cache?"
+    },
+    {
+      "seq": 22,
+      "ms": 4424,
+      "code": "msc.quiet",
+      "detail": "file=237568B age=2000ms"
+    },
+    {
+      "seq": 23,
+      "ms": 4713,
+      "code": "msc.phase",
+      "detail": "scan boot"
+    },
+    {
+      "seq": 24,
+      "ms": 4714,
+      "code": "msc.scsi.prevent",
+      "detail": "n=8"
+    },
+    {
+      "seq": 25,
+      "ms": 4885,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 26,
+      "ms": 4885,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 27,
+      "ms": 5348,
+      "code": "play.reject",
+      "detail": "not_from_head uid=1977938832270506073 from=761 +2048B age=4370ms prefetch"
+    },
+    {
+      "seq": 28,
+      "ms": 5358,
+      "code": "msc.prefetch",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 29,
+      "ms": 5413,
+      "code": "msc.scsi.prevent",
+      "detail": "n=16"
+    },
+    {
+      "seq": 30,
+      "ms": 5479,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=761..824 n=64 B=32768 w=0 ev=not_from_head set=1 1977938832270506073"
+    },
+    {
+      "seq": 31,
+      "ms": 6669,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=5692ms"
+    },
+    {
+      "seq": 32,
+      "ms": 6682,
+      "code": "msc.phase",
+      "detail": "play Zurueck"
+    },
+    {
+      "seq": 33,
+      "ms": 6682,
+      "code": "play.guess",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 34,
+      "ms": 6682,
+      "code": "msc.stream",
+      "detail": "from=81 +4096B"
+    },
+    {
+      "seq": 35,
+      "ms": 6693,
+      "code": "pump.event",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 36,
+      "ms": 6704,
+      "code": "play.reject",
+      "detail": "already_playing uid=1977938832270506073 from=81 +4608B age=5717ms"
+    },
+    {
+      "seq": 37,
+      "ms": 7015,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=6038ms"
+    },
+    {
+      "seq": 38,
+      "ms": 7029,
+      "code": "play.reject",
+      "detail": "already_playing uid=1977938832270506073 from=81 +4096B age=6051ms"
+    },
+    {
+      "seq": 39,
+      "ms": 7100,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=6123ms"
+    },
+    {
+      "seq": 40,
+      "ms": 7113,
+      "code": "play.reject",
+      "detail": "already_playing uid=1977938832270506073 from=81 +4096B age=6136ms"
+    },
+    {
+      "seq": 41,
+      "ms": 7185,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=6208ms"
+    },
+    {
+      "seq": 42,
+      "ms": 7199,
+      "code": "play.reject",
+      "detail": "already_playing uid=1977938832270506073 from=81 +4096B age=6222ms"
+    },
+    {
+      "seq": 43,
+      "ms": 7216,
+      "code": "msc.scsi.prevent",
+      "detail": "n=40"
+    },
+    {
+      "seq": 44,
+      "ms": 7271,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=6294ms"
+    },
+    {
+      "seq": 45,
+      "ms": 7285,
+      "code": "play.reject",
+      "detail": "already_playing uid=1977938832270506073 from=81 +4096B age=6307ms"
+    }
+  ]
+}

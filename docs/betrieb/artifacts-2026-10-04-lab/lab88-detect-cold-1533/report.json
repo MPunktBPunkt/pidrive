@@ -1,0 +1,41 @@
+{
+  "verdict": "PASS_WEAK",
+  "fw": "0.4.44-dev",
+  "serial": "PD0042",
+  "coldBodyBurstCount": [
+    1,
+    2
+  ],
+  "burst_events": [
+    {
+      "seq": 34,
+      "ms": 6046,
+      "code": "cold_body_burst",
+      "detail": "slot=0 uid=1977938832270506073 lba=761..824 n=64 B=32768 warm=0 eval=not_from_head reason=not_f"
+    }
+  ],
+  "play_reject_sample": [
+    {
+      "seq": 26,
+      "ms": 5375,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=4389ms"
+    },
+    {
+      "seq": 32,
+      "ms": 5905,
+      "code": "play.reject",
+      "detail": "not_from_head uid=1977938832270506073 from=761 +2048B age=4919ms prefetch"
+    }
+  ],
+  "play_guess_after": [
+    {
+      "seq": 28,
+      "ms": 5389,
+      "code": "play.guess",
+      "detail": "1977938832270506073"
+    }
+  ],
+  "policy_unchanged": false,
+  "note": "log-only; Detect policy not changed; cold sim is host-dd not HU"
+}

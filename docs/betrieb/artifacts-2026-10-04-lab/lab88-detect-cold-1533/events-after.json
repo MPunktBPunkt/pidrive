@@ -1,0 +1,216 @@
+{
+  "ok": true,
+  "nextSeq": 36,
+  "events": [
+    {
+      "seq": 1,
+      "ms": 614,
+      "code": "boot",
+      "detail": "0.4.44-dev"
+    },
+    {
+      "seq": 2,
+      "ms": 614,
+      "code": "msc.identity",
+      "detail": "nvs=PD0042"
+    },
+    {
+      "seq": 3,
+      "ms": 625,
+      "code": "msc.ready",
+      "detail": "FAT16 L3 16MiB fav0=8M"
+    },
+    {
+      "seq": 4,
+      "ms": 636,
+      "code": "msc.slots",
+      "detail": "slots=4"
+    },
+    {
+      "seq": 5,
+      "ms": 646,
+      "code": "msc.media_on",
+      "detail": "nvs"
+    },
+    {
+      "seq": 6,
+      "ms": 646,
+      "code": "usb.uart.init",
+      "detail": "activity-sense"
+    },
+    {
+      "seq": 7,
+      "ms": 656,
+      "code": "pump.init",
+      "detail": "line-json+bin uart/tcp"
+    },
+    {
+      "seq": 8,
+      "ms": 706,
+      "code": "softap.up",
+      "detail": "pidrive-29339C"
+    },
+    {
+      "seq": 9,
+      "ms": 986,
+      "code": "usb.otg.up",
+      "detail": "car-host"
+    },
+    {
+      "seq": 10,
+      "ms": 986,
+      "code": "msc.phase",
+      "detail": "scan plug"
+    },
+    {
+      "seq": 11,
+      "ms": 2042,
+      "code": "msc.scsi.inquiry",
+      "detail": "t=1056ms n=1"
+    },
+    {
+      "seq": 12,
+      "ms": 2046,
+      "code": "msc.first_read",
+      "detail": "1060 ms"
+    },
+    {
+      "seq": 13,
+      "ms": 2068,
+      "code": "softap.up",
+      "detail": "pidrive-29339C"
+    },
+    {
+      "seq": 14,
+      "ms": 2068,
+      "code": "wifi.up",
+      "detail": "192.168.178.88"
+    },
+    {
+      "seq": 15,
+      "ms": 2079,
+      "code": "pump.tcp",
+      "detail": ":9090"
+    },
+    {
+      "seq": 16,
+      "ms": 2082,
+      "code": "mdns.up",
+      "detail": "pidrive-29339C"
+    },
+    {
+      "seq": 17,
+      "ms": 2123,
+      "code": "ready",
+      "detail": "AP 192.168.4.1 STA 192.168.178.88"
+    },
+    {
+      "seq": 18,
+      "ms": 2151,
+      "code": "play.reject",
+      "detail": "not_from_head uid=1977938832270506073 from=4096 +4096B age=1165ms prefetch"
+    },
+    {
+      "seq": 19,
+      "ms": 2161,
+      "code": "msc.prefetch",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 20,
+      "ms": 2233,
+      "code": "cold_body_burst",
+      "detail": "slot=0 uid=1977938832270506073 lba=120..8192 n=8 B=32768 warm=0 eval=not_from_head reason=not_f"
+    },
+    {
+      "seq": 21,
+      "ms": 4459,
+      "code": "msc.phase",
+      "detail": "quiet cache?"
+    },
+    {
+      "seq": 22,
+      "ms": 4459,
+      "code": "msc.quiet",
+      "detail": "file=237568B age=2000ms"
+    },
+    {
+      "seq": 23,
+      "ms": 4736,
+      "code": "msc.phase",
+      "detail": "scan boot"
+    },
+    {
+      "seq": 24,
+      "ms": 4912,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 25,
+      "ms": 4912,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 26,
+      "ms": 5375,
+      "code": "play.reject",
+      "detail": "seq_short uid=1977938832270506073 from=81 +2048B age=4389ms"
+    },
+    {
+      "seq": 27,
+      "ms": 5388,
+      "code": "msc.phase",
+      "detail": "play Zurueck"
+    },
+    {
+      "seq": 28,
+      "ms": 5389,
+      "code": "play.guess",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 29,
+      "ms": 5389,
+      "code": "msc.stream",
+      "detail": "from=81 +4096B"
+    },
+    {
+      "seq": 30,
+      "ms": 5399,
+      "code": "pump.event",
+      "detail": "1977938832270506073"
+    },
+    {
+      "seq": 31,
+      "ms": 5400,
+      "code": "msc.scsi.prevent",
+      "detail": "n=8"
+    },
+    {
+      "seq": 32,
+      "ms": 5905,
+      "code": "play.reject",
+      "detail": "not_from_head uid=1977938832270506073 from=761 +2048B age=4919ms prefetch"
+    },
+    {
+      "seq": 33,
+      "ms": 5969,
+      "code": "msc.scsi.prevent",
+      "detail": "n=16"
+    },
+    {
+      "seq": 34,
+      "ms": 6046,
+      "code": "cold_body_burst",
+      "detail": "slot=0 uid=1977938832270506073 lba=761..824 n=64 B=32768 warm=0 eval=not_from_head reason=not_f"
+    },
+    {
+      "seq": 35,
+      "ms": 6125,
+      "code": "msc.scsi.prevent",
+      "detail": "n=32"
+    }
+  ]
+}
