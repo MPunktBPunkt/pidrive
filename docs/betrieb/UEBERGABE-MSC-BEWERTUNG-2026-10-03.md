@@ -55,5 +55,7 @@ Ring aufblasen, Live in M3, Detect als Read-Proxy, Plateau-Gate, BT-Festlegung, 
 ~~Auto-M3-statisch~~ → **done A_then_E (Fenster)** + Addendum Kritik.  
 ~~Feld-M3seq~~ → **done** [`auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/).  
 **Trace-Korrektur 2026-10-04:** Q2-Δrc=0 war warm-konfundiert; Select/Resume-Vollreads belegt; Architektur-Negativ zurückgezogen.  
-**Jetzt:** P0 Menü-Lock → P1 kalter Auto-Next → parallel Q3-Lab + BT-UX. Freeze Ring bis P1 grün.  
-Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · Plan Rev.4.
+**Review-Konsolidierung 2026-10-04:** Mistral/Claude/GPT → Plan **Rev.5**; P0 Provokation; Preflight EAR pro Datei; P1 ±1,5 s ×2; Q3a≠Q3b; Scan-Freeze-Constraint; L4 als P2c.  
+**Lab-Live:** ESP `.88` up; P0-Bug sichtbar (`Zurueck/…`); Host-Reads blockiert (`/dev/sda` Node fehlt).  
+**Jetzt:** `sudo mknod` → Q3a Lab; parallel P0 Lock in `pump_bridge`; dann P1×2 Auto. Freeze Ring bis P1×2 grün.  
+Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md) · Plan Rev.5.

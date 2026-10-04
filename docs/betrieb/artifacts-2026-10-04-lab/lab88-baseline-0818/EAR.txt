@@ -1,0 +1,22 @@
+2026-10-04 Lab baseline (DebianCursor .187 → ESP .88)
+
+Plan: reconnect check after overnight; no host reads (no /dev/sda node).
+FW 0.4.42-dev serial=PD0035 remountGen=35 labMode=true
+POST /api/lab/stop → ok pumpUp=false
+phase=play rc=126 ov=0 emit=0 fatMode=static
+
+slotMap after stop:
+  slot0 name='Zurueck'          bytes=323584 lba0=81    lba1=16464  (WARM partial)
+  slot1 name='Ausgang klinke'   bytes=0      lba0=16465 lba1=17488  (COLD)
+  slot2 name='Auto'             bytes=0      lba0=17489 lba1=18512  (COLD)
+  slot3 name='Mehr... (+7)'     bytes=0      lba0=18513 lba1=18525
+
+P0 observation (D): MSC names are Pi-UI action labels, not fav stations.
+Host: /sys/block/sda exists (8:0), /dev/sda missing → Q3a blocked.
+pump TCP 9090 accepts connect; pumpTcpUp=false (no bridge peer).
+
+preflight.warmth.slot0 = {bytes_after_scan:323584, cold:false, lba0:81, lba1:16464}
+preflight.warmth.slot1 = {bytes_after_scan:0, cold:true, lba0:16465, lba1:17488}
+preflight.warmth.slot2 = {bytes_after_scan:0, cold:true, lba0:17489, lba1:18512}
+
+Next: sudo mknod /dev/sda /dev/sg0 → remount + Q3a on cold fav1.

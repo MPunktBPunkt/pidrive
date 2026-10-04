@@ -46,5 +46,5 @@ Cursor-nahe Reads nur unter **Lab-Paced-Consume @ 6 KiB/s**.
 
 ## Nächstes
 
-→ Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · Plan Rev.4.  
-P0 Menü-Lock → P1 kalter Auto-Next → parallel Q3-Lab + BT-UX. Ring Freeze bis P1 grün.
+→ Normativ: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) · Review [`../artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](../artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md) · Plan **Rev.5**.  
+P0 Provokation → P1×2 (±1,5 s) → parallel Q3a Lab + BT-UX + L4/P2c. Ring Freeze bis P1×2 grün.
