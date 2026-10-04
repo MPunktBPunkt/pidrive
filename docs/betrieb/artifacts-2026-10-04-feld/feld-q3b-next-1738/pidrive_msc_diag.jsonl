@@ -1,0 +1,56 @@
+{"ts":1791128323.2607334,"code":"play.reject","detail":"not_from_head uid=fav0 from=4417 +3215360B age=6611ms prefetch"}
+{"ts":1791128323.9360158,"code":"cold_body_burst","detail":"s=0 lba=97..16457 n=776 B=3178496 w=0 ev=not_from_head set=0 fav0"}
+{"ts":1791128324.0150805,"code":"play.reject","detail":"not_from_head uid=fav0 from=4417 +4026368B age=7411ms prefetch"}
+{"ts":1791128324.807181,"code":"play.reject","detail":"not_from_head uid=fav0 from=4417 +4849664B age=8212ms prefetch"}
+{"ts":1791128325.622109,"code":"play.reject","detail":"not_from_head uid=fav0 from=4417 +5677056B age=9015ms prefetch"}
+{"ts":1791128327.911297,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791128327.911706,"code":"msc.quiet","detail":"file=8228864B age=2003ms"}
+{"ts":1791128343.733364,"code":"play.reject","detail":"seq_short uid=fav2 from=17489 +4096B age=27118ms"}
+{"ts":1791128343.7341533,"code":"msc.phase","detail":"play Radio BOB!"}
+{"ts":1791128344.9142454,"code":"play.reject","detail":"cooldown uid=fav2 from=17489 +12288B age=27156ms"}
+{"ts":1791128344.9264126,"code":"cold_body_burst","detail":"s=2 lba=17505..17561 n=8 B=32768 w=0 ev=not_from_head set=1 fav2"}
+{"ts":1791128424.5772467,"code":"play.reject","detail":"not_from_head uid=fav1 from=16945 +4096B age=107906ms prefetch"}
+{"ts":1791128424.5892951,"code":"cold_body_burst","detail":"s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+{"ts":1791128424.6696587,"code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=108064ms"}
+{"ts":1791128426.1112828,"code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=108089ms"}
+{"ts":1791128426.1372015,"code":"play.reject","detail":"not_from_head uid=fav1 from=16977 +4096B age=108209ms prefetch"}
+{"ts":1791128640.0567782,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791128640.056977,"code":"msc.quiet","detail":"file=557056B age=2003ms"}
+{"ts":1791128718.491415,"code":"play.reject","detail":"not_from_head uid=fav1 from=16945 +4096B age=82578ms prefetch"}
+{"ts":1791128718.5429244,"code":"cold_body_burst","detail":"s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+{"ts":1791128718.6487076,"code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=82729ms"}
+{"ts":1791128718.6489265,"code":"msc.phase","detail":"play Rock Antenne Bayern"}
+{"ts":1791128719.756163,"code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=82761ms"}
+{"ts":1791128719.7564013,"code":"play.reject","detail":"not_from_head uid=fav1 from=16977 +4096B age=82881ms prefetch"}
+{"ts":1791128806.2206929,"code":"play.reject","detail":"not_from_head uid=fav0 from=561 +4096B age=170302ms prefetch"}
+{"ts":1791128806.2794917,"code":"cold_body_burst","detail":"s=0 lba=321..585 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128806.368473,"code":"play.reject","detail":"seq_short uid=fav0 from=81 +4096B age=170464ms"}
+{"ts":1791128808.880421,"code":"play.reject","detail":"cooldown uid=fav0 from=81 +12288B age=170482ms"}
+{"ts":1791128809.016602,"code":"play.reject","detail":"not_from_head uid=fav0 from=593 +4096B age=170597ms prefetch"}
+{"ts":1791128809.1331778,"code":"play.reject","detail":"not_from_head uid=fav0 from=3665 +86016B age=171397ms prefetch"}
+{"ts":1791128809.272817,"code":"play.reject","detail":"not_from_head uid=fav0 from=4385 +151552B age=172197ms prefetch"}
+{"ts":1791128809.4097602,"code":"play.reject","detail":"not_from_head uid=fav0 from=5105 +94208B age=172997ms prefetch"}
+{"ts":1791128809.476707,"code":"cold_body_burst","detail":"s=0 lba=97..16457 n=672 B=2752512 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128809.7113981,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +319488B age=173798ms prefetch"}
+{"ts":1791128810.5107481,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +987136B age=174603ms prefetch"}
+{"ts":1791128813.2843628,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +1011712B age=177373ms prefetch"}
+{"ts":1791128813.332386,"code":"cold_body_burst","detail":"s=0 lba=7793..7849 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128814.0950677,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +1650688B age=178176ms prefetch"}
+{"ts":1791128814.900532,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +2310144B age=178979ms prefetch"}
+{"ts":1791128815.6976683,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +2969600B age=179780ms prefetch"}
+{"ts":1791128816.3381531,"code":"cold_body_burst","detail":"s=0 lba=7793..12633 n=598 B=2449408 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128816.502602,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +3612672B age=180582ms prefetch"}
+{"ts":1791128817.2943525,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +4259840B age=181382ms prefetch"}
+{"ts":1791128818.0926147,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +4915200B age=182184ms prefetch"}
+{"ts":1791128985.09953,"code":"play.reject","detail":"seq_short uid=fav0 from=81 +4096B age=349191ms"}
+{"ts":1791128985.1102417,"code":"play.reject","detail":"already_playing uid=fav0 from=81 +8192B age=349200ms"}
+{"ts":1791128985.173006,"code":"cold_body_burst","detail":"s=0 lba=97..153 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791128985.5554621,"code":"play.reject","detail":"not_from_head uid=fav0 from=16457 +4096B age=349554ms prefetch"}
+{"ts":1791128986.2650745,"code":"play.reject","detail":"not_from_head uid=fav0 from=1617 +266240B age=350355ms prefetch"}
+{"ts":1791128987.0710502,"code":"play.reject","detail":"not_from_head uid=fav0 from=2337 +393216B age=351158ms prefetch"}
+{"ts":1791129272.152989,"code":"play.reject","detail":"seq_short uid=fav0 from=81 +4096B age=636249ms"}
+{"ts":1791129272.1815567,"code":"play.reject","detail":"already_playing uid=fav0 from=81 +8192B age=636257ms"}
+{"ts":1791129272.2312253,"code":"cold_body_burst","detail":"s=0 lba=97..153 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791129272.5324745,"code":"play.reject","detail":"not_from_head uid=fav0 from=16457 +4096B age=636613ms prefetch"}
+{"ts":1791129273.329437,"code":"play.reject","detail":"not_from_head uid=fav0 from=1617 +274432B age=637413ms prefetch"}
+{"ts":1791129274.1366343,"code":"play.reject","detail":"not_from_head uid=fav0 from=2337 +409600B age=638215ms prefetch"}

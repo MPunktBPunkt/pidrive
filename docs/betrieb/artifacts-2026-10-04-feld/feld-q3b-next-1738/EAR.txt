@@ -1,0 +1,36 @@
+FELD Q3b NEXT — prepared 2026-10-04T17:38:35+02:00
+FW target: 0.4.45-dev (seed WINS over live in body; bodySeed.bytesServed)
+Prefill: fav0 tag=B fromOff=348160 (LBA 761+)
+NO remount after seed.
+
+OPERATOR:
+1) Film UI-Timer + LED
+2) Play short track Bayern or BOB
+3) Auto-Next → Rock (~87s / LED burst)
+4) Note: audible music NOT expected (seed≠MP3)
+5) Report: clock of burst/LED, any noise/glitch, then "Ende"
+6) Success this run = bytesServed rises during burst + HU body LBAs in trace
+
+DO NOT: unplug USB, remount, menu rewrite
+Artifacts: /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-04-feld/feld-q3b-next-1738
+OPERATOR 17:39: zu BOB gewechselt, warte bis durch
+OPERATOR 17:40: BOB fertig, LED blinkt vor Wechsel
+OPERATOR 17:42: Bayern durch, LED blinkt diesmal NICHT; schon gestartet / war erster im autoplay
+OPERATOR 17:43: Wechsel zu BOB + RST
+OPERATOR 17:44: zweimal RST — Wechsel zu BOB vergessen, dann erneut RST
+OPERATOR 17:45: BOB läuft
+OPERATOR 17:45: BOB läuft (Operator) — API zeigt fav1 Bayern seedB=0 cold=2
+OPERATOR 17:45: BOB durch, LED kurz vor Ende geblinkt
+OPERATOR 17:46: Rock Antenne Bayern gleich durch (→ erwartet Rock fav0 + LED)
+OPERATOR 17:47: LED blinkt am Ende von Bayern und zu Beginn von Rock Antenne
+OPERATOR 17:48: nirgends Ton — Operator kommt ins Haus (Session-Ende Feld)
+
+RESULT 17:48 (Feld-Ende):
+- AV: FAIL (nirgends Ton) — erwartet solange seed≠MP3 / Producer offen
+- LED: PASS am Bayern→Rock und BOB→Bayern Prefetch
+- Oracle C' (bytesServed): FAIL — seedB blieb 0, bodySeed.active=False nach RST 17:43/17:44
+  (Seed war RAM SoftAP; RST löscht Seed → Burst ging über Live/Ring, nicht Seed)
+- coldBodyBurstCount: 1→6 über Sequenz
+- Nächster Lauf: Seed NACH letztem RST setzen, dann Auto-Next ohne weiteren RST
+OPERATOR 17:55: BMW Tür geöffnet → LED geblinkt
+NOTE 17:55: cold 6→8; diag cold_body_burst lba=97..153 nach Tür (HU Re-Read/Prefetch)

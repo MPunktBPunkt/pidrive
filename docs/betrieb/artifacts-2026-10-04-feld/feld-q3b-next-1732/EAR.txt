@@ -18,3 +18,5 @@ OPERATOR 17:33: Bayern läuft, bald Ende/Auto-Next
 OPERATOR 17:34: LED vor und beim Wechsel zu Rock Antenne
 OPERATOR 17:35: kein Ton
 VERDICT: Oracle B PASS, Oracle C' PASS (bytesServed +8MiB), AV FAIL
+OPERATOR 17:37: BOB läuft, wechselt gleich zu Bayern
+OPERATOR 17:38 RST
