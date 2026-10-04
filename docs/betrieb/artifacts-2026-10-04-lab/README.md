@@ -34,7 +34,11 @@ pct set 100 --dev1 path=/dev/sg0,mode=0660,gid=6
 
 `tools/m3_lab_q3b_prefill.py` — Q3b Prefill Oracles A/B/C (ab LBA 761; len-check).  
 `tools/m3_lab_detect_cold_body.py` — Lab: `cold_body_burst` Log vs Warm-Head.  
+`tools/m3_lab_seed_survive.py` — Lab: Seed bleibt aktiv über Settle (+ optional Host-Hit).  
+`tools/feld_q3b_next_prepare.sh` — Feld-Prepare mit GO-Gate (kein toter Seed wie 1738).  
+`tools/feld_q3b_seed_watchdog.py` — Feld: Seed-Watchdog bis `bytesServed↑`.  
 `tools/m3_offline_detect_cold_vs_warm.py` — Offline PD0056/57 Detect-Regel.  
 `tools/m3_lab_q3a_freshness.py` — Q3a A/B overlay vs host hash.  
 `esp32.pidrive` SoftAP: `body_seed`/`body_read` (≥0.4.43); Event `cold_body_burst` (≥0.4.44).  
-Host-`dd`: Gruppe `disk` (`sg disk -c '…'`).
+Host-`dd`: Gruppe `disk` (`sg disk -c '…'`).  
+Weiterarbeit: [`LAB-NEXT-SEED-GATE-AV-2026-10-04.md`](LAB-NEXT-SEED-GATE-AV-2026-10-04.md).
