@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-04 · Feld 17:32 **B+C' PASS** · Feld 17:38 **C' FAIL** (Seed schon bei GO tot / Reboot ~4 s nach Seed) · AV FAIL · FW `0.4.45-dev`  
-**Phase:** Prefill/Datenfrische belegt · nächster Engpass **Seed-Gate + C′-Retry**, dann **MPEG an HU-LBAs (AV A→D)**
+**Stand:** 2026-10-04 · Feld B+C′ (17:32) · C′ Retry-Tools ready · Lab AV **A+B PASS** (MPEG am Host) · Feld-AV offen · FW `0.4.45-dev`  
+**Phase:** Lab zeigt MPEG-Auslieferung möglich · Engpass Feld = **Producer/Cursor am HU-fileOff** (+ C′-Retry-Prozedur)
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,11 +11,11 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md) | **Aktuell** — B PASS, C' FAIL (Seed bei GO tot); Kritik Mistral/GPT |
-| 0a | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/KRITIK-MISTRAL-GPT-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/KRITIK-MISTRAL-GPT-1738.md) | Rohspur-Korrektur zur Mistral/GPT-Deutung |
-| 1 | [`artifacts-2026-10-04-feld/feld-q3b-next-1732/GESAMTBERICHT-FELD-Q3B-1732.md`](artifacts-2026-10-04-feld/feld-q3b-next-1732/GESAMTBERICHT-FELD-Q3B-1732.md) | 17:32 Seed an HU (`bytesServed` +8 MiB) |
-| 2 | [`artifacts-2026-10-04-feld/feld-q3b-1653/GESAMTBERICHT-FELD-Q3B-1653.md`](artifacts-2026-10-04-feld/feld-q3b-1653/GESAMTBERICHT-FELD-Q3B-1653.md) | 16:53 Live maskierte Seed |
-| 3 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md) | Lab-Abschluss |
+| 0 | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md) | **Aktuell Lab** — AV A+B MPEG am Host PASS |
+| 1 | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md) | Feld 17:38 C' FAIL (Seed bei GO tot) |
+| 1a | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/KRITIK-MISTRAL-GPT-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/KRITIK-MISTRAL-GPT-1738.md) | Rohspur-Korrektur Mistral/GPT |
+| 2 | [`artifacts-2026-10-04-feld/feld-q3b-next-1732/GESAMTBERICHT-FELD-Q3B-1732.md`](artifacts-2026-10-04-feld/feld-q3b-next-1732/GESAMTBERICHT-FELD-Q3B-1732.md) | 17:32 Seed an HU (`bytesServed` +8 MiB) |
+| 3 | [`artifacts-2026-10-04-lab/lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md`](artifacts-2026-10-04-lab/lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md) | Seed-Gate Lab PASS |
 | 4 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Freeze |
 
 ---
@@ -27,7 +27,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED (17:34 + 17:47 LED+Trace; auch Tür 17:55) |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** bei 17:32 (+8 MiB); **FAIL** bei 17:38 (`active=False` schon bei GO / Reboot) |
-| AV / Ohr | **FAIL** — kein Ton (Seed≠MP3; Producer offen) |
+| AV / Ohr | Feld **FAIL** · Lab A+B **PASS** (MPEG am Host, `liveBytes>0`) |
 | Detect | Cold=`not_from_head`; nur Log |
 | Sequenz-GO | gesperrt bis hörbarer AV |
 | Freeze | hält |
@@ -36,14 +36,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Seed-Gate Lab PASS (20:29):** Survive 30 s + Hit +32 KiB auf `.88` / `0.4.45` — [`lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md`](artifacts-2026-10-04-lab/lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md).  
-2. **C′-Retry (Auto morgen):** Prepare-Gate + Watchdog → Auto-Next **ohne** RST; PASS = `bytesServed↑` + HU-Body-LBAs.  
-3. **AV A→D:** gültiges MPEG in den **tatsächlich gelesenen** LBAs + Auslieferung + Hörtest — getrennt von Seed.  
-4. Detect-Policy erst nach AV-Beweis ändern. Freeze hält.
+1. **Feld morgen — zwei getrennte Läufe:** (a) C′-Retry mit Gate/Watchdog; (b) AV mit Seed **aus**, echter Stream — Ziel `liveBytes>0` + Ton.  
+2. **AV Feld:** gleichen Nachweis wie Lab B unter HU-Reads (Fenster/`hostAbsCursor` vs absBase..absEnd).  
+3. Detect erst nach Hörbeweis. Freeze hält.
 
 ```
-Oracle B PASS ✓
-Oracle C' PASS ✓ (17:32); FAIL (17:38) Seed tot vor Burst — Gate fehlt
-AV FAIL — MPEG an HU-LBAs, nicht nur „Producer“
+Oracle B/C' Feld: 17:32 PASS; 17:38 C' FAIL (Gate)
+Lab AV A+B PASS — MPEG am Host möglich
+Feld-AV: Producer/Cursor am HU-fileOff + Ohr
 Freeze · Sequenz-GO gesperrt
 ```

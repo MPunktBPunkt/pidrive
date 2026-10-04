@@ -30,11 +30,13 @@ Erwartung: Oracle A PASS, Survive PASS; mit `--hit` `bytesServed` steigt.
 4. Auto-Next ohne RST/USB.  
 5. PASS nur `bytesServed↑` + Body-LBAs im Trace.
 
-## AV (Lab, getrennt — nicht heute erzwingen)
+## AV Lab 20:35 — A+B PASS
 
-Stufen A→D aus Feldkritik: gültiges MPEG an HU-LBAs. Freeze hält; Seed bleibt Diagnosepfad. Nächster konkreter Lab-Schritt: Producer-Cursor/`liveBytes` an Host-Reads koppeln (nach C′-Retry-Tooling).
+[`lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md): Pump `L1.mp3` → Ring voll → Host-dd LBA 369 mit MPEG-Sync, `liveBytes=24576`, `underruns=0`.  
+→ MSC-Pfad kann MPEG; Feld-`live≈0` ist Cursor/Producer-Fenster, nicht „kein MPEG möglich“.
 
-## Stand Lab 20:29 (nach RST + OTA)
+**Offen:** C/D am Auto (HU-Reads + Ohr). Seed-Diagnose getrennt halten.
 
-`lab88-seed-survive-2029/` — **PASS** auf `0.4.45-dev` PD0042: Survive 30 s + Host-Hit `bytesServed` 0→32768.  
-Bericht: [`lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md`](lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md).
+## Stand Seed-Gate 20:29
+
+`lab88-seed-survive-2029/` — Survive + Hit **PASS**.

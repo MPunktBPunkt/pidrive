@@ -1,0 +1,133 @@
+{
+  "ok": true,
+  "stageA": {
+    "ok": true,
+    "poll": [
+      {
+        "t": 1,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 2,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 3,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 4,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 5,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 6,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 7,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      },
+      {
+        "t": 8,
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "absBase": 135168,
+        "absEnd": 184320,
+        "underruns": 0,
+        "streamBytes": 0,
+        "live": 0,
+        "hostAbs": 0
+      }
+    ]
+  },
+  "stageB": {
+    "ok": true,
+    "file_off": 147456,
+    "lba": 369,
+    "abs": [
+      135168,
+      184320
+    ],
+    "id3_in_live_or_head": true,
+    "mpeg_sync_offs": [
+      6,
+      163,
+      320,
+      477,
+      633,
+      790,
+      947,
+      1103
+    ],
+    "live_prefix_hex": "555555555555fffb32c4bb83c00001a4",
+    "head_post_prefix_hex": "49443303000000000016544954320000",
+    "looks_silence_live": false,
+    "changed_vs_pre_head": true,
+    "streamBytes": 24576,
+    "underruns": 0,
+    "liveBytes": 24576,
+    "hostAbsCursor": 142848
+  },
+  "out": "docs/betrieb/artifacts-2026-10-04-lab/lab88-av-mpeg-2035"
+}
