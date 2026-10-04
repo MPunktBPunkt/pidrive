@@ -1,0 +1,1011 @@
+{
+  "ok": true,
+  "version": "0.4.42-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "11h 49min",
+  "freeHeap": 115856,
+  "wifiRssi": -40,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.187",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 95209,
+  "menuCount": 4,
+  "cover": {
+    "src": "q3a",
+    "path": "q3a",
+    "try": "q3a",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "stream": {
+    "active": true,
+    "uid": "fav1",
+    "size": 49152,
+    "cap": 49152,
+    "absBase": 57344,
+    "absEnd": 106496,
+    "underruns": 0,
+    "id3Len": 34,
+    "headResyncs": 0,
+    "cursorArmed": false,
+    "hostAbsCursor": 0,
+    "hasCover": true
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 5822,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 16544,
+    "bytesRead": 23395328,
+    "bytesMeta": 331776,
+    "bytesBoot": 24576,
+    "bytesFat": 102912,
+    "bytesDir": 138752,
+    "bytesFile": 23063552,
+    "prefetchHits": 5631,
+    "playRejectCount": 5651,
+    "playGuessCount": 1,
+    "streamSlot": 1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "readOverflow": 0,
+    "readsEmit": 6,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 37,
+    "usbSerial": "PD0037",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 126,
+      "n2k": 0,
+      "n4k": 5696,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 2,
+      "tur": 34491,
+      "turNotReady": 0,
+      "prevent": 17048,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1016,
+      "msToCapacity": 1016,
+      "msToTur": 1016,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": true,
+      "uid": "fav1",
+      "size": 49152,
+      "cap": 49152,
+      "absBase": 57344,
+      "absEnd": 106496,
+      "underruns": 0,
+      "id3Len": 34,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": true
+    },
+    "msSincePlug": 42568014,
+    "msSinceChange": 42568014,
+    "msPlugToFirstRead": 1017,
+    "msPlugToPlayGuess": 5441,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "Q3a Rock",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 23044096,
+        "fromHead": 5,
+        "midFile": 5621,
+        "maxSeq": 7573504,
+        "lastAgeMs": 87087
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "Q3a Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 19456,
+        "fromHead": 2,
+        "midFile": 36,
+        "maxSeq": 8192,
+        "lastAgeMs": 3906
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "Q3a BOB",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 42561114,
+      "gap": 1,
+      "lba": 1,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561114,
+      "gap": 0,
+      "lba": 2,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561115,
+      "gap": 1,
+      "lba": 3,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561116,
+      "gap": 1,
+      "lba": 4,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561117,
+      "gap": 1,
+      "lba": 5,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561117,
+      "gap": 0,
+      "lba": 6,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561118,
+      "gap": 1,
+      "lba": 7,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561119,
+      "gap": 1,
+      "lba": 8,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561120,
+      "gap": 1,
+      "lba": 9,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561120,
+      "gap": 0,
+      "lba": 10,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561121,
+      "gap": 1,
+      "lba": 11,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561122,
+      "gap": 1,
+      "lba": 12,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561123,
+      "gap": 1,
+      "lba": 13,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561124,
+      "gap": 1,
+      "lba": 14,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561124,
+      "gap": 0,
+      "lba": 15,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561125,
+      "gap": 1,
+      "lba": 16,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561126,
+      "gap": 1,
+      "lba": 17,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561127,
+      "gap": 1,
+      "lba": 18,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561127,
+      "gap": 0,
+      "lba": 19,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561128,
+      "gap": 1,
+      "lba": 20,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561129,
+      "gap": 1,
+      "lba": 21,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561130,
+      "gap": 1,
+      "lba": 22,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561130,
+      "gap": 0,
+      "lba": 23,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561131,
+      "gap": 1,
+      "lba": 24,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561132,
+      "gap": 1,
+      "lba": 25,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561133,
+      "gap": 1,
+      "lba": 26,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561133,
+      "gap": 0,
+      "lba": 27,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561134,
+      "gap": 1,
+      "lba": 28,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561135,
+      "gap": 1,
+      "lba": 29,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561136,
+      "gap": 1,
+      "lba": 30,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561137,
+      "gap": 1,
+      "lba": 31,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561137,
+      "gap": 0,
+      "lba": 32,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561138,
+      "gap": 1,
+      "lba": 33,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561139,
+      "gap": 1,
+      "lba": 34,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561140,
+      "gap": 1,
+      "lba": 35,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561140,
+      "gap": 0,
+      "lba": 36,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561141,
+      "gap": 1,
+      "lba": 37,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561141,
+      "gap": 0,
+      "lba": 38,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561142,
+      "gap": 1,
+      "lba": 39,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561143,
+      "gap": 1,
+      "lba": 40,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561143,
+      "gap": 0,
+      "lba": 41,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561144,
+      "gap": 1,
+      "lba": 42,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561145,
+      "gap": 1,
+      "lba": 43,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561145,
+      "gap": 0,
+      "lba": 44,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561146,
+      "gap": 1,
+      "lba": 45,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561147,
+      "gap": 1,
+      "lba": 46,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561148,
+      "gap": 1,
+      "lba": 47,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561148,
+      "gap": 0,
+      "lba": 48,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561149,
+      "gap": 1,
+      "lba": 49,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561150,
+      "gap": 1,
+      "lba": 50,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561150,
+      "gap": 0,
+      "lba": 51,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561151,
+      "gap": 1,
+      "lba": 52,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561152,
+      "gap": 1,
+      "lba": 53,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561152,
+      "gap": 0,
+      "lba": 54,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561153,
+      "gap": 1,
+      "lba": 55,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561154,
+      "gap": 1,
+      "lba": 56,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561154,
+      "gap": 0,
+      "lba": 57,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561155,
+      "gap": 1,
+      "lba": 58,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561156,
+      "gap": 1,
+      "lba": 59,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561156,
+      "gap": 0,
+      "lba": 60,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561157,
+      "gap": 1,
+      "lba": 61,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561158,
+      "gap": 1,
+      "lba": 62,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561158,
+      "gap": 0,
+      "lba": 63,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42562245,
+      "gap": 1087,
+      "lba": 16529,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562246,
+      "gap": 1,
+      "lba": 16530,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562247,
+      "gap": 1,
+      "lba": 16531,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562248,
+      "gap": 1,
+      "lba": 16532,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562259,
+      "gap": 11,
+      "lba": 16533,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562260,
+      "gap": 1,
+      "lba": 16534,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562261,
+      "gap": 1,
+      "lba": 16535,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562262,
+      "gap": 1,
+      "lba": 16536,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562262,
+      "gap": 0,
+      "lba": 16537,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562263,
+      "gap": 1,
+      "lba": 16538,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562264,
+      "gap": 1,
+      "lba": 16539,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562264,
+      "gap": 0,
+      "lba": 16540,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562265,
+      "gap": 1,
+      "lba": 16541,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562266,
+      "gap": 1,
+      "lba": 16542,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562267,
+      "gap": 1,
+      "lba": 16543,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42562267,
+      "gap": 0,
+      "lba": 16544,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42569001,
+      "gap": 6734,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 42569039,
+      "gap": 38,
+      "lba": 16529,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569040,
+      "gap": 1,
+      "lba": 16530,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569041,
+      "gap": 1,
+      "lba": 16531,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569042,
+      "gap": 1,
+      "lba": 16532,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569057,
+      "gap": 15,
+      "lba": 16533,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569058,
+      "gap": 1,
+      "lba": 16534,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569059,
+      "gap": 1,
+      "lba": 16535,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569060,
+      "gap": 1,
+      "lba": 16536,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569060,
+      "gap": 0,
+      "lba": 16537,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569061,
+      "gap": 1,
+      "lba": 16538,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569062,
+      "gap": 1,
+      "lba": 16539,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569063,
+      "gap": 1,
+      "lba": 16540,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569064,
+      "gap": 1,
+      "lba": 16541,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569065,
+      "gap": 1,
+      "lba": 16542,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569066,
+      "gap": 1,
+      "lba": 16543,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    },
+    {
+      "ms": 42569067,
+      "gap": 1,
+      "lba": 16544,
+      "n": 512,
+      "kind": "file",
+      "tag": "Q3a Bayern"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 42572427,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 42568017,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 42572427,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.187",
+      "sense": "tcp-client"
+    }
+  }
+}

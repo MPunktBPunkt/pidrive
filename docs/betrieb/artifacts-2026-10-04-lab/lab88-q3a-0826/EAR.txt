@@ -1,0 +1,7 @@
+Q3a Lab 2026-10-04 0826
+verdict=PASS_WEAK
+serial=PD0036 uid=fav1
+preflight.warmth.slot1 bytes=3072 cold=True
+hash_A=0df261ca82a54c4b hash_A'=0df261ca82a54c4b hash_B=2e6bf78e26b110a1 overlay=3e8145e71871290a
+changed=True match_overlay=False pdmk_A=False pdmk_B=False
+stream.active=True size=49152

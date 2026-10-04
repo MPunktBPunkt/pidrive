@@ -1,0 +1,997 @@
+{
+  "ok": true,
+  "version": "0.4.42-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "11h 49min",
+  "freeHeap": 118768,
+  "wifiRssi": -40,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": false,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": false,
+  "pumpTcpPeer": "",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 3699,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 5789,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 63,
+    "bytesRead": 23378432,
+    "bytesMeta": 331264,
+    "bytesBoot": 24064,
+    "bytesFat": 102912,
+    "bytesDir": 138752,
+    "bytesFile": 23047168,
+    "prefetchHits": 5605,
+    "playRejectCount": 5625,
+    "playGuessCount": 1,
+    "streamSlot": -1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "readOverflow": 0,
+    "readsEmit": 0,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 36,
+    "usbSerial": "PD0036",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 93,
+      "n2k": 0,
+      "n4k": 5696,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 2,
+      "tur": 34477,
+      "turNotReady": 0,
+      "prevent": 17038,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1016,
+      "msToCapacity": 1016,
+      "msToTur": 1016,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 0,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": false
+    },
+    "msSincePlug": 42557260,
+    "msSinceChange": 42557260,
+    "msPlugToFirstRead": 1017,
+    "msPlugToPlayGuess": 5441,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "1977938832270506073",
+        "name": "Zurueck",
+        "kind": "action",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 23044096,
+        "fromHead": 5,
+        "midFile": 5621,
+        "maxSeq": 7573504,
+        "lastAgeMs": 76334
+      },
+      {
+        "i": 1,
+        "uid": "18330258143618563731",
+        "name": "Ausgang klinke",
+        "kind": "info",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 3072,
+        "fromHead": 2,
+        "midFile": 4,
+        "maxSeq": 1024,
+        "lastAgeMs": 56916
+      },
+      {
+        "i": 2,
+        "uid": "16678805154550120858",
+        "name": "Auto",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Mehr... (+7)",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 42485783,
+      "gap": 4,
+      "lba": 14680,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485787,
+      "gap": 4,
+      "lba": 14688,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485791,
+      "gap": 4,
+      "lba": 14696,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485795,
+      "gap": 4,
+      "lba": 14704,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485799,
+      "gap": 4,
+      "lba": 14712,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485802,
+      "gap": 3,
+      "lba": 14720,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485806,
+      "gap": 4,
+      "lba": 14728,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485821,
+      "gap": 15,
+      "lba": 14736,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485825,
+      "gap": 4,
+      "lba": 14744,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485829,
+      "gap": 4,
+      "lba": 14752,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485832,
+      "gap": 3,
+      "lba": 14760,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485836,
+      "gap": 4,
+      "lba": 14768,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485840,
+      "gap": 4,
+      "lba": 14776,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485844,
+      "gap": 4,
+      "lba": 14784,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485848,
+      "gap": 4,
+      "lba": 14792,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485852,
+      "gap": 4,
+      "lba": 14800,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485855,
+      "gap": 3,
+      "lba": 14808,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485859,
+      "gap": 4,
+      "lba": 14816,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485863,
+      "gap": 4,
+      "lba": 14824,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485867,
+      "gap": 4,
+      "lba": 14832,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485871,
+      "gap": 4,
+      "lba": 14840,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485875,
+      "gap": 4,
+      "lba": 14848,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485878,
+      "gap": 3,
+      "lba": 14856,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485882,
+      "gap": 4,
+      "lba": 14864,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42485886,
+      "gap": 4,
+      "lba": 14872,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Zurueck"
+    },
+    {
+      "ms": 42505298,
+      "gap": 19412,
+      "lba": 16465,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42505299,
+      "gap": 1,
+      "lba": 16466,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42505301,
+      "gap": 2,
+      "lba": 16816,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42505302,
+      "gap": 1,
+      "lba": 16817,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42505304,
+      "gap": 2,
+      "lba": 17168,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42505304,
+      "gap": 0,
+      "lba": 17169,
+      "n": 512,
+      "kind": "file",
+      "tag": "Ausgang kli"
+    },
+    {
+      "ms": 42561049,
+      "gap": 55745,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 42561113,
+      "gap": 64,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 42561114,
+      "gap": 1,
+      "lba": 1,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561114,
+      "gap": 0,
+      "lba": 2,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561115,
+      "gap": 1,
+      "lba": 3,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561116,
+      "gap": 1,
+      "lba": 4,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561117,
+      "gap": 1,
+      "lba": 5,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561117,
+      "gap": 0,
+      "lba": 6,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561118,
+      "gap": 1,
+      "lba": 7,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561119,
+      "gap": 1,
+      "lba": 8,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561120,
+      "gap": 1,
+      "lba": 9,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561120,
+      "gap": 0,
+      "lba": 10,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561121,
+      "gap": 1,
+      "lba": 11,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561122,
+      "gap": 1,
+      "lba": 12,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561123,
+      "gap": 1,
+      "lba": 13,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561124,
+      "gap": 1,
+      "lba": 14,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561124,
+      "gap": 0,
+      "lba": 15,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561125,
+      "gap": 1,
+      "lba": 16,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 42561126,
+      "gap": 1,
+      "lba": 17,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561127,
+      "gap": 1,
+      "lba": 18,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561127,
+      "gap": 0,
+      "lba": 19,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561128,
+      "gap": 1,
+      "lba": 20,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561129,
+      "gap": 1,
+      "lba": 21,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561130,
+      "gap": 1,
+      "lba": 22,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561130,
+      "gap": 0,
+      "lba": 23,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561131,
+      "gap": 1,
+      "lba": 24,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561132,
+      "gap": 1,
+      "lba": 25,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561133,
+      "gap": 1,
+      "lba": 26,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561133,
+      "gap": 0,
+      "lba": 27,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561134,
+      "gap": 1,
+      "lba": 28,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561135,
+      "gap": 1,
+      "lba": 29,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561136,
+      "gap": 1,
+      "lba": 30,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561137,
+      "gap": 1,
+      "lba": 31,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561137,
+      "gap": 0,
+      "lba": 32,
+      "n": 512,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 42561138,
+      "gap": 1,
+      "lba": 33,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561139,
+      "gap": 1,
+      "lba": 34,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561140,
+      "gap": 1,
+      "lba": 35,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561140,
+      "gap": 0,
+      "lba": 36,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561141,
+      "gap": 1,
+      "lba": 37,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561141,
+      "gap": 0,
+      "lba": 38,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561142,
+      "gap": 1,
+      "lba": 39,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561143,
+      "gap": 1,
+      "lba": 40,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561143,
+      "gap": 0,
+      "lba": 41,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561144,
+      "gap": 1,
+      "lba": 42,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561145,
+      "gap": 1,
+      "lba": 43,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561145,
+      "gap": 0,
+      "lba": 44,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561146,
+      "gap": 1,
+      "lba": 45,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561147,
+      "gap": 1,
+      "lba": 46,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561148,
+      "gap": 1,
+      "lba": 47,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561148,
+      "gap": 0,
+      "lba": 48,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561149,
+      "gap": 1,
+      "lba": 49,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561150,
+      "gap": 1,
+      "lba": 50,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561150,
+      "gap": 0,
+      "lba": 51,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561151,
+      "gap": 1,
+      "lba": 52,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561152,
+      "gap": 1,
+      "lba": 53,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561152,
+      "gap": 0,
+      "lba": 54,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561153,
+      "gap": 1,
+      "lba": 55,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561154,
+      "gap": 1,
+      "lba": 56,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561154,
+      "gap": 0,
+      "lba": 57,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561155,
+      "gap": 1,
+      "lba": 58,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561156,
+      "gap": 1,
+      "lba": 59,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561156,
+      "gap": 0,
+      "lba": 60,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561157,
+      "gap": 1,
+      "lba": 61,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561158,
+      "gap": 1,
+      "lba": 62,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 42561158,
+      "gap": 0,
+      "lba": 63,
+      "n": 512,
+      "kind": "dir",
+      "tag": "ROOT"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 42561674,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 42557264,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 42561674,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": false,
+      "peer": "",
+      "sense": "tcp-client"
+    }
+  }
+}

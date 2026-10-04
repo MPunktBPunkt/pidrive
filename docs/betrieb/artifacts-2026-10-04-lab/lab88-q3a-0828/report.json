@@ -1,0 +1,44 @@
+{
+  "verdict": "PASS_WEAK",
+  "fw": "0.4.42-dev",
+  "serial": "PD0037",
+  "preflight": {
+    "slot": 1,
+    "uid": "fav1",
+    "name": "Q3a Bayern",
+    "lba0": 16465,
+    "lba1": 17488,
+    "bytes_after_scan": 68608,
+    "cold": true,
+    "silence_hashes": {
+      "32768": "ba5cb233636f4607",
+      "65536": "bfb47a51a085efd6",
+      "98304": "00296bc254808960",
+      "131072": "76035717b6f59321",
+      "196608": "6a57db9bff659447"
+    }
+  },
+  "file_off": 196608,
+  "hash_a": "6a57db9bff659447",
+  "hash_b": "94aa63e1c7bb704a",
+  "hash_overlay": "809f6b3b3ecff601",
+  "changed_A_to_B": true,
+  "match_overlay": false,
+  "stream": {
+    "active": true,
+    "uid": "fav1",
+    "size": 49152,
+    "cap": 49152,
+    "absBase": 176128,
+    "absEnd": 225280,
+    "underruns": 0,
+    "id3Len": 34,
+    "headResyncs": 0,
+    "cursorArmed": false,
+    "hostAbsCursor": 0,
+    "hasCover": true
+  },
+  "target_uid": "fav1",
+  "mp3": "docs/betrieb/artifacts-2026-10-03-m3/mp3/L1.mp3",
+  "feed_bytes": 225280
+}

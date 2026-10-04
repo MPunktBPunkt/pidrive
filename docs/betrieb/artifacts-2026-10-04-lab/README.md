@@ -1,20 +1,25 @@
 # Artefakte Lab / Review — 2026-10-04
 
-**ESP Lab:** `192.168.178.88` · FW `0.4.42-dev` · Host-CT `DebianCursor` `192.168.178.187`  
+**ESP Lab:** `192.168.178.88` · FW `0.4.42-dev` · Host-CT `DebianCursor` `192.168.178.187` (Proxmox VMID 100)  
 **Normativ:** [`GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md) · Plan Rev.5
 
 | Ordner / Datei | Inhalt |
 |----------------|--------|
 | `GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md` | Konsolidierung Mistral/Claude/GPT + eigene Nachrechnung |
-| `lab88-baseline-0818/` | Live-Baseline nach `POST /api/lab/stop` (Status + Menü) |
+| `lab88-baseline-0818/` | Live-Baseline vor Device-Pass-through |
+| `lab88-q3a-0826/` | Q3a erster Lauf (`PASS_WEAK`, Sample außerhalb absBase) |
+| `lab88-q3a-0828/` | Q3a zweiter Lauf (`PASS_WEAK`, Sample im abs-Fenster; NOTES) |
 
-## Blocker
+## Host-Zugang
 
-Kernel hat `sda`/`sg0` (ESP MSC), Container ohne Device-Nodes:
+Unprivileged LXC blockiert `mknod`. Dauerhaft auf Proxmox-Host:
 
 ```bash
-sudo mknod -m 660 /dev/sda b 8 0
-sudo mknod -m 660 /dev/sg0 c 21 0
+pct set 100 --dev0 path=/dev/sda,mode=0660,gid=6
+pct set 100 --dev1 path=/dev/sg0,mode=0660,gid=6
+# im CT: usermod -aG disk martin
 ```
 
-Danach: Q3a Lab, Remount-Sweep, Preflight-Prototype.
+## Tools
+
+`tools/m3_lab_q3a_freshness.py` — Q3a A/B overlay vs host hash.

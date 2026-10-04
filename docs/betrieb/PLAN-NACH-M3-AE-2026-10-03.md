@@ -30,7 +30,7 @@
 A+B + M3seq-Rehearsal: siehe Rev.3/4. Operator: Bridge vor Plug.  
 **Neu Pflicht:** Pre-Flight-Warmheit **pro Datei**, maschinenlesbar in EAR.
 
-**Blocker 2026-10-04:** CT `.187` sieht Kernel-`sda`/`sg0`, aber ohne Device-Nodes → Host-Reads/Q3 warten auf `sudo mknod`.
+**Lab-Host 2026-10-04:** CT `.187` bekommt `/dev/sda`+`/dev/sg0` via Proxmox `pct set 100 --dev0/1` (unprivileged LXC: `mknod` bleibt gesperrt). Q3a Tool-Lauf: `PASS_WEAK` ([`lab88-q3a-0828/`](artifacts-2026-10-04-lab/lab88-q3a-0828/)).
 
 ---
 
