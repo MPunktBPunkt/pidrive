@@ -10,6 +10,7 @@
 | `lab88-q3a-0826/` | Q3a erster Lauf (`PASS_WEAK`, Sample außerhalb absBase) |
 | `lab88-q3a-0828/` | Q3a zweiter Lauf (`PASS_WEAK`, Sample im abs-Fenster; NOTES) |
 | `lab88-p0-lock-0832/` | **P0** Menü-Lock Provokation **PASS** (Zurueck-UI abgelehnt, Namen stabil) |
+| `lab88-p0-lock-deploy-105/` | **P0** Deploy auf Bridge-Pi `.105` + Provokation **PASS** |
 
 ## Host-Zugang
 

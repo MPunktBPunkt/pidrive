@@ -1,0 +1,3 @@
+{"ts":1791095713.681963,"op":"session_start"}
+{"ts":1791095713.7874954,"op":"frozen","items":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"seal":1}
+{"ts":1791095715.4135542,"op":"reject","want":[["1977938832270506073","Zurueck"],["18330258143618563731","Ausgang klinke"],["16678805154550120858","Auto"],["pump:page_next","Mehr... (+7)"]],"have":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"n":1}

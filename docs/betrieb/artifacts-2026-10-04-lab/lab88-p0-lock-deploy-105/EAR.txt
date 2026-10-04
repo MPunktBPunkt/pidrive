@@ -1,0 +1,5 @@
+P0 menu-lock provocation 2026-10-04 0835
+verdict=PASS
+sealed=['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+after=['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+stable=True rejected_logged=True bug=False

@@ -1,0 +1,20 @@
+{
+  "verdict": "PASS",
+  "sealed_names": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "after_names": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "stable": true,
+  "rejected_logged": true,
+  "bug_names_present": false,
+  "fw": "0.4.42-dev",
+  "serial": "PD0038"
+}
