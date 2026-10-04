@@ -1,25 +1,30 @@
-# EAR p1-run-a — fill during field
-date:
-fw:
-serial:
-bridge_hello:
-ov:
-tcp_up_before_plug:
+# EAR p1-run-a — 2026-10-04 FIELD
+date: 2026-10-04T10:52:25
+fw: 0.4.42-dev
+serial: PD0056
+bridge_hello: ok
+ov: scan-warm; HU cache play suspected
+tcp_up_before_plug: yes
 
-# P0 only:
-menu_before:
-menu_after_provoke:
-frozen_reject: yes/no
+preflight.warmth.fav0: see preflight.json
+preflight.warmth.fav1: full 512KiB already at quiet
+preflight.warmth.fav2: full 512KiB already at quiet
 
-# P1 only:
-preflight.warmth.fav0: {bytes, cold, lba0, lba1}
-preflight.warmth.fav1:
-preflight.warmth.fav2:
-started_uid:
-nominal_end_s:
-first_body_read_s:
-delta_s:
-delta_rc:
-result_bool_cold_next:
-class_A_to_E:
-notes:
+started_uid: fav1 (Rock Antenne Bayern) — user confirm 10:52 complete
+nominal_end_s: ~87 (512KiB@48k) — N/A for ESP clock (no play detect)
+first_body_read_s: n/a (no play-from-head)
+delta_s: n/a
+delta_rc: n/a
+result_bool_cold_next: INCONCLUSIVE
+class_A_to_E: cache/no-stream (not classic A–E)
+
+heard_audio: NO
+saw_cover_bild: NO
+esp_playingUid: empty
+streamBytes: 0
+notes: User: Bayern komplett durch ohne Ton und Bild @10:52.
+ESP stayed phase=quiet; play.reject not_from_head on fav1 prefetch.
+Likely BMW played from scan cache; pump_bridge never got head-read → no Live-MP3 / no cover push.
+P1 auto-next timing not measurable this run. Next: unplug, P1-B; if again silent, try stop/restart or longer fav0, or force remount before select.
+
+user_led: blinked at automatic track change (correlates with fav0 ~8MiB body reads after Bayern; MSC activity, not audio_start)

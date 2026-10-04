@@ -1,25 +1,21 @@
-# EAR p0-provokation — fill during field
-date:
-fw:
-serial:
-bridge_hello:
-ov:
-tcp_up_before_plug:
+# EAR p0-provokation — FIELD PASS
+date: 2026-10-04T10:47:56
+fw: 0.4.42-dev
+serial: PD0055 (user saw PD0054; live PD0055 after RST)
+bridge_hello: ok peer .105
+ov: labMode=True pumpTcpUp=True
+tcp_up_before_plug: yes (reconnect after RST)
 
-# P0 only:
-menu_before:
-menu_after_provoke:
-frozen_reject: yes/no
+# RST note
+solid white LED → user pressed RST → new serial / reconnect
 
-# P1 only:
-preflight.warmth.fav0: {bytes, cold, lba0, lba1}
-preflight.warmth.fav1:
-preflight.warmth.fav2:
-started_uid:
-nominal_end_s:
-first_body_read_s:
-delta_s:
-delta_rc:
-result_bool_cold_next:
-class_A_to_E:
-notes:
+menu_before: ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+menu_after_provoke: ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+menu_after_audio_provoke: ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+frozen_reject: yes (favoriten-folder + audio path)
+sealed: ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+reject_n_events: 5
+last_reject_want: [['13172798796519771797', 'Zurueck'], ['8229407486047634580', 'Aktuellen Sender merken'], ['3428222402667302393', 'Rock Antenne'], ['pump:page_next', 'Mehr... (+3)']]
+
+result: P0_PASS
+notes: first connect sealed bad (Audio submenu) while plugged; after unplug+RST reseal Rock/Bayern/BOB; Pi UI overwrite rejected; ESP names stable.

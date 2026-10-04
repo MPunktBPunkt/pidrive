@@ -1,0 +1,11 @@
+OTG ~11:03 cycle
+READY PD0059 quiet
+Aim: watch bufferMs if play again; user reported no AV last cycle
+2026-10-04T11:03:55.765173
+11:04 user jump Rock Antenne no ton; 11:05 reselect Rock — ESP: fav0 full read, play.reject not_from_head, no play_uid
+user: Rock jump/select HAD LED feedback despite no play_uid — LED=MSC body read activity, not audio_start
+
+11:06 user switch Radio BOB
+events=[{'wall': '11:06:19', 't': 0.2, 'playingUid': '', 'phase': 'quiet', 'streamBytes': 0, 'bufferMs': 0, 'fav2_bytes': 524288, 'readCount': 2345}]
+user 11:06-07 BOB switch: KEIN LED feedback — matches ESP quiet, no play_uid, fav2 already 524288 (cache, no new MSC burst)
+field_end: 11:07 drive away

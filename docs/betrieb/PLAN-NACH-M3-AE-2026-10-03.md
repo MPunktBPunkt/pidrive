@@ -75,6 +75,8 @@ L4 positiv → A′ (Dension-Modus) parallel bewerten
 Pfad C nur wenn B-UX scheitert und 6NR aktiv
 ```
 
+**Feld 2026-10-04:** P0 **PASS**. P1×2 **NICHT GRÜN** (Cache-Autoplay / nicht messbar). Zusätzlich: Play-Detect kann greifen, HU trotzdem stumm (`bufferMs=0`) — vor BT-Hybrid-Sprint **AV-Lab** (Buffer/MSC-Fill). Details: [`artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md`](artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md).
+
 ---
 
 ## 4. Eingefroren (bis P1×2 grün)

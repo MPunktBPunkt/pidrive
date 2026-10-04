@@ -1,0 +1,15 @@
+Oct 04 10:43:12 Pidrive python3[1245019]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Oct 04 10:43:12 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 04 10:43:12 Pidrive python3[1245019]: [rx] {"t":"menu_ack","ok":true,"n":4,"rev":4038}
+Oct 04 10:43:12 Pidrive python3[1245019]: [menu_ack] ok=True n=4 rev=4038
+Oct 04 10:43:12 Pidrive python3[1245019]: [msc-lock] MSC_MAP_FROZEN [Zurueck,Ausgang auto,Auto,Mehr... (+7)]
+Oct 04 10:43:14 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"quiet cache?"}
+Oct 04 10:43:14 Pidrive python3[1245019]: [msc] msc.phase quiet cache?
+Oct 04 10:43:14 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=557056B age=2002ms"}
+Oct 04 10:43:14 Pidrive python3[1245019]: [msc] msc.quiet file=557056B age=2002ms
+Oct 04 10:43:14 Pidrive python3[1245019]: [tx] {"t":"ping"}
+Oct 04 10:43:14 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 04 10:43:17 Pidrive python3[1245019]: [tx] {"t":"ping"}
+Oct 04 10:43:17 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 04 10:43:18 Pidrive python3[1245019]: [tx] {"t":"ping"}
+Oct 04 10:43:19 Pidrive python3[1245019]: [rx] {"t":"pong"}

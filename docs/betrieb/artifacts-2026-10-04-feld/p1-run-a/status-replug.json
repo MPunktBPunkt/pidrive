@@ -1,0 +1,997 @@
+{
+  "ok": true,
+  "version": "0.4.42-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-USB",
+  "ip": "192.168.178.89",
+  "softApSsid": "pidrive-2BC568",
+  "softApIp": "192.168.4.1",
+  "softApPass": "***",
+  "mac": "68B6B32BC568",
+  "uptime": "3min 37s",
+  "freeHeap": 111920,
+  "wifiRssi": -70,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.105",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 4049,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 118,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 705,
+    "bytesRead": 475136,
+    "bytesMeta": 114688,
+    "bytesBoot": 12800,
+    "bytesFat": 44544,
+    "bytesDir": 57344,
+    "bytesFile": 360448,
+    "prefetchHits": 68,
+    "playRejectCount": 88,
+    "playGuessCount": 0,
+    "streamSlot": -1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "readOverflow": 0,
+    "readsEmit": 179,
+    "fatMode": "static",
+    "phase": "scan",
+    "mediaPresented": true,
+    "remountGen": 56,
+    "usbSerial": "PD0056",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 2,
+      "n2k": 0,
+      "n4k": 116,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 3,
+      "tur": 32,
+      "turNotReady": 0,
+      "prevent": 7,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 997,
+      "msToCapacity": 999,
+      "msToTur": 999,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 0,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": false
+    },
+    "msSincePlug": 1890,
+    "msSinceChange": 1890,
+    "msPlugToFirstRead": 1007,
+    "msPlugToPlayGuess": 0,
+    "plugCount": 2,
+    "unplugCount": 1,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 360448,
+        "fromHead": 2,
+        "midFile": 86,
+        "maxSeq": 241664,
+        "lastAgeMs": 3
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 217997,
+      "gap": 4,
+      "lba": 713,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217374,
+      "gap": 2,
+      "lba": 2,
+      "n": 3072,
+      "kind": "fat",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217378,
+      "gap": 4,
+      "lba": 32,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 217381,
+      "gap": 3,
+      "lba": 40,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 217385,
+      "gap": 4,
+      "lba": 48,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 217389,
+      "gap": 4,
+      "lba": 56,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 217393,
+      "gap": 4,
+      "lba": 64,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 217399,
+      "gap": 6,
+      "lba": 8,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 217404,
+      "gap": 5,
+      "lba": 24,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 217409,
+      "gap": 5,
+      "lba": 120,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217414,
+      "gap": 5,
+      "lba": 16,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 217419,
+      "gap": 5,
+      "lba": 128,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217425,
+      "gap": 6,
+      "lba": 512,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217429,
+      "gap": 4,
+      "lba": 4096,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217547,
+      "gap": 118,
+      "lba": 65,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 217600,
+      "gap": 53,
+      "lba": 73,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 217653,
+      "gap": 53,
+      "lba": 81,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217671,
+      "gap": 18,
+      "lba": 89,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217675,
+      "gap": 4,
+      "lba": 97,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217679,
+      "gap": 4,
+      "lba": 105,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217684,
+      "gap": 5,
+      "lba": 113,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217688,
+      "gap": 4,
+      "lba": 121,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217691,
+      "gap": 3,
+      "lba": 129,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217695,
+      "gap": 4,
+      "lba": 137,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217699,
+      "gap": 4,
+      "lba": 145,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217703,
+      "gap": 4,
+      "lba": 153,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217707,
+      "gap": 4,
+      "lba": 161,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217711,
+      "gap": 4,
+      "lba": 169,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217714,
+      "gap": 3,
+      "lba": 177,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217718,
+      "gap": 4,
+      "lba": 185,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217722,
+      "gap": 4,
+      "lba": 193,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217726,
+      "gap": 4,
+      "lba": 201,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217730,
+      "gap": 4,
+      "lba": 209,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217734,
+      "gap": 4,
+      "lba": 217,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217738,
+      "gap": 4,
+      "lba": 225,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217742,
+      "gap": 4,
+      "lba": 233,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217746,
+      "gap": 4,
+      "lba": 16457,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217764,
+      "gap": 18,
+      "lba": 241,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217768,
+      "gap": 4,
+      "lba": 249,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217772,
+      "gap": 4,
+      "lba": 257,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217777,
+      "gap": 5,
+      "lba": 265,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217780,
+      "gap": 3,
+      "lba": 273,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217784,
+      "gap": 4,
+      "lba": 281,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217788,
+      "gap": 4,
+      "lba": 289,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217792,
+      "gap": 4,
+      "lba": 297,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217796,
+      "gap": 4,
+      "lba": 305,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217800,
+      "gap": 4,
+      "lba": 313,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217804,
+      "gap": 4,
+      "lba": 321,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217807,
+      "gap": 3,
+      "lba": 329,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217811,
+      "gap": 4,
+      "lba": 337,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217815,
+      "gap": 4,
+      "lba": 345,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217819,
+      "gap": 4,
+      "lba": 353,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217823,
+      "gap": 4,
+      "lba": 361,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217828,
+      "gap": 5,
+      "lba": 369,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217832,
+      "gap": 4,
+      "lba": 377,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217836,
+      "gap": 4,
+      "lba": 385,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217840,
+      "gap": 4,
+      "lba": 393,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217844,
+      "gap": 4,
+      "lba": 401,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217848,
+      "gap": 4,
+      "lba": 409,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217852,
+      "gap": 4,
+      "lba": 417,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217856,
+      "gap": 4,
+      "lba": 425,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217860,
+      "gap": 4,
+      "lba": 433,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217864,
+      "gap": 4,
+      "lba": 441,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217868,
+      "gap": 4,
+      "lba": 449,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217872,
+      "gap": 4,
+      "lba": 457,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217876,
+      "gap": 4,
+      "lba": 465,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217880,
+      "gap": 4,
+      "lba": 473,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217884,
+      "gap": 4,
+      "lba": 481,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217888,
+      "gap": 4,
+      "lba": 489,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217892,
+      "gap": 4,
+      "lba": 497,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217896,
+      "gap": 4,
+      "lba": 505,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217900,
+      "gap": 4,
+      "lba": 513,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217904,
+      "gap": 4,
+      "lba": 521,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217908,
+      "gap": 4,
+      "lba": 529,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217912,
+      "gap": 4,
+      "lba": 537,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217916,
+      "gap": 4,
+      "lba": 545,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217920,
+      "gap": 4,
+      "lba": 553,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217923,
+      "gap": 3,
+      "lba": 561,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217927,
+      "gap": 4,
+      "lba": 569,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217931,
+      "gap": 4,
+      "lba": 577,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217935,
+      "gap": 4,
+      "lba": 585,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217939,
+      "gap": 4,
+      "lba": 593,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217943,
+      "gap": 4,
+      "lba": 601,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217947,
+      "gap": 4,
+      "lba": 609,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217951,
+      "gap": 4,
+      "lba": 617,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217955,
+      "gap": 4,
+      "lba": 625,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217958,
+      "gap": 3,
+      "lba": 633,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217962,
+      "gap": 4,
+      "lba": 641,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217966,
+      "gap": 4,
+      "lba": 649,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217970,
+      "gap": 4,
+      "lba": 657,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217974,
+      "gap": 4,
+      "lba": 665,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217977,
+      "gap": 3,
+      "lba": 673,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217981,
+      "gap": 4,
+      "lba": 681,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217985,
+      "gap": 4,
+      "lba": 689,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217989,
+      "gap": 4,
+      "lba": 697,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    },
+    {
+      "ms": 217993,
+      "gap": 4,
+      "lba": 705,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Rock Antenn"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 217424,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 1894,
+      "plugCount": 2,
+      "unplugCount": 1,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 217424,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.105",
+      "sense": "tcp-client"
+    }
+  }
+}

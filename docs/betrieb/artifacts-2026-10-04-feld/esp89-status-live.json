@@ -1,0 +1,997 @@
+{
+  "ok": true,
+  "version": "0.4.42-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-USB",
+  "ip": "192.168.178.89",
+  "softApSsid": "pidrive-2BC568",
+  "softApIp": "192.168.4.1",
+  "softApPass": "***",
+  "mac": "68B6B32BC568",
+  "uptime": "10s",
+  "freeHeap": 116168,
+  "wifiRssi": -72,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.105",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 4038,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 167,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 17481,
+    "bytesRead": 671744,
+    "bytesMeta": 114688,
+    "bytesBoot": 12800,
+    "bytesFat": 44544,
+    "bytesDir": 57344,
+    "bytesFile": 557056,
+    "prefetchHits": 8,
+    "playRejectCount": 136,
+    "playGuessCount": 0,
+    "streamSlot": -1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "readOverflow": 0,
+    "readsEmit": 15,
+    "fatMode": "static",
+    "phase": "quiet",
+    "mediaPresented": true,
+    "remountGen": 52,
+    "usbSerial": "PD0052",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 3,
+      "n2k": 0,
+      "n4k": 164,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 3,
+      "tur": 35,
+      "turNotReady": 0,
+      "prevent": 7,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 998,
+      "msToCapacity": 1000,
+      "msToTur": 1000,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 0,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": false
+    },
+    "msSincePlug": 9524,
+    "msSinceChange": 9524,
+    "msPlugToFirstRead": 1006,
+    "msPlugToPlayGuess": 0,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "1977938832270506073",
+        "name": "Zurueck",
+        "kind": "action",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 32768,
+        "fromHead": 0,
+        "midFile": 8,
+        "maxSeq": 4096,
+        "lastAgeMs": 8176
+      },
+      {
+        "i": 1,
+        "uid": "18330258143618563731",
+        "name": "Ausgang auto",
+        "kind": "info",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 524288,
+        "fromHead": 2,
+        "midFile": 126,
+        "maxSeq": 524288,
+        "lastAgeMs": 7482
+      },
+      {
+        "i": 2,
+        "uid": "16678805154550120858",
+        "name": "Auto",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Mehr... (+7)",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 2540,
+      "gap": 4,
+      "lba": 16721,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2544,
+      "gap": 4,
+      "lba": 16729,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2548,
+      "gap": 4,
+      "lba": 16737,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2551,
+      "gap": 3,
+      "lba": 16745,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2555,
+      "gap": 4,
+      "lba": 16753,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2559,
+      "gap": 4,
+      "lba": 16761,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2562,
+      "gap": 3,
+      "lba": 16769,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2566,
+      "gap": 4,
+      "lba": 16777,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2569,
+      "gap": 3,
+      "lba": 16785,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2573,
+      "gap": 4,
+      "lba": 16793,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2577,
+      "gap": 4,
+      "lba": 16801,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2580,
+      "gap": 3,
+      "lba": 16809,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2584,
+      "gap": 4,
+      "lba": 16817,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2588,
+      "gap": 4,
+      "lba": 16825,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2591,
+      "gap": 3,
+      "lba": 16833,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2595,
+      "gap": 4,
+      "lba": 16841,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2599,
+      "gap": 4,
+      "lba": 16849,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2602,
+      "gap": 3,
+      "lba": 16857,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2606,
+      "gap": 4,
+      "lba": 16865,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2610,
+      "gap": 4,
+      "lba": 16873,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2613,
+      "gap": 3,
+      "lba": 16881,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2617,
+      "gap": 4,
+      "lba": 16889,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2620,
+      "gap": 3,
+      "lba": 16897,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2624,
+      "gap": 4,
+      "lba": 16905,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2628,
+      "gap": 4,
+      "lba": 16913,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2631,
+      "gap": 3,
+      "lba": 16921,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2635,
+      "gap": 4,
+      "lba": 16929,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2639,
+      "gap": 4,
+      "lba": 16937,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2643,
+      "gap": 4,
+      "lba": 16945,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2647,
+      "gap": 4,
+      "lba": 16953,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2651,
+      "gap": 4,
+      "lba": 16961,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2655,
+      "gap": 4,
+      "lba": 16969,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2659,
+      "gap": 4,
+      "lba": 16977,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2663,
+      "gap": 4,
+      "lba": 16985,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2667,
+      "gap": 4,
+      "lba": 16993,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2670,
+      "gap": 3,
+      "lba": 17001,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2674,
+      "gap": 4,
+      "lba": 17009,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2678,
+      "gap": 4,
+      "lba": 17017,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2681,
+      "gap": 3,
+      "lba": 17025,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2685,
+      "gap": 4,
+      "lba": 17033,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2689,
+      "gap": 4,
+      "lba": 17041,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2693,
+      "gap": 4,
+      "lba": 17049,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2696,
+      "gap": 3,
+      "lba": 17057,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2700,
+      "gap": 4,
+      "lba": 17065,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2704,
+      "gap": 4,
+      "lba": 17073,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2707,
+      "gap": 3,
+      "lba": 17081,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2711,
+      "gap": 4,
+      "lba": 17089,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2715,
+      "gap": 4,
+      "lba": 17097,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2718,
+      "gap": 3,
+      "lba": 17105,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2722,
+      "gap": 4,
+      "lba": 17113,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2726,
+      "gap": 4,
+      "lba": 17121,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2729,
+      "gap": 3,
+      "lba": 17129,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2733,
+      "gap": 4,
+      "lba": 17137,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2737,
+      "gap": 4,
+      "lba": 17145,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2740,
+      "gap": 3,
+      "lba": 17153,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2744,
+      "gap": 4,
+      "lba": 17161,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2748,
+      "gap": 4,
+      "lba": 17169,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2752,
+      "gap": 4,
+      "lba": 17177,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2756,
+      "gap": 4,
+      "lba": 17185,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2759,
+      "gap": 3,
+      "lba": 17193,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2763,
+      "gap": 4,
+      "lba": 17201,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2767,
+      "gap": 4,
+      "lba": 17209,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2771,
+      "gap": 4,
+      "lba": 17217,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2775,
+      "gap": 4,
+      "lba": 17225,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2779,
+      "gap": 4,
+      "lba": 17233,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2782,
+      "gap": 3,
+      "lba": 17241,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2786,
+      "gap": 4,
+      "lba": 17249,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2790,
+      "gap": 4,
+      "lba": 17257,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2794,
+      "gap": 4,
+      "lba": 17265,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2798,
+      "gap": 4,
+      "lba": 17273,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2802,
+      "gap": 4,
+      "lba": 17281,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2805,
+      "gap": 3,
+      "lba": 17289,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2809,
+      "gap": 4,
+      "lba": 17297,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2813,
+      "gap": 4,
+      "lba": 17305,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2817,
+      "gap": 4,
+      "lba": 17313,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2821,
+      "gap": 4,
+      "lba": 17321,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2824,
+      "gap": 3,
+      "lba": 17329,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2828,
+      "gap": 4,
+      "lba": 17337,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2831,
+      "gap": 3,
+      "lba": 17345,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2835,
+      "gap": 4,
+      "lba": 17353,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2839,
+      "gap": 4,
+      "lba": 17361,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2842,
+      "gap": 3,
+      "lba": 17369,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2846,
+      "gap": 4,
+      "lba": 17377,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2850,
+      "gap": 4,
+      "lba": 17385,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2854,
+      "gap": 4,
+      "lba": 17393,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2858,
+      "gap": 4,
+      "lba": 17401,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2861,
+      "gap": 3,
+      "lba": 17409,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2865,
+      "gap": 4,
+      "lba": 17417,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2869,
+      "gap": 4,
+      "lba": 17425,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2872,
+      "gap": 3,
+      "lba": 17433,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2876,
+      "gap": 4,
+      "lba": 17441,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2879,
+      "gap": 3,
+      "lba": 17449,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2883,
+      "gap": 4,
+      "lba": 17457,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2887,
+      "gap": 4,
+      "lba": 17465,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2891,
+      "gap": 4,
+      "lba": 17473,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    },
+    {
+      "ms": 2895,
+      "gap": 4,
+      "lba": 17481,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Ausgang aut"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 9805,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 9527,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 9805,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.105",
+      "sense": "tcp-client"
+    }
+  }
+}

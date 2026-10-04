@@ -8,6 +8,8 @@
 
 **Artefakt-Ziel:** `docs/betrieb/artifacts-2026-10-04-feld/`
 
+**Feldende 11:07:** Ergebnis → [`artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md`](artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md) — P0 PASS, P1/AV offen.
+
 ---
 
 ## A. Vor dem Losfahren (Zuhause / Hof)

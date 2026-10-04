@@ -1,0 +1,24 @@
+[
+  {
+    "wall": "11:00:06",
+    "t": 0.09,
+    "playingUid": "fav1",
+    "playingName": "Rock Antenne Bayern",
+    "phase": "play",
+    "streamSlot": 1,
+    "streamBytes": 311296,
+    "bufferMs": 0,
+    "readCount": 1527
+  },
+  {
+    "wall": "11:00:38",
+    "t": 31.75,
+    "playingUid": "fav2",
+    "playingName": "Radio BOB!",
+    "phase": "play",
+    "streamSlot": 2,
+    "streamBytes": 479232,
+    "bufferMs": 0,
+    "readCount": 1655
+  }
+]

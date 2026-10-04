@@ -1,0 +1,30 @@
+Oct 04 10:59:03 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2337 +1601536B age=4195ms prefetch"}
+Oct 04 10:59:03 Pidrive python3[1245019]: [msc] play.reject not_from_head uid=fav0 from=2337 +1601536B age=4195ms prefetch
+Oct 04 10:59:04 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2337 +2433024B age=4997ms prefetch"}
+Oct 04 10:59:04 Pidrive python3[1245019]: [msc] play.reject not_from_head uid=fav0 from=2337 +2433024B age=4997ms prefetch
+Oct 04 10:59:04 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2337 +3239936B age=5797ms prefetch"}
+Oct 04 10:59:04 Pidrive python3[1245019]: [msc] play.reject not_from_head uid=fav0 from=2337 +3239936B age=5797ms prefetch
+Oct 04 10:59:05 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2337 +4071424B age=6598ms prefetch"}
+Oct 04 10:59:05 Pidrive python3[1245019]: [msc] play.reject not_from_head uid=fav0 from=2337 +4071424B age=6598ms prefetch
+Oct 04 10:59:07 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"quiet cache?"}
+Oct 04 10:59:07 Pidrive python3[1245019]: [msc] msc.phase quiet cache?
+Oct 04 10:59:53 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=54322ms"}
+Oct 04 10:59:53 Pidrive python3[1245019]: [msc] play.reject seq_short uid=fav1 from=16465 +4096B age=54322ms
+Oct 04 10:59:53 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"play Rock Antenne Bayern"}
+Oct 04 10:59:53 Pidrive python3[1245019]: [msc] msc.phase play Rock Antenne Bayern
+Oct 04 10:59:53 Pidrive python3[1245019]: [rx] {"t":"event","op":"play_uid","uid":"fav1"}
+Oct 04 10:59:53 Pidrive python3[1245019]: [trace] t=0ms play_uid=fav1
+Oct 04 10:59:53 Pidrive python3[1245019]: [tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+Oct 04 10:59:53 Pidrive python3[1245019]: [trace] audio_start sent uid=fav1 cover=file
+Oct 04 10:59:54 Pidrive python3[1245019]: [audio] ffmpeg https://stream.rockantenne.de/rockantenne-bayern/stream/mp3 @ 48k
+Oct 04 10:59:54 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=54353ms"}
+Oct 04 10:59:54 Pidrive python3[1245019]: [msc] play.reject cooldown uid=fav1 from=16465 +12288B age=54353ms
+Oct 04 11:00:37 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav2 from=17489 +4096B age=98528ms"}
+Oct 04 11:00:37 Pidrive python3[1245019]: [msc] play.reject seq_short uid=fav2 from=17489 +4096B age=98528ms
+Oct 04 11:00:37 Pidrive python3[1245019]: [rx] {"t":"event","op":"play_uid","uid":"fav2"}
+Oct 04 11:00:37 Pidrive python3[1245019]: [trace] t=0ms play_uid=fav2
+Oct 04 11:00:37 Pidrive python3[1245019]: [tx] {"t":"audio_start","uid":"fav2","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_radio_bob.jpg","cTry":"stations/web_radio_bob.jpg|stations/radio_bob.jpg"}
+Oct 04 11:00:37 Pidrive python3[1245019]: [trace] audio_start sent uid=fav2 cover=file
+Oct 04 11:00:38 Pidrive python3[1245019]: [audio] ffmpeg https://streams.radiobob.de/bob-national/mp3-128 @ 48k
+Oct 04 11:00:38 Pidrive python3[1245019]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav2 from=17489 +12288B age=98551ms"}
+Oct 04 11:00:38 Pidrive python3[1245019]: [msc] play.reject cooldown uid=fav2 from=17489 +12288B age=98551ms

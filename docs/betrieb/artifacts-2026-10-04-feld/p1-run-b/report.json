@@ -1,0 +1,21 @@
+{
+  "result": "P1B_FAIL_NO_AUDIO_CACHE_AUTOPLAY",
+  "serial": "PD0057",
+  "user": "10:55 Radio BOB durch",
+  "started_uid_user": "fav2",
+  "heard_audio": false,
+  "esp_playingUid": "",
+  "streamBytes": 0,
+  "phase": "quiet",
+  "fav2_bytes": 524288,
+  "pattern": "HU autoplay completes short file from cache; no ESP play detect / no Live-MP3",
+  "user_timeline": [
+    "10:53 BOB autoplay",
+    "10:55 BOB durch",
+    "10:55-10:56 Bayern laeuft/durch",
+    "LED stark bei Wechsel zu Rock Antenne"
+  ],
+  "led_blink_to_fav0": true,
+  "user_final": "10:58 PD0057 OTG reconnect; ton kam keiner",
+  "closed_at": "2026-10-04T10:58:51"
+}

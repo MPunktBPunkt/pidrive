@@ -1,0 +1,16 @@
+{
+  "serial": "PD0056",
+  "started_name": "Rock Antenne Bayern",
+  "started_uid": "fav1",
+  "heard_audio": false,
+  "saw_cover": false,
+  "esp_playingUid": "",
+  "esp_phase": "quiet",
+  "streamBytes": 0,
+  "fav1_slot_bytes": 524288,
+  "fav1_trace_bytes": 557056,
+  "play_detect": "NO \u2014 play.reject not_from_head / cache path; no audio_start",
+  "p1_cold_next": "INCONCLUSIVE \u2014 no ESP play session; HU may have advanced playlist from cache without head-read stream",
+  "wall_user": "10:52 Bayern komplett durch ohne Ton/Bild",
+  "confirmed_no_audio_session": true
+}

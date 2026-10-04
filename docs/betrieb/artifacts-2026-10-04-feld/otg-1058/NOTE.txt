@@ -1,0 +1,27 @@
+OTG 10:58 after P1-A/B no audio. serial=PD0058
+P0 PASS; P1×2 inconclusive/fail no Live-MP3.
+
+10:59 user: autoplay starts at Rock Antenne PD0058
+monitor_events=2 last={'wall': '11:00:38', 't': 31.75, 'playingUid': 'fav2', 'playingName': 'Radio BOB!', 'phase': 'play', 'streamSlot': 2, 'streamBytes': 479232, 'bufferMs': 0, 'readCount': 1655}
+
+# user 11:00
+manual_select: Rock Antenne Bayern @ ~11:00 with LED feedback
+bridge_had: play_uid fav1 @10:59:53 audio_start+ffmpeg; switch fav2 @11:00:37
+note: user select may be re-select or coincides with playlist; LED feedback = MSC/play activity
+logged: 2026-10-04T11:01:51
+user: LED feedback also on Radio BOB ~11:00 (matches play_uid fav2 @11:00:37 + audio_start)
+user: 11:01 station select — NO LED feedback
+
+user 11:02: kein ton, kein bild
+{
+  "serial": "PD0058",
+  "result": "PLAY_DETECT_OK_AV_FAIL",
+  "heard_audio": false,
+  "saw_cover": false,
+  "led_feedback": true,
+  "bridge": "play_uid fav1@10:59:53 + fav2@11:00:37; audio_start; ffmpeg; audio_ack ok",
+  "esp": "phase=play streamBytes grow then stall; bufferMs=0 throughout",
+  "user": "kein ton, kein bild",
+  "implication": "Select/play-detect + pump start work; AV path to HU broken or HU decodes cache not live file; bufferMs=0 suggests no MSC audio buffer fill",
+  "at": "2026-10-04T11:02:35"
+}

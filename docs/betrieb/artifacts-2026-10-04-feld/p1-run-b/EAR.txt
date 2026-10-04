@@ -1,25 +1,33 @@
-# EAR p1-run-b — fill during field
-date:
-fw:
-serial:
-bridge_hello:
-ov:
-tcp_up_before_plug:
+# EAR p1-run-b — FIELD
+date: 2026-10-04T10:56:42
+fw: 0.4.42-dev
+serial: PD0057
+bridge_hello: ok
 
-# P0 only:
-menu_before:
-menu_after_provoke:
-frozen_reject: yes/no
+user: 10:53 BOB autoplay; 10:55 BOB durch
+started_uid: fav2 (Radio BOB!)
+heard_audio: (unconfirmed — ask)
+saw_cover: (unconfirmed)
+esp_playingUid: empty
+streamBytes: 0
+phase: quiet
+audio_start: NO
+result_bool_cold_next: INCONCLUSIVE
+class: cache-autoplay (same as P1-A)
 
-# P1 only:
-preflight.warmth.fav0: {bytes, cold, lba0, lba1}
-preflight.warmth.fav1:
-preflight.warmth.fav2:
-started_uid:
-nominal_end_s:
-first_body_read_s:
-delta_s:
-delta_rc:
-result_bool_cold_next:
-class_A_to_E:
-notes:
+slot.bytes fav0=8421376 fav1=524288 fav2=524288
+notes: Short files fully warm after scan; HU advances playlist without head-read stream.
+P0 PASS earlier; P1×2 both inconclusive for ±1.5s cold-next under cache play.
+
+# user timeline update
+10:55 Radio BOB durch (prior)
+10:55-10:56 Rock Antenne Bayern laeuft / gleich durch — user: ja 10:56 durch
+LED: stark geblinkt bei Wechsel zu Rock Antenne (fav0)
+esp_at_check: phase=quiet stream=0 playingUid=''
+fav0.bytes=8421376
+fav1.bytes=524288
+interpretation: playlist autoplay BOB→Bayern→Rock; LED blink = MSC body load on fav0; still no Live-MP3 unless audio_start appears
+checked_at: 2026-10-04T10:57:15
+
+heard_audio: NO (user 10:58)
+OTG reconnect 10:58

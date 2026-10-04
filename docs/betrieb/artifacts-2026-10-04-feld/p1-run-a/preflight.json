@@ -1,0 +1,35 @@
+{
+  "serial": "PD0056",
+  "phase": "quiet",
+  "readCount": 338,
+  "bytesFile": 1260032,
+  "warmth": {
+    "fav0": {
+      "name": "Rock Antenne",
+      "bytes": 380928,
+      "lba0": 81,
+      "lba1": 16464,
+      "cold_bytes": false,
+      "trace_hits": 57,
+      "trace_bytes": 385024
+    },
+    "fav1": {
+      "name": "Rock Antenne Bayern",
+      "bytes": 348160,
+      "lba0": 16465,
+      "lba1": 17488,
+      "cold_bytes": false,
+      "trace_hits": 60,
+      "trace_bytes": 380928
+    },
+    "fav2": {
+      "name": "Radio BOB!",
+      "bytes": 524288,
+      "lba0": 17489,
+      "lba1": 18512,
+      "cold_bytes": false,
+      "trace_hits": 111,
+      "trace_bytes": 532480
+    }
+  }
+}

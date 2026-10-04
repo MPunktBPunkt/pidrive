@@ -1,0 +1,3648 @@
+{
+  "t0_wall": "2026-10-04T10:53:04",
+  "events": [
+    {
+      "event": "phase_change",
+      "t": 0.2,
+      "wall": "10:50:55",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    }
+  ],
+  "samples": [
+    {
+      "t": 0.2,
+      "wall": "10:50:55",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 1.13,
+      "wall": "10:50:56",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 2.01,
+      "wall": "10:50:56",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 3.03,
+      "wall": "10:50:58",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 3.91,
+      "wall": "10:50:58",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 4.81,
+      "wall": "10:50:59",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 5.75,
+      "wall": "10:51:00",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 6.62,
+      "wall": "10:51:01",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 7.49,
+      "wall": "10:51:02",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 8.37,
+      "wall": "10:51:03",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 9.32,
+      "wall": "10:51:04",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 10.21,
+      "wall": "10:51:05",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 11.11,
+      "wall": "10:51:06",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 11.95,
+      "wall": "10:51:06",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 12.91,
+      "wall": "10:51:07",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 13.79,
+      "wall": "10:51:08",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 14.74,
+      "wall": "10:51:09",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 15.67,
+      "wall": "10:51:10",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 16.6,
+      "wall": "10:51:11",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 17.46,
+      "wall": "10:51:12",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 18.38,
+      "wall": "10:51:13",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 19.3,
+      "wall": "10:51:14",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 20.22,
+      "wall": "10:51:15",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 21.16,
+      "wall": "10:51:16",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 22.01,
+      "wall": "10:51:16",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 22.91,
+      "wall": "10:51:17",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 23.83,
+      "wall": "10:51:18",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 24.7,
+      "wall": "10:51:19",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 25.57,
+      "wall": "10:51:20",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 26.52,
+      "wall": "10:51:21",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 27.42,
+      "wall": "10:51:22",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 28.26,
+      "wall": "10:51:23",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 29.19,
+      "wall": "10:51:24",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 30.1,
+      "wall": "10:51:25",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 31.0,
+      "wall": "10:51:25",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 31.92,
+      "wall": "10:51:26",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 32.87,
+      "wall": "10:51:27",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 33.76,
+      "wall": "10:51:28",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 34.71,
+      "wall": "10:51:29",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 35.65,
+      "wall": "10:51:30",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 36.56,
+      "wall": "10:51:31",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 37.48,
+      "wall": "10:51:32",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 38.37,
+      "wall": "10:51:33",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 39.29,
+      "wall": "10:51:34",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 40.21,
+      "wall": "10:51:35",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 41.16,
+      "wall": "10:51:36",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 42.05,
+      "wall": "10:51:37",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 42.98,
+      "wall": "10:51:37",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 43.94,
+      "wall": "10:51:38",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 44.82,
+      "wall": "10:51:39",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 45.77,
+      "wall": "10:51:40",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 46.7,
+      "wall": "10:51:41",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 47.59,
+      "wall": "10:51:42",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 48.54,
+      "wall": "10:51:43",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 49.42,
+      "wall": "10:51:44",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 50.39,
+      "wall": "10:51:45",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 51.25,
+      "wall": "10:51:46",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 52.18,
+      "wall": "10:51:47",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 53.09,
+      "wall": "10:51:48",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 54.05,
+      "wall": "10:51:49",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 55.0,
+      "wall": "10:51:49",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 55.95,
+      "wall": "10:51:50",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 56.9,
+      "wall": "10:51:51",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 57.91,
+      "wall": "10:51:52",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 59.15,
+      "wall": "10:51:54",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 60.18,
+      "wall": "10:51:55",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 61.35,
+      "wall": "10:51:56",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 62.48,
+      "wall": "10:51:57",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 63.35,
+      "wall": "10:51:58",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 381,
+      "bytesFile": 1436160,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 380928,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 64.26,
+      "wall": "10:51:59",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 489,
+      "bytesFile": 1878528,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 823296,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 65.15,
+      "wall": "10:52:00",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 720,
+      "bytesFile": 2824704,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 1769472,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 66.05,
+      "wall": "10:52:01",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 865,
+      "bytesFile": 3418624,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 2363392,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 66.98,
+      "wall": "10:52:01",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 865,
+      "bytesFile": 3418624,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 2363392,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 68.62,
+      "wall": "10:52:03",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 865,
+      "bytesFile": 3418624,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 2363392,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 69.53,
+      "wall": "10:52:04",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 865,
+      "bytesFile": 3418624,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 2363392,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 70.45,
+      "wall": "10:52:05",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 865,
+      "bytesFile": 3418624,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 2363392,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 71.34,
+      "wall": "10:52:06",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 998,
+      "bytesFile": 3963392,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 2912256,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 72.25,
+      "wall": "10:52:07",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 1226,
+      "bytesFile": 4897280,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 3842048,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 73.13,
+      "wall": "10:52:08",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 1465,
+      "bytesFile": 5876224,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 4820992,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 74.04,
+      "wall": "10:52:09",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 1691,
+      "bytesFile": 6801920,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 5746688,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 74.93,
+      "wall": "10:52:09",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 1933,
+      "bytesFile": 7793152,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 6737920,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 75.94,
+      "wall": "10:52:10",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2172,
+      "bytesFile": 8772096,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 7716864,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 76.88,
+      "wall": "10:52:11",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 77.79,
+      "wall": "10:52:12",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 78.67,
+      "wall": "10:52:13",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 79.67,
+      "wall": "10:52:14",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 80.55,
+      "wall": "10:52:15",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 81.47,
+      "wall": "10:52:16",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 82.4,
+      "wall": "10:52:17",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 83.37,
+      "wall": "10:52:18",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 84.22,
+      "wall": "10:52:19",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 85.08,
+      "wall": "10:52:20",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 86.0,
+      "wall": "10:52:20",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 86.93,
+      "wall": "10:52:21",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 87.81,
+      "wall": "10:52:22",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 88.72,
+      "wall": "10:52:23",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 89.65,
+      "wall": "10:52:24",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 90.57,
+      "wall": "10:52:25",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 91.52,
+      "wall": "10:52:26",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 92.46,
+      "wall": "10:52:27",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 93.41,
+      "wall": "10:52:28",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 94.38,
+      "wall": "10:52:29",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 95.29,
+      "wall": "10:52:30",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 96.23,
+      "wall": "10:52:31",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 97.45,
+      "wall": "10:52:32",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 98.38,
+      "wall": "10:52:33",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 99.49,
+      "wall": "10:52:34",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 100.56,
+      "wall": "10:52:35",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 101.55,
+      "wall": "10:52:36",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 102.63,
+      "wall": "10:52:37",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 103.59,
+      "wall": "10:52:38",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 104.56,
+      "wall": "10:52:39",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 105.44,
+      "wall": "10:52:40",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 106.31,
+      "wall": "10:52:41",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 107.18,
+      "wall": "10:52:42",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 108.15,
+      "wall": "10:52:43",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 109.05,
+      "wall": "10:52:44",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 109.98,
+      "wall": "10:52:44",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 111.1,
+      "wall": "10:52:46",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 111.97,
+      "wall": "10:52:46",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 112.95,
+      "wall": "10:52:47",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 113.82,
+      "wall": "10:52:48",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 114.76,
+      "wall": "10:52:49",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 115.6,
+      "wall": "10:52:50",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 116.49,
+      "wall": "10:52:51",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 117.37,
+      "wall": "10:52:52",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 118.23,
+      "wall": "10:52:53",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 119.14,
+      "wall": "10:52:54",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 120.06,
+      "wall": "10:52:55",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 120.99,
+      "wall": "10:52:55",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 121.91,
+      "wall": "10:52:56",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 122.83,
+      "wall": "10:52:57",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 123.67,
+      "wall": "10:52:58",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 124.57,
+      "wall": "10:52:59",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 125.5,
+      "wall": "10:53:00",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 126.48,
+      "wall": "10:53:01",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 127.35,
+      "wall": "10:53:02",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 128.28,
+      "wall": "10:53:03",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    },
+    {
+      "t": 129.2,
+      "wall": "10:53:04",
+      "phase": "quiet",
+      "playingUid": null,
+      "playingName": null,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "readCount": 2344,
+      "bytesFile": 9476608,
+      "serial": "PD0056",
+      "slots": {
+        "fav0": {
+          "bytes": 8421376,
+          "name": "Rock Antenne"
+        },
+        "fav1": {
+          "bytes": 524288,
+          "name": "Rock Antenne Bayern"
+        },
+        "fav2": {
+          "bytes": 524288,
+          "name": "Radio BOB!"
+        }
+      }
+    }
+  ]
+}
