@@ -1,11 +1,12 @@
 # Artefakte Lab / Review — 2026-10-04
 
 **ESP Lab:** `192.168.178.88` · FW `0.4.44-dev` · Host-CT `DebianCursor` `192.168.178.187` (Proxmox VMID 100)  
-**Einstieg:** [`../MSC-AKTUELL.md`](../MSC-AKTUELL.md) · **Übergabe:** [`GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md`](GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md) · Plan Rev.5
+**Einstieg:** [`../MSC-AKTUELL.md`](../MSC-AKTUELL.md) · **Übergabe:** [`GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md`](GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md) · Plan Rev.5
 
 | Ordner / Datei | Inhalt |
 |----------------|--------|
-| `GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md` | **Aktuelle Übergabe** — Detect-Log Lab |
+| `GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md` | **Aktuelle Übergabe** — Feldauftrag |
+| `GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md` | Detect-Log Lab |
 | `lab88-detect-cold-1536/` | `cold_body_burst` Log **PASS** (Cold loggt, Warm feuert Detect) |
 | `detect-cold-vs-warm-offline/` | PD0056/57 → `not_from_head` Offline |
 | `GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md` | Q3b Lab PASS |

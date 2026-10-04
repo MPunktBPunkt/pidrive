@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-04 · Q3b Lab **PASS** · Detect-Log **`cold_body_burst` PASS** · FW Lab `0.4.44-dev`  
-**Phase:** **P0 PASS** · **P1 PASS_WEAK** · **Q3b Lab PASS** · **Detect nur loggen** · **AV / Feld offen**
+**Stand:** 2026-10-04 · Lab **fertig** · nächster Schritt **Feld** · FW Lab `0.4.44-dev`  
+**Phase:** **P0 PASS** · **P1 PASS_WEAK** · **Q3b Lab PASS** · **Detect-Log PASS** · **Feld/AV offen**
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,11 +11,11 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md) | **Aktuelle Übergabe** — Detect-Log Lab |
-| 1 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md) | Q3b Lab PASS (MSC-Datenebene) |
-| 2 | [`artifacts-2026-10-04-lab/lab88-detect-cold-1536/`](artifacts-2026-10-04-lab/lab88-detect-cold-1536/) | cold_body_burst PASS-Artefakt |
-| 3 | [`artifacts-2026-10-04-lab/lab88-q3b-1515/`](artifacts-2026-10-04-lab/lab88-q3b-1515/) | Q3b Prefill Oracles A/B/C |
-| 4 | [`artifacts-2026-10-04-feld/UEBERGABE-STAND-2026-10-04-O1-Q3b.md`](artifacts-2026-10-04-feld/UEBERGABE-STAND-2026-10-04-O1-Q3b.md) | O1 Prefill ab LBA 761 |
+| 0 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md) | **Aktuelle Übergabe** — Feldauftrag |
+| 1 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md) | Detect-Log Lab |
+| 2 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md) | Q3b Lab PASS |
+| 3 | [`artifacts-2026-10-04-lab/lab88-detect-cold-1536/`](artifacts-2026-10-04-lab/lab88-detect-cold-1536/) | cold_body_burst PASS |
+| 4 | [`artifacts-2026-10-04-lab/lab88-q3b-1515/`](artifacts-2026-10-04-lab/lab88-q3b-1515/) | Q3b Prefill Oracles |
 | 5 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Freeze / Geometrie |
 | 6 | [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md) | Counter-Semantik |
 
@@ -39,9 +39,9 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Feld** Prefill ab LBA 761 + Ohr/Film + UI-Timer; HU-Trace = Feld-Oracle B; MSC-Response↔Erwartung = Feld-Oracle C.  
-2. `cold_body_burst` im Feld mitlaufen — **nicht schalten**.  
-3. BT-Hybrid nur Fallback. Kein Ring/PSRAM.
+1. **Feld** (kein weiteres Lab): Prefill ab LBA 761 + Ohr/Film + UI-Timer.  
+2. Feld-Oracle B = HU-Trace · Feld-Oracle C = MSC→HU Bytes · AV = Ohr.  
+3. `cold_body_burst` nur loggen · Freeze hält · `0.4.44-dev` nur bewusst auf Auto.
 
 ---
 
