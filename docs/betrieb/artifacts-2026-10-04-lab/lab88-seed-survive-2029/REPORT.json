@@ -1,0 +1,66 @@
+{
+  "esp": "http://192.168.178.88",
+  "ok": true,
+  "steps": [
+    {
+      "name": "reach",
+      "ok": true,
+      "detail": {
+        "version": "0.4.45-dev",
+        "uptime": "6s"
+      }
+    },
+    {
+      "name": "arm",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "active": true,
+        "slot": 0,
+        "tag": "B",
+        "fromOff": 348160,
+        "bytesServed": 0
+      }
+    },
+    {
+      "name": "oracleA",
+      "ok": true,
+      "detail": {
+        "prefix": "Q3B1B\u0000\u0000\u0000",
+        "sha16": "0536c9b76745a94b"
+      }
+    },
+    {
+      "name": "gate_immediate",
+      "ok": true,
+      "detail": {
+        "uptime": "6s",
+        "seedB": 0
+      }
+    },
+    {
+      "name": "survive",
+      "ok": true,
+      "detail": {
+        "settle_s": 30,
+        "uptime": "38s",
+        "bodySeed": {
+          "active": true,
+          "slot": 0,
+          "tag": "B",
+          "fromOff": 348160,
+          "bytesServed": 0
+        }
+      }
+    },
+    {
+      "name": "hit_bytesServed",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 32768,
+        "delta": 32768
+      }
+    }
+  ]
+}

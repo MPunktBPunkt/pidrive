@@ -36,8 +36,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Seed-Gate + Watchdog (Lab/Tools ready):** `feld_q3b_next_prepare.sh` Settle-Gate · `feld_q3b_seed_watchdog.py` · Lab `m3_lab_seed_survive.py` — siehe [`artifacts-2026-10-04-lab/LAB-NEXT-SEED-GATE-AV-2026-10-04.md`](artifacts-2026-10-04-lab/LAB-NEXT-SEED-GATE-AV-2026-10-04.md).  
-2. **C′-Retry (Auto morgen):** letzte RST → Seed → Gate → Auto-Next ohne Reset; PASS = `bytesServed↑` + passende HU-Body-LBAs.  
+1. **Seed-Gate Lab PASS (20:29):** Survive 30 s + Hit +32 KiB auf `.88` / `0.4.45` — [`lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md`](artifacts-2026-10-04-lab/lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md).  
+2. **C′-Retry (Auto morgen):** Prepare-Gate + Watchdog → Auto-Next **ohne** RST; PASS = `bytesServed↑` + HU-Body-LBAs.  
 3. **AV A→D:** gültiges MPEG in den **tatsächlich gelesenen** LBAs + Auslieferung + Hörtest — getrennt von Seed.  
 4. Detect-Policy erst nach AV-Beweis ändern. Freeze hält.
 

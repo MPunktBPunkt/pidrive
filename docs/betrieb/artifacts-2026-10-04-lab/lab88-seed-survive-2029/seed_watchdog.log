@@ -1,0 +1,4 @@
+20:30:26 START active=True tag='B' seedB=32768 uptime='45s' (45s) cold=2
+20:30:27 play=- active=True seedB=32768 cold=2 uptime='45s'
+20:30:31 play=- active=True seedB=32768 cold=2 uptime='50s'
+20:30:37 TIMEOUT 0.15 min — seed still active, no bytesServed rise ≥ 1

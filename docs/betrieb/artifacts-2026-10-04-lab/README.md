@@ -10,6 +10,7 @@
 | `lab88-detect-cold-1536/` | `cold_body_burst` Log **PASS** (Cold loggt, Warm feuert Detect) |
 | `detect-cold-vs-warm-offline/` | PD0056/57 → `not_from_head` Offline |
 | `GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md` | Q3b Lab PASS |
+| `lab88-seed-survive-2029/` | Seed Survive 30 s + Hit **PASS** (`0.4.45`, bytesServed +32 KiB) |
 | `lab88-q3b-1515/` | Q3b Prefill Oracles A/B/C **PASS** (fromOff=348160 / LBA 761) |
 | `lab88-av-stream-1400/` | `bufferMs` tote Telemetrie; Ring füllt |
 | `GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md` | Konsolidierung Mistral/Claude/GPT |

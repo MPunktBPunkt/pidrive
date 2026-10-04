@@ -1,0 +1,3 @@
+lab seed survive PASS 2026-10-04T20:30:20
+settle_s=30 hit=True
+OUT=docs/betrieb/artifacts-2026-10-04-lab/lab88-seed-survive-2029
