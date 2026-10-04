@@ -1,0 +1,3 @@
+lab AV burst-sim PASS 2026-10-04T21:43:27
+host_moved=True live_up=True prefill761_und=True
+OUT=docs/betrieb/artifacts-2026-10-04-lab/lab88-av-burst-2143

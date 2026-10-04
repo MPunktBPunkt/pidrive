@@ -18,9 +18,10 @@ PASS: `bytesServed↑` + HU-Body-LBAs zeitlich korreliert.
 Echter Producer · Korrelation `fileOff` ↔ `absBase..absEnd` / `hostAbsCursor` · `liveBytes`/`underruns` · Fingerprint · **Ohr**.  
 PASS: hörbar + Inhalt an HU-LBAs — nicht aus C′ ableiten.
 
-**Lab 21:24 Nachzug:** außerhalb Fenster → `underruns↑`; Sync-Fingerprint allein unterscheidet Live vs. Silence-Fill **nicht**.  
+**Lab 21:24:** außerhalb Fenster → `underruns↑`; Sync allein unscharf.  
+**Lab 21:43 Burst-Sim:** sequentieller Read lässt `hostAbs`/`liveBytes` steigen; Prefill **LBA 761** bei spät Fenster → nur Underrun (+32 KiB).  
 Hilfsskript: `python3 tools/feld_av_correlate.py --esp http://192.168.178.89 --watch-s 90 --out <OUT>`  
-Bericht: [`lab88-av-window-2124/GESAMTBERICHT-AV-WINDOW-BOUNDS.md`](lab88-av-window-2124/GESAMTBERICHT-AV-WINDOW-BOUNDS.md).
+Berichte: [`lab88-av-window-2124/…](lab88-av-window-2124/GESAMTBERICHT-AV-WINDOW-BOUNDS.md) · [`lab88-av-burst-2143/…](lab88-av-burst-2143/GESAMTBERICHT-AV-BURST-SIM.md).
 
 ## Freeze
 
