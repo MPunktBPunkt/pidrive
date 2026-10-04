@@ -1,0 +1,25 @@
+# EAR p1-run-b — fill during field
+date:
+fw:
+serial:
+bridge_hello:
+ov:
+tcp_up_before_plug:
+
+# P0 only:
+menu_before:
+menu_after_provoke:
+frozen_reject: yes/no
+
+# P1 only:
+preflight.warmth.fav0: {bytes, cold, lba0, lba1}
+preflight.warmth.fav1:
+preflight.warmth.fav2:
+started_uid:
+nominal_end_s:
+first_body_read_s:
+delta_s:
+delta_rc:
+result_bool_cold_next:
+class_A_to_E:
+notes:

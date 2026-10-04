@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-04 · `pidrive` @ `9daee7a` · `esp32.pidrive` @ `2bc9055`  
-**Phase:** Lab-Blocker erledigt → **nächster Schritt = Auto (P0-Feld + P1×2)**
+**Stand:** 2026-10-04 · Feld-Prep fertig · `esp32.pidrive` @ `2bc9055`  
+**Phase:** **Auto jetzt** — P0-Feld-Provokation → Unplug → P1×2
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.  
 Alles andere unten ist Belegkette oder Historie — nicht parallel „aktuell“ lesen.
@@ -12,7 +12,8 @@ Alles andere unten ist Belegkette oder Historie — nicht parallel „aktuell“
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 1 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) | **Aktuelle Übergabe** — Stand, Kritik, P0/P1-Protokoll |
+| 0 | [`FELD-P0-P1-CHECKLISTE-2026-10-04.md`](FELD-P0-P1-CHECKLISTE-2026-10-04.md) | **Taschen-Protokoll** heute im Auto |
+| 1 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) | Übergabe — Stand, Kritik, P0/P1-Protokoll |
 | 2 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Plan **Rev.5** — Prio, Freeze, Entscheidungsregel |
 | 3 | [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md) | Counter/`readCount`/Burst-Semantik |
 
@@ -39,12 +40,14 @@ Chronologisch — nicht überspringen, wenn du die Architektur-Wende verstehen m
 |------------|---------|---------|
 | Docs / Plan / Übergabe | ✅ | beide Repos `origin/main` sync |
 | Lab-Arbeit (Blocker) | ✅ durch | Q3a Oracle / L4 optional, kein P1-Blocker |
-| Bridge `.105` | ✅ | `pump_bridge` mit `--msc-lock` + Connect-Retry → `.89` |
-| ESP-FW Feld `.89` | ✅ für P0/P1 | **kein neues OTA für P0** (Lock = Bridge). Feld lief schon `0.4.42-dev` L3; bei Online-Werden Version prüfen |
-| Auto-ESP `.89` Netz | ⏳ offline | Bridge wartet mit Retry |
-| Lab-ESP `.88` | idle ok | für optionale Oracle/L4 später |
+| Bridge `.105` | ✅ | frisch restartet; `--msc-lock` + Connect-Retry → `.89`; Traces geleert |
+| ESP-FW Feld `.89` | ✅ für P0/P1 | **kein OTA** / **nicht** `feld_prepare_homecoming.sh` (das zieht 0.4.36). Online: Version prüfen |
+| Auto-ESP `.89` Netz | ⏳ offline | Bridge retryt; im Auto `curl …89/api/status` |
+| Feld-Artefakte | ✅ | `artifacts-2026-10-04-feld/{p0-provokation,p1-run-a,p1-run-b}/` + EAR-Stubs |
+| Prep-Script | ✅ | `tools/feld_p0_p1_prepare.sh` (kein OTA) |
+| Lab-ESP `.88` | idle ok | Oracle/L4 später |
 
-**Lab vorerst durch** für den kritischen Pfad. Weiter im Auto: P0-Feld-Provokation → Unplug → P1×2.
+**Bereit zum Losfahren.** Im Auto: Checkliste §B → Unplug → §C/D.
 
 ---
 
