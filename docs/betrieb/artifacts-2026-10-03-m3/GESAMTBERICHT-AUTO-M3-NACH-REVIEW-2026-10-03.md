@@ -1,5 +1,7 @@
 # Gesamtbericht: Auto-M3 nach Addendum und Review-Schleife
 
+> **Historisch (vor Trace-Korrektur).** Einstieg: [`../../MSC-AKTUELL.md`](../../MSC-AKTUELL.md) · Korrektur: [`GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md).
+
 **Stand:** 2026-10-03 Abend  
 **Repos:** `pidrive` (Ziel: dieser Push) · `esp32.pidrive` `eaa65f7`  
 **Artefakte:** `artifacts-2026-10-03-m3/auto89-m3-static-170625/`  
