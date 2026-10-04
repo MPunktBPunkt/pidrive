@@ -11,10 +11,10 @@
 | Thema | Ergebnis | Beleg |
 |-------|----------|--------|
 | **P0 Menü-Lock** | **PASS** | [`p0-provokation/`](p0-provokation/) — Seal Rock/Bayern/BOB; `frozen_reject`; ESP-Namen stabil |
-| **P1 kalter Auto-Next ×2** | **INCONCLUSIVE / nicht messbar** | [`p1-run-a/`](p1-run-a/) · [`p1-run-b/`](p1-run-b/) — HU Autoplay aus Scan-Cache |
-| **Play-Detect (selten)** | **OK wenn Head-Read** | [`otg-1058/`](otg-1058/) — `play_uid` fav1→fav2, `audio_start`, ffmpeg, `audio_ack ok` |
-| **Ton / Cover an HU** | **FAIL** (auch bei Detect) | User mehrfach: kein Ton, kein Bild; ESP `bufferMs=0` trotz `phase=play` |
-| **LED** | **≠ Live-AV** | Blinkt bei großen MSC-Reads *oder* bei echtem Play; ohne Burst kein Feedback ([`otg-1103/`](otg-1103/)) |
+| **P1 kalter Auto-Next ×2** | **EVIDENCED / PASS_WEAK** (offline nachbewertet) | Identische fav0-Body-Bursts; Lauf B Burst1 **+0,35 s** vs Nominal — [`P1-OFFLINE-REGRADE-2026-10-04.json`](P1-OFFLINE-REGRADE-2026-10-04.json). Nicht voll GRÜN (Startuhr/Ohr). |
+| **Play-Detect (selten)** | **OK wenn Warm-Head**; verpasst Cold-Burst | [`otg-1058/`](otg-1058/) — `play_uid` + ffmpeg; P1-Bursts oft `not_from_head` |
+| **Ton / Cover an HU** | **FAIL** (auch bei Detect) | User: kein Ton/Bild; PD0058 **`streamBytes==underruns`** (0 Live-Bytes). **`bufferMs` ist tote Telemetrie** — siehe Lab `lab88-av-stream-1400/` |
+| **LED** | **≠ Live-AV**; korreliert mit MSC-Bursts | Blinkt bei Rock-Body-Burst (~87 s); kein Burst (BOB-Cache) → kein Feedback |
 
 ---
 
@@ -34,20 +34,19 @@
 ## Drei getrennte Probleme (nicht vermischen)
 
 1. **P0 / Menü-Identität** — gelöst im Feld (Lock in Bridge).  
-2. **HU-Cache vs. Live-Read** — nach Scan spielt NBT oft ohne Head-Read → kein `play_uid` → stumme Playlist; LED kann trotzdem bei Prefetch/Vollread blinken.  
-3. **AV-Pfad** — selbst wenn Detect+ffmpeg greifen: `bufferMs=0`, kein Ton/Cover an HU → Pump/MSC-Fill oder Ausgang, nicht „Menü kaputt“.
+2. **Cold-Body-Next existiert** — HU liest fav0-Body ~87 s nach Kurzdatei (LBA-Evidenz). Scan-Kopf (~0,33 MiB) bleibt „gefroren“; Detect reagiert oft falsch.  
+3. **AV-Pfad** — Detect+ffmpeg ≠ hörbar; Metrik **`streamBytes` vs `underruns`**, nicht `bufferMs`.
 
-P1 (±1,5 s kalter Next) setzt voraus, dass (2) und ideal (3) greifen. Heute: **Entscheidungsregel P1 nicht GRÜN**.
+Voll-GRÜN P1 braucht bessere Startuhr + Q3b (Inhalt des Bursts). Siehe [`GESAMTBERICHT-KRITIK-MISTRAL-GPT-CLAUDE-2026-10-04.md`](GESAMTBERICHT-KRITIK-MISTRAL-GPT-CLAUDE-2026-10-04.md).
 
 ---
 
 ## Nächste Schritte (Priorität)
 
-1. **Lab: warum `bufferMs=0` bei `audio_ack ok`?** SoftAP/`lab/play` + Host-Read der Live-Datei; Bridge-Audio → MSC-Buffer → Host-`dd`.  
-2. **Play-Detect vs. Cache:** Head-Read erzwingen oder Detect-Policy (warm/mid-file) bewusst erweitern — nur mit AV-Beweis.  
-3. **P1 wiederholen** erst wenn mindestens einmal Ton an HU (Lab oder Feld).  
-4. **Q3a Oracle** (Lab) parallel; Freeze Ring/PSRAM/Pacing halten.  
-5. **BT-Hybrid** als Fallback bleibt im Plan, solange P1/AV nicht grün.
+1. **Lab Q3b / Prefill** hinter Scan-Kopf — Oracle auf Cold-Burst-LBAs.  
+2. **Detect:** Cold-Body-Burst vs Warm-Head (zuerst nur loggen).  
+3. **Feld mit Ohr/Film** nach Prefill.  
+4. Freeze halten; BT-Hybrid Fallback.
 
 ---
 

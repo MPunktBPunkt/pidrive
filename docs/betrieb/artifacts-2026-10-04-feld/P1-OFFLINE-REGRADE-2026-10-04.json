@@ -1,0 +1,65 @@
+{
+  "title": "P1 offline regrade from field traces",
+  "nominal_s_512KiB_48kbps": 87.38133333333333,
+  "verdict": "P1_BODY_NEXT_EVIDENCED_TIMING_PASS_WEAK",
+  "summary": "Both runs show identical cold fav0 body bursts after short-file activity; B burst1 at +0.35s of nominal. Not GR\u00dcN for full P1 (no AV, weak start clock) but NOT 'unmeasurable'.",
+  "caveats": [
+    "Start clock = fav1 mid-file touch, not play_uid/UI film",
+    "No ear/AV proof of decoded content",
+    "slot.bytes cumulative; LBA trace is the evidence",
+    "p1-run-b jsonl contains leftover A session lines \u2014 windowed analysis required"
+  ],
+  "runs": [
+    {
+      "run": "p1-run-a",
+      "serial": "PD0056",
+      "preflight_fav0_bytes": 380928,
+      "preflight_fav0_body_cold": true,
+      "anchor": "fav1 touch 10:50:38.602 lba=17377 (not play_uid)",
+      "fav0_burst1": {
+        "wall": "10:51:58.799",
+        "n_sum": 484,
+        "bytes": 1982464,
+        "lba0": 1953,
+        "delta_s": 80.2,
+        "vs_nominal": -7.18
+      },
+      "fav0_burst2": {
+        "wall": "10:52:05.864",
+        "n_sum": 1479,
+        "bytes": 6057984,
+        "lba0": 4625,
+        "delta_s": 87.26,
+        "vs_nominal": -0.12
+      },
+      "pattern": "484 then ~5s then 1479 \u2014 identical across runs",
+      "timing_vs_pm15": "burst2 within \u00b11.5s of nominal; burst1 early; anchor weak"
+    },
+    {
+      "run": "p1-run-b",
+      "serial": "PD0057",
+      "preflight_fav0_bytes": 380928,
+      "preflight_fav0_body_cold": true,
+      "anchor": "fav1 touch 10:54:51.242 lba=17377",
+      "fav0_burst1": {
+        "wall": "10:56:18.974",
+        "n_sum": 484,
+        "bytes": 1982464,
+        "lba0": 1953,
+        "delta_s": 87.73,
+        "vs_nominal": 0.35
+      },
+      "fav0_burst2": {
+        "wall": "10:56:26.057",
+        "n_sum": 1479,
+        "bytes": 6057984,
+        "lba0": 4625,
+        "delta_s": 94.82,
+        "vs_nominal": 7.43
+      },
+      "timing_vs_pm15": "burst1 WITHIN \u00b11.5s (+0.35); strongest cold-next timing evidence"
+    }
+  ],
+  "led": "User LED at Rock switch correlates with these bursts; BOB@11:06 no new reads \u2192 no LED",
+  "at": "2026-10-04T14:01:28"
+}

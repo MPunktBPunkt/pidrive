@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-04T14:06:41",
+  "bufferMs_code": "App::bufferMs never written in FW \u2014 always 0 (dead telemetry). Do NOT chase bufferMs=0 as root cause.",
+  "lab_without_host_read": {
+    "poll": [
+      "t=1 play=fav1 und=0 sb=57344 size=6144 buf=0 live=57344",
+      "t=2 play=fav1 und=0 sb=57344 size=16168 buf=0 live=57344",
+      "t=3 play=fav1 und=0 sb=57344 size=26192 buf=0 live=57344",
+      "t=4 play=fav1 und=0 sb=57344 size=35192 buf=0 live=57344",
+      "t=5 play=fav1 und=0 sb=57344 size=46024 buf=0 live=57344",
+      "t=6 play=fav1 und=0 sb=57344 size=49152 buf=0 live=57344",
+      "t=7 play=fav1 und=0 sb=57344 size=49152 buf=0 live=57344",
+      "t=8 play=fav1 und=0 sb=57344 size=49152 buf=0 live=57344"
+    ],
+    "finding": "While ffmpeg fills StreamBuffer, size grows 6KiB\u219248KiB (full) with underruns=0 and bufferMs still 0. Confirms bufferMs is unused."
+  },
+  "field_PD0058_fav1": {
+    "streamBytes": 311296,
+    "underruns": 311296,
+    "live_bytes_est": 0,
+    "finding": "streamBytes==underruns \u2192 0 live bytes delivered to host during detected play (real AV metric)."
+  },
+  "host_dd": "blocked (sudo password required on this host); not required for bufferMs conclusion"
+}

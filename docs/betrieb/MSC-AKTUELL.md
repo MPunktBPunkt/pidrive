@@ -1,78 +1,56 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-04 · nach Feldtermin · `esp32.pidrive` @ `2bc9055`  
-**Phase:** **P0 Feld PASS** · **P1/AV offen** → nächster Engpass Lab (`bufferMs` / Cache-Detect)
+**Stand:** 2026-10-04 · nach Kritik Mistral/GPT/Claude + Lab · `esp32.pidrive` @ `2bc9055`  
+**Phase:** **P0 PASS** · **P1 Body-Next EVIDENCED (PASS_WEAK)** · **AV: underruns, nicht bufferMs** · nächster Engpass **Q3b/Prefill + Detect**
 
-Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.  
-Alles andere unten ist Belegkette oder Historie — nicht parallel „aktuell“ lesen.
+Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
 ---
 
-## 1. Jetzt lesen (normativ, in dieser Reihenfolge)
+## 1. Jetzt lesen (normativ)
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md`](artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md) | **Feld-Ampel** heute |
-| 1 | [`artifacts-2026-10-04-feld/GESAMTBERICHT-FELD-P0-P1-2026-10-04.md`](artifacts-2026-10-04-feld/GESAMTBERICHT-FELD-P0-P1-2026-10-04.md) | Feld-Gesamtbericht + nächste Pakete |
-| 2 | [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) | Lab-Übergabe vor Feld (P0 deploy, Q3a PASS_WEAK) |
-| 3 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Plan **Rev.5** — Freeze, Entscheidungsregel |
-| 4 | [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md) | Counter/`readCount`/Burst-Semantik |
+| 0 | [`artifacts-2026-10-04-feld/GESAMTBERICHT-KRITIK-MISTRAL-GPT-CLAUDE-2026-10-04.md`](artifacts-2026-10-04-feld/GESAMTBERICHT-KRITIK-MISTRAL-GPT-CLAUDE-2026-10-04.md) | **Aktuelle Übergabe** an nächste KI |
+| 1 | [`artifacts-2026-10-04-feld/P1-OFFLINE-REGRADE-2026-10-04.json`](artifacts-2026-10-04-feld/P1-OFFLINE-REGRADE-2026-10-04.json) | Zahlen: kalte fav0-Bursts ± Nominal |
+| 2 | [`artifacts-2026-10-04-lab/lab88-av-stream-1400/`](artifacts-2026-10-04-lab/lab88-av-stream-1400/) | Lab: `bufferMs` tot; Ring füllt trotz buf=0 |
+| 3 | [`artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md`](artifacts-2026-10-04-feld/FELD-ERGEBNIS-2026-10-04.md) | Feld-Ampel (P1-Zeile korrigiert unten) |
+| 4 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Rev.5 Freeze / Geometrie |
+| 5 | [`MSC-STATUS-SEMANTIK-0.4.42.md`](MSC-STATUS-SEMANTIK-0.4.42.md) | Counter-Semantik |
 
 ---
 
-## 2. Wie die Entscheidung zustande kam (Belegkette)
+## 2. Ampel (korrigiert)
 
-| Wann | Dokument / Artefakt | Entscheidung |
-|------|---------------------|--------------|
-| Feldabend | [`artifacts-2026-10-03-m3/auto89-m3seq-2042/`](artifacts-2026-10-03-m3/auto89-m3seq-2042/) | Rohdaten Select/Cache/Q2 |
-| Korrektur | [`artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3SEQ-TRACE-KORREKTUR-2026-10-04.md) | Q2 war **warm-konfundiert** → Sequenzpfad wieder offen |
-| Gegenindiz | [`artifacts-2026-10-03-b7/replug-1231-noselect/`](artifacts-2026-10-03-b7/replug-1231-noselect/) | Counter-Indiz kaltes Auto-Next (±1 s); **kein** LBA-Beweis |
-| Review | [`artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md) | Rev.5-Schärfung |
-| Lab Q3a | [`artifacts-2026-10-04-lab/lab88-q3a-0828/`](artifacts-2026-10-04-lab/lab88-q3a-0828/) | **PASS_WEAK** |
-| Lab+Deploy P0 | [`lab88-p0-lock-0832/`](artifacts-2026-10-04-lab/lab88-p0-lock-0832/) · [`lab88-p0-lock-deploy-105/`](artifacts-2026-10-04-lab/lab88-p0-lock-deploy-105/) | Lock PASS; auf `.105` |
-| **Feld heute** | [`artifacts-2026-10-04-feld/`](artifacts-2026-10-04-feld/) | **P0 PASS**; P1 nicht messbar; Detect selten OK; **AV FAIL** (`bufferMs=0`) |
-
----
-
-## 3. Systemstand
-
-| Komponente | Stand | Hinweis |
-|------------|-------|---------|
-| Docs / Feldbericht | ✅ | dieser Index + Feld-Artefakte |
-| P0 Bridge-Lock | ✅ Feld PASS | Root-Menü vor Seal; nicht mit USB schon steckend falsch siegeln |
-| P1×2 | ❌ / offen | Cache-Autoplay; ±1,5 s nicht anwendbar |
-| Play→ffmpeg | ⚠ selten OK | PD0058 Bayern/BOB |
-| Ton/Cover HU | ❌ | auch bei Detect; `bufferMs=0` |
-| ESP-FW `.89` | `0.4.42-dev` | kein Downgrade / kein homecoming-OTA |
-| Freeze Ring/PSRAM/Pacing | weiter halten | bis AV + P1 belastbar |
+| Thema | Stand |
+|-------|--------|
+| P0 Menü-Lock | **PASS** |
+| P1 kalter Body-Next | **EVIDENCED / PASS_WEAK** (B: +0,35 s; identisches 484+1479-Muster) — nicht „unmeasurable“ |
+| Play-Detect | selten; oft Warm-Head; verpasst Cold-Burst |
+| Ton/Cover | **FAIL**; PD0058: `streamBytes==underruns` → 0 Live-Bytes |
+| `bufferMs` | **tote Telemetrie** (nie geschrieben) — ignorieren |
+| LED | MSC-Burst-Korrelator, ≠ AV |
+| Sequenz-GO | noch nein; Prefill/Q3b offen |
+| Freeze | hält |
 
 ---
 
-## 4. Historisch / nicht mehr „aktuell“ (nicht löschen)
+## 3. Nächste Schritte
 
-| Dokument | Status |
-|----------|--------|
-| [`FELD-P0-P1-CHECKLISTE-2026-10-04.md`](FELD-P0-P1-CHECKLISTE-2026-10-04.md) | Prep-Protokoll — Feld **durch**, Ergebnis in FELD-ERGEBNIS |
-| [`UEBERGABE-MSC-BEWERTUNG-2026-10-03.md`](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md) | Maßnahmen-Log 10-03 — Kopf historisch |
-| [`AUTO-M3-READINESS-2026-10-03.md`](AUTO-M3-READINESS-2026-10-03.md) | überholt |
-| [`artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md`](artifacts-2026-10-03-m3/GESAMTBERICHT-AUTO-M3-NACH-REVIEW-2026-10-03.md) | historisch |
-| [`FELDTEST-ESP-MSC-BMW-2026-09-28.md`](FELDTEST-ESP-MSC-BMW-2026-09-28.md) | langer Log — Referenz |
+1. Lab **Q3b / Prefill** Body-Inhalt hinter Scan-Kopf (~0,33–0,5 MiB).  
+2. Detect: Cold-Body-Burst vs Warm-Head dokumentieren (zuerst loggen).  
+3. Feld mit Ohr/Film erst nach Prefill-Inhalt.  
+4. BT-Hybrid nur Fallback.
 
 ---
 
-## 5. Entscheidungsregel (aktualisiert nach Feld)
+## 4. Entscheidungsregel
 
 ```
-P0 Feld PASS ✓
-P1×2 (±1,5 s, kalt) → heute NICHT GRÜN (Cache / nicht messbar)
-  + AV: Detect kann greifen, HU trotzdem stumm (bufferMs=0)
-→ kein Sequenz-Hauptpfad-GO
-→ Lab: AV-Buffer/MSC-Fill + Cache/Detect
-→ P1-Feld wiederholen erst nach Ton an HU
-Freeze: Ring/PSRAM/Pacing halten
-BT-Hybrid: Fallback, nicht vor AV-Lab-Klärung als „Lösung“ verkaufen
+P0 PASS ✓
+P1 Body-Next PASS_WEAK (LBA) — voll GRÜN braucht Startuhr+Ohr/Q3b
+AV-Metrik = streamBytes − underruns  (nicht bufferMs)
+GRÜN Prefill/Q3b → Sequenz-Prototyp erwägen
+sonst BT-Hybrid Fallback
+Freeze Ring/PSRAM/Pacing bis belastbare AV-/P1-Evidenz
 ```
-
-Zentrale offene Fragen:
-1. Warum füllt der Live-Pump die MSC-Datei nicht (`bufferMs=0`)?  
-2. Wann erzwingt die NBT einen Head-Read statt Cache-Play?

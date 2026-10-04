@@ -1,0 +1,8 @@
+t=1 play=fav1 und=0 sb=57344 size=6144 buf=0 live=57344
+t=2 play=fav1 und=0 sb=57344 size=16168 buf=0 live=57344
+t=3 play=fav1 und=0 sb=57344 size=26192 buf=0 live=57344
+t=4 play=fav1 und=0 sb=57344 size=35192 buf=0 live=57344
+t=5 play=fav1 und=0 sb=57344 size=46024 buf=0 live=57344
+t=6 play=fav1 und=0 sb=57344 size=49152 buf=0 live=57344
+t=7 play=fav1 und=0 sb=57344 size=49152 buf=0 live=57344
+t=8 play=fav1 und=0 sb=57344 size=49152 buf=0 live=57344
