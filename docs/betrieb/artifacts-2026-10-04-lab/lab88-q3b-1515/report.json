@@ -1,0 +1,279 @@
+{
+  "fw": "0.4.43-dev",
+  "serial": "PD0042",
+  "slot": 0,
+  "lba0": 81,
+  "from_off": 348160,
+  "prefill_lba": 761,
+  "head_hash": "76174bce4a0c8783",
+  "tests": {
+    "A": {
+      "oracle_a": {
+        "pass": true,
+        "samples": {
+          "761": {
+            "file_off": 348160,
+            "sha16": "caf822eebaea0799",
+            "match": true,
+            "n": 8192
+          },
+          "1000": {
+            "file_off": 470528,
+            "sha16": "83dd830d423b5fd5",
+            "match": true,
+            "n": 8192
+          },
+          "1472": {
+            "file_off": 712192,
+            "sha16": "df145bb14ef93125",
+            "match": true,
+            "n": 8192
+          },
+          "1953": {
+            "file_off": 958464,
+            "sha16": "db8b4190c4dbc8e8",
+            "match": true,
+            "n": 8192
+          },
+          "3000": {
+            "file_off": 1494528,
+            "sha16": "63a7268ccce45af0",
+            "match": true,
+            "n": 8192
+          },
+          "4624": {
+            "file_off": 2326016,
+            "sha16": "bbbf764fc0750c1e",
+            "match": true,
+            "n": 8192
+          }
+        }
+      },
+      "host": {
+        "oracle_b": true,
+        "oracle_c": true,
+        "reads": [
+          {
+            "lba": 761,
+            "sectors": 64,
+            "file_off": 348160,
+            "sha16": "436e0e73eaf857d0",
+            "match_tag": true,
+            "ts": 1791119759.4851694,
+            "after_switch": true,
+            "dt_ms": 46
+          },
+          {
+            "lba": 1529,
+            "sectors": 64,
+            "file_off": 741376,
+            "sha16": "70bdcfc757202155",
+            "match_tag": true,
+            "ts": 1791119759.535177,
+            "after_switch": true,
+            "dt_ms": 46
+          },
+          {
+            "lba": 1953,
+            "sectors": 128,
+            "file_off": 958464,
+            "sha16": "4d2fa6ad787b4192",
+            "match_tag": true,
+            "ts": 1791119759.5865343,
+            "after_switch": true,
+            "dt_ms": 86
+          },
+          {
+            "lba": 3000,
+            "sectors": 64,
+            "file_off": 1494528,
+            "sha16": "0b81332f338a0ebf",
+            "match_tag": true,
+            "ts": 1791119759.6804445,
+            "after_switch": true,
+            "dt_ms": 42
+          },
+          {
+            "lba": 4500,
+            "sectors": 64,
+            "file_off": 2262528,
+            "sha16": "607d5d2b126d6572",
+            "match_tag": true,
+            "ts": 1791119759.7272677,
+            "after_switch": true,
+            "dt_ms": 43
+          }
+        ]
+      },
+      "pass": true
+    },
+    "B": {
+      "oracle_a": {
+        "pass": true,
+        "samples": {
+          "761": {
+            "file_off": 348160,
+            "sha16": "0536c9b76745a94b",
+            "match": true,
+            "n": 8192
+          },
+          "1000": {
+            "file_off": 470528,
+            "sha16": "1580392208036ce5",
+            "match": true,
+            "n": 8192
+          },
+          "1472": {
+            "file_off": 712192,
+            "sha16": "45164af873d805a7",
+            "match": true,
+            "n": 8192
+          },
+          "1953": {
+            "file_off": 958464,
+            "sha16": "89ef7f5a450edb3f",
+            "match": true,
+            "n": 8192
+          },
+          "3000": {
+            "file_off": 1494528,
+            "sha16": "f6baf20af8ae722a",
+            "match": true,
+            "n": 8192
+          },
+          "4624": {
+            "file_off": 2326016,
+            "sha16": "c54f63b8ccfbf30d",
+            "match": true,
+            "n": 8192
+          }
+        }
+      },
+      "no_remount": true,
+      "remountGen": [
+        42,
+        42
+      ],
+      "pass": true
+    },
+    "C": {
+      "oracle_b": true,
+      "oracle_c": true,
+      "head_frozen": true,
+      "early_lba761_is_B": true,
+      "t_switch": 1791119759.8000436,
+      "reads": [
+        {
+          "lba": 761,
+          "sectors": 64,
+          "file_off": 348160,
+          "sha16": "5ef63f0e34bc9f0a",
+          "match_tag": true,
+          "ts": 1791119760.2312732,
+          "after_switch": true,
+          "dt_ms": 57
+        },
+        {
+          "lba": 1529,
+          "sectors": 64,
+          "file_off": 741376,
+          "sha16": "960b01342f769083",
+          "match_tag": true,
+          "ts": 1791119760.2929697,
+          "after_switch": true,
+          "dt_ms": 43
+        },
+        {
+          "lba": 1953,
+          "sectors": 128,
+          "file_off": 958464,
+          "sha16": "38144aea95b5be63",
+          "match_tag": true,
+          "ts": 1791119760.3407977,
+          "after_switch": true,
+          "dt_ms": 87
+        },
+        {
+          "lba": 3000,
+          "sectors": 64,
+          "file_off": 1494528,
+          "sha16": "ed26642e77300ca1",
+          "match_tag": true,
+          "ts": 1791119760.4365757,
+          "after_switch": true,
+          "dt_ms": 43
+        },
+        {
+          "lba": 4500,
+          "sectors": 64,
+          "file_off": 2262528,
+          "sha16": "9a17fdc771ec899c",
+          "match_tag": true,
+          "ts": 1791119760.4846623,
+          "after_switch": true,
+          "dt_ms": 43
+        }
+      ],
+      "pass": true
+    },
+    "control": {
+      "oracle_c": true,
+      "no_remount": true,
+      "reads": [
+        {
+          "lba": 761,
+          "sectors": 64,
+          "file_off": 348160,
+          "sha16": "436e0e73eaf857d0",
+          "match_tag": true,
+          "ts": 1791119760.9511712,
+          "after_switch": true,
+          "dt_ms": 47
+        },
+        {
+          "lba": 1529,
+          "sectors": 64,
+          "file_off": 741376,
+          "sha16": "70bdcfc757202155",
+          "match_tag": true,
+          "ts": 1791119761.0025969,
+          "after_switch": true,
+          "dt_ms": 58
+        },
+        {
+          "lba": 1953,
+          "sectors": 128,
+          "file_off": 958464,
+          "sha16": "4d2fa6ad787b4192",
+          "match_tag": true,
+          "ts": 1791119761.064587,
+          "after_switch": true,
+          "dt_ms": 88
+        },
+        {
+          "lba": 3000,
+          "sectors": 64,
+          "file_off": 1494528,
+          "sha16": "0b81332f338a0ebf",
+          "match_tag": true,
+          "ts": 1791119761.160072,
+          "after_switch": true,
+          "dt_ms": 44
+        },
+        {
+          "lba": 4500,
+          "sectors": 64,
+          "file_off": 2262528,
+          "sha16": "607d5d2b126d6572",
+          "match_tag": true,
+          "ts": 1791119761.2085538,
+          "after_switch": true,
+          "dt_ms": 44
+        }
+      ],
+      "pass": true
+    }
+  },
+  "verdict": "PASS",
+  "note": "Lab Oracle B = host-simulated cold-burst (dd), not HU. Oracle C = actual MSC response bytes via dd iflag=direct. lba1 in field traces is NOT transfer end."
+}

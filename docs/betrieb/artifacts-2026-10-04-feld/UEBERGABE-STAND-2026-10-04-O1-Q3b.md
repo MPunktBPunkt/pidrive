@@ -41,7 +41,7 @@ Mistral- und GPT-Übergaben sind in den Kernaussagen **richtig und freigabefähi
 | **bufferMs** | **TOTE TELEMETRIE** | nie geschrieben; Lab: Ring 6→48 KiB, Underruns 0, `bufferMs`=0 |
 | **AV / PD0058** | **FAIL** | `streamBytes==underruns` → `liveBytes=0`; Stelle Producer↔Buffer↔Slot↔Silence offen |
 | **Q3a** | **PASS_WEAK** | Host≠Silence; Oracle in Q3b integrieren |
-| **Q3b** | **OFFEN** | nächster kritischer Schritt (§4) |
+| **Q3b** | **LAB PASS** (2026-10-04) | [`../artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md`](../artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md) — Feld-AV/HU-Oracle-B noch offen |
 | **Detect** | **OFFEN** | Warm-Head feuert; Cold-Body → `not_from_head`; erst `cold_body_burst`-Log |
 | **L4** | OFFEN, kein Blocker | fortlaufendes Lesen großer Dateien |
 | **O1 LBA-Grenzen** | **GESCHLOSSEN** | §3 |

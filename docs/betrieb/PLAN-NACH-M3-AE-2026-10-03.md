@@ -19,7 +19,7 @@
 | Mount-Scan = Köpfe (+ ggf. volle kleine Datei) | ✅ (V); **Scan-Freeze 512 KiB möglich** |
 | Remount → Resume-Vollread ohne Select | ✅ (V) |
 | Kaltes Auto-Next liest | 🔜 P1 (Morgenpass = Counter-Indiz, **kein** LBA-Beweis) |
-| Payload-Frische | 🔜 Q3a Lab / Q3b Auto |
+| Payload-Frische | ✅ Q3b Lab PASS · 🔜 Feld-AV |
 | MSC-Live als unendliche Overlay-Datei | weiterhin ungestützt |
 | MSC-Sequenz (N Chunk-Dateien) | bedingt first-class bis P1×2 |
 
@@ -42,7 +42,7 @@ A+B + M3seq-Rehearsal: siehe Rev.3/4. Operator: Bridge vor Plug.
 |----|--------|-------------------|
 | **Q2c** | Liest kaltes Auto-Next Body-LBAs — wann relativ zum Übergang (±1,5 s)? | P1 Feld ×2 |
 | **Q3a** | Liefert der ESP beim Start-Read frische B-Bytes? | P2a Lab |
-| **Q3b** | Spielt die HU frische B-Bytes (hörbar)? | Auto, mit Ton |
+| **Q3b** | Liefert MSC aktuelle B-Bytes hinter Scan-Kopf? / hörbar? | Lab **PASS** (Datenebene); Feld-AV offen |
 | **Q1** | Select-Trigger | ✅ erledigt |
 | **Q2w** | Warmes Auto-Next | ✅ Δrc=0, warm-konfundiert |
 | **L4** | Liest NBT große Datei fortlaufend nach? | P2c Diagnose |
@@ -75,7 +75,7 @@ L4 positiv → A′ (Dension-Modus) parallel bewerten
 Pfad C nur wenn B-UX scheitert und 6NR aktiv
 ```
 
-**Feld 2026-10-04 (nach Kritik + O1):** P0 **PASS**. P1 Body-Next **EVIDENCED / PASS_WEAK** (offline; nicht „unmeasurable“). `bufferMs` = **tote Telemetrie**. AV-Metrik: `streamBytes` vs `underruns` (PD0058: 0 Live-Bytes). O1 geschlossen: Prefill ab LBA **761** (Scan-Kopf …760; 1953 = first_event). Nächster Engpass: **Q3b/Prefill (Oracles A/B/C) + Detect-Log**, nicht Ring. Übergabe: [`artifacts-2026-10-04-feld/UEBERGABE-STAND-2026-10-04-O1-Q3b.md`](artifacts-2026-10-04-feld/UEBERGABE-STAND-2026-10-04-O1-Q3b.md).
+**Feld/Lab 2026-10-04 (Q3b):** P0 **PASS**. P1 Body-Next **EVIDENCED / PASS_WEAK**. `bufferMs` = **tote Telemetrie**. O1 zu (Prefill ab LBA **761**). **Q3b Lab PASS** (MSC-Datenebene, FW `0.4.43-dev` body_seed; Oracle B = Lab-Host). Nächster Engpass: **Detect-Log + Feld Ohr/Film**, nicht Ring. Übergabe: [`artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md).
 
 ---
 
