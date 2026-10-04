@@ -75,7 +75,7 @@ L4 positiv → A′ (Dension-Modus) parallel bewerten
 Pfad C nur wenn B-UX scheitert und 6NR aktiv
 ```
 
-**Feld/Lab 2026-10-04 (Lab fertig → Feld):** P0 **PASS**. P1 **PASS_WEAK**. O1 zu. **Q3b Lab PASS**. **Detect-Log PASS** (`cold_body_burst`, Policy unverändert). Nächster Engpass: **Feld HU-Trace + Ohr/Film**. Übergabe: [`artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md`](artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md).
+**Feld 2026-10-04 16:53 (PD0060):** Oracle B **PASS** (HU liest ≥761). Oracle C/AV **FAIL** — Live-Overlay maskierte Seed; liveBytes=0; kein Ton. Nächster Lauf: FW **0.4.45-dev** (Seed-over-Live + `bytesServed`). Bericht: [`artifacts-2026-10-04-feld/feld-q3b-1653/GESAMTBERICHT-FELD-Q3B-1653.md`](artifacts-2026-10-04-feld/feld-q3b-1653/GESAMTBERICHT-FELD-Q3B-1653.md). Prepare: `tools/feld_q3b_next_prepare.sh`.
 
 ---
 

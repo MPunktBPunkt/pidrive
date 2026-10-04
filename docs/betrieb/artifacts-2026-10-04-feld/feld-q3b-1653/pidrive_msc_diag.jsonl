@@ -1,0 +1,20 @@
+{"ts":1791125744.982677,"code":"play.reject","detail":"not_from_head uid=fav0 from=561 +4096B age=85127ms prefetch"}
+{"ts":1791125745.0813742,"code":"cold_body_burst","detail":"s=0 lba=321..585 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791125745.131996,"code":"play.reject","detail":"seq_short uid=fav0 from=81 +4096B age=85304ms"}
+{"ts":1791125745.1827047,"code":"msc.phase","detail":"play Rock Antenne"}
+{"ts":1791125746.3530996,"code":"play.reject","detail":"cooldown uid=fav0 from=81 +12288B age=85370ms"}
+{"ts":1791125746.3660107,"code":"play.reject","detail":"not_from_head uid=fav0 from=593 +4096B age=85483ms prefetch"}
+{"ts":1791125746.4591486,"code":"play.reject","detail":"not_from_head uid=fav0 from=1313 +307200B age=86283ms prefetch"}
+{"ts":1791125747.298952,"code":"play.reject","detail":"not_from_head uid=fav0 from=2097 +237568B age=87087ms prefetch"}
+{"ts":1791125747.74048,"code":"play.reject","detail":"not_from_head uid=fav0 from=2817 +196608B age=87889ms prefetch"}
+{"ts":1791125748.0052726,"code":"cold_body_burst","detail":"s=0 lba=97..16457 n=587 B=2404352 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791125748.7624562,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +36864B age=88692ms prefetch"}
+{"ts":1791125749.3380518,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +708608B age=89494ms prefetch"}
+{"ts":1791125751.9916365,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +1011712B age=92163ms prefetch"}
+{"ts":1791125752.0448425,"code":"cold_body_burst","detail":"s=0 lba=7793..7849 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791125755.9410975,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +1675264B age=92966ms prefetch"}
+{"ts":1791125755.941463,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +2363392B age=93770ms prefetch"}
+{"ts":1791125755.9418538,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +3051520B age=94574ms prefetch"}
+{"ts":1791125755.9545457,"code":"cold_body_burst","detail":"s=0 lba=7793..12841 n=624 B=2555904 w=0 ev=not_from_head set=1 fav0"}
+{"ts":1791125755.9549437,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +3727360B age=95378ms prefetch"}
+{"ts":1791125756.9981883,"code":"play.reject","detail":"not_from_head uid=fav0 from=5825 +5046272B age=96983ms prefetch"}

@@ -1,0 +1,17 @@
+FELD Q3b 2026-10-04 ~16:53
+Serial start: PD0060 → OTA 0.4.44-dev (serial stayed PD0060)
+Prefill: fav0 slot0 tag=B fromOff=348160 (LBA 761+)
+Scan head: LBA 81..760 FROZEN (silence/Xing)
+NO remount after seed.
+
+OPERATOR NOW:
+1) Film UI timer + LED start
+2) Play SHORT track (fav1 Bayern or fav2 BOB) ~few seconds
+3) Let Auto-Next run to fav0 Rock (~87s to cold burst)
+4) Listen for ANY change / signature; keep filming through ~2 min after next
+5) Say when burst/LED happens or "kein Ton"
+
+DO NOT: remount, unplug USB, change menu names, OTA again
+
+OPERATOR 16:57: kein Ton bis jetzt
+AV=FAIL (Ohr)
