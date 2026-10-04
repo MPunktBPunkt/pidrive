@@ -51,7 +51,7 @@ A+B + M3seq-Rehearsal: siehe Rev.3/4. Operator: Bridge vor Plug.
 
 | Prio | Arbeit | Done wenn |
 |------|--------|-----------|
-| **P0** | Menü-Lock / MSC-Session-Lock | Provokation: Pi-UI-Wechsel → Name/UID/LBA unverändert; Regression reject/defer |
+| **P0** | Menü-Lock / MSC-Session-Lock | ✅ Lab-Provokation PASS [`lab88-p0-lock-0832/`](artifacts-2026-10-04-lab/lab88-p0-lock-0832/) (`pump_bridge --msc-lock`); Feld-Provokation noch offen |
 | **P1** | Kalter Auto-Next Feld ×2 | Trace kalt, Timing ±1,5 s, EAR-Preflight, A–E |
 | **P2a** | Q3a Lab A/B | Hash-Kette + Marker, B-Bytes belegt |
 | **P2b** | BT-Abnahme inkl. Quellwechsel-UX | 4-Punkte-Checkliste |
