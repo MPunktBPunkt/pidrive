@@ -48,3 +48,12 @@ Freeze hält — kein Detect-/FW-Snap vor Auswertung.
 Siehe [`GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md`](GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md).
 
 **P0 erledigt:** `1945-empty248` reproduziert Feld **`hostAbs=streamBytes=underruns=253952`** nach Arm bei `absBase=0`. Tool braucht default `--bridge-mimic` (`audio_start` nach Head-Tip), sonst kein Live-Pfad.
+
+## Weiche ~20:35 (Prefill-Sweep + Free/Gate)
+
+Siehe [`GESAMTBERICHT-ARM-WEICHE-2035.md`](GESAMTBERICHT-ARM-WEICHE-2035.md) · Review [`KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md`](KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md).
+
+- Prefill 0–48 allein: Arm ok, Burst ohne Nachschub → Fail  
+- **Producer free chunk=8KiB:** underruns=0, in_window über 248 KiB → **PASS**  
+- Producer-Gate allein: Cursor outrannt eingefrorenes Fenster → Fail  
+- Remount: Cursor bleibt (settle armed)

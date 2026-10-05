@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Lab — **`hostAbs=253952` reproduziert** (Underrun-Zähler) · Feld 18:07 Arm PASS / Ton FAIL · FW `0.4.45-dev`  
-**Phase:** Baustelle B — Cursor-Ursprung geklärt; nächstes = Prefill/Pace Timing · Freeze hält
+**Stand:** 2026-10-05 Lab Weiche — **Producer-Pace ≥ Host hält live** · Prefill allein / Gate allein FAIL · FW `0.4.45-dev`  
+**Phase:** Baustelle B — 253952 geklärt; nächstes = Bridge Prefill+Pace (kein Blind-Gate/Snap) · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -22,6 +22,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0L2 | [`artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md) | StreamBuffer: underruns / hostAbs / liveBytes |
 | 0L5 | [`artifacts-2026-10-05-lab/LAB-NEXT-ARM-TIMELINE-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-ARM-TIMELINE-2026-10-05.md) | **P0 Lab:** Arm-Timeline + RST-Matrix (`m3_lab_arm_timeline.py`) |
 | 0L6 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md) | **Lab Matrix:** 253952 = 62×4KiB Underrun (PASS) |
+| 0L7 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-WEICHE-2035.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-WEICHE-2035.md) | **Lab Weiche:** Prefill-Sweep + Free vs Gate |
+| 0k4 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md) | Review Mistral+GPT zu 8d4f028 |
 | 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
 | 0m | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | Morgen — C′ PASS, AV Meta-Hindernis |
 | 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | Abend-EAR (ausgeführt) |
@@ -47,7 +49,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Lab Prefill+Versuch C PASS · Lab **253952 Underrun-Repro PASS** · Feld **18:07 Arm PASS** (RST), Ton **FAIL** Fenster · 17:55 ohne RST kein Arm |
+| AV / Ohr | Lab **Pace≥Host → live+in_window über 62er-Burst** · Prefill/Gate allein FAIL · 253952 Underrun-Repro PASS · Feld 18:07 Arm PASS / Ton FAIL |
 | Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
 | Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
 | Detect | Cold=mid Reject; **Head-Arm im Feld nach RST** belegt; Cooldown 5 s |
@@ -58,13 +60,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Prefill/Pace:** Arm + Host-Reads erst bei gefülltem Ring halten (`liveBytes>0` anhaltend) — Bridge-Timing, kein Blind-FW-Snap.  
-2. Optional Feld: dense Correlate ab `audio_start` (wie Lab 1945).  
-3. Freeze hält.
+1. **Bridge:** nach `audio_start` Prefill + kontinuierlicher Pace ≥ HU-Burst (Lab 2039-PASS); Gate-alone nicht übernehmen.  
+2. Optional Feld: dense Correlate ab `play_uid`/`audio_start` + `absEnd`-Steigung.  
+3. Freeze hält (kein FW-Snap / Detect).
 
 ```
-Lab: 253952 = Underrun-Zähler (repro)
-Feld 18:07 Arm PASS · Ton FAIL (Fenster)
-Nächstes: Prefill/Pace hält Host im Fenster
+Lab Weiche: Pace≥Host PASS · Prefill/Gate allein FAIL
+253952 = Underrun-Zähler (repro)
+Nächstes: Bridge Prefill+Pace
 Freeze hält
 ```

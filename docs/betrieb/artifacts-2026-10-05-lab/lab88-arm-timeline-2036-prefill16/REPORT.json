@@ -1,0 +1,60 @@
+{
+  "label": "prefill_16",
+  "prep": {
+    "prep": "soft_rst",
+    "steps": [
+      "restart_err=Expecting value: line 1 column 1 (char 0)"
+    ],
+    "serial_after": "PD0066",
+    "uptime_after": "12s"
+  },
+  "geometry": {
+    "lba0": 16465,
+    "head_need": 12288
+  },
+  "arm_transition": {
+    "ts": 1791225356.603242,
+    "mark": "head_tip_post_0",
+    "hostAbsCursor": 3584,
+    "absBase": 0,
+    "absEnd": 16384,
+    "underruns": 0,
+    "streamBytes": 4096,
+    "headResyncs": 2,
+    "in_window": true,
+    "liveBytes": 4096
+  },
+  "at_guess": {
+    "playGuessCount": 1,
+    "playingUid": "fav1",
+    "hostAbsCursor": 265728,
+    "absBase": 0,
+    "absEnd": 16384,
+    "liveBytes": 16896,
+    "in_window": false,
+    "behind_base": 0,
+    "streamBytes": 266240,
+    "underruns": 249344
+  },
+  "field_compare_253952": {
+    "hostAbs": 265728,
+    "is_62_sectors": false,
+    "host_eq_streamBytes": false,
+    "host_eq_underruns": false,
+    "sectors_4k": 64
+  },
+  "bridge_mimic": true,
+  "producer_gate": false,
+  "post_pump_kb": 0,
+  "pumped_bytes": 0,
+  "gate_pauses": 0,
+  "settle_cursorArmed": false,
+  "n_samples": 158,
+  "live_summary": {
+    "max_live": 16896,
+    "final_live": 16896,
+    "max_behind_base": 0,
+    "final_behind_base": 0,
+    "max_absBase": 0
+  }
+}

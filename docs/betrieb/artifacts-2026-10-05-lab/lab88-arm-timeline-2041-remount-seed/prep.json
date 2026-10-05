@@ -1,0 +1,8 @@
+{
+  "prep": "soft_rst",
+  "steps": [
+    "restart_err=Expecting value: line 1 column 1 (char 0)"
+  ],
+  "serial_after": "PD0066",
+  "uptime_after": "12s"
+}

@@ -1,0 +1,6 @@
+{
+  "prep": "usb_remount",
+  "steps": [
+    "remount={'ok': True, 'otg': True}"
+  ]
+}

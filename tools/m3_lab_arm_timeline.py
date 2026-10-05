@@ -320,8 +320,20 @@ def main() -> int:
         "--post-pump-kb",
         type=int,
         default=0,
-        help="After bridge-mimic audio_start, pump this many KiB while post-head reads continue (0=silence/underrun)",
+        help="While post-head reads continue, pump up to this many KiB (trickle; 0=no pump)",
     )
+    ap.add_argument(
+        "--post-pump-chunk",
+        type=int,
+        default=2048,
+        help="Bytes pumped per host 4KiB step when post-pump active (use >4096 to outrun host)",
+    )
+    ap.add_argument(
+        "--producer-gate",
+        action="store_true",
+        help="Pause post-pump when ring full (size>=cap); resume when size < cap/2 (Bridge-side, no FW)",
+    )
+    ap.add_argument("--ring-cap", type=int, default=49152, help="Ring capacity for producer-gate")
     ap.add_argument("--settle-s", type=float, default=3.0)
     ap.add_argument("--label", default="", help="Scenario label in report")
     args = ap.parse_args()
@@ -351,6 +363,8 @@ def main() -> int:
     wait_dev(args.dev)
     series: list[dict] = []
     lba0 = need = 0
+    pumped = 0
+    gate_pauses = 0
     pump = PumpTcp(args.esp_ip)
     try:
         setup_menu(pump)
@@ -424,9 +438,6 @@ def main() -> int:
             )
             pump.drain(0.35)
             pump.send_bin(KIND_ID3, id3("BridgeMimic"), gap_s=0.05)
-            if args.post_pump_kb > 0:
-                n = min(len(mp3), args.post_pump_kb * 1024)
-                pump.send_bin(KIND_AUDIO, mp3[:n], gap_s=0.002)
             series.append(snap(esp, "after_audio_start"))
             print(
                 f"  active={series[-1]['stream_active']} ring={series[-1]['ring_size']} "
@@ -436,31 +447,43 @@ def main() -> int:
 
         # Post-arm host reads (field HU continues; cursor++ even on underrun)
         post = args.post_head_kib * 1024
+        pumped = 0
+        pump_budget = max(0, args.post_pump_kb * 1024)
+        gate_pauses = 0
+        gate_paused = False
         if post > 0:
-            print(f"== post-head {args.post_head_kib} KiB (cursor timeline) ==", flush=True)
+            mode = "gate" if args.producer_gate else ("free" if pump_budget else "silent")
+            print(
+                f"== post-head {args.post_head_kib} KiB (cursor timeline, pump={mode}) ==",
+                flush=True,
+            )
             off = need
-            if args.dense:
-                burst_dense(
-                    args.dev,
-                    lba0 + off // 512,
-                    post,
-                    esp,
-                    series,
-                    "post_head",
-                    4096,
-                    4.5,
-                )
-            else:
-                # Coarser: 16 KiB chunks with snap; optional trickle pump
-                done = 0
-                i = 0
-                while done < post:
-                    if args.post_pump_kb > 0 and i % 4 == 0:
-                        pump.send_bin(KIND_AUDIO, mp3[(i * 2048) % max(1, len(mp3) - 2048) : (i * 2048) % max(1, len(mp3) - 2048) + 2048], gap_s=0.001)
-                    burst(args.dev, lba0 + (off + done) // 512, 16384, 4096, 4.5)
-                    done += 16384
-                    series.append(snap(esp, f"post_head_{i}"))
-                    i += 1
+            done = 0
+            i = 0
+            while done < post:
+                # optional trickle pump before each 4 KiB host read
+                if pump_budget > 0 and pumped < pump_budget:
+                    st_now = series[-1] if series else snap(esp, "pre_pump")
+                    ring = int(st_now.get("ring_size") or 0)
+                    if args.producer_gate:
+                        if ring >= args.ring_cap:
+                            if not gate_paused:
+                                gate_pauses += 1
+                            gate_paused = True
+                        elif ring < args.ring_cap // 2:
+                            gate_paused = False
+                    if not (args.producer_gate and gate_paused):
+                        chunk_n = min(args.post_pump_chunk, pump_budget - pumped)
+                        base = (pumped // max(1, chunk_n) * chunk_n) % max(1, len(mp3) - chunk_n)
+                        pump.send_bin(KIND_AUDIO, mp3[base : base + chunk_n], gap_s=0.0005)
+                        pumped += chunk_n
+                if args.dense:
+                    series.append(snap(esp, f"post_head_pre_{i}"))
+                dd(args.dev, lba0 + (off + done) // 512, max(1, 4096 // 512))
+                done += 4096
+                series.append(snap(esp, f"post_head_post_{i}"))
+                i += 1
+                time.sleep(4.5 / 1000.0)
 
         t_end = time.time() + 2
         while time.time() < t_end:
@@ -473,7 +496,8 @@ def main() -> int:
             f"armed={s_last['cursorArmed']} host={s_last['hostAbsCursor']} "
             f"abs={s_last['absBase']}..{s_last['absEnd']} live={s_last['liveBytes']} "
             f"behind={s_last['behind_base']} resync={s_last['headResyncs']} "
-            f"sb={s_last['streamBytes']} und={s_last['underruns']}",
+            f"sb={s_last['streamBytes']} und={s_last['underruns']} "
+            f"pumped={pumped} gate_pauses={gate_pauses}",
             flush=True,
         )
     finally:
@@ -513,8 +537,19 @@ def main() -> int:
             "sectors_4k": (final.get("hostAbsCursor") or 0) // 4096,
         },
         "bridge_mimic": bool(args.bridge_mimic),
+        "producer_gate": bool(args.producer_gate),
+        "post_pump_kb": args.post_pump_kb,
+        "pumped_bytes": pumped,
+        "gate_pauses": gate_pauses,
         "settle_cursorArmed": settle.get("cursorArmed"),
         "n_samples": len(series),
+        "live_summary": {
+            "max_live": max((int(r.get("liveBytes") or 0) for r in series), default=0),
+            "final_live": final.get("liveBytes"),
+            "max_behind_base": max((int(r.get("behind_base") or 0) for r in series), default=0),
+            "final_behind_base": final.get("behind_base"),
+            "max_absBase": max((int(r.get("absBase") or 0) for r in series), default=0),
+        },
     }
     (out / "REPORT.json").write_text(json.dumps(report, indent=2))
 
