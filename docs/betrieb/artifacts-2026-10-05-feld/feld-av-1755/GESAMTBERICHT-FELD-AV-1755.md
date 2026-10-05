@@ -55,3 +55,7 @@ Head-Trigger Feld FAIL (nur cold mid/LED)
 Prefill ungetestet (kein Arm)
 Freeze hält
 ```
+
+## Nachtrag 18:00 — Bayern durch
+
+Operator: Bayern zu Ende. Messung: Rock-Body-Sturm (~8,4 MiB, lba→16449), cold 2→5, rej→2314, **guess=0** — gleiche Signatur wie 17:31/17:38. [`status-1800-bayern-durch.json`](status-1800-bayern-durch.json)

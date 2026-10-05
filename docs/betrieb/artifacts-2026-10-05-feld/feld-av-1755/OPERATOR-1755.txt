@@ -22,3 +22,7 @@ Correlate --dense parallel
 Messung: guess=0; cold=2; bay mid 512KiB fromHead=2; play.reject not_from_head fav1; kein audio_start — LED=cold mid
 
 17:59 Operator: noch kein Ton
+
+18:00 Operator: Bayern ist durch
+
+18:00 Messung: nach Bayern-Ende Rock-Body-Sturm ~8.4MiB cold 2→5 rej→2314 guess=0 (wie 17:31/17:38)
