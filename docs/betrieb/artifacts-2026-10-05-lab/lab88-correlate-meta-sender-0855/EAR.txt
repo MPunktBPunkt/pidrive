@@ -1,0 +1,4 @@
+correlate meta vs sender 2026-10-05T09:02 ok=True
+META Negativ: active=false slots=Favoriten/… pass=True
+SENDER Positiv: active+liveBytes pass=True liveMax=925696
+Abend: erst Sender-Seite, dann Correlate/Ohr; Meta = Negativkontrolle.

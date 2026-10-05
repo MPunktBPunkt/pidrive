@@ -1,0 +1,1005 @@
+{
+  "ok": true,
+  "version": "0.4.45-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "12h 32min",
+  "freeHeap": 107124,
+  "wifiRssi": -71,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.187",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 7102,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 1749,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 804,
+    "bytesRead": 3604992,
+    "bytesMeta": 999936,
+    "bytesBoot": 41472,
+    "bytesFat": 147456,
+    "bytesDir": 221184,
+    "bytesFile": 2605056,
+    "prefetchHits": 1298,
+    "playRejectCount": 1349,
+    "playGuessCount": 1,
+    "streamSlot": -1,
+    "streamBytes": 888832,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "bodySeed": {
+      "active": false,
+      "slot": -1,
+      "tag": "",
+      "fromOff": 348160,
+      "bytesServed": 32768
+    },
+    "coldBodyBurstCount": 7,
+    "readOverflow": 30,
+    "readsEmit": 588,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 58,
+    "usbSerial": "PD0058",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 993,
+      "n2k": 0,
+      "n4k": 756,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 4,
+      "tur": 36599,
+      "turNotReady": 12,
+      "prevent": 17085,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1057,
+      "msToCapacity": 1061,
+      "msToTur": 1059,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "fav0",
+      "size": 49152,
+      "cap": 49152,
+      "absBase": 135168,
+      "absEnd": 184320,
+      "underruns": 0,
+      "id3Len": 32,
+      "headResyncs": 2,
+      "cursorArmed": true,
+      "hostAbsCursor": 142848,
+      "hasCover": true
+    },
+    "msSincePlug": 45150087,
+    "msSinceChange": 45150087,
+    "msPlugToFirstRead": 1061,
+    "msPlugToPlayGuess": 339573,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 2605056,
+        "fromHead": 61,
+        "midFile": 1373,
+        "maxSeq": 188416,
+        "lastAgeMs": 8664
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 45132276,
+      "gap": 65535,
+      "lba": 781,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132277,
+      "gap": 1,
+      "lba": 782,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132277,
+      "gap": 0,
+      "lba": 783,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132278,
+      "gap": 1,
+      "lba": 784,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132290,
+      "gap": 12,
+      "lba": 785,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132291,
+      "gap": 1,
+      "lba": 786,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132292,
+      "gap": 1,
+      "lba": 787,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132293,
+      "gap": 1,
+      "lba": 788,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132293,
+      "gap": 0,
+      "lba": 789,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132294,
+      "gap": 1,
+      "lba": 790,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132295,
+      "gap": 1,
+      "lba": 791,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132296,
+      "gap": 1,
+      "lba": 792,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132296,
+      "gap": 0,
+      "lba": 793,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132297,
+      "gap": 1,
+      "lba": 794,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132298,
+      "gap": 1,
+      "lba": 795,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132298,
+      "gap": 0,
+      "lba": 796,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132299,
+      "gap": 1,
+      "lba": 797,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132300,
+      "gap": 1,
+      "lba": 798,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132301,
+      "gap": 1,
+      "lba": 799,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132301,
+      "gap": 0,
+      "lba": 800,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132302,
+      "gap": 1,
+      "lba": 801,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132303,
+      "gap": 1,
+      "lba": 802,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132304,
+      "gap": 1,
+      "lba": 803,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45132304,
+      "gap": 0,
+      "lba": 804,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135626,
+      "gap": 3322,
+      "lba": 781,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135627,
+      "gap": 1,
+      "lba": 782,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135628,
+      "gap": 1,
+      "lba": 783,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135629,
+      "gap": 1,
+      "lba": 784,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135641,
+      "gap": 12,
+      "lba": 785,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135641,
+      "gap": 0,
+      "lba": 786,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135642,
+      "gap": 1,
+      "lba": 787,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135643,
+      "gap": 1,
+      "lba": 788,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135644,
+      "gap": 1,
+      "lba": 789,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135644,
+      "gap": 0,
+      "lba": 790,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135645,
+      "gap": 1,
+      "lba": 791,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135646,
+      "gap": 1,
+      "lba": 792,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135647,
+      "gap": 1,
+      "lba": 793,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135647,
+      "gap": 0,
+      "lba": 794,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135648,
+      "gap": 1,
+      "lba": 795,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135649,
+      "gap": 1,
+      "lba": 796,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135649,
+      "gap": 0,
+      "lba": 797,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135650,
+      "gap": 1,
+      "lba": 798,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135651,
+      "gap": 1,
+      "lba": 799,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135652,
+      "gap": 1,
+      "lba": 800,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135652,
+      "gap": 0,
+      "lba": 801,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135653,
+      "gap": 1,
+      "lba": 802,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135654,
+      "gap": 1,
+      "lba": 803,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45135655,
+      "gap": 1,
+      "lba": 804,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139001,
+      "gap": 3346,
+      "lba": 781,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139002,
+      "gap": 1,
+      "lba": 782,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139002,
+      "gap": 0,
+      "lba": 783,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139003,
+      "gap": 1,
+      "lba": 784,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139015,
+      "gap": 12,
+      "lba": 785,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139016,
+      "gap": 1,
+      "lba": 786,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139017,
+      "gap": 1,
+      "lba": 787,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139017,
+      "gap": 0,
+      "lba": 788,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139018,
+      "gap": 1,
+      "lba": 789,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139019,
+      "gap": 1,
+      "lba": 790,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139019,
+      "gap": 0,
+      "lba": 791,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139020,
+      "gap": 1,
+      "lba": 792,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139021,
+      "gap": 1,
+      "lba": 793,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139022,
+      "gap": 1,
+      "lba": 794,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139022,
+      "gap": 0,
+      "lba": 795,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139023,
+      "gap": 1,
+      "lba": 796,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139024,
+      "gap": 1,
+      "lba": 797,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139024,
+      "gap": 0,
+      "lba": 798,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139025,
+      "gap": 1,
+      "lba": 799,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139026,
+      "gap": 1,
+      "lba": 800,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139027,
+      "gap": 1,
+      "lba": 801,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139027,
+      "gap": 0,
+      "lba": 802,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139028,
+      "gap": 1,
+      "lba": 803,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45139029,
+      "gap": 1,
+      "lba": 804,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142378,
+      "gap": 3349,
+      "lba": 781,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142379,
+      "gap": 1,
+      "lba": 782,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142380,
+      "gap": 1,
+      "lba": 783,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142381,
+      "gap": 1,
+      "lba": 784,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142393,
+      "gap": 12,
+      "lba": 785,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142393,
+      "gap": 0,
+      "lba": 786,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142394,
+      "gap": 1,
+      "lba": 787,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142395,
+      "gap": 1,
+      "lba": 788,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142395,
+      "gap": 0,
+      "lba": 789,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142396,
+      "gap": 1,
+      "lba": 790,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142397,
+      "gap": 1,
+      "lba": 791,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142398,
+      "gap": 1,
+      "lba": 792,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142398,
+      "gap": 0,
+      "lba": 793,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142399,
+      "gap": 1,
+      "lba": 794,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142400,
+      "gap": 1,
+      "lba": 795,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142401,
+      "gap": 1,
+      "lba": 796,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142401,
+      "gap": 0,
+      "lba": 797,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142402,
+      "gap": 1,
+      "lba": 798,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142403,
+      "gap": 1,
+      "lba": 799,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142404,
+      "gap": 1,
+      "lba": 800,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142404,
+      "gap": 0,
+      "lba": 801,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142405,
+      "gap": 1,
+      "lba": 802,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142406,
+      "gap": 1,
+      "lba": 803,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 45142407,
+      "gap": 1,
+      "lba": 804,
+      "n": 512,
+      "kind": "file",
+      "tag": "Favoriten"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 45150437,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 45150090,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 45150437,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.187",
+      "sense": "tcp-client"
+    }
+  }
+}

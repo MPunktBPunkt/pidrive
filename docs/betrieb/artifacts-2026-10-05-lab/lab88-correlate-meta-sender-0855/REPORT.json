@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "meta": {
+    "pass": true,
+    "active_any": false,
+    "slots": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "liveBytes_end": 888832
+  },
+  "sender": {
+    "pass": true,
+    "active_any": true,
+    "liveBytes_max": 925696,
+    "slots": [
+      "Rock Antenne",
+      "Rock Antenne Bayern",
+      "Radio BOB!",
+      "Menue"
+    ]
+  }
+}
