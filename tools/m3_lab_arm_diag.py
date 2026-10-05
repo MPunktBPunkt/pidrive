@@ -148,6 +148,9 @@ def snap(esp: str, mark: str = "") -> dict:
         "msSincePlug": m.get("msSincePlug"),
         "msPlugToPlayGuess": m.get("msPlugToPlayGuess"),
         "playDetect": m.get("playDetect"),
+        "readOverflow": m.get("readOverflow"),
+        "readsEmit": m.get("readsEmit"),
+        "readCount": m.get("readCount"),
     }
 
 
@@ -311,9 +314,53 @@ def main() -> int:
             f"  guess {g1}->{s_tip['playGuessCount']} play={s_tip['playingUid']} "
             f"active={s_tip['stream_active']} ring={s_tip['ring_size']} "
             f"host={s_tip['hostAbsCursor']} live={s_tip['liveBytes']} "
-            f"ahead={s_tip['ahead']} in={s_tip['in_window']}",
+            f"ahead={s_tip['ahead']} in={s_tip['in_window']} "
+            f"ov={s_tip.get('readOverflow')}",
             flush=True,
         )
+
+        # --- post_tip sustained (prefill path): host continues + producer pace ---
+        if args.prefill_kb > 0 and (
+            s_tip.get("playingUid") == args.uid
+            or (s_tip.get("playGuessCount") or 0) > (g1 or 0)
+            or s_tip.get("stream_active")
+        ):
+            print("== post_tip_prefill_sustain ==", flush=True)
+            mp3 = Path(args.mp3).read_bytes()
+            # keep feeding while host reads from head onward
+            off = need
+            live_pos = 0
+            live_streak = 0
+            max_live = 0
+            max_streak = 0
+            for i in range(24):
+                # ~8 KiB host + ~3 KiB pump per step (~field-ish pace)
+                burst(args.dev, lba0 + off // 512, 8192, 4096, 4.5)
+                off += 8192
+                chunk = mp3[(i * 3072) % max(1, len(mp3) - 3072) : (i * 3072) % max(1, len(mp3) - 3072) + 3072]
+                if chunk:
+                    pump.send_bin(KIND_AUDIO, chunk, gap_s=0.001)
+                s = snap(esp, f"prefill_sustain_{i}")
+                series.append(s)
+                lv = int(s.get("liveBytes") or 0)
+                max_live = max(max_live, lv)
+                if lv > 0:
+                    live_pos += 1
+                    live_streak += 1
+                    max_streak = max(max_streak, live_streak)
+                else:
+                    live_streak = 0
+                if i % 4 == 0:
+                    print(
+                        f"  [{i}] live={lv} ring={s['ring_size']} host={s['hostAbsCursor']} "
+                        f"ahead={s['ahead']} in={s['in_window']} ov={s.get('readOverflow')}",
+                        flush=True,
+                    )
+            print(
+                f"  sustain max_live={max_live} max_streak={max_streak} "
+                f"live_pos={live_pos}/24 ring_at_arm={s_tip['ring_size']}",
+                flush=True,
+            )
 
         # --- field_like: mid then head (no stop between) ---
         print("== field_like mid→head ==", flush=True)
@@ -419,9 +466,22 @@ def main() -> int:
     fls = [r for r in series if r["mark"] == "field_like_tip_poll"]
     fl = fls[-1] if fls else {}
     settle = by.get("settle") or series[0]
+    pref = by.get("after_prefill") or {}
+    sust = [r for r in series if str(r.get("mark", "")).startswith("prefill_sustain_")]
+    live_vals = [int(r.get("liveBytes") or 0) for r in sust]
+    max_live = max(live_vals) if live_vals else 0
+    # longest streak of live>0
+    streak = best = 0
+    for v in live_vals:
+        if v > 0:
+            streak += 1
+            best = max(best, streak)
+        else:
+            streak = 0
 
     report = {
         "playDetect": settle.get("playDetect"),
+        "prefill_kb": args.prefill_kb,
         "mid_cold": {
             "guess_delta": (mid.get("playGuessCount") or 0) - (settle.get("playGuessCount") or 0),
             "reject_delta": (mid.get("playRejectCount") or 0) - (settle.get("playRejectCount") or 0),
@@ -431,30 +491,42 @@ def main() -> int:
             "snap": mid,
         },
         "tip_head": {
-            "armed": tip.get("playingUid") == args.uid or (tip.get("playGuessCount") or 0)
-            > (settle.get("playGuessCount") or 0),
+            "armed": tip.get("playingUid") == args.uid
+            or (tip.get("playGuessCount") or 0) > (settle.get("playGuessCount") or 0)
+            or bool(tip.get("stream_active")),
             "playingUid": tip.get("playingUid"),
             "ring_size_at_arm": tip.get("ring_size"),
             "hostAbs_at_arm": tip.get("hostAbsCursor"),
             "live_at_arm": tip.get("liveBytes"),
             "ahead_at_arm": tip.get("ahead"),
             "stream_active": tip.get("stream_active"),
+            "readOverflow": tip.get("readOverflow"),
+            "prefill_ring": pref.get("ring_size"),
             "snap": tip,
         },
+        "prefill_sustain": {
+            "n": len(sust),
+            "max_live": max_live,
+            "max_live_streak": best,
+            "live_positive_samples": sum(1 for v in live_vals if v > 0),
+            "pass_sustained": best >= 3 and max_live > 0,
+        },
         "field_like": {
-            "armed": fl.get("playingUid") == args.uid,
+            "armed": fl.get("playingUid") == args.uid
+            or (fl.get("playGuessCount") or 0) > (settle.get("playGuessCount") or 0),
             "ring_size_at_arm": fl.get("ring_size"),
             "hostAbs_at_arm": fl.get("hostAbsCursor"),
             "live_at_arm": fl.get("liveBytes"),
+            "readOverflow": fl.get("readOverflow"),
             "snap": fl,
         },
     }
     (out / "REPORT.json").write_text(json.dumps(report, indent=2))
 
     md = [
-        "# Lab Arm-Diagnose · P2",
+        "# Lab Arm-Diagnose · Prefill-vor-Arm" if args.prefill_kb else "# Lab Arm-Diagnose · P2",
         "",
-        f"**ESP:** `{esp}` · **Out:** `{out}` · Seed aus · kein Detect-Umbau",
+        f"**ESP:** `{esp}` · **Out:** `{out}` · Seed aus · prefill_kb={args.prefill_kb} · kein Detect-Umbau",
         "",
         "## playDetect",
         f"```json\n{json.dumps(report['playDetect'], indent=2)}\n```",
@@ -465,17 +537,24 @@ def main() -> int:
         f"coldΔ={report['mid_cold']['cold_delta']} play=`{report['mid_cold']['playingUid']}`",
         f"- **tip_head:** armed={report['tip_head']['armed']} "
         f"ring={report['tip_head']['ring_size_at_arm']} "
+        f"prefill_ring={report['tip_head']['prefill_ring']} "
         f"hostAbs={report['tip_head']['hostAbs_at_arm']} "
-        f"live={report['tip_head']['live_at_arm']}",
+        f"live={report['tip_head']['live_at_arm']} "
+        f"ov={report['tip_head']['readOverflow']}",
+        f"- **prefill_sustain:** max_live={report['prefill_sustain']['max_live']} "
+        f"streak={report['prefill_sustain']['max_live_streak']} "
+        f"pos={report['prefill_sustain']['live_positive_samples']}/"
+        f"{report['prefill_sustain']['n']} "
+        f"PASS={report['prefill_sustain']['pass_sustained']}",
         f"- **field_like mid→head:** armed={report['field_like']['armed']} "
         f"ring={report['field_like']['ring_size_at_arm']} "
         f"hostAbs={report['field_like']['hostAbs_at_arm']} "
         f"live={report['field_like']['live_at_arm']}",
         "",
-        "## Erwartung (Code)",
-        "- Mid-only: `not_from_head` / prefetch → kein `play.guess`",
-        "- Head-Sequenz ≥ minSeqBytes + indexSettled → `play.guess`",
-        "- Beim Arm: `ring_size`/`hostAbs`/`live` loggen (Feld 15:41-Frage)",
+        "## Erwartung",
+        "- Mid-only: kein Arm",
+        "- Prefill vor Head: ring>0 beim Arm; sustain liveBytes>0 anhaltend",
+        "- field_like: Mid→Head armt (Head-Trigger-Form)",
         "",
         "Freeze hält.",
         "",

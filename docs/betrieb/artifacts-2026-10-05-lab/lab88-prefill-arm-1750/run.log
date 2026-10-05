@@ -1,0 +1,90 @@
+== soft-rst ==
+  restart req: Expecting value: line 1 column 1 (char 0)
+  up=12s serial=PD0062
+uid=fav1 lba0=16465..17488 minSeq=6000 headSlop=12
+== settle ==
+== mid_cold ==
+  guess 1->1 reject 78->171 cold=3 play= ring=0 host=0
+== tip_head ==
+  prefill 98304B ring=49152 abs=49152..98304
+  guess 1->2 play=fav1 active=True ring=49152 host=60928 live=12288 ahead=0 in=True ov=0
+== post_tip_prefill_sustain ==
+  [0] live=20480 ring=49152 host=69120 ahead=0 in=True ov=0
+  [4] live=53248 ring=49152 host=101888 ahead=0 in=True ov=0
+  [8] live=69632 ring=49152 host=134656 ahead=8704 in=False ov=0
+  [12] live=69632 ring=49152 host=167424 ahead=29184 in=False ov=0
+  [16] live=69632 ring=49152 host=200192 ahead=49664 in=False ov=0
+  [20] live=69632 ring=49152 host=232960 ahead=70144 in=False ov=0
+  sustain max_live=69632 max_streak=24 live_pos=24/24 ring_at_arm=49152
+== field_like mid→head ==
+  pump reconnect 0: [Errno 32] Broken pipe
+  guess 2->3 play=fav1 ring=49152 host=257536 live=69632
+== post_arm_burst (no prefill) ==
+  final live=208896 und=0 ahead=0 size=49152
+  status-final retry: [Errno 104] Connection reset by peer
+OUT=docs/betrieb/artifacts-2026-10-05-lab/lab88-prefill-arm-1750
+{
+  "playDetect": {
+    "plugWindowMs": 500,
+    "minSeqBytes": 6000,
+    "navMinSeqBytes": 4096,
+    "headLbaSlop": 12,
+    "cooldownMs": 5000,
+    "prefetchLbaSlop": 2
+  },
+  "prefill_kb": 96,
+  "mid_cold": {
+    "guess_delta": 0,
+    "reject_delta": 93,
+    "cold_delta": 1,
+    "playingUid": "",
+    "snap": {
+      "ts": 1791215415.8128643,
+      "mark": "after_mid_cold",
+      "playingUid": "",
+      "playingName": "",
+      "phase": "play",
+      "playGuessCount": 1,
+      "playRejectCount": 171,
+      "prefetchHits": 152,
+      "coldBodyBurstCount": 3,
+      "stream_active": false,
+      "stream_uid": "",
+      "cursorArmed": false,
+      "ring_size": 0,
+      "absBase": 0,
+      "absEnd": 0,
+      "hostAbsCursor": 0,
+      "streamBytes": 0,
+      "underruns": 0,
+      "liveBytes": 0,
+      "ahead": 0,
+      "in_window": false,
+      "msSincePlug": 20381,
+      "msPlugToPlayGuess": 10342,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      },
+      "readOverflow": 0,
+      "readsEmit": 20,
+      "readCount": 224
+    }
+  },
+  "tip_head": {
+    "armed": true,
+    "playingUid": "fav1",
+    "ring_size_at_arm": 49152,
+    "hostAbs_at_arm": 60928,
+    "live_at_arm": 12288,
+    "ahead_at_arm": 0,
+    "stream_active": true,
+    "readOverflow": 0,
+    "prefill_ring": 49152,
+    "snap": {
+      "ts": 1791215418.3345513,
+      "mark"

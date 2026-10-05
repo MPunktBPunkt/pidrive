@@ -1,0 +1,1005 @@
+{
+  "ok": true,
+  "version": "0.4.45-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "17s",
+  "freeHeap": 106272,
+  "wifiRssi": -70,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.187",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 15410,
+  "menuCount": 4,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 128,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 0,
+    "bytesRead": 481280,
+    "bytesMeta": 157696,
+    "bytesBoot": 10240,
+    "bytesFat": 32768,
+    "bytesDir": 49152,
+    "bytesFile": 323584,
+    "prefetchHits": 59,
+    "playRejectCount": 78,
+    "playGuessCount": 1,
+    "streamSlot": -1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "bodySeed": {
+      "active": false,
+      "slot": -1,
+      "tag": "",
+      "fromOff": 348160,
+      "bytesServed": 0
+    },
+    "coldBodyBurstCount": 2,
+    "readOverflow": 0,
+    "readsEmit": 1,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 62,
+    "usbSerial": "PD0062",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 12,
+      "n2k": 0,
+      "n4k": 116,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 2,
+      "tur": 25,
+      "turNotReady": 0,
+      "prevent": 12,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1037,
+      "msToCapacity": 1038,
+      "msToTur": 1038,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": false,
+      "uid": "",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 0,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": false
+    },
+    "msSincePlug": 16896,
+    "msSinceChange": 16896,
+    "msPlugToFirstRead": 1039,
+    "msPlugToPlayGuess": 10342,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "AV Rock",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 323584,
+        "fromHead": 2,
+        "midFile": 77,
+        "maxSeq": 188416,
+        "lastAgeMs": 6455
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "AV Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "AV BOB",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 2064,
+      "gap": 4,
+      "lba": 512,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2069,
+      "gap": 5,
+      "lba": 1024,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2073,
+      "gap": 4,
+      "lba": 2048,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2078,
+      "gap": 5,
+      "lba": 8192,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2082,
+      "gap": 4,
+      "lba": 40,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2086,
+      "gap": 4,
+      "lba": 48,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2090,
+      "gap": 4,
+      "lba": 56,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2096,
+      "gap": 6,
+      "lba": 24,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 2111,
+      "gap": 15,
+      "lba": 120,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2117,
+      "gap": 6,
+      "lba": 16,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 2121,
+      "gap": 4,
+      "lba": 72,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 2125,
+      "gap": 4,
+      "lba": 80,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 2129,
+      "gap": 4,
+      "lba": 88,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2134,
+      "gap": 5,
+      "lba": 96,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2138,
+      "gap": 4,
+      "lba": 104,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2142,
+      "gap": 4,
+      "lba": 112,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2147,
+      "gap": 5,
+      "lba": 136,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2151,
+      "gap": 4,
+      "lba": 144,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2155,
+      "gap": 4,
+      "lba": 152,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2159,
+      "gap": 4,
+      "lba": 160,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2163,
+      "gap": 4,
+      "lba": 168,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2167,
+      "gap": 4,
+      "lba": 176,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2171,
+      "gap": 4,
+      "lba": 184,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2175,
+      "gap": 4,
+      "lba": 192,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2179,
+      "gap": 4,
+      "lba": 200,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2183,
+      "gap": 4,
+      "lba": 208,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2188,
+      "gap": 5,
+      "lba": 216,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2192,
+      "gap": 4,
+      "lba": 224,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2196,
+      "gap": 4,
+      "lba": 232,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2200,
+      "gap": 4,
+      "lba": 240,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2204,
+      "gap": 4,
+      "lba": 248,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2208,
+      "gap": 4,
+      "lba": 264,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2212,
+      "gap": 4,
+      "lba": 272,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2216,
+      "gap": 4,
+      "lba": 280,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2220,
+      "gap": 4,
+      "lba": 288,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2224,
+      "gap": 4,
+      "lba": 296,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2228,
+      "gap": 4,
+      "lba": 304,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2232,
+      "gap": 4,
+      "lba": 312,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2236,
+      "gap": 4,
+      "lba": 320,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2240,
+      "gap": 4,
+      "lba": 328,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2244,
+      "gap": 4,
+      "lba": 336,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2249,
+      "gap": 5,
+      "lba": 344,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2253,
+      "gap": 4,
+      "lba": 352,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2257,
+      "gap": 4,
+      "lba": 360,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2260,
+      "gap": 3,
+      "lba": 368,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2264,
+      "gap": 4,
+      "lba": 376,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2268,
+      "gap": 4,
+      "lba": 384,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2272,
+      "gap": 4,
+      "lba": 392,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2276,
+      "gap": 4,
+      "lba": 400,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2281,
+      "gap": 5,
+      "lba": 408,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2285,
+      "gap": 4,
+      "lba": 416,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2289,
+      "gap": 4,
+      "lba": 424,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2293,
+      "gap": 4,
+      "lba": 432,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2297,
+      "gap": 4,
+      "lba": 440,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2301,
+      "gap": 4,
+      "lba": 448,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2305,
+      "gap": 4,
+      "lba": 456,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2309,
+      "gap": 4,
+      "lba": 464,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2313,
+      "gap": 4,
+      "lba": 472,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2317,
+      "gap": 4,
+      "lba": 480,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2321,
+      "gap": 4,
+      "lba": 488,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2325,
+      "gap": 4,
+      "lba": 496,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 2329,
+      "gap": 4,
+      "lba": 504,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11171,
+      "gap": 8842,
+      "lba": 0,
+      "n": 4096,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 11176,
+      "gap": 5,
+      "lba": 8,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 11181,
+      "gap": 5,
+      "lba": 16,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 11186,
+      "gap": 5,
+      "lba": 24,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 11190,
+      "gap": 4,
+      "lba": 32,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 11194,
+      "gap": 4,
+      "lba": 40,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 11198,
+      "gap": 4,
+      "lba": 48,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 11202,
+      "gap": 4,
+      "lba": 56,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 11206,
+      "gap": 4,
+      "lba": 64,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 11211,
+      "gap": 5,
+      "lba": 72,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 11214,
+      "gap": 3,
+      "lba": 80,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 11219,
+      "gap": 5,
+      "lba": 88,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11233,
+      "gap": 14,
+      "lba": 96,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11238,
+      "gap": 5,
+      "lba": 104,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11253,
+      "gap": 15,
+      "lba": 112,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11257,
+      "gap": 4,
+      "lba": 120,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11261,
+      "gap": 4,
+      "lba": 128,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11265,
+      "gap": 4,
+      "lba": 136,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11269,
+      "gap": 4,
+      "lba": 144,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11283,
+      "gap": 14,
+      "lba": 152,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11287,
+      "gap": 4,
+      "lba": 160,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11291,
+      "gap": 4,
+      "lba": 168,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11295,
+      "gap": 4,
+      "lba": 176,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11299,
+      "gap": 4,
+      "lba": 184,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11304,
+      "gap": 5,
+      "lba": 192,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11308,
+      "gap": 4,
+      "lba": 200,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11312,
+      "gap": 4,
+      "lba": 208,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11316,
+      "gap": 4,
+      "lba": 216,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11320,
+      "gap": 4,
+      "lba": 224,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11324,
+      "gap": 4,
+      "lba": 232,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11328,
+      "gap": 4,
+      "lba": 240,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 11332,
+      "gap": 4,
+      "lba": 248,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 15112,
+      "gap": 3780,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 17771,
+      "gap": 2659,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 17234,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 16899,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 17235,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.187",
+      "sense": "tcp-client"
+    }
+  }
+}
