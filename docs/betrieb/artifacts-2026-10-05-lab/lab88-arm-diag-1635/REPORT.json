@@ -1,0 +1,76 @@
+{
+  "playDetect": {
+    "plugWindowMs": 500,
+    "minSeqBytes": 6000,
+    "navMinSeqBytes": 4096,
+    "headLbaSlop": 12,
+    "cooldownMs": 5000,
+    "prefetchLbaSlop": 2
+  },
+  "mid_cold": {
+    "guess_delta": 0,
+    "reject_delta": 93,
+    "cold_delta": 1,
+    "armed": false,
+    "ring": 0,
+    "host": 0
+  },
+  "tip_head": {
+    "armed": true,
+    "guess": 1,
+    "ring_size_at_arm": 0,
+    "hostAbs_at_arm": 0,
+    "live_at_arm": 0,
+    "stream_active": false,
+    "ahead_at_arm": 0
+  },
+  "field_like": {
+    "armed": true,
+    "ring_size_at_arm": 0,
+    "hostAbs_at_arm": 0,
+    "live_at_arm": 0
+  },
+  "post_arm_no_prefill": {
+    "n": 10,
+    "final": {
+      "ts": 1791210985.8649127,
+      "mark": "post_arm_9",
+      "playingUid": "fav1",
+      "playingName": "AV Bayern",
+      "phase": "play",
+      "playGuessCount": 2,
+      "playRejectCount": 476,
+      "prefetchHits": 180,
+      "coldBodyBurstCount": 3,
+      "stream_active": true,
+      "stream_uid": "fav1",
+      "cursorArmed": false,
+      "ring_size": 49152,
+      "absBase": 32768,
+      "absEnd": 81920,
+      "hostAbsCursor": 0,
+      "streamBytes": 0,
+      "underruns": 0,
+      "liveBytes": 0,
+      "ahead": 0,
+      "in_window": false,
+      "msSincePlug": 36833,
+      "msPlugToPlayGuess": 30961,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      }
+    },
+    "max_live": 0,
+    "max_ahead": 0
+  },
+  "interpretation": {
+    "mid_does_not_arm": true,
+    "head_arms_with_empty_ring": true,
+    "explains_field_0_live_at_arm": true
+  }
+}

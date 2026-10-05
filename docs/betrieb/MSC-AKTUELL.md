@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Lab-Follow-up · Feld Gate Abend **PASS** · AV/Ohr **FAIL** Fenster/Arm · StreamBuffer-Semantik dokumentiert · HU-Mimic Lab · FW `0.4.45-dev`  
-**Phase:** Baustelle B — Lab-Fenster-Repro + Counter-Semantik · Freeze hält
+**Stand:** 2026-10-05 Lab Arm-Diagnose · Fenster-Outrun + Head-Arm bei ring=0 belegt · FW `0.4.45-dev`  
+**Phase:** Baustelle B — Prefill-vor-Arm als Lab-Gegenmittel; Feldlauf mit `--dense` als Nächstes · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -12,12 +12,14 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | # | Dokument | Rolle |
 |---|----------|--------|
 | 0 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | **Feld Abend** — Gate PASS, AV/Ohr FAIL Fenster/Arm |
+| 0L4 | [`artifacts-2026-10-05-lab/lab88-arm-diag-1635/GESAMTBERICHT-ARM-DIAG.md`](artifacts-2026-10-05-lab/lab88-arm-diag-1635/GESAMTBERICHT-ARM-DIAG.md) | Lab Arm-Diagnose: Mid≠Arm, Head-Arm bei ring=0 |
 | 0L3 | [`artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md`](artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md) | Lab HU-Mimic 15:41 Fenster-Outrun |
 | 0L2 | [`artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md) | StreamBuffer: underruns / hostAbs / liveBytes |
 | 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
 | 0m | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | Morgen — C′ PASS, AV Meta-Hindernis |
 | 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | Abend-EAR (ausgeführt) |
 | 0k | [`artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md) | Kritik GPT-5.4 → Maßnahmen |
+| 0k3 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-LAB-FOLLOWUP-305b55f.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-LAB-FOLLOWUP-305b55f.md) | Kritik Mistral 305b55f (lokal verifiziert) |
 | 0k2 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md) | Konsolidiert: Gate-Wortlaut schärfen |
 | 0L | [`artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md`](artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md) | Lab: Meta-Erstsiegel-Mechanismus (**Feldmorgen stark erklärt**, Seal-Log Feld fehlt) |
 | 0a | [`artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md) | **Lab Menü-Seite PASS** + Abend-EAR |
@@ -49,14 +51,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Lab HU-Mimic 15:41** (`tools/m3_lab_hu_mimic_1541.py`) — Zeitreihe abs/host/live; Counter-Semantik: [`STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md).  
-2. Arm-Diagnose (cold_body / `playGuess`) — Log only, kein Policy-Umbau.  
-3. Erst danach kurzer Feldlauf: frische Bridge → Gate → ein Sender → `--dense` Correlate + Ohr.  
-4. Freeze hält. Gate-Recovery: Bridge neu / Unplug.
+1. **Feld (kurz):** frische Bridge → Gate + FROZEN archivieren → ein Sender → `--dense` Correlate + Ohr. Messen: `ring_size`/`hostAbs`/`live` **beim Arm**.  
+2. Lab-Gegenmittel bleibt Messziel: Prefill/Fill **vor** HU-Head-Sequenz (nicht Detect-Umbau).  
+3. Freeze hält. Gate-Recovery: Bridge neu / Unplug.
 
 ```
-Gate Abend PASS
-AV FAIL Fenster (Zustand) — Ursache Lab
-Correlate --dense · HU-Mimic
+Fenster-Outrun Lab ✓
+Head-Arm @ ring=0 Lab ✓
+Feld: dense Correlate + Prefill-Frage
 Freeze hält
 ```

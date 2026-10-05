@@ -11,7 +11,7 @@
 
 | Sc | Idee | max_live | max_ahead | full_und_phase | mirrors_1541 |
 |----|------|----------|-----------|----------------|--------------|
-| **A** | Race (kaum Prefill → Mid-Burst) | 4096 | 285696 | ~98 % und | **ja (nahe)** |
+| **A** | Race (kaum Prefill → Mid-Burst) | 4096 | 285696 | ~98 % und | **nahe** (`REPORT.mirrors_1541=false`: live≠0, und≠sb exakt) |
 | **B** | Fill dann Pace (Positiv) | 373760 | 34816 | False | False |
 | **C** | Fill dann schneller Outrun | 472576 | 268288 | False | False |
 
