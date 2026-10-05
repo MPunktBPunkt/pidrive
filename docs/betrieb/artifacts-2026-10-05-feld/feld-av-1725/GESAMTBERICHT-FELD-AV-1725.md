@@ -78,6 +78,13 @@ Standard-Correlate (`hostAbs`/`live`) blieb flach **null**, obwohl LED/Slot-Byte
 - Fenster-Outrun am Auto (kein Producer)  
 - Detect-Umbau nötig (Messlage, Freeze hält)
 
+## 4b. Review-Nachtrag (`4bcadaf`-Prüfung)
+
+Externer Review + Cursor-Gegenprüfung: [`KRITIK-REVIEW-FELD-1725-4bcadaf.md`](KRITIK-REVIEW-FELD-1725-4bcadaf.md).
+
+- **Übernommen:** Head-Trigger der HU ist die neue offene Feldfrage (15:41 einmal Head→Arm; 17:25/36 nie). `mscTrace` 15:41 beginnt erst bei Mid→Head — Vorlauf fehlt im Ring.
+- **Anomalie:** nach Remount PD0072 `readOverflow=67`; kurz `readsEmit=0` bei `readCount>0` (M0: Emit braucht Bridge-Drain) — mitloggen, kein Arm-Beweis.
+
 ## 5. Nächste Schritte
 
 1. Lab: Prefill/Fill **vor** Head-Sequenz (Gegenmittel zu ring=0 nach Arm).  
