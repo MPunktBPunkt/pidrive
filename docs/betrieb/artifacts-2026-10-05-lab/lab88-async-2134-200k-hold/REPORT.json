@@ -1,0 +1,49 @@
+{
+  "label": "async_200k_hold",
+  "prep": {
+    "steps": [
+      "restart_err=Expecting value: line 1 column 1 (char 0)"
+    ],
+    "serial": "PD0067",
+    "uptime": "12s"
+  },
+  "config": {
+    "pump_bps": 200000.0,
+    "pump_chunk": 4096,
+    "host_gap_ms": 4.5,
+    "prefill_kb": 48,
+    "post_head_kib": 248,
+    "cursor_hold": true,
+    "host_pause_after_kib": 0,
+    "host_pause_s": 0
+  },
+  "rates": {
+    "host_bps_observed": 126046.72073887636,
+    "pump_bps_target": 200000.0,
+    "pump_bps_ratio": 1.5867132348038497,
+    "burst_s": 2.014744997024536,
+    "pumped_bytes": 114688,
+    "hold_pauses": 1
+  },
+  "after_burst": {
+    "hostAbs": 253952,
+    "absBase": 102400,
+    "absEnd": 151552,
+    "live": 52736,
+    "und": 201216,
+    "behind": 0,
+    "in_window": false
+  },
+  "after_pause": null,
+  "final": {
+    "hostAbs": 253952,
+    "absBase": 114688,
+    "absEnd": 163840,
+    "live": 52736,
+    "und": 201216,
+    "behind": 0,
+    "in_window": false
+  },
+  "pass_streaming": false,
+  "pass_pause": true
+}

@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Lab — **Cursor-Hold PASS** (2110/2111) · Pace≥Host · 18:07-Repro · FW `0.4.45-dev`  
-**Phase:** Baustelle B — dreistufig lab-belegt; nächstes = asynchrone Bridge + Feld-Raten · Freeze hält
+**Stand:** 2026-10-05 Lab — Cursor-Hold PASS (gekoppelt) · **Async: Hold vs Free belegt**, und=0 unter MSC-Last offen · FW `0.4.45-dev`  
+**Phase:** Baustelle B — Bridge Prefill+Pace+Hold; Async-Concurrent-Limit dokumentiert · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -25,6 +25,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0L7 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-WEICHE-2035.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-WEICHE-2035.md) | **Lab Weiche:** Prefill-Sweep + Free vs Gate |
 | 0L8 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-FOLGE-2045.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-FOLGE-2045.md) | **Lab Folge:** Pace-Raten + Fenster-voraus-Repro |
 | 0L9 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-CURSOR-HOLD-2110.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-CURSOR-HOLD-2110.md) | **Lab Cursor-Hold PASS** (gegen 2050 / Host-Pause) |
+| 0L10 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md) | **Lab Async:** Free=18:07 · Hold behind=0 · Pace unter MSC-Last offen |
 | 0k4 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md) | Review Mistral+GPT zu 8d4f028 |
 | 0k5 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-WEICHE-a99a830.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-WEICHE-a99a830.md) | Review Mistral+GPT zu Weiche a99a830 |
 | 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
@@ -52,7 +53,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Lab **Prefill+Pace+Cursor-Hold PASS** · Gate-alone 🔴 · 18:07-Repro 🟢 · Feld Ton 🔴 |
+| AV / Ohr | Lab Prefill+Pace+Hold (gekoppelt) PASS · Async Hold hält behind=0, Free→18:07 · Async und=0 unter MSC-Last 🟠 · Feld Ton 🔴 |
 | Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
 | Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
 | Detect | Cold=mid Reject; **Head-Arm im Feld nach RST** belegt; Cooldown 5 s |
@@ -63,12 +64,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Bridge:** dreistufig umsetzen (Prefill + Pace ≥ Host + Cursor-Hold); zuerst asynchroner Lab-Pump ohne Read-Kopplung.  
-2. Feld: dense Correlate ab `audio_start` — `d(absEnd)/dt` vs `d(hostAbs)/dt`; PASS = `live>0`∧`und=0`∧`behind=0` anhaltend + Ohr.  
+1. **Bridge:** Prefill + Pace + Cursor-Hold umsetzen; Async-Lab zeigt: ohne Hold → Fenster voraus, mit Hold → behind=0, aber ESP-Pump unter MSC-Burst drosselt.  
+2. Feld: `d(absEnd)/dt` vs `d(hostAbs)/dt` ab `audio_start`.  
 3. Freeze hält.
 
 ```
-Lab: Prefill+Pace+Cursor-Hold PASS
-Nächstes: asynchrone Bridge + Feld-Raten
+Lab Async: Hold vs Free belegt (18:07)
+Gekoppelt: Prefill+Pace+Hold PASS
+Nächstes: Bridge-Implementierung + Feld-Raten
 Freeze hält
 ```

@@ -259,8 +259,10 @@ def cursor_hold_allows(st: dict, ring_cap: int, next_chunk: int = 0) -> bool:
     """Producer may write only while window cannot fully outrun the host cursor.
 
     GPT rule: absEnd <= hostAbs + cap  (equiv. absBase <= hostAbs when ring full).
-    next_chunk: refuse if this write would push absEnd past hostAbs+cap.
+    Before cursor is armed / hostAbs==0: allow fill (Prefill/Pace warm-up).
     """
+    if not st.get("cursorArmed") or int(st.get("hostAbsCursor") or 0) <= 0:
+        return True
     host = int(st.get("hostAbsCursor") or 0)
     abs_base = int(st.get("absBase") or 0)
     abs_end = int(st.get("absEnd") or 0)
