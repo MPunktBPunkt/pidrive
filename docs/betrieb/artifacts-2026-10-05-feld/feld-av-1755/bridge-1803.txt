@@ -1,0 +1,11 @@
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+[msc-lock] USB_SESSION_END → MSC_MAP_RELEASED
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=753..6825 n=752 B=3080192 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=753..6825 n=752 B=3080192 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=753..12857 n=754 B=3088384 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=753..12857 n=754 B=3088384 w=0 ev=not_from_head set=1 fav0

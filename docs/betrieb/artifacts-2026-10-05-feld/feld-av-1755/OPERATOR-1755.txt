@@ -26,3 +26,17 @@ Messung: guess=0; cold=2; bay mid 512KiB fromHead=2; play.reject not_from_head f
 18:00 Operator: Bayern ist durch
 
 18:00 Messung: nach Bayern-Ende Rock-Body-Sturm ~8.4MiB cold 2→5 rej→2314 guess=0 (wie 17:31/17:38)
+
+18:01 Operator: OTG neu verbinden, PD0073
+
+18:01 Remount → PD0074; Bridge e nach BrokenPipe; Gate check
+
+18:02 Gate PASS PD0074 MSC_MAP_FROZEN — GO BOB halten dann Bayern
+
+18:03 Operator: GO — BOB dann Bayern (PD0074)
+
+18:03 Operator: Zeitmarke / GO aktiv
+
+18:03 Operator: kein Ton, LED blinkt bei Wechsel (PD0075)
+
+Messung 18:03: guess=0 cold=2 bay mid 512KiB fromHead=2 — LED=cold mid, kein Arm

@@ -59,3 +59,9 @@ Freeze hält
 ## Nachtrag 18:00 — Bayern durch
 
 Operator: Bayern zu Ende. Messung: Rock-Body-Sturm (~8,4 MiB, lba→16449), cold 2→5, rej→2314, **guess=0** — gleiche Signatur wie 17:31/17:38. [`status-1800-bayern-durch.json`](status-1800-bayern-durch.json)
+
+## Nachtrag 18:01–18:03 — Remount PD0074/75
+
+OTG neu → Serial **PD0074** dann **PD0075**; Gate erneut FROZEN nach Bridge-Retry.  
+GO BOB→Bayern: LED blinkt, **guess=0**, Bayern mid 512 KiB / fromHead=2, kein `audio_start` — Head-Trigger erneut FAIL.  
+Artefakte: `status-1803-no-tone.json`, `bridge-1803.txt`, `OPERATOR-1755.txt`.
