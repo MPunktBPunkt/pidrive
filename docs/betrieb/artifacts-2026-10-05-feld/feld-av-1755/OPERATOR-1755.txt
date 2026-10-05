@@ -40,3 +40,7 @@ Messung: guess=0; cold=2; bay mid 512KiB fromHead=2; play.reject not_from_head f
 18:03 Operator: kein Ton, LED blinkt bei Wechsel (PD0075)
 
 Messung 18:03: guess=0 cold=2 bay mid 512KiB fromHead=2 — LED=cold mid, kein Arm
+
+18:04 Operator: Wechsel zu Rock Antenne — LED Dauerfeuer
+
+Messung: Rock-Body-Sturm / cold mid — guess=0 erwartet (LED Dauerfeuer ≠ Ton)

@@ -65,3 +65,7 @@ Operator: Bayern zu Ende. Messung: Rock-Body-Sturm (~8,4 MiB, lba→16449), co
 OTG neu → Serial **PD0074** dann **PD0075**; Gate erneut FROZEN nach Bridge-Retry.  
 GO BOB→Bayern: LED blinkt, **guess=0**, Bayern mid 512 KiB / fromHead=2, kein `audio_start` — Head-Trigger erneut FAIL.  
 Artefakte: `status-1803-no-tone.json`, `bridge-1803.txt`, `OPERATOR-1755.txt`.
+
+## Nachtrag 18:04 — Rock Dauerfeuer
+
+Operator: Wechsel zu Rock Antenne, LED Dauerfeuer. Messung PD0076: Rock ~8,4 MiB mid/end (lba→16449), cold 2→5, rej→2314, **guess=0** — Body-Sturm, kein Arm. [`status-1804-rock-dauerfeuer.json`](status-1804-rock-dauerfeuer.json)
