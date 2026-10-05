@@ -1,0 +1,7 @@
+15:43 Operator: OTG neu verbinden, dann Rock Antenne tippen — PD0067
+
+15:44 Operator: PD0068 Rock Antenne gewählt, warte auf Ton
+
+15:46 Operator: tippe Radio BOB!
+15:47 Operator: BOB — kein Ton, LED nicht gesehen
+Watch: stream.active=false, bobB~512KiB stagnant, kein audio_start fav2

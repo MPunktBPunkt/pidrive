@@ -1,0 +1,32 @@
+15:46:22 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:24 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:26 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:29 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:31 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:33 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:35 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:37 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:39 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:41 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:43 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:46 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:48 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:50 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:52 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:54 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:56 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:46:58 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:47:01 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+15:47:03 play - active False uid - host 0 win [0, 0] live 0 und 0 buf 0 bobB 524288
+[msc] cold_body_burst s=0 lba=9937..16153 n=770 B=3153920 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"play_uid","uid":"fav1"}
+[trace] t=0ms play_uid=fav1
+[tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+[trace] audio_start sent uid=fav1 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne-bayern/stream/mp3 @ 48k
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=753..7153 n=793 B=3248128 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=753..7153 n=793 B=3248128 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=753..13161 n=751 B=3076096 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=753..13161 n=751 B=3076096 w=0 ev=not_from_head set=1 fav0

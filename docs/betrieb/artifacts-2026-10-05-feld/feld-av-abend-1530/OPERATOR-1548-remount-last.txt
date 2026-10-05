@@ -1,0 +1,8 @@
+15:48 Operator last remount attempt — waiting for GO
+Plan: OTG ab → 3s → OTG an → Gate Rock/Bayern/BOB → GO → nur EIN Sender tippen (Bayern bevorzugt) ~40s
+
+15:49 Operator: Bayern getippt
+
+15:49 Operator: kein Ton (Bayern nach Remount)
+
+15:51 Operator: LED-Aktivität vor Ende von Bayern und zu Beginn von Rock Antenne

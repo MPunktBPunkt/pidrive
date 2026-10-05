@@ -1,0 +1,9 @@
+15:40 Operator: Bayern-Wechsel ohne LED (E4 hatte Bayern schon gelesen)
+→ Wechsel zu BOB, dann ESP RST, Test neu starten
+Correlate-1538: vor RST abgebrochen / ungültig für AV-PASS
+15:40 BOB läuft
+
+15:40 Operator: BOB läuft (UI)
+Messung: stream.active=false; BOB slot bytes~512KiB lastAge~37s; kein audio_start
+
+15:41 Operator: kein Ton; HU wechselt gleich zu Bayern

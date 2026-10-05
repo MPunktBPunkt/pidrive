@@ -1,0 +1,26 @@
+total_hits 59
+[msc] cold_body_burst s=0 lba=753..13161 n=751 B=3076096 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=9300480B age=2000ms"}
+[msc] msc.quiet file=9300480B age=2000ms
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17137..17193 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17137..17193 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=9476608B age=2000ms"}
+[msc] msc.quiet file=9476608B age=2000ms
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=120..4096 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"}
+[msc] cold_body_burst s=0 lba=120..4096 n=8 B=32768 w=0 ev=not_from_head set=0 fav0
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1260032B age=2003ms"}
+[msc] msc.quiet file=1260032B age=2003ms
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=1436160B age=2000ms"}
+[msc] msc.quiet file=1436160B age=2000ms
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=3303936B age=2000ms"}
+[msc] msc.quiet file=3303936B age=2000ms
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=4401..4457 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=4401..4457 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=4401..10505 n=756 B=3096576 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=4401..10505 n=756 B=3096576 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"msc.quiet","detail":"file=9476608B age=2000ms"}
+[msc] msc.quiet file=9476608B age=2000ms

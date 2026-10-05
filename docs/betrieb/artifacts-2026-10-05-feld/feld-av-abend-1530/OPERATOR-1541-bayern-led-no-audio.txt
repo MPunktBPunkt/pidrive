@@ -1,0 +1,6 @@
+15:41 LED blinkt, Wechsel BOB→Bayern, kein Ton
+Messung: stream.active=true fav1; audio_start+ffmpeg Rock Antenne Bayern
+hostAbsCursor=253952 außerhalb absBase..absEnd (161944..211096)
+underruns=253952 (=streamBytes) → liveBytes=0
+Correlate-1540: live=0 und=253952
+Klassifikation: Gate PASS, AV FAIL Fenster (B) — Producer an, Host-Cursor außerhalb Live-Fenster

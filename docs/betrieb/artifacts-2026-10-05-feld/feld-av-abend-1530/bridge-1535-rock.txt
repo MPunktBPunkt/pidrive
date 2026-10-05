@@ -1,0 +1,14 @@
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=120..4096 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"}
+[msc] cold_body_burst s=0 lba=120..4096 n=8 B=32768 w=0 ev=not_from_head set=0 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=753..6897 n=761 B=3117056 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=753..6897 n=761 B=3117056 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=9937..9993 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=9937..9993 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=9937..16153 n=770 B=3153920 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=9937..16153 n=770 B=3153920 w=0 ev=not_from_head set=1 fav0

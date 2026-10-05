@@ -1,0 +1,3 @@
+15:38 Operator ready — waiting for correlate GO
+Note: Stop not visible on HU; uncertain if E4 already read Rock Antenne Bayern earlier
+Target: Rock Antenne Bayern ~30s play during correlate 90s

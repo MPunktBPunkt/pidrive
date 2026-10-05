@@ -1,0 +1,7 @@
+Gate PASS 2026-10-05 ~15:30
+Operator: 15:30 PD0065 (Ankunft / HU)
+FW 0.4.45-dev API nach Bridge-Neu: PD0066 (remountGen bump)
+slotMap: Rock Antenne / Rock Antenne Bayern / Radio BOB! / Menue
+First MSC_MAP_FROZEN: [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+seed active: false
+Recovery: stale bridge (since Oct 4) killed, fresh bridge + clean traces (no USB unplug required)

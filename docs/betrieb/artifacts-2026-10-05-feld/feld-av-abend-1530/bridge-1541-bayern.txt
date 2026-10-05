@@ -1,0 +1,7 @@
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"event","op":"play_uid","uid":"fav1"}
+[trace] t=0ms play_uid=fav1
+[tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+[trace] audio_start sent uid=fav1 cover=file
+[audio] ffmpeg https://stream.rockantenne.de/rockantenne-bayern/stream/mp3 @ 48k

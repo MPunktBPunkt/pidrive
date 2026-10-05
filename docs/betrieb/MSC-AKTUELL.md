@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Vormittag · Feld C′ **PASS** · Feld AV blockiert (Meta-Menü) · Lab Menü-Seite **PASS** ([`lab88-menu-page-0816/`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md)) · FW `0.4.45-dev`  
-**Phase:** C′ im Auto belegt · AV braucht Sender-Seite (Rock/Bayern/BOB) + Live-Stream · Freeze hält
+**Stand:** 2026-10-05 Abend · Feld C′ **PASS** · Feld Gate Abend **PASS** · Feld AV/Ohr **FAIL** (Fenster/Arm) · FW `0.4.45-dev`  
+**Phase:** Meta/Lock im Feld gelöst · nächste Arbeit = Baustelle B (Cursor/Arm) · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,8 +11,10 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | **Feld heute** — C′ PASS, AV Menü-Hindernis |
-| 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | **Abend-EAR** — Gate Sender-Slots vor AV |
+| 0 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | **Feld Abend** — Gate PASS, AV/Ohr FAIL Fenster/Arm |
+| 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
+| 0m | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | Morgen — C′ PASS, AV Meta-Hindernis |
+| 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | Abend-EAR (ausgeführt) |
 | 0k | [`artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md) | Kritik GPT-5.4 → Maßnahmen |
 | 0k2 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md) | Konsolidiert: Gate-Wortlaut schärfen |
 | 0L | [`artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md`](artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md) | Lab: Meta-Erstsiegel-Mechanismus (**Feldmorgen stark erklärt**, Seal-Log Feld fehlt) |
@@ -34,9 +36,9 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Lab A+B **PASS** (Sender-Seite) · Feld **blockiert** bis HU Rock/Bayern/BOB zeigt |
+| AV / Ohr | Lab A+B **PASS** · Feld Abend: Gate **PASS**, Ohr **FAIL** — einmal `stream.active`+ffmpeg mit `liveBytes=0` (Fenster); sonst oft kein Arm |
 | Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
-| Menü-Lock | Lab: Meta-**Erstsiegel** überlebt Soft-RST + blockiert Rock (`frozen_reject`); Recovery = frischer Bridge-Prozess/Root oder Unplug · Feldmorgen **stark erklärt**, erstes Feld-`FROZEN` nicht geloggt |
+| Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
 | Detect | Cold=`not_from_head`; nur Log |
 | Sequenz-GO | gesperrt bis hörbarer AV |
 | Freeze | hält |
@@ -45,13 +47,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Feld Abend:** Gate = `slotMap` Rock/Bayern/BOB + **erstes** Session-`MSC_MAP_FROZEN` gleich; dann AV (Seed aus + Correlate + Ohr). Siehe [`FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md). C′ **nicht** wiederholen.  
-2. Gate FAIL: **kein** Same-Process-Reconnect als Heilung; Bridge **neu** mit Root oder Unplug. Soft-RST allein reicht nicht (Lab 1022 D).  
-3. Nach Gate: Hör-/Fensterfrage (B) separat. Detect erst nach Hörbeweis. Freeze hält.
+1. **Baustelle B:** Fenster/`hostAbs` vs. Underrun (Abend 15:41) und fehlender Stream-Arm trotz Tip/cold body — Lab+Messung, **kein** Lock-Umbau.  
+2. Detect-Policy erst nach hörbarem AV. Sequenz-GO weiter gesperrt. Freeze hält.  
+3. Gate-Recovery bleibt: Bridge **neu** oder Unplug (nicht Soft-RST / Same-Process-Reconnect).
 
 ```
 C′ Feld PASS
-Lock/Meta Gate verstanden (Lab)
-Abend: erstes FROZEN loggen → AV/Ohr
+Gate Abend PASS (FROZEN Rock)
+AV Ohr FAIL → Fenster/Arm (B)
 Freeze hält
 ```

@@ -1,0 +1,3 @@
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+{"ts":1791207044.00458,"op":"session_start"}
+{"ts":1791207044.1044445,"op":"frozen","items":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"seal":1}
