@@ -4,11 +4,13 @@
 Reads status JSON (+ optional msc_reads.jsonl) and scores whether observed
 body LBAs map into absBase..absEnd for a slot.
 
-Example (live):
-  python3 tools/feld_av_correlate.py --esp http://192.168.178.89 --watch-s 90
+Example (live, dense watch — evening EAR):
+  python3 tools/feld_av_correlate.py --esp http://192.168.178.89 \\
+      --watch-s 90 --interval 0.5 --dense
 
 Example (offline artifact):
-  python3 tools/feld_av_correlate.py --status path/status.json --reads path/pidrive_msc_reads.jsonl
+  python3 tools/feld_av_correlate.py --status path/status.json \\
+      --reads path/pidrive_msc_reads.jsonl
 """
 from __future__ import annotations
 
@@ -32,32 +34,54 @@ def slot_for_lba(slots: list[dict], lba: int) -> dict | None:
     return None
 
 
+def stream_view(status: dict) -> dict:
+    """Prefer nested msc.stream; fall back to top-level stream."""
+    m = status.get("msc") or {}
+    return m.get("stream") or status.get("stream") or {}
+
+
 def analyze(status: dict, reads: list[dict] | None = None) -> dict:
     m = status.get("msc") or {}
-    stream = m.get("stream") or {}
-    slots = m.get("slotMap") or []
+    stream = stream_view(status)
+    slots = m.get("slotMap") or status.get("slotMap") or []
     abs_base = int(stream.get("absBase") or 0)
     abs_end = int(stream.get("absEnd") or 0)
     host_abs = int(stream.get("hostAbsCursor") or 0)
     sb = int(m.get("streamBytes") or 0)
     ud = int(stream.get("underruns") or 0)
-    live = sb - ud
+    live = max(0, sb - ud)
     uid = stream.get("uid") or status.get("playingUid") or ""
     seed = m.get("bodySeed") or {}
+    win_span = max(0, abs_end - abs_base)
 
     in_window = abs_end > abs_base and abs_base <= host_abs < abs_end
+    ahead = host_abs - abs_end if abs_end and host_abs >= abs_end else 0
+    behind = abs_base - host_abs if abs_base and host_abs < abs_base else 0
+
     out: dict = {
-        "play": status.get("playingUid"),
-        "stream_uid": stream.get("uid"),
-        "stream_active": stream.get("active"),
+        "play": status.get("playingUid") or status.get("playingName") or "",
+        "stream_uid": stream.get("uid") or "",
+        "stream_active": bool(stream.get("active")),
+        "cursorArmed": bool(stream.get("cursorArmed")),
+        "absBase": abs_base,
+        "absEnd": abs_end,
         "abs": [abs_base, abs_end],
+        "win_span": win_span,
         "hostAbsCursor": host_abs,
         "host_in_window": in_window,
+        "host_ahead_of_end": ahead,
+        "host_behind_base": behind,
         "streamBytes": sb,
         "underruns": ud,
         "liveBytes": live,
+        "ring_size": int(stream.get("size") or 0),
+        "ring_cap": int(stream.get("cap") or 0),
+        "id3Len": int(stream.get("id3Len") or 0),
+        "headResyncs": int(stream.get("headResyncs") or 0),
         "seed_active": seed.get("active"),
         "seed_bytesServed": seed.get("bytesServed"),
+        "playRejectCount": m.get("playRejectCount"),
+        "playGuessCount": m.get("playGuessCount"),
         "reads": None,
     }
 
@@ -70,7 +94,6 @@ def analyze(status: dict, reads: list[dict] | None = None) -> dict:
             slot = slot_for_lba(slots, l0)
             if not slot:
                 continue
-            # fileOff for start of read
             file_off = (l0 - int(slot["lba0"])) * 512
             inside = abs_end > abs_base and abs_base <= file_off < abs_end and (
                 not uid or slot.get("uid") == uid or slot.get("uid") == status.get("playingUid")
@@ -99,12 +122,32 @@ def analyze(status: dict, reads: list[dict] | None = None) -> dict:
     return out
 
 
+def watch_key(a: dict) -> tuple:
+    return (
+        a["play"],
+        a["stream_active"],
+        a["cursorArmed"],
+        a["absBase"] // 4096,
+        a["absEnd"] // 4096,
+        a["hostAbsCursor"] // 4096,
+        a["liveBytes"] // 8192,
+        a["underruns"] // 8192,
+        a["seed_bytesServed"],
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--esp", default="")
     ap.add_argument("--status", default="")
     ap.add_argument("--reads", default="")
     ap.add_argument("--watch-s", type=float, default=0)
+    ap.add_argument("--interval", type=float, default=0.5, help="poll seconds (default 0.5)")
+    ap.add_argument(
+        "--dense",
+        action="store_true",
+        help="log every sample while stream.active (not only on key change)",
+    )
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
@@ -118,26 +161,24 @@ def main() -> int:
                 st = http_json(f"{esp}/api/status")
             except Exception as e:
                 print(f"{time.strftime('%H:%M:%S')} ERR {e}", flush=True)
-                time.sleep(1)
+                time.sleep(max(0.2, args.interval))
                 continue
             a = analyze(st)
-            key = (
-                a["play"],
-                a["hostAbsCursor"] // 4096,
-                a["liveBytes"] // 8192,
-                a["underruns"] // 8192,
-                a["seed_bytesServed"],
-            )
-            if key != prev:
+            key = watch_key(a)
+            log = args.dense or key != prev or a["stream_active"]
+            if log:
                 print(
-                    f"{time.strftime('%H:%M:%S')} play={a['play']} hostAbs={a['hostAbsCursor']} "
-                    f"win={a['abs']} in={a['host_in_window']} live={a['liveBytes']} "
-                    f"und={a['underruns']} seedB={a['seed_bytesServed']}",
+                    f"{time.strftime('%H:%M:%S')} play={a['play']!s:8} "
+                    f"act={int(a['stream_active'])} armed={int(a['cursorArmed'])} "
+                    f"abs={a['absBase']}..{a['absEnd']} host={a['hostAbsCursor']} "
+                    f"in={int(a['host_in_window'])} ahead={a['host_ahead_of_end']} "
+                    f"live={a['liveBytes']} und={a['underruns']} "
+                    f"ring={a['ring_size']}/{a['ring_cap']}",
                     flush=True,
                 )
                 rows.append({"ts": time.time(), **a})
                 prev = key
-            time.sleep(1)
+            time.sleep(max(0.05, args.interval))
         st = http_json(f"{esp}/api/status")
         final = analyze(st)
     elif args.status:

@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Abend · Feld C′ **PASS** · Feld Gate Abend **PASS** · Feld AV/Ohr **FAIL** (Fenster/Arm) · FW `0.4.45-dev`  
-**Phase:** Meta/Lock im Feld gelöst · nächste Arbeit = Baustelle B (Cursor/Arm) · Freeze hält
+**Stand:** 2026-10-05 Lab-Follow-up · Feld Gate Abend **PASS** · AV/Ohr **FAIL** Fenster/Arm · StreamBuffer-Semantik dokumentiert · HU-Mimic Lab · FW `0.4.45-dev`  
+**Phase:** Baustelle B — Lab-Fenster-Repro + Counter-Semantik · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -12,6 +12,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | # | Dokument | Rolle |
 |---|----------|--------|
 | 0 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | **Feld Abend** — Gate PASS, AV/Ohr FAIL Fenster/Arm |
+| 0L3 | [`artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md`](artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md) | Lab HU-Mimic 15:41 Fenster-Outrun |
+| 0L2 | [`artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md) | StreamBuffer: underruns / hostAbs / liveBytes |
 | 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
 | 0m | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | Morgen — C′ PASS, AV Meta-Hindernis |
 | 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | Abend-EAR (ausgeführt) |
@@ -47,13 +49,14 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Baustelle B:** Fenster/`hostAbs` vs. Underrun (Abend 15:41) und fehlender Stream-Arm trotz Tip/cold body — Lab+Messung, **kein** Lock-Umbau.  
-2. Detect-Policy erst nach hörbarem AV. Sequenz-GO weiter gesperrt. Freeze hält.  
-3. Gate-Recovery bleibt: Bridge **neu** oder Unplug (nicht Soft-RST / Same-Process-Reconnect).
+1. **Lab HU-Mimic 15:41** (`tools/m3_lab_hu_mimic_1541.py`) — Zeitreihe abs/host/live; Counter-Semantik: [`STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md).  
+2. Arm-Diagnose (cold_body / `playGuess`) — Log only, kein Policy-Umbau.  
+3. Erst danach kurzer Feldlauf: frische Bridge → Gate → ein Sender → `--dense` Correlate + Ohr.  
+4. Freeze hält. Gate-Recovery: Bridge neu / Unplug.
 
 ```
-C′ Feld PASS
-Gate Abend PASS (FROZEN Rock)
-AV Ohr FAIL → Fenster/Arm (B)
+Gate Abend PASS
+AV FAIL Fenster (Zustand) — Ursache Lab
+Correlate --dense · HU-Mimic
 Freeze hält
 ```

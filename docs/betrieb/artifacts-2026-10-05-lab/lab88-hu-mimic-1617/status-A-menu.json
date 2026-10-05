@@ -1,0 +1,1019 @@
+{
+  "ok": true,
+  "version": "0.4.45-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "5h 39min",
+  "freeHeap": 106820,
+  "wifiRssi": -69,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.187",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 9848,
+  "menuCount": 4,
+  "cover": {
+    "src": "lab",
+    "path": "lab",
+    "try": "lab",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "stream": {
+    "active": true,
+    "uid": "fav1",
+    "size": 0,
+    "cap": 49152,
+    "absBase": 0,
+    "absEnd": 0,
+    "underruns": 0,
+    "id3Len": 34,
+    "headResyncs": 0,
+    "cursorArmed": false,
+    "hostAbsCursor": 0,
+    "hasCover": true
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 131,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 8192,
+    "bytesRead": 461312,
+    "bytesMeta": 195072,
+    "bytesBoot": 10752,
+    "bytesFat": 24576,
+    "bytesDir": 28672,
+    "bytesFile": 266240,
+    "prefetchHits": 65,
+    "playRejectCount": 65,
+    "playGuessCount": 0,
+    "streamSlot": 1,
+    "streamBytes": 0,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "bodySeed": {
+      "active": false,
+      "slot": -1,
+      "tag": "",
+      "fromOff": 348160,
+      "bytesServed": 0
+    },
+    "coldBodyBurstCount": 1,
+    "readOverflow": 0,
+    "readsEmit": 14,
+    "fatMode": "static",
+    "phase": "scan",
+    "mediaPresented": true,
+    "remountGen": 62,
+    "usbSerial": "PD0062",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 21,
+      "n2k": 0,
+      "n4k": 110,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 3,
+      "tur": 16488,
+      "turNotReady": 6,
+      "prevent": 8153,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1075,
+      "msToCapacity": 1076,
+      "msToTur": 1076,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": true,
+      "uid": "fav1",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 34,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": true
+    },
+    "msSincePlug": 20373883,
+    "msSinceChange": 20373883,
+    "msPlugToFirstRead": 1077,
+    "msPlugToPlayGuess": 0,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "AV Rock",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 266240,
+        "fromHead": 1,
+        "midFile": 64,
+        "maxSeq": 188416,
+        "lastAgeMs": 4
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "AV Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "AV BOB",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 2108,
+      "gap": 5,
+      "lba": 8192,
+      "n": 4096,
+      "kind": "file",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2112,
+      "gap": 4,
+      "lba": 40,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2116,
+      "gap": 4,
+      "lba": 48,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2120,
+      "gap": 4,
+      "lba": 56,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 2126,
+      "gap": 6,
+      "lba": 24,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 2149,
+      "gap": 23,
+      "lba": 120,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2155,
+      "gap": 6,
+      "lba": 16,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 2159,
+      "gap": 4,
+      "lba": 72,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 2163,
+      "gap": 4,
+      "lba": 80,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "DIR"
+    },
+    {
+      "ms": 2168,
+      "gap": 5,
+      "lba": 88,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2172,
+      "gap": 4,
+      "lba": 96,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2176,
+      "gap": 4,
+      "lba": 104,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2180,
+      "gap": 4,
+      "lba": 112,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2185,
+      "gap": 5,
+      "lba": 136,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2189,
+      "gap": 4,
+      "lba": 144,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2193,
+      "gap": 4,
+      "lba": 152,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2197,
+      "gap": 4,
+      "lba": 160,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2202,
+      "gap": 5,
+      "lba": 168,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2206,
+      "gap": 4,
+      "lba": 176,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2210,
+      "gap": 4,
+      "lba": 184,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2214,
+      "gap": 4,
+      "lba": 192,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2218,
+      "gap": 4,
+      "lba": 200,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2222,
+      "gap": 4,
+      "lba": 208,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2226,
+      "gap": 4,
+      "lba": 216,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2231,
+      "gap": 5,
+      "lba": 224,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2235,
+      "gap": 4,
+      "lba": 232,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2239,
+      "gap": 4,
+      "lba": 240,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2243,
+      "gap": 4,
+      "lba": 248,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2247,
+      "gap": 4,
+      "lba": 264,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2251,
+      "gap": 4,
+      "lba": 272,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2255,
+      "gap": 4,
+      "lba": 280,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2259,
+      "gap": 4,
+      "lba": 288,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2263,
+      "gap": 4,
+      "lba": 296,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2267,
+      "gap": 4,
+      "lba": 304,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2271,
+      "gap": 4,
+      "lba": 312,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2275,
+      "gap": 4,
+      "lba": 320,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2279,
+      "gap": 4,
+      "lba": 328,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2283,
+      "gap": 4,
+      "lba": 336,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2287,
+      "gap": 4,
+      "lba": 344,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2291,
+      "gap": 4,
+      "lba": 352,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2295,
+      "gap": 4,
+      "lba": 360,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2299,
+      "gap": 4,
+      "lba": 368,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2303,
+      "gap": 4,
+      "lba": 376,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2307,
+      "gap": 4,
+      "lba": 384,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2311,
+      "gap": 4,
+      "lba": 392,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2316,
+      "gap": 5,
+      "lba": 400,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2320,
+      "gap": 4,
+      "lba": 408,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2324,
+      "gap": 4,
+      "lba": 416,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2328,
+      "gap": 4,
+      "lba": 424,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2332,
+      "gap": 4,
+      "lba": 432,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2336,
+      "gap": 4,
+      "lba": 440,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2340,
+      "gap": 4,
+      "lba": 448,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2344,
+      "gap": 4,
+      "lba": 456,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2348,
+      "gap": 4,
+      "lba": 464,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2352,
+      "gap": 4,
+      "lba": 472,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2356,
+      "gap": 4,
+      "lba": 480,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2360,
+      "gap": 4,
+      "lba": 488,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2364,
+      "gap": 4,
+      "lba": 496,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 2368,
+      "gap": 4,
+      "lba": 504,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Favoriten"
+    },
+    {
+      "ms": 20370564,
+      "gap": 65535,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 20374618,
+      "gap": 4054,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 20374631,
+      "gap": 13,
+      "lba": 0,
+      "n": 4096,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 20374637,
+      "gap": 6,
+      "lba": 32640,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374641,
+      "gap": 4,
+      "lba": 32752,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374646,
+      "gap": 5,
+      "lba": 8,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT0"
+    },
+    {
+      "ms": 20374650,
+      "gap": 4,
+      "lba": 32760,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374651,
+      "gap": 1,
+      "lba": 32761,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374651,
+      "gap": 0,
+      "lba": 32762,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374652,
+      "gap": 1,
+      "lba": 32763,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374653,
+      "gap": 1,
+      "lba": 32764,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374653,
+      "gap": 0,
+      "lba": 32765,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374654,
+      "gap": 1,
+      "lba": 32766,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374655,
+      "gap": 1,
+      "lba": 32767,
+      "n": 512,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374655,
+      "gap": 0,
+      "lba": 32504,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374659,
+      "gap": 4,
+      "lba": 32704,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374664,
+      "gap": 5,
+      "lba": 32512,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374668,
+      "gap": 4,
+      "lba": 32368,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374672,
+      "gap": 4,
+      "lba": 32176,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374676,
+      "gap": 4,
+      "lba": 32088,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374681,
+      "gap": 5,
+      "lba": 32032,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374685,
+      "gap": 4,
+      "lba": 31856,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374689,
+      "gap": 4,
+      "lba": 31792,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374693,
+      "gap": 4,
+      "lba": 31776,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374697,
+      "gap": 4,
+      "lba": 31816,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374701,
+      "gap": 4,
+      "lba": 29680,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374705,
+      "gap": 4,
+      "lba": 4096,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 20374723,
+      "gap": 18,
+      "lba": 30720,
+      "n": 4096,
+      "kind": "meta",
+      "tag": "META"
+    },
+    {
+      "ms": 20374728,
+      "gap": 5,
+      "lba": 32,
+      "n": 4096,
+      "kind": "fat",
+      "tag": "FAT1"
+    },
+    {
+      "ms": 20374732,
+      "gap": 4,
+      "lba": 64,
+      "n": 4096,
+      "kind": "dir",
+      "tag": "ROOT"
+    },
+    {
+      "ms": 20374737,
+      "gap": 5,
+      "lba": 128,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 20374740,
+      "gap": 3,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 20374741,
+      "gap": 1,
+      "lba": 256,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 20374746,
+      "gap": 5,
+      "lba": 512,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 20374750,
+      "gap": 4,
+      "lba": 1024,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 20374754,
+      "gap": 4,
+      "lba": 2048,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    },
+    {
+      "ms": 20374758,
+      "gap": 4,
+      "lba": 8192,
+      "n": 4096,
+      "kind": "file",
+      "tag": "AV Rock"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 20374209,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 20373887,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 20374209,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.187",
+      "sense": "tcp-client"
+    }
+  }
+}

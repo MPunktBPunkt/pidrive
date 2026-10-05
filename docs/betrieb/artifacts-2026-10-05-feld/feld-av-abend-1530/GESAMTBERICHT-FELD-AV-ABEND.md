@@ -43,13 +43,13 @@ Correlate-1540 / Status:
 | Größe | Wert |
 |-------|------|
 | hostAbsCursor | 253952 |
-| absBase..absEnd | wandernd; Host oft außerhalb |
+| absBase..absEnd | Snapshot `161944..211096` (Correlate-End `150088..199240` — **keine dichte Zeitreihe**) |
 | streamBytes | 253952 |
 | underruns | 253952 |
 | liveBytes | **0** |
 | host_in_window | **false** |
 
-→ **FAIL Fenster (B):** Producer an, Host-Cursor/Underrun, kein Live im Fenster.
+→ **FAIL Fenster (B):** Producer an, Cursor außerhalb; **Ursache** (Nachführung vs. Outrun vs. spätes Fill) **offen** — Zustand belegt, nicht Kausalmechanismus.
 
 Artefakte: [`status-1541-bayern-stream-active-no-audio.json`](status-1541-bayern-stream-active-no-audio.json), [`correlate-1540/`](correlate-1540/), [`OPERATOR-1541-bayern-led-no-audio.txt`](OPERATOR-1541-bayern-led-no-audio.txt).
 

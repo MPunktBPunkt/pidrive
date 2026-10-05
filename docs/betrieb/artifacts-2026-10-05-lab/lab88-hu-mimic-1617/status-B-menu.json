@@ -1,0 +1,1019 @@
+{
+  "ok": true,
+  "version": "0.4.45-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "5h 39min",
+  "freeHeap": 104084,
+  "wifiRssi": -70,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.187",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 9863,
+  "menuCount": 4,
+  "cover": {
+    "src": "lab",
+    "path": "lab",
+    "try": "lab",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "stream": {
+    "active": true,
+    "uid": "fav1",
+    "size": 0,
+    "cap": 49152,
+    "absBase": 0,
+    "absEnd": 0,
+    "underruns": 0,
+    "id3Len": 34,
+    "headResyncs": 0,
+    "cursorArmed": false,
+    "hostAbsCursor": 0,
+    "hasCover": true
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 983,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 0,
+    "bytesRead": 1707520,
+    "bytesMeta": 445952,
+    "bytesBoot": 19968,
+    "bytesFat": 65536,
+    "bytesDir": 98304,
+    "bytesFile": 1261568,
+    "prefetchHits": 793,
+    "playRejectCount": 801,
+    "playGuessCount": 1,
+    "streamSlot": 1,
+    "streamBytes": 311296,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "bodySeed": {
+      "active": false,
+      "slot": -1,
+      "tag": "",
+      "fromOff": 348160,
+      "bytesServed": 0
+    },
+    "coldBodyBurstCount": 3,
+    "readOverflow": 6,
+    "readsEmit": 242,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 62,
+    "usbSerial": "PD0062",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 647,
+      "n2k": 0,
+      "n4k": 336,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 3,
+      "tur": 16670,
+      "turNotReady": 6,
+      "prevent": 8153,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1075,
+      "msToCapacity": 1076,
+      "msToTur": 1076,
+      "hint": "hu-like"
+    },
+    "stream": {
+      "active": true,
+      "uid": "fav1",
+      "size": 0,
+      "cap": 49152,
+      "absBase": 0,
+      "absEnd": 0,
+      "underruns": 0,
+      "id3Len": 34,
+      "headResyncs": 0,
+      "cursorArmed": false,
+      "hostAbsCursor": 0,
+      "hasCover": true
+    },
+    "msSincePlug": 20388699,
+    "msSinceChange": 20388699,
+    "msPlugToFirstRead": 1077,
+    "msPlugToPlayGuess": 20373939,
+    "plugCount": 1,
+    "unplugCount": 0,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "AV Rock",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 950272,
+        "fromHead": 4,
+        "midFile": 228,
+        "maxSeq": 188416,
+        "lastAgeMs": 13603
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "AV Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 311296,
+        "fromHead": 0,
+        "midFile": 608,
+        "maxSeq": 290816,
+        "lastAgeMs": 11721
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "AV BOB",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 20377592,
+      "gap": 1,
+      "lba": 17043,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377593,
+      "gap": 1,
+      "lba": 17044,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377594,
+      "gap": 1,
+      "lba": 17045,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377595,
+      "gap": 1,
+      "lba": 17046,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377596,
+      "gap": 1,
+      "lba": 17047,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377597,
+      "gap": 1,
+      "lba": 17048,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377605,
+      "gap": 8,
+      "lba": 17049,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377606,
+      "gap": 1,
+      "lba": 17050,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377606,
+      "gap": 0,
+      "lba": 17051,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377607,
+      "gap": 1,
+      "lba": 17052,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377608,
+      "gap": 1,
+      "lba": 17053,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377609,
+      "gap": 1,
+      "lba": 17054,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377610,
+      "gap": 1,
+      "lba": 17055,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377611,
+      "gap": 1,
+      "lba": 17056,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377619,
+      "gap": 8,
+      "lba": 17057,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377620,
+      "gap": 1,
+      "lba": 17058,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377621,
+      "gap": 1,
+      "lba": 17059,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377621,
+      "gap": 0,
+      "lba": 17060,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377622,
+      "gap": 1,
+      "lba": 17061,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377623,
+      "gap": 1,
+      "lba": 17062,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377624,
+      "gap": 1,
+      "lba": 17063,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377624,
+      "gap": 0,
+      "lba": 17064,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377631,
+      "gap": 7,
+      "lba": 17065,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377632,
+      "gap": 1,
+      "lba": 17066,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377633,
+      "gap": 1,
+      "lba": 17067,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377634,
+      "gap": 1,
+      "lba": 17068,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377634,
+      "gap": 0,
+      "lba": 17069,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377635,
+      "gap": 1,
+      "lba": 17070,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377636,
+      "gap": 1,
+      "lba": 17071,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377637,
+      "gap": 1,
+      "lba": 17072,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377688,
+      "gap": 51,
+      "lba": 17073,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377689,
+      "gap": 1,
+      "lba": 17074,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377690,
+      "gap": 1,
+      "lba": 17075,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377691,
+      "gap": 1,
+      "lba": 17076,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377691,
+      "gap": 0,
+      "lba": 17077,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377692,
+      "gap": 1,
+      "lba": 17078,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377693,
+      "gap": 1,
+      "lba": 17079,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377694,
+      "gap": 1,
+      "lba": 17080,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377701,
+      "gap": 7,
+      "lba": 17081,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377702,
+      "gap": 1,
+      "lba": 17082,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377703,
+      "gap": 1,
+      "lba": 17083,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377704,
+      "gap": 1,
+      "lba": 17084,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377705,
+      "gap": 1,
+      "lba": 17085,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377706,
+      "gap": 1,
+      "lba": 17086,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377707,
+      "gap": 1,
+      "lba": 17087,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377708,
+      "gap": 1,
+      "lba": 17088,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377715,
+      "gap": 7,
+      "lba": 17089,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377716,
+      "gap": 1,
+      "lba": 17090,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377717,
+      "gap": 1,
+      "lba": 17091,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377718,
+      "gap": 1,
+      "lba": 17092,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377719,
+      "gap": 1,
+      "lba": 17093,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377720,
+      "gap": 1,
+      "lba": 17094,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377720,
+      "gap": 0,
+      "lba": 17095,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377721,
+      "gap": 1,
+      "lba": 17096,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377728,
+      "gap": 7,
+      "lba": 17097,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377729,
+      "gap": 1,
+      "lba": 17098,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377729,
+      "gap": 0,
+      "lba": 17099,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377730,
+      "gap": 1,
+      "lba": 17100,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377731,
+      "gap": 1,
+      "lba": 17101,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377732,
+      "gap": 1,
+      "lba": 17102,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377733,
+      "gap": 1,
+      "lba": 17103,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377734,
+      "gap": 1,
+      "lba": 17104,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377812,
+      "gap": 78,
+      "lba": 17105,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377814,
+      "gap": 2,
+      "lba": 17106,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377815,
+      "gap": 1,
+      "lba": 17107,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377816,
+      "gap": 1,
+      "lba": 17108,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377817,
+      "gap": 1,
+      "lba": 17109,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377818,
+      "gap": 1,
+      "lba": 17110,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377819,
+      "gap": 1,
+      "lba": 17111,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377820,
+      "gap": 1,
+      "lba": 17112,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377827,
+      "gap": 7,
+      "lba": 17113,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377828,
+      "gap": 1,
+      "lba": 17114,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377828,
+      "gap": 0,
+      "lba": 17115,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377829,
+      "gap": 1,
+      "lba": 17116,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377830,
+      "gap": 1,
+      "lba": 17117,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377831,
+      "gap": 1,
+      "lba": 17118,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377832,
+      "gap": 1,
+      "lba": 17119,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377832,
+      "gap": 0,
+      "lba": 17120,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377840,
+      "gap": 8,
+      "lba": 17121,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377841,
+      "gap": 1,
+      "lba": 17122,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377841,
+      "gap": 0,
+      "lba": 17123,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377842,
+      "gap": 1,
+      "lba": 17124,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377843,
+      "gap": 1,
+      "lba": 17125,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377844,
+      "gap": 1,
+      "lba": 17126,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377844,
+      "gap": 0,
+      "lba": 17127,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377845,
+      "gap": 1,
+      "lba": 17128,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377852,
+      "gap": 7,
+      "lba": 17129,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377853,
+      "gap": 1,
+      "lba": 17130,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377853,
+      "gap": 0,
+      "lba": 17131,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377854,
+      "gap": 1,
+      "lba": 17132,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377855,
+      "gap": 1,
+      "lba": 17133,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377856,
+      "gap": 1,
+      "lba": 17134,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377857,
+      "gap": 1,
+      "lba": 17135,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20377857,
+      "gap": 0,
+      "lba": 17136,
+      "n": 512,
+      "kind": "file",
+      "tag": "AV Bayern"
+    },
+    {
+      "ms": 20384176,
+      "gap": 6319,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    },
+    {
+      "ms": 20389562,
+      "gap": 5386,
+      "lba": 0,
+      "n": 512,
+      "kind": "boot",
+      "tag": "BOOT"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 20389025,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 20388703,
+      "plugCount": 1,
+      "unplugCount": 0,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 20389025,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.187",
+      "sense": "tcp-client"
+    }
+  }
+}

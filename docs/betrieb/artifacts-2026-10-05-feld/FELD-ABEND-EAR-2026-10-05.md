@@ -32,8 +32,12 @@ journalctl -u pidrive_pump_bridge … | grep MSC_MAP_FROZEN
 
 ## 2. AV (nur nach Gate PASS = Baustelle B)
 - Operator: Rock/Bayern/BOB auf HU
-- Correlate + Ohr gleichzeitig
-- Log: `active`, `liveBytes`, `underruns`, `absBase..absEnd`, `hostAbs` (`hostAbs < absEnd`)
+- Correlate + Ohr gleichzeitig — **dicht**:
+  ```
+  python3 tools/feld_av_correlate.py --esp http://192.168.178.89 \
+    --watch-s 90 --interval 0.5 --dense --out ARTIFACT/
+  ```
+- Log: `active`, `cursorArmed`, `liveBytes`, `underruns`, `absBase..absEnd`, `hostAbs`, `ahead`
 
 ## 3. PASS / FAIL
 - **PASS:** Gate + `stream.active` + `liveBytes` steigt + hörbar  
