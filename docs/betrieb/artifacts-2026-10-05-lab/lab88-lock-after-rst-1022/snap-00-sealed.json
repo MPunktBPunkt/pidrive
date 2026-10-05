@@ -1,0 +1,23 @@
+{
+  "tag": "00-sealed",
+  "t": "10:33:18",
+  "uptime": "14h 3min",
+  "serial": "PD0058",
+  "plugged": true,
+  "remountGen": 58,
+  "menuRev": 8001,
+  "fromNvs": false,
+  "api_menu": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "slotMap": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "playing": ""
+}

@@ -1,0 +1,3 @@
+variant B meta-NVS→RST→bridge
+meta_across_rst=True boot=['Favoriten', 'Quellen', 'Stop', 'Mehr... (+3)']
+after_bridge=['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue'] rescued=True

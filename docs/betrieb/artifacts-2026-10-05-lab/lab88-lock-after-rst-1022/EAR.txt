@@ -1,0 +1,5 @@
+Lab lock-after-rst 2026-10-05 1022
+A: Rock sealed → soft RST → Rock stays → Gate PASS
+D: Meta FIRST seal → Rock frozen_reject → RST → Meta stays → Feld-Falle CONFIRMED Gate FAIL
+Recovery: Bridge restart with root presets OR USB unplug/replug (soft RST alone insufficient)
+Abend: check MSC_MAP_FROZEN names == Rock/Bayern/BOB before AV

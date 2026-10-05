@@ -1,0 +1,12 @@
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[tx] {"t":"menu_set","rev":8200,"page":0,"items":[{"uid":"14037496848256783396","name":"Favoriten","kind":"folder"},{"uid":"1628800432581751424","name":"Quellen","kind":"folder"},{"uid":"7194960129032930190","name":"Stop","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+3)","kind":"action"}]}
+[msc-lock] sealing publish (seal)
+[msc-lock] MSC_MAP_FROZEN [Favoriten,Quellen,Stop,Mehr... (+3)]
+[msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=1)
+[msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=13)
+[msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=24)
+[bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+[tx] {"t":"menu_set","rev":8200,"page":0,"items":[{"uid":"14037496848256783396","name":"Favoriten","kind":"folder"},{"uid":"1628800432581751424","name":"Quellen","kind":"folder"},{"uid":"7194960129032930190","name":"Stop","kind":"action"},{"uid":"pump:page_next","name":"Mehr... (+3)","kind":"action"}]}
+[bridge] reconnected tcp:192.168.178.88:9090 hello_ack=ok (menu snapshot resent rev=8200 grace=8)
+[msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=25)
+[msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=37)

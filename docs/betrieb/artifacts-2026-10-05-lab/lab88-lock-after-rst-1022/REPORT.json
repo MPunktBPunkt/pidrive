@@ -1,0 +1,185 @@
+{
+  "steps": {
+    "seal": {
+      "tag": "00-sealed",
+      "t": "10:33:18",
+      "uptime": "14h 3min",
+      "serial": "PD0058",
+      "plugged": true,
+      "remountGen": 58,
+      "menuRev": 8001,
+      "fromNvs": false,
+      "api_menu": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "playing": ""
+    },
+    "post_rst": [
+      {
+        "tag": "01-post-rst-06",
+        "t": "10:33:34",
+        "uptime": "14s",
+        "serial": "PD0058",
+        "plugged": true,
+        "remountGen": 58,
+        "menuRev": 8001,
+        "fromNvs": true,
+        "api_menu": [
+          "Rock Antenne",
+          "Rock Antenne Bayern",
+          "Radio BOB!",
+          "Menue"
+        ],
+        "slotMap": [
+          "Rock Antenne",
+          "Rock Antenne Bayern",
+          "Radio BOB!",
+          "Menue"
+        ],
+        "playing": ""
+      },
+      {
+        "tag": "01-post-rst-07",
+        "t": "10:33:36",
+        "uptime": "16s",
+        "serial": "PD0058",
+        "plugged": true,
+        "remountGen": 58,
+        "menuRev": 8001,
+        "fromNvs": true,
+        "api_menu": [
+          "Rock Antenne",
+          "Rock Antenne Bayern",
+          "Radio BOB!",
+          "Menue"
+        ],
+        "slotMap": [
+          "Rock Antenne",
+          "Rock Antenne Bayern",
+          "Radio BOB!",
+          "Menue"
+        ],
+        "playing": ""
+      },
+      {
+        "tag": "01-post-rst-08",
+        "t": "10:33:38",
+        "uptime": "18s",
+        "serial": "PD0058",
+        "plugged": true,
+        "remountGen": 58,
+        "menuRev": 8001,
+        "fromNvs": true,
+        "api_menu": [
+          "Rock Antenne",
+          "Rock Antenne Bayern",
+          "Radio BOB!",
+          "Menue"
+        ],
+        "slotMap": [
+          "Rock Antenne",
+          "Rock Antenne Bayern",
+          "Radio BOB!",
+          "Menue"
+        ],
+        "playing": ""
+      }
+    ],
+    "after_settle": {
+      "tag": "02-after-settle",
+      "t": "10:33:46",
+      "uptime": "27s",
+      "serial": "PD0058",
+      "plugged": true,
+      "remountGen": 58,
+      "menuRev": 8001,
+      "fromNvs": true,
+      "api_menu": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "playing": ""
+    }
+  },
+  "verdict": {
+    "pre_slots_sender": true,
+    "post_slots_meta": false,
+    "post_slots_sender": true,
+    "post_fromNvs": true,
+    "post_api_menu": [
+      "Rock Antenne",
+      "Rock Antenne Bayern",
+      "Radio BOB!",
+      "Menue"
+    ],
+    "post_slotMap": [
+      "Rock Antenne",
+      "Rock Antenne Bayern",
+      "Radio BOB!",
+      "Menue"
+    ],
+    "bridge_MSC_MAP_FROZEN_count": 1,
+    "bridge_USB_SESSION_START_count": 1,
+    "bridge_frozen_reject_count": 0,
+    "gate_would_pass": true,
+    "matches_field_morning_risk": false
+  },
+  "out": "docs/betrieb/artifacts-2026-10-05-lab/lab88-lock-after-rst-1022",
+  "ok": true,
+  "variant_B_meta_nvs_then_bridge": {
+    "meta_persisted_across_rst": true,
+    "boot_slotMap": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "boot_fromNvs": true,
+    "after_bridge_slotMap": [
+      "Rock Antenne",
+      "Rock Antenne Bayern",
+      "Radio BOB!",
+      "Menue"
+    ],
+    "bridge_rescued_to_sender": true,
+    "gate_pass_after_bridge": true
+  },
+  "variant_D_meta_first_seal": {
+    "after_root_provoke_still_meta": true,
+    "reject_logged": true,
+    "reject_sample": "[msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=37)",
+    "post_rst_slots": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "post_rst_meta": true,
+    "post_rst_sender": false,
+    "field_trap_confirmed": true,
+    "first_seal_meta": true,
+    "first_seal_slots": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ]
+  }
+}

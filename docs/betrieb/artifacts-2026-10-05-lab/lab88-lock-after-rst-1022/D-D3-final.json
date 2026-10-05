@@ -1,0 +1,22 @@
+{
+  "row": {
+    "tag": "D3-final",
+    "t": "10:38:25",
+    "uptime": "29s",
+    "fromNvs": true,
+    "menuRev": 8200,
+    "slots": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "api": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "serial": "PD0061"
+  }
+}

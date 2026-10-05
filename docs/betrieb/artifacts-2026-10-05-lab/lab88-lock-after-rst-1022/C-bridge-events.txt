@@ -1,0 +1,7 @@
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[tx] {"t":"hello","ver":1}
+[rx] {"t":"hello_ack","ver":"0.4.45-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+[hello_ack] ver=0.4.45-dev slots=4 page=True tcp=True
+[tx] {"t":"menu_set","rev":8101,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"},{"uid":"pump:page_next","name":"Menue","kind":"action"}]}
+[msc-lock] sealing publish (seal)
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]

@@ -1,0 +1,21 @@
+{
+  "tag": "B4-final",
+  "t": "10:34:35",
+  "uptime": "8s",
+  "fromNvs": false,
+  "menuRev": 8101,
+  "api_menu": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "slotMap": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "serial": "PD0060",
+  "plugged": true
+}

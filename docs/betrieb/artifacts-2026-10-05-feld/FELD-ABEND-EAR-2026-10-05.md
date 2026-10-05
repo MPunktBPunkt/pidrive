@@ -14,7 +14,14 @@ curl -sS http://192.168.178.89/api/menu
 journalctl … | grep MSC_MAP_FROZEN
 ```
 **PASS Gate:** slotMap = Rock Antenne / Rock Antenne Bayern / Radio BOB! (+ Menue)  
-**FAIL Gate:** Favoriten/Quellen/Stop oder Zurueck/… → **kein AV**, Remount/`Mehr…`/Bridge-Restart, neu gate.
+**und** Bridge-Log `MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]`  
+**FAIL Gate:** Favoriten/Quellen/Stop oder Zurueck/… → **kein AV**.
+
+### Gate FAIL — Recovery (Lab bestätigt 1022 Variante D)
+1. Soft-RST allein reicht **nicht**, wenn Meta erstes Siegel + NVS ist.  
+2. Bridge stoppen → sicherstellen Root-Menü (Presets) → Bridge neu starten → auf neues `MSC_MAP_FROZEN` Rock warten.  
+3. Oder USB Unplug/Replug (Session-End → sealing).  
+4. Neu gate; erst dann AV.
 
 ## 2. AV
 - Operator wählt Rock/Bayern/BOB auf HU

@@ -1,0 +1,21 @@
+{
+  "tag": "B2-boot-settle",
+  "t": "10:34:29",
+  "uptime": "2s",
+  "fromNvs": true,
+  "menuRev": 8100,
+  "api_menu": [
+    "Favoriten",
+    "Quellen",
+    "Stop",
+    "Mehr... (+3)"
+  ],
+  "slotMap": [
+    "Favoriten",
+    "Quellen",
+    "Stop",
+    "Mehr... (+3)"
+  ],
+  "serial": "PD0059",
+  "plugged": true
+}

@@ -1,0 +1,21 @@
+{
+  "tag": "B0-meta-written",
+  "t": "10:34:26",
+  "uptime": "1min 6s",
+  "fromNvs": false,
+  "menuRev": 8100,
+  "api_menu": [
+    "Favoriten",
+    "Quellen",
+    "Stop",
+    "Mehr... (+3)"
+  ],
+  "slotMap": [
+    "Favoriten",
+    "Quellen",
+    "Stop",
+    "Mehr... (+3)"
+  ],
+  "serial": "PD0059",
+  "plugged": true
+}

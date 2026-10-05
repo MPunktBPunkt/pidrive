@@ -1,0 +1,22 @@
+{
+  "row": {
+    "tag": "D1-after-root-provoke",
+    "t": "10:37:55",
+    "uptime": "16s",
+    "fromNvs": true,
+    "menuRev": 8200,
+    "slots": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "api": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "serial": "PD0061"
+  }
+}

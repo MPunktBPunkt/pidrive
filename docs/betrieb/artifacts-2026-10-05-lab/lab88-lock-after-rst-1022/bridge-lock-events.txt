@@ -1,0 +1,4 @@
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] sealing publish (seal)
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+[bridge] reconnected tcp:192.168.178.88:9090 hello_ack=ok (menu snapshot resent rev=8001 grace=4)

@@ -1,0 +1,23 @@
+{
+  "tag": "01-post-rst-07",
+  "t": "10:33:36",
+  "uptime": "16s",
+  "serial": "PD0058",
+  "plugged": true,
+  "remountGen": 58,
+  "menuRev": 8001,
+  "fromNvs": true,
+  "api_menu": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "slotMap": [
+    "Rock Antenne",
+    "Rock Antenne Bayern",
+    "Radio BOB!",
+    "Menue"
+  ],
+  "playing": ""
+}

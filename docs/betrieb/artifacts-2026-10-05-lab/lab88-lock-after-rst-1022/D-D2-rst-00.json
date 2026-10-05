@@ -1,0 +1,22 @@
+{
+  "row": {
+    "tag": "D2-rst-00",
+    "t": "10:37:59",
+    "uptime": "3s",
+    "fromNvs": true,
+    "menuRev": 8200,
+    "slots": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "api": [
+      "Favoriten",
+      "Quellen",
+      "Stop",
+      "Mehr... (+3)"
+    ],
+    "serial": "PD0061"
+  }
+}
