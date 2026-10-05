@@ -1,0 +1,22 @@
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=120 +4096B age=1065ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=120 +4096B age=1065ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=120..4096 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"}
+[msc] cold_body_burst s=0 lba=120..4096 n=8 B=32768 w=0 ev=not_from_head set=0 fav0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav2 from=17489 +4096B age=1603ms"}
+[msc] play.reject plug_window uid=fav2 from=17489 +4096B age=1603ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav1 from=16945 +4096B age=14141ms prefetch"}
+[msc] play.reject not_from_head uid=fav1 from=16945 +4096B age=14141ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=16705..16969 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=14301ms"}
+[msc] play.reject seq_short uid=fav1 from=16465 +4096B age=14301ms
+[rx] {"t":"event","op":"play_uid","uid":"fav1"}
+[trace] t=0ms play_uid=fav1
+[tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+[trace] audio_start sent uid=fav1 cover=file
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=14331ms"}
+[msc] play.reject cooldown uid=fav1 from=16465 +12288B age=14331ms
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav1 from=16977 +4096B age=14451ms prefetch"}
+[msc] play.reject not_from_head uid=fav1 from=16977 +4096B age=14451ms prefetch

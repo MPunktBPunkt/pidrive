@@ -1,0 +1,14 @@
+{
+  "play": "fav1",
+  "stream_active": true,
+  "cursorArmed": true,
+  "hostAbsCursor": 253952,
+  "absBase": 457112,
+  "absEnd": 506264,
+  "streamBytes": 253952,
+  "underruns": 253952,
+  "liveBytes": 0,
+  "ring_size": 49152,
+  "playGuessCount": 1,
+  "playRejectCount": 263
+}

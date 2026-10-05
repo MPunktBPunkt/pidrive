@@ -1,0 +1,19 @@
+18:07 Operator: RST, OTG ein, alle Sender eingesteckt
+
+18:08 Prep: plug=True names Rock/Bayern/BOB — Gate check
+
+18:08 Gate PASS MSC_MAP_FROZEN Rock/Bayern/BOB PD0076 — GO
+Plan: BOB halten → Bayern tippen ~40s; LED/Ton melden
+
+18:09 Operator: GO — bereits auf Bayern
+
+18:09 Messung: GUESS=1 play=Bayern act=True ring=49152 live=0 (Fenster/Outrun) PD0077
+
+18:10 Operator: kein Ton; Autoplay wechselt gleich
+Messung: guess=1 act=True ring=full live=0 host=253952 stuck hinter absBase — Fenster-Outrun wie 15:41
+
+18:11 Autoplay → Rock Antenne: guess=2 act=True live≈254k (Zähler) — Ohr?
+
+18:12 Operator: es kommt kein Ton (auch Rock)
+
+18:13 Operator: Ende — geht ins Haus; Ergebnisse pushen
