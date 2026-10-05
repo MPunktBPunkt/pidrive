@@ -1,0 +1,37 @@
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav1 from=17377 +4096B age=82909ms prefetch"}
+[msc] play.reject not_from_head uid=fav1 from=17377 +4096B age=82909ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=1953 +4096B age=170661ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=1953 +4096B age=170661ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=1713..1961 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=753 +196608B age=171463ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=753 +196608B age=171463ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +655360B age=172264ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +655360B age=172264ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +995328B age=177727ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +995328B age=177727ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=4625..4681 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=4625..4681 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +1806336B age=178529ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +1806336B age=178529ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +2633728B age=179329ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +2633728B age=179329ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +3465216B age=180130ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +3465216B age=180130ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=4625..10729 n=756 B=3096576 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=4625..10729 n=756 B=3096576 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +4276224B age=180930ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +4276224B age=180930ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +5107712B age=181731ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +5107712B age=181731ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +5935104B age=182532ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +5935104B age=182532ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2689 +6762496B age=183332ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2689 +6762496B age=183332ms prefetch
+[msc-lock] USB_SESSION_END → MSC_MAP_RELEASED
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]

@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Lab Arm-Diagnose · Fenster-Outrun + Head-Arm bei ring=0 belegt · FW `0.4.45-dev`  
-**Phase:** Baustelle B — Prefill-vor-Arm als Lab-Gegenmittel; Feldlauf mit `--dense` als Nächstes · Freeze hält
+**Stand:** 2026-10-05 Feld 17:25 — Gate PASS, Arm nie (cold mid=LED); Lab mid≠Arm bestätigt · FW `0.4.45-dev`  
+**Phase:** Baustelle B — Prefill-vor-Arm im Lab; Feld pausiert bis Lab Head→liveBytes · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,7 +11,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | **Feld Abend** — Gate PASS, AV/Ohr FAIL Fenster/Arm |
+| 0 | [`artifacts-2026-10-05-feld/feld-av-1725/GESAMTBERICHT-FELD-AV-1725.md`](artifacts-2026-10-05-feld/feld-av-1725/GESAMTBERICHT-FELD-AV-1725.md) | **Feld 17:25** — Gate PASS, `guess=0`, LED=cold mid; Lab mid≠Arm bestätigt |
+| 0e2 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | Feld Abend 15:30 — Gate PASS, AV/Ohr FAIL Fenster/Arm |
 | 0L4 | [`artifacts-2026-10-05-lab/lab88-arm-diag-1635/GESAMTBERICHT-ARM-DIAG.md`](artifacts-2026-10-05-lab/lab88-arm-diag-1635/GESAMTBERICHT-ARM-DIAG.md) | Lab Arm-Diagnose: Mid≠Arm, Head-Arm bei ring=0 |
 | 0L3 | [`artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md`](artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md) | Lab HU-Mimic 15:41 Fenster-Outrun |
 | 0L2 | [`artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md) | StreamBuffer: underruns / hostAbs / liveBytes |
@@ -40,7 +41,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Lab A+B **PASS** · Feld Abend: Gate **PASS**, Ohr **FAIL** — einmal `stream.active`+ffmpeg mit `liveBytes=0` (Fenster); sonst oft kein Arm |
+| AV / Ohr | Lab A+B **PASS** · Feld 15:30: einmal Fenster (`liveBytes=0`); Feld **17:25: Arm nie** (`guess=0`, LED=cold mid) — Lab mid≠Arm bestätigt |
 | Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
 | Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
 | Detect | Cold=`not_from_head`; nur Log |
@@ -51,13 +52,12 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Feld (kurz):** frische Bridge → Gate + FROZEN archivieren → ein Sender → `--dense` Correlate + Ohr. Messen: `ring_size`/`hostAbs`/`live` **beim Arm**.  
-2. Lab-Gegenmittel bleibt Messziel: Prefill/Fill **vor** HU-Head-Sequenz (nicht Detect-Umbau).  
+1. **Lab:** Prefill/Fill **vor** Head-Sequenz (Gegenmittel zu ring=0 nach Arm) — hörbarer liveBytes-Pfad.  
+2. **Feld:** pausiert bis Lab den Head→Ohr-Pfad hat; 17:25-Beleg reicht für mid≠Arm.  
 3. Freeze hält. Gate-Recovery: Bridge neu / Unplug.
 
 ```
-Fenster-Outrun Lab ✓
-Head-Arm @ ring=0 Lab ✓
-Feld: dense Correlate + Prefill-Frage
+Feld 17:25 Gate PASS / Arm nie (cold mid)
+Lab mid≠Arm ✓ · Prefill-vor-Arm als Nächstes
 Freeze hält
 ```

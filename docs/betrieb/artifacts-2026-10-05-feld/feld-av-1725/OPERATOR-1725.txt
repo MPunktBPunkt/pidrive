@@ -1,0 +1,41 @@
+17:25 Operator: Auto ESP an, OTG noch nicht
+Prep: frische Bridge, Traces leer, Seed aus, FW 0.4.45-dev PD0071
+Plan: OTG rein → Gate FROZEN Rock loggen → GO → nur Rock Antenne Bayern tippen ~40s
+Correlate --dense parallel
+
+17:28 Operator: OTG einstecken; Autoplay = alphabetisch erster Sender
+
+17:28 Bridge BrokenPipe → frischer Restart; Autoplay erwartet alphabetisch ersten Sender
+
+17:29 Gate PASS MSC_MAP_FROZEN Rock/Bayern/BOB — Bridge OK nach Retry
+GO: Autoplay alphabetisch erster Sender (vermutlich Radio BOB!) — laufen lassen / halten
+
+17:29 Correlate-1 fertig: 90s stream_active=false live=0 guess=0 (kein Arm). Correlate-2 gestartet.
+
+17:29 Operator: kurzes LED-Blinken; vor Ende von BOB nochmal Blinken
+
+Messung: guess=0; cold_body/not_from_head; BOB/Bayern je ~512KiB Slot-Bytes; kein audio_start; LED=kalte Body-Reads
+
+17:31 Operator: starkes Blinken am Ende von Rock Antenne Bayern beim Wechsel zu Rock Antenne
+Messung: Snapshot status-1731-bayern-tip.json — siehe Analyse
+
+17:31 Analyse Bayern→Rock:
+  Rock Antenne slot bytes 0.4MB→8.4MB (midFile 91→2054, maxSeq≈7.0MB)
+  coldBodyBurst 2→5; playReject 351→2314; playGuess bleibt 0
+  stream.active=false hostAbs=0 cursorArmed=false
+  Trace: sequenzielle 4k-Reads nahe Rock-Dateiende (lba≈16337..16449), nicht fromHead
+  LED-Starkblinken = cold mid/end Body-Reads, kein Stream-Arm
+
+
+17:34 Plan: 1× Remount (OTG raus/rein), Autoplay ignorieren, sofort Rock Antenne Bayern tippen und ~40s halten — kein Wechsel.
+
+17:36 Operator: OTG aus/an, Wechsel zu Rock Antenne Bayern, PD0071
+
+17:36 Messung nach Remount:
+  serial PD0071→PD0072 remountGen=72 Gate FROZEN
+  guess=0 rej=351 cold=2 stream.active=False ring=0
+  Bayern bytes=524288 fromHead=2 mid=126
+  = wieder cold mid / not_from_head, kein Ton erwartet
+
+17:38 Operator: starkes Blinken; Bayern zu Ende, Rock Antenne läuft; nach einigen Sekunden auch Blinken
+Messung: status-1738-rock-blink.json — Rock mid-Sturm bytes=8421376 mid=2054 cold=6 rej=2314 guess=0 kein Stream
