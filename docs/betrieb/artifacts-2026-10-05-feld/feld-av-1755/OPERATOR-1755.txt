@@ -1,0 +1,24 @@
+17:55 Feld: Head-Trigger + Prefill-Messung (nach Lab PASS)
+FW 0.4.45-dev · Bridge frisch --msc-lock · Seed aus
+Plan:
+  1) OTG sicher drin / ggf. Remount wenn Serial alt
+  2) Gate FROZEN Rock/Bayern/BOB abwarten — GO
+  3) Radio BOB! kurz halten (UI „läuft“ ok, Ton egal)
+  4) Station-Next / Wechsel zu Rock Antenne Bayern — ~40s halten
+  5) Melden: LED? Ton? Sender?
+Correlate --dense parallel
+
+17:55 Prep OK — OTG noch aus (PD0073). Warte auf Einstecken.
+
+17:57 Operator: OTG stecken — LED grün→blau
+
+17:57 Bridge BrokenPipe → Restart feld1755b
+
+17:57 PLUG PD0073 — Bridge Restart c nach BrokenPipe; Gate check
+
+17:58 Operator: Wechsel zu Rock Antenne Bayern
+
+17:58 Operator: LED hat kurz geblinkt bei Wechsel zu Bayern
+Messung: guess=0; cold=2; bay mid 512KiB fromHead=2; play.reject not_from_head fav1; kein audio_start — LED=cold mid
+
+17:59 Operator: noch kein Ton

@@ -1,0 +1,13 @@
+{
+  "play": "",
+  "stream_active": false,
+  "cursorArmed": false,
+  "hostAbsCursor": 0,
+  "streamBytes": 0,
+  "underruns": 0,
+  "liveBytes": 0,
+  "ring_size": 0,
+  "playGuessCount": 0,
+  "playRejectCount": 351,
+  "coldBodyBurstCount": 2
+}

@@ -1,0 +1,4 @@
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav1 from=17377 +4096B age=64962ms prefetch"}
+[msc] play.reject not_from_head uid=fav1 from=17377 +4096B age=64962ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1

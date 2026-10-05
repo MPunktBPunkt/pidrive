@@ -1,0 +1,13 @@
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav1 from=17377 +4096B age=64962ms prefetch"}
+[msc] play.reject not_from_head uid=fav1 from=17377 +4096B age=64962ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+[msc] cold_body_burst s=1 lba=17377..17433 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=1953 +4096B age=145123ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=1953 +4096B age=145123ms prefetch
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=1713..1993 n=8 B=32768 w=0 ev=not_from_head set=1 fav0"}
+[msc] cold_body_burst s=0 lba=1713..1993 n=8 B=32768 w=0 ev=not_from_head set=1 fav0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2241 +86016B age=145926ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2241 +86016B age=145926ms prefetch
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=2241 +946176B age=146729ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=2241 +946176B age=146729ms prefetch
