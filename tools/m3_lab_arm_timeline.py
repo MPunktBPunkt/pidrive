@@ -255,6 +255,25 @@ def pump_audio(pump: PumpTcp, uid: str, mp3: bytes, nbytes: int, tag: str) -> No
     pump.send_bin(KIND_AUDIO, mp3[:n], gap_s=0.002)
 
 
+def cursor_hold_allows(st: dict, ring_cap: int, next_chunk: int = 0) -> bool:
+    """Producer may write only while window cannot fully outrun the host cursor.
+
+    GPT rule: absEnd <= hostAbs + cap  (equiv. absBase <= hostAbs when ring full).
+    next_chunk: refuse if this write would push absEnd past hostAbs+cap.
+    """
+    host = int(st.get("hostAbsCursor") or 0)
+    abs_base = int(st.get("absBase") or 0)
+    abs_end = int(st.get("absEnd") or 0)
+    if abs_end <= 0 and abs_base <= 0:
+        return True
+    projected_end = abs_end + max(0, next_chunk)
+    if projected_end > host + ring_cap:
+        return False
+    if abs_base >= host and abs_end > 0:
+        return False
+    return True
+
+
 def find_arm_transition(series: list[dict]) -> dict | None:
     prev_armed = None
     for r in series:
@@ -340,7 +359,24 @@ def main() -> int:
         help="After post-head: pump this many seconds with NO host reads (field 18:07 window-ahead repro)",
     )
     ap.add_argument("--tail-pump-chunk", type=int, default=4096, help="Chunk size for --tail-pump-s")
-    ap.add_argument("--ring-cap", type=int, default=49152, help="Ring capacity for producer-gate")
+    ap.add_argument(
+        "--cursor-hold",
+        action="store_true",
+        help="Cursor-aware producer: pause pump when absBase > hostAbs (or absEnd > hostAbs+cap); no FW change",
+    )
+    ap.add_argument(
+        "--host-pause-after-kib",
+        type=int,
+        default=0,
+        help="During post-head: after this many KiB host reads, pause host for --host-pause-s (Versuch C)",
+    )
+    ap.add_argument(
+        "--host-pause-s",
+        type=float,
+        default=0,
+        help="Seconds of host-idle while producer may continue (pair with --host-pause-after-kib)",
+    )
+    ap.add_argument("--ring-cap", type=int, default=49152, help="Ring capacity for producer-gate / cursor-hold")
     ap.add_argument("--settle-s", type=float, default=3.0)
     ap.add_argument("--label", default="", help="Scenario label in report")
     args = ap.parse_args()
@@ -372,6 +408,8 @@ def main() -> int:
     lba0 = need = 0
     pumped = 0
     gate_pauses = 0
+    hold_pauses = 0
+    hold_paused = False
     pump = PumpTcp(args.esp_ip)
     try:
         setup_menu(pump)
@@ -457,9 +495,19 @@ def main() -> int:
         pumped = 0
         pump_budget = max(0, args.post_pump_kb * 1024)
         gate_pauses = 0
+        hold_pauses = 0
         gate_paused = False
+        hold_paused = False
+        host_pause_done = False
         if post > 0:
-            mode = "gate" if args.producer_gate else ("free" if pump_budget else "silent")
+            if args.producer_gate:
+                mode = "gate"
+            elif args.cursor_hold and pump_budget:
+                mode = "cursor_hold"
+            elif pump_budget:
+                mode = "free"
+            else:
+                mode = "silent"
             print(
                 f"== post-head {args.post_head_kib} KiB (cursor timeline, pump={mode}) ==",
                 flush=True,
@@ -468,18 +516,83 @@ def main() -> int:
             done = 0
             i = 0
             while done < post:
+                # optional host pause mid-burst (Versuch C)
+                if (
+                    args.host_pause_s > 0
+                    and args.host_pause_after_kib > 0
+                    and not host_pause_done
+                    and done >= args.host_pause_after_kib * 1024
+                ):
+                    print(
+                        f"== host-pause {args.host_pause_s}s after {args.host_pause_after_kib} KiB ==",
+                        flush=True,
+                    )
+                    series.append(snap(esp, "before_host_pause"))
+                    t_hp = time.time() + args.host_pause_s
+                    hi = 0
+                    while time.time() < t_hp:
+                        st_now = series[-1]
+                        allow = True
+                        if args.cursor_hold:
+                            allow = cursor_hold_allows(st_now, args.ring_cap, args.post_pump_chunk)
+                            if not allow:
+                                if not hold_paused:
+                                    hold_pauses += 1
+                                hold_paused = True
+                            else:
+                                hold_paused = False
+                        elif args.producer_gate:
+                            ring = int(st_now.get("ring_size") or 0)
+                            if ring >= args.ring_cap:
+                                allow = False
+                                if not gate_paused:
+                                    gate_pauses += 1
+                                gate_paused = True
+                            elif ring < args.ring_cap // 2:
+                                gate_paused = False
+                                allow = True
+                            else:
+                                allow = not gate_paused
+                        if allow and pump_budget > 0 and pumped < pump_budget:
+                            chunk_n = min(args.post_pump_chunk, pump_budget - pumped)
+                            base = (pumped // max(1, chunk_n) * chunk_n) % max(1, len(mp3) - chunk_n)
+                            pump.send_bin(KIND_AUDIO, mp3[base : base + chunk_n], gap_s=0.0005)
+                            pumped += chunk_n
+                        if hi % 4 == 0:
+                            series.append(snap(esp, f"host_pause_{hi}"))
+                        hi += 1
+                        time.sleep(0.01)
+                    series.append(snap(esp, "after_host_pause"))
+                    print(
+                        f"  pause end: host={series[-1]['hostAbsCursor']} "
+                        f"abs={series[-1]['absBase']}..{series[-1]['absEnd']} "
+                        f"behind={series[-1]['behind_base']}",
+                        flush=True,
+                    )
+                    host_pause_done = True
+
                 # optional trickle pump before each 4 KiB host read
                 if pump_budget > 0 and pumped < pump_budget:
                     st_now = series[-1] if series else snap(esp, "pre_pump")
                     ring = int(st_now.get("ring_size") or 0)
-                    if args.producer_gate:
+                    allow = True
+                    if args.cursor_hold:
+                        allow = cursor_hold_allows(st_now, args.ring_cap, args.post_pump_chunk)
+                        if not allow:
+                            if not hold_paused:
+                                hold_pauses += 1
+                            hold_paused = True
+                        else:
+                            hold_paused = False
+                    elif args.producer_gate:
                         if ring >= args.ring_cap:
                             if not gate_paused:
                                 gate_pauses += 1
                             gate_paused = True
                         elif ring < args.ring_cap // 2:
                             gate_paused = False
-                    if not (args.producer_gate and gate_paused):
+                        allow = not gate_paused
+                    if allow:
                         chunk_n = min(args.post_pump_chunk, pump_budget - pumped)
                         base = (pumped // max(1, chunk_n) * chunk_n) % max(1, len(mp3) - chunk_n)
                         pump.send_bin(KIND_AUDIO, mp3[base : base + chunk_n], gap_s=0.0005)
@@ -494,7 +607,11 @@ def main() -> int:
 
         # Field 18:07-like: host stopped (or slowed), producer keeps scrolling absBase ahead
         if args.tail_pump_s > 0:
-            print(f"== tail-pump {args.tail_pump_s}s (no host reads) ==", flush=True)
+            print(
+                f"== tail-pump {args.tail_pump_s}s (no host reads"
+                f"{', cursor-hold' if args.cursor_hold else ''}) ==",
+                flush=True,
+            )
             # ensure stream active
             if not (series and series[-1].get("stream_active")):
                 pump.send_json(
@@ -513,17 +630,36 @@ def main() -> int:
             t_end_tp = time.time() + args.tail_pump_s
             ti = 0
             while time.time() < t_end_tp:
-                base = (ti * args.tail_pump_chunk) % max(1, len(mp3) - args.tail_pump_chunk)
-                pump.send_bin(KIND_AUDIO, mp3[base : base + args.tail_pump_chunk], gap_s=0.002)
-                pumped += args.tail_pump_chunk
-                if ti % 8 == 0:
-                    series.append(snap(esp, f"tail_pump_{ti}"))
+                if args.cursor_hold:
+                    st_now = snap(esp, f"tail_chk_{ti}")
+                    series.append(st_now)
+                else:
+                    st_now = series[-1] if series else snap(esp, "tail_pre")
+                allow = True
+                if args.cursor_hold:
+                    allow = cursor_hold_allows(st_now, args.ring_cap, args.tail_pump_chunk)
+                    if not allow:
+                        if not hold_paused:
+                            hold_pauses += 1
+                        hold_paused = True
+                    else:
+                        hold_paused = False
+                if allow:
+                    base = (ti * args.tail_pump_chunk) % max(1, len(mp3) - args.tail_pump_chunk)
+                    pump.send_bin(KIND_AUDIO, mp3[base : base + args.tail_pump_chunk], gap_s=0.002)
+                    pumped += args.tail_pump_chunk
+                if (not args.cursor_hold and ti % 8 == 0) or (args.cursor_hold and not allow and ti % 16 == 0):
+                    if not args.cursor_hold:
+                        series.append(snap(esp, f"tail_pump_{ti}"))
                 ti += 1
+                if not allow:
+                    time.sleep(0.01)
             series.append(snap(esp, "after_tail_pump"))
             print(
                 f"  after tail: host={series[-1]['hostAbsCursor']} "
                 f"abs={series[-1]['absBase']}..{series[-1]['absEnd']} "
-                f"behind={series[-1]['behind_base']} live={series[-1]['liveBytes']}",
+                f"behind={series[-1]['behind_base']} live={series[-1]['liveBytes']} "
+                f"hold_pauses={hold_pauses}",
                 flush=True,
             )
 
@@ -539,7 +675,7 @@ def main() -> int:
             f"abs={s_last['absBase']}..{s_last['absEnd']} live={s_last['liveBytes']} "
             f"behind={s_last['behind_base']} resync={s_last['headResyncs']} "
             f"sb={s_last['streamBytes']} und={s_last['underruns']} "
-            f"pumped={pumped} gate_pauses={gate_pauses}",
+            f"pumped={pumped} gate_pauses={gate_pauses} hold_pauses={hold_pauses}",
             flush=True,
         )
     finally:
@@ -580,9 +716,11 @@ def main() -> int:
         },
         "bridge_mimic": bool(args.bridge_mimic),
         "producer_gate": bool(args.producer_gate),
+        "cursor_hold": bool(args.cursor_hold),
         "post_pump_kb": args.post_pump_kb,
         "pumped_bytes": pumped,
         "gate_pauses": gate_pauses,
+        "hold_pauses": hold_pauses,
         "settle_cursorArmed": settle.get("cursorArmed"),
         "n_samples": len(series),
         "live_summary": {
@@ -591,6 +729,11 @@ def main() -> int:
             "max_behind_base": max((int(r.get("behind_base") or 0) for r in series), default=0),
             "final_behind_base": final.get("behind_base"),
             "max_absBase": max((int(r.get("absBase") or 0) for r in series), default=0),
+            "pass_streaming": (
+                int(final.get("underruns") or 0) == 0
+                and int(final.get("liveBytes") or 0) > 0
+                and int(final.get("behind_base") or 0) == 0
+            ),
         },
     }
     (out / "REPORT.json").write_text(json.dumps(report, indent=2))

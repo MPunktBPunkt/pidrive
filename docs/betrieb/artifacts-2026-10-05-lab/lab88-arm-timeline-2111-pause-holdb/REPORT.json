@@ -1,0 +1,63 @@
+{
+  "label": "host_pause_HOLD2",
+  "prep": {
+    "prep": "soft_rst",
+    "steps": [
+      "restart_err=Expecting value: line 1 column 1 (char 0)"
+    ],
+    "serial_after": "PD0067",
+    "uptime_after": "12s"
+  },
+  "geometry": {
+    "lba0": 16465,
+    "head_need": 12288
+  },
+  "arm_transition": {
+    "ts": 1791227313.960527,
+    "mark": "post_head_post_0",
+    "hostAbsCursor": 4096,
+    "absBase": 0,
+    "absEnd": 8192,
+    "underruns": 0,
+    "streamBytes": 4096,
+    "headResyncs": 0,
+    "in_window": true,
+    "liveBytes": 4096
+  },
+  "at_guess": {
+    "playGuessCount": 1,
+    "playingUid": "fav1",
+    "hostAbsCursor": 253952,
+    "absBase": 245760,
+    "absEnd": 294912,
+    "liveBytes": 253952,
+    "in_window": true,
+    "behind_base": 0,
+    "streamBytes": 253952,
+    "underruns": 0
+  },
+  "field_compare_253952": {
+    "hostAbs": 253952,
+    "is_62_sectors": true,
+    "host_eq_streamBytes": true,
+    "host_eq_underruns": false,
+    "sectors_4k": 62
+  },
+  "bridge_mimic": true,
+  "producer_gate": false,
+  "cursor_hold": true,
+  "post_pump_kb": 1024,
+  "pumped_bytes": 294912,
+  "gate_pauses": 0,
+  "hold_pauses": 26,
+  "settle_cursorArmed": false,
+  "n_samples": 195,
+  "live_summary": {
+    "max_live": 253952,
+    "final_live": 253952,
+    "max_behind_base": 0,
+    "final_behind_base": 0,
+    "max_absBase": 245760,
+    "pass_streaming": true
+  }
+}
