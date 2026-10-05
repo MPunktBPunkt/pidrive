@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-04 · Lab AV **A+B PASS** (Fingerprint am Host-dd im Live-Fenster) · Feld-AV/Ohr offen · C′-Retry-Tools ready · FW `0.4.45-dev`  
-**Phase:** MSC-Lieferung im Lab belegt · Feld = HU-Read × Fenster × Inhalt × Ton (Cursor-Hypothese) · C′ getrennt
+**Stand:** 2026-10-05 Vormittag · Feld C′ **PASS** (Gate/Watchdog) · Feld AV blockiert (Menü-Seite Favoriten/Quellen/Stop, `liveBytes=0`) · Lab AV A+B PASS · FW `0.4.45-dev`  
+**Phase:** C′ im Auto belegt · AV braucht Sender-Seite (Rock/Bayern/BOB) + Live-Stream · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,13 +11,12 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-04-lab/UEBERGABE-FELD-MORGEN-AV-C-PRIME-2026-10-04.md`](artifacts-2026-10-04-lab/UEBERGABE-FELD-MORGEN-AV-C-PRIME-2026-10-04.md) | **Übergabe morgen** — Doppelauftrag C′ + AV |
-| 0a | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md) | Lab AV A+B PASS |
-| 0b | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/KRITIK-MISTRAL-GPT-AV-AB.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/KRITIK-MISTRAL-GPT-AV-AB.md) | GPT-Grenzen vs. Mistral-Überzug |
-| 1 | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md) | Feld 17:38 C' FAIL (Seed bei GO tot) |
-| 1a | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/KRITIK-MISTRAL-GPT-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/KRITIK-MISTRAL-GPT-1738.md) | Rohspur-Korrektur Mistral/GPT |
-| 2 | [`artifacts-2026-10-04-feld/feld-q3b-next-1732/GESAMTBERICHT-FELD-Q3B-1732.md`](artifacts-2026-10-04-feld/feld-q3b-next-1732/GESAMTBERICHT-FELD-Q3B-1732.md) | 17:32 Seed an HU (`bytesServed` +8 MiB) |
-| 3 | [`artifacts-2026-10-04-lab/lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md`](artifacts-2026-10-04-lab/lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md) | Seed-Gate Lab PASS |
+| 0 | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | **Feld heute** — C′ PASS, AV Menü-Hindernis |
+| 0a | [`artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md) | **Lab heute** — Menü-Seite + AV-Prep für Abend |
+| 0b | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md) | Lab AV A+B PASS |
+| 1 | [`artifacts-2026-10-05-feld/feld-q3b-next-0744/`](artifacts-2026-10-05-feld/feld-q3b-next-0744/) | C′ Artefakte (GATE+Watchdog PASS) |
+| 2 | [`artifacts-2026-10-05-feld/feld-av-0750/`](artifacts-2026-10-05-feld/feld-av-0750/) | AV Correlate: stream off / live=0 |
+| 3 | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md) | gestern C′ FAIL (Seed tot bei GO) |
 | 4 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Freeze |
 
 ---
@@ -26,10 +25,11 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | Thema | Stand |
 |-------|--------|
-| P1 Body-Next | EVIDENCED (17:34 + 17:47 LED+Trace; auch Tür 17:55) |
+| P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
-| Feld-Oracle C' | **PASS** bei 17:32 (+8 MiB); **FAIL** bei 17:38 (`active=False` schon bei GO / Reboot) |
-| AV / Ohr | Feld **FAIL** · Lab A+B **PASS** (Fingerprint/`liveBytes>0` im **gezielt** gelesenen Fenster; ≠ Decoder/Ohr) |
+| Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
+| AV / Ohr | Lab A+B **PASS** · Feld **blockiert** — HU auf Meta-Seite Favoriten/Quellen/Stop, kein `stream.active` |
+| Menü-Lock | Bridge frozen auf Rock/Bayern/BOB; API/HU zeigen Favoriten/Quellen/Stop → `frozen_reject` |
 | Detect | Cold=`not_from_head`; nur Log |
 | Sequenz-GO | gesperrt bis hörbarer AV |
 | Freeze | hält |
@@ -38,13 +38,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Feld morgen — zwei getrennte Läufe:** (a) C′-Retry mit Gate/Watchdog; (b) AV mit Seed **aus**, echter Stream — Ziel `liveBytes>0` + Ton.  
-2. **AV Feld:** `feld_av_correlate.py` — `hostAbs`/`fileOff` ∈ Fenster; **`liveBytes`/`underruns`** (Sync-Fingerprint allein reicht nicht, Lab 21:24).  
+1. **Lab (heute):** Menü-Seite klären — wie landet Session auf Favoriten/Quellen/Stop; Prozedur zurück zu Rock/Bayern/BOB (page / remount / reseal).  
+2. **Feld Abend:** erst Sender-Seite sichtbar → AV mit Seed aus + Correlate + Ohr (`liveBytes>0`). C′ nicht wiederholen (schon PASS).  
 3. Detect erst nach Hörbeweis. Freeze hält.
 
 ```
-Lab A+B PASS — MPEG-Bytes am Host-dd im Live-Fenster
-Feld-Stille: Cursor/Fenster = Hypothese bis HU-Korrelation
-Morgen: C′ (Seed/Gate) und AV (Seed aus) getrennt; GO erst nach Ohr
+C′ Feld PASS (Gate hält)
+AV Feld: Meta-Menü blockiert Live-Stream
+Lab: Menü-Seite → Abend AV mit Rock/Bayern/BOB
 Freeze hält
 ```

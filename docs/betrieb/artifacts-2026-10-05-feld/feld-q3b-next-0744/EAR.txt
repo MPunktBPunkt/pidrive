@@ -1,0 +1,26 @@
+FELD Q3b NEXT — prepared 2026-10-05T07:45:05+02:00
+FW target: 0.4.45-dev (seed WINS over live in body; bodySeed.bytesServed)
+Prefill: fav0 tag=B fromOff=348160 (LBA 761+)
+GO gate: seed active after 8s settle (status-03-go)
+NO remount after seed. NO RST after seed.
+
+OPERATOR:
+1) Film UI-Timer + LED
+2) Play short track Bayern or BOB
+3) Auto-Next → Rock (~87s / LED burst)
+4) Note: audible music NOT expected (seed≠MP3)
+5) Report: clock of burst/LED, any noise/glitch, then "Ende"
+6) Success = bytesServed rises during burst + HU body LBAs in trace
+
+DO NOT: RST, unplug USB, remount, menu rewrite (kills RAM seed)
+Watchdog (Haus):
+  python3 tools/feld_q3b_seed_watchdog.py --esp http://192.168.178.89 --out /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-05-feld/feld-q3b-next-0744 --minutes 4
+Artifacts: /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-05-feld/feld-q3b-next-0744
+
+OPERATOR 07:47 Quellen ende, LED blinkt vor Ende
+
+OPERATOR 07:49 Stop im Autoplay, kein Ton, kein Blinken am Ende
+
+OPERATOR 07:50 RST vor Lauf 2 AV
+
+OPERATOR 07:53 Session Ende — Arbeit

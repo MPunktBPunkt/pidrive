@@ -1,0 +1,8 @@
+
+OPERATOR 07:52 Favoriten lief, wählt Quellen (Menü noch Favoriten/Quellen/Stop)
+
+OPERATOR ~07:52 LED blinkt während Quellen; API: playing=Quellen stream=off live=0 quellen_bytes=524288
+
+OPERATOR 07:53 Stop gewählt, LED Aktivität
+
+OPERATOR 07:53 Session Ende — Arbeit

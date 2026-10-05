@@ -1,0 +1,10 @@
+07:45:07 START active=True tag='B' seedB=0 uptime='51s' (51s) cold=2
+07:45:07 play=- active=True seedB=0 cold=2 uptime='51s'
+07:45:10 play=- active=True seedB=0 cold=2 uptime='55s'
+07:45:16 play=- active=True seedB=0 cold=2 uptime='1min 0s'
+07:45:20 play=- active=True seedB=0 cold=2 uptime='1min 5s'
+07:45:26 play=- active=True seedB=0 cold=2 uptime='1min 11s'
+07:45:30 play=- active=True seedB=0 cold=2 uptime='1min 15s'
+07:45:32 play=- active=True seedB=57344 cold=3 uptime='1min 16s'
+07:45:33 play=- active=True seedB=1511424 cold=3 uptime='1min 17s'
+07:45:33 PASS bytesServed rose 0 → 1511424 (delta 1511424)

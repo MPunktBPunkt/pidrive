@@ -1,0 +1,23 @@
+{"ts":1791179132.0431316,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4129 +2977792B age=75999ms prefetch"}
+{"ts":1791179132.0763078,"code":"cold_body_burst","detail":"s=0 lba=9937..9993 n=8 B=32768 w=0 ev=not_from_head set=1 14037496848256783396"}
+{"ts":1791179132.848157,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4129 +3805184B age=76802ms prefetch"}
+{"ts":1791179134.4429057,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4129 +5402624B age=78407ms prefetch"}
+{"ts":1791179135.077399,"code":"cold_body_burst","detail":"s=0 lba=9937..15937 n=743 B=3043328 w=0 ev=not_from_head set=1 14037496848256783396"}
+{"ts":1791179135.2465293,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4129 +6209536B age=79209ms prefetch"}
+{"ts":1791179137.3616178,"code":"msc.quiet","detail":"file=9124352B age=2000ms"}
+{"ts":1791179141.1965737,"code":"play.reject","detail":"not_from_head uid=1628800432581751424 from=17137 +4096B age=85123ms prefetch"}
+{"ts":1791179143.392037,"code":"msc.quiet","detail":"file=9300480B age=2000ms"}
+{"ts":1791179221.2807724,"code":"play.reject","detail":"not_from_head uid=7194960129032930190 from=18161 +4096B age=165246ms prefetch"}
+{"ts":1791179221.3226445,"code":"cold_body_burst","detail":"s=2 lba=18161..18217 n=8 B=32768 w=0 ev=not_from_head set=1 7194960129032930190"}
+{"ts":1791179223.4695668,"code":"msc.quiet","detail":"file=9476608B age=2000ms"}
+{"ts":1791179440.747298,"code":"cold_body_burst","detail":"s=0 lba=97..16457 n=785 B=3215360 w=0 ev=not_from_head set=0 14037496848256783396"}
+{"ts":1791179440.871964,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4417 +4005888B age=7444ms prefetch"}
+{"ts":1791179441.6631436,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4417 +4837376B age=8245ms prefetch"}
+{"ts":1791179442.4705434,"code":"play.reject","detail":"not_from_head uid=14037496848256783396 from=4417 +5668864B age=9045ms prefetch"}
+{"ts":1791179444.806966,"code":"msc.phase","detail":"quiet cache?"}
+{"ts":1791179444.8072662,"code":"msc.quiet","detail":"file=8278016B age=2002ms"}
+{"ts":1791179535.695364,"code":"msc.phase","detail":"play Quellen"}
+{"ts":1791179536.975721,"code":"play.reject","detail":"already_playing uid=1628800432581751424 from=16465 +8192B age=102262ms"}
+{"ts":1791179536.9867206,"code":"cold_body_burst","detail":"s=1 lba=16481..16537 n=8 B=32768 w=0 ev=not_from_head set=1 1628800432581751424"}
+{"ts":1791179579.124932,"code":"play.reject","detail":"already_playing uid=7194960129032930190 from=17489 +8192B age=144699ms"}
+{"ts":1791179579.1359315,"code":"cold_body_burst","detail":"s=2 lba=17505..17561 n=8 B=32768 w=0 ev=not_from_head set=1 7194960129032930190"}
