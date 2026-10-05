@@ -12,6 +12,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | # | Dokument | Rolle |
 |---|----------|--------|
 | 0 | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | **Feld heute** — C′ PASS, AV Menü-Hindernis |
+| 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | **Abend-EAR** — Gate Sender-Slots vor AV |
+| 0k | [`artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md) | Kritik GPT-5.4 → Maßnahmen |
 | 0a | [`artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md) | **Lab Menü-Seite PASS** + Abend-EAR |
 | 0a1 | [`artifacts-2026-10-05-lab/lab88-correlate-meta-sender-0855/GESAMTBERICHT-CORRELATE-META-SENDER.md`](artifacts-2026-10-05-lab/lab88-correlate-meta-sender-0855/GESAMTBERICHT-CORRELATE-META-SENDER.md) | Correlate Meta=Negativ / Sender=Positiv **PASS** |
 | 0a2 | [`artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md) | Lab-Auftrag (Plan, erledigt) |
@@ -41,13 +43,13 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Feld Abend:** HU **Rock/Bayern/BOB** → AV (Seed aus + Correlate + Ohr). Meta-Seite: kein AV; ggf. `Mehr…`/Seite 1 oder Remount (siehe Lab-EAR). C′ **nicht** wiederholen.  
-2. Lab heute: **erledigt** (Menü-Seite + Correlate Meta/Sender).  
-3. Detect erst nach Hörbeweis. Freeze hält.
+1. **Feld Abend:** Gate = `slotMap` Rock/Bayern/BOB + Bridge `MSC_MAP_FROZEN` gleich; dann AV (Seed aus + Correlate + Ohr). Siehe [`FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md). C′ **nicht** wiederholen.  
+2. Nach RST: Meta/`fromNvs` möglich — **kein AV** bis Gate PASS (Lock/NVS, siehe GPT-Kritik).  
+3. Lab heute: **erledigt**. Detect erst nach Hörbeweis. Freeze hält.
 
 ```
-C′ Feld PASS (Gate hält)
+C′ Feld PASS
 Lab Menü+Correlate PASS
-Feld Abend: Sender-Seite → AV/Ohr
+Abend: Gate Sender-Slots → AV/Ohr
 Freeze hält
 ```
