@@ -1,0 +1,46 @@
+{
+  "label": "prefill96",
+  "prep": {
+    "prep": "soft_rst",
+    "steps": [
+      "restart_err=Expecting value: line 1 column 1 (char 0)"
+    ],
+    "serial_after": "PD0062",
+    "uptime_after": "12s"
+  },
+  "geometry": {
+    "lba0": 16465,
+    "head_need": 12288
+  },
+  "arm_transition": {
+    "ts": 1791218782.7214746,
+    "mark": "head_dense_post_0",
+    "hostAbsCursor": 52736,
+    "absBase": 49152,
+    "absEnd": 98304,
+    "underruns": 0,
+    "streamBytes": 4096,
+    "headResyncs": 2,
+    "in_window": true,
+    "liveBytes": 4096
+  },
+  "at_guess": {
+    "playGuessCount": 0,
+    "playingUid": "",
+    "hostAbsCursor": 126464,
+    "absBase": 49152,
+    "absEnd": 98304,
+    "liveBytes": 49664,
+    "in_window": false,
+    "behind_base": 0,
+    "streamBytes": 77824,
+    "underruns": 28160
+  },
+  "field_compare_253952": {
+    "hostAbs": 126464,
+    "is_62_sectors": false,
+    "host_eq_streamBytes": false
+  },
+  "settle_cursorArmed": false,
+  "n_samples": 56
+}

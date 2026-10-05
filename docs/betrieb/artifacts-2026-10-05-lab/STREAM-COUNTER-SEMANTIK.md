@@ -36,6 +36,16 @@
 
 → Fehlerzustand **Fenster-Miss** ist code-kompatibel erklärt als: **Cursor outruns Ring / liest Outside und läuft weiter**. Ob der Host zu früh/mittig startete oder der Producer zu spät füllte, braucht Lab-Zeitreihe (nicht aus einem Snapshot).
 
+## Feld 18:07 (status-1809) — zweite Geometrie
+
+| Beobachtung | Deutung |
+|-------------|---------|
+| `hostAbs=253952`, `absBase=457112..absEnd=506264`, Ring voll | Cursor **vor** Fenster (~200 KiB) — Producer/Ringscroll lief weiter, Cursor zählte Underruns hoch |
+| Wieder `streamBytes == underruns == hostAbs` | Kein Ring-Treffer auf dem Live-Pfad bis zur Messung |
+| Gleiche `253952` wie 15:41 | Sehr wahrscheinlich **62×4096 Live-Pfad-Bytes** (HU-Burst), nicht persistierter Cursor — siehe [`KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](../artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) |
+
+**Offene Messfrage:** Bei welchem Read `cursorArmed` false→true und welches `absBase` — danach Korrelation je 4 KiB-Read bis 253952.
+
 ## Was `liveBytes>0` bedeutet
 
 Nur Bytes, die tatsächlich aus dem Ring kamen. Silence-Underruns erhöhen `streamBytes`, nicht den Hörinhalt. MPEG-Sync allein reicht nicht (Silence-Frames haben Syncs).

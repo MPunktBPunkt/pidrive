@@ -14,7 +14,9 @@
 | Ohr / Ton | **FAIL** (Operator) |
 | Klassifikation | Gate **A PASS** · Arm **PASS** · AV **B FAIL Fenster** |
 
-**Ein Satz:** Nach RST kam endlich der Head-Arm (wie 15:41) — Ring voll, ffmpeg Bayern — aber Host outrannt / hängt außerhalb → kein Ton.
+**Ein Satz:** Nach RST kam endlich der Head-Arm (wie 15:41) — Ring voll, ffmpeg Bayern — aber Cursor/Fenster-Miss (`live=0`): Host ~254 KiB, Fenster bereits ~457 KiB+ (**Fenster voraus**, nicht „Host outrannt“ wie 15:41).
+
+**Review:** [`../KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](../KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) — `253952` sehr wahrscheinlich Underrun-Zähler seit Arm auf `absBase≈0`, nicht persistierter Cursor.
 
 ## Ablauf
 
@@ -33,7 +35,7 @@
 | play / uid | Rock Antenne Bayern / fav1 |
 | stream.active / cursorArmed | true / true |
 | ring_size | **49152** (voll) |
-| hostAbsCursor | **253952** (stuck) |
+| hostAbsCursor | **253952** (= `streamBytes`; 62×4096 — vermutlich HU-Burst + Underrun-Zähler) |
 | absBase..absEnd | läuft voraus (z. B. 457112..506264) |
 | streamBytes / underruns / live | 253952 / 253952 / **0** |
 | Bridge | `play_uid=fav1` + `audio_start` + ffmpeg Rock-Antenne-Bayern |
@@ -51,19 +53,20 @@ Artefakte: [`status-1809-guess.json`](status-1809-guess.json), [`status-1809-arm
 ## Folgerung
 
 1. **HU-wann-Head** ist nach RST **reproduzierbar** (17:55 ohne RST: nie; 18:07 mit RST: ja).  
-2. Nächstes Blocker ist klar **Fenster/Prefill-Timing**: Arm + voller Ring reichen nicht, wenn Host schon bei 254 KiB und Fenster hinterherläuft bzw. Host später wegläuft.  
-3. Lab Prefill-vor-Arm PASS bleibt relevant — im Feld muss Fill den Host **einholen/halten** (`liveBytes>0` anhaltend + `in_window`).  
-4. Freeze hält (kein Detect-Umbau).
+2. Blocker eingegrenzt: **Arm-/Producer-Timing** — Arm + voller Ring reichen nicht, wenn der Cursor früh auf kleinem `absBase` armt und durch Underruns auf ~254 KiB läuft, während der Ring scrollt (18:07: Fenster **voraus**).  
+3. Lab Prefill PASS zeigt das Gegenbild (Cursor im Fenster) — Ursache ist Timing, nicht „Ring leer“.  
+4. Freeze hält (kein Detect-Umbau; kein pauschaler FW-Snap vor Lab-Timeline).
 
 ## Nächste Schritte
 
-1. Lab/Bridge: Prefill + Pace so, dass nach Head-Arm `host` im Fenster bleibt (nicht nur Ring voll).  
-2. Feld: RST→schneller Tip nur noch zur Fenster-Messung mit densem Correlate.  
-3. Freeze hält.
+1. **Lab P0:** Arm-Timeline (`cursorArmed` false→true, `absBase` beim Arm, Reads bis 253952) + **Versuch C** (Producer zuerst, dann Head-Arm).  
+2. Instrumentierung: `fileOff`, `headResyncs` je Read (nearHead-Resync?).  
+3. Feld erst nach Lab-Antwort; optional kurz RST→dense Correlate zur Bestätigung.  
+4. Freeze hält.
 
 ```
 Gate PASS · Head-Arm PASS (nach RST)
-Fenster FAIL live=0 / Host außerhalb → kein Ton
-Nächstes: Prefill hält Host im Fenster
+Fenster FAIL live=0 (Cursor/Fenster-Miss)
+Nächstes: Lab Arm-Timeline + Versuch C
 Freeze hält
 ```
