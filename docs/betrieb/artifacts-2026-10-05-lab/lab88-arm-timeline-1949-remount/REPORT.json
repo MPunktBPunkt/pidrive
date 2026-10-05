@@ -1,0 +1,47 @@
+{
+  "label": "remount_after_prior",
+  "prep": {
+    "prep": "usb_remount",
+    "steps": [
+      "remount={'ok': True, 'otg': True}"
+    ]
+  },
+  "geometry": {
+    "lba0": 16465,
+    "head_need": 12288
+  },
+  "arm_transition": {
+    "ts": 1791222151.0453084,
+    "mark": "post_head_post_0",
+    "hostAbsCursor": 4096,
+    "absBase": 0,
+    "absEnd": 0,
+    "underruns": 4096,
+    "streamBytes": 69632,
+    "headResyncs": 0,
+    "in_window": false,
+    "liveBytes": 65536
+  },
+  "at_guess": {
+    "playGuessCount": 1,
+    "playingUid": "",
+    "hostAbsCursor": 65536,
+    "absBase": 0,
+    "absEnd": 0,
+    "liveBytes": 65536,
+    "in_window": false,
+    "behind_base": 0,
+    "streamBytes": 131072,
+    "underruns": 65536
+  },
+  "field_compare_253952": {
+    "hostAbs": 65536,
+    "is_62_sectors": false,
+    "host_eq_streamBytes": false,
+    "host_eq_underruns": true,
+    "sectors_4k": 16
+  },
+  "bridge_mimic": true,
+  "settle_cursorArmed": true,
+  "n_samples": 67
+}

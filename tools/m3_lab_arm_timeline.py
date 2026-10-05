@@ -310,6 +310,18 @@ def main() -> int:
     ap.add_argument("--prefill-kb", type=int, default=0, help="Fixed prefill KiB immediately before head burst")
     ap.add_argument("--post-head-kib", type=int, default=256, help="Continue head sequential reads after arm")
     ap.add_argument("--dense", action="store_true", help="Snap before/after each 4KiB during head burst")
+    ap.add_argument(
+        "--bridge-mimic",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="After head tip / playGuess: audio_start like field bridge (needed for live path / cursorArm)",
+    )
+    ap.add_argument(
+        "--post-pump-kb",
+        type=int,
+        default=0,
+        help="After bridge-mimic audio_start, pump this many KiB while post-head reads continue (0=silence/underrun)",
+    )
     ap.add_argument("--settle-s", type=float, default=3.0)
     ap.add_argument("--label", default="", help="Scenario label in report")
     args = ap.parse_args()
@@ -375,21 +387,82 @@ def main() -> int:
             time.sleep(0.35)
             series.append(snap(esp, "after_prefill"))
 
-        print("== head burst (arm trigger) ==", flush=True)
+        # Head tip until Detect (field: HU reads lba0 ≥ minSeq)
+        print("== head tip (Detect) ==", flush=True)
         series.append(snap(esp, "before_head"))
-        post = args.post_head_kib * 1024
-        total = need + post
         if args.dense:
-            burst_dense(args.dev, lba0, total, esp, series, "head_dense", 4096, 4.5)
+            burst_dense(args.dev, lba0, need, esp, series, "head_tip", 4096, 4.5)
         else:
-            burst(args.dev, lba0, total, 4096, 4.5)
-            for _ in range(20):
-                series.append(snap(esp, "head_poll"))
-                if series[-1]["playGuessCount"] > g0 or series[-1]["playingUid"] == args.uid:
-                    break
-                time.sleep(0.1)
+            burst(args.dev, lba0, need, 4096, 4.5)
+        for _ in range(16):
+            series.append(snap(esp, "head_tip_poll"))
+            if series[-1]["playGuessCount"] > g0 or series[-1]["playingUid"] == args.uid:
+                break
+            time.sleep(0.1)
+        s_tip = series[-1]
+        print(
+            f"  tip guess={s_tip['playGuessCount']} play={s_tip['playingUid']!r} "
+            f"active={s_tip['stream_active']} armed={s_tip['cursorArmed']}",
+            flush=True,
+        )
 
-        t_end = time.time() + 3
+        # Field bridge: play_uid → audio_start. Without this, MSC stays off live path
+        # (streamBytes=0, cursorArmed stays false) even after playGuess.
+        already_streaming = bool(s_tip.get("stream_active")) or args.producer_s > 0 or args.prefill_kb > 0
+        if args.bridge_mimic and not already_streaming:
+            print("== bridge-mimic audio_start ==", flush=True)
+            pump.send_json(
+                {
+                    "t": "audio_start",
+                    "uid": args.uid,
+                    "codec": "mp3",
+                    "br": "48k",
+                    "cSrc": "lab",
+                    "cPath": "bridge_mimic",
+                    "cTry": "bridge_mimic",
+                }
+            )
+            pump.drain(0.35)
+            pump.send_bin(KIND_ID3, id3("BridgeMimic"), gap_s=0.05)
+            if args.post_pump_kb > 0:
+                n = min(len(mp3), args.post_pump_kb * 1024)
+                pump.send_bin(KIND_AUDIO, mp3[:n], gap_s=0.002)
+            series.append(snap(esp, "after_audio_start"))
+            print(
+                f"  active={series[-1]['stream_active']} ring={series[-1]['ring_size']} "
+                f"abs={series[-1]['absBase']}..{series[-1]['absEnd']}",
+                flush=True,
+            )
+
+        # Post-arm host reads (field HU continues; cursor++ even on underrun)
+        post = args.post_head_kib * 1024
+        if post > 0:
+            print(f"== post-head {args.post_head_kib} KiB (cursor timeline) ==", flush=True)
+            off = need
+            if args.dense:
+                burst_dense(
+                    args.dev,
+                    lba0 + off // 512,
+                    post,
+                    esp,
+                    series,
+                    "post_head",
+                    4096,
+                    4.5,
+                )
+            else:
+                # Coarser: 16 KiB chunks with snap; optional trickle pump
+                done = 0
+                i = 0
+                while done < post:
+                    if args.post_pump_kb > 0 and i % 4 == 0:
+                        pump.send_bin(KIND_AUDIO, mp3[(i * 2048) % max(1, len(mp3) - 2048) : (i * 2048) % max(1, len(mp3) - 2048) + 2048], gap_s=0.001)
+                    burst(args.dev, lba0 + (off + done) // 512, 16384, 4096, 4.5)
+                    done += 16384
+                    series.append(snap(esp, f"post_head_{i}"))
+                    i += 1
+
+        t_end = time.time() + 2
         while time.time() < t_end:
             series.append(snap(esp, "tail"))
             time.sleep(0.15)
@@ -399,7 +472,8 @@ def main() -> int:
             f"  guess={s_last['playGuessCount']} play={s_last['playingUid']} "
             f"armed={s_last['cursorArmed']} host={s_last['hostAbsCursor']} "
             f"abs={s_last['absBase']}..{s_last['absEnd']} live={s_last['liveBytes']} "
-            f"behind={s_last['behind_base']} resync={s_last['headResyncs']}",
+            f"behind={s_last['behind_base']} resync={s_last['headResyncs']} "
+            f"sb={s_last['streamBytes']} und={s_last['underruns']}",
             flush=True,
         )
     finally:
@@ -435,7 +509,10 @@ def main() -> int:
             "hostAbs": final.get("hostAbsCursor"),
             "is_62_sectors": (final.get("hostAbsCursor") or 0) == 253952,
             "host_eq_streamBytes": final.get("hostAbsCursor") == final.get("streamBytes"),
+            "host_eq_underruns": final.get("hostAbsCursor") == final.get("underruns"),
+            "sectors_4k": (final.get("hostAbsCursor") or 0) // 4096,
         },
+        "bridge_mimic": bool(args.bridge_mimic),
         "settle_cursorArmed": settle.get("cursorArmed"),
         "n_samples": len(series),
     }

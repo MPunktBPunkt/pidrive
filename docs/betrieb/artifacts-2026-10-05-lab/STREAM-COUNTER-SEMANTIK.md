@@ -46,6 +46,16 @@
 
 **Offene Messfrage:** Bei welchem Read `cursorArmed` false→true und welches `absBase` — danach Korrelation je 4 KiB-Read bis 253952.
 
+## Lab-Repro 19:45 (`lab88-arm-timeline-1945-empty248`)
+
+| Beobachtung | Deutung |
+|-------------|---------|
+| Arm bei `hostAbs=4096`, `absBase=0` | Erster Live-Read nach `audio_start` armt auf `absBase` |
+| End: `hostAbs=streamBytes=underruns=253952` | **62×4096** Outside-Bytes — exakt Feld 15:41/18:07 |
+| Prefill/Versuch C: Arm `host≈absBase`, `live>0` | Gegenprobe: Ring voll → Treffer im Fenster |
+
+→ 253952 = Underrun-Zählerstand seit Arm, **kein** NVS/Persistenz.
+
 ## Was `liveBytes>0` bedeutet
 
 Nur Bytes, die tatsächlich aus dem Ring kamen. Silence-Underruns erhöhen `streamBytes`, nicht den Hörinhalt. MPEG-Sync allein reicht nicht (Silence-Frames haben Syncs).

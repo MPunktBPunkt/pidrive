@@ -1,0 +1,9 @@
+{
+  "prep": "rst_remount",
+  "steps": [
+    "restart_err=Expecting value: line 1 column 1 (char 0)",
+    "remount={'ok': True, 'otg': True}"
+  ],
+  "serial_after": "PD0065",
+  "uptime_after": "12s"
+}

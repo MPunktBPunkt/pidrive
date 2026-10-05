@@ -1,0 +1,35 @@
+{
+  "label": "empty_ring_253k",
+  "prep": {
+    "prep": "soft_rst",
+    "steps": [
+      "restart_err=Expecting value: line 1 column 1 (char 0)"
+    ],
+    "serial_after": "PD0064",
+    "uptime_after": "12s"
+  },
+  "geometry": {
+    "lba0": 16465,
+    "head_need": 12288
+  },
+  "arm_transition": null,
+  "at_guess": {
+    "playGuessCount": 2,
+    "playingUid": "fav1",
+    "hostAbsCursor": 0,
+    "absBase": 0,
+    "absEnd": 0,
+    "liveBytes": 0,
+    "in_window": false,
+    "behind_base": 0,
+    "streamBytes": 0,
+    "underruns": 0
+  },
+  "field_compare_253952": {
+    "hostAbs": 0,
+    "is_62_sectors": false,
+    "host_eq_streamBytes": true
+  },
+  "settle_cursorArmed": false,
+  "n_samples": 148
+}

@@ -42,3 +42,9 @@ Freeze hält — kein Detect-/FW-Snap vor Auswertung.
 | `lab88-arm-timeline-1845-C` | versuch_C (Pump-Bug) | — | 0 | Vor Fix: falsches Pump-Framing → Ring leer; nur Underrun |
 
 → **GPT-Mechanik stützt sich:** Cursor armt nahe aktuellem `absBase`, zählt bei weiteren Reads hoch; Persistenz-Hypothese für 253952 **nicht nötig** (Feld-Timeline weiterhin wünschenswert).
+
+## Matrix ~19:45 (Bridge-Mimic)
+
+Siehe [`GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md`](GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md).
+
+**P0 erledigt:** `1945-empty248` reproduziert Feld **`hostAbs=streamBytes=underruns=253952`** nach Arm bei `absBase=0`. Tool braucht default `--bridge-mimic` (`audio_start` nach Head-Tip), sonst kein Live-Pfad.
