@@ -333,6 +333,13 @@ def main() -> int:
         action="store_true",
         help="Pause post-pump when ring full (size>=cap); resume when size < cap/2 (Bridge-side, no FW)",
     )
+    ap.add_argument(
+        "--tail-pump-s",
+        type=float,
+        default=0,
+        help="After post-head: pump this many seconds with NO host reads (field 18:07 window-ahead repro)",
+    )
+    ap.add_argument("--tail-pump-chunk", type=int, default=4096, help="Chunk size for --tail-pump-s")
     ap.add_argument("--ring-cap", type=int, default=49152, help="Ring capacity for producer-gate")
     ap.add_argument("--settle-s", type=float, default=3.0)
     ap.add_argument("--label", default="", help="Scenario label in report")
@@ -484,6 +491,41 @@ def main() -> int:
                 series.append(snap(esp, f"post_head_post_{i}"))
                 i += 1
                 time.sleep(4.5 / 1000.0)
+
+        # Field 18:07-like: host stopped (or slowed), producer keeps scrolling absBase ahead
+        if args.tail_pump_s > 0:
+            print(f"== tail-pump {args.tail_pump_s}s (no host reads) ==", flush=True)
+            # ensure stream active
+            if not (series and series[-1].get("stream_active")):
+                pump.send_json(
+                    {
+                        "t": "audio_start",
+                        "uid": args.uid,
+                        "codec": "mp3",
+                        "br": "48k",
+                        "cSrc": "lab",
+                        "cPath": "tail",
+                        "cTry": "tail",
+                    }
+                )
+                pump.drain(0.3)
+                pump.send_bin(KIND_ID3, id3("TailPump"), gap_s=0.05)
+            t_end_tp = time.time() + args.tail_pump_s
+            ti = 0
+            while time.time() < t_end_tp:
+                base = (ti * args.tail_pump_chunk) % max(1, len(mp3) - args.tail_pump_chunk)
+                pump.send_bin(KIND_AUDIO, mp3[base : base + args.tail_pump_chunk], gap_s=0.002)
+                pumped += args.tail_pump_chunk
+                if ti % 8 == 0:
+                    series.append(snap(esp, f"tail_pump_{ti}"))
+                ti += 1
+            series.append(snap(esp, "after_tail_pump"))
+            print(
+                f"  after tail: host={series[-1]['hostAbsCursor']} "
+                f"abs={series[-1]['absBase']}..{series[-1]['absEnd']} "
+                f"behind={series[-1]['behind_base']} live={series[-1]['liveBytes']}",
+                flush=True,
+            )
 
         t_end = time.time() + 2
         while time.time() < t_end:
