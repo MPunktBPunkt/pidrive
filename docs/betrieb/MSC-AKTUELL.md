@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Lab Prefill-vor-Arm **PASS** (live streak 24/24) · Feld-Head-Trigger weiter offen · FW `0.4.45-dev`  
-**Phase:** Baustelle B — Prefill-Beweis lab-grün; nächste Feldfrage = Head-Trigger · Freeze hält
+**Stand:** 2026-10-05 Lab Head-Trigger Mid→Head **PASS** + Prefill-vor-Arm **PASS** · HU-wann-Head offen · FW `0.4.45-dev`  
+**Phase:** Baustelle B — Lab-Kette komplett; nächstes Feld = Station-Next + Prefill · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,7 +11,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md`](artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md) | **Lab Prefill-vor-Arm PASS** — ring voll @ Arm, liveBytes anhaltend |
+| 0 | [`artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md`](artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md) | **Lab Head-Trigger** — Mid→Head armt; Mid-only nicht; Cooldown |
+| 0p | [`artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md`](artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md) | Lab Prefill-vor-Arm PASS (live 24/24) |
 | 0f | [`artifacts-2026-10-05-feld/feld-av-1725/GESAMTBERICHT-FELD-AV-1725.md`](artifacts-2026-10-05-feld/feld-av-1725/GESAMTBERICHT-FELD-AV-1725.md) | Feld 17:25 — Gate PASS, Arm nie (cold mid) |
 | 0r | [`artifacts-2026-10-05-feld/feld-av-1725/KRITIK-REVIEW-FELD-1725-4bcadaf.md`](artifacts-2026-10-05-feld/feld-av-1725/KRITIK-REVIEW-FELD-1725-4bcadaf.md) | Review 17:25: mid≠Arm + Head-Trigger |
 | 0e2 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | Feld Abend 15:30 — Gate PASS, AV/Ohr FAIL Fenster/Arm |
@@ -46,7 +47,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | AV / Ohr | Lab A+B **PASS** · **Prefill-vor-Arm Lab PASS** (live 24/24) · Feld 15:30 Fenster; Feld 17:25 Arm nie |
 | Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
 | Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
-| Detect | Cold=`not_from_head`; nur Log · **Head-Trigger HU** (warum 15:41 1× Head) offen |
+| Detect | Cold=`not_from_head`; Mid→Head armt (Lab); **HU-wann-Head** im Feld offen; Cooldown 5 s |
 | Sequenz-GO | gesperrt bis hörbarer AV |
 | Freeze | hält |
 
@@ -54,12 +55,12 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Lab optional:** Head-Trigger-Repro isoliert (15:41 Mid→Head / Station-Change).  
-2. **Feld:** erst wenn Head-Trigger + Bridge-Prefill-vor-Arm kombiniert sind → Ohr.  
+1. **Feld:** Station-Next BOB→Bayern (wie 15:41) + frische Bridge + Prefill-bereit; Trace/JSONL vor Arm; Ohr.  
+2. Lab-Kette Prefill + Mid→Head ist belegt — kein Detect-Umbau.  
 3. Freeze hält. Gate-Recovery: Bridge neu / Unplug.
 
 ```
-Prefill-vor-Arm Lab PASS ✓
-Feld-Head-Trigger 🟠 · dann Feld+Ohr
+Lab: Prefill PASS · Mid→Head armt PASS
+Feld: HU-wann-Head + Prefill → Ohr
 Freeze hält
 ```

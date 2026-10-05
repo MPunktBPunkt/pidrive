@@ -1,0 +1,22 @@
+== soft-rst ==
+  restart: Expecting value: line 1 column 1 (char 0)
+  up=12s ser=PD0062
+bay=fav1 16465..17488 bob=fav2 17489 mid_lba=16939 (+237KiB) need=12288
+== settle ==
+== A bob_mid ==
+  guess 1->1 play='' rej=171 cold=3
+== B mid_then_head (15:41) ==
+  guess 1->2 play='fav1' armed=True ring=0 live=0 last=16488
+  cooldown wait 6.0s
+== C head_only ==
+  guess 2->3 play='fav1' armed=True ring=0
+  cooldown wait 6.0s
+== D mid_only ==
+  guess 3->3 play='' armed=False rejΔ? rej=333
+OUT=docs/betrieb/artifacts-2026-10-05-lab/lab88-head-trigger-1754
+{
+  "B_reproduces_1541_shape": true,
+  "C_head_positive": true,
+  "D_mid_negative": true,
+  "pass_head_trigger_lab": true
+}

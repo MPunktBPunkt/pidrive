@@ -1,0 +1,270 @@
+{
+  "playDetect": {
+    "plugWindowMs": 500,
+    "minSeqBytes": 6000,
+    "navMinSeqBytes": 4096,
+    "headLbaSlop": 12,
+    "cooldownMs": 5000,
+    "prefetchLbaSlop": 2
+  },
+  "geometry": {
+    "uid": "fav1",
+    "bob_uid": "fav2",
+    "mid_off_kib": 237,
+    "min_seq_need": 12288
+  },
+  "A_bob_mid": {
+    "guess_delta": 0,
+    "playingUid": "",
+    "armed_target": false,
+    "snap": {
+      "ts": 1791215571.2200513,
+      "mark": "after_bob_mid",
+      "playingUid": "",
+      "playingName": "",
+      "phase": "quiet",
+      "playGuessCount": 0,
+      "playRejectCount": 93,
+      "coldBodyBurstCount": 1,
+      "prefetchHits": 93,
+      "stream_active": false,
+      "ring_size": 0,
+      "hostAbsCursor": 0,
+      "liveBytes": 0,
+      "readOverflow": 0,
+      "lastReadLba": 17648,
+      "msSincePlug": 23080,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      },
+      "slotBrief": [
+        {
+          "uid": "fav0",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "uid": "fav1",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "uid": "fav2",
+          "bytes": 49152,
+          "fromHead": 0,
+          "midFile": 96,
+          "lastAgeMs": 3071
+        },
+        {
+          "uid": "pump:page_next",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        }
+      ]
+    }
+  },
+  "B_mid_then_head": {
+    "armed": true,
+    "guess_delta": 1,
+    "playingUid": "fav1",
+    "ring_at_arm": 0,
+    "live_at_arm": 0,
+    "snap": {
+      "ts": 1791215571.7229366,
+      "mark": "b_tip_poll",
+      "playingUid": "fav1",
+      "playingName": "AV Bayern",
+      "phase": "play",
+      "playGuessCount": 1,
+      "playRejectCount": 142,
+      "coldBodyBurstCount": 1,
+      "prefetchHits": 122,
+      "stream_active": false,
+      "ring_size": 0,
+      "hostAbsCursor": 0,
+      "liveBytes": 0,
+      "readOverflow": 0,
+      "lastReadLba": 16488,
+      "msSincePlug": 23587,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      },
+      "slotBrief": [
+        {
+          "uid": "fav0",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "uid": "fav1",
+          "bytes": 28672,
+          "fromHead": 13,
+          "midFile": 43,
+          "lastAgeMs": 42
+        },
+        {
+          "uid": "fav2",
+          "bytes": 49152,
+          "fromHead": 0,
+          "midFile": 96,
+          "lastAgeMs": 3578
+        },
+        {
+          "uid": "pump:page_next",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        }
+      ]
+    }
+  },
+  "C_head_only": {
+    "playingUid": "",
+    "ring_at_arm": 0,
+    "snap": {
+      "ts": 1791215579.0004468,
+      "mark": "c_tip_poll",
+      "playingUid": "",
+      "playingName": "",
+      "phase": "play",
+      "playGuessCount": 1,
+      "playRejectCount": 163,
+      "coldBodyBurstCount": 1,
+      "prefetchHits": 122,
+      "stream_active": false,
+      "ring_size": 0,
+      "hostAbsCursor": 0,
+      "liveBytes": 0,
+      "readOverflow": 0,
+      "lastReadLba": 16488,
+      "msSincePlug": 30864,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      },
+      "slotBrief": [
+        {
+          "uid": "fav0",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "uid": "fav1",
+          "bytes": 40960,
+          "fromHead": 26,
+          "midFile": 54,
+          "lastAgeMs": 6056
+        },
+        {
+          "uid": "fav2",
+          "bytes": 49152,
+          "fromHead": 0,
+          "midFile": 96,
+          "lastAgeMs": 10854
+        },
+        {
+          "uid": "pump:page_next",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        }
+      ]
+    },
+    "armed": false,
+    "guess_delta": 0
+  },
+  "D_mid_only": {
+    "playingUid": "",
+    "guess": 1,
+    "snap": {
+      "ts": 1791215583.2917821,
+      "mark": "d_after_mid",
+      "playingUid": "",
+      "playingName": "",
+      "phase": "play",
+      "playGuessCount": 1,
+      "playRejectCount": 256,
+      "coldBodyBurstCount": 2,
+      "prefetchHits": 215,
+      "stream_active": false,
+      "ring_size": 0,
+      "hostAbsCursor": 0,
+      "liveBytes": 0,
+      "readOverflow": 0,
+      "lastReadLba": 17034,
+      "msSincePlug": 35154,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      },
+      "slotBrief": [
+        {
+          "uid": "fav0",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "uid": "fav1",
+          "bytes": 90112,
+          "fromHead": 26,
+          "midFile": 150,
+          "lastAgeMs": 2880
+        },
+        {
+          "uid": "fav2",
+          "bytes": 49152,
+          "fromHead": 0,
+          "midFile": 96,
+          "lastAgeMs": 15145
+        },
+        {
+          "uid": "pump:page_next",
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "lastAgeMs": 0
+        }
+      ]
+    },
+    "armed": false,
+    "guess_delta": 0
+  },
+  "summary": {
+    "B_reproduces_1541_shape": true,
+    "C_head_positive": false,
+    "D_mid_negative": true,
+    "pass_head_trigger_lab": false
+  }
+}
