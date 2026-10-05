@@ -1,0 +1,5 @@
+{"ts":1791181166.7871509,"op":"session_start"}
+{"ts":1791181166.8596525,"op":"frozen","items":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"seal":1}
+{"ts":1791181168.4255474,"op":"reject","want":[["14037496848256783396","Favoriten"],["1628800432581751424","Quellen"],["7194960129032930190","Stop"],["pump:page_next","Mehr... (+3)"]],"have":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"n":1}
+{"ts":1791181174.6284482,"op":"reject","want":[["14037496848256783396","Favoriten"],["1628800432581751424","Quellen"],["7194960129032930190","Stop"],["pump:page_next","Mehr... (+3)"]],"have":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"n":11}
+{"ts":1791181179.6787379,"op":"reject","want":[["14037496848256783396","Favoriten"],["1628800432581751424","Quellen"],["7194960129032930190","Stop"],["pump:page_next","Mehr... (+3)"]],"have":[["fav0","Rock Antenne"],["fav1","Rock Antenne Bayern"],["fav2","Radio BOB!"],["pump:page_next","Menue"]],"n":21}

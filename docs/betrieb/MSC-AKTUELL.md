@@ -1,6 +1,6 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-05 Vormittag · Feld C′ **PASS** (Gate/Watchdog) · Feld AV blockiert (Menü-Seite Favoriten/Quellen/Stop, `liveBytes=0`) · Lab AV A+B PASS · FW `0.4.45-dev`  
+**Stand:** 2026-10-05 Vormittag · Feld C′ **PASS** · Feld AV blockiert (Meta-Menü) · Lab Menü-Seite **PASS** ([`lab88-menu-page-0816/`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md)) · FW `0.4.45-dev`  
 **Phase:** C′ im Auto belegt · AV braucht Sender-Seite (Rock/Bayern/BOB) + Live-Stream · Freeze hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
@@ -12,7 +12,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | # | Dokument | Rolle |
 |---|----------|--------|
 | 0 | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | **Feld heute** — C′ PASS, AV Menü-Hindernis |
-| 0a | [`artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md) | **Lab heute** — Menü-Seite + AV-Prep für Abend |
+| 0a | [`artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md) | **Lab Menü-Seite PASS** + Abend-EAR |
+| 0a1 | [`artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md) | Lab-Auftrag (Plan) |
 | 0b | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md) | Lab AV A+B PASS |
 | 1 | [`artifacts-2026-10-05-feld/feld-q3b-next-0744/`](artifacts-2026-10-05-feld/feld-q3b-next-0744/) | C′ Artefakte (GATE+Watchdog PASS) |
 | 2 | [`artifacts-2026-10-05-feld/feld-av-0750/`](artifacts-2026-10-05-feld/feld-av-0750/) | AV Correlate: stream off / live=0 |
@@ -28,7 +29,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Lab A+B **PASS** · Feld **blockiert** — HU auf Meta-Seite Favoriten/Quellen/Stop, kein `stream.active` |
+| AV / Ohr | Lab A+B **PASS** (Sender-Seite) · Feld **blockiert** bis HU Rock/Bayern/BOB zeigt |
+| Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
 | Menü-Lock | Bridge frozen auf Rock/Bayern/BOB; API/HU zeigen Favoriten/Quellen/Stop → `frozen_reject` |
 | Detect | Cold=`not_from_head`; nur Log |
 | Sequenz-GO | gesperrt bis hörbarer AV |
@@ -38,8 +40,8 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Lab (heute):** Menü-Seite klären — wie landet Session auf Favoriten/Quellen/Stop; Prozedur zurück zu Rock/Bayern/BOB (page / remount / reseal).  
-2. **Feld Abend:** erst Sender-Seite sichtbar → AV mit Seed aus + Correlate + Ohr (`liveBytes>0`). C′ nicht wiederholen (schon PASS).  
+1. **Feld Abend:** HU **Rock/Bayern/BOB** → AV (Seed aus + Correlate + Ohr). Meta-Seite: kein AV; ggf. `Mehr…`/Seite 1 oder Remount (siehe Lab-EAR). C′ **nicht** wiederholen.  
+2. Lab Menü-Seite: **erledigt** ([`lab88-menu-page-0816/`](artifacts-2026-10-05-lab/lab88-menu-page-0816/)).  
 3. Detect erst nach Hörbeweis. Freeze hält.
 
 ```

@@ -1,0 +1,17 @@
+[msc-lock] enabled=False seed_plugged=True
+[tx] {"t":"hello","ver":1}
+[bridge] warn: no hello_ack yet — continuing
+Traceback (most recent call last):
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 2058, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 1507, in main
+    send({"t": "audio_stop"})
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 1459, in send
+    ser.write((line + "\n").encode("utf-8"))
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 304, in write
+    self._sock.sendall(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe

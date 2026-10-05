@@ -1,0 +1,161 @@
+{
+  "steps": {
+    "seal": {
+      "menu_api": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "match": true
+    },
+    "meta_repro": {
+      "menu_api": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "meta_like_api": false,
+      "lock_kept_sender_slots": true,
+      "stream": {
+        "active": false,
+        "uid": "fav0",
+        "size": 49152,
+        "liveBytes": 249856,
+        "playingUid": "pump:page_next",
+        "playingName": "Menue"
+      }
+    },
+    "meta_av_negative": {
+      "active": false,
+      "uid": "fav0",
+      "size": 49152,
+      "liveBytes": 249856,
+      "playingUid": "7194960129032930190",
+      "playingName": "",
+      "menu": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "host_in_window": false,
+      "abs": [
+        155648,
+        204800
+      ]
+    },
+    "return_page_home": {
+      "menu_api": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "sender_visible": true
+    },
+    "return_remount": {
+      "menu_api": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "slotMap": [
+        "Rock Antenne",
+        "Rock Antenne Bayern",
+        "Radio BOB!",
+        "Menue"
+      ],
+      "remountGen": 53
+    },
+    "field_meta_nolock": {
+      "menu_api": [
+        "Favoriten",
+        "Quellen",
+        "Stop",
+        "Mehr... (+3)"
+      ],
+      "slotMap": [
+        "Favoriten",
+        "Quellen",
+        "Stop",
+        "Mehr... (+3)"
+      ],
+      "field_meta_slotMap": true,
+      "stream": {
+        "active": false,
+        "uid": "fav0",
+        "size": 49152,
+        "liveBytes": 249856,
+        "playingUid": "7194960129032930190",
+        "playingName": "Stop",
+        "menu": [
+          "Favoriten",
+          "Quellen",
+          "Stop",
+          "Mehr... (+3)"
+        ],
+        "slotMap": [
+          "Favoriten",
+          "Quellen",
+          "Stop",
+          "Mehr... (+3)"
+        ],
+        "host_in_window": false,
+        "abs": [
+          155648,
+          204800
+        ]
+      }
+    },
+    "av_smoke": {
+      "stream": {
+        "active": true,
+        "uid": "fav0",
+        "size": 49152,
+        "liveBytes": 589824,
+        "playingUid": "",
+        "playingName": ""
+      },
+      "pass": true
+    }
+  },
+  "verdict": {
+    "meta_reproduced_api": false,
+    "field_meta_slotMap": true,
+    "lock_kept_slots": true,
+    "meta_live_zero": true,
+    "return_page_home": true,
+    "av_smoke_pass": true,
+    "bridge_frozen_reject_logged": true,
+    "av_mpeg_ab": true
+  },
+  "out": "docs/betrieb/artifacts-2026-10-05-lab/lab88-menu-page-0816",
+  "ok": true
+}

@@ -1,0 +1,6 @@
+Lab menu-page session 2026-10-05 0816 verdict=PASS
+Lock: frozen_reject hält MSC Rock/Bayern/BOB; Meta menu_set abgewiesen.
+Feld-Meta repro (Pump): slotMap Favoriten/Quellen/Stop; stream.active=false auf Stop.
+Rückweg: page_home=ok; remount+reseal ok.
+AV: Pump smoke liveBytes>0; av-mpeg-smoke A+B PASS.
+Abend: HU Sender-Seite dann AV; C' skip.
