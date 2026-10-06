@@ -1,0 +1,220 @@
+{
+  "golden": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5"
+  ],
+  "results": {
+    "G5": {
+      "samples": [
+        {
+          "t": 63.0,
+          "bps": 6143.2,
+          "bytes": 537344
+        },
+        {
+          "t": 64.0,
+          "bps": 5887.2,
+          "bytes": 543232
+        },
+        {
+          "t": 65.0,
+          "bps": 5887.2,
+          "bytes": 549120
+        },
+        {
+          "t": 66.0,
+          "bps": 6143.4,
+          "bytes": 555264
+        },
+        {
+          "t": 67.0,
+          "bps": 5887.3,
+          "bytes": 561152
+        },
+        {
+          "t": 68.0,
+          "bps": 5886.1,
+          "bytes": 567040
+        },
+        {
+          "t": 69.0,
+          "bps": 6143.5,
+          "bytes": 573184
+        },
+        {
+          "t": 70.0,
+          "bps": 5887.2,
+          "bytes": 579072
+        },
+        {
+          "t": 71.0,
+          "bps": 5887.2,
+          "bytes": 584960
+        },
+        {
+          "t": 72.0,
+          "bps": 6143.4,
+          "bytes": 591104
+        }
+      ],
+      "burst_median_bps": 8702.9,
+      "late_median_bps": 5887.3,
+      "burst_ok": true,
+      "late_ok": true,
+      "err": null,
+      "pass": true
+    },
+    "G1": {
+      "bytes_before_arm": 86016,
+      "expect_before": 86016,
+      "before_ok": true,
+      "hostAbs": 438272,
+      "underruns": 438272,
+      "expect_und_host": 438272,
+      "und_ok": true,
+      "host_ok": true,
+      "und_host_ok": true,
+      "liveBytes_fw": 30425088,
+      "liveBytes_ear": 0,
+      "live_ok": true,
+      "class_counts": {
+        "ID3": 2,
+        "OTHER": 241,
+        "SILENCE": 13
+      },
+      "ear": {
+        "live_bytes": 0,
+        "consumed": 0,
+        "events": {},
+        "event_list": []
+      },
+      "pass": true
+    },
+    "G3": {
+      "fill_pre": 49152,
+      "fill_wait_s": 1.248,
+      "fill_ok": true,
+      "liveBytes_fw": 30912543,
+      "liveBytes_ear": 45056,
+      "expect_live": 49152,
+      "live_ok": true,
+      "underruns": 475105,
+      "hostAbs": 543457,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 11,
+        "OTHER": 113,
+        "SILENCE": 3
+      },
+      "ear": {
+        "live_bytes": 45056,
+        "consumed": 0,
+        "events": {
+          "gap_in_content": 10,
+          "silence_in_play": 3
+        },
+        "event_list": [
+          {
+            "t": 1839797.227720953,
+            "kind": "gap_in_content",
+            "from": 91,
+            "to": 107
+          },
+          {
+            "t": 1839797.237825187,
+            "kind": "gap_in_content",
+            "from": 107,
+            "to": 123
+          },
+          {
+            "t": 1839797.247815616,
+            "kind": "gap_in_content",
+            "from": 123,
+            "to": 139
+          },
+          {
+            "t": 1839797.257485419,
+            "kind": "gap_in_content",
+            "from": 139,
+            "to": 155
+          },
+          {
+            "t": 1839797.267229883,
+            "kind": "gap_in_content",
+            "from": 155,
+            "to": 171
+          },
+          {
+            "t": 1839797.276968586,
+            "kind": "gap_in_content",
+            "from": 171,
+            "to": 187
+          },
+          {
+            "t": 1839797.286597923,
+            "kind": "gap_in_content",
+            "from": 187,
+            "to": 203
+          },
+          {
+            "t": 1839797.310160379,
+            "kind": "gap_in_content",
+            "from": 203,
+            "to": 219
+          },
+          {
+            "t": 1839797.31967586,
+            "kind": "gap_in_content",
+            "from": 219,
+            "to": 235
+          },
+          {
+            "t": 1839797.329322088,
+            "kind": "gap_in_content",
+            "from": 235,
+            "to": 251
+          },
+          {
+            "t": 1839797.377903653,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1839797.757364538,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1839798.153861898,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "silence_after_live": true,
+      "pass": true
+    },
+    "G4": {
+      "fav2_maxSeq": 524288,
+      "prefetch_s": 1.133,
+      "prefetch_ok": true,
+      "within_few_s": true,
+      "pass": true
+    },
+    "G2": {
+      "maxSeq": 524288,
+      "hostAbs_pre": 524257,
+      "hostAbs_after_arm": 0,
+      "und_delta": -1048545,
+      "host_delta": -524257,
+      "armed": false,
+      "file_full": true,
+      "host_ok": true,
+      "und_ok": true,
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

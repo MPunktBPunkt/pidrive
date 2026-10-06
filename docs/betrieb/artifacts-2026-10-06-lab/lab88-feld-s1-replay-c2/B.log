@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/m3_lab_hu_eager_file.py", line 402, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/m3_lab_hu_eager_file.py", line 308, in main
+    setup_menu(pump)  # menu only; arm after remount
+    ~~~~~~~~~~^^^^^^
+  File "/home/martin/projects/pidrive/tools/m3_lab_hu_eager_file.py", line 145, in setup_menu
+    pump.send_json({"t": "audio_stop"})
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/m3_lab_hu_eager_file.py", line 91, in send_json
+    self.s.sendall((json.dumps(obj, separators=(",", ":")) + "\n").encode())
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe

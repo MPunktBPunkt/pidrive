@@ -1,0 +1,22 @@
+{
+  "golden": [
+    "G2"
+  ],
+  "results": {
+    "G2": {
+      "maxSeq": 524288,
+      "hostAbs_pre": 0,
+      "hostAbs_after_arm": 0,
+      "und_delta": 0,
+      "host_delta": 0,
+      "armed": false,
+      "file_full": true,
+      "host_ok": true,
+      "und_ok": true,
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

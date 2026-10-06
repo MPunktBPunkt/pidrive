@@ -1,0 +1,30 @@
+run_id: 2026-10-06-lab88-nbt-hu-sim-all-c1
+stufe: 2
+env: lab
+fw: 0.4.46-dev
+fw_commit: d120ff9
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+stall_ms: 0
+station: mixed
+bitrate_kbps: 48
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T22:07:20+02:00"
+actions:
+  - {t: "2026-10-06T22:07:20+02:00", op: golden, note: "ALL G1–G5 after C1 strict und==expect_und"}
+observations:
+  - {t: "2026-10-06T22:07:20+02:00", what: "golden", value: "ALL", note: "G1–G5 PASS; G1 und=hostAbs=438272"}
+  - {t: "2026-10-06T22:07:20+02:00", what: "c1", value: "fixed", note: "pre_arm before arm_uid; no OR-cascade"}
+  - {t: "2026-10-06T22:07:20+02:00", what: "c2", value: "other_dominant", note: "G1 OTHER=241; G3 ear LIVE=45056 still OK"}
+heard: none
+notes: "C1 assertion fix; Freeze hält; kein Stall-OTA"
+status_poll:
+  interval_s: 1.0
+  out: ""

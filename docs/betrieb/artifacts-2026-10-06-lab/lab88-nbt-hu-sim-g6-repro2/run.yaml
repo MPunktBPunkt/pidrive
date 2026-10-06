@@ -1,0 +1,16 @@
+run_id: 2026-10-06-lab88-nbt-hu-sim-g6-repro2
+stufe: 2
+env: lab
+fw: 0.4.46-dev
+fw_commit: d120ff9
+geometry: L3
+stall_ms: 0
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T22:40:28+02:00"
+actions:
+  - {t: "2026-10-06T22:40:28+02:00", op: lab, note: "G6+G1+G2 PASS"}
+observations:
+  - {t: "2026-10-06T22:40:28+02:00", what: "result", value: "PASS", note: "G6+G1+G2 PASS"}
+heard: none
+notes: "G6+G1+G2 PASS"

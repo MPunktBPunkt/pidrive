@@ -1,0 +1,38 @@
+{
+  "golden": [
+    "G1"
+  ],
+  "results": {
+    "G1": {
+      "bytes_before_arm": 86016,
+      "expect_before": 86016,
+      "before_ok": true,
+      "hostAbs": 438272,
+      "underruns": 438272,
+      "expect_und_host": 438272,
+      "und_ok": true,
+      "host_ok": true,
+      "und_host_ok": true,
+      "liveBytes_fw": 32436224,
+      "liveBytes_ear": 0,
+      "live_ok": true,
+      "class_counts": {
+        "ID3": 2,
+        "SILENCE": 254
+      },
+      "ear": {
+        "live_bytes": 0,
+        "consumed": 0,
+        "events": {},
+        "event_list": []
+      },
+      "silence_ratio": 1.0,
+      "other_ratio": 0.0,
+      "classifier_ok": true,
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

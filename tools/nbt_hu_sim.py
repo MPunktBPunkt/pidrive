@@ -2,7 +2,7 @@
 """NBT HU state simulator for Lab ESP (Stufe 2).
 
 Models File-Cache eager-read + next-prefetch + realistic producer, classifies
-read bytes, and runs Golden G1–G5 against FW 0.4.46 (stall_ms=0).
+read bytes, and runs Golden G1–G5 (ALL) plus optional G6 against FW 0.4.46 (stall_ms=0).
 
   sg disk -c 'python3 tools/nbt_hu_sim.py --golden G1 --sg /dev/sg0'
   python3 tools/nbt_hu_sim.py --self-test   # classifier / producer offline
@@ -172,22 +172,43 @@ def find_pdsq(blob: bytes) -> LiveStamp | None:
         i = j + 1
 
 
+def silence_hits(blob: bytes) -> tuple[int, int]:
+    """Return (best_phase, hit_count) for kSil sync tiles at any phase 0..155."""
+    sync = KSIL[:4]
+    best_p, best_n = 0, 0
+    for p in range(156):
+        n = 0
+        for o in range(p, len(blob) - 3, 156):
+            if blob[o : o + 4] == sync:
+                n += 1
+        if n > best_n:
+            best_p, best_n = p, n
+    return best_p, best_n
+
+
 def classify_block(blob: bytes, file_off: int = 0, id3_len: int = 64) -> str:
+    """Classify a 4 KiB MSC read. Silence detection is phase-tolerant (C2)."""
     if file_off < id3_len or blob.startswith(b"ID3"):
         return "ID3"
     if b"Q3B1" in blob[:64] or b"Q3B1" in blob:
         return "SEED"
     if find_pdsq(blob) is not None:
         return "LIVE"
-    # silence: header + LAME tag
-    if blob[:4] == KSIL[:4] or (b"\xff\xfb\x30\x64" in blob[:8] and b"LAME3.100" in blob):
-        # majority silence tiles
-        hits = sum(1 for o in range(0, len(blob) - 4, 156) if blob[o : o + 4] == KSIL[:4])
-        if hits >= max(1, len(blob) // 312) or b"LAME3.100" in blob:
+    # Silence: kSil frames may start at any offset within the 4 KiB block (ID3 /
+    # prior frame phase). Do not require sync at blob[0].
+    sync = KSIL[:4]
+    has_lame = b"LAME3.100" in blob
+    has_sync = blob.find(sync) >= 0
+    if has_sync or has_lame:
+        _phase, hits = silence_hits(blob)
+        # ~26 frames / 4 KiB when fully tiled
+        need = max(2, len(blob) // 400)
+        if hits >= need or (has_lame and hits >= 1):
+            return "SILENCE"
+        if has_lame and blob.count(0x55) > len(blob) * 0.5:
             return "SILENCE"
     if blob[:2] == b"\xff\xf3" or blob[:2] == b"\xff\xfb":
         return "OTHER"
-    # dense FF padding / silence-like
     if blob.count(0xFF) > len(blob) * 0.85:
         return "SILENCE"
     return "OTHER"
@@ -695,16 +716,19 @@ def arm_uid(pump: PumpTcp, uid: str) -> None:
 
 
 def run_g1(hu: HuSim, esp: str, pump: PumpTcp, out: Path, producer: RealisticProducer | None) -> dict:
-    """Muster A: ~86 KiB before arm, rest as underrun/silence."""
+    """Muster A: ~86 KiB cold file-read before arm, rest as underrun/silence on empty ring.
+
+    Field 07:58: 86016 + 438272 = 524288 with und≈hostAbs≈438272 (post-arm only).
+    Arm ESP *after* pre_arm so those bytes are not counted as live underruns (C1).
+    """
     pre_arm = 86016
     hu.refresh_slots(esp)
-    arm_uid(pump, "fav1")
-    # Field: host already reading before ack — simulate by reading first, then mark arm
-    # Order: start producer delayed, read pre_arm without counting as armed, then arm flag, rest
+    # Field order: HU already reading before audio_start ack — do NOT arm ESP first.
     hu._armed = False
     hu.eager_read("fav1", stop_at=pre_arm)
+    arm_uid(pump, "fav1")
     hu.mark_armed()
-    # Muster A = empty/near-empty ring: do not feed producer during the burst read
+    # Muster A = empty/near-empty ring: no producer during the post-arm burst
     # (field 07:58 had live=0). Optional producer after EOF would be a different scenario.
     hu.eager_read("fav1")  # to EOF
     # next prefetch
@@ -714,30 +738,42 @@ def run_g1(hu: HuSim, esp: str, pump: PumpTcp, out: Path, producer: RealisticPro
     (out / "status-g1.json").write_text(json.dumps(post, indent=2))
     size = hu.slots["fav1"].size
     expect_und = size - pre_arm  # ~438272 when silence for rest
+    und = int(post["underruns"])
+    host = int(post["hostAbs"])
     live = int(post.get("liveBytes") or 0)
     ear = hu.ear.report()
     ear_live = int(ear.get("live_bytes") or 0)
+    # Strict C1: underruns == expect_und ± TOL; hostAbs matches underruns (empty ring).
+    # Do not accept und==size or und>=expect-TOL alone — that masked pre-arm-after-arm bugs.
+    und_ok = near(und, expect_und)
+    host_ok = near(host, expect_und) and near(host, und)
     # polluted streamBytesServed_ → ignore FW liveBytes; ear/classifier is source of truth
     checks = {
         "bytes_before_arm": hu.bytes_before_arm,
         "expect_before": pre_arm,
         "before_ok": near(hu.bytes_before_arm, pre_arm),
-        "hostAbs": post["hostAbs"],
-        "underruns": post["underruns"],
+        "hostAbs": host,
+        "underruns": und,
         "expect_und_host": expect_und,
-        "und_host_ok": (
-            near(post["underruns"], expect_und)
-            or near(post["underruns"], post["hostAbs"])
-            or near(post["underruns"], size)
-            or int(post["underruns"]) >= expect_und - TOL
-        ),
+        "und_ok": und_ok,
+        "host_ok": host_ok,
+        "und_host_ok": und_ok and host_ok,
         "liveBytes_fw": live,
         "liveBytes_ear": ear_live,
         "live_ok": ear_live < 4096,
         "class_counts": dict(hu.class_counts),
         "ear": ear,
     }
-    checks["pass"] = bool(checks["before_ok"] and checks["und_host_ok"] and checks["live_ok"])
+    body = sum(int(hu.class_counts.get(k, 0)) for k in ("SILENCE", "OTHER", "LIVE", "SEED"))
+    other = int(hu.class_counts.get("OTHER", 0))
+    sil = int(hu.class_counts.get("SILENCE", 0))
+    checks["silence_ratio"] = round(sil / body, 3) if body else 0.0
+    checks["other_ratio"] = round(other / body, 3) if body else 0.0
+    # C2 soft gate: OTHER < 20% of body reads (phase-tolerant silence)
+    checks["classifier_ok"] = body == 0 or other / body < 0.20
+    checks["pass"] = bool(
+        checks["before_ok"] and checks["und_host_ok"] and checks["live_ok"] and checks["classifier_ok"]
+    )
     return checks
 
 
@@ -854,6 +890,68 @@ def run_g2(hu: HuSim, esp: str, pump: PumpTcp, out: Path) -> dict:
     return checks
 
 
+def run_g6(hu: HuSim, esp: str, esp_ip: str, pump: PumpTcp, out: Path) -> tuple[dict, PumpTcp]:
+    """Lab F2 rehearsal: cache hit on re-select; remount + cleared sim-cache re-reads.
+
+    Not part of ALL — field F2 (HU cache over OTG) remains open. This checks the
+    simulator cache model and ESP remount read growth.
+    """
+    hu.refresh_slots(esp)
+    pre0 = snap(esp)
+    rc0 = int(pre0.get("readCount") or 0)
+    hu.eager_read("fav1")
+    mid1 = snap(esp)
+    fav1 = next((s for s in mid1["slots"] if s["uid"] == "fav1"), {})
+    a_full = near(int(fav1.get("maxSeq") or 0), hu.slots["fav1"].size) or int(
+        fav1.get("maxSeq") or 0
+    ) >= hu.slots["fav1"].size * 0.9
+    hu.eager_read("fav2")
+    mid2 = snap(esp)
+    fav2 = next((s for s in mid2["slots"] if s["uid"] == "fav2"), {})
+    b_full = near(int(fav2.get("maxSeq") or 0), hu.slots["fav2"].size) or int(
+        fav2.get("maxSeq") or 0
+    ) >= hu.slots["fav2"].size * 0.9
+    rc_after_prefetch = int(mid2.get("readCount") or 0)
+    # c) re-select fav1 with sim cache — must not issue SCSI reads
+    covered_before = hu.cache.get("fav1", CacheEntry()).covered
+    n_events_before = len(hu.events)
+    again = hu.eager_read("fav1")
+    n_new_reads = sum(1 for e in hu.events[n_events_before:] if e.get("op") == "read")
+    rc_after_cache = int(snap(esp).get("readCount") or 0)
+    cache_hit = n_new_reads == 0 and again == covered_before and rc_after_cache == rc_after_prefetch
+    # d) remount + clear sim cache → body reads again
+    pump = prep_lab(esp, esp_ip, pump, remount=True)
+    hu.open()
+    hu.cache.clear()
+    hu.class_counts.clear()
+    hu.refresh_slots(esp)
+    pre_rm = snap(esp)
+    rc_rm = int(pre_rm.get("readCount") or 0)
+    hu.eager_read("fav1")
+    post_rm = snap(esp)
+    (out / "status-g6-pre.json").write_text(json.dumps(pre0, indent=2))
+    (out / "status-g6-after-prefetch.json").write_text(json.dumps(mid2, indent=2))
+    (out / "status-g6-after-remount.json").write_text(json.dumps(post_rm, indent=2))
+    fav1_rm = next((s for s in post_rm["slots"] if s["uid"] == "fav1"), {})
+    rc_delta_rm = int(post_rm.get("readCount") or 0) - rc_rm
+    reread_ok = rc_delta_rm >= (hu.slots["fav1"].size // READ_N) * 0.8 or near(
+        int(fav1_rm.get("maxSeq") or 0), hu.slots["fav1"].size
+    )
+    checks = {
+        "a_fav1_full": a_full,
+        "b_fav2_full": b_full,
+        "c_cache_hit": cache_hit,
+        "c_new_sim_reads": n_new_reads,
+        "c_readCount_delta": rc_after_cache - rc_after_prefetch,
+        "d_remount_reread": reread_ok,
+        "d_readCount_delta": rc_delta_rm,
+        "d_fav1_maxSeq": fav1_rm.get("maxSeq"),
+        "note": "Lab G6 models sim-cache + ESP remount; field HU-cache over OTG is F2/M5",
+    }
+    checks["pass"] = bool(a_full and b_full and cache_hit and reread_ok)
+    return checks, pump
+
+
 def run_g4(hu: HuSim, esp: str, pump: PumpTcp, out: Path) -> dict:
     """Next-prefetch: after fav1 EOF, fav2 fully read."""
     hu.refresh_slots(esp)
@@ -914,11 +1012,22 @@ def self_test() -> int:
     assert classify_block(b"ID3" + b"\x00" * 100) == "ID3"
     sil = (KSIL * 30)[:4096]
     assert classify_block(sil, file_off=100) == "SILENCE"
+    # C2: phase-shifted silence (sync not at block start)
+    for phase in (1, 17, 56, 100):
+        pad = b"\x55" * phase
+        phased = (pad + KSIL * 30)[:4096]
+        assert classify_block(phased, file_off=100) == "SILENCE", f"phase={phase}"
     live = make_pdsq_chunk(1, 0, 256) * 16
     assert classify_block(live[:4096], file_off=100) == "LIVE"
     assert find_pdsq(live).seq == 1
     seed = b"xxxxQ3B1yyyy" + b"\x00" * 100
     assert classify_block(seed, file_off=100) == "SEED"
+    # mix: live stamp then silence tail — LIVE wins (PDSQ first)
+    mixed = (make_pdsq_chunk(0, 0, 256) + KSIL * 20)[:4096]
+    assert classify_block(mixed, file_off=100) == "LIVE"
+    # silence-only mid-block padding (no sync at [0]) must not be OTHER
+    mid = (b"\x55" * 80 + KSIL * 28)[:4096]
+    assert classify_block(mid, file_off=200) == "SILENCE"
     # ear
     ear = VirtualEar(decode_start="incremental:1")
     t = time.monotonic()
@@ -932,13 +1041,13 @@ def self_test() -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NBT HU simulator / Golden G1–G5")
+    ap = argparse.ArgumentParser(description="NBT HU simulator / Golden G1–G6")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--esp", default="http://192.168.178.88")
     ap.add_argument("--esp-ip", default="192.168.178.88")
     ap.add_argument("--sg", default="/dev/sg0")
     ap.add_argument("--profile", default="tools/profiles/nbt_evo_2026-10-06.json")
-    ap.add_argument("--golden", default="", help="G1,G2,G4,G5 or comma list / all")
+    ap.add_argument("--golden", default="", help="G1,G2,G3,G4,G5,G6 or comma list / all (ALL=G1–G5 only)")
     ap.add_argument("--soft-rst", action="store_true")
     ap.add_argument("--out", default="")
     ap.add_argument("--g5-s", type=float, default=70.0)
@@ -1024,6 +1133,18 @@ def main() -> int:
             hu._armed = False
             hu.refresh_slots(esp)
             report["results"]["G2"] = run_g2(hu, esp, pump, out)
+
+        if "G6" in goldens:
+            pump = prep_lab(esp, args.esp_ip, pump, remount=True)
+            hu.open()
+            hu.cache.clear()
+            hu.class_counts.clear()
+            hu.bytes_before_arm = hu.bytes_after_arm = 0
+            hu._armed = False
+            hu.events.clear()
+            hu.refresh_slots(esp)
+            g6, pump = run_g6(hu, esp, args.esp_ip, pump, out)
+            report["results"]["G6"] = g6
 
     finally:
         stop.set()

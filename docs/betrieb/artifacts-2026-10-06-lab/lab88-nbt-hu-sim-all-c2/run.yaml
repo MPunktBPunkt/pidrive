@@ -1,0 +1,22 @@
+run_id: 2026-10-06-lab88-nbt-hu-sim-all-c2
+stufe: 2
+env: lab
+fw: 0.4.46-dev
+fw_commit: d120ff9
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+stall_ms: 0
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T22:16:09+02:00"
+actions:
+  - {t: "2026-10-06T22:16:09+02:00", op: golden, note: "ALL G1–G5 after C2 phase-tolerant silence"}
+observations:
+  - {t: "2026-10-06T22:16:09+02:00", what: "golden", value: "ALL", note: "G1–G5 PASS; G1 silence_ratio=1.0 OTHER=0; und=438272"}
+  - {t: "2026-10-06T22:16:09+02:00", what: "c2", value: "fixed", note: "phase-tolerant kSil classifier"}
+heard: none
+notes: "Overnight: C1+C2; Freeze hält"
+status_poll:
+  interval_s: 1.0
+  out: ""

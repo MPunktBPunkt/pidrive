@@ -1,0 +1,369 @@
+{
+  "golden": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5"
+  ],
+  "results": {
+    "G5": {
+      "samples": [
+        {
+          "t": 63.0,
+          "bps": 5887.4,
+          "bytes": 537088
+        },
+        {
+          "t": 64.0,
+          "bps": 5887.4,
+          "bytes": 542976
+        },
+        {
+          "t": 65.0,
+          "bps": 6143.4,
+          "bytes": 549120
+        },
+        {
+          "t": 66.0,
+          "bps": 5887.6,
+          "bytes": 555008
+        },
+        {
+          "t": 67.0,
+          "bps": 5887.4,
+          "bytes": 560896
+        },
+        {
+          "t": 68.0,
+          "bps": 6143.4,
+          "bytes": 567040
+        },
+        {
+          "t": 69.0,
+          "bps": 5887.2,
+          "bytes": 572928
+        },
+        {
+          "t": 70.0,
+          "bps": 5887.3,
+          "bytes": 578816
+        },
+        {
+          "t": 71.0,
+          "bps": 6143.3,
+          "bytes": 584960
+        },
+        {
+          "t": 72.0,
+          "bps": 5887.4,
+          "bytes": 590848
+        }
+      ],
+      "burst_median_bps": 8703.2,
+      "late_median_bps": 5887.4,
+      "burst_ok": true,
+      "late_ok": true,
+      "err": null,
+      "pass": true
+    },
+    "G1": {
+      "bytes_before_arm": 86016,
+      "expect_before": 86016,
+      "before_ok": true,
+      "hostAbs": 438272,
+      "underruns": 438272,
+      "expect_und_host": 438272,
+      "und_ok": true,
+      "host_ok": true,
+      "und_host_ok": true,
+      "liveBytes_fw": 34885632,
+      "liveBytes_ear": 0,
+      "live_ok": true,
+      "class_counts": {
+        "ID3": 2,
+        "SILENCE": 254
+      },
+      "ear": {
+        "live_bytes": 0,
+        "consumed": 0,
+        "events": {},
+        "event_list": []
+      },
+      "silence_ratio": 1.0,
+      "other_ratio": 0.0,
+      "classifier_ok": true,
+      "pass": true
+    },
+    "G3": {
+      "fill_pre": 49152,
+      "fill_wait_s": 1.258,
+      "fill_ok": true,
+      "liveBytes_fw": 35373087,
+      "liveBytes_ear": 45056,
+      "expect_live": 49152,
+      "live_ok": true,
+      "underruns": 475105,
+      "hostAbs": 542689,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 11,
+        "SILENCE": 116
+      },
+      "ear": {
+        "live_bytes": 45056,
+        "consumed": 0,
+        "events": {
+          "gap_in_content": 10,
+          "silence_in_play": 116
+        },
+        "event_list": [
+          {
+            "t": 1840676.34299052,
+            "kind": "gap_in_content",
+            "from": 88,
+            "to": 104
+          },
+          {
+            "t": 1840676.35251553,
+            "kind": "gap_in_content",
+            "from": 104,
+            "to": 120
+          },
+          {
+            "t": 1840676.362151259,
+            "kind": "gap_in_content",
+            "from": 120,
+            "to": 136
+          },
+          {
+            "t": 1840676.371717146,
+            "kind": "gap_in_content",
+            "from": 136,
+            "to": 152
+          },
+          {
+            "t": 1840676.381404322,
+            "kind": "gap_in_content",
+            "from": 152,
+            "to": 168
+          },
+          {
+            "t": 1840676.390925945,
+            "kind": "gap_in_content",
+            "from": 168,
+            "to": 184
+          },
+          {
+            "t": 1840676.400565392,
+            "kind": "gap_in_content",
+            "from": 184,
+            "to": 200
+          },
+          {
+            "t": 1840676.424664903,
+            "kind": "gap_in_content",
+            "from": 200,
+            "to": 216
+          },
+          {
+            "t": 1840676.434445486,
+            "kind": "gap_in_content",
+            "from": 216,
+            "to": 232
+          },
+          {
+            "t": 1840676.444092507,
+            "kind": "gap_in_content",
+            "from": 232,
+            "to": 248
+          },
+          {
+            "t": 1840676.45421725,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.464553262,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.474650093,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.484775918,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.494866106,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.504933711,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.515277398,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.525439542,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.535518899,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.54553133,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.555727438,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.566698481,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.577065942,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.587405031,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.597691199,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.607903718,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.618224962,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.628519677,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.638804422,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.648901052,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.659184095,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.66938435,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.679694674,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.690104586,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.700498438,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.710698123,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.720937262,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.731286309,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.741497917,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.751530195,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.761816273,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.772051525,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.782132796,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.792187868,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.802261394,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.812614418,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.822973444,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.833015722,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.843017492,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1840676.853092902,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "silence_after_live": true,
+      "pass": true
+    },
+    "G4": {
+      "fav2_maxSeq": 524288,
+      "prefetch_s": 1.187,
+      "prefetch_ok": true,
+      "within_few_s": true,
+      "pass": true
+    },
+    "G2": {
+      "maxSeq": 524288,
+      "hostAbs_pre": 524257,
+      "hostAbs_after_arm": 0,
+      "und_delta": -1048545,
+      "host_delta": -524257,
+      "armed": false,
+      "file_full": true,
+      "host_ok": true,
+      "und_ok": true,
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

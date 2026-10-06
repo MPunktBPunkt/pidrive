@@ -1,7 +1,7 @@
 # Maßnahmen: HU-File-Cache + MSC-Backpressure (Konsolidierung 2026-10-06)
 
-**Stand:** 2026-10-06 Abend · **HEAD-Bezug:** `3ae4207` (+ Feld `ec56935`/`a1d76b5`, Lab bulk `1464c3c`)  
-**Quellen:** `summary-2026-10-06.txt` · `ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md` · `HU-Technical-Facts.md` · `KONZEPT-HU-SIM-NBT-2026-10-06.md` · `SPIKE-TINYUSB-READ10-2026-10-06.md` · `Stufenplan.md` · Mistral-Review feld-av-0723 (§1–9) · GPT-Plan (in summary)
+**Stand:** 2026-10-06 Abend (Nachzug Reviews s1-1700) · **HEAD-Bezug:** `44eb102` + C1-Fix  
+**Quellen:** `summary-2026-10-06.txt` · `ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md` · `HU-Technical-Facts.md` · `KONZEPT-HU-SIM-NBT-2026-10-06.md` · `SPIKE-TINYUSB-READ10-2026-10-06.md` · `Stufenplan.md` · Mistral-/GPT-Review feld-s1-1700 · Lab NOTE
 
 **Normativer Plan:** [`docs/planung/Stufenplan.md`](../../planung/Stufenplan.md) — dieses Dokument leitet **Maßnahmen + Ampel** ab und korrigiert überholte Hebel.
 
@@ -33,7 +33,11 @@
 | `liveBytes` nach Senderwechsel falsch | 🟢 | `streamBytesServed_` nur bei Remount |
 | TinyUSB `return 0` / Teilantwort möglich | 🟢 Spike | Busy-Retry + 512-B-Regel |
 | HU READ10-Timeout | ❓ | Stufe 5 |
-| Decode-Start inkrementell vs. after_eof | ❓ | **Stufe 1 — kritisch** |
+| Decode-Start inkrementell vs. after_eof | ❓ | **M4/F1 — nicht entschieden** (s1-1700 Teilerfolg) |
+| Cache Abwahl / Remount | ❓ | **M5/F2 — unvollständig**; RST-Teil: USB-Re-Read fav2 |
+| LED ≈ cold_body / MSC-Aktivität | 🟢 [S] | HU-Facts R14; kein absoluter Cache-Beweis |
+| G1-Assertion C1 (und==expect, nicht OR-Kaskade) | 🟢 | `nbt_hu_sim` pre_arm vor Arm + strikte Checks |
+| Klassifikator OTHER dominant (C2) | 🟢 | Phasen-tolerant; G1 OTHER=0 / silence_ratio=1.0 |
 | Bridge-Drossel 9000 B/s < 128k-Echtzeit | 🟠 | Stufenplan N1 |
 | Silence-Frame MPEG-1 44.1 vs Live MPEG-2 22.05 | 🟠 | Stufenplan N3 / R7 |
 
@@ -67,15 +71,16 @@
 
 | ID | Maßnahme | Abnahme |
 |----|----------|---------|
-| **M4 = Stufe 1 F1** | Decode-Start: Spielzeit-Zähler vs. `slotMap.fav0.b` (8 MiB Silence, Bridge stop) | **inkrementell** vs **after_eof** eindeutig |
-| **M5 = Stufe 1 F2** | Cache über Abwahl / Remount | liest HU neu? → Muster-B-Heilung |
-| **M6** | Ergebnisse → `HU-Technical-Facts.md` Q1–Q3 schließen (Status [B]/[H]) | Facts aktuell |
+| **M4 = Stufe 1 F1** | Decode-Start: Spielzeit-Zähler vs. `slotMap.fav0.b` (8 MiB Silence, Bridge stop) + Video | ❓ **nicht entschieden** (s1-1700: kein Timer/Video) |
+| **M5 = Stufe 1 F2** | Cache über Abwahl / Remount (`fav1→fav2→fav1`, OTG) | ❓ unvollständig; RST-Teil siehe `F2-TEIL-s1-1700.md` |
+| **M6** | Ergebnisse → `HU-Technical-Facts.md` Q1–Q3 / R12–R14 | R14 ✅; Q1–Q3 / R12–R13 weiter offen |
 
 ### Lab parallel (zweite Instanz)
 
 | ID | Maßnahme | Abnahme |
 |----|----------|---------|
-| **M7** | `nbt_hu_sim.py` + Golden G1–G5 gegen 0.4.46 L3 | G1–G5 ✅ (2× ALL) |
+| **M7** | `nbt_hu_sim.py` + Golden G1–G5 gegen 0.4.46 L3 | ✅ 3× ALL + **all-c1** + **all-c2** (C1+C2) |
+| **M7b** | G6 Lab-F2-Rehearsal (Sim-Cache / Remount) | ✅ `lab88-nbt-hu-sim-g6` — ersetzt nicht Feld M5 |
 | **M8** | Producer **Echtzeit** (nicht 900 KB/s Lab-Hold-Illusion); Format-Stempel PDSQ | ✅ G5 8,7→6,1 KB/s + PDSQ; PDSQ-Ohr im Sim |
 
 ### Nach Go (Freeze-Bruch)
@@ -121,8 +126,23 @@ Stufe 1 F1?
 
 ## 7. Nächster konkreter Arbeitsschritt
 
-1. **Lab:** G1–G5 grün (2× ALL). Stall-Go vorbereiten; Feld Stufe 1 parallel.  
-2. **Feld:** Stufe 1 F1/F2 (Silence, Video, `run.yaml`, `feld_status_poll.py`) — **kein** Stall-OTA.  
-3. **Kein** Code für `stall_ms` bis Go + Golden grün (G3 inkl.).
+1. **Feld (Priorität):** M4/F1 per Video + Spielzeit-Zähler; M5/F2 `fav1→fav2→fav1` + OTG-Remount — **kein** Stall-OTA. Siehe aktualisiertes [`feld-s1-1700/ARRIVAL.md`](feld-s1-1700/ARRIVAL.md).  
+2. **Lab:** C1+C2 erledigt (`all-c2`); G6 Lab-F2-Rehearsal grün.  
+3. **Stall-Go erst wenn:** F1 entschieden. Kein `stall_ms`-Flash vor Go.
 
 **PASS-Kriterium unverändert:** `live>0 ∧ und=0 ∧ behind=0` anhaltend + Ohr — aber Interpretation von `hostAbs`-„Burst“ ist nicht mehr Ringmaß.
+
+## 8. Ampel nach s1-1700 + Reviews
+
+| Thema | Ampel |
+|-------|-------|
+| Stufe 0 Messbarkeit | 🟢 |
+| Stufe 2 Lab Golden (aktuelle 3× ALL) | 🟢 |
+| Feldformat / Profil 4 ms·4 KiB | 🟢 |
+| Muster A/B + Feld-Replay | 🟢 |
+| C1 G1-Assertion | 🟢 |
+| C2 Klassifikator OTHER | 🟢 (phase-tolerant) |
+| G6 Lab-F2-Rehearsal | 🟢 (Sim; Feld F2 offen) |
+| M4/F1 Decode-Start | 🔴 offen |
+| M5/F2 Cache/Remount | 🔴 offen (RST-Teil [S]) |
+| Stall-FW / Stufe 3+ | 🔒 Freeze |

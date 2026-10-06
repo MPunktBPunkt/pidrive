@@ -1,0 +1,55 @@
+{
+  "G1": {
+    "pass": true,
+    "bytes_before_arm": 86016,
+    "expect_before": 86016,
+    "before_ok": true,
+    "hostAbs": 438272,
+    "underruns": 438272,
+    "expect_und_host": 438272,
+    "und_ok": true,
+    "host_ok": true,
+    "und_host_ok": true,
+    "liveBytes_fw": 36896768,
+    "liveBytes_ear": 0,
+    "live_ok": true,
+    "class_counts": {
+      "ID3": 2,
+      "SILENCE": 254
+    },
+    "ear": {
+      "live_bytes": 0,
+      "consumed": 0,
+      "events": {},
+      "event_list": []
+    },
+    "silence_ratio": 1.0,
+    "other_ratio": 0.0,
+    "classifier_ok": true
+  },
+  "G2": {
+    "pass": true,
+    "maxSeq": 524288,
+    "hostAbs_pre": 524257,
+    "hostAbs_after_arm": 0,
+    "und_delta": -962529,
+    "host_delta": -524257,
+    "armed": false,
+    "file_full": true,
+    "host_ok": true,
+    "und_ok": true
+  },
+  "G6": {
+    "pass": true,
+    "a_fav1_full": true,
+    "b_fav2_full": true,
+    "c_cache_hit": true,
+    "c_new_sim_reads": 0,
+    "c_readCount_delta": 0,
+    "d_remount_reread": true,
+    "d_readCount_delta": 128,
+    "d_fav1_maxSeq": 524288,
+    "note": "Lab G6 models sim-cache + ESP remount; field HU-cache over OTG is F2/M5"
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-nbt-hu-sim-g6-repro2 overall=PASS

@@ -1,0 +1,22 @@
+{
+  "golden": [
+    "G6"
+  ],
+  "results": {
+    "G6": {
+      "a_fav1_full": true,
+      "b_fav2_full": true,
+      "c_cache_hit": true,
+      "c_new_sim_reads": 0,
+      "c_readCount_delta": 0,
+      "d_remount_reread": true,
+      "d_readCount_delta": 128,
+      "d_fav1_maxSeq": 524288,
+      "note": "Lab G6 models sim-cache + ESP remount; field HU-cache over OTG is F2/M5",
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

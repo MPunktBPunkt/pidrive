@@ -89,8 +89,9 @@ flowchart LR
 | R9 | Cache-Treffer erzeugt keine Reads (Muster B) | [B] | 08:00 BOB, 08:04 Bayern, 08:06 BOB: `hostAbs=0`, Datei vorher `bytes=524288` |
 | R10 | Beim Scan nach Plug/RST wird groß vorgelesen | [B] | post-RST nach 5–14 s: `fav0` 3,8–5,6 MiB gelesen |
 | R11 | Erneute Auswahl einer gecachten Datei spielt denselben Inhalt nochmal | [B] | 01.10.: „erneute Wahl = dieselben ~6 s“ |
-| R12 | Ab wann die HU abspielt (sofort vs. nach Read-Ende) | [?] | nicht unterscheidbar, Read war nach ~1 s fertig |
-| R13 | Überlebt der Cache einen Remount / neue Serial? | [?] | offen; 01.10. (nur 164 KiB von `fav1` gelesen) deutet auf Cache aus vorheriger Session hin [H] |
+| R12 | Ab wann die HU abspielt (sofort vs. nach Read-Ende) | [?] | **M4/F1 nicht entschieden** (s1-1700: kein Video/Spielzeit-Zähler; Pause 17:28) |
+| R13 | Überlebt der Cache einen Remount / neue Serial? | [?] | **M5/F2 offen**; Teilbefund s1-1700 nach RST: HU Autoplay BOB, ESP `playingUid=""`, aber `fav2.bytes→524288` / Scan-Reads → **USB-Re-Read nach Remount**, kein reiner Cache-only-Beweis |
+| R14 | LED-Blinken korreliert mit Cold-Body-/MSC-Aktivität | [S] | s1-1700: erster Autoplay (Bayern) ohne Blink; BOB/Rock cold mit Blink; frühere Läufe `cold_body_burst`. **Nicht** alleiniger Cache-Orakelzustand — operativ: Blink ≈ Body-Read/MSC-Aktivität |
 
 ### 5.2 Log-Beleg: Burst bei leerem Ring (07:58, Correlate-Watch)
 
@@ -190,8 +191,8 @@ Mit Stille-bei-Miss sind pro Auswahl höchstens **Ringinhalt beim Arm + R_prod �
 | ID | Frage | Vorgeschlagener Test |
 |----|-------|---------------------|
 | Q1 | Wie lange darf ein READ10 dauern, ohne dass die HU resettet? | Stall-Leiter 300/700/1500/3000 ms bei 128k; `inquiry`/`plugCount`/`remountGen` beobachten |
-| Q2 | Spielt die HU während des Lesens oder erst nach Read-Ende? | Hörbare Marker alle 10 s im Producer; Handy-Aufnahme gegen ESP-Zeitstempel |
-| Q3 | Invalidiert Remount / neue Serial / geänderte Dateigröße den Cache? | Session A: `fav1` lesen lassen; Remount; Session B: `fav1` wählen; liest die HU neu? |
+| Q2 | Spielt die HU während des Lesens oder erst nach Read-Ende? | s1-1700 **nicht entschieden** (kein Video/Timer). Nächster Termin: Spielzeit-Zähler + Video gegen `slotMap.fav0.b` / EOF (Stufenplan 1.2) |
+| Q3 | Invalidiert Remount / neue Serial / geänderte Dateigröße den Cache? | Teil: nach ESP-RST in s1-1700 wurde fav2 erneut per USB gelesen (`F2-TEIL-s1-1700.md`). Saubere fav1→fav2→fav1- + OTG-Kette fehlt |
 | Q4 | Wie groß ist der HU-Cache maximal? | Slot ≥ 64 MiB anbieten; maximale gelesene Menge ohne Abwahl messen |
 | Q5 | In welcher Reihenfolge werden Tracks gewechselt / vorgelesen? | Mehrere Dateien mit eindeutigen Namen; Wechselfolge protokollieren (beobachtet: Bayern → BOB, zweimal) |
 | Q6 | Wie reagiert die HU auf gültiges, kontinuierlich nachgeliefertes MP3? | ergibt sich aus dem ersten erfolgreichen Stall-Lauf |

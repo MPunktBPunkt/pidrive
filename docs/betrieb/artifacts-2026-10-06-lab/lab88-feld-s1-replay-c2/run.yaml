@@ -1,0 +1,16 @@
+run_id: 2026-10-06-lab88-feld-s1-replay-c2
+stufe: 2
+env: lab
+fw: 0.4.46-dev
+fw_commit: d120ff9
+geometry: L3
+stall_ms: 0
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T22:40:28+02:00"
+actions:
+  - {t: "2026-10-06T22:40:28+02:00", op: lab, note: "Feld-Replay G1/G2 nach soft_rst"}
+observations:
+  - {t: "2026-10-06T22:40:28+02:00", what: "result", value: "PASS", note: "Feld-Replay G1/G2 nach soft_rst"}
+heard: none
+notes: "Feld-Replay G1/G2 nach soft_rst"
