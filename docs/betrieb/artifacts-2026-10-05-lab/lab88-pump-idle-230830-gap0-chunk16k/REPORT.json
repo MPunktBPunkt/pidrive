@@ -1,0 +1,37 @@
+{
+  "label": "gap0-chunk16k",
+  "config": {
+    "duration_s": 10.0,
+    "chunk": 16384,
+    "frame_max": 512,
+    "gap_s": 0.0
+  },
+  "wall_s": 10.05988621711731,
+  "loops": 42,
+  "pumped_bytes": 684185,
+  "pumped_bps": 68011.20661144568,
+  "absEnd0": 0,
+  "absEnd1": 684185,
+  "abs_delta": 684185,
+  "abs_bps": 68011.20661144568,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791234517.203797,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791234528.058557,
+    "absBase": 635033,
+    "absEnd": 684185,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "label": "baseline",
+  "config": {
+    "duration_s": 8.0,
+    "chunk": 4096,
+    "frame_max": 512,
+    "gap_s": 0.0002,
+    "batch_frames": 1
+  },
+  "wall_s": 8.04476022720337,
+  "loops": 146,
+  "pumped_bytes": 594073,
+  "pumped_bps": 73845.9547857177,
+  "absEnd0": 0,
+  "absEnd1": 594073,
+  "abs_delta": 594073,
+  "abs_bps": 73845.9547857177,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791234919.5190325,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791234928.9516647,
+    "absBase": 544921,
+    "absEnd": 594073,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

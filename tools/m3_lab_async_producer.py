@@ -25,7 +25,7 @@ from pathlib import Path
 
 KIND_AUDIO = 0x55
 KIND_ID3 = 0x56
-FRAME_MAX = 512
+FRAME_MAX_DEFAULT = 512
 
 
 def snap(esp: str, mark: str = "", retries: int = 4) -> dict:
@@ -106,10 +106,35 @@ def wait_dev(dev: str, timeout: float = 25.0) -> None:
 
 
 class PumpTcp:
-    def __init__(self, host: str, port: int = 9090):
-        self.s = socket.create_connection((host, port), timeout=8)
-        self.s.settimeout(0.35)
+    def __init__(
+        self,
+        host: str,
+        port: int = 9090,
+        frame_max: int = FRAME_MAX_DEFAULT,
+        batch_frames: int = 1,
+    ):
+        self.host = host
+        self.port = port
+        self.frame_max = max(1, min(int(frame_max), 65535))
+        self.batch_frames = max(1, int(batch_frames))
         self.lock = threading.Lock()
+        self.s = self._connect()
+
+    def _connect(self) -> socket.socket:
+        s = socket.create_connection((self.host, self.port), timeout=8)
+        s.settimeout(0.35)
+        try:
+            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
+        return s
+
+    def reconnect(self) -> None:
+        try:
+            self.s.close()
+        except OSError:
+            pass
+        self.s = self._connect()
 
     def close(self) -> None:
         try:
@@ -133,13 +158,21 @@ class PumpTcp:
 
     def send_bin(self, kind: int, payload: bytes, gap_s: float = 0.002) -> None:
         off = 0
+        pending: list[bytes] = []
+        frames_in_batch = 0
         while off < len(payload):
-            chunk = payload[off : off + FRAME_MAX]
+            chunk = payload[off : off + self.frame_max]
             hdr = bytes((0x01, kind, len(chunk) & 0xFF, (len(chunk) >> 8) & 0xFF))
-            with self.lock:
-                self.s.sendall(hdr + chunk)
+            pending.append(hdr + chunk)
+            frames_in_batch += 1
             off += len(chunk)
-            time.sleep(gap_s)
+            if frames_in_batch >= self.batch_frames or off >= len(payload):
+                with self.lock:
+                    self.s.sendall(b"".join(pending))
+                pending = []
+                frames_in_batch = 0
+                if gap_s > 0:
+                    time.sleep(gap_s)
 
 
 def id3(title: str) -> bytes:
@@ -194,24 +227,33 @@ def soft_rst(esp: str, dev: str) -> dict:
 
 
 def setup_menu(pump: PumpTcp) -> None:
-    pump.send_json({"t": "hello", "ver": 1})
-    pump.drain(0.8)
-    pump.send_json({"t": "audio_stop"})
-    time.sleep(0.1)
-    pump.send_json(
-        {
-            "t": "menu_set",
-            "rev": int(time.time()) % 100000,
-            "page": 0,
-            "items": [
-                {"uid": "fav0", "name": "AV Rock", "kind": "station"},
-                {"uid": "fav1", "name": "AV Bayern", "kind": "station"},
-                {"uid": "fav2", "name": "AV BOB", "kind": "station"},
-                {"uid": "pump:page_next", "name": "Menue", "kind": "action"},
-            ],
-        }
-    )
-    pump.drain(1.2)
+    def _once() -> None:
+        pump.send_json({"t": "hello", "ver": 1})
+        pump.drain(0.8)
+        pump.send_json({"t": "audio_stop"})
+        time.sleep(0.1)
+        pump.send_json(
+            {
+                "t": "menu_set",
+                "rev": int(time.time()) % 100000,
+                "page": 0,
+                "items": [
+                    {"uid": "fav0", "name": "AV Rock", "kind": "station"},
+                    {"uid": "fav1", "name": "AV Bayern", "kind": "station"},
+                    {"uid": "fav2", "name": "AV BOB", "kind": "station"},
+                    {"uid": "pump:page_next", "name": "Menue", "kind": "action"},
+                ],
+            }
+        )
+        pump.drain(1.2)
+
+    try:
+        _once()
+    except (BrokenPipeError, ConnectionResetError, OSError):
+        print("  setup_menu: reconnect after broken pipe", flush=True)
+        time.sleep(0.5)
+        pump.reconnect()
+        _once()
 
 
 class AsyncProducer(threading.Thread):
@@ -227,6 +269,7 @@ class AsyncProducer(threading.Thread):
         ring_cap: int,
         stop_evt: threading.Event,
         hold_poll_ms: float = 80.0,
+        gap_s: float = 0.0002,
     ):
         super().__init__(daemon=True)
         self.pump = pump
@@ -238,10 +281,13 @@ class AsyncProducer(threading.Thread):
         self.ring_cap = ring_cap
         self.stop_evt = stop_evt
         self.hold_poll_ms = hold_poll_ms
+        self.gap_s = gap_s
         self.pumped = 0
         self.hold_pauses = 0
         self.hold_paused = False
         self.ticks = 0
+        self.t_start = 0.0
+        self.t_stop = 0.0
         self._last_st: dict | None = None
         self._last_st_ts = 0.0
 
@@ -257,6 +303,7 @@ class AsyncProducer(threading.Thread):
             return self._last_st
 
     def run(self) -> None:
+        self.t_start = time.time()
         interval = self.chunk / max(1.0, self.bps)
         off = 0
         while not self.stop_evt.is_set():
@@ -278,7 +325,7 @@ class AsyncProducer(threading.Thread):
                     off = 0
                     n = min(self.chunk, len(self.mp3))
                 try:
-                    self.pump.send_bin(KIND_AUDIO, self.mp3[off : off + n], gap_s=0.0002)
+                    self.pump.send_bin(KIND_AUDIO, self.mp3[off : off + n], gap_s=self.gap_s)
                     self.pumped += n
                     off = (off + n) % max(1, len(self.mp3))
                 except OSError:
@@ -290,6 +337,7 @@ class AsyncProducer(threading.Thread):
                 time.sleep(max(0.01, min(sleep_for if sleep_for > 0 else 0.02, 0.05)))
             elif sleep_for > 0:
                 time.sleep(sleep_for)
+        self.t_stop = time.time()
 
 
 def main() -> int:
@@ -307,6 +355,9 @@ def main() -> int:
     ap.add_argument("--host-gap-ms", type=float, default=4.5)
     ap.add_argument("--pump-bps", type=float, default=900000, help="Independent producer bytes/sec")
     ap.add_argument("--pump-chunk", type=int, default=4096)
+    ap.add_argument("--frame-max", type=int, default=FRAME_MAX_DEFAULT)
+    ap.add_argument("--pump-gap-s", type=float, default=0.0002, help="Sleep between pump TCP frames")
+    ap.add_argument("--batch-frames", type=int, default=1, help="Frames per sendall()")
     ap.add_argument("--cursor-hold", action="store_true")
     ap.add_argument("--ring-cap", type=int, default=49152)
     ap.add_argument("--host-pause-after-kib", type=int, default=0)
@@ -340,11 +391,12 @@ def main() -> int:
 
     wait_dev(args.dev)
     series: list[dict] = []
-    pump = PumpTcp(args.esp_ip)
+    pump = PumpTcp(args.esp_ip, frame_max=args.frame_max, batch_frames=args.batch_frames)
     stop_evt = threading.Event()
     producer: AsyncProducer | None = None
     prod_pumped = 0
     prod_holds = 0
+    prod_life_s = 0.0
     burst_s = 0.0
     try:
         setup_menu(pump)
@@ -401,10 +453,12 @@ def main() -> int:
             cursor_hold=args.cursor_hold,
             ring_cap=args.ring_cap,
             stop_evt=stop_evt,
+            gap_s=args.pump_gap_s,
         )
         producer.start()
         print(
-            f"== async producer bps={args.pump_bps:.0f} hold={args.cursor_hold} ==",
+            f"== async producer bps={args.pump_bps:.0f} hold={args.cursor_hold} "
+            f"frame={args.frame_max} gap={args.pump_gap_s} ==",
             flush=True,
         )
         time.sleep(0.05)
@@ -451,10 +505,12 @@ def main() -> int:
 
         # stop producer BEFORE final status spam
         stop_evt.set()
-        prod_pumped = producer.pumped if producer else 0
-        prod_holds = producer.hold_pauses if producer else 0
         if producer is not None:
             producer.join(timeout=3)
+            prod_pumped = producer.pumped
+            prod_holds = producer.hold_pauses
+            if producer.t_start and producer.t_stop:
+                prod_life_s = max(0.001, producer.t_stop - producer.t_start)
             producer = None
         time.sleep(0.3)
         try:
@@ -464,9 +520,13 @@ def main() -> int:
     finally:
         stop_evt.set()
         if producer is not None:
+            producer.join(timeout=3)
             prod_pumped = getattr(producer, "pumped", 0)
             prod_holds = getattr(producer, "hold_pauses", 0)
-            producer.join(timeout=3)
+            t0 = getattr(producer, "t_start", 0.0) or 0.0
+            t1 = getattr(producer, "t_stop", 0.0) or time.time()
+            if t0:
+                prod_life_s = max(0.001, t1 - t0)
         try:
             pump.send_json({"t": "audio_stop"})
         except Exception:
@@ -490,6 +550,8 @@ def main() -> int:
     pumped = prod_pumped
     hold_p = prod_holds
     host_bps = (args.post_head_kib * 1024) / max(0.001, burst_s) if burst_s else 0
+    # Claude: pumped_bytes is lifetime sum — NEVER divide by burst_s.
+    pump_bps_obs = pumped / prod_life_s if prod_life_s > 0 else None
     report = {
         "label": args.label
         or f"async bps={args.pump_bps} hold={args.cursor_hold} pause={args.host_pause_s}",
@@ -497,6 +559,9 @@ def main() -> int:
         "config": {
             "pump_bps": args.pump_bps,
             "pump_chunk": args.pump_chunk,
+            "frame_max": args.frame_max,
+            "pump_gap_s": args.pump_gap_s,
+            "batch_frames": args.batch_frames,
             "host_gap_ms": args.host_gap_ms,
             "prefill_kb": args.prefill_kb,
             "post_head_kib": args.post_head_kib,
@@ -507,10 +572,13 @@ def main() -> int:
         "rates": {
             "host_bps_observed": host_bps,
             "pump_bps_target": args.pump_bps,
-            "pump_bps_ratio": (args.pump_bps / host_bps) if host_bps else None,
-            "burst_s": burst_s if "burst_s" in dir() else None,
+            "pump_target_over_host": (args.pump_bps / host_bps) if host_bps else None,
+            "burst_s": burst_s if burst_s else None,
+            "producer_life_s": prod_life_s if prod_life_s else None,
             "pumped_bytes": pumped,
+            "pump_bps_observed": pump_bps_obs,
             "hold_pauses": hold_p,
+            "note": "pump_bps_observed = pumped_bytes / producer_life_s (not burst_s)",
         },
         "after_burst": {
             "hostAbs": after_burst.get("hostAbsCursor"),
@@ -553,7 +621,9 @@ def main() -> int:
         "",
         f"**Label:** `{report['label']}` · **Out:** `{out}`",
         "",
-        f"- pump_bps={args.pump_bps:.0f} host_bps≈{host_bps:.0f} hold={args.cursor_hold}",
+        f"- pump_target={args.pump_bps:.0f} pump_obs≈{(pump_bps_obs or 0):.0f} "
+        f"host_bps≈{host_bps:.0f} hold={args.cursor_hold}",
+        f"- life={prod_life_s:.2f}s pumped={pumped} burst={burst_s:.2f}s",
         f"- after_burst: und={after_burst.get('underruns')} live={after_burst.get('liveBytes')} "
         f"behind={after_burst.get('behind_base')} in_win={after_burst.get('in_window')}",
         f"- PASS streaming: {report['pass_streaming']}",

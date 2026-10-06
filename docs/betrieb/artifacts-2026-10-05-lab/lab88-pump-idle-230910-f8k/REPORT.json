@@ -1,0 +1,37 @@
+{
+  "label": "f8k",
+  "config": {
+    "duration_s": 10.0,
+    "chunk": 8192,
+    "frame_max": 8192,
+    "gap_s": 0.0
+  },
+  "wall_s": 10.048470973968506,
+  "loops": 87,
+  "pumped_bytes": 708761,
+  "pumped_bps": 70534.21379592089,
+  "absEnd0": 0,
+  "absEnd1": 0,
+  "abs_delta": 0,
+  "abs_bps": 0.0,
+  "size0": 0,
+  "size1": 0,
+  "start": {
+    "ts": 1791234556.6796916,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791234567.6143267,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "label": "rst-prep",
+  "prep": {
+    "steps": [
+      "restart_err=<urlopen error [Errno 111] Connection refused>"
+    ],
+    "serial": "PD0068",
+    "uptime": "2s"
+  },
+  "config": {
+    "pump_bps": 100000.0,
+    "pump_chunk": 4096,
+    "frame_max": 512,
+    "pump_gap_s": 0.0002,
+    "batch_frames": 1,
+    "host_gap_ms": 4.5,
+    "prefill_kb": 8,
+    "post_head_kib": 16,
+    "cursor_hold": false,
+    "host_pause_after_kib": 0,
+    "host_pause_s": 0
+  },
+  "rates": {
+    "host_bps_observed": 244063.4340185535,
+    "pump_bps_target": 100000.0,
+    "pump_target_over_host": 0.4097295459359884,
+    "burst_s": 0.06713008880615234,
+    "producer_life_s": 34.20368814468384,
+    "pumped_bytes": 2208356,
+    "pump_bps_observed": 64564.85016055899,
+    "hold_pauses": 0,
+    "note": "pump_bps_observed = pumped_bytes / producer_life_s (not burst_s)"
+  },
+  "after_burst": {
+    "hostAbs": 16384,
+    "absBase": 2167396,
+    "absEnd": 2216548,
+    "live": 13312,
+    "und": 3072,
+    "behind": 2151012,
+    "in_window": false
+  },
+  "after_pause": null,
+  "final": {
+    "hostAbs": 16384,
+    "absBase": 2167396,
+    "absEnd": 2216548,
+    "live": 13312,
+    "und": 3072,
+    "behind": 2151012,
+    "in_window": false
+  },
+  "pass_streaming": false,
+  "pass_pause": true
+}

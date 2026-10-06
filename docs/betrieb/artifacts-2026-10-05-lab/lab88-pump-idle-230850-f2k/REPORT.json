@@ -1,0 +1,37 @@
+{
+  "label": "f2k",
+  "config": {
+    "duration_s": 10.0,
+    "chunk": 4096,
+    "frame_max": 2048,
+    "gap_s": 0.0
+  },
+  "wall_s": 10.040906429290771,
+  "loops": 172,
+  "pumped_bytes": 700569,
+  "pumped_bps": 69771.48974880786,
+  "absEnd0": 0,
+  "absEnd1": 153,
+  "abs_delta": 153,
+  "abs_bps": 15.237668140565173,
+  "size0": 0,
+  "size1": 153,
+  "start": {
+    "ts": 1791234536.952228,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791234547.7709622,
+    "absBase": 0,
+    "absEnd": 153,
+    "size": 153,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

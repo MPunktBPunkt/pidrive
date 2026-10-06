@@ -1,0 +1,38 @@
+{
+  "label": "f768",
+  "config": {
+    "duration_s": 8.0,
+    "chunk": 4096,
+    "frame_max": 768,
+    "gap_s": 0.0,
+    "batch_frames": 4
+  },
+  "wall_s": 8.006225347518921,
+  "loops": 139,
+  "pumped_bytes": 565401,
+  "pumped_bps": 70620.17061201185,
+  "absEnd0": 0,
+  "absEnd1": 35481,
+  "abs_delta": 35481,
+  "abs_bps": 4431.6764092826015,
+  "size0": 0,
+  "size1": 35481,
+  "start": {
+    "ts": 1791235149.3103697,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791235158.0946093,
+    "absBase": 0,
+    "absEnd": 35481,
+    "size": 35481,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

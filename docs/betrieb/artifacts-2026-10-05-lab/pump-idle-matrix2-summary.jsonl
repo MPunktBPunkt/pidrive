@@ -1,0 +1,9 @@
+{"label": "baseline", "pumped_bps": 73845.9547857177, "abs_bps": 73845.9547857177, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 512, "gap_s": 0.0002, "batch_frames": 1}}
+{"label": "gap0", "pumped_bps": 70139.50229300818, "abs_bps": 70139.50229300818, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 512, "gap_s": 0.0, "batch_frames": 1}}
+{"label": "batch8", "pumped_bps": 69629.83000935447, "abs_bps": 69629.83000935447, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 512, "gap_s": 0.0, "batch_frames": 8}}
+{"label": "batch16", "pumped_bps": 69829.293497271, "abs_bps": 69829.293497271, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 8192, "frame_max": 512, "gap_s": 0.0, "batch_frames": 16}}
+{"label": "batch32", "pumped_bps": 71144.87413111892, "abs_bps": 71144.87413111892, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 16384, "frame_max": 512, "gap_s": 0.0, "batch_frames": 32}}
+{"label": "f384", "pumped_bps": 69098.72766171276, "abs_bps": 69098.72766171276, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 384, "gap_s": 0.0, "batch_frames": 8}}
+{"label": "f256", "pumped_bps": 68706.26716589721, "abs_bps": 68706.26716589721, "size1": 49152, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 256, "gap_s": 0.0, "batch_frames": 8}}
+{"label": "f768", "pumped_bps": 70620.17061201185, "abs_bps": 4431.6764092826015, "size1": 35481, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 768, "gap_s": 0.0, "batch_frames": 4}}
+{"label": "f1024", "pumped_bps": 71146.38951030067, "abs_bps": 18.97756352514065, "size1": 153, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 1024, "gap_s": 0.0, "batch_frames": 4}}

@@ -1,0 +1,53 @@
+{
+  "label": "maxpump-free",
+  "prep": {
+    "steps": [
+      "noop"
+    ]
+  },
+  "config": {
+    "pump_bps": 5000000.0,
+    "pump_chunk": 4096,
+    "frame_max": 512,
+    "pump_gap_s": 0.0,
+    "batch_frames": 8,
+    "host_gap_ms": 4.5,
+    "prefill_kb": 48,
+    "post_head_kib": 248,
+    "cursor_hold": false,
+    "host_pause_after_kib": 0,
+    "host_pause_s": 0
+  },
+  "rates": {
+    "host_bps_observed": 307326.06725989934,
+    "pump_bps_target": 5000000.0,
+    "pump_target_over_host": 16.269365122782126,
+    "burst_s": 0.8263275623321533,
+    "producer_life_s": 34.92152547836304,
+    "pumped_bytes": 2245220,
+    "pump_bps_observed": 64293.296734448544,
+    "hold_pauses": 0,
+    "note": "pump_bps_observed = pumped_bytes / producer_life_s (not burst_s)"
+  },
+  "after_burst": {
+    "hostAbs": 257024,
+    "absBase": 2245220,
+    "absEnd": 2294372,
+    "live": 75264,
+    "und": 195072,
+    "behind": 1988196,
+    "in_window": false
+  },
+  "after_pause": null,
+  "final": {
+    "hostAbs": 257024,
+    "absBase": 2245220,
+    "absEnd": 2294372,
+    "live": 75264,
+    "und": 195072,
+    "behind": 1988196,
+    "in_window": false
+  },
+  "pass_streaming": false,
+  "pass_pause": true
+}

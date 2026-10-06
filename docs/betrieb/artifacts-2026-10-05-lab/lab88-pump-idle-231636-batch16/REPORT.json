@@ -1,0 +1,38 @@
+{
+  "label": "batch16",
+  "config": {
+    "duration_s": 8.0,
+    "chunk": 8192,
+    "frame_max": 512,
+    "gap_s": 0.0,
+    "batch_frames": 16
+  },
+  "wall_s": 8.038245439529419,
+  "loops": 69,
+  "pumped_bytes": 561305,
+  "pumped_bps": 69829.293497271,
+  "absEnd0": 0,
+  "absEnd1": 561305,
+  "abs_delta": 561305,
+  "abs_bps": 69829.293497271,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791235018.2187097,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791235027.1655064,
+    "absBase": 512153,
+    "absEnd": 561305,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

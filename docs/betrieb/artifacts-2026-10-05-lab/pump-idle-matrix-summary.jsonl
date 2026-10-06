@@ -1,0 +1,4 @@
+{"label": "gap0-chunk16k", "pumped_bps": 68011.20661144568, "abs_bps": 68011.20661144568, "cfg": {"duration_s": 10.0, "chunk": 16384, "frame_max": 512, "gap_s": 0.0}}
+{"label": "f2k", "pumped_bps": 69771.48974880786, "abs_bps": 15.237668140565173, "cfg": {"duration_s": 10.0, "chunk": 4096, "frame_max": 2048, "gap_s": 0.0}}
+{"label": "f8k", "pumped_bps": 70534.21379592089, "abs_bps": 0.0, "cfg": {"duration_s": 10.0, "chunk": 8192, "frame_max": 8192, "gap_s": 0.0}}
+{"label": "gap50us", "pumped_bps": 68014.5804032449, "abs_bps": 68014.5804032449, "cfg": {"duration_s": 10.0, "chunk": 4096, "frame_max": 512, "gap_s": 5e-05}}

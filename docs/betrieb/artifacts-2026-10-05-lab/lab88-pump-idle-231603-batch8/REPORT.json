@@ -1,0 +1,38 @@
+{
+  "label": "batch8",
+  "config": {
+    "duration_s": 8.0,
+    "chunk": 4096,
+    "frame_max": 512,
+    "gap_s": 0.0,
+    "batch_frames": 8
+  },
+  "wall_s": 8.00244665145874,
+  "loops": 137,
+  "pumped_bytes": 557209,
+  "pumped_bps": 69629.83000935447,
+  "absEnd0": 0,
+  "absEnd1": 557209,
+  "abs_delta": 557209,
+  "abs_bps": 69629.83000935447,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791234985.5749936,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791234994.418646,
+    "absBase": 508057,
+    "absEnd": 557209,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}
