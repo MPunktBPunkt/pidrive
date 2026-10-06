@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-06 Feld — **OTA 0.4.46-dev im Auto:** Detect teils PASS, **kein Ton** (Burst→und / hostAbs=0) · Lab Hold-PASS transferiert nicht 1:1  
-**Phase:** Baustelle B — Prefill an Feld-Erstburst ≥~400 KiB; Sequenz-GO gesperrt
+**Stand:** 2026-10-06 Abend — **HU = File-Cache / Eager-Read** · Hebel **MSC-Backpressure (Stall)**, nicht Prefill≥400 KiB / PSRAM · Feld 0.4.46: Detect OK, kein Ton  
+**Phase:** Baustelle C — Stufe 1 Auto (Decode-Start + Cache) ∥ Lab HU-Sim Golden · Stall-FW erst nach Go · Sequenz-GO gesperrt
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -11,10 +11,17 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | # | Dokument | Rolle |
 |---|----------|--------|
-| 0 | [`artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md`](artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md) | **Feld 18:07** — RST→Head-Arm, Ring voll, live=0 / kein Ton |
-| 0r | [`artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) | **Review Mistral+GPT** — RST-Trigger, 253952-Korrektur, P0 Lab |
+| 0 | [`planung/Stufenplan.md`](../planung/Stufenplan.md) | **Stufen 0–6:** Messbarkeit → Auto-F1 → Lab-Sim → Stall-FW → Feld |
+| 0m | [`artifacts-2026-10-06-feld/MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md`](artifacts-2026-10-06-feld/MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md) | **Maßnahmen-Konsolidierung** (was stoppen / was tun) |
+| 0a | [`artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md`](artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) | Modell: Burst=Dateirest, Cure=Stall |
+| 0f | [`fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | HU-Fakten [B]/[S]/[H]/[?] |
+| 0s | [`artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md`](artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md) | TinyUSB return 0 / Teilantwort |
+| 0k | [`artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md`](artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md) | Lab-Simulator-Konzept |
+| 0f6 | [`artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md`](artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md) | Feld 07:50–08:13 — 0.4.46, Detect OK, AV FAIL |
+| 0sum | [`artifacts-2026-10-06-feld/summary-2026-10-06.txt`](artifacts-2026-10-06-feld/summary-2026-10-06.txt) | Rohauswertung + GPT-Plan |
+| 0old | [`artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md`](artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md) | Feld 18:07 — historisch |
+| 0r | [`artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) | Review Mistral+GPT — RST-Trigger, 253952-Korrektur, P0 Lab |
 | 0f5 | [`artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md`](artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md) | Feld 17:55 — ohne RST kein Arm |
-| 0f6 | [`artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md`](artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md) | **Feld 07:50–08:13** — 0.4.46 OTA, Detect OK, AV/Ohr FAIL |
 | 0h | [`artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md`](artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md) | Lab Mid→Head armt |
 | 0p | [`artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md`](artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md) | Lab Prefill-vor-Arm PASS |
 | 0e2 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | Feld Abend 15:30 — Gate PASS, AV/Ohr FAIL Fenster/Arm |
@@ -29,19 +36,12 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0L10 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md) | **Lab Async:** Free=18:07 · Hold behind=0 · Pace unter MSC-Last offen |
 | 0L11 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-PUMP-IDLE-BURST-REALISM.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-PUMP-IDLE-BURST-REALISM.md) | **Lab Idle+Burst:** Pump-Ceiling ~70 KB/s · Prefill≥Burst async PASS |
 | 0L12 | [`artifacts-2026-10-06-lab/lab88-async-064741-burst-then-slow/NOTE-BURST-THEN-SLOW.md`](artifacts-2026-10-06-lab/lab88-async-064741-burst-then-slow/NOTE-BURST-THEN-SLOW.md) | Burst-then-Slow: und=0, behind≠0 (kein formaler PASS) |
-| 0L13 | [`artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md`](artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md) | **Lab Bulk-drainTcp:** Idle ~840 KB/s · maxpump-hold PASS |
-| 0k7 | [`artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md`](artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md) | **Review Mistral+GPT+Claude** zu c99ac36 — Maßnahmen |
-| 0k6 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-CLAUDE-ASYNC-eb91d4e.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-CLAUDE-ASYNC-eb91d4e.md) | Review Mistral+Claude zu eb91d4e (Rate-Korrektur) |
-| 0k4 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md) | Review Mistral+GPT zu 8d4f028 |
-| 0k5 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-WEICHE-a99a830.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-WEICHE-a99a830.md) | Review Mistral+GPT zu Weiche a99a830 |
-| 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
-| 0m | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | Morgen — C′ PASS, AV Meta-Hindernis |
-| 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | Abend-EAR (ausgeführt) |
-| 0k | [`artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md) | Kritik GPT-5.4 → Maßnahmen |
+| 0L13 | [`artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md`](artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md) | **Lab Bulk-drainTcp:** Idle ~840 KB/s · maxpump-hold PASS (Lab≠HU) |
+| 0k7 | [`artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md`](artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md) | Review Idle/Burst — Ceiling→bulk bestätigt; Prefill-Linie überholt |
 | 0k3 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-LAB-FOLLOWUP-305b55f.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-LAB-FOLLOWUP-305b55f.md) | Kritik Mistral 305b55f (lokal verifiziert) |
 | 0k2 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md) | Konsolidiert: Gate-Wortlaut schärfen |
 | 0L | [`artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md`](artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md) | Lab: Meta-Erstsiegel-Mechanismus (**Feldmorgen stark erklärt**, Seal-Log Feld fehlt) |
-| 0a | [`artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md) | **Lab Menü-Seite PASS** + Abend-EAR |
+| 0menu | [`artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md) | **Lab Menü-Seite PASS** + Abend-EAR |
 | 0a1 | [`artifacts-2026-10-05-lab/lab88-correlate-meta-sender-0855/GESAMTBERICHT-CORRELATE-META-SENDER.md`](artifacts-2026-10-05-lab/lab88-correlate-meta-sender-0855/GESAMTBERICHT-CORRELATE-META-SENDER.md) | Correlate Meta=Negativ / Sender=Positiv **PASS** |
 | 0a2 | [`artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md) | Lab-Auftrag (Plan, erledigt) |
 | 0b | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md) | Lab AV A+B PASS |
@@ -56,26 +56,26 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 | Thema | Stand |
 |-------|--------|
-| P1 Body-Next | EVIDENCED |
-| Feld-Oracle B | **PASS** |
-| Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Lab Bulk-Pump ~840 KB/s · async Hold-PASS (248 KiB) 🟢 · Feld-Ton 🔴 (Feld noch 0.4.45) |
-| Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
-| Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
-| Detect | Cold=mid Reject; **Head-Arm im Feld nach RST** belegt; Cooldown 5 s |
+| HU-Modell (File-Cache / Eager-Read) | 🟢 belegt (feld-av-0723 + ANALYSE) |
+| Hebel | **MSC-Stall / Backpressure** — nicht Prefill≥400 KiB / PSRAM |
+| Bulk-drainTcp / Lab Hold | 🟢 Lab · **≠** Feld-AV |
+| AV / Ohr Feld | 🔴 kein Ton unter 0.4.46 |
+| Detect / Gate / Freeze | 🟢 / 🟢 / hält |
 | Sequenz-GO | gesperrt bis hörbarer AV |
-| Freeze | hält |
+| Stall-FW | spezifiziert, **Go nötig** |
+| Decode-Start (inkrementell?) | ❓ Stufe 1 |
 
 ---
 
 ## 3. Nächste Schritte
 
-1. **Feld (P0):** OTA `0.4.46-dev` (Bulk-drainTcp) nach Abstimmung → RST → Bridge → Gate → 1 Sender → Correlate + Ohr.  
-2. **Bridge:** Prefill + Hold mit lokaler absEnd-Schätzung (wie Lab-Tool); PASS `live>0 ∧ und=0 ∧ behind=0`.  
-3. Freeze Feld hält bis OTA-Go; Lab .88 bereits `0.4.46-dev`.
+1. **Feld (ohne FW):** Stufe 1 — Decode-Start (Spielzeit vs. Lesefortschritt) + Cache/Remount (`Stufenplan` / `MASSNAHMEN`).  
+2. **Lab parallel:** Spike-Rest 2a · `nbt_hu_sim` + Golden G1–G5.  
+3. **Danach Go:** Stall hinter Flag (0.4.47) · Bridge-Drossel an Bitrate · Auto-Leiter 128k.  
+4. **Stoppen:** Prefill≥400 KiB, Ring/PSRAM als Burst-Puffer, Detect-Umbau.
 
 ```
-Bulk-drainTcp: Idle ~840 KB/s (war ~70)
-maxpump-hold 248 KiB PASS (pump≈host)
-Nächstes: Feld-OTA 0.4.46 + Ton
+Burst = Dateirest, nicht Decoder-Puffer
+HU bremsen (Stall), nicht nur füttern
+Nächstes: Stufe 1 Auto ∥ Lab-Sim
 ```
