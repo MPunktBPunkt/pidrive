@@ -1,5 +1,6 @@
 # Feld-/Lab-Laufprotokoll (Stufe 0) — Vorlage
-# Kopie nach docs/betrieb/artifacts-<datum>-feld/<run>/run.yaml und ausfüllen.
+# Kopie nach docs/betrieb/artifacts-<datum>-…/<run>/run.yaml und ausfüllen.
+# Ingest: tools/ingest/ingest.py → data/*.parquet (siehe tools/ingest/README.md)
 
 run_id: 2026-10-07-feld-s1-example
 stufe: 1
@@ -8,6 +9,7 @@ fw: 0.4.46-dev
 fw_commit: ""
 build_env: pidrive-s3-l3
 geometry: L3              # fav0 8 MiB, fav1/fav2 512 KiB
+counter_semantics: v3     # STREAM-COUNTER-SEMANTIK
 bridge:
   bitrate: 48k
   audio_target_bps: 9000
@@ -15,6 +17,7 @@ bridge:
   ffmpeg_ac: 1
 stall_ms: 0               # ab Stufe 3
 station: ""
+bitrate_kbps: 48
 clock_sync:               # einmal pro Lauf: Status-Poll + Uhr im Video
   esp_uptime_ms: 0
   wall: 2026-10-07T08:00:00+02:00

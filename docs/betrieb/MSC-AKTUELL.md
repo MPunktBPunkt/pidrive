@@ -14,6 +14,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0 | [`planung/Stufenplan.md`](../planung/Stufenplan.md) | **Stufen 0–6:** Messbarkeit → Auto-F1 → Lab-Sim → Stall-FW → Feld |
 | 0m | [`artifacts-2026-10-06-feld/MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md`](artifacts-2026-10-06-feld/MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md) | **Maßnahmen** — M1–M3 + Bridge-Drossel ✅; Stall-FW offen |
 | 0n | [`artifacts-2026-10-06-lab/NOTE-STUFE0-LAB-2026-10-06.md`](artifacts-2026-10-06-lab/NOTE-STUFE0-LAB-2026-10-06.md) | Stufe-0/Lab-Umsetzung (Profil, Eager-Mimic, Spike) |
+| 0i | [`../tools/ingest/README.md`](../../tools/ingest/README.md) | **Ingest** Roh→Parquet/DuckDB (`run.yaml` + `data/`) |
 | 0a | [`artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md`](artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) | Modell: Burst=Dateirest, Cure=Stall |
 | 0f | [`fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | HU-Fakten [B]/[S]/[H]/[?] |
 | 0s | [`artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md`](artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md) | TinyUSB return 0 / Teilantwort |

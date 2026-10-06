@@ -1,0 +1,28 @@
+# Session-Manifest feld-av-0723 (Review-Ingest)
+run_id: 2026-10-06-feld-av-0723
+stufe: 1
+env: feld
+fw: 0.4.46-dev
+fw_commit: ""
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+station: mixed
+bitrate_kbps: 48
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+stall_ms: 0
+clock_sync:
+  # Anchor: correlate-run-post-rst first lines ≈ session mid; OPERATOR 07:58 Bayern
+  esp_uptime_ms: 0
+  wall: 2026-10-06T07:50:00+02:00
+heard: none
+notes: "AV FAIL ganze Session — Muster A (07:58 und=438k) und B (08:00/08:04 hostAbs=0); kein Ton"
+observations:
+  - {t: "2026-10-06T07:58:00+02:00", what: "muster_a", value: "fav1", note: "Detect PASS, und=hostAbs≈438272, live=0"}
+  - {t: "2026-10-06T08:00:00+02:00", what: "muster_b", value: "fav2", note: "armed=false hostAbs=0 Cache"}
+  - {t: "2026-10-06T08:04:00+02:00", what: "muster_b", value: "fav1", note: "LED/cold, hostAbs=0"}
+  - {t: "2026-10-06T08:13:00+02:00", what: "heard", value: "none", note: "Ohr still trotz hostAbs bis ~4MiB"}

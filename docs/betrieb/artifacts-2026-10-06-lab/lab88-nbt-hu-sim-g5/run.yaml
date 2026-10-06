@@ -1,0 +1,17 @@
+run_id: 2026-10-06-lab-sim-g5
+stufe: 2
+env: sim
+fw: 0.4.46-dev
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+station: fav0
+bitrate_kbps: 48
+stall_ms: 0
+clock_sync:
+  esp_uptime_ms: 0
+  wall: 2026-10-06T15:50:00+02:00
+heard: none
+notes: "nbt_hu_sim Golden G5 PASS burst≈8703 late≈6143 B/s"
+observations:
+  - {what: "golden", value: "G5", note: "PASS"}

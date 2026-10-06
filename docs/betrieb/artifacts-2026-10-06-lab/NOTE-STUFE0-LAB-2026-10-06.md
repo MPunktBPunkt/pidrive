@@ -13,6 +13,7 @@
 | Mimic | `m3_lab_hu_eager_file.py` | Lab-Lauf arm: hostAbs/und≈524288, maxSeq=524288 (**Muster A**) |
 | Bridge | `pump_bridge.py` | bitrate→target_bps; `--marker` |
 | Sim | `nbt_hu_sim.py` | self-test + Golden **G1/G2/G4/G5 PASS** gegen 0.4.46 |
+| Ingest | `tools/ingest/ingest.py` → `data/*.parquet` | Review-Format: runs/status/slots/msc_reads/… |
 
 ## Lab-Läufe (Artefakte)
 

@@ -41,13 +41,15 @@ def slot_progress(slots: list) -> list[dict]:
     return out
 
 
-def row_from_status(st: dict, wall_iso: str, mono: float) -> dict:
+def row_from_status(st: dict, wall_iso: str, mono: float, run_id: str = "") -> dict:
     m = st.get("msc") or {}
     stream = m.get("stream") or st.get("stream") or {}
     slots = m.get("slotMap") or st.get("slotMap") or []
     sb = int(m.get("streamBytes") or 0)
     und = int(stream.get("underruns") or 0)
     return {
+        "schema_version": 1,
+        "run_id": run_id or None,
         "wall_iso": wall_iso,
         "mono_s": mono,
         "esp_uptime": st.get("uptime"),
@@ -79,6 +81,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="1 Hz ESP status poll (wall clock)")
     ap.add_argument("--esp", default="http://192.168.178.89")
     ap.add_argument("--out", required=True, help="output JSONL path")
+    ap.add_argument("--run-id", default="", help="optional run_id for ingest")
     ap.add_argument("--interval", type=float, default=1.0)
     ap.add_argument("--seconds", type=float, default=90.0)
     ap.add_argument("--print", action="store_true", dest="do_print")
@@ -96,9 +99,15 @@ def main() -> int:
             mono = time.monotonic()
             try:
                 st = http_json(f"{esp}/api/status")
-                row = row_from_status(st, wall, mono)
+                row = row_from_status(st, wall, mono, run_id=args.run_id)
             except Exception as e:
-                row = {"wall_iso": wall, "mono_s": mono, "error": str(e)}
+                row = {
+                    "schema_version": 1,
+                    "run_id": args.run_id or None,
+                    "wall_iso": wall,
+                    "mono_s": mono,
+                    "error": str(e),
+                }
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
             f.flush()
             n += 1

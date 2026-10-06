@@ -4,7 +4,11 @@ __pycache__/
 .pytest_cache/
 .venv-ci/
 .venv/
+.venv-ingest/
 venv/
+# Generated analytics (rebuild via tools/ingest/ingest.py)
+data/*
+!data/.gitkeep
 pidrive/exports/spectrum/*.png
 pidrive/exports/spectrum/*.json
 !pidrive/exports/spectrum/.gitkeep

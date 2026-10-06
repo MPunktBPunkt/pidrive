@@ -59,7 +59,7 @@
 | ID | Maßnahme | Ort | Abnahme |
 |----|----------|-----|---------|
 | **M0** | Normative Korrektur in `MSC-AKTUELL`: Phase = **MSC-Backpressure / File-Cache**; Hebel Stall, nicht Prefill≥400k | Docs | ✅ |
-| **M1** | Stufe 0: `run.yaml`-Vorlage + 1-s-Status-Poll mit Wanduhr (Marker-Schalter darf warten) | Pi/Repo | ✅ `templates/run.yaml`, `feld_status_poll.py` |
+| **M1** | Stufe 0: `run.yaml`-Vorlage + 1-s-Status-Poll mit Wanduhr (Marker-Schalter darf warten) | Pi/Repo | ✅ + Ingest Parquet/DuckDB (`tools/ingest/`) |
 | **M2** | Spike-Rest Stufe 2a: Arduino-Wrapper `USBMSC` / USB-Task-Prio / `CFG_TUD_MSC_EP_BUFSIZE` auf Debian lesen | Lab | ✅ Spike-Doc Nachtrag |
 | **M3** | `nbt_profile_extract.py` + Profil `nbt_evo_2026-10-06.json` aus `feld-av-0723` | Lab | ✅ gap median 4 ms, n=4096 |
 

@@ -1,0 +1,18 @@
+run_id: 2026-10-06-lab-sim-g1g4
+stufe: 2
+env: sim
+fw: 0.4.46-dev
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+station: fav1
+bitrate_kbps: 48
+stall_ms: 0
+clock_sync:
+  esp_uptime_ms: 0
+  wall: 2026-10-06T15:40:00+02:00
+heard: none
+notes: "nbt_hu_sim Golden G1+G4 PASS"
+observations:
+  - {what: "golden", value: "G1", note: "PASS before_arm=86016"}
+  - {what: "golden", value: "G4", note: "PASS fav2 prefetch"}
