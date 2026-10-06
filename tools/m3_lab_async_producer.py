@@ -353,6 +353,18 @@ def main() -> int:
     ap.add_argument("--prefill-kb", type=int, default=48)
     ap.add_argument("--post-head-kib", type=int, default=248)
     ap.add_argument("--host-gap-ms", type=float, default=4.5)
+    ap.add_argument(
+        "--host-slow-after-kib",
+        type=int,
+        default=0,
+        help="After this many KiB of post-head, switch to --host-slow-gap-ms",
+    )
+    ap.add_argument(
+        "--host-slow-gap-ms",
+        type=float,
+        default=800.0,
+        help="Host gap after slow-after (≈5 KiB/s at 4 KiB reads)",
+    )
     ap.add_argument("--pump-bps", type=float, default=900000, help="Independent producer bytes/sec")
     ap.add_argument("--pump-chunk", type=int, default=4096)
     ap.add_argument("--frame-max", type=int, default=FRAME_MAX_DEFAULT)
@@ -468,6 +480,7 @@ def main() -> int:
         done = 0
         i = 0
         pause_done = False
+        slow_armed = False
         t_burst0 = time.time()
         while done < post:
             if (
@@ -493,10 +506,29 @@ def main() -> int:
                 except Exception as e:
                     print(f"  after_pause snap: {e}", flush=True)
                 pause_done = True
+            if (
+                args.host_slow_after_kib > 0
+                and not slow_armed
+                and done >= args.host_slow_after_kib * 1024
+            ):
+                try:
+                    series.append(snap(esp, "after_fast_burst", retries=2))
+                except Exception as e:
+                    print(f"  after_fast snap: {e}", flush=True)
+                print(
+                    f"== host slow gap={args.host_slow_gap_ms}ms after {args.host_slow_after_kib} KiB ==",
+                    flush=True,
+                )
+                slow_armed = True
             dd(args.dev, lba0 + (need + done) // 512, max(1, 4096 // 512))
             done += 4096
             i += 1
-            time.sleep(args.host_gap_ms / 1000.0)
+            gap = (
+                args.host_slow_gap_ms
+                if (args.host_slow_after_kib > 0 and done > args.host_slow_after_kib * 1024)
+                else args.host_gap_ms
+            )
+            time.sleep(gap / 1000.0)
         burst_s = time.time() - t_burst0
         try:
             series.append(snap(esp, "after_burst"))
@@ -546,6 +578,7 @@ def main() -> int:
 
     final = series[-1]
     after_burst = next((r for r in reversed(series) if r.get("mark") == "after_burst"), final)
+    after_fast = next((r for r in reversed(series) if r.get("mark") == "after_fast_burst"), None)
     after_pause = next((r for r in reversed(series) if r.get("mark") == "after_host_pause"), None)
     pumped = prod_pumped
     hold_p = prod_holds
@@ -563,6 +596,8 @@ def main() -> int:
             "pump_gap_s": args.pump_gap_s,
             "batch_frames": args.batch_frames,
             "host_gap_ms": args.host_gap_ms,
+            "host_slow_after_kib": args.host_slow_after_kib,
+            "host_slow_gap_ms": args.host_slow_gap_ms,
             "prefill_kb": args.prefill_kb,
             "post_head_kib": args.post_head_kib,
             "cursor_hold": args.cursor_hold,
@@ -589,6 +624,15 @@ def main() -> int:
             "behind": after_burst.get("behind_base"),
             "in_window": after_burst.get("in_window"),
         },
+        "after_fast_burst": {
+            "hostAbs": after_fast.get("hostAbsCursor") if after_fast else None,
+            "live": after_fast.get("liveBytes") if after_fast else None,
+            "und": after_fast.get("underruns") if after_fast else None,
+            "behind": after_fast.get("behind_base") if after_fast else None,
+            "in_window": after_fast.get("in_window") if after_fast else None,
+        }
+        if after_fast
+        else None,
         "after_pause": {
             "hostAbs": after_pause.get("hostAbsCursor") if after_pause else None,
             "behind": after_pause.get("behind_base") if after_pause else None,
