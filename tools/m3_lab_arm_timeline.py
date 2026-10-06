@@ -40,6 +40,24 @@ def http_json(url: str, method: str = "GET", body: bytes | None = None, timeout:
         return json.loads(raw.decode()) if raw else {}
 
 
+def http_post_allow_empty(url: str, body: bytes = b"{}", timeout: float = 12) -> dict:
+    """POST that tolerates empty/non-JSON bodies (ESP /api/restart often returns none)."""
+    req = urllib.request.Request(
+        url,
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        raw = r.read()
+        if not raw:
+            return {"ok": True, "empty": True}
+        try:
+            return json.loads(raw.decode())
+        except json.JSONDecodeError:
+            return {"ok": True, "raw": raw.decode("utf-8", errors="replace")[:200]}
+
+
 def dd(dev: str, lba: int, sectors: int) -> None:
     subprocess.check_call(
         [
@@ -203,7 +221,7 @@ def apply_prep(esp: str, dev: str, prep: str) -> dict:
     log: dict = {"prep": prep, "steps": []}
     if prep in ("soft_rst", "rst_remount"):
         try:
-            http_json(f"{esp}/api/restart", method="POST", body=b"{}")
+            http_post_allow_empty(f"{esp}/api/restart", body=b"{}")
             log["steps"].append("POST /api/restart")
         except Exception as e:
             log["steps"].append(f"restart_err={e}")

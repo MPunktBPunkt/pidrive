@@ -79,15 +79,27 @@ Der ESP32-S3 läuft als **USB Full-Speed** mit 64 B Bulk-Max-Packet-Size. Ist `n
 3. **Timeout in der Firmware** (`stall_ms`), weil TinyUSB keinen hat. Danach gibt es Stille für den Rest des Requests, der Cursor bleibt stehen.
 4. Der Timeout-Zähler gehört zum **Request**: Er wird bei einer neuen CBW zurückgesetzt, erkennbar an `lba`/`offset`, die nicht zur Fortsetzung passen.
 
+## Verifiziert auf dem Lab-Host (2026-10-06, PlatformIO arduino-esp32)
+
+Paket: `~/.platformio/packages/framework-arduinoespressif32` (espressif32@6.4.x).
+
+| Check | Ergebnis |
+|-------|----------|
+| `USBMSC.cpp` `tud_msc_read10_cb` | reicht `msc_luns[lun].read(lba, offset, buffer, bufsize)` **1:1** als `int32_t` durch (kein Clamping außer media absent → 0) |
+| USB-Task | `xTaskCreate(usb_device_task, "usbd", 4096, NULL, configMAX_PRIORITIES - 1, NULL)` — **höchste FreeRTOS-Priorität** → vor jedem `return 0` **`vTaskDelay(2 ms)` Pflicht**, sonst Producer-Verhungern (Falle 1) |
+| `CFG_TUD_MSC_BUFSIZE` / `CFG_TUD_MSC_EP_BUFSIZE` | `CONFIG_TINYUSB_MSC_BUFSIZE=4096` (`sdkconfig` esp32s3) → Klassenpuffer **4096 B** |
+
+Stufe 3 kann damit Variante A (`return 0`) und Teilantworten in 512-B-Schritten planen.
+
 ## Noch auf dem Debian-Container zu verifizieren (5 Minuten, nur lesen)
 
-Der Arduino-Wrapper ließ sich hier nicht nachladen. Auf dem Container mit installiertem PlatformIO:
+~~Der Arduino-Wrapper ließ sich hier nicht nachladen.~~ **Erledigt oben.** Zum Nachvollziehen:
 
 ```bash
 P=~/.platformio/packages/framework-arduinoespressif32
-grep -n "read10_cb\|return" $P/cores/esp32/USBMSC.cpp | head -40      # Rückgabe wird 1:1 durchgereicht?
-grep -n "xTaskCreate\|usb_device_task" $P/cores/esp32/esp32-hal-tinyusb.c  # Priorität / Core
-grep -rn "CFG_TUD_MSC_EP_BUFSIZE\|CFG_TUD_MSC_BUFSIZE" $P/tools/sdk/esp32s3/include/arduino_tinyusb/  # 4096?
+grep -n "read10_cb\|return" $P/cores/esp32/USBMSC.cpp | head -40
+grep -n "xTaskCreate\|usb_device_task" $P/cores/esp32/esp32-hal-tinyusb.c
+grep -rn "CONFIG_TINYUSB_MSC_BUFSIZE" $P/tools/sdk/esp32s3/sdkconfig | head
 ```
 
 Erwartung: `tud_msc_read10_cb` reicht den `int32_t` unseres `pidrive_msc_read` unverändert durch, und der Klassenpuffer ist 4096 B (passt zu `if (bufsize > 4096)` in `UsbMscGadget::onRead`). Weicht eines davon ab, muss Stufe 3 angepasst werden.

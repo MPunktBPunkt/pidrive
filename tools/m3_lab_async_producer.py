@@ -76,6 +76,24 @@ def http_json(url: str, method: str = "GET", body: bytes | None = None, timeout:
         return json.loads(raw.decode()) if raw else {}
 
 
+def http_post_allow_empty(url: str, body: bytes = b"{}", timeout: float = 12) -> dict:
+    """POST that tolerates empty/non-JSON bodies (ESP /api/restart often returns none)."""
+    req = urllib.request.Request(
+        url,
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        raw = r.read()
+        if not raw:
+            return {"ok": True, "empty": True}
+        try:
+            return json.loads(raw.decode())
+        except json.JSONDecodeError:
+            return {"ok": True, "raw": raw.decode("utf-8", errors="replace")[:200]}
+
+
 def dd(dev: str, lba: int, sectors: int) -> None:
     subprocess.check_call(
         [
@@ -209,9 +227,10 @@ def cursor_hold_allows(st: dict, ring_cap: int, next_chunk: int = 0, margin: int
 def soft_rst(esp: str, dev: str) -> dict:
     log: dict = {"steps": []}
     try:
-        http_json(f"{esp}/api/restart", method="POST", body=b"{}")
+        http_post_allow_empty(f"{esp}/api/restart", body=b"{}")
         log["steps"].append("restart")
     except Exception as e:
+        # Connect/timeout only — empty JSON body is not an error.
         log["steps"].append(f"restart_err={e}")
     for _ in range(45):
         try:

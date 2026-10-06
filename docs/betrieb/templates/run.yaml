@@ -1,0 +1,29 @@
+# Feld-/Lab-Laufprotokoll (Stufe 0) — Vorlage
+# Kopie nach docs/betrieb/artifacts-<datum>-feld/<run>/run.yaml und ausfüllen.
+
+run_id: 2026-10-07-feld-s1-example
+stufe: 1
+env: feld                 # feld | lab | sim
+fw: 0.4.46-dev
+fw_commit: ""
+build_env: pidrive-s3-l3
+geometry: L3              # fav0 8 MiB, fav1/fav2 512 KiB
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+stall_ms: 0               # ab Stufe 3
+station: ""
+clock_sync:               # einmal pro Lauf: Status-Poll + Uhr im Video
+  esp_uptime_ms: 0
+  wall: 2026-10-07T08:00:00+02:00
+actions:                  # Bedienschritte mit Wanduhr (aus Video)
+  - {t: "08:00:05", op: select, uid: fav0}
+observations:             # Ohr / Display
+  - {t: "08:00:06.2", what: timer_start}
+heard: none               # audio | silence | cover_only | none
+notes: ""
+status_poll:
+  interval_s: 1.0
+  out: status-poll.jsonl

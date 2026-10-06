@@ -58,10 +58,10 @@
 
 | ID | Maßnahme | Ort | Abnahme |
 |----|----------|-----|---------|
-| **M0** | Normative Korrektur in `MSC-AKTUELL`: Phase = **MSC-Backpressure / File-Cache**; Hebel Stall, nicht Prefill≥400k | Docs | Lesbar in 30 s |
-| **M1** | Stufe 0: `run.yaml`-Vorlage + 1-s-Status-Poll mit Wanduhr (Marker-Schalter darf warten) | Pi/Repo | Vorlage im Repo |
-| **M2** | Spike-Rest Stufe 2a: Arduino-Wrapper `USBMSC` / USB-Task-Prio / `CFG_TUD_MSC_EP_BUFSIZE` auf Debian lesen | Lab | 3 Zeilen Ergebnis im Spike-Doc |
-| **M3** | `nbt_profile_extract.py` + Profil `nbt_evo_2026-10-06.json` aus `feld-av-0723` | Lab | Gap-Median 3–5 ms, n=4096 |
+| **M0** | Normative Korrektur in `MSC-AKTUELL`: Phase = **MSC-Backpressure / File-Cache**; Hebel Stall, nicht Prefill≥400k | Docs | ✅ |
+| **M1** | Stufe 0: `run.yaml`-Vorlage + 1-s-Status-Poll mit Wanduhr (Marker-Schalter darf warten) | Pi/Repo | ✅ `templates/run.yaml`, `feld_status_poll.py` |
+| **M2** | Spike-Rest Stufe 2a: Arduino-Wrapper `USBMSC` / USB-Task-Prio / `CFG_TUD_MSC_EP_BUFSIZE` auf Debian lesen | Lab | ✅ Spike-Doc Nachtrag |
+| **M3** | `nbt_profile_extract.py` + Profil `nbt_evo_2026-10-06.json` aus `feld-av-0723` | Lab | ✅ gap median 4 ms, n=4096 |
 
 ### Nächster Feldtermin (ohne FW-Änderung) — **höchste inhaltliche Priorität**
 
@@ -75,15 +75,15 @@
 
 | ID | Maßnahme | Abnahme |
 |----|----------|---------|
-| **M7** | `nbt_hu_sim.py` + Golden G1–G5 gegen 0.4.46 L3 | 3× reproduzierbar |
-| **M8** | Producer **Echtzeit** (nicht 900 KB/s Lab-Hold-Illusion); Format-Stempel PDSQ | Profil wie Feld B9/B10 |
+| **M7** | `nbt_hu_sim.py` + Golden G1–G5 gegen 0.4.46 L3 | offen — Vorstufe: `m3_lab_hu_eager_file.py` + Profil |
+| **M8** | Producer **Echtzeit** (nicht 900 KB/s Lab-Hold-Illusion); Format-Stempel PDSQ | teilweise: Eager-Mimic `--pump-bps 9000`; PDSQ noch offen |
 
 ### Nach Go (Freeze-Bruch)
 
 | ID | Maßnahme | Abnahme |
 |----|----------|---------|
 | **M9** | FW 0.4.47 hinter Flag: `streamBytesServed_=0` in `startStream`; `stall_ms`; Cursor nur bei Live; `return 0`+2 ms Delay; Teilantwort ×512 | `stall_ms=0` → G1–G5 bitgleich |
-| **M10** | Pi: `AUDIO_TARGET_BPS = 1.5×bitrate/8` (128k → ≥24 KB/s); optional `--marker`; Format-A/B später | Kein Dauer-Underrun bei 128k |
+| **M10** | Pi: `AUDIO_TARGET_BPS = 1.5×bitrate/8` (128k → ≥24 KB/s); optional `--marker`; Format-A/B später | ✅ Bridge: dynamisch + `--marker` (Format-A/B später) |
 | **M11** | Lab-Stall-Matrix (Stufe 4) → Auto-Leiter 128k (Stufe 5) | ≥30 s hörbar oder Timeout-Grenze bekannt |
 
 ### Fallback (nur wenn F1=Batch oder Stall scheitert)
@@ -119,11 +119,10 @@ Stufe 1 F1?
 
 ---
 
-## 7. Nächster konkreter Arbeitsschritt (ohne Go)
+## 7. Nächster konkreter Arbeitsschritt
 
-1. **Docs:** dieses Maßnahmen-Doc + `MSC-AKTUELL` (erledigt in diesem Commit).  
-2. **Lab:** M2 + M3 starten (Spike-Rest, Profil-Extraktor).  
-3. **Feld:** Termin nur für **Stufe 1** (F1/F2, Silence, Video, `run.yaml`) — **kein** Stall-OTA.  
-4. **Kein** Code für `stall_ms` bis Go + Golden grün.
+1. **Lab:** Eager-Mimic auf `.88` fahren (`NOTE-STUFE0-LAB-2026-10-06.md`); danach `nbt_hu_sim` Golden.  
+2. **Feld:** Stufe 1 F1/F2 (Silence, Video, `run.yaml`, `feld_status_poll.py`) — **kein** Stall-OTA.  
+3. **Kein** Code für `stall_ms` bis Go + Golden grün.
 
 **PASS-Kriterium unverändert:** `live>0 ∧ und=0 ∧ behind=0` anhaltend + Ohr — aber Interpretation von `hostAbs`-„Burst“ ist nicht mehr Ringmaß.
