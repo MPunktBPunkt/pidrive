@@ -1,0 +1,236 @@
+{
+  "source": "docs/betrieb/artifacts-2026-10-06-feld/feld-s1-1700",
+  "generated": "2026-10-06T18:26:48+02:00",
+  "model": "nbt_evo_file_cache_eager_read",
+  "read": {
+    "size_bytes": 4096,
+    "gap_ms_target": 4,
+    "queue_depth": 1
+  },
+  "from_artifacts": {
+    "status_files": 10,
+    "trace_entries": 960,
+    "gap_ms": {
+      "n": 960,
+      "median": 4.0,
+      "p25": 4.0,
+      "p75": 4.0,
+      "min": 3,
+      "max": 65535
+    },
+    "read_n_bytes": {
+      "n": 960,
+      "median": 4096.0,
+      "mode": 4096,
+      "counts": {
+        "4096": 957,
+        "2560": 3
+      }
+    },
+    "xfer_avg": {
+      "n512": 3.0,
+      "n2k": 0.0,
+      "n4k": 1277.8,
+      "n8kPlus": 0.0
+    },
+    "xfer_samples": 10,
+    "tags_top": [
+      [
+        "Rock Antenn",
+        638
+      ],
+      [
+        "Radio BOB!",
+        316
+      ],
+      [
+        "Menue",
+        6
+      ]
+    ],
+    "kinds": {
+      "file": 960
+    },
+    "slot_progress_samples": 10,
+    "slot_progress_tail": [
+      {
+        "file": "status-f1-pre-bob.json",
+        "uptime": "5min 9s",
+        "slots": [
+          {
+            "uid": "fav0",
+            "name": "Rock Antenne",
+            "bytes": 8179712,
+            "maxSeq": 5201920
+          },
+          {
+            "uid": "fav1",
+            "name": "Rock Antenne Bayern",
+            "bytes": 524288,
+            "maxSeq": 524288
+          },
+          {
+            "uid": "fav2",
+            "name": "Radio BOB!",
+            "bytes": 0,
+            "maxSeq": 0
+          },
+          {
+            "uid": "pump:page_next",
+            "name": "Menue",
+            "bytes": 0,
+            "maxSeq": 0
+          }
+        ]
+      },
+      {
+        "file": "status-gate.json",
+        "uptime": "2min 20s",
+        "slots": [
+          {
+            "uid": "fav0",
+            "name": "Rock Antenne",
+            "bytes": 32768,
+            "maxSeq": 4096
+          },
+          {
+            "uid": "fav1",
+            "name": "Rock Antenne Bayern",
+            "bytes": 524288,
+            "maxSeq": 524288
+          },
+          {
+            "uid": "fav2",
+            "name": "Radio BOB!",
+            "bytes": 0,
+            "maxSeq": 0
+          },
+          {
+            "uid": "pump:page_next",
+            "name": "Menue",
+            "bytes": 0,
+            "maxSeq": 0
+          }
+        ]
+      },
+      {
+        "file": "status-pause-ins-haus.json",
+        "uptime": "2min 43s",
+        "slots": [
+          {
+            "uid": "fav0",
+            "name": "Rock Antenne",
+            "bytes": 8421376,
+            "maxSeq": 7049216
+          },
+          {
+            "uid": "fav1",
+            "name": "Rock Antenne Bayern",
+            "bytes": 524288,
+            "maxSeq": 122880
+          },
+          {
+            "uid": "fav2",
+            "name": "Radio BOB!",
+            "bytes": 524288,
+            "maxSeq": 262144
+          },
+          {
+            "uid": "pump:page_next",
+            "name": "Menue",
+            "bytes": 6656,
+            "maxSeq": 6656
+          }
+        ]
+      },
+      {
+        "file": "status-prep.json",
+        "uptime": "52s",
+        "slots": [
+          {
+            "uid": "fav0",
+            "name": "Rock Antenne",
+            "bytes": 380928,
+            "maxSeq": 262144
+          },
+          {
+            "uid": "fav1",
+            "name": "Rock Antenne Bayern",
+            "bytes": 348160,
+            "maxSeq": 262144
+          },
+          {
+            "uid": "fav2",
+            "name": "Radio BOB!",
+            "bytes": 524288,
+            "maxSeq": 176128
+          },
+          {
+            "uid": "pump:page_next",
+            "name": "Menue",
+            "bytes": 6656,
+            "maxSeq": 6656
+          }
+        ]
+      },
+      {
+        "file": "status-rock-after-bayern.json",
+        "uptime": "2min 24s",
+        "slots": [
+          {
+            "uid": "fav0",
+            "name": "Rock Antenne",
+            "bytes": 8421376,
+            "maxSeq": 7049216
+          },
+          {
+            "uid": "fav1",
+            "name": "Rock Antenne Bayern",
+            "bytes": 524288,
+            "maxSeq": 122880
+          },
+          {
+            "uid": "fav2",
+            "name": "Radio BOB!",
+            "bytes": 524288,
+            "maxSeq": 262144
+          },
+          {
+            "uid": "pump:page_next",
+            "name": "Menue",
+            "bytes": 6656,
+            "maxSeq": 6656
+          }
+        ]
+      }
+    ]
+  },
+  "producer": {
+    "correlate_watches": [],
+    "absEnd_bps_samples": 0,
+    "absEnd_bps_median": null,
+    "absEnd_bps_p25": null,
+    "absEnd_bps_p75": null
+  },
+  "bridge": {
+    "bridge_files": 0,
+    "audio_start_mentions": 0,
+    "switches": [],
+    "switch_age_s": [],
+    "track_gap_s_est": {
+      "n": 0,
+      "median": null,
+      "note": "age_s - 87.3 (512KiB@48k content)"
+    }
+  },
+  "geometry_l3": {
+    "fav0_bytes": 8388608,
+    "fav1_bytes": 524288,
+    "fav2_bytes": 524288
+  },
+  "notes": [
+    "Burst = unread file remainder, not decoder buffer",
+    "Stall only on active live slot sequential cursor reads",
+    "Prefetch other slots: silence immediately"
+  ]
+}

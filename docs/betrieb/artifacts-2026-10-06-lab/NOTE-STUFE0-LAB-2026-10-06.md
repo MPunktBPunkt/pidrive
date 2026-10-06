@@ -8,7 +8,7 @@
 |----|----------|---------|
 | M1 | `templates/run.yaml` · `feld_status_poll.py` | 1 Hz + Wanduhr |
 | M2 | Spike TinyUSB | USBMSC 1:1, USB-Task max prio, BUFSIZE=4096 |
-| M3 | `nbt_profile_extract` · `nbt_evo_2026-10-06.json` | gap median **4** ms, n=4096 |
+| M3 | `nbt_profile_extract` · `nbt_evo_2026-10-06.json` (+ `nbt_evo_feld-s1-1700.json` gleiche gap/n) | gap median **4** ms, n=4096 |
 | O6 | soft_rst empty-body | kein `restart_err=Expecting value` |
 | Mimic | `m3_lab_hu_eager_file.py` | Lab-Lauf arm: hostAbs/und≈524288, maxSeq=524288 (**Muster A**) |
 | Bridge | `pump_bridge.py` | bitrate→target_bps; `--marker` |
