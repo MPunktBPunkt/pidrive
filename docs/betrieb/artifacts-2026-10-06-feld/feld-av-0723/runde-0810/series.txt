@@ -114,3 +114,12 @@
 08:13:49 n=114 up 1min 25s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
 08:13:50 n=115 up 1min 26s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
 08:13:52 n=116 up 1min 28s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:13:53 n=117 up 1min 29s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:13:54 n=118 up 1min 30s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:13:55 n=119 up 1min 31s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:13:56 n=120 up 1min 32s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:13:57 n=121 up 1min 33s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:13:58 n=122 up 1min 35s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:14:00 n=123 up 1min 36s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:14:01 n=124 up 1min 37s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
+08:14:02 n=125 up 1min 38s otg 1 plug 1 pump 1 play 'Rock Antenne Bayern' act 1 armed 1 host 360448 und 360448 guess 1 cold 5 rej 2264 streamB 360448 serial PD0084
