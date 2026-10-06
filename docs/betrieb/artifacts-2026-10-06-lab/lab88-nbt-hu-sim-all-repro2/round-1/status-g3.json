@@ -1,0 +1,45 @@
+{
+  "version": "0.4.46-dev",
+  "uptime": "34min 1s",
+  "play": "fav0",
+  "armed": true,
+  "hostAbs": 540641,
+  "absEnd": 65536,
+  "absBase": 16384,
+  "streamBytes": 11112448,
+  "underruns": 475105,
+  "liveBytes": 10637343,
+  "ring_size": 49152,
+  "ring_cap": 49152,
+  "readCount": 6954,
+  "slots": [
+    {
+      "uid": "fav0",
+      "bytes": 7925760,
+      "maxSeq": 188416,
+      "lba0": 81,
+      "lba1": 16464
+    },
+    {
+      "uid": "fav1",
+      "bytes": 11026432,
+      "maxSeq": 524288,
+      "lba0": 16465,
+      "lba1": 17488
+    },
+    {
+      "uid": "fav2",
+      "bytes": 4718592,
+      "maxSeq": 524288,
+      "lba0": 17489,
+      "lba1": 18512
+    },
+    {
+      "uid": "pump:page_next",
+      "bytes": 0,
+      "maxSeq": 0,
+      "lba0": 18513,
+      "lba1": 18525
+    }
+  ]
+}

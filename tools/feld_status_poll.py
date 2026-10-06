@@ -85,6 +85,11 @@ def main() -> int:
     ap.add_argument("--interval", type=float, default=1.0)
     ap.add_argument("--seconds", type=float, default=90.0)
     ap.add_argument("--print", action="store_true", dest="do_print")
+    ap.add_argument(
+        "--append",
+        action="store_true",
+        help="append to existing JSONL instead of overwriting (field multi-segment)",
+    )
     args = ap.parse_args()
 
     esp = args.esp.rstrip("/")
@@ -93,7 +98,8 @@ def main() -> int:
 
     t_end = time.monotonic() + max(0.0, args.seconds)
     n = 0
-    with out.open("w", encoding="utf-8") as f:
+    mode = "a" if args.append else "w"
+    with out.open(mode, encoding="utf-8") as f:
         while time.monotonic() < t_end:
             wall = datetime.now().astimezone().isoformat(timespec="milliseconds")
             mono = time.monotonic()

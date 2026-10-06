@@ -1,0 +1,15 @@
+bridge_compile_OK
+active
+3795935 bash -c python3 -m py_compile /home/pidrive/pump_bridge.py && echo bridge_compile_OK echo pidrive | sudo -S systemctl restart pidrive_pump_bridge sleep 2 : > /tmp/pidrive_msc_reads.jsonl : > /tmp/pidrive_msc_lock.jsonl : > /tmp/pidrive_msc_diag.jsonl systemctl is-active pidrive_pump_bridge || true pgrep -af pump_bridge.py | head -1 || true echo pidrive | sudo -S journalctl -u pidrive_pump_bridge -n 12 --no-pager | tail -12 
+Oct 06 17:19:08 Pidrive python3[3336154]: [rx] {"t":"pong"}
+Oct 06 17:19:10 Pidrive python3[3336154]: [tx] {"t":"ping"}
+Oct 06 17:19:10 Pidrive python3[3336154]: [rx] {"t":"pong"}
+Oct 06 17:19:10 Pidrive systemd[1]: Stopping pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü)...
+Oct 06 17:19:10 Pidrive systemd[1]: pidrive_pump_bridge.service: Deactivated successfully.
+Oct 06 17:19:10 Pidrive systemd[1]: Stopped pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 17:19:10 Pidrive systemd[1]: pidrive_pump_bridge.service: Consumed 17.951s CPU time.
+Oct 06 17:19:10 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 17:19:11 Pidrive python3[3795975]: [audio] target_bps=9000 bitrate=48k marker=False
+Oct 06 17:19:11 Pidrive python3[3795975]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 17:19:11 Pidrive python3[3795975]: [msc-lock] enabled=True seed_plugged=True
+Oct 06 17:19:11 Pidrive python3[3795975]: [tx] {"t":"hello","ver":1}

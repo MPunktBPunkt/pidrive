@@ -27,6 +27,8 @@
 | `lab88-ingest-demo-1605/` | E2E: G2+1Hz-Poll → Ingest; DuckDB Muster-B hostAbs=0 vs Feld max_host≈4MiB |
 | `lab88-nbt-hu-sim-g3/` | G3 PASS |
 | `lab88-nbt-hu-sim-all-final{,2}/` | 2× ALL G1–G5 PASS |
+| `lab88-feld-s1-replay/` | Feld `feld-s1-1700`: A Muster_B fav1→fav2; B Muster_A_like fav0 (host≈8.4 MiB); G1+G2 PASS |
+| `lab88-nbt-hu-sim-all-evening/` | 3.× ALL G1–G5 PASS (Abend, nach Feld-Replay) |
 
 ```bash
 sg disk -c 'python3 tools/nbt_hu_sim.py --self-test'

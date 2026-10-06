@@ -1,0 +1,260 @@
+{
+  "golden": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5"
+  ],
+  "results": {
+    "G5": {
+      "samples": [
+        {
+          "t": 61.0,
+          "bps": 6143.3,
+          "bytes": 525568
+        },
+        {
+          "t": 62.0,
+          "bps": 5887.4,
+          "bytes": 531456
+        },
+        {
+          "t": 63.0,
+          "bps": 5887.4,
+          "bytes": 537344
+        },
+        {
+          "t": 64.0,
+          "bps": 6143.4,
+          "bytes": 543488
+        },
+        {
+          "t": 65.0,
+          "bps": 5887.2,
+          "bytes": 549376
+        },
+        {
+          "t": 66.0,
+          "bps": 6143.4,
+          "bytes": 555520
+        },
+        {
+          "t": 67.0,
+          "bps": 5887.5,
+          "bytes": 561408
+        },
+        {
+          "t": 68.0,
+          "bps": 5887.5,
+          "bytes": 567296
+        },
+        {
+          "t": 69.0,
+          "bps": 6143.3,
+          "bytes": 573440
+        },
+        {
+          "t": 70.0,
+          "bps": 5886.9,
+          "bytes": 579328
+        }
+      ],
+      "burst_median_bps": 8703.2,
+      "late_median_bps": 5887.5,
+      "burst_ok": true,
+      "late_ok": true,
+      "err": null,
+      "pass": true
+    },
+    "G1": {
+      "bytes_before_arm": 86016,
+      "expect_before": 86016,
+      "before_ok": true,
+      "hostAbs": 524288,
+      "underruns": 524288,
+      "expect_und_host": 438272,
+      "und_host_ok": true,
+      "liveBytes_fw": 27889664,
+      "liveBytes_ear": 0,
+      "live_ok": true,
+      "class_counts": {
+        "ID3": 2,
+        "OTHER": 242,
+        "SILENCE": 12
+      },
+      "ear": {
+        "live_bytes": 0,
+        "consumed": 0,
+        "events": {},
+        "event_list": []
+      },
+      "pass": true
+    },
+    "G3": {
+      "fill_pre": 49152,
+      "fill_wait_s": 1.34,
+      "fill_ok": true,
+      "liveBytes_fw": 28463135,
+      "liveBytes_ear": 45056,
+      "expect_live": 49152,
+      "live_ok": true,
+      "underruns": 475105,
+      "hostAbs": 542689,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 11,
+        "OTHER": 113,
+        "SILENCE": 3
+      },
+      "ear": {
+        "live_bytes": 45056,
+        "consumed": 0,
+        "events": {
+          "gap_in_content": 10,
+          "silence_in_play": 3
+        },
+        "event_list": [
+          {
+            "t": 1826314.836498895,
+            "kind": "gap_in_content",
+            "from": 88,
+            "to": 104
+          },
+          {
+            "t": 1826314.846281613,
+            "kind": "gap_in_content",
+            "from": 104,
+            "to": 120
+          },
+          {
+            "t": 1826314.856457525,
+            "kind": "gap_in_content",
+            "from": 120,
+            "to": 136
+          },
+          {
+            "t": 1826314.866387391,
+            "kind": "gap_in_content",
+            "from": 136,
+            "to": 152
+          },
+          {
+            "t": 1826314.876062305,
+            "kind": "gap_in_content",
+            "from": 152,
+            "to": 168
+          },
+          {
+            "t": 1826314.885649975,
+            "kind": "gap_in_content",
+            "from": 168,
+            "to": 184
+          },
+          {
+            "t": 1826314.895237414,
+            "kind": "gap_in_content",
+            "from": 184,
+            "to": 200
+          },
+          {
+            "t": 1826314.919058943,
+            "kind": "gap_in_content",
+            "from": 200,
+            "to": 216
+          },
+          {
+            "t": 1826314.928656371,
+            "kind": "gap_in_content",
+            "from": 216,
+            "to": 232
+          },
+          {
+            "t": 1826314.938260011,
+            "kind": "gap_in_content",
+            "from": 232,
+            "to": 248
+          },
+          {
+            "t": 1826315.248315838,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1826315.663719088,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1826316.034971829,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "silence_after_live": true,
+      "pass": true
+    },
+    "G4": {
+      "fav2_maxSeq": 524288,
+      "prefetch_s": 1.113,
+      "prefetch_ok": true,
+      "within_few_s": true,
+      "pass": true
+    },
+    "G2": {
+      "maxSeq": 524288,
+      "hostAbs_pre": 524257,
+      "hostAbs_after_arm": 0,
+      "und_delta": -1048545,
+      "host_delta": -524257,
+      "armed": false,
+      "file_full": true,
+      "host_ok": true,
+      "und_ok": true,
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "2h 12min",
+    "play": "",
+    "armed": false,
+    "hostAbs": 0,
+    "absEnd": 0,
+    "absBase": 0,
+    "streamBytes": 29986816,
+    "underruns": 0,
+    "liveBytes": 29986816,
+    "ring_size": 0,
+    "ring_cap": 49152,
+    "readCount": 32217,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 21303296,
+        "maxSeq": 8388608,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 22036480,
+        "maxSeq": 524288,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 11010048,
+        "maxSeq": 524288,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

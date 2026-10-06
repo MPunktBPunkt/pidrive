@@ -1,4 +1,5 @@
 # Stufe 1 Feld — Decode-Start + Cache (kein Stall-OTA)
+# Session 2026-10-06 ~17:19–17:28 (pausiert: User ins Haus)
 run_id: feld-s1-1700
 stufe: 1
 env: feld
@@ -13,15 +14,49 @@ bridge:
   ffmpeg_ar: 22050
   ffmpeg_ac: 1
 stall_ms: 0
-station: ""
+station: mixed
 bitrate_kbps: 48
+device: PD0085
+# Poll serials drifted PD0086/PD0087 (MSC usbSerial); Operator: PD0085
 clock_sync:
-  esp_uptime_ms: 0
-  wall: "2026-10-06T17:00:00+02:00"
-actions: []
-observations: []
+  # Anchor = first recovered poll row (seg1). Nach RST ~17:26 ist esp_uptime neu —
+  # für Boot2 die wall_iso-Felder der JSONL-Zeilen nutzen, nicht diesen Anchor.
+  esp_uptime_ms: 229000
+  wall: "2026-10-06T17:22:09.881+02:00"
+actions:
+  - {t: "2026-10-06T17:19:00+02:00", op: prep, note: "bridge deploy + gate; fw 0.4.46-dev; kein OTA"}
+  - {t: "2026-10-06T17:20:25+02:00", op: otg_replug, note: "OTG neu; usb@17:20:32; MSC_MAP_FROZEN"}
+  - {t: "2026-10-06T17:21:00+02:00", op: autoplay, uid: fav1, note: "Bayern erster Sender (Autoplay)"}
+  - {t: "2026-10-06T17:21:39+02:00", op: autoplay, uid: fav0, note: "Wechsel → Rock Antenne"}
+  - {t: "2026-10-06T17:23:34+02:00", op: select, uid: fav2, note: "User → Radio BOB!"}
+  - {t: "2026-10-06T17:25:59+02:00", op: select, uid: fav2, note: "User → BOB + RST"}
+  - {t: "2026-10-06T17:26:05+02:00", op: rst, note: "ESP soft/hard RST; bridge hello_ack ~17:26:12"}
+  - {t: "2026-10-06T17:26:00+02:00", op: autoplay, uid: fav2, note: "BOB Autoplay nach RST (HU; ESP playingUid oft leer)"}
+  - {t: "2026-10-06T17:27:50+02:00", op: autoplay, uid: fav1, note: "Bayern läuft (Operator); ESP ohne playingUid"}
+  - {t: "2026-10-06T17:28:04+02:00", op: select, uid: fav0, note: "User → Rock Antenne; eager readCount 382→2345"}
+  - {t: "2026-10-06T17:28:42+02:00", op: pause, note: "User ins Haus — Session pausiert"}
+observations:
+  - {t: "2026-10-06T17:22:09+02:00", what: "muster_a_like", value: "fav0", note: "Rock Antenne: hostAbs=1441792 frozen, und=7753728 polluted, readCount=2156; kein Ton; Spielzeit unbekannt"}
+  - {t: "2026-10-06T17:23:34+02:00", what: "muster_b", value: "fav2", note: "BOB: hostAbs→0 und→0; fav2 bytes→512KiB; readCount 2160→2284 dann stop — Cache"}
+  - {t: "2026-10-06T17:24:38+02:00", what: "led_blink", value: "fav2", note: "LED geblinkt bei BOB; BOB gleich durch; kein Ton"}
+  - {t: "2026-10-06T17:25:24+02:00", what: "led_rule", value: "fav1_first", note: "Bayern war erster Autoplay-Sender → kein Blink beim Wechsel von Bayern"}
+  - {t: "2026-10-06T17:26:12+02:00", what: "bridge", value: "hello_ack", note: "nach RST reconnect tcp; map resent"}
+  - {t: "2026-10-06T17:28:11+02:00", what: "eager_read", value: "fav0", note: "nach Bayern→Rock: readCount 382→2345 in ~8s, dann freeze; playingUid leer"}
+  - {t: "2026-10-06T17:28:42+02:00", what: "heard", value: "none", note: "Rock Antenne nach Wechsel weiter kein Ton"}
 heard: none
-notes: "F1 Decode-Start + F2 Cache — ausfüllen nach Lauf"
+notes: >
+  F1: Silence auf fav0 (vor RST) und fav2; genaue HU-Spielzeit unbekannt.
+  F2 Cache: unvollständig (Pause) — nach RST HU Autoplay ohne ESP playingUid;
+  Eager-Read bei manuellem Wechsel Bayern→Rock sichtbar.
+  status-poll.jsonl = seg1 recovered from status-poll-1721.out (180) + boot2 (298);
+  raw boot2 also status-poll-boot2.jsonl.bak. Kein Stall-OTA.
 status_poll:
   interval_s: 1.0
   out: status-poll.jsonl
+artifacts:
+  - status-poll.jsonl
+  - status-poll-1721.out
+  - status-poll-boot2.jsonl.bak
+  - heard-notes.log
+  - otg-replug-1720.log
+  - bob-rst-watch.log

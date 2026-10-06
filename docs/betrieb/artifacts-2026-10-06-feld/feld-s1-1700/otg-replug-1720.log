@@ -1,0 +1,12 @@
+=== 2026-10-06T17:20:25+02:00 OTG-replug watch PD0085 ===
+17:20:26 usb False otg False susp False msc True pumpTcp True playing None slots []
+17:20:27 usb False otg False susp False msc True pumpTcp True playing None slots []
+17:20:28 usb False otg False susp False msc True pumpTcp True playing None slots []
+17:20:30 usb False otg False susp False msc True pumpTcp True playing None slots []
+17:20:31 usb False otg False susp False msc True pumpTcp True playing None slots []
+17:20:32 usb True otg True susp False msc True pumpTcp True playing None slots []
+17:20:33 usb True otg True susp False msc True pumpTcp True playing None slots []
+17:20:34 usb True otg True susp False msc True pumpTcp True playing None slots []
+17:20:35 usb True otg True susp False msc True pumpTcp True playing None slots []
+17:20:36 usb True otg True susp False msc True pumpTcp True playing None slots []
+Oct 06 17:20:33 Pidrive python3[3796074]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]

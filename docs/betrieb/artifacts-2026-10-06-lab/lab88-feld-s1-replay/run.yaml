@@ -1,0 +1,40 @@
+# Lab-Replay von Feld feld-s1-1700 (Silence / Muster A+B)
+run_id: 2026-10-06-lab88-feld-s1-replay
+stufe: 1
+env: lab
+fw: 0.4.46-dev
+fw_commit: d120ff9
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+stall_ms: 0
+station: mixed
+bitrate_kbps: 48
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T18:16:00+02:00"
+actions:
+  - {t: "2026-10-06T18:16:00+02:00", op: eager, uid: fav1, note: "A: fav1→fav2 no-arm (Feld Bayern→BOB Cache)"}
+  - {t: "2026-10-06T18:16:10+02:00", op: eager, uid: fav0, note: "B: fav0 arm+pump; fav2 snap timeout"}
+  - {t: "2026-10-06T18:18:17+02:00", op: golden, note: "G1,G2 regression"}
+observations:
+  - {t: "2026-10-06T18:16:05+02:00", what: "muster_b", value: "fav1", note: "A: hostAbs=0 und=0 maxSeq=524288 — Feld BOB Cache bestätigt"}
+  - {t: "2026-10-06T18:17:00+02:00", what: "muster_a_like", value: "fav0", note: "B: hostAbs≈8.39MiB und≈8.38MiB; Feld fav0 host=1.44MiB und=7.75MiB — gleiche Familie, Lab füllt weiter"}
+  - {t: "2026-10-06T18:17:40+02:00", what: "lab_stress", value: "fav0", note: "ESP /api/status Timeout nach fav0-Eager+Pump (Feld: kein Crash, nur Silence)"}
+  - {t: "2026-10-06T18:18:47+02:00", what: "golden", value: "G1,G2", note: "PASS; G1 ear live=0 SILENCE; G2 hostAbs_after_arm=0"}
+heard: none
+notes: >
+  Replay von feld-s1-1700 auf .88: Muster B (A) reproduziert; Muster A-like (B) auf fav0;
+  G1/G2 PASS. B unvollständig (Timeout nach fav0). Kein Stall.
+status_poll:
+  interval_s: 1.0
+  out: ""
+artifacts:
+  - A-fav1-fav2-noarm/
+  - B-fav0-fav2-arm/
+  - G1G2/

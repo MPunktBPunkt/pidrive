@@ -1,0 +1,41 @@
+{
+  "uptime": "2h 6min",
+  "serial": "PD0125",
+  "play": "",
+  "active": false,
+  "armed": false,
+  "hostAbs": 0,
+  "absBase": 0,
+  "absEnd": 0,
+  "streamBytes": 18452480,
+  "underruns": 0,
+  "liveBytes": 18452480,
+  "readCount": 10768,
+  "bytesFile": 37531648,
+  "slots": [
+    {
+      "uid": "fav0",
+      "bytes": 10776576,
+      "maxSeq": 188416,
+      "lba0": 81
+    },
+    {
+      "uid": "fav1",
+      "bytes": 18366464,
+      "maxSeq": 524288,
+      "lba0": 16465
+    },
+    {
+      "uid": "fav2",
+      "bytes": 8388608,
+      "maxSeq": 524288,
+      "lba0": 17489
+    },
+    {
+      "uid": "pump:page_next",
+      "bytes": 0,
+      "maxSeq": 0,
+      "lba0": 18513
+    }
+  ]
+}

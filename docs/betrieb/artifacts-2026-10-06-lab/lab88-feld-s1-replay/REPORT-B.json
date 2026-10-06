@@ -1,0 +1,107 @@
+{
+  "gap_ms": 4.0,
+  "pump_bps": 9000,
+  "uid": "fav0",
+  "next": "fav2",
+  "arm_before_read": true,
+  "steps": [
+    {
+      "op": "note",
+      "err": "TimeoutError on status snap after fav2 eager; fav0 phase captured"
+    }
+  ],
+  "pre": {
+    "uptime": "2h 6min",
+    "serial": "PD0127",
+    "play": "",
+    "active": true,
+    "armed": false,
+    "hostAbs": 0,
+    "absBase": 0,
+    "absEnd": 0,
+    "streamBytes": 18452480,
+    "underruns": 0,
+    "liveBytes": 18452480,
+    "readCount": 12819,
+    "bytesFile": 38580224,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 10776576,
+        "maxSeq": 188416,
+        "lba0": 81
+      },
+      {
+        "uid": "fav1",
+        "bytes": 18890752,
+        "maxSeq": 524288,
+        "lba0": 16465
+      },
+      {
+        "uid": "fav2",
+        "bytes": 8912896,
+        "maxSeq": 524288,
+        "lba0": 17489
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513
+      }
+    ]
+  },
+  "after_uid": {
+    "uptime": "2h 7min",
+    "serial": "PD0127",
+    "play": "",
+    "active": true,
+    "armed": true,
+    "hostAbs": 8388096,
+    "absBase": 27968,
+    "absEnd": 77120,
+    "streamBytes": 26841088,
+    "underruns": 8379096,
+    "liveBytes": 18461992,
+    "readCount": 29203,
+    "bytesFile": 46968832,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 19165184,
+        "maxSeq": 8388608,
+        "lba0": 81
+      },
+      {
+        "uid": "fav1",
+        "bytes": 18890752,
+        "maxSeq": 524288,
+        "lba0": 16465
+      },
+      {
+        "uid": "fav2",
+        "bytes": 8912896,
+        "maxSeq": 524288,
+        "lba0": 17489
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513
+      }
+    ]
+  },
+  "classification": {
+    "hostAbs": 8388096,
+    "underruns": 8379096,
+    "hint": "Muster_A_like",
+    "note": "matches field F1 Rock: high und vs host; field host frozen earlier (1.4MiB) lab filled ~8MiB"
+  },
+  "feld_compare": {
+    "feld_fav0_hostAbs": 1441792,
+    "feld_fav0_und": 7753728,
+    "lab_after_fav0_hostAbs": 8388096,
+    "lab_after_fav0_und": 8379096
+  }
+}
