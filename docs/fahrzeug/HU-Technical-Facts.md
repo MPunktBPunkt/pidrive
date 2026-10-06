@@ -193,9 +193,13 @@ Mit Stille-bei-Miss sind pro Auswahl höchstens **Ringinhalt beim Arm + R_prod �
 | Q1 | Wie lange darf ein READ10 dauern, ohne dass die HU resettet? | Stall-Leiter 300/700/1500/3000 ms bei 128k; `inquiry`/`plugCount`/`remountGen` beobachten |
 | Q2 | Spielt die HU während des Lesens oder erst nach Read-Ende? | s1-1700 **nicht entschieden** (kein Video/Timer). Nächster Termin: Spielzeit-Zähler + Video gegen `slotMap.fav0.b` / EOF (Stufenplan 1.2) |
 | Q3 | Invalidiert Remount / neue Serial / geänderte Dateigröße den Cache? | Teil: nach ESP-RST in s1-1700 wurde fav2 erneut per USB gelesen (`F2-TEIL-s1-1700.md`). Saubere fav1→fav2→fav1- + OTG-Kette fehlt |
-| Q4 | Wie groß ist der HU-Cache maximal? | Slot ≥ 64 MiB anbieten; maximale gelesene Menge ohne Abwahl messen |
+| Q4 | Wie groß ist der HU-Cache / Read-Ahead? | **Aufteilen** — siehe Katalog [`EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md`](../betrieb/artifacts-2026-10-06-feld/EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md) |
+| Q4a | Max. Eager-Read **einer** Datei? | Größenleiter 512 KiB…64 MiB Silence; `maxSeq`/`bytes` ohne Abwahl |
+| Q4b | Max. Bytes/Anzahl **mehrerer** gecachter Dateien? | N=1…64 × 512 KiB; Re-Select → Hit (keine Body-Reads) vs Miss |
+| Q4c | Eviction-Strategie? | Sequenz dann frühe Datei erneut; optional Rückwärtslauf — FIFO/LRU/? |
 | Q5 | In welcher Reihenfolge werden Tracks gewechselt / vorgelesen? | Mehrere Dateien mit eindeutigen Namen; Wechselfolge protokollieren (beobachtet: Bayern → BOB, zweimal) |
 | Q6 | Wie reagiert die HU auf gültiges, kontinuierlich nachgeliefertes MP3? | ergibt sich aus dem ersten erfolgreichen Stall-Lauf |
+| Q7 | Bekannte Prefill bis Offset X, dann Backpressure — wo stoppt/wartet die HU? | **nur nach Stall-Go**; Silence hinter X verbieten (sonst Cursor-Versatz). Marker-Blöcke zur Offset-Diagnose |
 
 ---
 

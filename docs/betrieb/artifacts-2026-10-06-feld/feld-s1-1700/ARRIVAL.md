@@ -48,3 +48,10 @@ Nicht aus `hostAbs`/LED ableiten.
 - `heard` / observations in `run.yaml` → `./run-ingest.sh`
 
 Stall-Go erst nach F1 + Lab C1/C2 (bereits grün).
+
+## Nicht morgen (parken)
+
+- Multi-File-Cache-Matrix / 64×512 KiB (Q4b) — lohnt, aber eigener Termin  
+- Eager-Leiter bis 64 MiB (Q4a)  
+- Marker-Offset-Diagnose / Live-Grenze@300 KiB — braucht Stall-FW oder reine Diagnose ohne Silence-Zukunft  
+→ [`EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md`](../EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md)

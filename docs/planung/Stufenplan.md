@@ -174,6 +174,9 @@ USB-Stick mit zwei Dateien: 128-kbit-MP3 mit 5 MB und mit 100 MB (gleicher Inhal
 - Track-Wechsel-Lücke an EOF stoppen (bekannt ~6 s): Zeit zwischen Ende Spielzeit fav1 (87 s) und Start nächster Track.
 - Next-Track-Prefetch: Welcher Slot wird nach EOF gelesen, und wann?
 
+### 1.6 Später (nicht mit F1 vermischen): Cache-Kapazität Q4a–c
+Drei Fav-Slots reichen nicht, um die HU-Cachegröße zu schätzen. Nach F1/F2: Eager einer Datei (Größenleiter), Multi-File Hit/Miss-Matrix, Eviction-Probe — Katalog [`EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md`](../betrieb/artifacts-2026-10-06-feld/EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md). Live-Stall und Cache-Matrix **getrennte** Experimente.
+
 **Fertig, wenn:** F1 eindeutig entschieden, F2 a–d beantwortet, alle Läufe mit `run.yaml` abgelegt unter `docs/betrieb/artifacts-<datum>-feld-s1/`. Ergebnisse als Fakten in [HU-Technical-Facts.md](../fahrzeug/HU-Technical-Facts.md) eintragen (Q-Fragen schließen).
 
 ---

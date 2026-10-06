@@ -75,6 +75,13 @@
 | **M5 = Stufe 1 F2** | Cache über Abwahl / Remount (`fav1→fav2→fav1`, OTG) | ❓ unvollständig; RST-Teil siehe `F2-TEIL-s1-1700.md` |
 | **M6** | Ergebnisse → `HU-Technical-Facts.md` Q1–Q3 / R12–R14 | R14 ✅; Q1–Q3 / R12–R13 weiter offen |
 
+### Nach F1/F2 (eigenes Paket, nicht Stall)
+
+| ID | Maßnahme | Abnahme |
+|----|----------|---------|
+| **M13 = Q4a–c** | Eager einer Datei + Multi-File-Cache-Matrix + Eviction — **getrennt** von Live-Stall | siehe [`EXPERIMENTKATALOG-Q4-…`](EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md) |
+| **M14** | Marker-Blöcke / Offset-Log (Diagnose Cursor vs Producer) | READ-Map mit Pattern A/B/C…; kein Silence-als-Zukunft hinter Live-Grenze |
+
 ### Lab parallel (zweite Instanz)
 
 | ID | Maßnahme | Abnahme |
@@ -128,9 +135,12 @@ Stufe 1 F1?
 
 1. **Feld (Priorität):** M4/F1 per Video + Spielzeit-Zähler; M5/F2 `fav1→fav2→fav1` + OTG-Remount — **kein** Stall-OTA. Siehe aktualisiertes [`feld-s1-1700/ARRIVAL.md`](feld-s1-1700/ARRIVAL.md).  
 2. **Lab:** C1+C2 erledigt (`all-c2`); G6 Lab-F2-Rehearsal grün.  
-3. **Stall-Go erst wenn:** F1 entschieden. Kein `stall_ms`-Flash vor Go.
+3. **Stall-Go erst wenn:** F1 entschieden. Kein `stall_ms`-Flash vor Go.  
+4. **Danach (nicht morgen vermischen):** M13 Q4a–c Cache-Kapazität; M14 Marker; Live-Grenze@X nur mit Stall-FW.
 
 **PASS-Kriterium unverändert:** `live>0 ∧ und=0 ∧ behind=0` anhaltend + Ohr — aber Interpretation von `hostAbs`-„Burst“ ist nicht mehr Ringmaß.
+
+**Cursor-Klarstellung (GPT 2026-10-07):** Bekannte Dateidaten helfen zur Positionsdiagnose; Silence bei Miss simuliert eine **falsche Zukunft** — die HU holt diese Offsets nicht erneut. Streaming braucht Backpressure, nicht nur „File vorher füllen“. Drei Slots reichen nicht für Cache-Größe → Q4b.
 
 ## 8. Ampel nach s1-1700 + Reviews
 
