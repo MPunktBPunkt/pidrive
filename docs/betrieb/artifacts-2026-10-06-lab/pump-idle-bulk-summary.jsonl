@@ -1,0 +1,3 @@
+{"label": "bulk-baseline", "abs_bps": 840078.1024049346, "pumped_bps": 840078.1024049346, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 512, "gap_s": 0.0002, "batch_frames": 1}}
+{"label": "bulk-gap0", "abs_bps": 796629.6713862945, "pumped_bps": 796629.6713862945, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 512, "gap_s": 0.0, "batch_frames": 1}}
+{"label": "bulk-batch8", "abs_bps": 837806.7879583153, "pumped_bps": 837806.7879583153, "cfg": {"duration_s": 8.0, "chunk": 4096, "frame_max": 512, "gap_s": 0.0, "batch_frames": 8}}

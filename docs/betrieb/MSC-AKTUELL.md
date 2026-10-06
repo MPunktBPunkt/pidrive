@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-06 — Lab-Mechanik Prefill≥Burst 🟢 · Ceiling ~70 KB/s · **nächstes: Feld-Erstburst bei gültigem MP3** · FW `0.4.45-dev`  
-**Phase:** Baustelle B — Bridge Prefill+Hold; optional Lab Bulk-`drainTcp` · Freeze hält
+**Stand:** 2026-10-06 Lab — **Bulk-drainTcp 0.4.46-dev auf .88:** Idle ~840 KB/s · async Hold-PASS inkl. 248 KiB @~275 KB/s · Feld noch 0.4.45  
+**Phase:** Baustelle B — Bridge Prefill+Hold+lokale Hold-Schätzung; Feld-OTA 0.4.46 nach Abstimmung · Freeze Feld hält
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -28,6 +28,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0L10 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md) | **Lab Async:** Free=18:07 · Hold behind=0 · Pace unter MSC-Last offen |
 | 0L11 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-PUMP-IDLE-BURST-REALISM.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-PUMP-IDLE-BURST-REALISM.md) | **Lab Idle+Burst:** Pump-Ceiling ~70 KB/s · Prefill≥Burst async PASS |
 | 0L12 | [`artifacts-2026-10-06-lab/lab88-async-064741-burst-then-slow/NOTE-BURST-THEN-SLOW.md`](artifacts-2026-10-06-lab/lab88-async-064741-burst-then-slow/NOTE-BURST-THEN-SLOW.md) | Burst-then-Slow: und=0, behind≠0 (kein formaler PASS) |
+| 0L13 | [`artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md`](artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md) | **Lab Bulk-drainTcp:** Idle ~840 KB/s · maxpump-hold PASS |
 | 0k7 | [`artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md`](artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md) | **Review Mistral+GPT+Claude** zu c99ac36 — Maßnahmen |
 | 0k6 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-CLAUDE-ASYNC-eb91d4e.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-CLAUDE-ASYNC-eb91d4e.md) | Review Mistral+Claude zu eb91d4e (Rate-Korrektur) |
 | 0k4 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md) | Review Mistral+GPT zu 8d4f028 |
@@ -57,7 +58,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | P1 Body-Next | EVIDENCED |
 | Feld-Oracle B | **PASS** |
 | Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
-| AV / Ohr | Prefill≥Burst Lab-Mechanik 🟢 · Burst-then-Slow und=0/behind≠0 🟡 · Feld-Ton 🔴 |
+| AV / Ohr | Lab Bulk-Pump ~840 KB/s · async Hold-PASS (248 KiB) 🟢 · Feld-Ton 🔴 (Feld noch 0.4.45) |
 | Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
 | Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
 | Detect | Cold=mid Reject; **Head-Arm im Feld nach RST** belegt; Cooldown 5 s |
@@ -68,13 +69,12 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 
 ## 3. Nächste Schritte
 
-1. **Feld (P0):** RST → Bridge frisch → Gate → 1 Sender → Correlate: Erstburst-Länge Live-Pfad bei gültigem MP3, `d(hostAbs)/dt`/`d(absEnd)/dt`, Slot-bytes/readCount, Ohr. PASS: `live>0 ∧ und=0 ∧ behind=0` (nicht „behind bounded“).  
-2. **Lab optional:** Bulk-`drainTcp` auf .88 (Ceiling-Ursache); Hold strenger bis behind=0.  
-3. Freeze hält — PSRAM/Pacing/Detect erst nach Feldmaß.
+1. **Feld (P0):** OTA `0.4.46-dev` (Bulk-drainTcp) nach Abstimmung → RST → Bridge → Gate → 1 Sender → Correlate + Ohr.  
+2. **Bridge:** Prefill + Hold mit lokaler absEnd-Schätzung (wie Lab-Tool); PASS `live>0 ∧ und=0 ∧ behind=0`.  
+3. Freeze Feld hält bis OTA-Go; Lab .88 bereits `0.4.46-dev`.
 
 ```
-Prefill≥Burst Mechanik 🟢 · Burst-then-Slow und=0 / behind≠0
-Ceiling ~70 KB/s · Ursache: Byte-Read (H), nicht Frame/s
-Nächstes: Feld-Erstburst bei Live-MP3
-Freeze hält
+Bulk-drainTcp: Idle ~840 KB/s (war ~70)
+maxpump-hold 248 KiB PASS (pump≈host)
+Nächstes: Feld-OTA 0.4.46 + Ton
 ```

@@ -184,11 +184,12 @@ def id3(title: str) -> bytes:
     ) + frame
 
 
-def cursor_hold_allows(st: dict, ring_cap: int, next_chunk: int = 0) -> bool:
+def cursor_hold_allows(st: dict, ring_cap: int, next_chunk: int = 0, margin: int = 4096) -> bool:
     """Producer may write only while window cannot fully outrun the host cursor.
 
     GPT rule: absEnd <= hostAbs + cap  (equiv. absBase <= hostAbs when ring full).
     Before cursor is armed / hostAbs==0: allow fill (Prefill/Pace warm-up).
+    margin: stop early so poll lag cannot leave behind_base > 0.
     """
     if not st.get("cursorArmed") or int(st.get("hostAbsCursor") or 0) <= 0:
         return True
@@ -197,9 +198,10 @@ def cursor_hold_allows(st: dict, ring_cap: int, next_chunk: int = 0) -> bool:
     abs_end = int(st.get("absEnd") or 0)
     if abs_end <= 0 and abs_base <= 0:
         return True
-    if abs_end + max(0, next_chunk) > host + ring_cap:
+    m = max(0, int(margin))
+    if abs_end + max(0, next_chunk) > host + ring_cap - m:
         return False
-    if abs_base >= host and abs_end > 0:
+    if abs_base + m >= host and abs_end > 0:
         return False
     return True
 
@@ -268,8 +270,9 @@ class AsyncProducer(threading.Thread):
         cursor_hold: bool,
         ring_cap: int,
         stop_evt: threading.Event,
-        hold_poll_ms: float = 80.0,
+        hold_poll_ms: float = 25.0,
         gap_s: float = 0.0002,
+        hold_margin: int = 4096,
     ):
         super().__init__(daemon=True)
         self.pump = pump
@@ -282,6 +285,7 @@ class AsyncProducer(threading.Thread):
         self.stop_evt = stop_evt
         self.hold_poll_ms = hold_poll_ms
         self.gap_s = gap_s
+        self.hold_margin = hold_margin
         self.pumped = 0
         self.hold_pauses = 0
         self.hold_paused = False
@@ -290,6 +294,8 @@ class AsyncProducer(threading.Thread):
         self.t_stop = 0.0
         self._last_st: dict | None = None
         self._last_st_ts = 0.0
+        self._local_abs_end: int | None = None
+        self._local_abs_base: int | None = None
 
     def _status(self) -> dict | None:
         now = time.time()
@@ -298,6 +304,9 @@ class AsyncProducer(threading.Thread):
         try:
             self._last_st = snap(self.esp, "prod", retries=2)
             self._last_st_ts = time.time()
+            # Resync local estimates from ESP truth
+            self._local_abs_end = int(self._last_st.get("absEnd") or 0)
+            self._local_abs_base = int(self._last_st.get("absBase") or 0)
             return self._last_st
         except Exception:
             return self._last_st
@@ -312,7 +321,19 @@ class AsyncProducer(threading.Thread):
             if self.cursor_hold:
                 st = self._status()
                 if st is not None:
-                    allow = cursor_hold_allows(st, self.ring_cap, self.chunk)
+                    # Use local end/base between polls so fast pump cannot overshoot.
+                    st_eff = dict(st)
+                    if self._local_abs_end is not None:
+                        st_eff["absEnd"] = max(int(st.get("absEnd") or 0), self._local_abs_end)
+                    if self._local_abs_base is not None:
+                        # Ring full: base tracks end - cap
+                        end = int(st_eff["absEnd"])
+                        cap = self.ring_cap
+                        if end >= cap:
+                            st_eff["absBase"] = max(int(st.get("absBase") or 0), end - cap)
+                    allow = cursor_hold_allows(
+                        st_eff, self.ring_cap, self.chunk, margin=self.hold_margin
+                    )
                 if not allow:
                     if not self.hold_paused:
                         self.hold_pauses += 1
@@ -327,6 +348,10 @@ class AsyncProducer(threading.Thread):
                 try:
                     self.pump.send_bin(KIND_AUDIO, self.mp3[off : off + n], gap_s=self.gap_s)
                     self.pumped += n
+                    if self._local_abs_end is not None:
+                        self._local_abs_end += n
+                    elif self.cursor_hold:
+                        self._local_abs_end = n
                     off = (off + n) % max(1, len(self.mp3))
                 except OSError:
                     break
@@ -334,7 +359,7 @@ class AsyncProducer(threading.Thread):
             elapsed = time.time() - t0
             sleep_for = interval - elapsed
             if self.cursor_hold and self.hold_paused:
-                time.sleep(max(0.01, min(sleep_for if sleep_for > 0 else 0.02, 0.05)))
+                time.sleep(max(0.005, min(sleep_for if sleep_for > 0 else 0.01, 0.03)))
             elif sleep_for > 0:
                 time.sleep(sleep_for)
         self.t_stop = time.time()
@@ -371,6 +396,8 @@ def main() -> int:
     ap.add_argument("--pump-gap-s", type=float, default=0.0002, help="Sleep between pump TCP frames")
     ap.add_argument("--batch-frames", type=int, default=1, help="Frames per sendall()")
     ap.add_argument("--cursor-hold", action="store_true")
+    ap.add_argument("--hold-poll-ms", type=float, default=25.0)
+    ap.add_argument("--hold-margin", type=int, default=4096, help="Stop Hold this many bytes early")
     ap.add_argument("--ring-cap", type=int, default=49152)
     ap.add_argument("--host-pause-after-kib", type=int, default=0)
     ap.add_argument("--host-pause-s", type=float, default=0)
@@ -466,6 +493,8 @@ def main() -> int:
             ring_cap=args.ring_cap,
             stop_evt=stop_evt,
             gap_s=args.pump_gap_s,
+            hold_poll_ms=args.hold_poll_ms,
+            hold_margin=args.hold_margin,
         )
         producer.start()
         print(

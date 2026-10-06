@@ -1,0 +1,64 @@
+{
+  "label": "bts-localhold",
+  "prep": {
+    "steps": [
+      "restart_err=Expecting value: line 1 column 1 (char 0)"
+    ],
+    "serial": "PD0071",
+    "uptime": "12s"
+  },
+  "config": {
+    "pump_bps": 5000000.0,
+    "pump_chunk": 4096,
+    "frame_max": 512,
+    "pump_gap_s": 0.0,
+    "batch_frames": 8,
+    "host_gap_ms": 4.5,
+    "host_slow_after_kib": 48,
+    "host_slow_gap_ms": 800.0,
+    "prefill_kb": 48,
+    "post_head_kib": 96,
+    "cursor_hold": true,
+    "host_pause_after_kib": 0,
+    "host_pause_s": 0
+  },
+  "rates": {
+    "host_bps_observed": 9692.870584946344,
+    "pump_bps_target": 5000000.0,
+    "pump_target_over_host": 515.8430576557294,
+    "burst_s": 10.141887187957764,
+    "producer_life_s": 10.274966716766357,
+    "pumped_bytes": 135168,
+    "pump_bps_observed": 13155.079108863412,
+    "hold_pauses": 14,
+    "note": "pump_bps_observed = pumped_bytes / producer_life_s (not burst_s)"
+  },
+  "after_burst": {
+    "hostAbs": 143360,
+    "absBase": 135168,
+    "absEnd": 184320,
+    "live": 98304,
+    "und": 0,
+    "behind": 0,
+    "in_window": true
+  },
+  "after_fast_burst": {
+    "hostAbs": 94208,
+    "live": 49152,
+    "und": 0,
+    "behind": 0,
+    "in_window": true
+  },
+  "after_pause": null,
+  "final": {
+    "hostAbs": 143360,
+    "absBase": 135168,
+    "absEnd": 184320,
+    "live": 98304,
+    "und": 0,
+    "behind": 0,
+    "in_window": true
+  },
+  "pass_streaming": true,
+  "pass_pause": true
+}
