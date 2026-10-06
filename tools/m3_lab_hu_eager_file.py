@@ -139,7 +139,7 @@ def snap(esp: str) -> dict:
     }
 
 
-def setup_menu(pump: PumpTcp, uid: str) -> None:
+def setup_menu(pump: PumpTcp, uid: str | None = None) -> None:
     pump.send_json({"t": "hello", "ver": 1})
     pump.drain(0.8)
     pump.send_json({"t": "audio_stop"})
@@ -158,6 +158,23 @@ def setup_menu(pump: PumpTcp, uid: str) -> None:
         }
     )
     pump.drain(0.5)
+    if uid:
+        pump.send_json(
+            {
+                "t": "audio_start",
+                "uid": uid,
+                "codec": "mp3",
+                "br": "48k",
+                "cSrc": "lab",
+                "cPath": "lab",
+                "cTry": "lab",
+            }
+        )
+        pump.drain(0.4)
+        pump.send_bin(KIND_ID3, id3("Eager-File"))
+
+
+def arm_stream(pump: PumpTcp, uid: str) -> None:
     pump.send_json(
         {
             "t": "audio_start",
@@ -288,8 +305,21 @@ def main() -> int:
     prod_stats: dict = {}
     thr: threading.Thread | None = None
     try:
-        setup_menu(pump, args.uid if args.arm_before_read else "fav0")
+        setup_menu(pump)  # menu only; arm after remount
+        try:
+            http_json(f"{esp}/api/lab/remount", method="POST", body=b"{}")
+            report["steps"].append({"op": "remount", "ok": True})
+        except Exception as e:
+            report["steps"].append({"op": "remount_err", "err": str(e)})
+        time.sleep(1.5)
         wait_dev(args.dev)
+
+        if args.arm_before_read:
+            arm_stream(pump, args.uid)
+        else:
+            pump.send_json({"t": "audio_stop"})
+            time.sleep(0.1)
+
         st0 = snap(esp)
         (out / "status-pre.json").write_text(json.dumps(st0, indent=2))
         report["pre"] = st0
@@ -302,14 +332,6 @@ def main() -> int:
             if need not in by_uid:
                 raise SystemExit(f"missing slot {need}: {list(by_uid)}")
 
-        if args.arm_before_read:
-            # already started on uid
-            pass
-        else:
-            # Muster B path: read file cold, then optionally arm (caller can re-run with --arm-before-read)
-            pump.send_json({"t": "audio_stop"})
-            time.sleep(0.1)
-
         if args.pump_bps > 0 and args.arm_before_read:
             thr = threading.Thread(
                 target=producer_loop,
@@ -319,8 +341,13 @@ def main() -> int:
             thr.start()
             time.sleep(0.3)
 
+        def slot_size(s: dict) -> int:
+            # slotMap.bytes = host progress, not file size; prefer LBA span
+            l0, l1 = int(s["lba0"]), int(s["lba1"])
+            return max(512, (l1 - l0 + 1) * 512)
+
         s1 = by_uid[args.uid]
-        size1 = int(s1.get("bytes") or 524288)
+        size1 = slot_size(s1)
         r1 = eager_read_slot(args.dev, int(s1["lba0"]), size1, args.gap_ms)
         report["steps"].append({"op": "eager", "uid": args.uid, **r1})
         mid = snap(esp)
@@ -328,7 +355,7 @@ def main() -> int:
         report["after_uid"] = mid
 
         s2 = by_uid[args.next_uid]
-        size2 = int(s2.get("bytes") or 524288)
+        size2 = slot_size(s2)
         r2 = eager_read_slot(args.dev, int(s2["lba0"]), size2, args.gap_ms)
         report["steps"].append({"op": "eager_next", "uid": args.next_uid, **r2})
         post = snap(esp)

@@ -1,26 +1,37 @@
-# Lab-NOTE: Stufe 0 + Eager-Mimic / Profil (2026-10-06)
+# Lab-NOTE: Stufe 0–2 Lab (2026-10-06)
 
-**Bezug:** [`Stufenplan.md`](../../planung/Stufenplan.md) · [`MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md`](../artifacts-2026-10-06-feld/MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md)
+**Bezug:** [`Stufenplan.md`](../../planung/Stufenplan.md) · [`KONZEPT-HU-SIM-NBT-2026-10-06.md`](KONZEPT-HU-SIM-NBT-2026-10-06.md) · [`MASSNAHMEN-…`](../artifacts-2026-10-06-feld/MASSNAHMEN-HU-CACHE-BACKPRESSURE-2026-10-06.md)
 
-## Erledigt (ohne Stall-FW)
+## Erledigt
 
 | ID | Artefakt | Abnahme |
 |----|----------|---------|
-| M1 | `docs/betrieb/templates/run.yaml` · `tools/feld_status_poll.py` | 1 Hz + Wanduhr |
-| M2 | Spike-Rest in `SPIKE-TINYUSB-READ10-2026-10-06.md` | USBMSC 1:1, USB-Task max prio, BUFSIZE=4096 |
-| M3 | `tools/nbt_profile_extract.py` · `tools/profiles/nbt_evo_2026-10-06.json` | gap median **4** ms, read_n mode **4096**, ACCEPT PASS |
-| O6 | `soft_rst` / prep in `m3_lab_async_producer.py`, `m3_lab_arm_timeline.py` | leerer Restart-Body ≠ Fehler |
-| Mimic | `tools/m3_lab_hu_eager_file.py` | fav1→fav2 @ 4 KiB / 4 ms; `--pump-bps 9000`; `--arm-before-read` |
-| Bridge | `esp32.pidrive/tools/pump_bridge.py` | `audio_target_bps(bitrate)` (48k→9000, 128k→24000); `--marker` |
+| M1 | `templates/run.yaml` · `feld_status_poll.py` | 1 Hz + Wanduhr |
+| M2 | Spike TinyUSB | USBMSC 1:1, USB-Task max prio, BUFSIZE=4096 |
+| M3 | `nbt_profile_extract` · `nbt_evo_2026-10-06.json` | gap median **4** ms, n=4096 |
+| O6 | soft_rst empty-body | kein `restart_err=Expecting value` |
+| Mimic | `m3_lab_hu_eager_file.py` | Lab-Lauf arm: hostAbs/und≈524288, maxSeq=524288 (**Muster A**) |
+| Bridge | `pump_bridge.py` | bitrate→target_bps; `--marker` |
+| Sim | `nbt_hu_sim.py` | self-test + Golden **G1/G2/G4/G5 PASS** gegen 0.4.46 |
 
-## Lab-Lauf Eager (wenn `.88` gesteckt)
+## Lab-Läufe (Artefakte)
+
+| Lauf | Ergebnis |
+|------|----------|
+| `lab88-hu-eager-arm/` | Muster_A_like: und=hostAbs=524288, maxSeq=524288 |
+| `lab88-hu-eager-cold/` | Re-Read bei vollem maxSeq (Cursor unverändert) |
+| `lab88-nbt-hu-sim-g1g4/` | G1+G4 PASS (before_arm=86016; fav2 prefetch 1.2 s) |
+| `lab88-nbt-hu-sim-g2/` | G2 PASS: hostAbs=0 nach Cold-Read+Arm, und_delta=0 |
+| `lab88-nbt-hu-sim-g5/` | G5 PASS: burst median **8703** B/s, late **6143** B/s |
 
 ```bash
-sg disk -c 'python3 tools/m3_lab_hu_eager_file.py --dev /dev/sda --uid fav1 --next fav2 --arm-before-read'
-sg disk -c 'python3 tools/m3_lab_hu_eager_file.py --dev /dev/sda --uid fav1 --next fav2'  # cold / Muster-B-nah
+sg disk -c 'python3 tools/nbt_hu_sim.py --self-test'
+sg disk -c 'python3 tools/nbt_hu_sim.py --golden G1,G2,G4 --sg /dev/sg0'
+sg disk -c 'python3 tools/nbt_hu_sim.py --golden G5 --g5-s 68 --sg /dev/sg0'
 ```
 
-## Nicht in dieser Runde
+## Offen
 
-- FW `stall_ms` / Cursor-strict / `streamBytesServed_` Reset (Freeze)
-- Vollständiger `nbt_hu_sim` Golden G1–G5
+- **G3** (Ring-voll / 49 152 B LIVE) — noch nicht automatisiert
+- Vollständiger 3×-Repro-Lauf `ALL` hintereinander
+- FW Stall / `streamBytesServed_` Reset (Freeze)
