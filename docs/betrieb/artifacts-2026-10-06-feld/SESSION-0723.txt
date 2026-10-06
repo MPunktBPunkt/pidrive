@@ -1,0 +1,15 @@
+Aktuelle Feld-Session (vor Abfahrt 2026-10-06):
+
+OUT=/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-06-feld/feld-av-0723
+
+Im Auto:
+  cd "$OUT"
+  ./run-gate-check.sh
+  # Sender ~30s, parallel:
+  ./run-correlate.sh
+
+OTA (falls noch 0.4.45):
+  cd /home/martin/projects/pidrive
+  ./tools/feld_av_session_prep.sh --ota --skip-ssh --out "$OUT"
+
+OTA-Binary lokal: /home/martin/projects/esphub/esp32.pidrive/dist/pidrive.0.4.46-dev.ota.esp32s3.bin

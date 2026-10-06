@@ -14,6 +14,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0 | [`artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md`](artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md) | **Feld 18:07** — RST→Head-Arm, Ring voll, live=0 / kein Ton |
 | 0r | [`artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) | **Review Mistral+GPT** — RST-Trigger, 253952-Korrektur, P0 Lab |
 | 0f5 | [`artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md`](artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md) | Feld 17:55 — ohne RST kein Arm |
+| 0f6 | [`artifacts-2026-10-06-feld/FELD-AV-OPERATOR.md`](artifacts-2026-10-06-feld/FELD-AV-OPERATOR.md) | **Feld heute:** Gate → 1 Sender → Correlate + OTA 0.4.46 |
 | 0h | [`artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md`](artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md) | Lab Mid→Head armt |
 | 0p | [`artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md`](artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md) | Lab Prefill-vor-Arm PASS |
 | 0e2 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | Feld Abend 15:30 — Gate PASS, AV/Ohr FAIL Fenster/Arm |

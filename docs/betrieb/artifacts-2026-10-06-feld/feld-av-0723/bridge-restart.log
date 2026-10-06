@@ -1,0 +1,15 @@
+bridge_compile_OK
+active
+2626806 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k --msc-lock --reconnect 3
+Oct 05 15:30:28 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 05 15:30:30 Pidrive python3[1245019]: [tx] {"t":"ping"}
+Oct 05 15:30:30 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 05 15:30:31 Pidrive python3[1245019]: [msc-lock] frozen_reject want=[Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue] have=[Favoriten,Quellen,Stop,Mehr... (+3)] (n=2817)
+Oct 05 15:30:32 Pidrive python3[1245019]: [tx] {"t":"ping"}
+Oct 05 15:30:32 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 05 15:30:34 Pidrive python3[1245019]: [tx] {"t":"ping"}
+Oct 05 15:30:34 Pidrive python3[1245019]: [rx] {"t":"pong"}
+Oct 05 15:30:35 Pidrive systemd[1]: pidrive_pump_bridge.service: Deactivated successfully.
+Oct 05 15:30:35 Pidrive systemd[1]: pidrive_pump_bridge.service: Consumed 2min 25.043s CPU time.
+Oct 06 07:24:04 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 07:24:04 Pidrive python3[3295240]: connect failed: [Errno 113] No route to host — retry in 3s
