@@ -1,0 +1,37 @@
+# Stufe 1 Feld — F1 Decode-Start + F2 Cache (2026-10-07 Morgen)
+# Lab-Vorbereitung: Tools + Q4-Dry-Run; kein Stall-OTA
+run_id: feld-s1-morgen
+stufe: 1
+env: feld
+fw: 0.4.46-dev
+fw_commit: d120ff9
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+stall_ms: 0
+station: mixed
+bitrate_kbps: 48
+device: ""
+clock_sync:
+  esp_uptime_ms: 0
+  wall: ""
+actions: []
+observations: []
+heard: none
+notes: >
+  F1: Bridge stop, Video Spielzeit, f1-events.jsonl (s/t/e).
+  F2: f2-watch.jsonl während fav1→fav2→fav1 + OTG.
+  Lab prep: markers + q4 cache matrix dry-run on .88.
+status_poll:
+  interval_s: 1.0
+  out: status-poll.jsonl
+artifacts:
+  - status-poll.jsonl
+  - f1-events.jsonl
+  - f2-watch.jsonl
+  - ARRIVAL.md

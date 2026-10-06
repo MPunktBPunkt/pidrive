@@ -1,0 +1,6 @@
+{"step": "eager_fav1", "sim_reads": 128, "d_readCount": 128, "dt_s": 1.256, "covered": 524288}
+{"step": "eager_fav2", "sim_reads": 128, "d_readCount": 128, "dt_s": 1.317, "covered": 524288}
+{"step": "re_fav1_cache", "sim_reads": 0, "d_readCount": 0, "dt_s": 0.065, "covered": 524288, "expect_sim_reads_0": true}
+{"step": "post_remount_fav1", "sim_reads": 128, "d_readCount": 128, "dt_s": 1.307, "covered": 524288}
+{"step": "eager_fav0_8MiB", "sim_reads": 2048, "d_readCount": null, "dt_s": 32.018, "covered": 8388608, "size": 8388608, "snap_timeout": true}
+OUT docs/betrieb/artifacts-2026-10-07-feld/feld-s1-morgen/lab-prep/lab88-q4-cache-matrix overall=PASS

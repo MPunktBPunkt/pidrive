@@ -1,0 +1,416 @@
+{
+  "size": 8388608,
+  "section": 102400,
+  "sections": [
+    {
+      "section": 0,
+      "off": 0,
+      "tag": "ID30"
+    },
+    {
+      "section": 1,
+      "off": 102400,
+      "tag": "Mk01"
+    },
+    {
+      "section": 2,
+      "off": 204800,
+      "tag": "Mk02"
+    },
+    {
+      "section": 3,
+      "off": 307200,
+      "tag": "Mk03"
+    },
+    {
+      "section": 4,
+      "off": 409600,
+      "tag": "Mk04"
+    },
+    {
+      "section": 5,
+      "off": 512000,
+      "tag": "Mk05"
+    },
+    {
+      "section": 6,
+      "off": 614400,
+      "tag": "Mk06"
+    },
+    {
+      "section": 7,
+      "off": 716800,
+      "tag": "Mk07"
+    },
+    {
+      "section": 8,
+      "off": 819200,
+      "tag": "Mk08"
+    },
+    {
+      "section": 9,
+      "off": 921600,
+      "tag": "Mk09"
+    },
+    {
+      "section": 10,
+      "off": 1024000,
+      "tag": "Mk10"
+    },
+    {
+      "section": 11,
+      "off": 1126400,
+      "tag": "Mk11"
+    },
+    {
+      "section": 12,
+      "off": 1228800,
+      "tag": "Mk12"
+    },
+    {
+      "section": 13,
+      "off": 1331200,
+      "tag": "Mk13"
+    },
+    {
+      "section": 14,
+      "off": 1433600,
+      "tag": "Mk14"
+    },
+    {
+      "section": 15,
+      "off": 1536000,
+      "tag": "Mk15"
+    },
+    {
+      "section": 16,
+      "off": 1638400,
+      "tag": "Mk16"
+    },
+    {
+      "section": 17,
+      "off": 1740800,
+      "tag": "Mk17"
+    },
+    {
+      "section": 18,
+      "off": 1843200,
+      "tag": "Mk18"
+    },
+    {
+      "section": 19,
+      "off": 1945600,
+      "tag": "Mk19"
+    },
+    {
+      "section": 20,
+      "off": 2048000,
+      "tag": "Mk20"
+    },
+    {
+      "section": 21,
+      "off": 2150400,
+      "tag": "Mk21"
+    },
+    {
+      "section": 22,
+      "off": 2252800,
+      "tag": "Mk22"
+    },
+    {
+      "section": 23,
+      "off": 2355200,
+      "tag": "Mk23"
+    },
+    {
+      "section": 24,
+      "off": 2457600,
+      "tag": "Mk24"
+    },
+    {
+      "section": 25,
+      "off": 2560000,
+      "tag": "Mk25"
+    },
+    {
+      "section": 26,
+      "off": 2662400,
+      "tag": "Mk26"
+    },
+    {
+      "section": 27,
+      "off": 2764800,
+      "tag": "Mk27"
+    },
+    {
+      "section": 28,
+      "off": 2867200,
+      "tag": "Mk28"
+    },
+    {
+      "section": 29,
+      "off": 2969600,
+      "tag": "Mk29"
+    },
+    {
+      "section": 30,
+      "off": 3072000,
+      "tag": "Mk30"
+    },
+    {
+      "section": 31,
+      "off": 3174400,
+      "tag": "Mk31"
+    },
+    {
+      "section": 32,
+      "off": 3276800,
+      "tag": "Mk32"
+    },
+    {
+      "section": 33,
+      "off": 3379200,
+      "tag": "Mk33"
+    },
+    {
+      "section": 34,
+      "off": 3481600,
+      "tag": "Mk34"
+    },
+    {
+      "section": 35,
+      "off": 3584000,
+      "tag": "Mk35"
+    },
+    {
+      "section": 36,
+      "off": 3686400,
+      "tag": "Mk36"
+    },
+    {
+      "section": 37,
+      "off": 3788800,
+      "tag": "Mk37"
+    },
+    {
+      "section": 38,
+      "off": 3891200,
+      "tag": "Mk38"
+    },
+    {
+      "section": 39,
+      "off": 3993600,
+      "tag": "Mk39"
+    },
+    {
+      "section": 40,
+      "off": 4096000,
+      "tag": "Mk40"
+    },
+    {
+      "section": 41,
+      "off": 4198400,
+      "tag": "Mk41"
+    },
+    {
+      "section": 42,
+      "off": 4300800,
+      "tag": "Mk42"
+    },
+    {
+      "section": 43,
+      "off": 4403200,
+      "tag": "Mk43"
+    },
+    {
+      "section": 44,
+      "off": 4505600,
+      "tag": "Mk44"
+    },
+    {
+      "section": 45,
+      "off": 4608000,
+      "tag": "Mk45"
+    },
+    {
+      "section": 46,
+      "off": 4710400,
+      "tag": "Mk46"
+    },
+    {
+      "section": 47,
+      "off": 4812800,
+      "tag": "Mk47"
+    },
+    {
+      "section": 48,
+      "off": 4915200,
+      "tag": "Mk48"
+    },
+    {
+      "section": 49,
+      "off": 5017600,
+      "tag": "Mk49"
+    },
+    {
+      "section": 50,
+      "off": 5120000,
+      "tag": "Mk50"
+    },
+    {
+      "section": 51,
+      "off": 5222400,
+      "tag": "Mk51"
+    },
+    {
+      "section": 52,
+      "off": 5324800,
+      "tag": "Mk52"
+    },
+    {
+      "section": 53,
+      "off": 5427200,
+      "tag": "Mk53"
+    },
+    {
+      "section": 54,
+      "off": 5529600,
+      "tag": "Mk54"
+    },
+    {
+      "section": 55,
+      "off": 5632000,
+      "tag": "Mk55"
+    },
+    {
+      "section": 56,
+      "off": 5734400,
+      "tag": "Mk56"
+    },
+    {
+      "section": 57,
+      "off": 5836800,
+      "tag": "Mk57"
+    },
+    {
+      "section": 58,
+      "off": 5939200,
+      "tag": "Mk58"
+    },
+    {
+      "section": 59,
+      "off": 6041600,
+      "tag": "Mk59"
+    },
+    {
+      "section": 60,
+      "off": 6144000,
+      "tag": "Mk60"
+    },
+    {
+      "section": 61,
+      "off": 6246400,
+      "tag": "Mk61"
+    },
+    {
+      "section": 62,
+      "off": 6348800,
+      "tag": "Mk62"
+    },
+    {
+      "section": 63,
+      "off": 6451200,
+      "tag": "Mk63"
+    },
+    {
+      "section": 64,
+      "off": 6553600,
+      "tag": "Mk64"
+    },
+    {
+      "section": 65,
+      "off": 6656000,
+      "tag": "Mk65"
+    },
+    {
+      "section": 66,
+      "off": 6758400,
+      "tag": "Mk66"
+    },
+    {
+      "section": 67,
+      "off": 6860800,
+      "tag": "Mk67"
+    },
+    {
+      "section": 68,
+      "off": 6963200,
+      "tag": "Mk68"
+    },
+    {
+      "section": 69,
+      "off": 7065600,
+      "tag": "Mk69"
+    },
+    {
+      "section": 70,
+      "off": 7168000,
+      "tag": "Mk70"
+    },
+    {
+      "section": 71,
+      "off": 7270400,
+      "tag": "Mk71"
+    },
+    {
+      "section": 72,
+      "off": 7372800,
+      "tag": "Mk72"
+    },
+    {
+      "section": 73,
+      "off": 7475200,
+      "tag": "Mk73"
+    },
+    {
+      "section": 74,
+      "off": 7577600,
+      "tag": "Mk74"
+    },
+    {
+      "section": 75,
+      "off": 7680000,
+      "tag": "Mk75"
+    },
+    {
+      "section": 76,
+      "off": 7782400,
+      "tag": "Mk76"
+    },
+    {
+      "section": 77,
+      "off": 7884800,
+      "tag": "Mk77"
+    },
+    {
+      "section": 78,
+      "off": 7987200,
+      "tag": "Mk78"
+    },
+    {
+      "section": 79,
+      "off": 8089600,
+      "tag": "Mk79"
+    },
+    {
+      "section": 80,
+      "off": 8192000,
+      "tag": "Mk80"
+    },
+    {
+      "section": 81,
+      "off": 8294400,
+      "tag": "Mk81"
+    }
+  ]
+}
