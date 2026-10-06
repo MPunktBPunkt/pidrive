@@ -1,0 +1,27 @@
+# Stufe 1 Feld — Decode-Start + Cache (kein Stall-OTA)
+run_id: feld-s1-1700
+stufe: 1
+env: feld
+fw: 0.4.46-dev
+fw_commit: d120ff9
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+stall_ms: 0
+station: ""
+bitrate_kbps: 48
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T17:00:00+02:00"
+actions: []
+observations: []
+heard: none
+notes: "F1 Decode-Start + F2 Cache — ausfüllen nach Lauf"
+status_poll:
+  interval_s: 1.0
+  out: status-poll.jsonl
