@@ -1,0 +1,5 @@
+active
+2626806 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k --msc-lock --reconnect 3
+3318652 bash -c echo pidrive | sudo -S systemctl restart pidrive_pump_bridge; sleep 3; systemctl is-active pidrive_pump_bridge; pgrep -af "/home/pidrive/pump_bridge.py"; curl -sS -m 3 http://192.168.178.89/api/status | python3 -c "import sys,json;d=json.load(sys.stdin);print(\"esp pumpTcp\",d.get(\"pumpTcpUp\"),d.get(\"pumpTcpPeer\"),d.get(\"version\"),\"otg\",d.get(\"otgUp\"),\"plugged\",(d.get(\"msc\") or {}).get(\"plugged\"))"
+3318663 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k
+esp pumpTcp True 192.168.178.105 0.4.46-dev otg True plugged True

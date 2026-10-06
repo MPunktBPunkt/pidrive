@@ -1,0 +1,6 @@
+08:04:48 n=1 play 'Rock Antenne Bayern' act True armed False hostAbs 0 abs 340920 390072 und 0 guess 1 cold 2 rej 263 slot 1 streamB 0 buf 0
+08:04:50 n=2 play 'Rock Antenne Bayern' act True armed False hostAbs 0 abs 364848 414000 und 0 guess 1 cold 2 rej 263 slot 1 streamB 0 buf 0
+08:04:52 n=3 play 'Rock Antenne Bayern' act True armed False hostAbs 0 abs 382040 431192 und 0 guess 1 cold 2 rej 263 slot 1 streamB 0 buf 0
+08:04:55 n=4 play 'Rock Antenne Bayern' act True armed False hostAbs 0 abs 400848 450000 und 0 guess 1 cold 2 rej 263 slot 1 streamB 0 buf 0
+08:04:57 n=5 play 'Rock Antenne Bayern' act True armed False hostAbs 0 abs 418848 468000 und 0 guess 1 cold 2 rej 263 slot 1 streamB 0 buf 0
+08:04:59 n=6 play 'Rock Antenne Bayern' act True armed False hostAbs 0 abs 436848 486000 und 0 guess 1 cold 2 rej 263 slot 1 streamB 0 buf 0

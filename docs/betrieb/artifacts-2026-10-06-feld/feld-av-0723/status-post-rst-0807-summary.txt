@@ -1,0 +1,4 @@
+08:08:27 0.4.46-dev up 21s serial PD0084
+otg True plugged True pump True
+slots ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+GATE_NAMES PASS

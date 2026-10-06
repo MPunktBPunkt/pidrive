@@ -1,0 +1,5 @@
+08:03:07 0.4.46-dev up 17s serial PD0084
+otg True plugged True pump True peer 192.168.178.105
+slots ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+GATE_NAMES PASS
+play - guess 0 rej 136 cold 1

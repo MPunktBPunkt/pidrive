@@ -1,0 +1,19 @@
+{
+  "samples": 202,
+  "active_samples": 149,
+  "hostAbs_delta": 143360,
+  "duration_s": 87.02,
+  "host_bps_avg": 1647,
+  "max_host_step_bytes": 143360,
+  "max_step_bps": 250383,
+  "final": {
+    "underruns": 438272,
+    "liveBytes": 0,
+    "hostAbsCursor": 438272,
+    "host_behind_base": 186185,
+    "host_in_window": false,
+    "absBase": 624457,
+    "absEnd": 673609
+  },
+  "pass_streaming_heuristic": false
+}

@@ -1,0 +1,6 @@
+Oct 06 07:51:34 Pidrive python3[3318505]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+Oct 06 07:51:43 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 07:51:44 Pidrive python3[3318663]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:51:44 Pidrive python3[3318663]: [msc-lock] enabled=True seed_plugged=True
+---
+2626806 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k --msc-lock --reconnect 3

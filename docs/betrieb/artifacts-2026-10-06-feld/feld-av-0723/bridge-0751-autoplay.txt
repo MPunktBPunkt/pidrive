@@ -1,0 +1,40 @@
+Oct 06 07:50:07 Pidrive python3[3317149]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:50:10 Pidrive python3[3317149]:     send({"t": "audio_stop"})
+Oct 06 07:50:16 Pidrive python3[3317324]:     send({"t": "audio_stop"})
+Oct 06 07:50:23 Pidrive python3[3317429]:     send({"t": "audio_stop"})
+Oct 06 07:50:30 Pidrive python3[3317533]:     send({"t": "audio_stop"})
+Oct 06 07:50:37 Pidrive python3[3317639]:     send({"t": "audio_stop"})
+Oct 06 07:50:44 Pidrive python3[3317742]:     send({"t": "audio_stop"})
+Oct 06 07:50:50 Pidrive python3[3317840]:     send({"t": "audio_stop"})
+Oct 06 07:50:57 Pidrive python3[3317924]:     send({"t": "audio_stop"})
+Oct 06 07:51:04 Pidrive python3[3318025]:     send({"t": "audio_stop"})
+Oct 06 07:51:10 Pidrive python3[3318121]:     send({"t": "audio_stop"})
+Oct 06 07:51:17 Pidrive python3[3318215]:     send({"t": "audio_stop"})
+Oct 06 07:51:25 Pidrive python3[3318311]: [tx] {"t":"audio_stop"}
+Oct 06 07:51:25 Pidrive python3[3318311]: [bridge] tcp:192.168.178.89:9090 audio=48k paging=on
+Oct 06 07:51:27 Pidrive python3[3318311]: [tx] {"t":"menu_set","rev":5160,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"},{"uid":"pump:page_next","name":"Menue","kind":"action"}]}
+Oct 06 07:51:34 Pidrive python3[3318505]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:51:34 Pidrive python3[3318505]: [rx] {"t":"hello_ack","ver":"0.4.46-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Oct 06 07:51:34 Pidrive python3[3318505]: [tx] {"t":"audio_stop"}
+Oct 06 07:51:34 Pidrive python3[3318505]: [bridge] tcp:192.168.178.89:9090 audio=48k paging=on
+Oct 06 07:51:34 Pidrive python3[3318505]: [tx] {"t":"menu_set","rev":5161,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"},{"uid":"pump:page_next","name":"Menue","kind":"action"}]}
+Oct 06 07:51:34 Pidrive python3[3318505]: [msc-lock] sealing publish (seal)
+Oct 06 07:51:34 Pidrive python3[3318505]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Oct 06 07:51:34 Pidrive python3[3318505]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Oct 06 07:51:34 Pidrive python3[3318505]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+Oct 06 07:51:44 Pidrive python3[3318663]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:51:47 Pidrive python3[3318663]:     send({"t": "audio_stop"})
+Oct 06 07:51:51 Pidrive python3[3318765]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:51:53 Pidrive python3[3318765]:     send({"t": "audio_stop"})
+Oct 06 07:51:58 Pidrive python3[3318866]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:00 Pidrive python3[3318866]:     send({"t": "audio_stop"})
+Oct 06 07:52:04 Pidrive python3[3318953]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:07 Pidrive python3[3318953]:     send({"t": "audio_stop"})
+Oct 06 07:52:11 Pidrive python3[3319047]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:13 Pidrive python3[3319047]:     send({"t": "audio_stop"})
+Oct 06 07:52:17 Pidrive python3[3319125]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:20 Pidrive python3[3319125]:     send({"t": "audio_stop"})
+Oct 06 07:52:24 Pidrive python3[3319225]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:26 Pidrive python3[3319225]:     send({"t": "audio_stop"})
+Oct 06 07:52:30 Pidrive python3[3319311]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:33 Pidrive python3[3319311]:     send({"t": "audio_stop"})

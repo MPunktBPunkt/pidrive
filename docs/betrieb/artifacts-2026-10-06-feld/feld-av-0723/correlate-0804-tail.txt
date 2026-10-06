@@ -1,0 +1,10 @@
+08:04:55 play=fav1     act=1 armed=0 abs=404944..454096 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:56 play=fav1     act=1 armed=0 abs=409848..459000 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:56 play=fav1     act=1 armed=0 abs=418040..467192 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:57 play=fav1     act=1 armed=0 abs=418848..468000 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:58 play=fav1     act=1 armed=0 abs=427848..477000 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:58 play=fav1     act=1 armed=0 abs=430920..480072 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:59 play=fav1     act=1 armed=0 abs=436848..486000 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:04:59 play=fav1     act=1 armed=0 abs=441968..491120 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:05:00 play=fav1     act=1 armed=0 abs=445848..495000 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152
+08:05:00 play=fav1     act=1 armed=0 abs=451992..501144 host=0 in=0 ahead=0 live=0 und=0 ring=49152/49152

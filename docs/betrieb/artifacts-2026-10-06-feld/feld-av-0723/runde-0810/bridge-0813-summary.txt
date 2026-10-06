@@ -1,0 +1,31 @@
+30
+Oct 06 08:11:18 Pidrive python3[3333703]: [rx] {"t":"event","op":"play_uid","uid":"fav1"}
+Oct 06 08:11:18 Pidrive python3[3333703]: [trace] t=0ms play_uid=fav1
+Oct 06 08:11:18 Pidrive python3[3333703]: [tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+Oct 06 08:11:18 Pidrive python3[3333703]: [trace] audio_start sent uid=fav1 cover=file
+Oct 06 08:11:22 Pidrive python3[3333703]: [rx] {"t":"event","op":"play_uid","uid":"fav0"}
+Oct 06 08:11:22 Pidrive python3[3333703]: [trace] t=0ms play_uid=fav0
+Oct 06 08:11:43 Pidrive python3[3336154]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+Oct 06 08:11:46 Pidrive python3[3336154]: [rx] {"t":"event","op":"play_uid","uid":"fav0"}
+Oct 06 08:11:46 Pidrive python3[3336154]: [trace] t=0ms play_uid=fav0
+Oct 06 08:11:47 Pidrive python3[3336154]: [tx] {"t":"audio_start","uid":"fav0","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne.jpg","cTry":"stations/web_rock_antenne.jpg|stations/rock_antenne.jpg"}
+Oct 06 08:11:47 Pidrive python3[3336154]: [trace] audio_start sent uid=fav0 cover=file
+Oct 06 08:11:56 Pidrive python3[3336154]: [rx] {"t":"event","op":"play_uid","uid":"fav2"}
+Oct 06 08:11:56 Pidrive python3[3336154]: [trace] t=0ms play_uid=fav2
+Oct 06 08:11:56 Pidrive python3[3336154]: [audio] switch fav0 → fav2 (age=9.6s)
+Oct 06 08:11:58 Pidrive python3[3336154]: [tx] {"t":"audio_start","uid":"fav2","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_radio_bob.jpg","cTry":"stations/web_radio_bob.jpg|stations/radio_bob.jpg"}
+Oct 06 08:11:58 Pidrive python3[3336154]: [trace] audio_start sent uid=fav2 cover=file
+Oct 06 08:12:10 Pidrive python3[3336154]: [rx] {"t":"event","op":"play_uid","uid":"fav0"}
+Oct 06 08:12:10 Pidrive python3[3336154]: [trace] t=0ms play_uid=fav0
+Oct 06 08:12:10 Pidrive python3[3336154]: [audio] switch fav2 → fav0 (age=11.9s)
+Oct 06 08:12:10 Pidrive python3[3336154]: [tx] {"t":"audio_start","uid":"fav0","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne.jpg","cTry":"stations/web_rock_antenne.jpg|stations/rock_antenne.jpg"}
+Oct 06 08:12:10 Pidrive python3[3336154]: [trace] audio_start sent uid=fav0 cover=file
+Oct 06 08:12:15 Pidrive python3[3336154]: [rx] {"t":"event","op":"play_uid","uid":"fav1"}
+Oct 06 08:12:15 Pidrive python3[3336154]: [trace] t=0ms play_uid=fav1
+Oct 06 08:12:15 Pidrive python3[3336154]: [audio] switch fav0 → fav1 (age=4.5s)
+Oct 06 08:12:17 Pidrive python3[3336154]: [tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+Oct 06 08:12:17 Pidrive python3[3336154]: [trace] audio_start sent uid=fav1 cover=file
+Oct 06 08:12:35 Pidrive python3[3336154]: [rx] {"t":"event","op":"play_uid","uid":"fav1"}
+Oct 06 08:12:35 Pidrive python3[3336154]: [trace] t=0ms play_uid=fav1
+Oct 06 08:12:35 Pidrive python3[3336154]: [tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+Oct 06 08:12:35 Pidrive python3[3336154]: [trace] audio_start sent uid=fav1 cover=file

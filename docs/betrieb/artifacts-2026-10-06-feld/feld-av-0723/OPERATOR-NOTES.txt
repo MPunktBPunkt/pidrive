@@ -8,3 +8,63 @@ Ziel: Erstburst-Länge + Ton bei gültigem MP3 (nicht nur und-Zähler).
 3) Ein Sender tippen, ~30s hörig
 4) Parallel: run-correlate.sh (90s dense)
 5) Notieren: Ton ja/nein, welcher Sender
+2026-10-06T07:52:32+02:00
+correlate_already_running
+
+07:51 PD0082 autoplay startet BOB, wechselt gleich zu Bayern
+
+07:52 Bridge war inactive nach Crash-Loop; neu gestartet 07:53. Correlator läuft (flaches hostAbs=0).
+
+07:53 Ende BOB: LED aktiv. Bayern ohne Ton. Autoplay → Rock Antenne.
+
+07:55 vor Wechsel+Rock einige Sek LED, kein Ton. Operator drückt RST.
+
+07:56 Autoplay bleibt bei Rock Antenne; zweiter RST.
+
+07:56 Autoplay bleibt Rock; zweiter RST.
+
+07:58 Operator wählt Rock Antenne Bayern.
+
+07:58 Bayern: Detect PASS (guess=1, audio_start fav1, armed). AV FAIL: hostAbs stuck 438272, und=438272, live=0, host ahead of window; bufferMs=0. Ohr?
+
+07:59 Bayern kein Ton, wechselt gleich (Autoplay).
+
+08:00 Operator: zu BOB gewechselt. Rock Antenne war erster Sender, keine LED-Aktivität.
+
+08:00 BOB: play+audio_start fav2, cold_body once, but armed=False hostAbs=0 (HU liest nicht / Cache). Rock erster Sender ohne LED = Warm/Cache, kein Body-Sturm.
+
+08:00 BOB: kein Ton (Ohr). armed=False hostAbs=0 — Cache-Play ohne Host-Cursor.
+
+08:01 OTG ausgesteckt, verbindet wieder.
+
+08:03 Replug OK: PD0084, Gate PASS, MSC_MAP_FROZEN, correlate-run-replug.
+
+08:03 Operator: musste RST drücken (ESP offline nach OTG) — erklärt Reboot PD0084.
+
+08:04 PD0084 Wechsel zu Bayern, LED aktiv, kein Ton.
+
+08:04 Bayern: Detect OK (audio_start fav1) + LED/cold_body, aber armed=False hostAbs=0 streamB=0 — HU Body-Prefetch ohne Live-Cursor (anders als 07:58 und=438k).
+
+08:05 Operator tippt RST.
+
+08:06 RST OK PD0084 Gate PASS FROZEN correlate-run-0805.
+
+08:07 Operator: nochmal RST, dann schnell Dateien/Sender wechseln.
+
+08:07 Operator: nochmal RST, dann schnell Dateien wechseln.
+
+08:08 RST OK — Gate/Freeze; correlate-run-0807 + switch-run-0807 (75s) laufen. Schnell wechseln jetzt.
+
+08:08/09 nach RST: Bridge hello_ack/BrokenPipe kurz; Capture (correlate+switch) trotzdem aktiv — schnell wechseln.
+
+08:09 Operator: „das waren jetzt viele RST“ — Session stoppen/sichern ok.
+
+08:10 Operator startet letzte RST-Runde: mehrere RST + Senderwechsel hintereinander.
+
+08:10 Operator startet letzte RST-Runde: mehrere RST + Senderwechsel hintereinander.
+
+08:11 Capture READY (~3.5min): runde-0810 series+correlate. Schon Rock act hostAbs=0.
+
+08:13 Operator: Runde fertig — kein Ton. Viele Logs?
+
+08:13 Runde-0810: ~90 Statuszeilen, 7 OFFLINE (~3 RST), Detect oft (audio_start fav0/1/2), armed+hostAbs>0 (max host~4MiB und~6MiB) aber live=0 — Ohr kein Ton. Session gesamt ~251 Dateien / 2.9MB unter feld-av-0723.

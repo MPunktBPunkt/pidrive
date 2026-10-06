@@ -1,0 +1,4 @@
+version 0.4.46-dev
+slotMap ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+GATE_NAMES PASS
+Bridge: ssh pidrive@192.168.178.105 'grep MSC_MAP_FROZEN /tmp/pump_bridge*.log 2>/dev/null | tail -3; journalctl -u pidrive_pump_bridge -n 30 --no-pager | grep -E FROZEN|frozen'

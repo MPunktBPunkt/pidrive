@@ -1,0 +1,23 @@
+active
+3319985 bash -c echo pidrive | sudo -S systemctl reset-failed pidrive_pump_bridge; echo pidrive | sudo -S systemctl start pidrive_pump_bridge; sleep 5; systemctl is-active pidrive_pump_bridge; pgrep -af "/home/pidrive/pump_bridge.py"; echo pidrive | sudo -S journalctl -u pidrive_pump_bridge -n 20 --no-pager | tail -20
+3319994 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k
+Oct 06 07:52:40 Pidrive systemd[1]: Stopped pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 07:53:15 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] enabled=True seed_plugged=True
+Oct 06 07:53:16 Pidrive python3[3319994]: [tx] {"t":"hello","ver":1}
+Oct 06 07:53:16 Pidrive python3[3319994]: [rx] {"t":"hello_ack","ver":"0.4.46-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Oct 06 07:53:16 Pidrive python3[3319994]: [hello_ack] ver=0.4.46-dev slots=4 page=True tcp=True
+Oct 06 07:53:16 Pidrive python3[3319994]: [tx] {"t":"audio_stop"}
+Oct 06 07:53:16 Pidrive python3[3319994]: [bridge] tcp:192.168.178.89:9090 audio=48k paging=on
+Oct 06 07:53:16 Pidrive python3[3319994]: [tx] {"t":"ping"}
+Oct 06 07:53:16 Pidrive python3[3319994]: [tx] {"t":"menu_set","rev":5161,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"},{"uid":"pump:page_next","name":"Menue","kind":"action"}]}
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] sealing publish (seal)
+Oct 06 07:53:16 Pidrive python3[3319994]: [rx] {"t":"audio_ack","ok":true,"op":"stop"}
+Oct 06 07:53:16 Pidrive python3[3319994]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+Oct 06 07:53:16 Pidrive python3[3319994]: [rx] {"t":"pong"}
+Oct 06 07:53:16 Pidrive python3[3319994]: [rx] {"t":"menu_ack","ok":true,"n":4,"rev":5161}
+Oct 06 07:53:16 Pidrive python3[3319994]: [menu_ack] ok=True n=4 rev=5161
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]
+Oct 06 07:53:18 Pidrive python3[3319994]: [tx] {"t":"ping"}
+Oct 06 07:53:18 Pidrive python3[3319994]: [rx] {"t":"pong"}

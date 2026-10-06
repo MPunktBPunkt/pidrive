@@ -1,0 +1,4 @@
+activating
+Oct 06 08:08:49 Pidrive python3[3333567]: [bridge] warn: no hello_ack yet — continuing
+Oct 06 08:08:49 Pidrive python3[3333567]: BrokenPipeError: [Errno 32] Broken pipe
+active

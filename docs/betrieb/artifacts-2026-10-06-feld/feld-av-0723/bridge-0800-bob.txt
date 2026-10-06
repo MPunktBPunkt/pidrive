@@ -1,0 +1,15 @@
+Oct 06 07:59:35 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav2 from=17489 +4096B age=157539ms"}
+Oct 06 07:59:35 Pidrive python3[3323463]: [msc] play.reject seq_short uid=fav2 from=17489 +4096B age=157539ms
+Oct 06 07:59:35 Pidrive python3[3323463]: [rx] {"t":"event","op":"play_uid","uid":"fav2"}
+Oct 06 07:59:35 Pidrive python3[3323463]: [trace] t=0ms play_uid=fav2
+Oct 06 07:59:35 Pidrive python3[3323463]: [audio] switch fav1 → fav2 (age=93.2s)
+Oct 06 07:59:35 Pidrive python3[3323463]: [trace] t=50ms audio.start fav fav2
+Oct 06 07:59:37 Pidrive python3[3323463]: [tx] {"t":"audio_stop"}
+Oct 06 07:59:37 Pidrive python3[3323463]: [tx] {"t":"audio_start","uid":"fav2","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_radio_bob.jpg","cTry":"stations/web_radio_bob.jpg|stations/radio_bob.jpg"}
+Oct 06 07:59:37 Pidrive python3[3323463]: [trace] audio_start sent uid=fav2 cover=file
+Oct 06 07:59:38 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav2 from=17489 +12288B age=157564ms"}
+Oct 06 07:59:38 Pidrive python3[3323463]: [msc] play.reject cooldown uid=fav2 from=17489 +12288B age=157564ms
+Oct 06 07:59:38 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=2 lba=17505..17561 n=8 B=32768 w=0 ev=not_from_head set=1 fav2"}
+Oct 06 07:59:38 Pidrive python3[3323463]: [msc] cold_body_burst s=2 lba=17505..17561 n=8 B=32768 w=0 ev=not_from_head set=1 fav2
+Oct 06 07:59:38 Pidrive python3[3323463]: [rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav2","id3":true,"warmup":0}
+Oct 06 07:59:38 Pidrive python3[3323463]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav2', 'id3': True, 'warmup': 0}

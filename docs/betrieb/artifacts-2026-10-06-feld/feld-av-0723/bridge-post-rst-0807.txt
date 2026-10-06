@@ -1,0 +1,4 @@
+activating
+Oct 06 08:08:26 Pidrive python3[3333225]: [bridge] warn: no hello_ack yet — continuing
+active
+Oct 06 08:08:34 Pidrive python3[3333320]: [bridge] warn: no hello_ack yet — continuing

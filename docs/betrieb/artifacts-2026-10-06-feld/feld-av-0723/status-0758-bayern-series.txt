@@ -1,0 +1,5 @@
+07:58:31 n=1 play 'Rock Antenne Bayern' act True armed True hostAbs 438272 absEnd 226024 und 438272 live? buf 0 guess 1 rej 1507 cold 3 slot 1 streamB 438272 seed False
+07:58:33 n=2 play 'Rock Antenne Bayern' act True armed True hostAbs 438272 absEnd 246072 und 438272 live? buf 0 guess 1 rej 1507 cold 3 slot 1 streamB 438272 seed False
+07:58:35 n=3 play 'Rock Antenne Bayern' act True armed True hostAbs 438272 absEnd 265096 und 438272 live? buf 0 guess 1 rej 1507 cold 3 slot 1 streamB 438272 seed False
+07:58:37 n=4 play 'Rock Antenne Bayern' act True armed True hostAbs 438272 absEnd 283096 und 438272 live? buf 0 guess 1 rej 1507 cold 3 slot 1 streamB 438272 seed False
+07:58:39 n=5 play 'Rock Antenne Bayern' act True armed True hostAbs 438272 absEnd 302120 und 438272 live? buf 0 guess 1 rej 1507 cold 3 slot 1 streamB 438272 seed False

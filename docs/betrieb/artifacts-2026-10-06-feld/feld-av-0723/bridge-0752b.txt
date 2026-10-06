@@ -1,0 +1,17 @@
+inactive
+3319734 bash -c systemctl is-active pidrive_pump_bridge; pgrep -af pump_bridge.py; echo pidrive | sudo -S journalctl -u pidrive_pump_bridge -n 15 --no-pager
+Oct 06 07:52:33 Pidrive python3[3319311]:     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Oct 06 07:52:33 Pidrive python3[3319311]:   File "/home/pidrive/pump_bridge.py", line 304, in write
+Oct 06 07:52:33 Pidrive python3[3319311]:     self._sock.sendall(data)
+Oct 06 07:52:33 Pidrive python3[3319311]:     ~~~~~~~~~~~~~~~~~~^^^^^^
+Oct 06 07:52:33 Pidrive python3[3319311]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:33 Pidrive systemd[1]: pidrive_pump_bridge.service: Main process exited, code=exited, status=1/FAILURE
+Oct 06 07:52:33 Pidrive systemd[1]: pidrive_pump_bridge.service: Failed with result 'exit-code'.
+Oct 06 07:52:36 Pidrive systemd[1]: pidrive_pump_bridge.service: Scheduled restart job, restart counter is at 8.
+Oct 06 07:52:36 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 07:52:37 Pidrive python3[3319417]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:37 Pidrive python3[3319417]: [msc-lock] enabled=True seed_plugged=True
+Oct 06 07:52:37 Pidrive python3[3319417]: [tx] {"t":"hello","ver":1}
+Oct 06 07:52:40 Pidrive systemd[1]: Stopping pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü)...
+Oct 06 07:52:40 Pidrive systemd[1]: pidrive_pump_bridge.service: Deactivated successfully.
+Oct 06 07:52:40 Pidrive systemd[1]: Stopped pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).

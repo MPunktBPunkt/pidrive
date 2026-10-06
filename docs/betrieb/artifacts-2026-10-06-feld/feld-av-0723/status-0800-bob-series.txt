@@ -1,0 +1,4 @@
+08:00:19 n=1 play 'Radio BOB!' act True armed False hostAbs 0 abs 278133 327285 und 0 guess 2 cold 4 rej 1634 slot 2 streamB 438272 buf 0
+08:00:21 n=2 play 'Radio BOB!' act True armed False hostAbs 0 abs 293723 342875 und 0 guess 2 cold 4 rej 1634 slot 2 streamB 438272 buf 0
+08:00:23 n=3 play 'Radio BOB!' act True armed False hostAbs 0 abs 306972 356124 und 0 guess 2 cold 4 rej 1634 slot 2 streamB 438272 buf 0
+08:00:25 n=4 play 'Radio BOB!' act True armed False hostAbs 0 abs 319427 368579 und 0 guess 2 cold 4 rej 1634 slot 2 streamB 438272 buf 0

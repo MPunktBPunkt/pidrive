@@ -1,7 +1,7 @@
 # MSC / BMW — aktueller Stand (Lesereihenfolge)
 
-**Stand:** 2026-10-06 Lab — **Bulk-drainTcp 0.4.46-dev auf .88:** Idle ~840 KB/s · async Hold-PASS inkl. 248 KiB @~275 KB/s · Feld noch 0.4.45  
-**Phase:** Baustelle B — Bridge Prefill+Hold+lokale Hold-Schätzung; Feld-OTA 0.4.46 nach Abstimmung · Freeze Feld hält
+**Stand:** 2026-10-06 Feld — **OTA 0.4.46-dev im Auto:** Detect teils PASS, **kein Ton** (Burst→und / hostAbs=0) · Lab Hold-PASS transferiert nicht 1:1  
+**Phase:** Baustelle B — Prefill an Feld-Erstburst ≥~400 KiB; Sequenz-GO gesperrt
 
 Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -14,7 +14,7 @@ Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und waru
 | 0 | [`artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md`](artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md) | **Feld 18:07** — RST→Head-Arm, Ring voll, live=0 / kein Ton |
 | 0r | [`artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) | **Review Mistral+GPT** — RST-Trigger, 253952-Korrektur, P0 Lab |
 | 0f5 | [`artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md`](artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md) | Feld 17:55 — ohne RST kein Arm |
-| 0f6 | [`artifacts-2026-10-06-feld/FELD-AV-OPERATOR.md`](artifacts-2026-10-06-feld/FELD-AV-OPERATOR.md) | **Feld heute:** Gate → 1 Sender → Correlate + OTA 0.4.46 |
+| 0f6 | [`artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md`](artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md) | **Feld 07:50–08:13** — 0.4.46 OTA, Detect OK, AV/Ohr FAIL |
 | 0h | [`artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md`](artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md) | Lab Mid→Head armt |
 | 0p | [`artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md`](artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md) | Lab Prefill-vor-Arm PASS |
 | 0e2 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | Feld Abend 15:30 — Gate PASS, AV/Ohr FAIL Fenster/Arm |

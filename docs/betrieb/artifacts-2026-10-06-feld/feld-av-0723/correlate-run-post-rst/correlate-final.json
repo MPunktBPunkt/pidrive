@@ -1,0 +1,29 @@
+{
+  "play": "fav1",
+  "stream_uid": "fav1",
+  "stream_active": true,
+  "cursorArmed": true,
+  "absBase": 632433,
+  "absEnd": 681585,
+  "abs": [
+    632433,
+    681585
+  ],
+  "win_span": 49152,
+  "hostAbsCursor": 438272,
+  "host_in_window": false,
+  "host_ahead_of_end": 0,
+  "host_behind_base": 194161,
+  "streamBytes": 438272,
+  "underruns": 438272,
+  "liveBytes": 0,
+  "ring_size": 49152,
+  "ring_cap": 49152,
+  "id3Len": 3044,
+  "headResyncs": 0,
+  "seed_active": false,
+  "seed_bytesServed": 0,
+  "playRejectCount": 1507,
+  "playGuessCount": 1,
+  "reads": null
+}

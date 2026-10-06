@@ -1,0 +1,21 @@
+Oct 06 07:58:01 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav1 from=16465 +4096B age=64272ms"}
+Oct 06 07:58:01 Pidrive python3[3323463]: [msc] play.reject seq_short uid=fav1 from=16465 +4096B age=64272ms
+Oct 06 07:58:01 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"msc.phase","detail":"play Rock Antenne Bayern"}
+Oct 06 07:58:01 Pidrive python3[3323463]: [msc] msc.phase play Rock Antenne Bayern
+Oct 06 07:58:01 Pidrive python3[3323463]: [rx] {"t":"event","op":"play_uid","uid":"fav1"}
+Oct 06 07:58:01 Pidrive python3[3323463]: [trace] t=0ms play_uid=fav1
+Oct 06 07:58:01 Pidrive python3[3323463]: [trace] t=50ms audio.start fav fav1
+Oct 06 07:58:01 Pidrive python3[3323463]: [tx] {"t":"audio_start","uid":"fav1","codec":"mp3","br":"48k","cSrc":"file","cPath":"stations/web_rock_antenne_bayern.jpg","cTry":"stations/web_rock_antenne_bayern.jpg|stations/rock_antenne_bayern.jpg"}
+Oct 06 07:58:01 Pidrive python3[3323463]: [trace] audio_start sent uid=fav1 cover=file
+Oct 06 07:58:02 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"cooldown uid=fav1 from=16465 +12288B age=64303ms"}
+Oct 06 07:58:02 Pidrive python3[3323463]: [msc] play.reject cooldown uid=fav1 from=16465 +12288B age=64303ms
+Oct 06 07:58:03 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=1 lba=16481..16537 n=8 B=32768 w=0 ev=not_from_head set=1 fav1"}
+Oct 06 07:58:03 Pidrive python3[3323463]: [msc] cold_body_burst s=1 lba=16481..16537 n=8 B=32768 w=0 ev=not_from_head set=1 fav1
+Oct 06 07:58:03 Pidrive python3[3323463]: [rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav1","id3":true,"warmup":0}
+Oct 06 07:58:03 Pidrive python3[3323463]: [audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav1', 'id3': True, 'warmup': 0}
+Oct 06 07:59:35 Pidrive python3[3323463]: [rx] {"t":"event","op":"diag","code":"play.reject","detail":"seq_short uid=fav2 from=17489 +4096B age=157539ms"}
+Oct 06 07:59:35 Pidrive python3[3323463]: [msc] play.reject seq_short uid=fav2 from=17489 +4096B age=157539ms
+Oct 06 07:59:35 Pidrive python3[3323463]: [rx] {"t":"event","op":"play_uid","uid":"fav2"}
+Oct 06 07:59:35 Pidrive python3[3323463]: [trace] t=0ms play_uid=fav2
+Oct 06 07:59:35 Pidrive python3[3323463]: [audio] switch fav1 → fav2 (age=93.2s)
+Oct 06 07:59:35 Pidrive python3[3323463]: [trace] t=50ms audio.start fav fav2

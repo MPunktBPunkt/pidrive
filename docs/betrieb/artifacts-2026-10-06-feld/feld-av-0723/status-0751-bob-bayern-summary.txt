@@ -1,0 +1,11 @@
+ts 07:52:33
+version 0.4.46-dev serial PD0082 uptime 1min 3s
+playing '' ''
+otg True plugged True pumpTcp True 192.168.178.105
+stream.active False uid  cap 49152
+hostAbs 0 absBase 0 absEnd 0
+live? und 0 armed False bufferMs 0
+cold 1 guess 0 rej 308 streamSlot -1 streamBytes 0
+bodySeed {'active': False, 'slot': -1, 'tag': '', 'fromOff': 348160, 'bytesServed': 0}
+msSincePlug 62820 msSinceChange 62820
+slots ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']

@@ -1,0 +1,23 @@
+Oct 06 07:52:00 Pidrive python3[3318866]:     send({"t": "audio_stop"})
+Oct 06 07:52:00 Pidrive python3[3318866]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:04 Pidrive python3[3318953]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:07 Pidrive python3[3318953]:     send({"t": "audio_stop"})
+Oct 06 07:52:07 Pidrive python3[3318953]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:11 Pidrive python3[3319047]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:13 Pidrive python3[3319047]:     send({"t": "audio_stop"})
+Oct 06 07:52:13 Pidrive python3[3319047]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:17 Pidrive python3[3319125]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:20 Pidrive python3[3319125]:     send({"t": "audio_stop"})
+Oct 06 07:52:20 Pidrive python3[3319125]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:24 Pidrive python3[3319225]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:26 Pidrive python3[3319225]:     send({"t": "audio_stop"})
+Oct 06 07:52:26 Pidrive python3[3319225]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:30 Pidrive python3[3319311]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:52:33 Pidrive python3[3319311]:     send({"t": "audio_stop"})
+Oct 06 07:52:33 Pidrive python3[3319311]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:52:37 Pidrive python3[3319417]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+Oct 06 07:53:16 Pidrive python3[3319994]: [tx] {"t":"audio_stop"}
+Oct 06 07:53:16 Pidrive python3[3319994]: [tx] {"t":"menu_set","rev":5161,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"},{"uid":"pump:page_next","name":"Menue","kind":"action"}]}
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] sealing publish (seal)
+Oct 06 07:53:16 Pidrive python3[3319994]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]

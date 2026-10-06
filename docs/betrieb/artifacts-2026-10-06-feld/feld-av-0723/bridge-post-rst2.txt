@@ -1,0 +1,7 @@
+=== try 1 ===
+active
+Oct 06 07:57:09 Pidrive python3[3323311]: BrokenPipeError: [Errno 32] Broken pipe
+Oct 06 07:57:12 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 06 07:57:14 Pidrive python3[3323463]: [rx] {"t":"hello_ack","ver":"0.4.46-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+Oct 06 07:57:14 Pidrive python3[3323463]: [hello_ack] ver=0.4.46-dev slots=4 page=True tcp=True
+Oct 06 07:57:14 Pidrive python3[3323463]: [msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!,Menue]

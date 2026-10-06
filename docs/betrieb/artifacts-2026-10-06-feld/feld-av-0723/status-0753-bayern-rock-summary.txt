@@ -1,0 +1,12 @@
+07:54:19 ver 0.4.46-dev serial PD0082
+playing '' uid ''
+otg True plugged True pump True bufferMs 0
+stream.active False armed False hostAbs 0 abs 0 0 und 0 cap 49152
+guess 0 rej 351 cold 2 streamSlot -1 streamBytes 0
+bytesFile 1436160 lastLba 17369 readCount 382
+bodySeed {'active': False, 'slot': -1, 'tag': '', 'fromOff': 348160, 'bytesServed': 0}
+msPlug 169309 msChange 169309 hint hu-like
+ slot Rock Antenne size None lba None
+ slot Rock Antenne Bayern size None lba None
+ slot Radio BOB! size None lba None
+ slot Menue size None lba None

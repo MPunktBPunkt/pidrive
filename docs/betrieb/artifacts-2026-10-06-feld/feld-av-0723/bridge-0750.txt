@@ -1,0 +1,4 @@
+activating
+2626806 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k --msc-lock --reconnect 3
+[sudo] password for pidrive: active
+2626806 /usr/bin/python3 -u /home/pidrive/pump_bridge.py --transport tcp --host 192.168.178.89 --tcp-port 9090 --interval 0.5 --bitrate 48k --msc-lock --reconnect 3

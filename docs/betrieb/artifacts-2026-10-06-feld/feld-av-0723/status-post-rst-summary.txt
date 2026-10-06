@@ -1,0 +1,4 @@
+07:55:47 POST-RST 0.4.46-dev up 4min 17s serial PD0082
+otg True plugged True pump True peer 192.168.178.105
+slots ['Rock Antenne', 'Rock Antenne Bayern', 'Radio BOB!', 'Menue']
+play - guess 0 rej 2314
