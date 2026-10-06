@@ -1,0 +1,101 @@
+repro_start 2026-10-06T16:25:45+02:00
+=== ROUND 1 2026-10-06T16:25:45+02:00 ===
+ROUND 1 FAIL
+        },
+        {
+          "t": 1819422.836777633,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "silence_after_live": true
+  },
+  "G4": {
+    "pass": true,
+    "fav2_maxSeq": 524288,
+    "prefetch_s": 1.141,
+    "prefetch_ok": true,
+    "within_few_s": true
+  },
+  "G2": {
+    "pass": false,
+    "maxSeq": 524288,
+    "hostAbs_pre": 524257,
+    "hostAbs_after_arm": 0,
+    "und_delta": -1048545,
+    "host_delta": -524257,
+    "armed": false,
+    "file_full": true,
+    "host_ok": true,
+    "und_ok": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-nbt-hu-sim-all-repro/round-1 overall=FAIL
+round 1 {'G5': False, 'G1': False, 'G3': True, 'G4': True, 'G2': False}
+=== ROUND 2 2026-10-06T16:27:39+02:00 ===
+ROUND 2 FAIL
+        },
+        {
+          "t": 1819536.922024731,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "silence_after_live": true
+  },
+  "G4": {
+    "pass": true,
+    "fav2_maxSeq": 524288,
+    "prefetch_s": 1.114,
+    "prefetch_ok": true,
+    "within_few_s": true
+  },
+  "G2": {
+    "pass": false,
+    "maxSeq": 524288,
+    "hostAbs_pre": 524257,
+    "hostAbs_after_arm": 0,
+    "und_delta": -1048545,
+    "host_delta": -524257,
+    "armed": false,
+    "file_full": true,
+    "host_ok": true,
+    "und_ok": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-nbt-hu-sim-all-repro/round-2 overall=FAIL
+round 2 {'G5': False, 'G1': False, 'G3': True, 'G4': True, 'G2': False}
+=== ROUND 3 2026-10-06T16:29:34+02:00 ===
+ROUND 3 FAIL
+        },
+        {
+          "t": 1819651.151102827,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "silence_after_live": true
+  },
+  "G4": {
+    "pass": true,
+    "fav2_maxSeq": 524288,
+    "prefetch_s": 1.115,
+    "prefetch_ok": true,
+    "within_few_s": true
+  },
+  "G2": {
+    "pass": false,
+    "maxSeq": 524288,
+    "hostAbs_pre": 524257,
+    "hostAbs_after_arm": 0,
+    "und_delta": -1048545,
+    "host_delta": -524257,
+    "armed": false,
+    "file_full": true,
+    "host_ok": true,
+    "und_ok": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-nbt-hu-sim-all-repro/round-3 overall=FAIL
+round 3 {'G5': False, 'G1': False, 'G3': True, 'G4': True, 'G2': False}
+repro_done 2026-10-06T16:31:28+02:00

@@ -92,7 +92,7 @@ class PumpTcp:
 
     def send_bin(self, kind: int, payload: bytes) -> None:
         n = len(payload)
-        hdr = bytes([0xA5, kind, (n >> 8) & 0xFF, n & 0xFF])
+        hdr = bytes((0x01, kind, n & 0xFF, (n >> 8) & 0xFF))
         self.s.sendall(hdr + payload)
 
     def drain(self, seconds: float) -> None:

@@ -75,7 +75,7 @@
 
 | ID | Maßnahme | Abnahme |
 |----|----------|---------|
-| **M7** | `nbt_hu_sim.py` + Golden G1–G5 gegen 0.4.46 L3 | G1/G2/G4/G5 ✅ · G3 offen |
+| **M7** | `nbt_hu_sim.py` + Golden G1–G5 gegen 0.4.46 L3 | G1–G5 ✅ (2× ALL) |
 | **M8** | Producer **Echtzeit** (nicht 900 KB/s Lab-Hold-Illusion); Format-Stempel PDSQ | ✅ G5 8,7→6,1 KB/s + PDSQ; PDSQ-Ohr im Sim |
 
 ### Nach Go (Freeze-Bruch)
@@ -121,7 +121,7 @@ Stufe 1 F1?
 
 ## 7. Nächster konkreter Arbeitsschritt
 
-1. **Lab:** G3 automatisieren + 3× `ALL`-Repro; danach Stall-Go vorbereiten.  
+1. **Lab:** G1–G5 grün (2× ALL). Stall-Go vorbereiten; Feld Stufe 1 parallel.  
 2. **Feld:** Stufe 1 F1/F2 (Silence, Video, `run.yaml`, `feld_status_poll.py`) — **kein** Stall-OTA.  
 3. **Kein** Code für `stall_ms` bis Go + Golden grün (G3 inkl.).
 

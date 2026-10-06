@@ -1,0 +1,107 @@
+{
+  "golden": [
+    "G3"
+  ],
+  "results": {
+    "G3": {
+      "fill_pre": 49152,
+      "fill_wait_s": 1.26,
+      "fill_ok": true,
+      "liveBytes_fw": 2162719,
+      "liveBytes_ear": 45056,
+      "expect_live": 49152,
+      "live_ok": true,
+      "underruns": 475105,
+      "hostAbs": 543969,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 11,
+        "OTHER": 114,
+        "SILENCE": 2
+      },
+      "ear": {
+        "live_bytes": 45056,
+        "consumed": 0,
+        "events": {
+          "gap_in_content": 10,
+          "silence_in_play": 2
+        },
+        "event_list": [
+          {
+            "t": 1818667.436500658,
+            "kind": "gap_in_content",
+            "from": 93,
+            "to": 109
+          },
+          {
+            "t": 1818667.445999612,
+            "kind": "gap_in_content",
+            "from": 109,
+            "to": 125
+          },
+          {
+            "t": 1818667.455556386,
+            "kind": "gap_in_content",
+            "from": 125,
+            "to": 141
+          },
+          {
+            "t": 1818667.465158174,
+            "kind": "gap_in_content",
+            "from": 141,
+            "to": 157
+          },
+          {
+            "t": 1818667.474665014,
+            "kind": "gap_in_content",
+            "from": 157,
+            "to": 173
+          },
+          {
+            "t": 1818667.484197501,
+            "kind": "gap_in_content",
+            "from": 173,
+            "to": 189
+          },
+          {
+            "t": 1818667.493726182,
+            "kind": "gap_in_content",
+            "from": 189,
+            "to": 205
+          },
+          {
+            "t": 1818667.517075599,
+            "kind": "gap_in_content",
+            "from": 205,
+            "to": 221
+          },
+          {
+            "t": 1818667.526618737,
+            "kind": "gap_in_content",
+            "from": 221,
+            "to": 237
+          },
+          {
+            "t": 1818667.53605878,
+            "kind": "gap_in_content",
+            "from": 237,
+            "to": 253
+          },
+          {
+            "t": 1818667.919038842,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1818668.317115604,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "silence_after_live": true,
+      "pass": true
+    }
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

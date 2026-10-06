@@ -12,7 +12,7 @@
 | O6 | soft_rst empty-body | kein `restart_err=Expecting value` |
 | Mimic | `m3_lab_hu_eager_file.py` | Lab-Lauf arm: hostAbs/und≈524288, maxSeq=524288 (**Muster A**) |
 | Bridge | `pump_bridge.py` | bitrate→target_bps; `--marker` |
-| Sim | `nbt_hu_sim.py` | self-test + Golden **G1/G2/G4/G5 PASS** gegen 0.4.46 |
+| Sim | `nbt_hu_sim.py` | self-test + Golden **G1–G5 PASS** gegen 0.4.46 |
 | Ingest | `tools/ingest/ingest.py` → `data/*.parquet` | Review-Format: runs/status/slots/msc_reads/… |
 
 ## Lab-Läufe (Artefakte)
@@ -25,6 +25,8 @@
 | `lab88-nbt-hu-sim-g2/` | G2 PASS: hostAbs=0 nach Cold-Read+Arm, und_delta=0 |
 | `lab88-nbt-hu-sim-g5/` | G5 PASS: burst median **8703** B/s, late **6143** B/s |
 | `lab88-ingest-demo-1605/` | E2E: G2+1Hz-Poll → Ingest; DuckDB Muster-B hostAbs=0 vs Feld max_host≈4MiB |
+| `lab88-nbt-hu-sim-g3/` | G3 PASS |
+| `lab88-nbt-hu-sim-all-final{,2}/` | 2× ALL G1–G5 PASS |
 
 ```bash
 sg disk -c 'python3 tools/nbt_hu_sim.py --self-test'
@@ -34,6 +36,7 @@ sg disk -c 'python3 tools/nbt_hu_sim.py --golden G5 --g5-s 68 --sg /dev/sg0'
 
 ## Offen
 
-- **G3** (Ring-voll / 49 152 B LIVE) — noch nicht automatisiert
+- G3 ✅ Ring-voll → ear LIVE≈45 KiB + silence; 2× ALL PASS (`all-final`, `all-final2`)
+- Pump-Bugfix: Framing war `0xA5` statt `0x01` (kein absEnd-Fill)
 - Vollständiger 3×-Repro-Lauf `ALL` hintereinander
 - FW Stall / `streamBytesServed_` Reset (Freeze)

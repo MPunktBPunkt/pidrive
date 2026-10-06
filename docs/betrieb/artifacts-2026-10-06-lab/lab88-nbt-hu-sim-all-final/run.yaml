@@ -1,0 +1,15 @@
+run_id: 2026-10-06-lab88-nbt-hu-sim-all-final
+stufe: 2
+env: sim
+fw: 0.4.46-dev
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+station: fav1
+bitrate_kbps: 48
+stall_ms: 0
+clock_sync:
+  esp_uptime_ms: 0
+  wall: "2026-10-06T16:54:31+02:00"
+heard: none
+notes: "ALL G1-G5 PASS once"

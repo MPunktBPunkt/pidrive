@@ -1,0 +1,16 @@
+=== ROUND 1 2026-10-06T16:41:52+02:00 ===
+ROUND 1 FAIL
+    "host_ok": true,
+    "und_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-nbt-hu-sim-all-repro2/round-1 overall=FAIL
+{'G5': True, 'G1': False, 'G3': True, 'G4': True, 'G2': True}
+=== ROUND 2 2026-10-06T16:43:54+02:00 ===
+ROUND 2 FAIL
+    "host_ok": true,
+    "und_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-nbt-hu-sim-all-repro2/round-2 overall=FAIL
+{'G5': True, 'G1': False, 'G3': True, 'G4': True, 'G2': True}
