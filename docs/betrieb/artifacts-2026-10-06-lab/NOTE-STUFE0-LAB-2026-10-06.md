@@ -24,6 +24,7 @@
 | `lab88-nbt-hu-sim-g1g4/` | G1+G4 PASS (before_arm=86016; fav2 prefetch 1.2 s) |
 | `lab88-nbt-hu-sim-g2/` | G2 PASS: hostAbs=0 nach Cold-Read+Arm, und_delta=0 |
 | `lab88-nbt-hu-sim-g5/` | G5 PASS: burst median **8703** B/s, late **6143** B/s |
+| `lab88-ingest-demo-1605/` | E2E: G2+1Hz-Poll → Ingest; DuckDB Muster-B hostAbs=0 vs Feld max_host≈4MiB |
 
 ```bash
 sg disk -c 'python3 tools/nbt_hu_sim.py --self-test'

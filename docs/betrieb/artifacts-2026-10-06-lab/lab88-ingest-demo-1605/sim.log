@@ -1,0 +1,15 @@
+{
+  "G2": {
+    "pass": true,
+    "maxSeq": 524288,
+    "hostAbs_pre": 0,
+    "hostAbs_after_arm": 0,
+    "und_delta": 0,
+    "host_delta": 0,
+    "armed": false,
+    "file_full": true,
+    "host_ok": true,
+    "und_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-06-lab/lab88-ingest-demo-1605 overall=PASS
