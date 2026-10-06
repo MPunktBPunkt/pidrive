@@ -1,0 +1,910 @@
+Ich habe die Rohdaten selbst nachgerechnet: Status-JSONs, Correlate-Zeitreihen, Bridge-Logs und den Firmware-Code. Fast alles lässt sich auf **ein einziges HU-Verhalten** zurückführen, das in beiden Reviews noch nicht erkannt ist.
+
+**Die BMW-HU liest die gewählte Datei sofort komplett ein, mit ~0,7–1 MB/s.** Danach liest sie die nächste Datei ebenfalls komplett vor, spielt alles aus ihrem Cache ab und springt am Dateiende zum nächsten Track. Der "Erstburst" ist also keine Puffergröße des Decoders. Er ist einfach der Teil der Datei, den die HU noch nicht gelesen hatte. Mit der aktuellen Architektur lassen sich deshalb pro Auswahl höchstens ~8–9 s echtes Audio hörbar machen.
+
+## Die Belege
+
+**1. Burst = Restdatei.** In zwei Fällen ergeben die Bytes vor dem Arm (als Stille geliefert) plus die Bytes über den Live-Pfad exakt die Dateigröße von `fav1`:
+
+| Fall | Vor dem Arm | Live-Pfad (`hostAbs`) | Summe |
+|---|---|---|---|
+| 07:58 Bayern | 86.016 | 438.272 | **524.288 = 512 KiB** |
+| 08:12:35 Bayern | 163.840 | 360.448 | **524.288** |
+| 08:00 BOB, 08:04 Bayern, 08:06 BOB | 524.288 | 0 | **524.288** (Muster B) |
+
+Die 8-MiB-Datei `fav0` (Rock) wurde ebenfalls komplett gelesen (`b8421376` ≥ Dateigröße). Das erklärt die 4,1 MiB bzw. 6,2 MiB aus Runde 08:10.
+
+**2. Muster A und B sind derselbe Mechanismus.** Es entscheidet nur, ob die HU mit der Datei schon fertig ist, wenn der Stream scharf geschaltet wird:
+- **A (07:58):** Arm 50 ms nach `play_uid`. Die HU liest den Rest der Datei in ~1 s über den Live-Pfad, bei **leerem Ring** (`absEnd=0`). Das erste Producer-Byte kommt erst um 07:58:05.4, also ~2,5 s *nachdem* der Burst schon fertig war.
+- **B (08:00, 08:04):** Die HU hatte die Datei schon vorher gelesen, beim Scan, als Body-Prefetch (08:04:00, vor der Play-Erkennung um 08:04:01) oder als Next-Track-Prefetch (st-55: `fav2` komplett gelesen, während `fav1` lief). Danach spielt sie aus dem Cache, ohne jeden Read.
+
+**3. Der "Autoplay"-Wechsel ist das Track-Ende.** Bayern startete um 07:58:01, die HU sprang um 07:59:35 auf BOB (`age=93.2s`). Rechnung: (524.288 − 3.044 ID3) ÷ 5.973 B/s (156-B-Frames à 26,12 ms) = **87,3 s**, dazu ~6 s Wechsel-Latenz.
+
+**4. Die Referenz vom 01.10. geht auf das Byte genau auf.** `streamBytes` 167.936 − `underruns` 115.740 − ID3 3.044 = **49.152 = genau eine Ringfüllung** = 8,2 s bei 48 kbit/s. Gehört wurden "~6 s". Möglich war das nur, weil der Ring beim Arm voll war: Der Stream lief schon ≥ 98 s, und 0.4.31 hatte noch `warmup=8192`. Seit B6 in 0.4.46 (`kOverlayWarmupBytes = 0`) wird mit leerem Ring scharf geschaltet. Kontrolle: Cursor 587.241 + 164.892 = 752.133, wie im Snapshot.
+
+**5. Die Obergrenze der aktuellen Architektur lässt sich ausrechnen.**
+
+hörbarRinginhaltbeimArm+RprodTHU-Read6000 B/s49152+87000,660009 s
+Daran ändern Prefill, Hold und der schnelle Pump mit 840 KB/s nichts. Das Radio liefert nun mal nur Echtzeit, und die HU liest 130–180× schneller.
+
+**6. Producer-Rate, in allen drei Läufen gleich.** In den ersten ~60 s kommen 8,6–8,9 KB/s (~70 kbit/s), danach 5,85–6,0 KB/s. Das ist der Burst-on-Connect des Radio-Servers: ~160 KB (~27 s Audio) Vorlauf gratis. Im 48-KiB-Ring geht er durch Scrollen verloren.
+
+## Antworten auf die offenen Punkte der Reviews
+
+- **Mistral O1 (`und` ≫ `host`):** Reads, die mehr als 8 KiB springen (`kSeqSlop`), laufen über den `fileOff`-Pfad. Dort wird `underruns` hochgezählt, der Cursor bewegt sich aber nicht.
+- **Mistral O2 (`liveBytes` 7.823.360 bzw. 438.272 bei BOB):** Das ist ein Messartefakt. `streamBytesServed_` wird nur beim Remount zurückgesetzt (`UsbMscGadget.cpp:847`), `underruns` dagegen bei jedem `start()`. Nach einem Senderwechsel ist `liveBytes = streamBytes − underruns` deshalb falsch.
+- **Mistral O3 (Auslöser für Muster B):** Die Datei lag schon im HU-Cache (Scan, Body-Prefetch oder Next-Track-Prefetch).
+- **Mistral "≥ 400 KiB Prefill / PSRAM" vs. GPT "max_host_step":** Beide Ansätze laufen ins Leere. Der Burst hängt an der Dateigröße, nicht am Decoder; GPTs "Szenario 2" (Dateigeometrie) ist der richtige. Ein PSRAM-Ring hilft nur, wenn er vorher mit ~87 s Aufnahme gefüllt wird. Das wäre zeitversetzt statt live und endet nach 87 s am Dateiende.
+- **Warum der Lab-PASS nicht ins Auto übertragbar ist:** Der Lab-Host liest gleichmäßig verteilt, die HU nicht.
+
+Ein zusätzlicher Code-Fehler verschärft das Ganze: Bei einem Miss zählt der Cursor trotzdem weiter. Einmal vor `absEnd` geraten, bekommt die HU dauerhaft Stille.
+
+```135:142:esp32.pidrive-main\esp32.pidrive-main\src\core\StreamBuffer.h
+            if (active_ && size_ > 0 && aoff >= absBase_ && aoff < absEnd_) {
+                // ... Treffer
+            } else {
+                if (active_) underruns_++;
+                out[i] = kSil[aoff % kSilLen];
+                if (useCursor) hostAbsCursor_++;
+```
+
+## Was daraus folgt: Rückstau statt Stille
+
+Der einzige Weg zu echtem Live-Betrieb, den die Daten hergeben: Hat die HU den Live-Slot eingeholt, **verzögert der ESP die Read-Antwort**, statt Stille zu liefern. TinyUSB bietet dafür den Rückgabewert 0 ("not ready", der Callback wird erneut aufgerufen) oder Teilantworten; für die verwendete arduino-esp32-Version ist das noch zu prüfen. Die Leserate der HU koppelt sich dann an die Producer-Rate. Diesen Ansatz hat das Projekt noch nicht getestet; er taucht nur als Stichwort "stall timing" in `IDEE-USB-MSC-MENUE.md` auf.
+
+Die Rechnung dazu:
+- **Ring:** Es muss nur eine HU-Anfrage hineinpassen. Beobachtet sind fast nur 4-KiB-Reads (`n8kPlus=0`), also reichen **48 KiB, kein PSRAM nötig**.
+- **Wartezeit pro 4-KiB-Read bei leerem Ring:** 4096 ÷ (Bitrate/8). Das ergibt 0,68 s bei 48k, 0,34 s bei 96k und **0,26 s bei 128k**. Eine höhere Bitrate senkt also das Timeout-Risiko; der Pump schafft 16 KB/s problemlos.
+- **Dateilänge = maximale Spielzeit** (Länge ÷ 6000 B/s bei 48k): 512 KiB reichen für 87 s, 8 MiB für 23 min, 64 MiB für 3,1 h.
+- **Puffer:** Der Burst-on-Connect füllt den HU-Cache in den ersten 60 s um ~27 s Puffer gegen WLAN-Aussetzer.
+
+## Vorgeschlagene nächste Tests
+
+1. **FW-Flag `live_stall_ms`:** Den Cursor nur bei echten Daten weiterzählen, bis zu `stall_ms` auf Daten warten und erst danach mit Stille als Fallback antworten. Im Auto die Stufen 300, 700, 1500 und 3000 ms bei 128k fahren. Zu messen: kommt es zu USB-Resets (`inquiry`/`plugCount`), liest die HU gleichmäßig in Höhe der Producer-Rate, und ist Ton zu hören?
+2. **`streamBytesServed_` bei `startStream()` zurücksetzen**, damit `liveBytes` stimmt.
+3. **Muster B getrennt testen:** Liest die HU eine gecachte Datei nach einem Remount mit neuer Seriennummer oder geänderter Dateigröße erneut?
+4. **Lab-Mimic anpassen:** ganze Datei mit 0,8 MB/s lesen, danach die nächste Datei vorlesen.
+
+Eine Unstimmigkeit bleibt offen: Am 01.10. (0.4.31) las die HU von `fav1` nur 164 KiB, nicht die ganze Datei. Vielleicht lag sie teilweise noch im Cache einer früheren Sitzung; aus den Daten ist das nicht zu klären.
+
+Soll ich daraus einen Bericht in `docs/betrieb/artifacts-2026-10-06-feld/` anlegen oder den `live_stall_ms`-Patch für die Firmware entwerfen?
+
+GPT Vorschlag: 
+Ja. Mit dieser neuen Auswertung würde ich die bisherige Strategie deutlich ändern. Die zentrale Hypothese ist jetzt nicht mehr „Ring zu klein“, sondern „MSC-Read muss bei fehlenden Live-Daten backpressurefähig werden“.
+Ich würde im Cursor-Planungsmodus allerdings noch nicht sofort live_stall_ms implementieren. Erst würde ich die neue HU-Datei-Cache-Hypothese mit einem sehr kleinen, gezielten Lab-Mimic absichern. Danach ist der Stall-Test der logisch nächste Schritt.
+Meine Reihenfolge
+1. Zuerst die neue Semantik als Plan-Fundament festschreiben
+Die bisherige Interpretation sollte in den normativen/Plan-Dokumenten korrigiert werden:
+HU-Burst ≠ Decoder-Prefill-Anforderung
+HU-Burst ≈ noch nicht gelesener Teil der Datei
+Und explizit:
+hostAbs
+ist kein Maß für eine erforderliche Ringgröße.
+Das verhindert, dass Cursor/Claude/Mistral beim nächsten Durchlauf wieder auf „400 KiB/PSRAM“ springen.
+
+2. streamBytesServed_ sofort korrigieren
+Das ist ein kleiner, eindeutig belegter Fehler und sollte unabhängig vom Stall-Experiment behoben werden:
+startStream()
+    -> streamBytesServed_ = 0;
+    -> underruns_ = 0;
+Danach ist
+liveBytes = streamBytesServed - underruns
+über einen einzelnen Track überhaupt erst sinnvoll.
+Das würde ich vor dem nächsten Fahrzeugtest erledigen.
+
+3. Dann den Lab-Mimic bauen
+Das ist für mich jetzt der wichtigste Test vor dem Auto.
+Nicht mehr:
+„Kann ein Host langsam genug lesen?“
+sondern:
+„Verhält sich unser Lab-ESP genauso, wenn der Host eine komplette 512-KiB-Datei mit ~0,8 MB/s liest und anschließend die nächste Datei vorliest?“
+Also möglichst exakt:
+fav1
+  ↓
+HU-Mimic: kompletter File-Read @ ~0,7–1 MB/s
+  ↓
+EOF
+  ↓
+fav2
+  ↓
+kompletter File-Read
+Dabei muss man hostAbs, fileOff, absBase/absEnd, underruns, streamBytesServed und Slotwechsel korrelieren.
+Wenn das reproduzierbar das Feldmuster erzeugt, ist die neue HU-Hypothese extrem stark abgesichert.
+
+4. Danach der entscheidende Stall-Versuch
+Erst dann würde ich live_stall_ms implementieren.
+Aber nicht direkt mit 300/700/1500/3000 ms als vier verstreuten Auto-Tests.
+Ich würde eine saubere experimentelle Zustandsmaschine daraus machen:
+HU READ
+   │
+   ├── Daten vorhanden
+   │       ↓
+   │    sofort liefern
+   │
+   └── keine Daten
+           │
+           ↓
+       WAIT / NOT READY
+           │
+       ┌───┴────────┐
+       │            │
+   Daten kommen   Timeout
+       │            │
+       ↓            ↓
+    liefern      Silence
+Der wichtigste Punkt:
+Der Host-Cursor darf bei einem fehlgeschlagenen Read nicht weiterlaufen.
+Das ist meines Erachtens sogar wichtiger als die konkrete Timeoutdauer.
+Der bisherige Code macht momentan:
+out[i] = kSil[...];
+hostAbsCursor_++;
+obwohl gar kein Live-Datenbyte vorhanden war.
+Damit behauptet die virtuelle Datei gegenüber der HU:
+„Diese Bytes hast du bekommen.“
+obwohl tatsächlich Stille geliefert wurde.
+Das zerstört anschließend die räumliche Beziehung zwischen HU-Readposition und Live-Ring.
+
+5. Aber: Nicht blind return 0 aus dem MSC-Callback machen
+Hier würde ich Cursor ausdrücklich einen kleinen technischen Spike aufgeben.
+Vor der Implementierung muss geklärt werden, wie die konkrete Kombination aus
+ESP32-S3
+TinyUSB
+Arduino-ESP32-Version
+verwendeter MSC-Callback-Signatur
+mit 0 bzw. Teilantworten umgeht.
+Es gibt drei denkbare Varianten:
+A – 0 = NOT READY
+Ideal:
+HU READ 4096
+        ↓
+kein Datenbyte
+        ↓
+return 0
+        ↓
+HU versucht später erneut
+B – Teilantwort
+Zum Beispiel:
+4096 angefordert
+2048 verfügbar
+→ 2048 liefern
+Das könnte ebenfalls funktionieren, muss aber HU-seitig getestet werden.
+C – Callback darf nicht blockieren
+Dann müsste man eventuell innerhalb des Callbacks warten, was ich nicht als erste Wahl nehmen würde.
+Das darf Cursor nicht einfach annehmen. Erst API-/Stack-Verhalten verifizieren.
+
+6. Der erste Fahrzeugtest sollte 128 kbit/s verwenden
+Das halte ich für eine sehr gute Idee aus dem neuen Bericht.
+Bei 4 KiB:
+Bitrate
+Zeit für 4 KiB
+48 kbit/s
+~683 ms
+96 kbit/s
+~341 ms
+128 kbit/s
+256 ms
+
+Ich würde deshalb zunächst:
+MP3 CBR 128 kbit/s
+nehmen.
+Nicht weil 128 kbit/s für PiDrive zwingend besser ist, sondern weil damit der erste Proof-of-Concept weniger empfindlich gegenüber HU-/USB-Timing wird.
+Wenn das funktioniert:
+128k → 96k → 48k
+testen.
+Damit bekommt ihr eine sehr saubere Grenzkurve.
+
+7. Ich würde den Ring NICHT vergrößern
+Das ist eine wichtige Konsequenz.
+Mit der neuen Erkenntnis sehe ich derzeit keinen technischen Grund für PSRAM.
+Wenn die HU tatsächlich mit 4-KiB-Reads arbeitet und bei leerem Live-Fenster warten kann:
+Ring 48 KiB
+      +
+Read-Stall
+      +
+Producer ~6–16 KB/s
+reicht prinzipiell.
+Der Ring wird dann nicht mehr benötigt, um den BMW-Read-Burst zu absorbieren.
+Er dient nur noch als:
+Jitter-/Disconnect-Puffer zwischen Producer und HU.
+Das ist eine viel elegantere Architektur.
+
+8. Einen Punkt würde ich allerdings noch vor dem Auto testen
+Die Aussage
+„Die HU liest immer die komplette Datei“
+ist jetzt sehr plausibel, aber ich würde sie noch nicht als universelle HU-Regel dokumentieren.
+Der 01.10.-Fall mit nur 164 KiB ist dafür ein Gegenbeispiel.
+Daher:
+HU-Verhalten:
+  wahrscheinlich aggressiver File-Prefetch / Cache
+statt:
+Die HU liest immer jede Datei komplett.
+Der Unterschied ist wichtig.
+Der 01.10.-Fall könnte tatsächlich Cache-Zustand gewesen sein. Genau deshalb würde ich den neuen Lab-Mimic mit kontrolliertem Cache-/Remount-Zustand bauen.
+
+9. Muster B würde ich separat behandeln
+Das würde ich nicht in den Stall-Test hineinmischen.
+Dafür ein kleines Experiment:
+Session A
+  fav1 auswählen
+  HU liest fav1
+  → Cache warm
+
+Remount / neue Serial / Geometrieänderung
+
+Session B
+  fav1 auswählen
+Dann messen:
+liest HU fav1 erneut?
+Wenn ja:
+Cache invalidiert.
+Wenn nein:
+HU hält File-/Track-Cache über Remount/Session hinweg.
+Das ist für das endgültige Design sehr relevant, aber nicht Voraussetzung für den ersten Live-Stall-Proof.
+
+10. Der neue Kernversuch sollte so aussehen
+Ich würde Cursor konkret folgenden Auftrag geben:
+Phase 1
+-------
+streamBytesServed_ bei startStream() zurücksetzen.
+Keine sonstigen Architekturänderungen.
+
+Phase 2
+-------
+Lab-Mimic:
+HU-Verhalten "ganze Datei schnell lesen" reproduzieren.
+512 KiB fav1 vollständig lesen.
+Anschließend fav2 vollständig lesen.
+Messung der Cursor-/File-/Ring-Semantik.
+
+Phase 3
+-------
+MSC-Leseweg experimentell um einen konfigurierbaren
+live_stall_ms erweitern.
+
+Bei fehlenden Live-Daten:
+- Cursor NICHT erhöhen
+- keine Silence-Bytes während Stall
+- Read entweder NOT READY oder technisch korrekt
+  unterstützte Teilantwort
+- Timeout erst danach Silence-Fallback.
+
+Phase 4
+-------
+Lab:
+128-kbit/s Producer
+→ HU-Mimic mit aggressivem File-Read
+→ mindestens 30 s
+→ kein Cursor-Drift
+→ keine künstlichen Underruns.
+
+Phase 5
+-------
+Fahrzeug:
+300 / 700 / 1500 / 3000 ms
+jeweils separater Run.
+
+Messen:
+- USB reset
+- inquiry / read10
+- read cadence
+- hostAbs
+- absBase/absEnd
+- underruns
+- streamBytes
+- tatsächlicher Ton
+- Trackwechsel
+
+11. Ein zusätzlicher Test wäre sogar noch wertvoller
+Bevor ihr 300–3000 ms im Auto ausprobiert:
+Absichtlich einen kontrollierten Producer-Gap erzeugen.
+Zum Beispiel:
+Producer
+██████████████
+              ██████████████
+mit z.B. 500 ms Pause.
+Dann muss der ESP beweisen:
+HU fordert 4 KiB
+       ↓
+Ring leer
+       ↓
+STALL
+       ↓
+500 ms
+       ↓
+Producer liefert
+       ↓
+4 KiB
+       ↓
+HU läuft weiter
+Wenn das im Labor funktioniert, habt ihr den Kernmechanismus bewiesen.
+Dann ist der Autotest eigentlich nur noch:
+„Akzeptiert die BMW-HU dieses Read-Verhalten?“
+Das ist eine wesentlich kleinere Unsicherheit.
+
+12. Meine Priorisierung
+Ich würde die nächsten Schritte so gewichten:
+Priorität
+Aufgabe
+Warum
+P0
+streamBytesServed_ bei startStream() resetten
+eindeutiger Telemetriefehler
+P0
+MSC-Callback/API für NOT-READY prüfen
+Voraussetzung für Stall
+P0
+Cursor bei fehlenden Daten nicht erhöhen
+verhindert irreversiblen Cursor-Drift
+P1
+aggressiven HU-File-Read im Lab reproduzieren
+neue Kernhypothese beweisen
+P1
+kontrollierter Producer-Gap im Lab
+Stall mechanisch beweisen
+P1
+128-kbit/s Stall-Test
+erste reale Live-Architektur
+P2
+300/700/1500/3000 ms im Auto
+HU-Toleranz bestimmen
+P2
+Pattern-B/Cache-Test
+Cachemodell klären
+P3
+96/48 kbit/s
+reale Zielbitraten optimieren
+P3
+PSRAM
+aktuell nicht erforderlich
+
+Und ganz wichtig:
+Ich würde keinen neuen großen Umbau zulassen.
+Ihr habt gerade möglicherweise zum ersten Mal eine sehr elegante Erklärung, die gleichzeitig
+512-KiB-Dateigröße,
+438272 B,
+360448 B,
+524288 B,
+8-MiB-fav0,
+164-KiB-Historienfall,
+~0,7–1 MB/s HU-Leserate,
+Pattern A/B,
+und den 6-Sekunden-Erfolg
+in ein gemeinsames Modell bringt.
+Das sollte jetzt experimentell falsifiziert werden, nicht sofort als endgültige Wahrheit kodiert werden.
+Wenn der 500-ms-Lab-Gap + NOT-READY-Test funktioniert und anschließend der BMW bei 128 kbit/s mit live_stall_ms tatsächlich kontinuierlich Ton liefert, wäre das meiner Einschätzung nach der bisher wichtigste Durchbruch des gesamten MSC-Projekts. Dann wäre die Architektur nicht „großer Ring gegen BMW-Burst“, sondern ein sauberer MSC-Backpressure-/Flow-Control-Adapter zwischen Echtzeit-Producer und nicht-echtzeitfähigem HU-File-Reader.
+Mistrals Bericht:
+
+# Review: Feld-AV-Session `feld-av-0723` (0.4.46-dev im Auto) + vorgelagerte Lab-Commits
+
+**Commits im Scope:** `097a79b` (Docs-Konsolidierung), `1464c3c` (Lab bulk drainTcp 0.4.46), `2daa277` (Feld-Prep), `a1d76b5` (Feld-AV-Session + Gesamtbericht), `ec56935` (runde-0810-Nachzug). HEAD = `ec56935`, main == origin/main zum Lesezeitpunkt.
+
+**Kurzfazit:** Der Lab-Hold-PASS mit bulk-drainTcp ist real und die Byte-Read-Ceiling-These ist damit experimentell bestätigt (\~840 KB/s Idle, Faktor \~11–12). Aber der Feldtest zeigt: 0.4.46 allein ändert am Feld-AV nichts — kein Ton die ganze Session. Die Schicksalsfrage ist jetzt **messbar beantwortet und pessimistisch**: Der HU-Host-Cursor fuhr bis **438.272 B (≥428 KiB)** kumulativ (07:58), in Runde 08:10 sogar bis **\~4,1 MiB** — alles ≫ 48-KiB-Ring und auch ≫ 248 KiB. Der 48-KiB-Ring ist im Feld chancenlos, sofern die HU bei gültigem MP3 genauso liest. Zusätzlich existiert ein **zweites, vom Pump unabhängiges Failure-Muster**: Detect ohne Host-Cursor (hostAbs=0, armed=False, HU liest nur Body/Cache).
+
+---
+
+## 1. Geladene Artefakte (GitHub raw/API)
+
+- `GESAMTBERICHT-FELD-AV-0723.md`, `OPERATOR-NOTES.txt` (Session-Kommentarlauf 07:50–08:13)
+- `correlate-run-post-rst/burst-summary-post-rst.json` + `correlate-final.json` (07:58 Bayern-Detect)
+- `correlate-run-0805/correlate.log` (57 s, 08:06–08:07, fav2 ohne Cursor)
+- `correlate-run-0807/correlate-final.json` (alles null, playRejectCount=263)
+- `runde-0810/series.txt` (125 Zeilen, 08:11–08:14)
+- Ordnerlisting `feld-av-0723/` (75 Einträge)
+- Lab: `GESAMTBERICHT-BULK-DRAINTCP-046.md`, `pump-idle-bulk-summary.jsonl`, `lab88-pump-idle-bulk-071644-baseline/REPORT.json`, `lab88-async-071820-bts-holdstrict/REPORT.json`, `lab88-async-071910-bts-localhold/REPORT.json` (+series), `lab88-async-071943-maxpump-hold-bulk/REPORT.json` (+series, prep)
+- `KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md` (097a79b), `MSC-AKTUELL.md` (aktueller Stand)
+
+**Nicht geladen** (⚠️ Beweisgrenze): `correlate-run-0807/correlate.log`+`watch.jsonl`, `switch-run-0807/`, `correlate-run-replug/`, `correlate-run/`, `runde-0810/status/st-*.json` (125 Einzel-Snapshots; nur `series.txt` ausgewertet), alle `bridge-*.txt`, `status-*.json`-Einzeldateien, `SESSION-0723.txt`, `FELD-AV-OPERATOR.md`, Patch von `tools/m3_lab_async_producer.py` und `feld_av_burst_summary.py` (nur Commit-Stats gesehen).
+
+---
+
+## 2. Direkt belegte Fakten (aus Rohdaten nachgerechnet)
+
+**A1 — Bulk-drainTcp hebt den Idle-Ceiling auf \~840 KB/s.**  
+`pumped_bytes=6.723.372` in `wall_s=8,0033` → **840.078 B/s** ✓ (base, 512-B-Frames, gap 200 µs). gap0: 796.630; batch8: 837.807 B/s. Damit ist Claudes Byte-`read()`-These aus der KRITIK-Review (097a79b, Maßnahme P0-Lab) experimentell bestätigt: \~70 KB/s → \~840 KB/s, Faktor \~11,4.
+
+**A2 — maxpump-hold 248 KiB ist formaler PASS.**  
+`lab88-async-071943`: after\_burst und final: `und=0 ∧ behind=0 ∧ live=253.952 ∧ in_window=true`, hostAbs=299.008 in Fenster 282.624..331.776. Das ist der erste PASS gegen einen 248-KiB-Host-Burst überhaupt (0.4.45: und≈195 KiB FAIL).
+
+**A3 — Aber: Pump unter Last war nur \~268 KB/s, nicht 840.**  
+`pumped_bytes=282.624 / producer_life_s=1,056` → **267.594 B/s** (host 275.146 B/s, Ziel 5 MB/s, `pump_target_over_host=18×`). Der 840-KB/s-Wert ist ein **Idle**-Wert; unter Last belegt ist nur \~268 KB/s. PASS-Geometrie: Pump ≈ Host-Rate, nicht Pump ≫ Host. (B-Muster: kurzer Producer-Lauf könnte die 840 nie ausfahren — unbelegt, ob unter Last mehr geht.)
+
+**A4 — bts-holdstrict FAIL vs. bts-localhold PASS bei identischer Config.**  
+Beide `pump_bps=5MB/s, host_gap=4.5ms, prefill 48, post_head 96 KiB`. holdstrict (PD0070): behind=57.344, in\_window=false, pass=false. localhold (PD0071): behind=0, in\_window=true, pass=true. Unterschied ist das Tool-Update (lokale absEnd-Schätzung zwischen Status-Polls, +35 Zeilen in `m3_lab_async_producer.py`) — bestätigt die Berichtsaussage: „Bei schnellem Pump reicht Status-Poll nicht."
+
+**A5 — Feld-Erstburst ist groß: Host-Cursor 438.272 B (07:58), max Einzelschritt 143.360 B.**  
+`burst-summary-post-rst`: `hostAbs_delta=143.360` über 87 s, `max_host_step_bytes=143.360` (140 KiB in einem Sampling-Intervall, `max_step_bps=250.383`), final `hostAbsCursor=438.272`, `und=438.272`, `live=0`, `host_in_window=false`, `host_behind_base=186.185`. Fenster stand bei 624.457..673.609 → **Producer hat das Fenster am Host-Cursor vorbeigescrollt** (18:07-Geometrie), Host blieb dann 80+ s kleben.
+
+**A6 — Runde 08:10: Host-Reads bis \~4,1 MiB, und bis \~6,2 MiB, live=0 durchgehend.**  
+series.txt: 08:11:49 host=286.720 / und=2.150.400; 08:12:15–17 host wächst 1.146.688 → 4.104.192; 08:12:35+ host=360.448 für &gt;60 s eingefroren; 07:58-Analog: armed flippt bei Senderwechsel auf 0 (BOB 08:11:58). Nie `live>0`.
+
+**A7 — Zweites Failure-Muster: Detect ohne Cursor.**  
+correlate-run-0805 (08:06–08:07, Bayern 08:04): `act=1, armed=0, host=0` durchgehend bei 88 Samples, `und=0`. Auffällig: `live=7.823.360` konstant über 57 s bei `streamBytes=0` und absEnd-Wachstum nur \~7 KB/s — liveBytes verhält sich hier semantisch verdächtig (wirft Frage auf, was liveBytes nach Arm-Verlust zählt). (C — offen, muss gegen `STREAM-COUNTER-SEMANTIK.md` geprüft werden.)
+
+**A8 — 0.4.46 war die ganze Session im Auto.**  
+OTA 07:51 (vor dem ersten Detect-Versuch 07:52+). D. h. alle Feld-FAILs ab 07:52 sind unter bulk-drainTcp entstanden — der Lab-Pump-Hebel allein hat das Feld-AV-Problem nicht gelöst.
+
+---
+
+## 3. Prüfung der Cursor-/Gesamtbericht-Aussagen
+
+
+| Aussage (Cursor-Chat / Gesamtbericht)                                                                   | Urteil           | Beleg                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| „Bayern 07:58: Detect PASS, audio\_start fav1, armed, hostAbs stuck 438272"                             | ✅                | burst-summary + correlate-final (A5)                                                                                                                                                                                  |
+| „Host-Burst \~438 KiB"                                                                                  | 🟡 präzisieren   | 438.272 ist der **kumulative** Cursor; größter Einzelschritt 143.360 B in ≤1 s. Als Schicksalsgröße gilt: kumulativer Erstburst ≥428 KiB in wenigen Sekunden — Ring-relevant ist diese Summe, nicht der Einzelschritt |
+| „08:04 Bayern: Detect + LED, aber armed=False, hostAbs=0 — HU liest Body/Prefetch, nicht den Live-Ring" | ✅                | correlate-run-0805 (A7)                                                                                                                                                                                               |
+| „Runde 08:10: armed+hostAbs bis \~4 MiB, und bis \~6 MiB, live=0, kein Ton"                             | ✅                | series.txt: host max 4.104.192, und max 6.225.920 (A6)                                                                                                                                                                |
+| „Viele RSTs = Session-Reset, kein neuer Mechanismus"                                                    | ✅ konsistent     | OFFLINE-Samples ↔ up-Restarts (n=6/7, n=24/25, n=42/43)                                                                                                                                                               |
+| „0.4.46 ändert am Feld-AV nichts Sichtbares"                                                            | ✅                | kein einziges live&gt;0 unter 0.4.46 (A6, A7, A8)                                                                                                                                                                     |
+| „Detect funktioniert (07:58 + 08:04)"                                                                   | ✅                | audio\_start-Ereignisse in Operator-Notes; aber Detect ≠ Cursor (Muster B)                                                                                                                                            |
+| MSC-AKTUELL: „Prefill an Feld-Erstburst ≥\~400 KiB ausrichten"                                          | ✅ folgerichtig   | A5: kumulativer Burst ≥428 KiB &gt; 48-KiB-Ring &gt; jedes Prefill im aktuellen Design                                                                                                                                |
+| KRITIK P2-Regel „Slot-Geometrie (Live ≤ Ring) nur wenn Feld Burst≫48 KiB zeigt"                         | 🟠 **ausgelöst** | A5/A6: Feld zeigt Burst ≫ 48 KiB — die P2-Bedingung ist jetzt erfüllt                                                                                                                                                 |
+
+
+**Nicht auflösbar aus den geladenen Daten (C):**
+
+1. Warum `und ≫ hostAbs` in Runde 08:10 (6,2 MiB und bei max 4,1 MiB host) — und-Zähler wächst ohne entsprechenden Host-Fortschritt. Fenster-Geometrie (Host vor base → Miss zählt als und?) plausibel, aber ohne correlate-watch-Datei der Runde nicht bewiesen.
+2. `liveBytes=7.823.360` konstant in correlate-0805 — Zählersemantik nach armed-Verlust unklar.
+3. Ob die HU bei **gültigem MP3** (nicht Silence/Stub) denselben Burst fährt — der Kernvorbehalt aus der KRITIK bleibt bestehen. 07:58 war Bayern-Live-Inhalt, aber Ton kam nie raus; ob die HU deshalb anders gelesen hätte, ist untestbar, solange live=0 ist.
+
+---
+
+## 4. Prüfung Vorgänger-Reviews (Stichprobe)
+
+
+| Quelle                        | Aussage                                                                                | Urteil                                                                                                                                                             |
+| ----------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Claude (via KRITIK 097a79b)   | Byte-`read()`-Schleife in drainTcp ist der Ceiling                                     | ✅ **jetzt experimentell bestätigt** (A1) — strongest single outcome dieser Commits                                                                                 |
+| KRITIK 3.4                    | 253952 = Live-Pfad-Underrun, gekoppelt an Slot/Datei, kein „natürlicher Decoder-Burst" | 🟡 bleibt offen: Feld 07:58 zeigt jetzt Host-Reads bis 438 KiB **mit** Host-Cursor-Bewegung (nicht nur und-Zähler) — die HU liest real lange Strecken am Live-Slot |
+| Mistral (ich, c99ac36-Review) | „248 KiB Schicksalsgröße; falls Feld-Burst so groß, Bridge-only unmöglich"             | ✅ Verschärfung eingetreten: Feld-Burst ≥428 KiB kumulativ → These war richtig, aber even pessimistischer                                                           |
+| KRITIK P0-Feld                | Erstburst bei gültigem Inhalt messen                                                   | ⚠️ **teilweise ausgeführt**: Burst gemessen (A5), aber nie mit live&gt;0/validem MPEG — die entscheidende Koppelung fehlt                                          |
+
+
+---
+
+## 5. Eigene Bewertung
+
+1. **Ring-Entscheidung steht an.** Die P2-Bedingung (Feld-Burst ≫ 48 KiB) ist erfüllt. Ein 48-KiB-Ring kann 428 KiB in \~1,7 s bei 840 KB/s nicht puffern — selbst der neue bulk-Pump müsste den Burst in Echtzeit durchreichen (268 KB/s unter Last reichen für 250 KB/s Einzelschritt gerade so, aber nicht für 840 KB/s über 0,5 s). Bridge-only ist damit so gut wie ausgeschlossen, **es sei denn** der Burst ist Silence-geometriebedingt (Datei-/Slotgröße, ganze 512-KiB-Datei wie Feld 15:40). Nächster Hebel: Slot-Geometrie prüfen (Live-Anteil ≤ Ring) — Freeze-Bruch-Warnung steht dazu im KRITIK („nur wenn Feld Burst≫48 KiB zeigt" — jetzt gezeigt).
+2. **Zwei getrennte Feld-Probleme, nicht eines.** Muster A (Arm + Burst → Fenster-outrun/und) ist Pump-/Geometrie-Thema; Muster B (Detect, hostAbs=0, Cache) ist reines HU-Verhalten — bulk-drainTcp konnte Muster B nie heilen. Ein Großteil der RST-Runde war Muster B; Prefill-Vergrößerung allein hätte dort nichts geändert.
+3. **Lab-PASS-Transfer ist jetzt negativ belegt** (Gesamtbericht These 1 zurecht): 0.4.46 + Hold-PASS im Lab → 0 Ton im Feld. Grund plausibel: Lab-Host-Burst war konstruiert ≤ Ring; Feld-Burst ist es nicht.
+4. **Hausfrauen-Zahlen gefahren:** MSC-AKTUELL sagt „Erstburst ≥\~400 KiB" — durch meine Nachrechnung gedeckt (438.272 B kumulativ;⚠️ Einzelschritt 143.360). Beide Zahlen sollten künftig getrennt zitiert werden, sonst droht eine „248-KiB-2.0"-Fehlkalibrierung des Prefill-Maßes.
+
+---
+
+## 6. Offene Punkte
+
+- **O1 (C):** und-vs-host-Geometrie in Runde 08:10 klären (correlate-watch der Runde laden; `und = hostMissBytes?`).
+- **O2 (C):** liveBytes-Semantik nach Arm-Verlust (7.823.360 konstant) gegen `STREAM-COUNTER-SEMANTIK.md`.
+- **O3 (C):** Muster-B-Trigger: Wann entscheidet die HU, nach Detect einen Cursor zu fahren (07:58) vs. nur zu prefetchen (08:00/08:04)? Cache-Hitze ist naheliegend (Rock war erster Sender, ohne LED = warm), aber nicht belegt.
+- **O4:** Burst bei gültigem MP3 — bleibt der einzige Weg, die Silence-Artefakt-Hypothese zu killen. Solange live=0, misst man Geometrie, nicht Audiodecoder-Verhalten.
+- **O5:** Pump unter Last: Ziel 5 MB/s, erreicht 268 KB/s bei 1s-Producer. Längerer Lauf nötig, um echte Lastdecke zu messen (Lab, billig).
+- **O6:** prep `restart_err=Expecting value` in allen drei Lab-Runs — Restart schlug offenbar fehl (uptime 12s trotzdem). Sauberkeit des Testzustands dokumentieren.
+
+---
+
+## 7. Nächste Schritte (Vorschlag, priorisiert)
+
+1. **Slot-Geometrie vor PSRAM:** Prüfen, ob Live-Slot so geschnitten werden kann, dass Live-Anteil ≤ 48 KiB bleibt (KRITIK P2, Bedingung erfüllt). Billiger als PSRAM-Ring; Scan-Risiko beachten.
+2. **Muster-B-Trigger klären:** Cache-warm/cold-Protokoll im Feld (Sender-Reihenfolge systematisch variieren) — heute nur anekdotisch (Rock ohne LED, BOB/Bayern mit).
+3. **Lab: Pump-Lastdecke messen** (Producer ≥10 s bei 5 MB/s-Ziel) → ist 840 KB/s unter Last haltbar?
+4. **Kein** Detect-/Lock-Umbau (Freeze hält, Gesamtbericht schließt das explizit an).
+5. Berichtswesen: künftig **kumulativen Burst und max. Einzelschritt getrennt** führen (feld\_av\_burst\_summary erweitern).
+
+---
+
+## 8. Ampel
+
+
+| Thema                              | Stand                                                                               |
+| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| Byte-Read-Ceiling (Lab)            | 🟢 bestätigt + behoben (\~840 KB/s Idle)                                            |
+| maxpump-hold 248 KiB (Lab)         | 🟢 PASS — aber Pump unter Last nur 🟡 (\~268 KB/s belegt)                           |
+| Feld-Erstburst-Größe               | 🟠 gemessen: ≥428 KiB kumulativ / 140 KiB Einzelschritt; Content-Abhängigkeit offen |
+| Bridge-only (48-KiB-Ring)          | 🔴 praktisch ausgeschlossen, solange Burst real ist                                 |
+| Muster B (Detect ohne Cursor)      | 🟠 reproduzierbar im Feld, Trigger unbekannt                                        |
+| AV / Ohr im Feld                   | 🔴 kein Ton, live=0 überall, auch mit 0.4.46                                        |
+| Freeze / Sequenz-GO / Detect-Umbau | 🟢 hält / 🔴 gesperrt / kein Umbau                                                  |
+| HU-File-Cache-Modell (§9)          | 🟢 Kern bestätigt; Einzelfragen offen                                               |
+
+
+---
+
+## 9. Nachtrag: HU-File-Cache-Modell — Querschnittprüfung der neuen Analyse
+
+**Anlass:** Neue Auswertung (Rohdaten + FW-Code) mit der These: Die HU liest die gewählte Datei sofort komplett (\~0,7–1 MB/s), spielt aus dem Cache und springt am Dateiende zum nächsten Track. „Burst" = ungelesener Dateirest, keine Decoder-Puffergröße. Muster A und B seien derselbe Mechanismus; Cure = Read-Stall (Backpressure) statt Stille.
+
+### 9.1 Verifizierte Behauptungen (durch mich nachgeprüft)
+
+
+| Behauptung                                                                                | Prüfung                     | Ergebnis                                                                                                            |
+| ----------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Code: Cursor zählt bei Miss weiter (`StreamBuffer.h` readAt)                              | FW-Code geladen             | ✅ **real**: `out[i]=kSil[…]; if (useCursor) hostAbsCursor_++;` — einmal vor `absEnd` geraten → dauerhafte Stille    |
+| Code: `kSeqSlop=8192`; Reads mit Sprung &gt;8 KiB laufen über fileOff (und++ ohne Cursor) | FW-Code                     | ✅ real — klärt mein **O1** (und ≫ host in Runde 08:10)                                                              |
+| Code: `streamBytesServed_` nur bei Plug zurückgesetzt                                     | `UsbMscGadget.cpp`          | ✅ real (Reset nur im Plug-Block, `startStream()` resettet nicht) — klärt mein **O2** (liveBytes=7.823.360 Artefakt) |
+| Arm 50 ms nach `play_uid` (07:58)                                                         | `bridge-0758-bayern.txt`    | ✅ `trace t=0ms play_uid / t=50ms audio.start`                                                                       |
+| HU liest Dateikopf \~64 s vor Play-Erkennung                                              | `bridge-0758`               | ✅ `play.reject seq_short from=16465 age=64272ms`                                                                    |
+| Fast nur 4-KiB-Reads                                                                      | `st-55.json` xfer           | ✅ `n4k=2293, n8kPlus=0`                                                                                             |
+| HU-Leserate \~0,7–1 MB/s                                                                  | `st-55.json` mscTrace       | ✅ 4-KiB-Reads mit gap=4 ms → \~1 MB/s; 9,39 MB bytesRead in 16 s ≈ 0,57 MB/s netto                                  |
+| Next-Track-Prefetch während Wiedergabe                                                    | `st-55.json`                | ✅ mscTrace: fav2 (BOB) wird lückenlos gelesen, während `playingUid=fav1` — **Muster-B-Ursache direkt beobachtet**   |
+| fav1 komplett gelesen (524.288)                                                           | `st-55.json` slotMap        | ✅ `maxSeq=524288` bei `bytes=524288`; 163.840 + 360.448 = 524.288                                                   |
+| Dateigrößen fav0=8 MiB, fav1/2=512 KiB                                                    | `st-55.json` slotMap        | ✅ `bytes: 8228864 / 524288 / 524288`                                                                                |
+| Producer-Rate \~8,6–10 KB/s früh, dann \~6 KB/s                                           | `status-0758-bayern-series` | ✅ absEnd wächst \~9,5–10 KB/s                                                                                       |
+| 01.10.-Referenz: 167.936 − 115.740 − 3.044 = 49.152 (Ring exakt)                          | Arithmetik                  | ✅                                                                                                                   |
+| Track-Dauer 87,3 s + \~6 s = 93,2 s Wechsel                                               | Arithmetik                  | ✅ (524.288−3.044)/5.973 = 87,27 s — Wechsel=Track-These konsistent                                                  |
+
+
+### 9.2 Einschränkungen / Korrekturen am Modell
+
+- **„Liest immer komplett" ist zu stark.** In `st-55` (16 s Uptime, alles in einem Plug) wurde fav0 (Rock) nur bis `maxSeq=5.971.968` von 8.228.864 gelesen — die HU bricht den Read beim Trackwechsel ab. Richtiger: **aggressiver Vor-Lese-Bis-EOF-oder-Abwahl** ( deckt auch den 01.10.-164-KiB-Fall plausibel).
+- Die Prä-Arm-Zahlen (86.016 / 163.840) und „fav0 komplett (b8421376)" habe ich nicht direkt verifizieren können (vermutlich aus bridge-Logs/anderem Snapshot) — Summen-Checks über `maxSeq` stützen sie aber.
+- **Kritische offene Frage, die beide Pläne (Analyse + GPT) unterschlagen:** 07:58 zeigt **Batch-then-Play** — Reads fertig in \~1 s, danach 87 s Wiedergabe aus Cache, keine Reads während des Abspielens. Falls die HU erst nach komplettem Read abspielt, liefert Read-Stall **kein Live-Audio, sondern einen um \~(Dateigröße/Producer-Rate) versetzten Echo-Track** (bei 512 KiB/48k ≈ 87 s Versatz; Play startet erst, wenn der gestallte Read durch ist). Ob die HU inkrementell abspielt oder erst nach EOF, ist mit Stall first entscheidbar — die Feldmessung muss Read-Ende vs. hörbarem Start explizit timestampen. Ein 87-s-Versatz wäre immer noch besser als Stille, aber kein Live-Betrieb.
+- **Next-Track-Prefetch kollidiert mit Stall:** st-55 zeigt die HU liest die nächste Datei vor, während die aktuelle läuft. Stall nur im aktiven Live-Slot; Prefetch-Slots sofort mit Stub bedienen — sonst blockiert der Prefetch-Read das Abspielen oder zapft Producer-Daten des falschen Senders an. Muss ins `live_stall_ms`-Design.
+
+### 9.3 Bewertung des GPT-Plans
+
+GPTs Reihenfolge (P0 Telemetrie-Fix + Cursor-no-drift + API-Spike → P1 Lab-Mimic + kontrollierter Producer-Gap → P2 Stall-Leiter 128k → P3 Bitraten/PSRAM) ist richtig priorisiert. „Nicht sofort implementieren, erst Lab-Mimic" teile ich — der Mimic ist billig und falsifiziert/verifiziert das Modell am esp32.pidrive-Lab direkt. „Ring nicht vergrößern / kein PSRAM" ist unter dem Modell konsequent; ich würde PSRAM nur dann wieder auflegen, wenn der Stall an HU-Timeouts scheitert.
+
+Eigene Ergänzungen siehe 9.2: Batch-vs-Echtzeit-Playback als Messziel P1, Per-Slot-Stall-Politik, „liest komplett" abschwächen.
+
+### 9.4 Konsequenzen für frühere Bewertungen
+
+- Mein „Bridge-only praktisch ausgeschlossen" (§5.1) war unter der alten Annahme korrekt, ist aber schärfer zu fassen: Das Problem war nie die Ringgröße gegen einen Decoder-Burst, sondern **Stille statt Backpressure am Read-Pfad**. Die „≥400-KiB-Prefill/PSRAM"-Linie (auch meine) ist damit vom Tisch.
+- KRITIK 3.4 („253952 = Underrun-Zähler, kein Decoder-Burst") bleibt richtig, bekommt aber die bessere Erklärung: die Zähler messen Datei-Rest-Lesevorgänge am leeren Live-Overlay.  
+| Datenlage | 🟡 Kernartefakte geladen; Runden-Correlate-Watches und 125 Status-JSONs unausgewertet |
+
+
+Ich habe die neue Analyse gegen Rohdaten und Firmware-Code gequerschnittprüft — Ergebnis ist in den Review eingearbeitet (§9 im Canvas review-feld-av-0723-a1d76b5). Mein Urteil: Das Modell ist der größte Erkenntnissprung der ganzen Serie — ich kann alle prüfbaren Behauptungen bestätigen.
+Was ich unabhängig verifiziert habe:
+Beide Code-Befunde sind real: Cursor zählt bei Miss weiter (kSil-Pfad + hostAbsCursor_++), und streamBytesServed_ wird nur beim Plug zurückgesetzt, nicht bei startStream(). Damit sind meine offenen Punkte O1 und O2 aus dem letzten Review restlos erklärt — auch O3 (Muster B): st-55.json zeigt die HU direkt beim Next-Track-Prefetch (fav2 wird lückenlos gelesen, während fav1 läuft, 4-KiB-Reads mit 4 ms Gap ≈ 1 MB/s, n8kPlus=0).
+Arm 50 ms nach play_uid (07:58), Dateikopf-Read 64 s vor Play-Erkennung, fav1 komplett gelesen (maxSeq=524288), Producer ~9,5 KB/s — alles in den Bridge-Logs belegt.
+Zwei Korrekturen, bevor ihr das Modell festschreibt:
+„Liest immer komplett" ist zu stark. In st-55 wurde fav0 (Rock) nur bis 5,97 von 8,23 MiB gelesen — die HU bricht den Read beim Trackwechsel ab. Richtiger: aggressives Vorlesen bis EOF oder Abwahl. Das deckt auch den 01.10.-164-KiB-Fall plausibel.
+Die kritische offene Frage fehlt in beiden Plänen: 07:58 zeigt Batch-then-Play — Reads in ~1 s fertig, danach 87 s aus Cache, keine Reads während des Abspielens. Falls die HU erst nach komplettem Read abspielt, liefert Stall kein Live, sondern einen ~87 s versetzten Echo-Track (immer noch besser als Stille, aber kein Live-Betrieb). Der Stall-Test muss Read-Ende vs. hörbaren Start explizit messen.
+Stall kollidiert mit Next-Track-Prefetch: Das live_stall_ms-Design braucht eine Per-Slot-Politik — nur der aktive Live-Slot stallt; Prefetch-Slots müssen sofort Stub bedient bekommen, sonst blockiert der Prefetch-Read das Abspielen.
+Wie ich vorgehen würde: wie GPT — nicht sofort implementieren, sondern Mimic und Gap-Test zuerst; die Reihenfolge teile ich im Wesentlichen. Der entscheidende Unterschied zu beiden Plänen ist die Messgröße „Wiedergabe-Start relativ zum Read-Ende" — sie entscheidet, ob die Stall-Architektur Live-Audio oder nur einen Zeitversatz liefert. An der Checkliste
+Vorgehen nach dem HU-File-Cache-Befund
+P0 · Telemetrie-Fix: streamBytesServed_ bei startStream() zurücksetzen (Code-Bug verifiziert)
+P0 · Cursor-Drift-Fix: bei Read-Miss Cursor nicht erhöhen (hinter FW-Flag, Freeze-Bruch nur mit Go)
+P0 · TinyUSB-API-Spike: return 0 / Teilantwort im MSC-Callback auf ESP32-S3 + arduino-esp32 verifizieren
+P0 · Plan-Docs: Burst-Semantik korrigieren ("HU-Burst = ungelesener Dateirest, hostAbs ≠ Ringmaß")
+P1 · Lab-Mimic: ganze 512-KiB-Datei @ ~1 MB/s lesen (4-KiB-Reads, 4 ms gap), dann nächste Datei vorlesen
+P1 · Kontrollierter Producer-Gap (500 ms) + Stall im Lab: Kernmechanismus Backpressure beweisen
+Dabei timestampen: Read-Ende vs. Wiedergabe-Start (Batch-then-Play oder inkrementell?)
+Per-Slot-Stall-Politik: nur aktiver Live-Slot stallt, Prefetch-Slots sofort Stub
+P2 · Feld: live_stall_ms-Leiter 300/700/1500/3000 ms bei 128 kbit/s, je separater Run
+Messen: USB-Resets, read cadence ≈ Producer-Rate, hostAbs, und, Ohr, Trackwechsel
+P2 · Muster-B-Cache-Test separat: liest die HU nach Remount/neuer Serial/Größe neu?
+P3 · Bitraten 96k/48k; PSRAM nur falls Stall an HU-Timeouts scheitert
+hängt die konkrete Reihenfolge.
+Zu den abschließenden Fragen der Analyse: Ja, Bericht anlegen — aber mit den beiden Korrekturen („liest komplett" → „liest vor, bis EOF oder Abwahl"; Batch-vs-Echtzeit-Frage als neues P1-Messziel). Den live_stall_ms-Patch würde ich erst nach dem Mimic und dem API-Spike entwerfen — und der Cursor-Fix gehört auf jeden Fall vor jeden Fahrzeugtest, denn ohne ihn zerstört ein einziger Miss wieder die räumliche Beziehung. Freeze-Hinweis: alle drei FW-Änderungen sind Freeze-Brüche und brauchen dein explizites Go.
+---
+name: HU-Cache Bericht und Lab-Sim
+overview: "Zwei Markdown-Dokumente: (1) detaillierter Bewertungs- und Lösungsbericht zu GPT/Mistral auf Basis des HU-File-Cache-Modells mit Backpressure-Architektur, (2) Konzept für einen zustandsbehafteten, aus Felddaten kalibrierten HU-Simulator am Lab-ESP (Debian/Proxmox), inklusive Bewertung der Datenlage. Keine Code-/FW-Änderungen."
+todos:
+  - id: report
+    content: "Dokument 1 schreiben: ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md (Beweiskette, Bewertung GPT/Mistral, Flow-Control-Lösung, Risiken R1-R4, Roadmap P0-P3)"
+    status: completed
+  - id: simdoc
+    content: "Dokument 2 schreiben: KONZEPT-HU-SIM-NBT-2026-10-06.md (Ist-Analyse Tools, nbt_hu_sim-Architektur, Profil-Extraktion, Parameter, Inhaltsklassifikator, virtuelles Ohr, Golden-Regression, Testmatrix, Datenlage, Grenzen)"
+    status: completed
+  - id: index
+    content: "Optional: MSC-AKTUELL.md um Verweise ergaenzen und 400-KiB-Prefill-Aussage als ueberholt markieren"
+    status: completed
+  - id: todo-1791285568560-3o5t9a0hm
+    content: "Dokument 3 schreiben: HU-Technical-Facts.md (Eine ausführliche technische Beschreibung, was bisher über das Verhalten der HU bekannt und auch bewiesen ist. Flow Charts, Logs, ... ) "
+    status: completed
+isProject: false
+---
+
+# HU-File-Cache: Bewertungsbericht + Lab-HU-Simulator-Konzept
+
+Ergebnis sind **zwei Markdown-Dokumente**. Firmware und Tools werden nicht angefasst, weil Freeze gilt; die zweite Cursor-Instanz setzt um.
+
+## Dokument 1: Bewertung und Lösungsbericht
+
+Ziel: [pidrive-main/pidrive-main/docs/betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md](pidrive-main/pidrive-main/docs/betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md)
+
+### Inhalt
+
+**1. Kurzfazit.** Das Problem ist nicht die Ringgröße, sondern dass der Read-Pfad Stille statt Rückstau liefert. Die HU liest Dateien mit dem Tempo des USB-Full-Speed-Busses (~1 MB/s, `mscTrace`: 4 KiB alle 4 ms, `n8kPlus=0`): bis EOF oder Abwahl, danach Next-Track-Prefetch.
+
+**2. Beweiskette mit Rechnungen** (aus der Analyse übernommen, als Tabelle):
+- 86.016 + 438.272 = 524.288 und 163.840 + 360.448 = 524.288
+- Track-Ende: 87,3 s gerechnet, 93,2 s beobachtet
+- Golden Reference 01.10.: 49.152 = genau eine Ringfüllung
+- Producer: 8,7 KB/s für ~60 s, danach 6,0 KB/s; erstes Byte 3,4 s nach `audio_start`
+- Obergrenze der aktuellen Architektur: ≤ ~9 s hörbar pro Auswahl
+
+**3. Bewertung GPT** (insgesamt zustimmend). Präzisierungen:
+- `underruns_` wird über `StreamBuffer::start()` → `clear()` schon zurückgesetzt. Neu ist nur `streamBytesServed_ = 0` in `UsbMscGadget::startStream()` ([UsbMscGadget.cpp](esp32.pidrive-main/esp32.pidrive-main/src/msc/UsbMscGadget.cpp)).
+- "Cursor nicht erhöhen" ist nur zusammen mit Stall sinnvoll. Ohne Stall wiederholt die HU sonst denselben Offset mit Stille, also bleibt der Fix hinter einem Flag.
+- Variante C (im Callback blockieren) ausschließen: Sie blockiert den TinyUSB-Task, damit auch TUR/Inquiry. Das legt den Bus lahm.
+- Die Stall-Leiter (300/700/1500/3000 ms) zuerst im Lab per SG_IO-Timeout fahren, nicht im Auto.
+
+**4. Bewertung Mistral §9** (zustimmend):
+- Die Korrektur "liest bis EOF oder Abwahl" übernehmen.
+- Batch-then-Play vs. inkrementell ist die richtige Kernfrage. Ergänzung: Mit den vorhandenen Daten ist sie nicht entscheidbar, weil der Read nach ~1 s fertig war. Messbar wird sie nur im Auto mit hörbaren Markern (siehe Abschnitt 6).
+- Per-Slot-Stall-Politik übernehmen. Präzisierung: Stall nur bei sequenziellen Cursor-Reads des aktiven Slots. `fileOff`-Sprünge (> `kSeqSlop`) und Nicht-Live-Slots bekommen sofort Stille.
+- Korrektur: "fav0 nur 5,97 MiB gelesen" stammt aus einem Snapshot mit Abwahl. `status-pre-rst-0755` zeigt `b8421376` ≥ Dateigröße.
+
+**5. Meine Lösung: MSC-Flow-Control-Adapter.**
+- Zustandsmaschine `HIT` / `WAIT` (TinyUSB "not ready" bzw. Teilantwort) / `TIMEOUT→Silence`. Der Cursor zählt nur bei echten Bytes.
+- Ring bleibt 48 KiB und dient nur noch als Jitter-Puffer. Kein PSRAM.
+- Großer Live-Slot (≥ 64 MiB, ≈ 3 h bei 48k), damit kein EOF und kein Next-Track-Prefetch eintreten.
+- Bitrate 128k für den Proof of Concept: 0,26 s pro 4 KiB bei leerem Ring.
+- Burst-on-Connect des Radio-Servers auf dem Pi behalten und an den ESP weiterreichen, als HU-Polster gegen WLAN-Aussetzer.
+
+**6. Neue Risiken und offene Fragen**, je mit Testidee:
+- **R1 – HU-Timeout-Toleranz** (unbekannt).
+- **R2 – Batch-then-Play.** Messung: Der Pi mischt alle 10 s einen Piepton bzw. Marker in den Producer; Handy-Aufnahme gegen ESP-Zeitstempel ergibt die Latenz.
+- **R3 – Muster B bei großem Slot.** Prefetch vor Play cacht Stille. Rechnung: 4 MiB Stille entsprechen 11,6 min bei 48k. Tests: Invalidiert Remount/UNIT ATTENTION den Cache? Wird ein Body-Read vor Play zugelassen?
+- **R4 – 164-KiB-Fall vom 01.10.** bleibt offen.
+
+**7. Priorisierte Roadmap** (P0–P3, mit Freeze-Hinweis: FW-Änderungen nur mit Go):
+- **P0:** Telemetrie-Fix, TinyUSB-Spike (Plattform `espressif32@6.4.0` → arduino-esp32 2.0.x: Verhalten von `tud_msc_read10_cb`-Rückgabe 0/partial verifizieren), Doku-Semantik korrigieren.
+- **P1:** HU-Sim (Dokument 2), Stall hinter Flag im Lab, Gap-Test.
+- **P2:** Auto-Stall bei 128k mit Markern, Muster-B-Cache-Test.
+- **P3:** Bitrate 96k/48k.
+
+```mermaid
+flowchart LR
+  HuRead["HU READ10 4KiB"] --> Check{"Cursor im Ring?"}
+  Check -->|ja| Deliver["liefern, Cursor++"]
+  Check -->|nein, aktiver Slot, sequenziell| Wait["NOT READY / Teilantwort"]
+  Wait -->|Daten da| Deliver
+  Wait -->|"stall_ms abgelaufen"| Silence["Silence, Cursor bleibt"]
+  Check -->|"anderer Slot / Sprung"| Stub["Silence sofort"]
+```
+
+## Dokument 2: Konzept Lab-HU-Simulator
+
+Ziel: [pidrive-main/pidrive-main/docs/betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md](pidrive-main/pidrive-main/docs/betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md)
+
+### Ist-Zustand der Tools
+- [nbt_replay.py](esp32.pidrive-main/esp32.pidrive-main/tools/nbt_replay.py) spielt statische Event-Listen ab (SG_IO, `timeout = 5000`).
+- [m3_lab_hu_mimic_1541.py](pidrive-main/pidrive-main/tools/m3_lab_hu_mimic_1541.py) und `m3_lab_async_producer.py` arbeiten mit festen Szenarien und gleichmäßig getakteten Reads.
+- Traces wie [feld_heimabend_6s_cache.replay.json](esp32.pidrive-main/esp32.pidrive-main/tools/traces/feld_heimabend_6s_cache.replay.json) sind synthetisch und klein.
+- **Lücke:** Kein Tool hat HU-*Zustand*, also Cache, EOF, Next-Track, Wiedergabeuhr. Deshalb war der Lab-PASS nicht ins Auto übertragbar.
+
+### Neuer Simulator `nbt_hu_sim.py` (nutzt `read_sg` aus `nbt_replay.py`)
+
+```mermaid
+flowchart TB
+  Profile["Profil-JSON aus Felddaten"] --> HuModel
+  subgraph HuModel [HU-Zustandsmodell]
+    Mount["Mount-Scan + Body-Prefetch"] --> Select["Auswahl: Head-Reads"]
+    Select --> Eager["Eager-Read 4KiB/4ms bis EOF oder Abwahl"]
+    Eager --> NextPf["Next-Track-Prefetch"]
+    Cache["Cache je Serial+Datei"] --> Select
+    Clock["Wiedergabeuhr Bitrate"] --> EofAdv["EOF: Track +1 nach ca. 6s"]
+  end
+  HuModel -->|"SG_IO READ10, Timeout = HU-Toleranz"| LabEsp["Lab-ESP L3-Geometrie"]
+  Producer["Producer: Echtzeit, Burst 1,45x 60s, Start 3,4s, Gaps"] -->|"TCP 9090"| LabEsp
+  LabEsp --> Classifier["Byte-Klassifikator: LIVE-Seq / SILENCE / ID3"]
+  Classifier --> Ear["Virtuelles Ohr: HU-Puffer = empfangen - verbraucht"]
+  Ear --> Report["REPORT.json: Dropouts, Latenz, Cmd-Dauer, Timeouts"]
+```
+
+### Kernelemente
+1. **Profil aus Felddaten.** Ein neues Extraktions-Skript liest alle `status-*.json`/`st-*.json` (`mscTrace`, `slotMap`, `xfer`), `correlate-watch.jsonl` und Bridge-Logs. Ergebnis: Verteilungen für Read-Größe/-Gap, Scan-Reihenfolge, Arm-Latenzen, Producer-Rate.
+2. **Unbekannte als Parameter, nicht als Annahme.** `decode_start` (inkrementell N KiB vs. nach EOF), `cmd_timeout_ms`, `cache_persist_remount`, `prefetch_on_mount`. Der Report weist jedes Ergebnis pro Parametervariante aus.
+3. **Inhaltsbeweis statt Zähler.** Der Producer sendet MP3-Frames mit Sequenzmarke (analog `LabBodySeed`/M3-Marker). Der Sim klassifiziert jeden 4-KiB-Read und prüft Kontinuität, Lücken und Duplikate. PASS = keine Dropouts im virtuellen Ohr über ≥ 30 s. Damit entfällt das fehleranfällige `liveBytes`.
+4. **Realistischer Producer:** Startlatenz 3,4 s, 1,45× für 60 s, danach Echtzeit; Gap-Injektion 500 ms und 3 s (WLAN-Aussetzer).
+5. **Golden-Regression vor jedem Stall-Test:** Gegen FW 0.4.46 muss der Sim die Feldzahlen reproduzieren:
+   - 07:58: Vor-Arm-Read 86.016 B, dann `und` = `hostAbs` = 438.272
+   - 08:04: Muster B, `hostAbs = 0`
+   - 01.10.: `live` = 49.152 bei vollem Ring
+   Erst danach ist der Sim für Stall-Varianten vertrauenswürdig.
+6. **Testmatrix:** Stall 0/300/700/1500/3000 ms × Bitrate 48/96/128k × Timeout 2/5/10 s × Gap.
+7. **Rahmenbedingungen:**
+   - Lab-ESP mit L3-Build (`fav0` 8 MiB wie im Auto)
+   - Gerät nicht mounten (usb-storage-Resets vermeiden), nur SG_IO
+   - Kommandodauer aus `SgIoHdr.duration` loggen
+8. **Datenlage-Bewertung:**
+   - Ausreichend für: Read-Muster, Tempo, Reihenfolge, Ganz-Datei-Lesen, Next-Prefetch, Arm- und Producer-Timing.
+   - Nicht ausreichend für: HU-Timeout, Decode-Start-Regel, Cache-Invalidierung, Verhalten bei gültigem MP3.
+   - Diese Punkte bleiben Auto-Fragen. Empfehlung: Per-Read-Trace dauerhaft über TCP an die Bridge streamen, weil der `mscTrace`-Ring heute nur ein Fenster zeigt.
+9. **Grenzen:** Der Linux-SCSI-Stack ist nicht der QNX-Stack der HU. Der Sim beweist die ESP-Mechanik, nicht die Toleranz der HU.
+
+## Optional
+In [MSC-AKTUELL.md](pidrive-main/pidrive-main/docs/betrieb/MSC-AKTUELL.md) eine Zeile mit Verweis auf beide Dokumente ergänzen. Außerdem den Satz "Prefill an Feld-Erstburst ≥ ~400 KiB" als überholt markieren.
+
+
+Änderungen an MSC-AKTUELL.md
+# MSC / BMW — aktueller Stand (Lesereihenfolge)
+
+**Stand:** 2026-10-06 Feld — **OTA 0.4.46-dev im Auto:** Detect teils PASS, **kein Ton** (Burst→und / hostAbs=0) · Lab Hold-PASS transferiert nicht 1:1  
+**Phase:** Baustelle B — (überholt, siehe 0a0: HU-Burst = ungelesener Dateirest, `hostAbs` ist kein Ringmaß → Backpressure statt Stille) Prefill an Feld-Erstburst ≥~400 KiB; Sequenz-GO gesperrt
+
+Dies ist der **einzige Einstieg**, wenn du wissen willst, wo wir stehen und warum.
+
+---
+
+## 1. Jetzt lesen (normativ)
+
+| # | Dokument | Rolle |
+|---|----------|--------|
+| 0a0 | [`artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md`](artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) | **HU-File-Cache-Modell** — Burst = Restdatei, Bewertung GPT/Mistral, Flow-Control-Lösung |
+| 0a0s | [`artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md`](artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md) | **Lab-HU-Simulator** — zustandsbehaftet, aus Felddaten kalibriert |
+| 0a0f | [`../fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | **HU-Faktensammlung** — belegtes NBT-Evo-Verhalten mit Status |
+| 0 | [`artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md`](artifacts-2026-10-05-feld/feld-av-1807/GESAMTBERICHT-FELD-AV-1807.md) | **Feld 18:07** — RST→Head-Arm, Ring voll, live=0 / kein Ton |
+| 0r | [`artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md`](artifacts-2026-10-05-feld/KRITIK-REVIEW-MISTRAL-GPT-FELD-1807-87d2523.md) | **Review Mistral+GPT** — RST-Trigger, 253952-Korrektur, P0 Lab |
+| 0f5 | [`artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md`](artifacts-2026-10-05-feld/feld-av-1755/GESAMTBERICHT-FELD-AV-1755.md) | Feld 17:55 — ohne RST kein Arm |
+| 0f6 | [`artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md`](artifacts-2026-10-06-feld/feld-av-0723/GESAMTBERICHT-FELD-AV-0723.md) | **Feld 07:50–08:13** — 0.4.46 OTA, Detect OK, AV/Ohr FAIL |
+| 0h | [`artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md`](artifacts-2026-10-05-lab/lab88-head-trigger-1754/GESAMTBERICHT-HEAD-TRIGGER.md) | Lab Mid→Head armt |
+| 0p | [`artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md`](artifacts-2026-10-05-lab/lab88-prefill-arm-1750/GESAMTBERICHT-PREFILL-ARM.md) | Lab Prefill-vor-Arm PASS |
+| 0e2 | [`artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md`](artifacts-2026-10-05-feld/feld-av-abend-1530/GESAMTBERICHT-FELD-AV-ABEND.md) | Feld Abend 15:30 — Gate PASS, AV/Ohr FAIL Fenster/Arm |
+| 0L4 | [`artifacts-2026-10-05-lab/lab88-arm-diag-1635/GESAMTBERICHT-ARM-DIAG.md`](artifacts-2026-10-05-lab/lab88-arm-diag-1635/GESAMTBERICHT-ARM-DIAG.md) | Lab Arm-Diagnose: Mid≠Arm, Head-Arm bei ring=0 |
+| 0L3 | [`artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md`](artifacts-2026-10-05-lab/lab88-hu-mimic-1617/GESAMTBERICHT-HU-MIMIC-1541.md) | Lab HU-Mimic 15:41 Fenster-Outrun |
+| 0L2 | [`artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md`](artifacts-2026-10-05-lab/STREAM-COUNTER-SEMANTIK.md) | StreamBuffer: underruns / hostAbs / liveBytes |
+| 0L5 | [`artifacts-2026-10-05-lab/LAB-NEXT-ARM-TIMELINE-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-ARM-TIMELINE-2026-10-05.md) | **P0 Lab:** Arm-Timeline + RST-Matrix (`m3_lab_arm_timeline.py`) |
+| 0L6 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-TIMELINE-MATRIX-1945.md) | **Lab Matrix:** 253952 = 62×4KiB Underrun (PASS) |
+| 0L7 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-WEICHE-2035.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-WEICHE-2035.md) | **Lab Weiche:** Prefill-Sweep + Free vs Gate |
+| 0L8 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-FOLGE-2045.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ARM-FOLGE-2045.md) | **Lab Folge:** Pace-Raten + Fenster-voraus-Repro |
+| 0L9 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-CURSOR-HOLD-2110.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-CURSOR-HOLD-2110.md) | **Lab Cursor-Hold PASS** (gegen 2050 / Host-Pause) |
+| 0L10 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-ASYNC-PRODUCER-2140.md) | **Lab Async:** Free=18:07 · Hold behind=0 · Pace unter MSC-Last offen |
+| 0L11 | [`artifacts-2026-10-05-lab/GESAMTBERICHT-PUMP-IDLE-BURST-REALISM.md`](artifacts-2026-10-05-lab/GESAMTBERICHT-PUMP-IDLE-BURST-REALISM.md) | **Lab Idle+Burst:** Pump-Ceiling ~70 KB/s · Prefill≥Burst async PASS |
+| 0L12 | [`artifacts-2026-10-06-lab/lab88-async-064741-burst-then-slow/NOTE-BURST-THEN-SLOW.md`](artifacts-2026-10-06-lab/lab88-async-064741-burst-then-slow/NOTE-BURST-THEN-SLOW.md) | Burst-then-Slow: und=0, behind≠0 (kein formaler PASS) |
+| 0L13 | [`artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md`](artifacts-2026-10-06-lab/GESAMTBERICHT-BULK-DRAINTCP-046.md) | **Lab Bulk-drainTcp:** Idle ~840 KB/s · maxpump-hold PASS |
+| 0k7 | [`artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md`](artifacts-2026-10-06-lab/KRITIK-REVIEW-MISTRAL-GPT-CLAUDE-IDLE-BURST-c99ac36.md) | **Review Mistral+GPT+Claude** zu c99ac36 — Maßnahmen |
+| 0k6 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-CLAUDE-ASYNC-eb91d4e.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-CLAUDE-ASYNC-eb91d4e.md) | Review Mistral+Claude zu eb91d4e (Rate-Korrektur) |
+| 0k4 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-ARM-TIMELINE-8d4f028.md) | Review Mistral+GPT zu 8d4f028 |
+| 0k5 | [`artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-WEICHE-a99a830.md`](artifacts-2026-10-05-lab/KRITIK-REVIEW-MISTRAL-GPT-WEICHE-a99a830.md) | Review Mistral+GPT zu Weiche a99a830 |
+| 0s | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-ABEND.md) | Abend-Kurzsession |
+| 0m | [`artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md`](artifacts-2026-10-05-feld/FELD-SESSION-2026-10-05-MORGEN.md) | Morgen — C′ PASS, AV Meta-Hindernis |
+| 0e | [`artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md`](artifacts-2026-10-05-feld/FELD-ABEND-EAR-2026-10-05.md) | Abend-EAR (ausgeführt) |
+| 0k | [`artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-GPT54-GESAMTBERICHT-2026-10-05.md) | Kritik GPT-5.4 → Maßnahmen |
+| 0k3 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-LAB-FOLLOWUP-305b55f.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-LAB-FOLLOWUP-305b55f.md) | Kritik Mistral 305b55f (lokal verifiziert) |
+| 0k2 | [`artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md`](artifacts-2026-10-05-lab/KRITIK-MISTRAL-GPT-KONSOLIDIERT-2026-10-05.md) | Konsolidiert: Gate-Wortlaut schärfen |
+| 0L | [`artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md`](artifacts-2026-10-05-lab/lab88-lock-after-rst-1022/GESAMTBERICHT-LOCK-AFTER-RST.md) | Lab: Meta-Erstsiegel-Mechanismus (**Feldmorgen stark erklärt**, Seal-Log Feld fehlt) |
+| 0a | [`artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md`](artifacts-2026-10-05-lab/lab88-menu-page-0816/GESAMTBERICHT-MENU-PAGE-AV-PREP.md) | **Lab Menü-Seite PASS** + Abend-EAR |
+| 0a1 | [`artifacts-2026-10-05-lab/lab88-correlate-meta-sender-0855/GESAMTBERICHT-CORRELATE-META-SENDER.md`](artifacts-2026-10-05-lab/lab88-correlate-meta-sender-0855/GESAMTBERICHT-CORRELATE-META-SENDER.md) | Correlate Meta=Negativ / Sender=Positiv **PASS** |
+| 0a2 | [`artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md`](artifacts-2026-10-05-lab/LAB-NEXT-MENU-AV-2026-10-05.md) | Lab-Auftrag (Plan, erledigt) |
+| 0b | [`artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`](artifacts-2026-10-04-lab/lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md) | Lab AV A+B PASS |
+| 1 | [`artifacts-2026-10-05-feld/feld-q3b-next-0744/`](artifacts-2026-10-05-feld/feld-q3b-next-0744/) | C′ Artefakte (GATE+Watchdog PASS) |
+| 2 | [`artifacts-2026-10-05-feld/feld-av-0750/`](artifacts-2026-10-05-feld/feld-av-0750/) | AV Correlate: stream off / live=0 |
+| 3 | [`artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md`](artifacts-2026-10-04-feld/feld-q3b-next-1738/GESAMTBERICHT-FELD-Q3B-1738.md) | gestern C′ FAIL (Seed tot bei GO) |
+| 4 | [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md) | Freeze |
+
+---
+
+## 2. Ampel
+
+| Thema | Stand |
+|-------|--------|
+| P1 Body-Next | EVIDENCED |
+| Feld-Oracle B | **PASS** |
+| Feld-Oracle C' | **PASS** 2026-10-05 07:45 (`bytesServed` +1,5 MiB, Seed überlebte Settle); gestern 1738 FAIL |
+| AV / Ohr | Lab Bulk-Pump ~840 KB/s · async Hold-PASS (248 KiB) 🟢 · Feld-Ton 🔴 (0.4.46 im Auto; Ursache: Stille bei Miss statt Backpressure, siehe 0a0) |
+| Lab Menü-Seite | **PASS** — Lock hält Sender-Slots; Meta ohne Producer; `page_home`/Remount dokumentiert |
+| Menü-Lock | Lab+**Feld Abend**: Meta-Erstsiegel / stale Bridge geheilt durch **frischen Bridge-Prozess**; erstes Feld-`MSC_MAP_FROZEN` Rock **archiviert** |
+| Detect | Cold=mid Reject; **Head-Arm im Feld nach RST** belegt; Cooldown 5 s |
+| Sequenz-GO | gesperrt bis hörbarer AV |
+| Freeze | hält |
+---
+## 3. Nächste Schritte
+
+1. **Feld (P0):** OTA `0.4.46-dev` (Bulk-drainTcp) nach Abstimmung → RST → Bridge → Gate → 1 Sender → Correlate + Ohr.  
+2. **Bridge:** Prefill + Hold mit lokaler absEnd-Schätzung (wie Lab-Tool); PASS `live>0 ∧ und=0 ∧ behind=0`.  
+3. Freeze Feld hält bis OTA-Go; Lab .88 bereits `0.4.46-dev`.
+
+```
+Bulk-drainTcp: Idle ~840 KB/s (war ~70)
+maxpump-hold 248 KiB PASS (pump≈host)
+Nächstes: Feld-OTA 0.4.46 + Ton
+```
+
+
+sieh dir die neuen Files an: 
+docs\betrieb\artifacts-2026-10-06-feld\summary-2026-10-06.txt
+docs\betrieb\artifacts-2026-10-06-lab\KONZEPT-HU-SIM-NBT-2026-10-06.md 
+docs\fahrzeug\HU-Technical-Facts.md 
+docs\planung\Stufenplan.md
+docs\betrieb\artifacts-2026-10-06-lab\SPIKE-TINYUSB-READ10-2026-10-06.md
+
+Mein Vorschlag: Die Rohdaten bleiben unverändert liegen. Daneben kommt eine normalisierte Schicht aus wenigen einheitlichen Tabellen, gespeichert als **Parquet-Dateien und abgefragt mit DuckDB**, oder alternativ als eine einzige SQLite-Datei. Erzeugt wird sie von einem Extraktions-Skript, das jederzeit neu aus den Rohdaten gebaut werden kann.
+
+(Die vier Aufgaben aus dem Plan sind übrigens schon erledigt: die drei Dokumente und die Verweise in `MSC-AKTUELL.md`.)
+
+## Was heute das Arbeiten bremst
+
+In `docs/` liegen rund 24 MB: etwa 1050 `.json`, 180 `.jsonl`, 200 `.txt`, 60 `.log` und 50 `.bin`. Sie sind über 15 Datums-Ordner verteilt und mit Berichten (`.md`) vermischt. Bei der Analyse sind mir vier Probleme immer wieder begegnet:
+
+- **Keine gemeinsame Zeitbasis.** Der ESP zählt seine Laufzeit seit dem Start (`uptime`), Pi und Bridge loggen Uhrzeit, die Bedienernotizen nennen grobe Minuten. Jede Korrelation musste ich von Hand ausrichten.
+- **Dieselbe Information in verschiedenen Formen.** Der Status steckt mal in `status-*.json`, mal in `st-*.json`, mal in `correlate-watch.jsonl` mit leicht anderen Feldnamen. Bridge-Logs sind Freitext.
+- **Zähler ändern ihre Bedeutung je Firmware-Version**, etwa `streamBytes` oder `hostAbs` (siehe `STREAM-COUNTER-SEMANTIK.md`). Das steht nicht an den Daten selbst.
+- **Das Wichtigste fehlt maschinenlesbar:** ob man etwas gehört hat. Das steht nur in `OPERATOR-NOTES.txt` oder in Berichten.
+
+## Vorgeschlagene Struktur
+
+```text
+docs/betrieb/
+  artifacts-*/            ← Rohdaten, unverändert (nie editieren)
+    run.yaml              ← NEU: Manifest pro Lauf (handgeschrieben, 10 Zeilen)
+data/                     ← NEU, generiert, jederzeit neu baubar
+  runs.parquet
+  status.parquet
+  msc_reads.parquet
+  slots.parquet
+  bridge_events.parquet
+  observations.parquet
+  pidrive.duckdb          ← Views über alle Parquet-Dateien
+tools/ingest/
+  ingest.py               ← ein Parser pro Quelltyp
+```
+
+Das **Manifest `run.yaml`** ist der wichtigste Teil, und nur dieser Teil ist Handarbeit:
+
+```yaml
+run_id: 2026-10-06-feld-0758
+env: feld            # feld | lab
+fw: 0.4.46-dev
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3   # Verweis auf STREAM-COUNTER-SEMANTIK
+station: bayern3
+bitrate_kbps: 48
+clock_sync:           # ESP-Uptime ↔ Wanduhr
+  esp_uptime_ms: 1234567
+  wall: 2026-10-06T07:58:12+02:00
+heard: silence        # audio | silence | cover_only | none
+notes: "HU spielt 87 s Stille, dann Track-Wechsel"
+```
+
+## Die Tabellen
+
+Alle Tabellen haben `run_id` und einen Zeitstempel `t_wall`. `t_wall` wird beim Import aus `clock_sync` umgerechnet; die Original-Uptime bleibt als eigene Spalte erhalten.
+
+| Tabelle | Eine Zeile = | Quellen |
+|---|---|---|
+| `runs` | ein Lauf | `run.yaml` |
+| `status` | ein Status-Snapshot (flach: `readCount`, `underruns`, `hostAbs`, `absBase`, `absEnd` …) | `status-*.json`, `st-*.json`, `correlate-watch.jsonl` |
+| `msc_reads` | ein READ10 (`lba`, `len`, `slot`, `fileOff`, `dt_ms`) | `mscTrace` aus den Snapshots, dedupliziert |
+| `slots` | ein Slot pro Snapshot (`b`/`f`/`mx`/`h`/`m`) | `slotMap` |
+| `bridge_events` | eine Log-Zeile, geparst (`event`, `bytes`, `rate`) | `bridge-*.txt`, `*.log` |
+| `observations` | eine Beobachtung (Ton, Cover, Track-Wechsel) | `run.yaml`, Bedienernotizen |
+
+`msc_reads` muss dedupliziert werden: Der Trace-Ring mit 96 Einträgen überlappt zwischen aufeinanderfolgenden Snapshots.
+
+`.bin`, `.wav` und `.mp3` bleiben Dateien. Die Tabellen verweisen nur per Pfad und Hash darauf.
+
+## Warum Parquet und DuckDB
+
+| Format | Passt für | Nachteil |
+|---|---|---|
+| **JSONL** | Rohdaten, Live-Streams vom ESP oder der Bridge | langsam für Abfragen, keine festen Typen |
+| **Parquet + DuckDB** | Analyse über alle Läufe, SQL, pandas, Plots | binär, nicht im Diff lesbar |
+| **SQLite** | eine Datei, überall lesbar | für Zeitreihen-Abfragen langsamer |
+| CSV | Austausch, Excel | keine Typen, verschachtelte Daten gehen verloren |
+
+DuckDB liest Parquet, JSON und CSV direkt, braucht keinen Server und ist nur eine Datei. Fragen, die heute eine Stunde Suchen kosten, werden zu einer Abfrage, zum Beispiel:
+
+```sql
+SELECT r.fw, r.heard, max(s.hostAbs) AS max_host, max(s.underruns) AS und
+FROM status s JOIN runs r USING (run_id)
+WHERE r.env = 'feld'
+GROUP BY ALL ORDER BY r.run_id;
+```
+
+Für Git: Die Parquet-Dateien in `data/` werden nicht eingecheckt, denn sie sind generiert. Eingecheckt werden `run.yaml` und `ingest.py`.
+
+## Zusätzlich für die Zukunft
+
+- **Neue Messungen gleich im Zielformat erzeugen.** Die Bridge und der vorgeschlagene Per-Read-Trace über TCP schreiben JSONL mit festen Feldnamen und Wanduhrzeit. Dann entfällt die Parser-Arbeit.
+- **Zur Firmware-Version das Commit-Kürzel speichern**, damit die Zählerbedeutung eindeutig ist.
+- **Den HU-Simulator anbinden.** Sein `REPORT.json` landet in denselben Tabellen mit `env: sim`, und Simulator- und Feldläufe werden direkt vergleichbar. Das ist auch die Grundlage für die Pflicht-Regression gegen 0.4.46.
+
+Auf deinem Windows-Rechner ist kein Python installiert. Das Ingest-Skript würde daher am sinnvollsten im Debian-Container laufen, wo auch der Lab-ESP hängt. Wenn du willst, schreibe ich `ingest.py` und lege für die vorhandenen Läufe die `run.yaml`-Entwürfe an, die du dann nur noch prüfst.
+
+Zusammenfassung: 
+
+Ja — **das ist vermutlich die entscheidende neue Erkenntnis**: Die BMW-HU verhält sich offenbar nicht wie ein Decoder mit kleinem Echtzeit-Puffer, sondern wie ein aggressiver Dateileser mit starkem Cache. Sie liest die gewählte Datei sehr schnell und weitgehend am Stück ein und spielt danach aus dem eigenen Cache ab; deshalb ist der bisherige Ansatz „großer Ring gegen Burst“ grundsätzlich falsch angesetzt [1].  
+
+Die unmittelbare Konsequenz ist: **Nicht Ringgröße/PSRAM ist der Haupthebel, sondern Backpressure im MSC-Read-Pfad**. Wenn der ESP bei fehlenden Live-Daten einfach Stille liefert und den Host-Cursor trotzdem weiterzählt, verliert das System dauerhaft die räumliche Beziehung zwischen HU-Readposition und Live-Stream; genau das passt auch zu den bekannten Underrun-/Cursor-Problemen im StreamBuffer-Modell [23].  
+
+Kurz gesagt:  
+> **Die HU muss offenbar gebremst werden, nicht nur gefüttert.**  
+Der nächste sinnvolle technische Pfad ist daher ein **Read-Stall-/Flow-Control-Ansatz** im MSC-Pfad statt weiterer Fokus auf Prefill, größerer Ring oder PSRAM. Gleichzeitig bleibt eine wichtige offene Frage: **Spielt die HU inkrementell während des Lesens oder erst nach komplettem Read?** Das muss vor einem großen Umbau gezielt gemessen werden.
+
+
+
