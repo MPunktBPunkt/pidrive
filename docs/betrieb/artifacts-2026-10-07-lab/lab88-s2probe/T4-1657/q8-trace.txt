@@ -1,0 +1,26 @@
+rows: msc.reads=0 trace=580 -> single=580; jump bursts=0 (not resolved: 0)
+ep0: ms 1935–2334 (0.399s) rows=94 bytes=349184 ovΔ=0 unread_4k=1985 (8130560 B) max_off_2s=4156927 → r16_resume_like
+  stall: Startposition ≠ 0 — R16-Muster; P-Quelle klären
+  pattern: F4 B4 F4 F4 F4 F4 F4 B4 B16 F60 F124
+  seg0: META lba=0…0 B=512
+  seg1: META lba=0…0 B=512
+  seg2: META lba=0…7 B=4096
+  seg3: META lba=32640…32647 B=4096
+  seg4: META lba=32752…32759 B=4096
+  seg5: META lba=8…15 B=4096
+  seg6: META lba=32760…32760 B=512
+  seg7: META lba=32761…32761 B=512
+  seg8: META lba=32762…32762 B=512
+  seg9: META lba=32763…32763 B=512
+  seg10: META lba=32764…32764 B=512
+  seg11: META lba=32765…32765 B=512
+  … +35 Segmente
+ep1: ms 32688–32688 (0.0s) rows=1 bytes=512 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/feld_q8_msc_order.py", line 683, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/feld_q8_msc_order.py", line 559, in main
+    print(f"  stall: {r10['stall_implication']}")
+                      ~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'stall_implication'

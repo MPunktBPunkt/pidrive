@@ -1,0 +1,28 @@
+[
+  {
+    "file": "docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/f1-stick/F1-5MB_128k.mp3",
+    "label": "5MB_128k",
+    "blocks": 33,
+    "duration_s": 330.0,
+    "marker_s": 10.0,
+    "ar": 22050,
+    "bitrate": "128k",
+    "engine": [
+      "espeak-ng"
+    ],
+    "bytes": 5280981
+  },
+  {
+    "file": "docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/f1-stick/F1-100MB_128k.mp3",
+    "label": "100MB_128k",
+    "blocks": 655,
+    "duration_s": 6550.0,
+    "marker_s": 10.0,
+    "ar": 22050,
+    "bitrate": "128k",
+    "engine": [
+      "espeak-ng"
+    ],
+    "bytes": 104801244
+  }
+]

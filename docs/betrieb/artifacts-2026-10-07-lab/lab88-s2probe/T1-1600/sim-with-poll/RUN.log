@@ -1,0 +1,49 @@
+{
+  "G7": {
+    "pass": true,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 368640,
+    "maxSeq_after_frag": 368640,
+    "maxSeq_final": 5201920,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 14.0,
+        "min": 3.0,
+        "max": 65.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 3.998,
+        "p50": 4.177,
+        "p95": 4.628,
+        "p99": 14.391,
+        "min": 3.933,
+        "max": 65.1,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 4.556,
+        "p50": 4.812,
+        "p95": 5.43,
+        "p99": 18.208,
+        "min": 4.441,
+        "max": 1035.87,
+        "n": 1996
+      },
+      "late_reads": 399
+    },
+    "head_ok": true,
+    "frag_ok": true,
+    "final_ok": true,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-s2probe/T1-1600/sim-with-poll overall=PASS

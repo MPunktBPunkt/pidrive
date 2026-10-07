@@ -1,0 +1,1 @@
+sg not ready: /dev/sg0: [Errno 6] No such device or address: '/dev/sg0'

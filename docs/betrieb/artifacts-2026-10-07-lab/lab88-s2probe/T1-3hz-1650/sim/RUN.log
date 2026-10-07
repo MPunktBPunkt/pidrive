@@ -1,0 +1,49 @@
+{
+  "G7": {
+    "pass": true,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 368640,
+    "maxSeq_after_frag": 368640,
+    "maxSeq_final": 5201920,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 17.0,
+        "min": 3.0,
+        "max": 66.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 3.995,
+        "p50": 4.207,
+        "p95": 4.639,
+        "p99": 17.526,
+        "min": 3.93,
+        "max": 65.286,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 4.549,
+        "p50": 4.821,
+        "p95": 5.524,
+        "p99": 18.597,
+        "min": 4.442,
+        "max": 1121.189,
+        "n": 1996
+      },
+      "late_reads": 402
+    },
+    "head_ok": true,
+    "frag_ok": true,
+    "final_ok": true,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-s2probe/T1-3hz-1650/sim overall=PASS

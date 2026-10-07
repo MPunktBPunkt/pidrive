@@ -1,0 +1,16 @@
+=== c4-gw-live → docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-gw-live-1328 ===
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1861, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1799, in main
+    fresh()
+    ~~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1697, in fresh
+    pump = prep_lab(esp, args.esp_ip, pump, remount=remount)
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 935, in prep_lab
+    raise ConnectionError(f"prep_lab handshake failed: {last}")
+ConnectionError: prep_lab handshake failed: [Errno 104] Connection reset by peer
+DONE c4-gw-live exit=1
+sg not ready: /dev/sg0: [Errno 6] No such device or address: '/dev/sg0'
+DONE c4-gw-live exit=1

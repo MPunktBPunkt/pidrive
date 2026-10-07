@@ -1,0 +1,11 @@
+rows: msc.reads=151 trace=0 -> single=484; jump bursts=2 (not resolved: 0)
+window_364034-365907: ms 364034–365935 (1.901s) rows=484 bytes=1982464 ovΔ=0 unread_4k=1564 (6406144 B) max_off_2s=2326527 → r16_resume_like
+  stall: Startposition ≠ 0 — R16-Muster; P-Quelle klären
+  pattern: F8 B120 B120 F360 B360 F968
+  seg0: forward  off=958464… B=8192 lba=1953…1968
+  seg1: forward  off=835584… B=122880 lba=1713…1952
+  seg2: forward  off=712704… B=122880 lba=1473…1712
+  seg3: forward  off=966656… B=368640 lba=1969…2688
+  seg4: forward  off=344064… B=368640 lba=753…1472
+  seg5: forward  off=1335296… B=991232 lba=2689…4624
+wrote docs/betrieb/artifacts-2026-10-07-lab/lab88-s2probe/T4-1657/q8-reads/Q8-REPORT.json

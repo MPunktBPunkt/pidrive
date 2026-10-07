@@ -1,0 +1,51 @@
+=== c6-g7-bare → docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-bare-1341 ===
+{
+  "G7": {
+    "pass": false,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 7053312,
+    "maxSeq_after_frag": 7053312,
+    "maxSeq_final": 7053312,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 6.0,
+        "min": 3.0,
+        "max": 65.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 4.004,
+        "p50": 4.153,
+        "p95": 4.552,
+        "p99": 7.678,
+        "min": 3.915,
+        "max": 64.898,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 4.586,
+        "p50": 4.813,
+        "p95": 5.4,
+        "p99": 18.437,
+        "min": 4.384,
+        "max": 1139.194,
+        "n": 1996
+      },
+      "late_reads": 391
+    },
+    "head_ok": false,
+    "frag_ok": false,
+    "final_ok": false,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-bare-1341 overall=FAIL
+DONE bare exit=1

@@ -1,0 +1,93 @@
+2026-10-07T16:00:09.164+02:00 new 94 lost 0 rc 94 
+2026-10-07T16:00:16.917+02:00 new 1 lost 0 rc 95 
+2026-10-07T16:00:24.669+02:00 new 1 lost 0 rc 96 
+2026-10-07T16:00:24.919+02:00 new 28 lost 0 rc 124 
+2026-10-07T16:00:25.170+02:00 new 51 lost 0 rc 174 
+2026-10-07T16:00:25.420+02:00 new 11 lost 1 rc 186 
+2026-10-07T16:00:26.420+02:00 new 35 lost 0 rc 220 
+2026-10-07T16:00:26.670+02:00 new 49 lost 1 rc 270 
+2026-10-07T16:00:26.920+02:00 new 48 lost 0 rc 318 
+2026-10-07T16:00:27.170+02:00 new 43 lost 0 rc 361 
+2026-10-07T16:00:27.420+02:00 new 51 lost 0 rc 412 
+2026-10-07T16:00:27.671+02:00 new 50 lost 0 rc 462 
+2026-10-07T16:00:27.921+02:00 new 44 lost 0 rc 506 
+2026-10-07T16:00:28.171+02:00 new 51 lost 0 rc 557 
+2026-10-07T16:00:28.421+02:00 new 51 lost 0 rc 608 
+2026-10-07T16:00:28.671+02:00 new 51 lost 0 rc 659 
+2026-10-07T16:00:28.921+02:00 new 46 lost 0 rc 705 
+2026-10-07T16:00:29.171+02:00 new 51 lost 0 rc 755 
+2026-10-07T16:00:29.421+02:00 new 50 lost 1 rc 806 
+2026-10-07T16:00:29.671+02:00 new 17 lost 0 rc 823 
+2026-10-07T16:00:30.671+02:00 new 20 lost 0 rc 842 
+2026-10-07T16:00:30.921+02:00 new 49 lost 0 rc 891 
+2026-10-07T16:00:31.171+02:00 new 51 lost 0 rc 942 
+2026-10-07T16:00:31.422+02:00 new 49 lost 0 rc 991 
+2026-10-07T16:00:31.672+02:00 new 51 lost 1 rc 1043 
+2026-10-07T16:00:31.922+02:00 new 48 lost 0 rc 1091 
+2026-10-07T16:00:32.172+02:00 new 51 lost 0 rc 1141 
+2026-10-07T16:00:32.422+02:00 new 48 lost 1 rc 1190 
+2026-10-07T16:00:32.672+02:00 new 52 lost 0 rc 1241 
+2026-10-07T16:00:32.922+02:00 new 51 lost 1 rc 1293 
+2026-10-07T16:00:33.172+02:00 new 44 lost 0 rc 1337 
+1791381633.423 new None lost None rc None timed out
+1791381634.972 new None lost None rc None timed out
+1791381636.508 new None lost None rc None timed out
+1791381638.045 new None lost None rc None timed out
+1791381639.58 new None lost None rc None <urlopen error timed out>
+1791381641.082 new None lost None rc None <urlopen error timed out>
+1791381642.583 new None lost None rc None <urlopen error timed out>
+1791381644.085 new None lost None rc None <urlopen error timed out>
+1791381645.587 new None lost None rc None <urlopen error timed out>
+1791381647.089 new None lost None rc None <urlopen error timed out>
+1791381648.591 new None lost None rc None <urlopen error timed out>
+1791381650.093 new None lost None rc None <urlopen error timed out>
+1791381651.595 new None lost None rc None <urlopen error timed out>
+1791381653.102 new None lost None rc None <urlopen error timed out>
+1791381654.603 new None lost None rc None <urlopen error timed out>
+1791381656.105 new None lost None rc None <urlopen error timed out>
+1791381657.607 new None lost None rc None <urlopen error timed out>
+1791381659.109 new None lost None rc None <urlopen error timed out>
+1791381660.611 new None lost None rc None <urlopen error timed out>
+1791381662.113 new None lost None rc None <urlopen error timed out>
+1791381663.615 new None lost None rc None <urlopen error timed out>
+1791381665.117 new None lost None rc None <urlopen error timed out>
+1791381666.619 new None lost None rc None <urlopen error timed out>
+1791381668.121 new None lost None rc None <urlopen error timed out>
+1791381669.623 new None lost None rc None <urlopen error timed out>
+1791381671.125 new None lost None rc None <urlopen error timed out>
+1791381672.626 new None lost None rc None <urlopen error timed out>
+1791381674.128 new None lost None rc None <urlopen error timed out>
+1791381675.63 new None lost None rc None <urlopen error timed out>
+1791381677.132 new None lost None rc None <urlopen error timed out>
+1791381678.634 new None lost None rc None <urlopen error timed out>
+1791381680.136 new None lost None rc None <urlopen error timed out>
+1791381681.638 new None lost None rc None <urlopen error timed out>
+1791381683.14 new None lost None rc None <urlopen error timed out>
+1791381684.64 new None lost None rc None <urlopen error timed out>
+1791381686.142 new None lost None rc None <urlopen error timed out>
+1791381687.644 new None lost None rc None <urlopen error timed out>
+1791381689.146 new None lost None rc None <urlopen error timed out>
+1791381690.648 new None lost None rc None <urlopen error timed out>
+1791381692.15 new None lost None rc None <urlopen error timed out>
+1791381693.652 new None lost None rc None <urlopen error timed out>
+1791381695.154 new None lost None rc None <urlopen error timed out>
+1791381696.656 new None lost None rc None <urlopen error timed out>
+1791381698.157 new None lost None rc None <urlopen error timed out>
+1791381699.659 new None lost None rc None <urlopen error timed out>
+1791381701.167 new None lost None rc None <urlopen error timed out>
+1791381702.669 new None lost None rc None <urlopen error timed out>
+1791381704.171 new None lost None rc None <urlopen error timed out>
+1791381705.673 new None lost None rc None <urlopen error timed out>
+1791381707.175 new None lost None rc None <urlopen error timed out>
+1791381708.677 new None lost None rc None <urlopen error timed out>
+1791381710.179 new None lost None rc None <urlopen error timed out>
+1791381711.68 new None lost None rc None <urlopen error timed out>
+1791381713.182 new None lost None rc None <urlopen error timed out>
+1791381714.684 new None lost None rc None <urlopen error timed out>
+1791381716.186 new None lost None rc None <urlopen error timed out>
+1791381717.687 new None lost None rc None <urlopen error timed out>
+1791381719.189 new None lost None rc None <urlopen error timed out>
+1791381720.69 new None lost None rc None <urlopen error timed out>
+1791381722.192 new None lost None rc None <urlopen error timed out>
+2026-10-07T16:02:03.692+02:00 new 96 lost 660 rc 2093 
+DONE polls=179 rows=1433 lost=666 errors=60 out=docs/betrieb/artifacts-2026-10-07-lab/lab88-s2probe/T1-1600/trace.jsonl

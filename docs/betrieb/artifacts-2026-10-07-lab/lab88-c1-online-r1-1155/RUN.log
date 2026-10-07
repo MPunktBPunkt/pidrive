@@ -1,0 +1,49 @@
+=== c1-online-r1 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c1-online-r1-1155 ===
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1787, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1746, in main
+    report["results"]["BENCH"] = run_bench(
+                                 ~~~~~~~~~^
+        hu, esp, out, args.bench_uid, sizes, args.bench_n, offline=bool(args.offline)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1440, in run_bench
+    post_rc = int(snap(esp).get("readCount") or 0)
+                  ~~~~^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 799, in snap
+    st = http_json(f"{esp.rstrip('/')}/api/status")
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 75, in http_json
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+    response = self._open(req, data)
+  File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.13/urllib/request.py", line 1348, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/urllib/request.py", line 1323, in do_open
+    r = h.getresponse()
+  File "/usr/lib/python3.13/http/client.py", line 1459, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/http/client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+DONE c1-online-r1 exit=1

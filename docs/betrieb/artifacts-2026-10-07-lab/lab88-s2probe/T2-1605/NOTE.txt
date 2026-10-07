@@ -1,0 +1,5 @@
+T2_STAMP=1605
+DONE prod r1
+DONE prod r2
+DONE noprod r1
+DONE noprod r2

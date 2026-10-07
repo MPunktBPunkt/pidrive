@@ -1,0 +1,19 @@
+{
+  "reads": 491,
+  "live": 207,
+  "live_by_dir": {
+    "start": {
+      "n": 1,
+      "uniq_abs0_minus_off": 1,
+      "min": -747776,
+      "max": -747776
+    },
+    "F": {
+      "n": 206,
+      "uniq_abs0_minus_off": 52,
+      "min": -747264,
+      "max": -23296
+    }
+  },
+  "note": "Wi-Fi timeout after window; REPORT incomplete but reads.jsonl complete enough"
+}

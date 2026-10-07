@@ -1,0 +1,3 @@
+=== c2-armedprod-r2 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c2-armedprod-r2-1156 ===
+sg not ready: /dev/sg0: [Errno 6] No such device or address: '/dev/sg0'
+DONE c2-armedprod-r2 exit=1

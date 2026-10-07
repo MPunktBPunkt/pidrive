@@ -1,0 +1,3 @@
+=== c4-gw-live → docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-gw-live-1325 ===
+/bin/bash: line 1: 1: command not found
+DONE c4-gw-live exit=127

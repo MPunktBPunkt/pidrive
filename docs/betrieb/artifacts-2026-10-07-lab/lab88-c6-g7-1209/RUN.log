@@ -1,0 +1,27 @@
+=== c6-g7 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-1209 ===
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1824, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1762, in main
+    report["results"]["G7"] = run_g7(hu, esp, out, autoplay=args.g7_autoplay)
+                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1269, in run_g7
+    res = hu.select_head(uid, autoplay_pause_at=4194304 if autoplay else None,
+                         on_phase=lambda name: snaps.__setitem__(name, snap(esp)))
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 709, in select_head
+    total += self.read_segment(uid, final_start, size - final_start)
+             ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 664, in read_segment
+    blob = self.read_n(uid, off, min(READ_N, end - off))
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 601, in read_n
+    blob, meta = self._timed_read(lba, n)
+                 ~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 643, in _timed_read
+    blob, meta = read_sg(self.sg_fd, lba, n, self.cmd_timeout_ms)
+                 ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 150, in read_sg
+    fcntl.ioctl(sg_fd, SG_IO, hdr)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 19] No such device
+DONE c6-g7 exit=1

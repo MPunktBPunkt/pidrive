@@ -1,0 +1,11 @@
+# Auf dem Proxmox-Host (Shell), Stick steckt schon:
+
+# 1) Gerät an diese CT durchreichen (CT-ID prüfen: pct list — hier oft 100):
+pct set 100 -dev0 /dev/sdb
+
+# 2) Dann hier im Cursor/CT weitermachen, ODER direkt auf dem Host:
+YES=1 SRC=/var/lib/lxc/100/rootfs/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/f1-stick \
+  bash /var/lib/lxc/100/rootfs/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/prepare-f1-stick-host.sh
+
+# Falls QEMU-VM 100 statt LXC:
+# Pfad eher: /mnt oder qm guest — dann Stick in der VM unter Hardware→USB hinzufügen und neu einstecken.

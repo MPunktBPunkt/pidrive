@@ -1,0 +1,50 @@
+{
+  "BENCH": {
+    "pass": false,
+    "sizes": {
+      "4096": {
+        "reads": 2000,
+        "bytes": 8192000,
+        "dt_s": 11.207,
+        "reads_per_s": 178.5,
+        "MBps": 0.731,
+        "ms_per_4k": 5.603,
+        "esp_readCount_delta": 2000,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 4.0,
+          "p50": 4.0,
+          "p95": 5.0,
+          "p99": 64.0,
+          "min": 3.0,
+          "max": 65.0,
+          "n": 2000
+        },
+        "wall_ms": {
+          "p5": 4.007,
+          "p50": 4.167,
+          "p95": 4.592,
+          "p99": 64.142,
+          "min": 3.936,
+          "max": 65.138,
+          "n": 2000
+        },
+        "start_to_start_ms": {
+          "p5": 4.564,
+          "p50": 4.811,
+          "p95": 5.338,
+          "p99": 64.238,
+          "min": 4.43,
+          "max": 66.195,
+          "n": 1999
+        }
+      }
+    },
+    "c1_reads_per_s": 178.5,
+    "offline": false,
+    "incomplete": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-s2probe/T2-1605/armed-prod-fav0-read-fav1-r2 overall=FAIL

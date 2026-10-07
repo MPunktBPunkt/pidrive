@@ -1,0 +1,25 @@
+=== c3-online → docs/betrieb/artifacts-2026-10-07-lab/lab88-c3-online-1156 ===
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1824, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1783, in main
+    report["results"]["BENCH"] = run_bench(
+                                 ~~~~~~~~~^
+        hu, esp, out, args.bench_uid, sizes, args.bench_n, offline=bool(args.offline)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1456, in run_bench
+    blob = hu.read_n(uid, off, sz)
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 601, in read_n
+    blob, meta = self._timed_read(lba, n)
+                 ~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 643, in _timed_read
+    blob, meta = read_sg(self.sg_fd, lba, n, self.cmd_timeout_ms)
+                 ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 150, in read_sg
+    fcntl.ioctl(sg_fd, SG_IO, hdr)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 19] No such device
+DONE c3-online exit=1

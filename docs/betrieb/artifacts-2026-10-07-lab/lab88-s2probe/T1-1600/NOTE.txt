@@ -1,0 +1,3 @@
+T1_STAMP=1600
+DONE G7+poll exit=0
+DONE G7-bare exit=1
