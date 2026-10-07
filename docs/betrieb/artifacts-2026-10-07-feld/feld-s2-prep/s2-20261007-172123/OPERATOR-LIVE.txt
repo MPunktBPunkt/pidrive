@@ -1,0 +1,27 @@
+# Operator-Log Feld s2 — ohne F1
+# t=HH:MM:SS  aktion
+
+t=17:21:23  RUN START s2-20261007-172123
+t=17:21:28  s2 start no-F1
+t=17:23:24  Z1 BOB tap
+t=17:23:31  Z1 RST1
+t=17:24:19  Z1 Bayern tap
+t=17:24:35  Z1 Rock tap
+t=17:25:34  Z1 RST2
+t=17:26:19  Z2 BOB tap
+t=17:26:32  Z2 RST1
+t=17:27:14  Z2 Rock tap
+t=17:28:12  Z2 RST2
+t=17:28:51  Z3 BOB tap
+t=17:29:02  Z3 RST1
+t=17:29:34  Z3 Rock tap
+t=17:30:30  Z3 RST2
+t=17:31:10  Z4 BOB tap
+t=17:31:20  Z4 RST1
+t=17:31:53  Z4 Rock tap
+t=17:32:48  Z4 RST2
+t=17:33:34  Z5 BOB tap
+t=17:33:44  Z5 RST1
+t=17:34:44  Z5 Rock tap
+t=17:35:39  Z5 RST2
+t=17:35:42  s2 ende
