@@ -1,0 +1,15 @@
+[
+  {
+    "file": "docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/f1-stick-sample/F1-30s_dry2.mp3",
+    "label": "30s_dry2",
+    "blocks": 2,
+    "duration_s": 20.0,
+    "marker_s": 10.0,
+    "ar": 22050,
+    "bitrate": "48k",
+    "engine": [
+      "beep"
+    ],
+    "bytes": 120439
+  }
+]

@@ -1,0 +1,41 @@
+# Feld s2 — Q8 Lesereihenfolge (msc.reads) + F1 USB-Stick
+# Protokoll: ../FELDPROTOKOLL-NAECHSTER-TERMIN.md
+run_id: feld-s2-prep
+stufe: 1
+env: feld
+fw: 0.4.46-dev
+fw_commit: freeze
+build_env: pidrive-s3-l3
+geometry: L3
+counter_semantics: v3
+bridge:
+  bitrate: 48k
+  audio_target_bps: 9000
+  ffmpeg_ar: 22050
+  ffmpeg_ac: 1
+  state_during_probes: no_audio
+stall_ms: 0
+station: mixed
+bitrate_kbps: 48
+device: PD0089
+esp: http://192.168.178.89
+usb_stick: pending
+hub_usb11: pending
+status_poll:
+  interval_s: 1.0
+  out: status-poll.jsonl
+verdict:
+  q8_r10: open
+  f1: open
+  stall_go: false
+artifacts:
+  - msc_reads.jsonl
+  - bridge-noaudio.log
+  - status-poll.jsonl
+  - OPERATOR-LIVE.txt
+  - f1-events.jsonl
+  - F1-STICK.md
+  - Q8-REPORT.json
+notes: >
+  Bridge mit --no-audio (msc.reads an). Kein Stall-OTA.
+  Lab C2: Bridge kann Lesetakt ändern — readCount/s gegen s1-morgen prüfen (250 idle / 195 play).

@@ -1,0 +1,5 @@
+# Operator-Log Feld s2 — Uhrzeit + Aktion (Video-Uhr im Bild!)
+# Vorlage: A1 BOB antippen …
+#
+# t=HH:MM:SS  aktion
+#

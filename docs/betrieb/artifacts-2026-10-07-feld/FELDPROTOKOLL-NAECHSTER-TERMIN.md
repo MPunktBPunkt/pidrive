@@ -103,13 +103,10 @@ Rock läuft 60 s → Quelle Radio → 10 s → zurück USB. Prüfen, ob R16 (Wie
 - Optional `F1-1GB.mp3`, falls kein USB-1.1-Hub da ist (siehe unten).
 
 ```bash
-# Skizze: 10-s-Blöcke mit gesprochener Zahl, dann zusammenfügen und kodieren
-for i in $(seq 0 10 830); do
-  espeak-ng -v de "$i" -w m.wav
-  ffmpeg -loglevel error -y -i m.wav -af apad=whole_dur=10 -ar 22050 -ac 1 "blk_$(printf %05d $i).wav"
-done
-ls blk_*.wav | sed 's/^/file /' > list.txt
-ffmpeg -f concat -i list.txt -c:a libmp3lame -b:a 48k -ar 22050 -ac 1 -metadata title="F1-5MB" F1-5MB.mp3
+# Fertig-Tool (espeak-ng bevorzugt, sonst Beep-Fallback):
+cd /home/martin/projects/pidrive
+./docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/make-f1-stick.sh /mnt/stick
+# oder: python3 tools/feld_f1_make_stick.py --out-dir /mnt/stick --sizes 5mb,100mb
 ```
 
 **Warum USB-1.1-Hub:** Ein normaler Stick läuft am HU-Port vermutlich mit High-Speed. 100 MB sind dann in wenigen Sekunden gelesen, und „sofort hörbar“ wäre kein Beweis. Ein USB-1.1-Hub zwischen HU und Stick erzwingt Full-Speed (~1 MB/s wie beim ESP). Dann braucht ein Komplett-Read von 100 MB ≈ 100 s. Ohne Hub nimmt man die 1-GB-Datei: bei ~30 MB/s ≈ 33 s.
@@ -150,5 +147,14 @@ Ordner `artifacts-<datum>-feld/feld-s2-<zeit>/`:
 | `F1-STICK.md` | `t_voice` je Datei, erster Marker, Hub ja/nein |
 
 Danach `./run-ingest.sh`. Episoden aus `msc_reads.jsonl` als Lab-Replay übergeben (C6: `--golden REPLAY --replay … --replay-ms-from … --replay-ms-to …`).
+
+**Q8-Auswertung (Segmente, ungelesene 4-KiB-Blöcke, R10-Verdict):**
+
+```bash
+./docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/run-q8.sh msc_reads-A.jsonl
+# oder: python3 tools/feld_q8_msc_order.py --reads msc_reads.jsonl --out-dir q8-A
+```
+
+Session-Paket: [`feld-s2-prep/`](feld-s2-prep/) (`ARRIVAL.md`, Bridge `--no-audio`, Snapshots, Status-Poll).
 
 **Bridge danach zurück auf Normalbetrieb:** `sudo systemctl start pidrive_pump_bridge`.
