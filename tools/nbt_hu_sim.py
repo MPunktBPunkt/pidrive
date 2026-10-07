@@ -15,6 +15,7 @@ Field-fit scenarios (s1-morgen 07.10., HU-Facts R15–R21):
   --golden G4N            next-prefetch 15 s before playback end
   --golden BENCH          C1/C3 back-to-back reads per size
   --golden REPLAY --replay <msc_reads.jsonl|bridge.log> [--replay-ms-from/--replay-ms-to]  (C6)
+  --offline               SG-only BENCH when ESP HTTP is down (static L3 LBAs)
 Every read goes to <out>/reads.jsonl (off, lba, n, klass, dur_ms, wall_ms, seq0/seq1).
 
 See docs/betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md
@@ -565,6 +566,20 @@ class HuSim:
                 continue
             l0, l1 = int(s["lba0"]), int(s["lba1"])
             self.slots[s["uid"]] = SlotInfo(s["uid"], l0, l1, max(512, (l1 - l0 + 1) * 512))
+
+    def load_slots_l3(self) -> None:
+        """Static L3 geometry (fav0 8 MiB / fav1+fav2 512 KiB) when ESP HTTP is down.
+
+        LBAs from lab88 / feld-s1-morgen status: fav0=81..16464, fav1=16465..17488, fav2=17489..18512.
+        Offline BENCH/C1/C3 only — not a substitute for refresh_slots when Wi-Fi is up.
+        """
+        self.slots.clear()
+        for uid, l0, l1 in (
+            ("fav0", 81, 16464),
+            ("fav1", 16465, 17488),
+            ("fav2", 17489, 18512),
+        ):
+            self.slots[uid] = SlotInfo(uid, l0, l1, max(512, (l1 - l0 + 1) * 512))
 
     def _log(self, **kw: Any) -> None:
         kw["t"] = time.monotonic()
@@ -1383,9 +1398,22 @@ def run_replay(hu: HuSim, esp: str, out: Path, rows: list[dict], speed: float = 
     }
 
 
-def run_bench(hu: HuSim, esp: str, out: Path, uid: str, sizes: list[int], n_reads: int) -> dict:
+def run_bench(
+    hu: HuSim,
+    esp: str,
+    out: Path,
+    uid: str,
+    sizes: list[int],
+    n_reads: int,
+    *,
+    offline: bool = False,
+) -> dict:
     """C1/C3: back-to-back sequential reads per size (no pacing): reads/s, MB/s, durations."""
-    hu.refresh_slots(esp)
+    if offline:
+        if uid not in hu.slots:
+            hu.load_slots_l3()
+    else:
+        hu.refresh_slots(esp)
     saved = (hu.period_ms, hu.gap_ms)
     hu.period_ms, hu.gap_ms = None, 0.0
     res: dict[str, Any] = {}
@@ -1393,7 +1421,9 @@ def run_bench(hu: HuSim, esp: str, out: Path, uid: str, sizes: list[int], n_read
         for sz in sizes:
             hu.dur_ms.clear(); hu.wall_ms.clear(); hu.start_gap_ms.clear()
             hu._t_last_start = None
-            pre = snap(esp)
+            pre_rc = None
+            if not offline:
+                pre_rc = int(snap(esp).get("readCount") or 0)
             size = hu.slots[uid].size
             off = 0
             t0 = time.monotonic()
@@ -1405,7 +1435,11 @@ def run_bench(hu: HuSim, esp: str, out: Path, uid: str, sizes: list[int], n_read
                 off += len(blob)
                 done += len(blob)
             dt = time.monotonic() - t0
-            post = snap(esp)
+            rc_delta = None
+            if not offline:
+                post_rc = int(snap(esp).get("readCount") or 0)
+                rc_delta = post_rc - (pre_rc or 0)
+            # Host-side 4 KiB-equivalent rate (for sizes != 4096 still normalize by bytes)
             res[str(sz)] = {
                 "reads": n_reads,
                 "bytes": done,
@@ -1413,13 +1447,18 @@ def run_bench(hu: HuSim, esp: str, out: Path, uid: str, sizes: list[int], n_read
                 "reads_per_s": round(n_reads / dt, 1) if dt else None,
                 "MBps": round(done / dt / 1e6, 3) if dt else None,
                 "ms_per_4k": round(dt * 1000 / (done / 4096), 3) if done else None,
-                "esp_readCount_delta": int(post.get("readCount") or 0) - int(pre.get("readCount") or 0),
+                "esp_readCount_delta": rc_delta,
+                "offline": offline,
                 **{k: v for k, v in hu.timing_report().items() if k.endswith("_ms")},
             }
     finally:
         hu.period_ms, hu.gap_ms = saved
     (out / "bench.json").write_text(json.dumps(res, indent=2))
-    return {"sizes": res, "pass": True}
+    # C1 acceptance uses host reads_per_s for size 4096 when available
+    c1 = res.get("4096") or {}
+    rps = c1.get("reads_per_s")
+    c1_pass = (rps is not None and rps >= 245) if "4096" in res else True
+    return {"sizes": res, "pass": bool(c1_pass), "c1_reads_per_s": rps, "offline": offline}
 
 
 def run_g5(producer: RealisticProducer, duration_s: float = 70.0) -> dict:
@@ -1529,6 +1568,11 @@ def main() -> int:
     ap.add_argument("--bench-uid", default="fav0")
     ap.add_argument("--bench-sizes", default="512,4096,16384,65536")
     ap.add_argument("--bench-n", type=int, default=1000)
+    ap.add_argument(
+        "--offline",
+        action="store_true",
+        help="SG-only: skip ESP HTTP/Pump (BENCH/C1/C3 when Wi-Fi down). Uses static L3 LBAs.",
+    )
     args = ap.parse_args()
 
     if args.self_test:
@@ -1549,8 +1593,17 @@ def main() -> int:
     if "ALL" in goldens:
         goldens = ["G1", "G2", "G3", "G4", "G5"]
 
+    offline_ok = {"BENCH"}
+    if args.offline:
+        bad = [g for g in goldens if g not in offline_ok]
+        if bad:
+            ap.error(f"--offline only supports {sorted(offline_ok)}; got {bad}")
+        if args.live or args.soft_rst:
+            ap.error("--offline incompatible with --live / --soft-rst")
+
     report: dict[str, Any] = {"golden": goldens, "results": {},
-                              "period_ms": args.period_ms, "gap_ms": args.gap_ms}
+                              "period_ms": args.period_ms, "gap_ms": args.gap_ms,
+                              "offline": bool(args.offline)}
 
     if args.soft_rst:
         soft_rst(esp)
@@ -1567,6 +1620,15 @@ def main() -> int:
     def fresh(remount: bool = True) -> None:
         nonlocal pump
         stop_live()
+        if args.offline:
+            hu.open()
+            hu.cache.clear()
+            hu.class_counts.clear()
+            hu.bytes_before_arm = hu.bytes_after_arm = 0
+            hu._armed = False
+            hu.ear = VirtualEar()
+            hu.load_slots_l3()
+            return
         pump = prep_lab(esp, args.esp_ip, pump, remount=remount)
         hu.open()
         hu.cache.clear()
@@ -1594,9 +1656,13 @@ def main() -> int:
         live_prod.clear()
         stop.clear()
     try:
-        pump = prep_lab(esp, args.esp_ip, None, remount=True)
-        hu.open()
-        hu.refresh_slots(esp)
+        if args.offline:
+            hu.open()
+            hu.load_slots_l3()
+        else:
+            pump = prep_lab(esp, args.esp_ip, None, remount=True)
+            hu.open()
+            hu.refresh_slots(esp)
 
         if "G5" in goldens:
             producer = RealisticProducer(pump, stop, start_delay_s=0.0)
@@ -1677,7 +1743,9 @@ def main() -> int:
         if "BENCH" in goldens:
             fresh()
             sizes = [int(x) for x in args.bench_sizes.split(",") if x.strip()]
-            report["results"]["BENCH"] = run_bench(hu, esp, out, args.bench_uid, sizes, args.bench_n)
+            report["results"]["BENCH"] = run_bench(
+                hu, esp, out, args.bench_uid, sizes, args.bench_n, offline=bool(args.offline)
+            )
 
         if "REPLAY" in goldens:
             if not args.replay:

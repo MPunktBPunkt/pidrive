@@ -203,6 +203,14 @@ Dazu `usbSerial` vor und nach notieren.
 
 ---
 
+## Zwischenstand 2026-10-07 ~11:30
+
+Siehe [`C1-C7-ERGEBNIS.md`](C1-C7-ERGEBNIS.md).
+
+- Lab-ESP `.88` **ohne WLAN** (USB MSC ok) → C1/C3 mit neuem `--offline` gefahren; C2–C7 blockiert.
+- **C1 FAIL:** ~205 Reads/s (Ziel ≥245). SG p50=4,0 ms, Host start-to-start ≈4,7 ms.
+- **C3:** Dauer skaliert mit 4-KiB-Chunks; ESP-Callback-Zähler ausstehend (online).
+
 ## Rückmeldung
 
 Kurzbericht `C1-C7-ERGEBNIS.md` im Lab-Ordner. Pro Test: Kommando, Zahl, PASS/FAIL, Abweichung. Danach trage ich die Ergebnisse in diese Dokumente ein:

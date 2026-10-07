@@ -1,0 +1,46 @@
+{
+  "sizes": {
+    "4096": {
+      "reads": 2000,
+      "bytes": 8192000,
+      "dt_s": 9.763,
+      "reads_per_s": 204.9,
+      "MBps": 0.839,
+      "ms_per_4k": 4.881,
+      "esp_readCount_delta": null,
+      "offline": true,
+      "period_ms": null,
+      "gap_ms": 0.0,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 5.0,
+        "min": 3.0,
+        "max": 15.0,
+        "n": 2000
+      },
+      "wall_ms": {
+        "p5": 4.014,
+        "p50": 4.127,
+        "p95": 4.456,
+        "p99": 5.048,
+        "min": 3.962,
+        "max": 15.204,
+        "n": 2000
+      },
+      "start_to_start_ms": {
+        "p5": 4.574,
+        "p50": 4.728,
+        "p95": 5.264,
+        "p99": 5.971,
+        "min": 4.448,
+        "max": 15.761,
+        "n": 1999
+      }
+    }
+  },
+  "pass": false,
+  "c1_reads_per_s": 204.9,
+  "offline": true
+}
