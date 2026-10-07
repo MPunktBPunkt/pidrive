@@ -158,6 +158,37 @@ docs/betrieb/artifacts-2026-10-07-lab/
 
 ---
 
+## Nachprüfung 2026-10-07 nachmittags (N1–N4)
+
+**N1 — C1 ist kein ESP-Befund; das Kriterium war falsch gewählt.** In allen drei C1-Läufen sind die Werte `sg_duration p50 = 4,0 ms` und `start_to_start p50 = 4,84 ms`. Die SG-Dauer ist die Zeit von ESP und Bus pro READ10. Die ~0,8 ms Differenz entstehen im Lab-Host zwischen zwei Kommandos (Python + ioctl). Das Lab trifft das Feld also genau:
+
+| Zustand | Lab `sg_duration` p50 | Feld (Start-zu-Start der HU) |
+|---------|-----------------------|------------------------------|
+| idle | 4,0 ms | 4,0 ms (250/s) |
+| armed | 5,0 ms | 5,1 ms (195/s) |
+
+- **Neues C1-Kriterium:** `sg_duration p50 ≤ 4,1 ms` im Leerlauf. Reads/s an der Wanduhr misst den Lab-Host mit, nicht den ESP.
+- Mit diesem Kriterium ist C1 **PASS**.
+- C3 passt dazu: 512 B brauchen ~1,0 ms pro Kommando (Fix-Overhead CBW/CSW + Host). 4 KiB brauchen 4,0 ms, das ist die Bulk-Grenze von Full-Speed.
+
+**N2 — C4 prüft die feste Zuordnung nur im sequenziellen Kopf.** `C4-MAPPING-g7-live-1209.csv` hat 1997 Reads, davon **12 LIVE** (Offset 4.096–49.152, eine Ringfüllung) und 1984 SILENCE. Die Konstante `abs0−off = 19712` gilt deshalb nur für diese 12 sequenziellen Reads. Lesen außer der Reihe mit Live-Inhalt wurde nicht getestet: Der Sim liest mit ~1 MB/s, der Producer liefert ~9 KB/s, also ist bei jedem Rückwärts- oder Fragment-Read der Ring längst überholt. Nachtest **C4b** (Sim auf Producer-Tempo gedrosselt) siehe [`AUFTRAG-LAB-S2-PROBE-T1-T4.md`](AUFTRAG-LAB-S2-PROBE-T1-T4.md).
+
+**N3 — R16 ist auf Read-Ebene belegt** (Einzelzeilen p1-run-a ms 364034–365907):
+- LBA 1953–1961 (F8);
+- LBA 1713–1945 (B120);
+- LBA 1473–1705 (B120);
+- LBA 1969–2681 (F360);
+- LBA 753–1465 (B360);
+- LBA 2689–4617 (F968).
+
+Jedes Rückwärtssegment endet direkt unter dem bisher niedrigsten Block. HU-Facts R16 steht jetzt auf [B].
+
+**N4 — `msc.reads`-Bursts können einen LBA-Sprung enthalten.** `UsbMscGadget::drainPendingReads` fasst Samples nach Art, Abstand ≤ 50 ms und ≤ 32 Stück zusammen, **nicht nach LBA-Kontinuität**. Solche Bursts (`lba1 ≠ lba0 + (n−1)·8`) kommen vor: in p1-run-a 8 von 859, in m3seq 39 von 4218, und gerade an Segmentwechseln (z. B. `lba0=1913, lba1=1521, n=12`). Gegenmittel ohne FW:
+- `feld_q8_msc_order.py` erkennt und teilt solche Bursts;
+- `feld_trace_poll.py` liest die Einzel-Reads aus `/api/metrics → mscTrace` (96 Einträge, ab 3 Hz Poll lückenlos bei 250 Reads/s).
+
+---
+
 ## Empfehlung / noch offen
 
 1. ~~R15 Ursache~~ → in HU-Facts/Q9 nachgetragen (**Live-Pfad**).

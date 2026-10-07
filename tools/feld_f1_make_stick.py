@@ -101,7 +101,7 @@ def make_block(sec: int, out_wav: Path, work: Path, voice: str) -> str:
     return engine
 
 
-def encode_mp3(wav_list: Path, mp3: Path, title: str) -> None:
+def encode_mp3(wav_list: Path, mp3: Path, title: str, br: str = BR) -> None:
     run(
         [
             "ffmpeg",
@@ -117,7 +117,7 @@ def encode_mp3(wav_list: Path, mp3: Path, title: str) -> None:
             "-c:a",
             "libmp3lame",
             "-b:a",
-            BR,
+            br,
             "-ar",
             str(AR),
             "-ac",
@@ -131,29 +131,48 @@ def encode_mp3(wav_list: Path, mp3: Path, title: str) -> None:
     )
 
 
-def size_to_blocks(spec: str) -> tuple[str, int]:
-    """Return (label, n_blocks of 10 s)."""
+def br_bps(br: str) -> int:
+    s = br.strip().lower()
+    return int(float(s[:-1]) * 1000) if s.endswith("k") else int(s)
+
+
+def size_to_blocks(spec: str, br: str = BR) -> tuple[str, int]:
+    """Return (label, n_blocks of 10 s); file size / bitrate decides the duration."""
     s = spec.strip().lower()
     if s.endswith("s") and s[:-1].isdigit():
         sec = int(s[:-1])
         return (f"{sec}s", max(1, round(sec / MARKER_S)))
-    if s in ("5mb", "5mib", "5"):
-        # ~5 MiB @ 48k ≈ 5*1024*1024*8/48000 ≈ 873 s → 88 blocks
-        return ("5MB", 88)
-    if s in ("100mb", "100mib", "100"):
-        # ~100 MiB ≈ 17476 s → 1748 blocks (~4.8 h) — long; use 1748
-        return ("100MB", 1748)
-    if s in ("1gb", "1gib"):
-        return ("1GB", 17480)
-    raise SystemExit(f"unknown size spec: {spec}")
+    mib = {"5mb": 5, "5mib": 5, "5": 5, "100mb": 100, "100mib": 100, "100": 100, "1gb": 1000, "1gib": 1000}.get(s)
+    if mib is None:
+        raise SystemExit(f"unknown size spec: {spec}")
+    # 48k: 5 MiB ≈ 874 s (87 blocks), 100 MiB ≈ 4,8 h (1748); 128k: 33 / 655 blocks
+    sec = mib * 1024 * 1024 * 8 / br_bps(br)
+    label = "1GB" if mib == 1000 else f"{mib}MB"
+    return (label, max(1, round(sec / MARKER_S)))
 
 
-def build_one(out_dir: Path, spec: str, voice: str, dry_blocks: int | None) -> dict:
-    label, n = size_to_blocks(spec)
+def wav_bytes_needed(n_blocks: int) -> int:
+    """Temp WAVs of one file: 16-bit mono at AR, plus one spoken raw per block (~same size)."""
+    return int(n_blocks * MARKER_S * AR * 2 * 1.2)
+
+
+def build_one(out_dir: Path, spec: str, voice: str, dry_blocks: int | None, br: str = BR,
+              tmp_dir: str | None = None) -> dict:
+    label, n = size_to_blocks(spec, br)
     if dry_blocks is not None:
         n = dry_blocks
         label = f"{label}_dry{n}"
-    work = Path(tempfile.mkdtemp(prefix=f"f1_{label}_"))
+    if br != BR:
+        label = f"{label}_{br}"
+    tmp_root = tmp_dir or tempfile.gettempdir()
+    need = wav_bytes_needed(n)
+    free = shutil.disk_usage(tmp_root).free
+    if free < need:
+        raise SystemExit(
+            f"zu wenig Temp-Platz in {tmp_root}: frei {free / 1e6:.0f} MB, nötig ~{need / 1e6:.0f} MB "
+            f"({n} Blöcke). --tmp-dir auf den Stick/SSD setzen oder --br 128k nehmen."
+        )
+    work = Path(tempfile.mkdtemp(prefix=f"f1_{label}_", dir=tmp_root))
     engines: set[str] = set()
     try:
         files: list[Path] = []
@@ -165,7 +184,7 @@ def build_one(out_dir: Path, spec: str, voice: str, dry_blocks: int | None) -> d
         lst = work / "list.txt"
         lst.write_text("".join(f"file '{p.name}'\n" for p in files), encoding="utf-8")
         mp3 = out_dir / f"F1-{label}.mp3"
-        encode_mp3(lst, mp3, title=f"F1-{label}")
+        encode_mp3(lst, mp3, title=f"F1-{label}", br=br)
         meta = {
             "file": str(mp3),
             "label": label,
@@ -173,7 +192,7 @@ def build_one(out_dir: Path, spec: str, voice: str, dry_blocks: int | None) -> d
             "duration_s": n * MARKER_S,
             "marker_s": MARKER_S,
             "ar": AR,
-            "bitrate": BR,
+            "bitrate": br,
             "engine": sorted(engines),
             "bytes": mp3.stat().st_size,
         }
@@ -193,6 +212,8 @@ def main() -> int:
         default=None,
         help="nur N Blöcke (10 s) — schneller Smoke-Test",
     )
+    ap.add_argument("--br", default=BR, help="MP3-Bitrate, z. B. 48k (Bridge-Format) oder 128k (100MB in 1,8 h statt 4,8 h)")
+    ap.add_argument("--tmp-dir", default=None, help="Ordner für Temp-WAVs (Standard: System-Temp)")
     args = ap.parse_args()
     if not have("ffmpeg"):
         print("ffmpeg fehlt", file=sys.stderr)
@@ -205,7 +226,7 @@ def main() -> int:
         if not spec:
             continue
         print(f"building {spec} …")
-        meta = build_one(out, spec, args.voice, args.dry_blocks)
+        meta = build_one(out, spec, args.voice, args.dry_blocks, br=args.br, tmp_dir=args.tmp_dir)
         report.append(meta)
         print(f"  → {meta['file']} ({meta['bytes']} B, {meta['duration_s']} s, engine={meta['engine']})")
     (out / "F1-INDEX.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

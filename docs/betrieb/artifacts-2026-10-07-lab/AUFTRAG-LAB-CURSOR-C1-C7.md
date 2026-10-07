@@ -68,8 +68,8 @@ sg disk -c 'python3 tools/nbt_hu_sim.py --golden BENCH --bench-sizes 4096 --benc
 **Messgrößen:** `reads_per_s`, `ms_per_4k`, `sg_duration_ms.p50/p95`, `esp_readCount_delta`.
 
 **Abnahme:**
-- ≥ 245 Reads/s: Lab = HU-Grenze, weiter mit C2.
-- < 245 Reads/s: Ursache im Lab-Host suchen (Container-USB-Passthrough, Hub, `usbmon`) und dokumentieren. Sim-Zeiten danach nur relativ deuten.
+- **Neu (07.10. nachmittags):** `sg_duration p50 ≤ 4,1 ms` = ESP/Bus auf HU-Niveau. Reads/s an der Wanduhr enthält ~0,8 ms Host-Abstand pro Kommando und ist kein Kriterium (siehe `C1-C7-ERGEBNIS.md`, N1).
+- ~~≥ 245 Reads/s~~ (ursprüngliches Kriterium, misst den Lab-Host mit).
 
 ## C2 — ESP-Servicezeit je Zustand: woher kommen 5,1 ms?
 
@@ -137,7 +137,7 @@ sg disk -c 'python3 tools/nbt_hu_sim.py --golden BENCH --bench-sizes 512,4096,16
 - `duplicate`- und `gap_in_content`-Ereignisse des Ohrs, jetzt ohne Fehlalarm.
 - Position der `nearHead`-Resyncs: Sprung von `abs0` auf die Kopfposition.
 
-**Abnahme:** Die Tabelle ist reproduzierbar (2/2) und als `C4-MAPPING.csv` abgelegt. Daraus folgt eine Testvorlage für die FW nach Go: gleiche Reihenfolge, Erwartung `abs0 − off = const` für alle LIVE-Blöcke.
+**Abnahme:** Die Tabelle ist reproduzierbar (2/2) und als `C4-MAPPING.csv` abgelegt. **Zusatz 07.10.:** Mindestens 100 LIVE-Reads **außer der Reihe** in der Tabelle, sonst ist nur der sequenzielle Kopf geprüft (C4-Lauf 1209 hatte 12 LIVE, alle sequenziell). Dafür den Sim auf Producer-Tempo drosseln (C4b). Daraus folgt eine Testvorlage für die FW nach Go: gleiche Reihenfolge, Erwartung `abs0 − off = const` für alle LIVE-Blöcke.
 
 ## C5 — Steigung `hostAbs − absEnd`: Cursor-Geschwindigkeit direkt
 

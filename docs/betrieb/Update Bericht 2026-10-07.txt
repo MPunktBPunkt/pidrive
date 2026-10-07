@@ -1,0 +1,1039 @@
+es gab wieder ein größeres Update und einen Test im Lab.&#x20;
+
+Hier die Umsetzung:&#x20;
+To-do All done
+    ✔ Golden ALL (G1–G5) Regression online
+    ✔ C1 online ×3 + C3 Größen-Sweep
+    ✔ C2 Kernmatrix (Idle/Armed/Producer)
+    ✔ C4/C5/C6/C7 + Ergebnisbericht
+      aktualisieren
+    ✔ Commit + Push
+    ✔ Recover MSC via soft-RST (sg0 ENODEV)
+
+  Online-Lab ist durch; Bericht und Artefakte
+  liegen unter docs/betrieb/artifacts-2026-10-0
+  7-lab/C1-C7-ERGEBNIS.md, Commit 71e434e ist
+  auf main.
+
+  ┌──────────────┬────────────────────────────┐
+  │ Test         │ Ergebnis                   │
+  ├──────────────┼────────────────────────────┤
+  │ ALL G1–G5    │ PASS                       │
+  ├──────────────┼────────────────────────────┤
+  │ C1           │ FAIL \~195 Reads/s (Ziel    │
+  │              │ ≥245), δ=2000              │
+  ├──────────────┼────────────────────────────┤
+  │ C2           │ Idle sg 4,0 ms → Armed 5,0 │
+  │              │ ms → R15 = Live-Pfad       │
+  ├──────────────┼────────────────────────────┤
+  │ C3           │ EP = 4 KiB (16 KiB→4 CB,   │
+  │              │ 64 KiB→16 CB)              │
+  ├──────────────┼────────────────────────────┤
+  │ C7 G8        │ PASS rc=167 (Remount×3 +   │
+  │              │ Soft-RST)                  │
+  ├──────────────┼────────────────────────────┤
+  │ G6 / C4-G7 / │ PASS                       │
+  │ C6-REPLAY    │                            │
+  ├──────────────┼────────────────────────────┤
+  │ C5 / C4-GW / │ Daten/teilweise;           │
+  │ C6-autoplay  │ USB-ENODEV & Wi-Fi unter   │
+  │              │ MSC                        │
+  └──────────────┴────────────────────────────┘
+
+  Nach ENODEV hilft Soft-RST (/api/restart),
+  Remount allein oft nicht.
+
+  Finished Run C1×3, C3, C2 core matrix online
+
+  Finished Hardened BENCH: rerun C1/C3/C2
+  online
+
+  Finished Run C4/C6/C7 and G6 online
+
+  Finished Remount ESP and smoke-test BENCH
+
+  Die Lab-Serie ist abgeschlossen und auf main
+  (71e434e); Details in docs/betrieb/artifacts-
+  2026-10-07-lab/C1-C7-ERGEBNIS.md.
+
+  Ergebnis: ALL G1–G5, C7 G8 (rc=167), G6,
+  C4-G7 und C6-REPLAY sind PASS. C1 bleibt bei
+  \~195 Reads/s (FAIL gegen ≥245). C2 zeigt Idle
+  4,0 ms → Armed 5,0 ms (R15 = Live-Pfad). C3
+  bestätigt 4-KiB-Callbacks. C5, C4-GW und
+  C6-G7/autoplay sind nur teilweise — unter
+  MSC-Last ENODEV und Wi-Fi-Timeouts; Recovery
+  per Soft-RST.
+
+  Optional als Nächstes: C5 einmal isoliert
+  nach Soft-RST (1-Hz-Poll), dann GW und G7
+  bare/autoplay einzeln nachziehen. Die
+  fehlgeschlagenen Hintergrund-Jobs
+  (671142/144/145) wurden durch die späteren
+  Läufe 1209/1245 abgelöst.
+
+
+Hier wurde weiter gemacht:
+
+Nachlauf ist durch (3ec7bd6 auf main).
+
+  Frisch PASS: C4-GW, C6 G7 bare, C6 G7
+  autoplay (jeweils nach Soft-RST). C5-Clean:        Steigung \~0,63 MB/s ≈ Bench (±5 %) für 4 s,
+  dann Wi-Fi unter MSC weg.                       &#x20;
+  Doc nachgezogen: R15/Q9 in HU-Facts (Ursache       = Live-Pfad), EP=4 KiB im Stufenplan,
+  Lesetakt-Ampel in den Maßnahmen.                &#x20;
+  Noch umzusetzen?                                &#x20;
+  ┌──────────────────┬────────────────────────┐
+  │ Thema            │ Status                 │      ├──────────────────┼────────────────────────┤
+  │ Lab C1–C7 (außer │ erledigt               │
+  │ C1-Rate,         │                        │
+  │ C5-Langpoll)     │                        │      ├──────────────────┼────────────────────────┤
+  │ Stall-Adapter    │ Code noch offen        │      │ gegen 5 ms /     │ (Budget/Stückelung)    │
+  │ 4-KiB-Callbacks  │                        │      ├──────────────────┼────────────────────────┤
+  │ C5 ≥30 s         │ Lab: Wi-Fi unter MSC — │
+  │ Steigung         │ SoftAP/UART oder       │
+  │                  │ weniger MSC-Last       │      ├──────────────────┼────────────────────────┤
+  │ Stall-Go         │ weiter blockiert durch │      │                  │ Feld F1 + R10/feste    │
+  │                  │ Zuordnung              │      └──────────────────┴────────────────────────┘
+                                                     Kurz: Lab-Auftrag ist weitgehend fertig; als
+  Nächstes entweder Stall-Adapter-Code oder der
+  nächste Feldtermin (F1/R10).                    &#x20;
+  Finished Rerun GW and G7 with fixed run_one
+                                                     Finished Recover LXC sg0 via remount/RST
+
+  Finished Run GW/G7 after settled ESP (no
+  mid-batch RST)                                  &#x20;
+  Finished Wait until ESP HTTP, pump, and sg0
+  healthy
+                                                     Die älteren Retry-/Recovery-Jobs (GW/G7 ohne
+  Settle, sg0-Remount, ESP-Wait) sind
+  durchgelaufen — sie waren Zwischenversuche.        Die erfolgreichen Läufe (GW, G7                    bare/autoplay) und der Doc-Nachzug stecken
+  bereits in 3ec7bd6 auf main.
+
+
+
+Umgesetzt und auf main (6a2293a). Stall-FW
+  bewusst nicht angefasst (Freeze bis F1+R10).    &#x20;
+  Neu für den Feldtermin
+  • tools/feld_q8_msc_order.py — Segmente,
+    ungelesene 4-KiB-Blöcke, R10-Verdict               (fragments_near / far / r16_resume_like)
+  • tools/feld_f1_make_stick.py — F1-MP3s              (espeak-ng oder Beep-Fallback)
+  • Session docs/betrieb/artifacts-2026-10-07
+    -feld/feld-s2-prep/ — Arrival, Bridge
+    \--no-audio, Snapshots, Q8-Skript
+                                                     Vor dem Auto (kurz)
+
+  sudo apt-get install -y espeak-ng   # auf dem
+  Pi                                                 ./docs/betrieb/artifacts-2026-10-07-feld/feld
+  -s2-prep/make-f1-stick.sh /mnt/stick            &#x20;
+  Dann ARRIVAL.md abarbeiten.
+
+
+
+hol dir wieder die aktuellen Daten von Github und erstelle den Bericht für die nächste KI
+
+hier ist der Bericht von Mistral: 
+# Review: Lab-Serie C1–C7, Nachlauf 3ec7bd6, Feld-s2-Prep 6a2293a
+
+**Prüfer:** Mistral (GLM) · **Datum:** 2026-10-07 · **Repo:** MPunktBPunkt/pidrive · **HEAD geprüft:** 6a2293a (main == origin/main)
+
+## Kurzfazit
+
+Der Lab-Auftrag C1–C7 ist weitgehend erledigt und wurde diszipliniert gefahren: Regression (ALL G1–G5) hält unter allen neuen Tests, die Kernfragen C2 (Lesetakt-Ursache) und C3 (Callback-Granularität) sind beantwortet und liefern die Design-Parameter für den Stall-Adapter (5-ms-Budget im Play-Zustand, 4-KiB-Stückelung). **C1-FAIL ist ein Host-Limit des Lab-Rechners, kein ESP-Befund** — das Feld beweist mit 250 Reads/s die HU-Rate; das Abnahmekriterium „≥245 im Lab" ist falsch formuliert (→ Beanstandung B1). Richtig und wichtig: die KORREKTUR-F2C beseitigt meine eigene Budget-These aus dem letzten Review (Fehlereingeständnis F1 unten). Stall-Go bleibt korrekt blockiert (F1-Entscheidung + R10 fehlen); Feldtermin s2 ist mit Q8-Tool, F1-Stick-Builder und ARRIVAL-Paket sauber vorbereitet. Ampel gesamt: **🟢 mit zwei 🟡 (C1-Kriterium, C5-Langpoll).**
+
+## Commit-Inventar und Wirkung
+
+
+| Commit    | Inhalt                                                                                                                                                                                                                                                                        | Wirkung                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `7e78607` | C1/C3 offline gestartet                                                                                                                                                                                                                                                       | Start der Serie (offline-Reproduktion vor Online-Läufen)                |
+| `71e434e` | C1–C7 online (\~49k Zeilen): ALL G1–G5 PASS, C1×3, C2-Kernmatrix, C3-Sweep, C4/C7, G6/G8, C5/C6 teilweise; Tool-Härtungen (snap\_retry, BENCH soft-fail, `--offline`)                                                                                                         | Kernergebnisblock der Serie                                             |
+| `3ec7bd6` | Nachlauf (\~9k Zeilen): C4-GW, C6 G7 bare/autoplay PASS (nach Soft-RST, mit Settle), C5-Clean 4 s, R15/Q9 in HU-Facts, EP=4 KiB im Stufenplan, Lesetakt-Ampel                                                                                                                 | Schließt die ENODEV-bedingten Lücken aus 71e434e; Doc-Nachzug           |
+| `6a2293a` | Feld-s2-prep: `tools/feld_q8_msc_order.py` (Segmente, ungelesene 4-KiB-Blöcke, R10-Verdict fragments\_near/far/r16\_resume\_like), `tools/feld_f1_make_stick.py` (espeak-ng-Marker, F1-5MB/F1-100MB), Session-Paket `feld-s2-prep/` (ARRIVAL, Bridge `--no-audio`, Snapshots) | Konkreter Feldtermin-Auftrag; Stall-FW bewusst nicht angefasst (Freeze) |
+
+
+Nicht geändert (bestätigt): Stall-Adapter-Code bleibt offen (beabsichtigt, Freeze bis F1+R10), FW 0.4.46-dev, Bridge d120ff9.
+
+## Verifikation (eigene Nachrechnung aus Artefakten)
+
+- **C2-Matrix (R15/Q9 geklärt):** Idle sg p50 ≈ 4,0 ms → Armed 5,0 ms → +Producer \~0,3 ms; Raten 194,8 / 160,2 / 152,9 Reads/s. Der 5,1-ms-Takt mit Play stammt aus dem **ESP Live-/Play-Pfad**, nicht aus Poll/Bridge. Konsequenz: Stall-Adapter hat im Play-Zustand nur \~5 ms Budget pro 4-KiB-Read — bei 128k liefert der Ring ein 4-KiB-Paket alle \~256 ms, d. h. der Stall muss auf NOT-READY/Busy-Retry setzen, nicht auf Idle-Warten im Callback. Konsistent mit C1 (`δ/reads = 1`, ein Callback pro 4 KiB).
+- **C3:** EP = **4 KiB** (16 KiB → 4 CB, 64 KiB → 16 CB; `CFG_TUD_MSC_EP_BUFSIZE=4096`). Stall kann max. in 4-KiB-Scheiben antworten — passt zum Teilantworten-Modell (512-B-Vielfachen innerhalb eines Callbacks).
+- **C1:** \~194–195 Reads/s online (3×), \~205 offline, Ziel ≥245 verfehlt. Da die HU im Feld mit 250/s bei 4,0 ms liest und das ESP-seitig nie das Limit war, ist dies ein **Host-Limit (LXC/SG\_IO)**, kein ESP-Mangel.
+- **C4 PASS:** `abs0−off` konstant (19712/20480) über tausende Reads — belastbare Vorlage für die „feste Zuordnung" (R10).
+- **C5 teilweise:** Clean-Lauf nach Soft-RST: 4 s Steigung \~0,63 MB/s ≈ Bench ±5 %, dann Wi-Fi unter MSC weg (ENODEV). Recovery per Soft-RST (`/api/restart`), Remount allein oft nicht; ≥20 s Settle. ≥30-s-Steigungsmessung offen.
+- **C6/C7/G6:** G7 bare/autoplay PASS (sticky maxSeq ohne frisches Medium = falsch negativ, bekannt), G8 rc=167 (Remount×3 + Soft-RST), REPLAY resume, Cache-Hit/Remount-Reread alle PASS.
+- **HU-Facts (R15–R22, F7/F8, Q8/Q9):** Zahlen konsistent — R16 (OOO-Folge Summe exakt 1.982.464 B, 5,1 s Pause, dann sequenziell ab P+1336 KiB), R17 (Erstlauf 368.640 B in 5/5, Fragmente 392–632 KiB, Endlauf 5.201.920 B in 3/4), R18 (51 Blöcke/208.896 B nie gelesen, 4× exakt 8.179.712 B), R22 (Scan-Burst 1.374.720 B 3× identisch).
+
+## Eigene Fehlereingeständnisse (KORREKTUR-F2C, zugegeben)
+
+- **F1 — Budget-These zurückgenommen:** Meine Regel „Live-Slot &gt; HU-Cache-Budget" aus dem Review feld-s1-morgen war falsch. Das „BOB cache\_hit\_like nach RST" war ein **Poll-Artefakt** (Poll-Lücke bei RST; der erste Poll 2–3 s nach Reboot zeigt die Datei bereits frisch gelesen). Richtig (F2c / R13 \[B\]): **Die HU liest nach jedem ESP-RST neu — 6/6 RSTs, rc=167-Signatur 4× exakt.** Q4 (Cache-Größe) ist damit kein Planbaustein für den Stall mehr; nur noch in-session ohne RST messbar.
+- **F2 — Marker-Vorschlag zurückgenommen:** Mein Vorschlag „Marker-8MiB-Tonprobe als decisive test" ist mit 0.4.46 **nicht durchführbar** (`nbt_marker_file.py` erzeugt keinen hörbaren Inhalt; 0.4.46 füllt Nicht-Live-Slots immer mit `Mp3Silence::fill`). Der Ersatz ist gut: echter USB-Stick mit gesprochenen Markern (espeak-ng, `feld_f1_make_stick.py`), idealerweise über USB-1.1-Hub (Full-Speed erzwingen).
+- **K3 anerkannt:** G4-Anker (Prefetch \~1,1 s nach Read-EOF) gilt nur als alte Lab-Regression; Feldmodell ist R21 (Prefetch \~15 s vor Wiedergabe-Ende). Kalibrierblatt-Anker korrekt umgestellt.
+
+## Beanstandungen und offene Punkte
+
+
+| Nr. | Punkt                                                                                                                                                                                                                                                         | Label |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| B1  | C1-Abnahmekriterium „≥245 Reads/s im Lab" falsch formuliert: HU-Rate 250/s ist Feld-belegt, der Lab-Host (LXC/SG\_IO) erreicht sie nicht. Kriterium neu fassen: Lab misst nur relative Deltas (z. B. Idle↔Armed↔Play), absolute HU-Rate gilt als Feld-belegt. | C     |
+| B2  | C5 ≥30-s-Steigung offen: Wi-Fi stirbt unter MSC-Last (ENODEV). Braucht stabileren Kanal (SoftAP/UART) oder weniger MSC-Last.                                                                                                                                  | C     |
+| B3  | Sticky maxSeq ohne frisches Medium → falsch negativ bei G7; Auswertung muss Medium-Serial mitprüfen.                                                                                                                                                          | C     |
+| B4  | Snapshots ohne `usbSerial`-Feld → HU-seitige Zuordnung bei Session-Wechsel nicht rückverfolgbar.                                                                                                                                                              | C     |
+| B5  | R17-Fragmentlücke 392–632 KiB unklar (Feld Q8 mit `feld_q8_msc_order.py` klären: fragments\_near / far / r16\_resume\_like).                                                                                                                                  | C     |
+| B6  | F1 (inkrementell vs. vollständig) formal weiter offen — nur Balken beobachtet (F7), kein Sekundenzähler. R16/R17-Indizien deuten inkrementell. USB-Stick-Test (Q2) entscheidet.                                                                               | C     |
+| B7  | R16-Wiederaufnahme (OOO + Pause + Resume) ist das **Kern-Risiko für Stall (R10)** — muss vor Stall-Go im Feld beobachtet sein.                                                                                                                                | C     |
+
+
+## Planstand (Stufenplan)
+
+- Stufe 0 Messbarkeit ✅ (Ingest/Parquet, run.yaml-Manifeste, `counter_semantics: v3`).
+- Stufe 1 Feld F1/F2: F1 offen (B6), F2 weitgehend geklärt (R13, R15–R22).
+- Stufe 2 Lab/Sim ✅: G1–G5 + G6/G8, Kalibrierblatt aktualisiert, C2/C3 liefern Stall-Parameter (5-ms-Budget, 4-KiB-EP).
+- Stufe 3 FW hinter Flag: Go **weiter blockiert** (korrekt) — braucht F1-Entscheidung + R10 aus Feldtermin s2.
+- Stufe 4 Stall-Matrix / Stufe 5 Auto-Leiter 128k: unverändert.
+
+## Auftrag an die nächste KI
+
+1. **Feldtermin s2 nach `FELDPROTOKOLL-NAECHSTER-TERMIN.md`** (Artefakt-Paket liegt in `feld-s2-prep/`):
+  - Teil A: Rock frisch 3× mit `msc.reads`-Export (Bridge `--no-audio`) → R10-Verdict via `feld_q8_msc_order.py` (fragments\_near / far / r16\_resume\_like).
+  - Teil E: USB-Stick mit espeak-ng-Markern (F1-5MB / F1-100MB, ggf. USB-1.1-Hub) → F1/Q2-Entscheidung (Balken-Sekundenzähler).
+  - Teile B/C/D/F: Q4 nur in-session ohne RST.
+2. **C1-Kriterium neu fassen** (B1) und in Stufenplan/Kalibrierblatt festhalten.
+3. **C5-Langpoll** mit stabilem Wi-Fi (SoftAP/UART) nachziehen.
+4. **Stall-Adapter-Code erst nach F1 + R10** — Freeze weiter einhalten. Design-Parameter stehen bereit: Busy-Retry (return 0), 4-KiB-Stückelung, Teilantworten in 512-B-Vielfachen, 5-ms-Budget im Play-Pfad.
+5. **Wi-Fi/ENODEV-Hygiene** dokumentieren: nach ENODEV Soft-RST + ≥20 s Settle, sticky maxSeq nur mit frischem Medium werten.
+
+## Ampel
+
+- Regression &amp; Disziplin (Freeze, Tooling, Docs): **🟢**
+- C2/C3/C4/C6/C7/G6/G8: **🟢**
+- C1-Kriterium (Host-Limit, neu zu fassen): **🟡**
+- C5-Langpoll (Wi-Fi unter MSC): **🟡**
+- F1 / R10 (Stall-Go-Voraussetzungen): **🟠** (beide im nächsten Feldtermin adressiert)
+
+
+
+Der Bericht ist fertig: **Review „Lab C1–C7 + Nachlauf + Feld-s2-Prep"** (Canvas `review-lab-c1c7-s2prep-6a2293a`).
+
+**Kernbefunde meiner Prüfung:**
+
+- **Lab-Serie diszipliniert und weitgehend erledigt.** ALL G1–G5 PASS unter allen neuen Tests; C2 klärt den 5,1-ms-Lesetakt (Ursache = ESP Live-/Play-Pfad), C3 bestätigt 4-KiB-Callbacks — zusammen die Design-Parameter für den Stall-Adapter (5-ms-Budget, 4-KiB-Stückelung).
+- **C1-FAIL ist kein ESP-Befund**, sondern ein Host-Limit des Lab-Rechners (\~195 vs. Ziel ≥245 Reads/s). Die HU-Rate 250/s ist feldbelegt; das Abnahmekriterium sollte neu gefasst werden (Lab misst nur relative Deltas) — als Beanstandung B1 markiert.
+- **Zwei eigene Fehlereingeständnisse (KORREKTUR-F2C):** Meine Budget-These („Live-Slot > HU-Cache-Budget") ist widerlegt — das vermeintliche cache_hit_like nach RST war ein Poll-Artefakt; die HU liest nach jedem RST neu (6/6, rc=167). Und mein Marker-8MiB-Vorschlag war mit 0.4.46 nicht durchführbar; der espeak-ng-USB-Stick ist der richtige Ersatz.
+- **Offen (C-Labels):** C5-Langpoll (Wi-Fi stirbt unter MSC-Last, ENODEV → Soft-RST hilft), sticky maxSeq ohne frisches Medium, R16-Resume-Muster als Kern-Risiko für R10, F1 formal weiter offen (nur Balken).
+- **Stall-Go bleibt korrekt blockiert** (F1 + R10 fehlen). Der Feldtermin s2 ist mit Q8-Tool, F1-Stick-Builder und ARRIVAL-Paket sauber vorbereitet — Ampel gesamt 🟢 mit zwei 🟡 (C1-Kriterium, C5) und 🟠 bei F1/R10.
+
+
+hier der Bericht von GPT: 
+
+
+
+Ich habe den aktuellen `main`-Stand bis **6a2293a** direkt aus GitHub geprüft, inklusive der eigentlichen C1–C7-Ergebnisdatei, des Testauftrags, HU-Facts, Stufenplan sowie des neuen Feld-s2-Pakets. Der Mistral-Bericht ist insgesamt gut, aber ich würde **eine wichtige Aussage schärfer formulieren: C1 ist nicht zweifelsfrei als „bewiesenes Host-Limit“ nachgewiesen**.
+
+Hier ist der Übergabebericht für die nächste KI.
+
+# Technischer Übergabebericht
+
+## PiDrive / ESP32-S3 USB-MSC / BMW NBT Evo
+
+**Stand:** 2026-10-07
+**Repo:** `MPunktBPunkt/pidrive`
+**Branch:** `main`
+**HEAD:** `6a2293a`
+**Lab-FW:** `0.4.46-dev`
+**Feld-FW:** `0.4.46-dev` – bewusst eingefroren, **kein Stall-OTA**
+**Geometrie:** L3
+**Lab-ESP:** `.88`
+**Feld-ESP:** `.89`
+
+---
+
+# 1. Aktueller Gesamtstatus
+
+Die Lab-Serie **C1–C7 ist praktisch abgeschlossen**. Die Folgearbeiten haben die durch USB-ENODEV verursachten Lücken bei C4/C6/C7 geschlossen.
+
+Der entscheidende Punkt ist:
+
+> **Der Stall-Adapter wurde weiterhin NICHT implementiert.**
+
+Das ist Absicht. Der Firmware-Freeze bleibt bestehen, bis die beiden noch offenen Feldfragen **F1** und **R10/Q8** geklärt sind.
+
+Aktueller Stand:
+
+| Bereich                             | Status                                               |
+| ----------------------------------- | ---------------------------------------------------- |
+| Golden Regression G1–G5             | 🟢 PASS                                              |
+| C2 Lesetakt/Ursache                 | 🟢 geklärt                                           |
+| C3 Callback-Größe                   | 🟢 geklärt                                           |
+| C4 Offset/Mapping                   | 🟢 PASS                                              |
+| C6 Replay/G7                        | 🟢 PASS                                              |
+| C7 Remount/RST                      | 🟢 PASS                                              |
+| G6                                  | 🟢 PASS                                              |
+| C5 Kurzzeit-Steigung                | 🟢 belegt                                            |
+| C5 ≥30-s-Langlauf                   | 🟡 offen                                             |
+| C1 ≥245 Reads/s                     | 🟡 Ergebnis FAIL, Ursache nicht vollständig bewiesen |
+| F1 Decode-Start                     | 🟠 offen                                             |
+| R10 Lesereihenfolge/feste Zuordnung | 🟠 offen                                             |
+| Stall-Go                            | 🔴 blockiert                                         |
+
+---
+
+# 2. Was seit dem letzten Stand tatsächlich neu bewiesen wurde
+
+## 2.1 C4-GW erfolgreich
+
+Der vorher durch ENODEV unvollständige C4-GW-Lauf wurde nach Soft-RST und stabilem ESP-Zustand erfolgreich wiederholt.
+
+`lab88-c4-gw-live-1339`:
+
+* `bytes_delta_esp = 8,044,544`
+* `bytes = 8,044,544`
+* `maxSeq = 7,053,312`
+* Ergebnis **PASS**
+
+Damit ist die Gateway-Variante von C4 nicht mehr nur teilweise belegt.
+
+---
+
+## 2.2 C6 G7 bare und autoplay erfolgreich
+
+Nach Soft-RST und ausreichender Settling-Zeit wurden beide Varianten erfolgreich gefahren:
+
+### G7 bare
+
+**PASS**
+
+### G7 autoplay
+
+**PASS**
+
+Für den erfolgreichen Autoplay-Lauf:
+
+* `head_ok = true`
+* `frag_ok = true`
+* `final_ok = true`
+* `total_ok = true`
+* `maxSeq head = 368,640`
+* `maxSeq final = 5,201,920`
+
+Damit ist der frühere negative G7-Lauf nicht mehr als echter Firmware-Fehler zu bewerten.
+
+Ursache des alten False Negative:
+
+> `maxSeq` war ohne frisches Medium bereits hochgelaufen.
+
+Daraus folgt eine wichtige Auswertungsregel:
+
+> **G7 darf nur mit frischem Medium bzw. eindeutig neuer Session bewertet werden.**
+
+---
+
+# 3. C1 – wichtigster Interpretationspunkt
+
+C1 wurde dreimal online gefahren:
+
+| Lauf | Reads/s | ms/4 KiB | SG p50 |
+| ---- | ------: | -------: | -----: |
+| r1   |   194,7 | 5,135 ms | 4,0 ms |
+| r2   |   194,7 | 5,136 ms | 4,0 ms |
+| r3   |   193,8 | 5,159 ms | 4,0 ms |
+
+`esp_readCount_delta = 2000` in allen drei Läufen.
+
+Damit ist sicher:
+
+* exakt ein ESP-Callback pro 4-KiB-Read,
+* etwa 194–195 Reads/s,
+* sehr reproduzierbar,
+* das ursprüngliche Abnahmekriterium `≥245 Reads/s` wurde verfehlt.
+
+Die Testdefinition selbst sagt:
+
+> C1 sollte prüfen, ob das Lab ohne Play/Producer die HU-Grenze von ca. 250 Reads/s erreicht. Unter 245 sollte die Ursache im Lab-Host untersucht werden.
+
+### Wichtige Korrektur zum Mistral-Bericht
+
+Mistral formuliert:
+
+> „C1-FAIL ist ein Host-Limit des Lab-Rechners, kein ESP-Befund.“
+
+Das ist **plausibel, aber als endgültig bewiesen zu stark formuliert**.
+
+Dafür sprechen:
+
+* Offline-Referenz nur ~205 Reads/s,
+* Online reproduzierbar ~194–195 Reads/s,
+* Feldmessung ohne Play ~250 Reads/s,
+* C2 zeigt, dass der ESP im Idle grundsätzlich ca. 4-ms-Servicezeiten erreicht.
+
+Aber:
+
+**C1 selbst beweist die Ursache nicht.**
+
+Die 194–195 Reads/s entsprechen auffällig genau dem später reproduzierten **ESP-Play/Live-Takt**. C2 zeigt:
+
+* Idle: ~4,0 ms SG
+* Armed: ~5,0 ms SG
+* Armed + Producer: ~5,0 ms SG
+
+Das ergibt ca. 195 Reads/s.
+
+C1 wurde zwar ohne `--live`, Producer, Bridge und Poll spezifiziert, aber die Korrelation ist stark genug, dass die nächste KI nicht einfach „Host-Limit bewiesen“ übernehmen sollte.
+
+Die sauberere Formulierung lautet:
+
+> **C1 erfüllt die ≥245-Abnahme nicht. Ein Lab-/Host-Limit ist wahrscheinlich, aber nicht kausal abschließend isoliert. Für die Stall-Entwicklung ist die absolute C1-Rate ohnehin nicht der entscheidende Parameter; C2 liefert die relevante ESP-Servicezeit im Play-Zustand.**
+
+Das ist technisch belastbarer.
+
+---
+
+# 4. C2 – die 5-ms-Ursache ist jetzt geklärt
+
+Das ist eines der wichtigsten Ergebnisse der gesamten Serie.
+
+Matrix:
+
+| Zustand              | Reads/s |  ms/4 KiB |     SG p50 |
+| -------------------- | ------: | --------: | ---------: |
+| Idle                 |   194,8 | 5,13 wall | **4,0 ms** |
+| Armed, kein Producer |   160,2 | 6,24 wall | **5,0 ms** |
+| Armed + Producer     |   152,9 | 6,54 wall | **5,0 ms** |
+
+Die zusätzliche Verzögerung entsteht, sobald `playingUid` gesetzt ist.
+
+Damit ist **R15/Q9 geklärt**:
+
+> Der Sprung von ca. 4,0 auf ca. 5,1 ms kommt aus dem **ESP-Live-/Play-Pfad**, nicht aus Polling oder Bridge.
+
+Der Producer kostet zusätzlich ungefähr 0,3 ms Wall-Time.
+
+### Konsequenz für Stall
+
+Der Stall-Adapter kann im Play-Zustand nicht mit dem 4-ms-Idle-Budget rechnen.
+
+Planungswert:
+
+> **ca. 5 ms pro 4-KiB-Read**
+
+Das ist ein ESP-seitiges Budget, kein HU-Timeout.
+
+---
+
+# 5. C3 – Callback-Größe eindeutig 4 KiB
+
+Sweep:
+
+| READ10 | Reads/s | ESP-Callbacks/READ10 |
+| -----: | ------: | -------------------: |
+|  512 B |   998,1 |                    1 |
+|  4 KiB |   194,6 |                    1 |
+| 16 KiB |    52,2 |                    4 |
+| 64 KiB |    13,0 |                   16 |
+
+Daraus:
+
+> `CFG_TUD_MSC_EP_BUFSIZE = 4096`
+
+Ein 64-KiB-READ10 wird in 16 Callbacks zerlegt.
+
+Damit steht der relevante Stall-Mechanismus fest:
+
+* maximal 4 KiB pro Callback,
+* Teilantworten innerhalb eines Callbacks müssen 512-B-Vielfache sein,
+* ein 64-KiB-Request darf intern nicht als ein monolithischer Stall betrachtet werden.
+
+---
+
+# 6. C4 – Offset/Content-Mapping
+
+C4 liefert reproduzierbare Mapping-Daten.
+
+### G7-live
+
+`abs0 − off = 19,712`
+
+konstant über 1.997 Reads einschließlich Fragmentphase.
+
+### BENCH-seq
+
+`abs0 − off = 20,480`
+
+konstant über 2.048 Reads.
+
+Zusätzlich:
+
+* G7-live: `bytes_delta = 8,179,712 B`
+* GW-live: `bytes_delta = 8,044,544 B`
+
+Das ist eine wichtige Lab-Vorlage.
+
+Aber:
+
+> **C4 beweist noch nicht, dass dieselbe feste Zuordnung die reale HU-Lesereihenfolge bei einer frischen Auswahl korrekt abbildet.**
+
+Genau dafür existiert Q8/R10.
+
+---
+
+# 7. C5 – Cursor-Steigung
+
+C5 liefert einen wichtigen Teilnachweis.
+
+Clean-Lauf nach Soft-RST:
+
+* 1-Hz-Poll
+* saubere `d = hostAbs − absEnd`-Kurve
+* gültiges Fenster ca. 4 s
+* Steigung ungefähr **0,63 MB/s**
+* entspricht der erwarteten Differenz aus Leserate und Producer-Rate innerhalb von etwa ±5 %
+
+Danach:
+
+> **Wi-Fi stirbt unter längerer MSC-Last.**
+
+Damit ist die Kurzzeit-Steigung brauchbar, aber die formale Langzeitabnahme noch nicht erreicht.
+
+Offen:
+
+> **≥30 s stabile Messung**
+
+Das ist kein Hinweis auf einen Fehler im Stall-Modell, sondern ein Infrastruktur-/Messkanalproblem.
+
+Mögliche nächste Wege:
+
+1. SoftAP,
+2. UART,
+3. geringere MSC-Last,
+4. Statusübertragung außerhalb des belasteten Wi-Fi-Pfads.
+
+---
+
+# 8. C6 – Replay und G7
+
+REPLAY:
+
+* Feld-Episode erfolgreich reproduziert,
+* `readCount_delta = 1963`,
+* ESP-Zählerverhalten passt.
+
+G7:
+
+* bare PASS,
+* autoplay PASS,
+* head/fragment/final/total PASS.
+
+Damit ist die Simulationsmechanik für die bekannten Feldmuster ausreichend belastbar.
+
+Aber:
+
+> Die Simulation ersetzt **nicht** Q8 im Fahrzeug.
+
+Insbesondere sind weiterhin nicht real gemessen:
+
+* genaue LBA-Folge einer frischen Auswahl ab Kopf,
+* tatsächliche Lage der Fragmentphase,
+* tatsächliche 51 ungelesenen 4-KiB-Blöcke,
+* mögliche weit vorausliegende Reads.
+
+---
+
+# 9. C7 – Remount/RST-Verhalten
+
+G8 erfolgreich:
+
+* Remount ×3,
+* Soft-RST,
+* `readCount_delta = 167`,
+* `fav0_bytes_delta = 32,768`,
+* aktueller Slot `maxSeq = 524,288`,
+* `rc_ok = true`,
+* `probes_ok = true`,
+* `current_ok = true`.
+
+Wichtige Betriebsregel:
+
+> Nach USB-ENODEV reicht Remount häufig nicht. **Soft-RST + mindestens ca. 20 s Settling** ist der zuverlässigere Recovery-Pfad.
+
+Außerdem:
+
+> `maxSeq` ist ohne frisches Medium/sessionabhängig und darf nicht isoliert als G7-Erfolgskriterium interpretiert werden.
+
+---
+
+# 10. R13 / Cache nach ESP-RST – alte These korrigiert
+
+Eine frühere Interpretation eines vermeintlichen Cache-Hits nach RST war falsch.
+
+Die Korrektur ist jetzt belastbar:
+
+> **HU liest nach ESP-RST erneut.**
+
+Belegt:
+
+* 6/6 RSTs,
+* erster Poll 2–3 s nach Reboot,
+* vollständiger neuer Dateiread,
+* `rc=167`.
+
+Damit ist die frühere These
+
+> „HU-Cache überlebt ESP-RST“
+
+zurückzunehmen.
+
+Für den Stall-Entwurf ist Q4 daher **nicht mehr als primärer Planbaustein erforderlich**.
+
+---
+
+# 11. R15–R22: aktuelles HU-Modell
+
+Die aktuellen HU-Facts liefern folgendes konsistentes Modell:
+
+### R15
+
+HU:
+
+* ohne Play ca. 250 Reads/s,
+* mit `playingUid` ca. 195 Reads/s.
+
+Ursache der 5,1 ms:
+
+> ESP-Live-/Play-Pfad.
+
+### R16
+
+Wiederaufnahme um Wiedergabeposition P:
+
+1. +8 KiB
+2. −120 KiB
+3. −120 KiB
+4. +360 KiB
+5. −360 KiB
+6. +968 KiB
+7. Pause ~5,1 s
+8. anschließend sequenzieller Lauf ab `P + 1336 KiB`
+
+Gesamte erste Episode:
+
+**1.982.464 B**
+
+### R17
+
+Frische Auswahl:
+
+* zunächst **368.640 B = 360 KiB**
+* danach Fragmentphase
+* anschließend Lauf bis EOF.
+
+### R18
+
+51 × 4-KiB-Blöcke werden in der beobachteten Rampe nicht gelesen:
+
+**208.896 B**
+
+Die genaue räumliche Lage dieser Blöcke ist noch offen.
+
+### R19
+
+Autoplay kann nach ca. 4 MiB eine 2–3-s-Pause zeigen.
+
+### R20
+
+Nach ESP-RST:
+
+* aktueller Titel wird innerhalb weniger Sekunden neu gelesen,
+* zusätzlich 8 verstreute 4-KiB-Reads,
+* `rc = 167`.
+
+### R21
+
+Next-Track-Prefetch hängt offenbar an der **Wiedergabezeit**:
+
+> etwa 15 s vor Track-Ende.
+
+Nicht einfach unmittelbar nach Read-EOF.
+
+### R22
+
+Plug-Scan:
+
+> erster Burst ab LBA 0 = **1.374.720 B**
+
+dreimal identisch beobachtet.
+
+---
+
+# 12. F1 – weiterhin nicht entschieden
+
+F1 bedeutet:
+
+> Spielt die HU bereits während des Lesens oder erst nach vollständigem Read/EOF?
+
+Die bisherige Evidenz spricht für **inkrementelles Lesen/Spielen**, aber das ist noch kein formaler Beweis.
+
+Problem:
+
+Die HU zeigt nur einen Fortschrittsbalken und keinen zuverlässigen Sekundenzähler.
+
+Deshalb wurde die frühere Idee eines künstlichen Marker-Files im ESP verworfen.
+
+Grund:
+
+> FW 0.4.46 füllt Nicht-Live-Slots mit MP3-Stille. Ein ESP-intern erzeugter Marker liefert daher keinen hörbaren F1-Beweis.
+
+Die richtige Lösung ist jetzt:
+
+> **echter USB-Stick + echte MP3 + gesprochene Zeitmarker**
+
+---
+
+# 13. Feld-s2 ist vorbereitet
+
+Neues Session-Paket:
+
+`docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/`
+
+Enthält u. a.:
+
+* `ARRIVAL.md`
+* `run.yaml`
+* `run-q8.sh`
+* Bridge-Start mit `--no-audio`
+* Status-Poll
+* F1-Stick-Builder
+* Snapshot-/Logging-Struktur.
+
+Neue Tools:
+
+### `tools/feld_q8_msc_order.py`
+
+Analysiert:
+
+* Burst-Segmente,
+* LBA-Reihenfolge,
+* Dateioffsets,
+* ungelesene 4-KiB-Blöcke,
+* `fragments_near`,
+* `fragments_far`,
+* `r16_resume_like`.
+
+### `tools/feld_f1_make_stick.py`
+
+Erzeugt echte MP3-Testdateien:
+
+* F1-5MB
+* F1-100MB
+* optional weitere Größen,
+* bevorzugt mit `espeak-ng`,
+* Beep-Fallback.
+
+---
+
+# 14. Feld-s2 Teil A – R10 ist der wichtigste nächste Test
+
+Drei Wiederholungen:
+
+1. BOB auswählen,
+2. ESP-RST,
+3. warten,
+4. Rock frisch ab Kopf auswählen,
+5. Bridge `--no-audio`,
+6. vollständige `msc.reads` aufzeichnen.
+
+Gesucht werden:
+
+* erstes 360-KiB-Segment,
+* danach reale Fragmente,
+* deren Dateioffsets,
+* größter Vorausleseoffset,
+* Lage der 51 ungelesenen Blöcke,
+* Reihenfolge bis EOF.
+
+### R10-Entscheidung
+
+#### Fall A – Fragmente nahe am Kopf
+
+Wenn die Fragmente alle relativ nah hinter dem ersten Lauf liegen:
+
+> feste Zuordnung + begrenztes `stallAhead` ist wahrscheinlich ausreichend.
+
+#### Fall B – Fragmente weit voraus
+
+Wenn die HU mehrere MiB weit in die Zukunft liest:
+
+> Ein einfacher Stall-Adapter reicht möglicherweise nicht.
+
+Dann müsste entweder:
+
+* der Live-Slot begrenzt werden,
+* die Dateikette geändert werden,
+* oder eine andere Zuordnungsstrategie verwendet werden.
+
+#### Fall C – R16-artige Wiederaufnahme
+
+Wenn die frische Auswahl bereits die R16-Folge zeigt:
+
+> Die HU startet offenbar nicht bei Offset 0, obwohl ein neuer Track gewählt wurde.
+
+Dann muss geklärt werden, warum.
+
+---
+
+# 15. F1-Test mit echtem USB-Stick
+
+Empfohlen:
+
+**USB-1.1-Hub zwischen HU und Stick.**
+
+Grund:
+
+Ein normaler High-Speed-Stick kann 100 MB in wenigen Sekunden lesen. Das wäre für die Frage „wird bereits während des Reads abgespielt?“ zu schnell.
+
+Full-Speed über USB 1.1:
+
+> ungefähr 1 MB/s
+
+Damit sind 100 MB ungefähr 100 s lang lesbar.
+
+Die Testdateien enthalten alle 10 s gesprochene Marker.
+
+Damit kann das Video zeigen:
+
+> „HU spielt Marker X, obwohl der ESP/Stick noch längst nicht bis zu diesem Dateioffset gelesen haben kann.“
+
+Das wäre ein direkter F1-Beweis.
+
+---
+
+# 16. Warum Stall-Go weiterhin blockiert bleibt
+
+Das ist derzeit die wichtigste Architekturentscheidung.
+
+Noch NICHT implementieren:
+
+> `stall_ms`, Busy-Retry oder irgendeine produktive Stall-Firmware.
+
+Denn zwei fundamentale Fragen sind noch offen:
+
+### F1
+
+**Wann beginnt die HU mit der Wiedergabe?**
+
+### R10
+
+**Welche Dateioffsets liest die HU bei einer frischen Auswahl tatsächlich und in welcher Reihenfolge?**
+
+Erst wenn diese beiden Fragen beantwortet sind, kann entschieden werden, ob ein Stall-Adapter den HU-Cache korrekt mit Live-Daten versorgen kann.
+
+---
+
+# 17. Was bereits als Stall-Design-Parameter feststeht
+
+Trotzdem ist die untere Ebene weitgehend geklärt:
+
+### Callback
+
+**4 KiB**
+
+### Play-Servicebudget
+
+ungefähr:
+
+**5 ms / 4 KiB**
+
+### Antwortgranularität
+
+**512-B-Vielfache**
+
+### Grundstrategie
+
+Bei nicht vorhandenem Live-Inhalt:
+
+> **kein `return -1` / kein Medium Error**
+
+sondern ein Backpressure-/Busy-Retry-Modell.
+
+Das muss allerdings noch gegen die reale HU-Reaktion getestet werden.
+
+---
+
+# 18. Besonders wichtig: keine falsche Schlussfolgerung aus C4
+
+C4 hat gezeigt:
+
+> Das Lab kann eine feste `abs0 − off`-Zuordnung reproduzierbar darstellen.
+
+Das bedeutet **nicht automatisch**:
+
+> „Der Stall-Adapter ist jetzt fertig spezifiziert.“
+
+Denn C4 basiert auf einer bekannten Modell-Reihenfolge.
+
+R10 muss noch zeigen, dass die reale HU bei frischer Auswahl genau in einem beherrschbaren Offsetbereich bleibt.
+
+---
+
+# 19. C5-Langlauf ist nachrangig
+
+Der ≥30-s-Langlauf wäre wünschenswert, aber er blockiert den nächsten wesentlichen Architekturentscheid nicht in gleichem Maß wie F1/R10.
+
+Aktuelle Priorität:
+
+1. **F1**
+2. **R10/Q8**
+3. daraus Stall-Modell festlegen
+4. Stall-Adapter implementieren
+5. Stall-Matrix
+6. Auto-Leiter 128k
+7. C5-Langpoll über stabileren Kanal nachziehen
+
+Wenn ein stabiler UART-/SoftAP-Kanal schnell verfügbar ist, kann C5 parallel abgeschlossen werden.
+
+---
+
+# 20. Bewertung des Mistral-Berichts
+
+Der Mistral-Bericht ist insgesamt **technisch brauchbar und weitgehend konsistent mit dem Repo**.
+
+Übernehmen würde ich:
+
+* Lab-Serie weitgehend abgeschlossen.
+* C2 eindeutig geklärt.
+* C3 eindeutig 4 KiB.
+* C4/C6/C7 nach Follow-up erfolgreich.
+* R13-Korrektur.
+* F1 + R10 als Stall-Go-Gates.
+* Soft-RST nach ENODEV.
+* USB-Stick als F1-Methode.
+* Stall-FW weiterhin eingefroren.
+
+Eine Aussage würde ich für die nächste KI **präzisieren**:
+
+### Nicht:
+
+> „C1 ist bewiesen ein Host-Limit.“
+
+### Besser:
+
+> „C1 verfehlt ≥245 Reads/s reproduzierbar. Ein Lab-/Host-Limit ist wahrscheinlich und durch die Feld-/Offline-Differenz plausibel, aber C1 isoliert die Ursache nicht vollständig. C2 zeigt unabhängig davon, dass der ESP-Live-Pfad selbst auf ~5 ms/4 KiB geht. Für die Stall-Auslegung ist daher das Play-Budget von ~5 ms relevanter als die absolute C1-Rate.“
+
+---
+
+# 21. Aktueller Auftrag an die nächste KI
+
+## Sofortiger nächster Schritt
+
+**Nicht programmieren.**
+
+Stattdessen Feldtermin s2 durchführen:
+
+### A – Q8/R10
+
+3× frische Auswahl ab Kopf mit:
+
+* `Bridge --no-audio`
+* `msc.reads`
+* Video
+* 1-Hz-Status
+* vollständigen Snapshots.
+
+Danach:
+
+`feld_q8_msc_order.py`
+
+ausführen und entscheiden:
+
+* `fragments_near`
+* `fragments_far`
+* `r16_resume_like`.
+
+### E – F1
+
+Mit echtem USB-Stick:
+
+* 5 MB,
+* 100 MB,
+* möglichst USB-1.1-Hub,
+* gesprochene Marker,
+* Video + Sekundenuhr + Ton.
+
+Ziel:
+
+> Entscheiden, ob die HU bereits während des fortlaufenden Reads dekodiert.
+
+---
+
+# 22. Danach Entscheidungsbaum
+
+```text
+                 Feld s2
+                    │
+          ┌─────────┴─────────┐
+          │                   │
+         F1                  R10
+          │                   │
+   Decode während       HU-Lesereihenfolge
+      Read?             beherrschbar?
+          │                   │
+      ┌───┴───┐          ┌────┴────┐
+      │       │          │         │
+     JA      NEIN       NEAR      FAR/R16
+      │       │          │         │
+      │       │          │         └── Stall-Konzept
+      │       │          │             neu bewerten
+      │       │          │
+      └───────┴──────────┘
+                │
+           Stall-Go?
+                │
+               JA
+                │
+       Stall-Adapter implementieren
+                │
+         Lab Stall-Matrix
+                │
+          128k Auto-Leiter
+                │
+            Feld F1/F2
+```
+
+---
+
+# 23. Endstatus
+
+**Gesamt:** 🟢 technisch gut vorangekommen, aber **kein Stall-Go**.
+
+### Grün
+
+* Golden G1–G5
+* C2
+* C3
+* C4
+* C6
+* C7
+* G6
+* R13
+* R15/Q9
+* Lab-Infrastruktur/Recovery
+
+### Gelb
+
+* C1 absolute Rate / Ursachenzuordnung
+* C5 ≥30-s-Langlauf
+* G7-Auswertung muss frisches Medium berücksichtigen
+* Snapshot-`usbSerial`
+
+### Orange/Rot
+
+* **F1 offen**
+* **R10 offen**
+* **Stall-Adapter blockiert**
+
+Der nächste Feldtermin ist damit **kein allgemeiner weiterer Datensammeltest**, sondern ein gezielter Entscheidungsversuch für genau die beiden verbleibenden Architekturfragen **F1 und R10**.
+
+Bis dahin bleibt **FW 0.4.46-dev unverändert**.
+
+Der wichtigste Punkt gegenüber dem Mistral-Bericht ist für mich also die **C1-Einordnung**: Das Ergebnis selbst ist unstrittig, aber „Host-Limit bewiesen“ geht über die vorliegenden Daten hinaus. Alles andere bestätigt sich beim Abgleich mit `main` sehr gut.
+
+

@@ -1,43 +1,43 @@
-# Arrival — Feld s2 (Q8 + F1)
+# Arrival — Feld s2 (30 min)
 
-**Protokoll:** [`../FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../FELDPROTOKOLL-NAECHSTER-TERMIN.md)  
-**FW:** 0.4.46-dev Freeze — **kein Stall-OTA**  
+**Protokoll:** [`../FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../FELDPROTOKOLL-NAECHSTER-TERMIN.md)
+**FW:** 0.4.46-dev Freeze — **kein Stall-OTA**
 **ESP:** `.89` · L3
 
-## Vor dem Auto (Laptop/Pi)
+## Vorher (zu Hause)
 
 ```bash
-# F1-Stick bauen (auf Pi mit espeak-ng für Sprache; sonst Beep-Fallback)
 cd /home/martin/projects/pidrive
 sudo apt-get install -y espeak-ng   # falls fehlt
-python3 tools/feld_f1_make_stick.py --out-dir /mnt/stick --sizes 5mb,100mb
-# Kurzsmoke: --sizes 30s --dry-blocks 3
+BR=128k ./docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/make-f1-stick.sh /mnt/stick
+chmod +x docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/*.sh
 ```
 
-USB-1.1-Hub + Stick mit `F1-*.mp3` einpacken.
+Einpacken: USB-1.1-Hub, Stick mit `F1-*.mp3`, Handy-Halter.
 
-## Am Auto (Reihenfolge)
+## Am Auto
 
-| # | Aktion |
-|---|--------|
-| 1 | NTP / Uhr: `timedatectl` |
-| 2 | Video+Sekundenuhr **vor** erster Auswahl starten |
-| 3 | `./run-bridge-noaudio.sh` — prüfen: `[msc.reads]` erscheint bei HU-Reads; `ov` notieren |
-| 4 | `./run-status-poll.sh 3600` |
-| 5 | `./run-f1-log.sh` / OPERATOR-LIVE |
-| 6 | Teile **A→C** (ESP), dann Stick umstecken für **E** (F1) |
-| 7 | Nach jedem Teil: `./snap-msc-reads.sh A` (oder B/C/…) |
-| 8 | Nach Hause: `./run-q8.sh path/msc_reads-A.jsonl` · `./run-ingest.sh` |
+| Min | Terminal 1 | Terminal 2 / HU |
+|-----|-----------|-----------------|
+| 0 | Video + Sekundenuhr starten | — |
+| 1 | `./run-s2.sh 2400` | — |
+| 2 | Lebenszeichen prüfen (alle 10 s) | `./mark.sh "s2 start"` |
+| 3–12 | läuft | A+C-Zyklus 3×: BOB 10 s → RST 15 s → Rock 60 s → RST 20 s |
+| 12–21 | läuft | E: Hub + Stick, 100MB / 5MB / 100MB je 30 s, dann ESP zurück |
+| 21–25 | läuft | B: Bayern bis Ende, Autoplay auf Rock, 60 s |
+| 25–30 | Ctrl-C (Snap + Dienst-Neustart automatisch) | `./mark.sh "s2 ende"` |
 
-## Lesetakt-Gegenprobe (Lab C2)
+RST: `curl -s -m 3 -X POST http://192.168.178.89/api/restart`
+Vor jeder Bedienung: `./mark.sh "<Schritt>"`.
 
-Mit Bridge `--no-audio` kann der Takt vom nackten s1-morgen abweichen. Pro Phase `readCount`-Steigung:
+## Danach
 
-| Zustand | s1-morgen Soll |
-|---------|----------------|
-| kein Play | ~250 Reads/s |
-| `playingUid` gesetzt | ~195 Reads/s |
+```bash
+RUN=$(ls -d s2-* | tail -n 1)
+python3 /home/martin/projects/pidrive/tools/feld_q8_msc_order.py \
+  --reads $RUN/msc_reads.jsonl --trace $RUN/trace.jsonl --out-dir $RUN/q8
+```
 
 ## Stall-Go
 
-Nur wenn **F1 entschieden** und **Q8/R10** (Teil A) geklärt — siehe Protokoll-Entscheidungstabellen.
+Nur wenn **F1 entschieden** und **Q8/R10** geklärt — siehe Entscheidungstabellen im Protokoll.

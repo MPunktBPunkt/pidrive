@@ -11,6 +11,7 @@ Field-fit scenarios (s1-morgen 07.10., HU-Facts R15–R21):
   --period-ms 4.0|5.1     start-to-start schedule instead of gap after read
   --golden G7             fresh select from head (368640 / fragments / 5201920)
   --golden GW             resume around position P (out-of-order segments, R16)
+                          [--gw-no-eof: window only, for C4b with --period-ms 700]
   --golden G8             restart after remount (rc=167 signature)
   --golden G4N            next-prefetch 15 s before playback end
   --golden BENCH          C1/C3 back-to-back reads per size
@@ -1243,12 +1244,14 @@ def slot_of(s: dict, uid: str) -> dict:
     return next((x for x in s.get("slots") or [] if x.get("uid") == uid), {})
 
 
-def run_gw(hu: HuSim, esp: str, out: Path, uid: str = "fav0", pos: int = 958464) -> dict:
+def run_gw(hu: HuSim, esp: str, out: Path, uid: str = "fav0", pos: int = 958464,
+           to_eof: bool = True) -> dict:
     """Resume around position P (R16, msc.reads 03./04.10.). Report-only: the ESP has no
-    per-read export without the bridge, compare reads.jsonl against bridge msc.reads (C6)."""
+    per-read export without the bridge, compare reads.jsonl against bridge msc.reads (C6).
+    to_eof=False: only the 1.98 MB window (C4b with --period-ms 700 takes ~6 min)."""
     hu.refresh_slots(esp)
     pre = snap_retry(esp)
-    res = hu.window_read(uid, pos)
+    res = hu.window_read(uid, pos, to_eof=to_eof)
     time.sleep(2.0)
     post = snap_retry(esp)
     (out / "status-gw.json").write_text(json.dumps(post, indent=2))
@@ -1630,6 +1633,7 @@ def main() -> int:
     ap.add_argument("--g4n-lead", type=float, default=15.0)
     ap.add_argument("--g7-autoplay", action="store_true", help="2.5 s pause after 4 MiB (R19)")
     ap.add_argument("--gw-pos", type=int, default=958464, help="file offset P for GW (field LBA 1953)")
+    ap.add_argument("--gw-no-eof", action="store_true", help="GW: window only, skip the run to EOF (C4b)")
     ap.add_argument("--live", default="", help="arm this uid before G7/G8/GW/G4N/BENCH/REPLAY (C2/C4)")
     ap.add_argument("--live-no-producer", action="store_true", help="with --live: armed, no audio")
     ap.add_argument("--live-prefill-s", type=float, default=8.0, help="producer head start before reads")
@@ -1804,7 +1808,7 @@ def main() -> int:
 
         if "GW" in goldens:
             fresh()
-            report["results"]["GW"] = run_gw(hu, esp, out, pos=args.gw_pos)
+            report["results"]["GW"] = run_gw(hu, esp, out, pos=args.gw_pos, to_eof=not args.gw_no_eof)
 
         if "G8" in goldens:
             fresh()

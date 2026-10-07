@@ -6,4 +6,6 @@ cd /home/martin/projects/pidrive
 READS="${1:-$ROOT/msc_reads-A.jsonl}"
 OUT="${2:-$ROOT/q8-$(basename "$READS" .jsonl)}"
 mkdir -p "$OUT"
-exec python3 tools/feld_q8_msc_order.py --reads "$READS" --out-dir "$OUT"
+extra=()
+[[ -n "${TRACE:-}" ]] && extra+=(--trace "$TRACE")
+exec python3 tools/feld_q8_msc_order.py --reads "$READS" --out-dir "$OUT" "${extra[@]}"

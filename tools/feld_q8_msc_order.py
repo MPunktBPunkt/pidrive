@@ -11,6 +11,12 @@ eine Stall-Entscheidung vor (Fragmente nah / weit voraus / R16-ähnlich).
     [--pause-ms 2000] [--out-dir DIR]
 
 Ohne --ms-from/--ms-to: Episoden an Pausen > pause-ms schneiden und alle listen.
+
+msc.reads-Bursts fasst der ESP nur nach Art/Zeit/Anzahl zusammen; ein Burst kann
+einen LBA-Sprung enthalten (lba1 != lba0 + (n-1)*step). Solche Bursts werden in
+zwei aufsteigende Teile zerlegt (Regel: kein Doppellesen, Segmentende direkt
+unter bereits gelesenem Block); nicht eindeutige Fälle stehen als "ambiguous"
+im Report. --trace (feld_trace_poll.py) liefert Einzel-Reads und hat Vorrang.
 """
 from __future__ import annotations
 
@@ -45,6 +51,7 @@ class Segment:
     file_off1: int | None
     direction: str  # forward | backward | mixed | meta
     in_slot: bool
+    rel: str = ""  # F = above previous slot segment, B = below it, X = overlapping/first-meta
 
 
 def load_msc_reads(path: Path, ms_from: int | None = None, ms_to: int | None = None) -> list[dict]:
@@ -71,6 +78,115 @@ def load_msc_reads(path: Path, ms_from: int | None = None, ms_to: int | None = N
             continue
         rows.append(r)
     return rows
+
+
+def load_trace(path: Path, ms_from: int | None = None, ms_to: int | None = None) -> list[dict]:
+    """feld_trace_poll.py output -> single-read rows in msc.reads shape."""
+    rows: list[dict] = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if "lba" not in e or "ms" not in e:
+            continue
+        ms = int(e["ms"])
+        if (ms_from is not None and ms < ms_from) or (ms_to is not None and ms > ms_to):
+            continue
+        nb = int(e.get("n") or READ_N)
+        rows.append({"ms": ms, "gap": int(e.get("gap") or 0), "lba0": int(e["lba"]), "lba1": int(e["lba"]),
+                     "bytes": nb, "n": 1, "kind": e.get("kind"), "ov": 0, "src": "trace"})
+    rows.sort(key=lambda r: r["ms"])
+    return rows
+
+
+def merge_sources(reads: list[dict], trace: list[dict]) -> list[dict]:
+    """Trace wins inside its ms range; msc.reads fills before/after."""
+    if not trace:
+        return reads
+    t0, t1 = trace[0]["ms"], trace[-1]["ms"]
+    outside = [r for r in reads if int(r["ms"]) < t0 or int(r["ms"]) > t1]
+    return sorted(outside + trace, key=lambda r: int(r["ms"]))
+
+
+def _burst_step(r: dict) -> int:
+    n = max(1, int(r.get("n") or 1))
+    return max(1, (int(r["bytes"]) // n) // SECTOR)
+
+
+def is_jump_burst(r: dict) -> bool:
+    """ESP merges by kind/time/count only; lba1 is the start LBA of the last sample."""
+    n = int(r.get("n") or 1)
+    if n < 2:
+        return False
+    return int(r["lba1"]) != int(r["lba0"]) + (n - 1) * _burst_step(r)
+
+
+def split_jump_burst(r: dict, read_lbas: set[int]) -> tuple[list[int], str, int]:
+    """Split a burst with one LBA jump into [lba0 ascending..] + [..lba1 ascending].
+
+    Candidate k = reads in the first part. Rules (HU behaviour, R16):
+      - no re-read: neither part touches an LBA already read;
+      - a segment ends directly below an already read block (first part end + step
+        already read), or the second part starts directly above one.
+    Returns (start LBAs, status resolved|ambiguous|unresolved, k).
+    """
+    n = int(r["n"])
+    step = _burst_step(r)
+    l0, l1 = int(r["lba0"]), int(r["lba1"])
+    valid: list[tuple[int, bool, list[int]]] = []
+    for k in range(1, n):
+        first = [l0 + i * step for i in range(k)]
+        second = [l1 - (n - k - 1 - j) * step for j in range(n - k)]
+        lbas = first + second
+        if len(set(lbas)) != n or any(x in read_lbas for x in lbas):
+            continue
+        abut = (first[-1] + step) in read_lbas or (second[0] - step) in read_lbas
+        valid.append((k, abut, lbas))
+    abutting = [v for v in valid if v[1]]
+    if len(abutting) == 1:
+        return abutting[0][2], "resolved", abutting[0][0]
+    if len(valid) == 1:
+        return valid[0][2], "resolved", valid[0][0]
+    if valid:
+        pick = (abutting or valid)[len(abutting or valid) // 2]
+        return pick[2], "ambiguous", pick[0]
+    k = n // 2
+    lbas = [l0 + i * step for i in range(k)] + [l1 - (n - k - 1 - j) * step for j in range(n - k)]
+    return lbas, "unresolved", k
+
+
+def expand_rows(rows: list[dict], pause_ms: int = 2000) -> tuple[list[dict], list[dict]]:
+    """msc.reads bursts -> one row per READ10 callback; jump bursts split.
+
+    Returns (single rows, split log). ms inside a burst is interpolated up to the
+    next row (estimate only). The no-re-read set restarts after a pause >= pause_ms.
+    """
+    out: list[dict] = []
+    log: list[dict] = []
+    read_lbas: set[int] = set()
+    for idx, r in enumerate(rows):
+        if idx and (int(r.get("gap") or 0) >= pause_ms or int(r["ms"]) - int(rows[idx - 1]["ms"]) >= pause_ms):
+            read_lbas = set()
+        n = max(1, int(r.get("n") or 1))
+        step = _burst_step(r)
+        per = int(r["bytes"]) // n
+        if n == 1:
+            lbas = [int(r["lba0"])]
+        elif is_jump_burst(r):
+            lbas, status, k = split_jump_burst(r, read_lbas)
+            log.append({"ms": int(r["ms"]), "lba0": int(r["lba0"]), "lba1": int(r["lba1"]), "n": n,
+                        "status": status, "k_first": k, "ov": int(r.get("ov") or 0)})
+        else:
+            lbas = [int(r["lba0"]) + i * step for i in range(n)]
+        ms0 = int(r["ms"])
+        nxt = int(rows[idx + 1]["ms"]) if idx + 1 < len(rows) else None
+        dt = (nxt - ms0) / n if nxt is not None and 0 < nxt - ms0 < 50 * n else 4.0
+        for i, lba in enumerate(lbas):
+            out.append({**r, "ms": int(round(ms0 + i * dt)), "gap": int(r.get("gap") or 0) if i == 0 else int(round(dt)),
+                        "lba0": lba, "lba1": lba, "bytes": per, "n": 1})
+            read_lbas.add(lba)
+    return out, log
 
 
 def file_off(lba: int, slot_lba0: int, slot_bytes: int) -> int | None:
@@ -214,7 +330,23 @@ def segments_from_episode(
                 "first_lba": l0,
             }
     flush()
+    prev: Segment | None = None
+    for s in segs:
+        if not s.in_slot:
+            continue
+        if prev is None or s.lba0 > prev.lba1:
+            s.rel = "F"
+        elif s.lba1 < prev.lba0:
+            s.rel = "B"
+        else:
+            s.rel = "X"
+        prev = s
     return segs
+
+
+def segment_pattern(segs: list[Segment]) -> str:
+    """e.g. 'F8 B120 B120 F360 B360 F968' (KiB) for slot segments."""
+    return " ".join(f"{s.rel}{s.bytes // 1024}" for s in segs if s.in_slot)
 
 
 def covered_blocks(ep: list[dict], slot_lba0: int, slot_bytes: int) -> set[int]:
@@ -351,6 +483,7 @@ def analyze_episode(
         "ov_first_last": [ov0, ov1],
         "ov_delta": ov1 - ov0,
         "max_off_first_2s": max_off_first_s(ep, slot_lba0, slot_bytes),
+        "pattern_kib": segment_pattern(segs),
         "segments": [asdict(s) for s in segs],
         "unread_4k_blocks": len(unread),
         "unread_bytes": unread_bytes,
@@ -363,6 +496,7 @@ def analyze_episode(
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--reads", default="", help="msc_reads.jsonl oder Bridge-Log")
+    ap.add_argument("--trace", default="", help="feld_trace_poll.py JSONL (Einzel-Reads, hat Vorrang)")
     ap.add_argument("--ms-from", type=int, default=None)
     ap.add_argument("--ms-to", type=int, default=None)
     ap.add_argument("--lba0", type=int, default=DEFAULT_LBA0, help="Slot-Start-LBA (L3 fav0=81)")
@@ -374,13 +508,21 @@ def main() -> int:
 
     if args.self_test:
         return self_test()
-    if not args.reads:
-        ap.error("--reads required (unless --self-test)")
+    if not args.reads and not args.trace:
+        ap.error("--reads and/or --trace required (unless --self-test)")
 
-    rows = load_msc_reads(Path(args.reads), args.ms_from, args.ms_to)
+    reads = load_msc_reads(Path(args.reads), args.ms_from, args.ms_to) if args.reads else []
+    trace = load_trace(Path(args.trace), args.ms_from, args.ms_to) if args.trace else []
+    rows, splits = expand_rows(merge_sources(reads, trace), args.pause_ms)
     if not rows:
         print("no rows", file=sys.stderr)
         return 2
+    n_amb = sum(1 for s in splits if s["status"] != "resolved")
+    print(f"rows: msc.reads={len(reads)} trace={len(trace)} -> single={len(rows)}; "
+          f"jump bursts={len(splits)} (not resolved: {n_amb})")
+    for s in splits:
+        if s["status"] != "resolved":
+            print(f"  {s['status']}: ms={s['ms']} lba {s['lba0']}->{s['lba1']} n={s['n']} k={s['k_first']} ov={s['ov']}")
 
     if args.ms_from is not None or args.ms_to is not None:
         episodes = [rows]
@@ -399,6 +541,8 @@ def main() -> int:
         "lba0": args.lba0,
         "slot_bytes": args.slot_bytes,
         "pause_ms": args.pause_ms,
+        "trace": str(args.trace),
+        "jump_bursts": splits,
         "n_episodes": len(reports),
         "episodes": reports,
     }
@@ -413,6 +557,7 @@ def main() -> int:
             f"max_off_2s={ep['max_off_first_2s']} → {r10['verdict']}"
         )
         print(f"  stall: {r10['stall_implication']}")
+        print(f"  pattern: {ep['pattern_kib']}")
         for s in ep["segments"][:12]:
             if s["direction"] == "meta":
                 print(f"  seg{s['i']}: META lba={s['lba0']}…{s['lba1']} B={s['bytes']}")
@@ -499,6 +644,37 @@ def self_test() -> int:
     ]
     rep2 = analyze_episode(rows2, slot_lba0=lba0, slot_bytes=DEFAULT_SLOT, label="far")
     assert rep2["r10"]["verdict"] == "fragments_far", rep2["r10"]
+
+    # real field rows p1-run-a (start of the R16 resume), incl. both jump bursts
+    field = [
+        (364034, 65535, 1953, 1953, 1), (364052, 18, 1961, 1961, 1), (364056, 4, 1713, 1713, 1),
+        (364059, 3, 1721, 1721, 1), (364063, 4, 1729, 1881, 20), (364136, 4, 1889, 1889, 1),
+        (364140, 4, 1897, 1897, 1), (364144, 4, 1905, 1905, 1), (364147, 3, 1913, 1521, 12),
+        (364192, 4, 1529, 1529, 1), (364196, 4, 1537, 1625, 12), (364240, 4, 1633, 1633, 1),
+        (364243, 3, 1641, 1641, 1), (364247, 4, 1649, 1649, 1), (364251, 4, 1657, 1657, 1),
+        (364255, 4, 1665, 1665, 1), (364259, 4, 1673, 2001, 10), (364296, 3, 2009, 2009, 1),
+    ]
+    frows = [{"ms": a, "gap": g, "lba0": l0, "lba1": l1, "bytes": n * READ_N, "n": n, "kind": 2, "ov": 0}
+             for a, g, l0, l1, n in field]
+    single, splits = expand_rows(frows)
+    assert [s["status"] for s in splits] == ["resolved", "resolved"], splits
+    assert [s["k_first"] for s in splits] == [5, 5], splits
+    pat = segment_pattern(segments_from_episode(single, lba0, DEFAULT_SLOT))
+    assert pat == "F8 B120 B120 F24", pat
+    assert sum(r["bytes"] for r in single) == sum(r["bytes"] for r in frows)
+
+    # full episode from the repo, if present
+    repo_file = (Path(__file__).resolve().parents[1] / "docs/betrieb/artifacts-2026-10-04-feld"
+                 / "p1-run-a/msc_reads.jsonl")
+    if repo_file.is_file():
+        single, splits = expand_rows(load_msc_reads(repo_file, 364034, 365907))
+        rep3 = analyze_episode(single, slot_lba0=lba0, slot_bytes=DEFAULT_SLOT, label="p1a")
+        assert rep3["pattern_kib"] == "F8 B120 B120 F360 B360 F968", rep3["pattern_kib"]
+        assert rep3["bytes_total"] == R16_RESUME_BYTES, rep3["bytes_total"]
+        assert all(s["status"] == "resolved" for s in splits), splits
+        print(f"p1-run-a R16: {rep3['pattern_kib']} = {rep3['bytes_total']} B, jump bursts {len(splits)}")
+    else:
+        print(f"SKIP p1-run-a (not found: {repo_file})")
     print("self-test PASS")
     return 0
 
