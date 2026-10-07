@@ -1,0 +1,12 @@
+{
+  "GW": {
+    "pass": true,
+    "bytes": 8044544,
+    "lo": 344064,
+    "hi": 8388608,
+    "bytes_delta_esp": 8044544,
+    "maxSeq": 7053312
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-gw-live-1339 overall=PASS
+

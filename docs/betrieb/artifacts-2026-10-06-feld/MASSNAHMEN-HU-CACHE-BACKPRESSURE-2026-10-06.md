@@ -169,7 +169,7 @@ Quellen: [`feld-s1-morgen/KORREKTUR-F2C-RST-ARTEFAKT.md`](../artifacts-2026-10-0
 | Regel „Live-Slot > HU-Cache-Budget“ (Mistral) | ⛔ gestrichen | keine Datengrundlage (K1) |
 | Marker-8-MiB-Tonversuch (Reviews) | ⛔ mit 0.4.46 nicht machbar | 0x55 + kSil, nicht hörbar; ESP liefert nur `Mp3Silence::fill` (K2) |
 | **R10: HU liest außer der Reihe und weit voraus** | 🔴 neu, blockiert Stall-Go | Segmente bis 968 KiB um die Wiedergabeposition; erster Lauf 360 KiB. Stufenplan 3.2 auf feste Zuordnung Dateioffset → Stromoffset umgestellt |
-| Lesetakt 4,0 vs. 5,1 ms | 🟠 Ursache offen | ESP-Servicezeit im Play-Zustand? Lab C2 |
+| Lesetakt 4,0 vs. 5,1 ms | 🟢 Lab C2: **Live-Pfad** | Idle sg 4,0 → Armed 5,0 ms (ohne Poll/Bridge); siehe C1–C7-Ergebnis 07.10. |
 | Next-Prefetch | 🟢 [S] ~15 s vor Wiedergabe-Ende | Lab-Anker G4 neu verankert |
 | F1 Decode-Start | 🔴 offen | HU zeigt nur Balken; neuer Weg: USB-Stick-MP3 mit Sprachmarkern |
 

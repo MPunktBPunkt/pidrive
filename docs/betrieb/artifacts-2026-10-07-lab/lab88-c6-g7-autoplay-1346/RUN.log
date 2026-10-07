@@ -1,0 +1,49 @@
+{
+  "G7": {
+    "pass": true,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 368640,
+    "maxSeq_after_frag": 368640,
+    "maxSeq_final": 5201920,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 17.0,
+        "min": 3.0,
+        "max": 65.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 4.0,
+        "p50": 4.21,
+        "p95": 4.608,
+        "p99": 17.445,
+        "min": 3.937,
+        "max": 65.121,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 4.558,
+        "p50": 4.839,
+        "p95": 5.482,
+        "p99": 18.39,
+        "min": 4.462,
+        "max": 1086.552,
+        "n": 1996
+      },
+      "late_reads": 406
+    },
+    "head_ok": true,
+    "frag_ok": true,
+    "final_ok": true,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-autoplay-1346 overall=PASS

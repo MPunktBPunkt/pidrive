@@ -14,9 +14,9 @@
 | C1 | **FAIL** (Abnahme ≥245) | ~194–195 Reads/s online; `esp_readCount_delta=2000` |
 | C2 | **Messung ok** | Idle sg p50 **4,0 ms** → Armed **5,0 ms** (R15 = Live-Pfad) |
 | C3 | **PASS** (Callback) | 16 KiB→4 CB, 64 KiB→16 CB ⇒ **EP 4 KiB** |
-| C4 | **teilweise** | G7-live PASS; `abs0−off` konstant; GW flaky (ENODEV/Wi-Fi) |
-| C5 | **Daten da** | Poll 10/1 Hz; Steigung nicht ±5 % sauber (Reststrom/Poll-Last) |
-| C6 | **teilweise** | REPLAY PASS; G7-live PASS; bare/autoplay flaky |
+| C4 | **PASS** | G7-live + GW-live; `abs0−off` konstant |
+| C5 | **teilweise** | Clean-Fenster Steigung ≈ Bench (±5 %); Wi-Fi stirbt unter längerer MSC |
+| C6 | **PASS** | REPLAY + G7 bare + G7 autoplay (je nach Soft-RST) |
 | C7 | **PASS** | G8 remount×3 + soft-RST: `readCount_delta=167` |
 | G6 | **PASS** | Cache-Hit + Remount-Reread |
 
@@ -68,13 +68,13 @@ Je Größe separat (`lab88-c3-sz*-1245/`), 500 Reads — kombinierter Sweep kill
 
 ---
 
-## C4 — Offset → Strominhalt → **teilweise**
+## C4 — Offset → Strominhalt → **PASS** (Mapping + Golden)
 
 | Lauf | Artefakt | Ergebnis |
 |------|----------|----------|
 | G7 + live + prefill 8 s | `lab88-c4-g7-live-1209/` | **PASS** (bytes_delta=8 179 712, maxSeq head/final ok) |
-| GW + live | `lab88-c4-gw-live-1209/1245` | Timeout / ENODEV |
-| BENCH seq live | `lab88-c4-bench-seq-1245/` | Daten ok; C1-Gate FAIL (rps 152, armed) |
+| GW + live | `lab88-c4-gw-live-1339/` | **PASS** (bytes_delta_esp = bytes = 8 044 544) |
+| BENCH seq live | `lab88-c4-bench-seq-1245/` | Mapping-Daten ok; C1-Gate FAIL (rps 152, armed) |
 
 **Mapping** (`C4-MAPPING-g7-live-1209.csv`, `C4-MAPPING-bench-seq-1245.csv`):
 
@@ -85,28 +85,29 @@ Für 0.4.46 (zählender Cursor) wäre bei echten Rückwärts-Reads mit **neuem**
 
 ---
 
-## C5 — Steigung `hostAbs − absEnd` → **Daten, Steigung unsauber**
+## C5 — Steigung `hostAbs − absEnd` → **teilweise belegt**
 
 | Lauf | Artefakt | BENCH rps | Poll-Zeilen |
 |------|----------|-----------|-------------|
 | 10 Hz + period 4.0 | `lab88-c5-slope-10hz-1245/` | 153.2 | 219 |
 | 1 Hz + period 5.1 | `lab88-c5-slope-1hz-1245/` | 153.4 | 29 |
+| clean RST + 1 Hz | `lab88-c5-slope-clean-1hz-1325/` | 152.5 | 33 |
 
-Während `cursorArmed`: `hostAbs`, `absEnd`, `underruns` bewegen sich; `d = hostAbs−absEnd` startet bereits ≫0 (Reststrom nach Vorläufen). Armed-Regression ~**−0,20 MB/s** (d sinkt), nicht die erwarteten +0,8–1,0 MB/s auf sauberem Reset.  
-**Nächster C5:** Soft-RST → nur C5, kein Batch davor; optional Poll 1 Hz (C2: 10 Hz bremst wie Armed).
+**Clean-Lauf (1325):** Nach Soft-RST startet `d` sauber; in den **4 s mit `cursorArmed` + gültigem Poll** steigt `d` mit **~0,63 MB/s** (erwartet ≈ Bench-MBps − Producer ≈ 0,62 MB/s, Abweichung unter 5 %). Danach stirbt Wi-Fi unter MSC (Poll-Felder `null`) — Abnahme über ≥30 s noch offen.  
+Batch-Läufe vorher: Reststrom → `d` schon ≫0, Steigung unbrauchbar.
 
 ---
 
-## C6 — Replay / G7-Modell → **teilweise**
+## C6 — Replay / G7-Modell → **PASS**
 
 | Lauf | Artefakt | Ergebnis |
 |------|----------|----------|
 | REPLAY resume 364034–376757 | `lab88-c6-replay-resume-1209/` | **PASS** (`readCount_delta=1963`) |
-| G7 (ohne live, im C4-Kontext live) | `lab88-c4-g7-live-1209/` | **PASS** Modellzahlen |
-| G7 bare | `lab88-c6-g7-1209/1245` | ENODEV / Timeout nach MSC |
-| G7 autoplay | `lab88-c6-g7-autoplay-1245/` | **FAIL** (`maxSeq_after_head=8388608` statt 368640) |
+| G7 + live | `lab88-c4-g7-live-1209/` | **PASS** |
+| G7 bare (nach Soft-RST) | `lab88-c6-g7-bare-1343/` | **PASS** (head/frag/final/total) |
+| G7 autoplay (nach Soft-RST) | `lab88-c6-g7-autoplay-1346/` | **PASS** (maxSeq head 368640, final 5201920) |
 
-Bekannte Feld/Modell-Lücke (Fragment-maxSeq) bleibt; Autoplay-Zähler im Lab nicht stabil.
+Ohne frischen Soft-RST bleiben Slot-`maxSeq`-Zähler hoch → head_ok falsch negativ. Fragment-maxSeq-Feldlücke (392–632 KiB) ist separat (Feld Q8).
 
 ---
 
@@ -157,9 +158,10 @@ docs/betrieb/artifacts-2026-10-07-lab/
 
 ---
 
-## Empfehlung
+## Empfehlung / noch offen
 
-1. R15 in HU-Facts: **Armed/Play kostet +1 ms SG** (Lab belegt).
-2. Stall-Adapter: Budget gegen **5 ms**-Takt im Play-Zustand; Callback-Stückelung **4 KiB**.
-3. C5 einmal isoliert nach Soft-RST wiederholen für Steigungs-Abnahme.
-4. LXC: nach ENODEV immer Soft-RST (nicht nur Remount).
+1. ~~R15 Ursache~~ → in HU-Facts/Q9 nachgetragen (**Live-Pfad**).
+2. Stall-Adapter: Budget gegen **5 ms**-Takt im Play; Callback-Stückelung **4 KiB**.
+3. C5: längeres Poll-Fenster (≥30 s) braucht stabiles Wi-Fi unter MSC (oder Status über UART/SoftAP).
+4. LXC: nach ENODEV Soft-RST + ≥20 s Settle; G7 nur auf frischem Medium (sonst sticky `maxSeq`).
+5. Feld bleibt Blocker für Stall-Go: **F1** + **R10**/feste Zuordnung (C4-Mapping ist Lab-Vorlage).

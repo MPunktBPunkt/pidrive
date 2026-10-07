@@ -1,0 +1,49 @@
+{
+  "G7": {
+    "pass": true,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 368640,
+    "maxSeq_after_frag": 368640,
+    "maxSeq_final": 5201920,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 6.0,
+        "min": 3.0,
+        "max": 65.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 3.992,
+        "p50": 4.155,
+        "p95": 4.587,
+        "p99": 7.423,
+        "min": 3.935,
+        "max": 65.036,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 4.54,
+        "p50": 4.795,
+        "p95": 5.363,
+        "p99": 10.332,
+        "min": 4.444,
+        "max": 1075.285,
+        "n": 1996
+      },
+      "late_reads": 384
+    },
+    "head_ok": true,
+    "frag_ok": true,
+    "final_ok": true,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-bare-1343 overall=PASS

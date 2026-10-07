@@ -192,7 +192,7 @@ Drei Fav-Slots reichen nicht, um die HU-Cachegröße zu schätzen. Nach F1/F2: E
 **Rest auf dem Debian-Container (nur lesen, ~5 min):**
 - `USBMSC.cpp` reicht den Rückgabewert 1:1 durch?
 - Priorität und Core des USB-Tasks (`esp32-hal-tinyusb.c`) gegenüber PumpServer/lwIP
-- `CFG_TUD_MSC_EP_BUFSIZE` = 4096?
+- `CFG_TUD_MSC_EP_BUFSIZE` = 4096? → **Lab C3 2026-10-07 bestätigt:** `esp_readCount_delta/reads` = 1/4/16 bei READ10 4/16/64 KiB ([`C1-C7-ERGEBNIS.md`](../betrieb/artifacts-2026-10-07-lab/C1-C7-ERGEBNIS.md)).
 
 Befehle stehen im Spike-Dokument.
 

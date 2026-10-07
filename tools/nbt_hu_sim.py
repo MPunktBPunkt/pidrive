@@ -1277,7 +1277,12 @@ def run_g7(hu: HuSim, esp: str, out: Path, uid: str = "fav0", autoplay: bool = F
 
     res = hu.select_head(uid, autoplay_pause_at=4194304 if autoplay else None, on_phase=_phase)
     time.sleep(2.0)
-    post = snap_retry(esp)
+    snap_err: str | None = None
+    try:
+        post = snap_retry(esp, retries=10, delay_s=2.0)
+    except Exception as e:
+        snap_err = f"post:{type(e).__name__}: {e}"
+        post = snaps.get("frag") or snaps.get("head") or pre
     mid, frag = snaps.get("head", {}), snaps.get("frag", {})
     final_start, frag_end = res["final_start"], res["frag_end"]
     for name, s in (("pre", pre), ("mid", mid), ("frag", frag), ("post", post)):
@@ -1294,6 +1299,8 @@ def run_g7(hu: HuSim, esp: str, out: Path, uid: str = "fav0", autoplay: bool = F
         "field_total_8mib": 8179712,
         "timing": hu.timing_report(),
     }
+    if snap_err:
+        checks["snap_error"] = snap_err[:200]
     checks["head_ok"] = near(int(checks["maxSeq_after_head"] or 0), head)
     checks["frag_ok"] = int(checks["maxSeq_after_frag"] or 0) < head + 2 * 64 * 1024
     checks["final_ok"] = near(int(checks["maxSeq_final"] or 0), size - final_start)
@@ -1306,10 +1313,10 @@ def run_g8(hu: HuSim, esp: str, out: Path, current_uid: str = "fav2") -> dict:
     """Restart after remount (R20): field signature rc=167, current 512 KiB track complete,
     fav0 8 scattered 4 KiB probes (bytes 32768, maxSeq 4096)."""
     hu.refresh_slots(esp)
-    pre = snap(esp)
+    pre = snap_retry(esp)
     res = hu.remount_restart(current_uid)
-    time.sleep(0.5)
-    post = snap(esp)
+    time.sleep(2.0)
+    post = snap_retry(esp)
     (out / "status-g8-pre.json").write_text(json.dumps(pre, indent=2))
     (out / "status-g8.json").write_text(json.dumps(post, indent=2))
     rc_delta = int(post.get("readCount") or 0) - int(pre.get("readCount") or 0)
@@ -1378,7 +1385,7 @@ def run_replay(hu: HuSim, esp: str, out: Path, rows: list[dict], speed: float = 
     """C6: replay field msc.reads bursts (absolute LBAs, same L3 geometry) with their ESP
     timestamps; within a burst the sim pacing applies. Compare slot bytes/maxSeq with the field."""
     hu.refresh_slots(esp)
-    pre = snap(esp)
+    pre = snap_retry(esp)
     if not rows:
         return {"pass": False, "err": "no rows"}
     ms0 = int(rows[0]["ms"])
@@ -1398,8 +1405,8 @@ def run_replay(hu: HuSim, esp: str, out: Path, rows: list[dict], speed: float = 
             lba += n // SECTOR
             left -= n
             n_reads += 1
-    time.sleep(0.5)
-    post = snap(esp)
+    time.sleep(2.0)
+    post = snap_retry(esp, retries=8, delay_s=1.5)
     (out / "status-replay.json").write_text(json.dumps(post, indent=2))
     slots = {}
     for s in post.get("slots") or []:

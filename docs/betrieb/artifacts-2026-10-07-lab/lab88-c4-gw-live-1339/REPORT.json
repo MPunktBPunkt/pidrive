@@ -1,0 +1,304 @@
+{
+  "golden": [
+    "GW"
+  ],
+  "results": {
+    "GW": {
+      "bytes": 8044544,
+      "lo": 344064,
+      "hi": 8388608,
+      "bytes_delta_esp": 8044544,
+      "maxSeq": 7053312,
+      "pass": true
+    }
+  },
+  "period_ms": 5.1,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": 5.1,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 66.0,
+      "n": 1964
+    },
+    "wall_ms": {
+      "p5": 5.191,
+      "p50": 5.368,
+      "p95": 5.956,
+      "p99": 19.116,
+      "min": 5.107,
+      "max": 67.33,
+      "n": 1964
+    },
+    "start_to_start_ms": {
+      "p5": 5.757,
+      "p50": 6.07,
+      "p95": 6.723,
+      "p99": 20.029,
+      "min": 5.553,
+      "max": 5006.423,
+      "n": 1963
+    },
+    "late_reads": 367
+  },
+  "ear": {
+    "live_bytes": 57344,
+    "consumed": 0,
+    "events": {
+      "silence_in_play": 1950
+    },
+    "event_list": [
+      {
+        "t": 1895792.009938029,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.01664725,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.023386939,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.029987495,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.036202302,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.056018478,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.062800016,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.068778646,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.075198651,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.081254457,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.087299453,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.093605773,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.100061035,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.106203335,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.112438049,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.118417581,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.124409256,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.130288779,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.136314399,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.142445828,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.148434978,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.154563412,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.161062747,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.167181141,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.173318261,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.179771619,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.18579774,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.191642938,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.197535796,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.203428224,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.209424157,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.215407356,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.221214843,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.227253447,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.233136036,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.239452204,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.245672061,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.252049395,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.258426298,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.264448471,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.270940131,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.276976621,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.282996369,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.289084376,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.295179858,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.30130223,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.307565659,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.313896866,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.319863353,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1895792.326090493,
+        "kind": "silence_in_play"
+      }
+    ]
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "6min 17s",
+    "play": "fav0",
+    "armed": true,
+    "hostAbs": 7449856,
+    "absEnd": 155904,
+    "absBase": 106752,
+    "streamBytes": 8044544,
+    "underruns": 7990016,
+    "liveBytes": 54528,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "readCount": 6459,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 25677824,
+        "maxSeq": 7053312,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}
