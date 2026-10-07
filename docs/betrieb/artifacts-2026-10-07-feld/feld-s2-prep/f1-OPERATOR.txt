@@ -1,0 +1,1 @@
+t=20:09:25  F1 beide Files: Start 0/10/20; Ausstecken ~10; nach ESP Resume ~20; Hub von HU nicht erkannt
