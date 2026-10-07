@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """Lab: HU eager file-read mimic (File-Cache model, Stufe-2 Vorstufe).
 
-Reads an entire MSC slot at ~4 KiB / --gap-ms (field ~3–5 ms), then the next
-slot — matching NBT-Evo eager-read + next-track prefetch.
+Reads an entire MSC slot with one 4 KiB READ10 per step via SG_IO on a
+start-to-start schedule (--period-ms, field 4.0 / 5.1 ms), then the next slot —
+matching NBT-Evo eager-read + next-track prefetch. Per-read log: <out>/reads.jsonl.
+--use-dd keeps the old dd bs=512 path (8 x 512 B READ10 per 4 KiB, not HU-like).
 
 Optional realtime producer (default ~9000 B/s), not the 900 KB/s hold illusion.
 
 Example:
-  sg disk -c 'python3 tools/m3_lab_hu_eager_file.py --dev /dev/sda --uid fav1 --next fav2'
+  sg disk -c 'python3 tools/m3_lab_hu_eager_file.py --dev /dev/sda --sg /dev/sg0 --uid fav1 --next fav2'
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import socket
 import struct
 import subprocess
@@ -233,8 +236,9 @@ def producer_loop(
         time.sleep(0.008)
 
 
-def eager_read_slot(dev: str, lba0: int, size_bytes: int, gap_ms: float) -> dict:
-    """Sequential 8-sector (4 KiB) reads covering size_bytes."""
+def eager_read_slot_dd(dev: str, lba0: int, size_bytes: int, gap_ms: float) -> dict:
+    """Legacy: dd bs=512 per 4 KiB = 8 READ10 x 512 B plus a process spawn per step.
+    Not HU-like (ESP readCount x8, ~4 ms/4 KiB extra); kept for comparison only."""
     sectors_total = max(1, (size_bytes + 511) // 512)
     chunk = 8  # 4 KiB
     t0 = time.time()
@@ -246,11 +250,63 @@ def eager_read_slot(dev: str, lba0: int, size_bytes: int, gap_ms: float) -> dict
         if gap_ms > 0:
             time.sleep(gap_ms / 1000.0)
     return {
+        "mode": "dd512",
         "lba0": lba0,
         "size_bytes": size_bytes,
         "ops": n_ops,
         "duration_s": round(time.time() - t0, 3),
         "gap_ms": gap_ms,
+    }
+
+
+def eager_read_slot(sg_fd: int, lba0: int, size_bytes: int, period_ms: float,
+                    read_n: int = 4096, reads_fh=None, uid: str = "") -> dict:
+    """HU-like: one READ10 of read_n bytes per step via SG_IO, start-to-start period_ms."""
+    from nbt_hu_sim import percentiles, read_sg
+
+    total = (size_bytes // 512) * 512
+    t0 = time.monotonic()
+    t_next = t0
+    n_ops = 0
+    late = 0
+    durs: list[float] = []
+    walls: list[float] = []
+    off = 0
+    while off < total:
+        n = min(read_n, total - off)
+        now = time.monotonic()
+        if period_ms > 0:
+            if now > t_next + period_ms / 1000.0:
+                late += 1
+                t_next = now
+            elif t_next > now:
+                time.sleep(t_next - now)
+            t_next += period_ms / 1000.0
+        ts = time.monotonic()
+        _blob, meta = read_sg(sg_fd, lba0 + off // 512, n)
+        wall = (time.monotonic() - ts) * 1000.0
+        walls.append(wall)
+        if meta.get("duration_ms") is not None:
+            durs.append(float(meta["duration_ms"]))
+        if reads_fh is not None:
+            reads_fh.write(json.dumps({"wall": time.time(), "uid": uid, "off": off, "lba": lba0 + off // 512,
+                                       "n": n, "dur_ms": meta.get("duration_ms"),
+                                       "wall_ms": round(wall, 3)}, separators=(",", ":")) + "\n")
+        off += n
+        n_ops += 1
+    dt = time.monotonic() - t0
+    return {
+        "mode": "sg_io",
+        "lba0": lba0,
+        "size_bytes": total,
+        "ops": n_ops,
+        "read_n": read_n,
+        "duration_s": round(dt, 3),
+        "ms_per_4k": round(dt * 1000 / max(1, total / 4096), 3),
+        "period_ms": period_ms,
+        "late_reads": late,
+        "sg_duration_ms": percentiles(durs),
+        "wall_ms": percentiles(walls),
     }
 
 
@@ -261,7 +317,12 @@ def main() -> int:
     ap.add_argument("--dev", default="/dev/sda")
     ap.add_argument("--uid", default="fav1")
     ap.add_argument("--next", default="fav2", dest="next_uid")
-    ap.add_argument("--gap-ms", type=float, default=4.0)
+    ap.add_argument("--sg", default="/dev/sg0", help="SG_IO node (HU-like 4 KiB READ10)")
+    ap.add_argument("--period-ms", type=float, default=4.0,
+                    help="start-to-start per read (field 4.0 idle / 5.1 with ESP play; 0 = back-to-back)")
+    ap.add_argument("--read-n", type=int, default=4096)
+    ap.add_argument("--use-dd", action="store_true", help="legacy dd bs=512 path (not HU-like)")
+    ap.add_argument("--gap-ms", type=float, default=4.0, help="only with --use-dd: pause after each 4 KiB")
     ap.add_argument("--pump-bps", type=int, default=9000, help="realtime-ish producer (0=off)")
     ap.add_argument(
         "--mp3",
@@ -292,7 +353,9 @@ def main() -> int:
     wait_dev(args.dev)
 
     report: dict = {
-        "gap_ms": args.gap_ms,
+        "mode": "dd512" if args.use_dd else "sg_io",
+        "period_ms": None if args.use_dd else args.period_ms,
+        "gap_ms": args.gap_ms if args.use_dd else None,
         "pump_bps": args.pump_bps,
         "uid": args.uid,
         "next": args.next_uid,
@@ -304,6 +367,8 @@ def main() -> int:
     stop = threading.Event()
     prod_stats: dict = {}
     thr: threading.Thread | None = None
+    sg_fd = -1
+    reads_fh = None
     try:
         setup_menu(pump)  # menu only; arm after remount
         try:
@@ -313,6 +378,9 @@ def main() -> int:
             report["steps"].append({"op": "remount_err", "err": str(e)})
         time.sleep(1.5)
         wait_dev(args.dev)
+        if not args.use_dd:
+            sg_fd = os.open(args.sg, os.O_RDONLY)
+            reads_fh = open(out / "reads.jsonl", "a", encoding="utf-8")
 
         if args.arm_before_read:
             arm_stream(pump, args.uid)
@@ -346,17 +414,22 @@ def main() -> int:
             l0, l1 = int(s["lba0"]), int(s["lba1"])
             return max(512, (l1 - l0 + 1) * 512)
 
+        def read_slot(s: dict, uid: str) -> dict:
+            if args.use_dd:
+                return eager_read_slot_dd(args.dev, int(s["lba0"]), slot_size(s), args.gap_ms)
+            return eager_read_slot(sg_fd, int(s["lba0"]), slot_size(s), args.period_ms,
+                                   args.read_n, reads_fh, uid)
+
         s1 = by_uid[args.uid]
         size1 = slot_size(s1)
-        r1 = eager_read_slot(args.dev, int(s1["lba0"]), size1, args.gap_ms)
+        r1 = read_slot(s1, args.uid)
         report["steps"].append({"op": "eager", "uid": args.uid, **r1})
         mid = snap(esp)
         (out / "status-after-uid.json").write_text(json.dumps(mid, indent=2))
         report["after_uid"] = mid
 
         s2 = by_uid[args.next_uid]
-        size2 = slot_size(s2)
-        r2 = eager_read_slot(args.dev, int(s2["lba0"]), size2, args.gap_ms)
+        r2 = read_slot(s2, args.next_uid)
         report["steps"].append({"op": "eager_next", "uid": args.next_uid, **r2})
         post = snap(esp)
         (out / "status-after-next.json").write_text(json.dumps(post, indent=2))
@@ -386,6 +459,10 @@ def main() -> int:
         stop.set()
         if thr:
             thr.join(timeout=2)
+        if sg_fd >= 0:
+            os.close(sg_fd)
+        if reads_fh is not None:
+            reads_fh.close()
         try:
             pump.send_json({"t": "audio_stop"})
         except Exception:

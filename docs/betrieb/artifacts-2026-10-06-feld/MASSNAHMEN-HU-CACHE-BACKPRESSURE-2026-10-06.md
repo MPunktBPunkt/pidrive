@@ -156,3 +156,29 @@ Stufe 1 F1?
 | M4/F1 Decode-Start | 🔴 offen |
 | M5/F2 Cache/Remount | 🔴 offen (RST-Teil [S]) |
 | Stall-FW / Stufe 3+ | 🔒 Freeze |
+
+---
+
+## 9. Nachtrag nach s1-morgen (2026-10-07)
+
+Quellen: [`feld-s1-morgen/KORREKTUR-F2C-RST-ARTEFAKT.md`](../artifacts-2026-10-07-feld/feld-s1-morgen/KORREKTUR-F2C-RST-ARTEFAKT.md), HU-Facts R13/R15–R21, Stufenplan R10/R11.
+
+| Thema | Ampel | Kommentar |
+|-------|-------|-----------|
+| Cache nach ESP-RST | 🟢 geklärt: **HU liest neu** (6/6) | „BOB cache_hit_like“ war Poll-Artefakt |
+| Regel „Live-Slot > HU-Cache-Budget“ (Mistral) | ⛔ gestrichen | keine Datengrundlage (K1) |
+| Marker-8-MiB-Tonversuch (Reviews) | ⛔ mit 0.4.46 nicht machbar | 0x55 + kSil, nicht hörbar; ESP liefert nur `Mp3Silence::fill` (K2) |
+| **R10: HU liest außer der Reihe und weit voraus** | 🔴 neu, blockiert Stall-Go | Segmente bis 968 KiB um die Wiedergabeposition; erster Lauf 360 KiB. Stufenplan 3.2 auf feste Zuordnung Dateioffset → Stromoffset umgestellt |
+| Lesetakt 4,0 vs. 5,1 ms | 🟠 Ursache offen | ESP-Servicezeit im Play-Zustand? Lab C2 |
+| Next-Prefetch | 🟢 [S] ~15 s vor Wiedergabe-Ende | Lab-Anker G4 neu verankert |
+| F1 Decode-Start | 🔴 offen | HU zeigt nur Balken; neuer Weg: USB-Stick-MP3 mit Sprachmarkern |
+
+**Neue Maßnahmen:**
+
+| ID | Maßnahme | Abnahme |
+|----|----------|---------|
+| **M15** | Lab-Tools realistischer (Takt nach Fahrplan, Ohr-Fix, Eager per SG_IO 4 KiB, Lesereihenfolge-Modelle, Per-Read-JSONL) | `nbt_hu_sim.py`, `m3_lab_hu_eager_file.py` |
+| **M16** | Lab-Tests C1–C7 Cursor-Geschwindigkeit/-Position | [`AUFTRAG-LAB-CURSOR-C1-C7.md`](../artifacts-2026-10-07-lab/AUFTRAG-LAB-CURSOR-C1-C7.md) |
+| **M17** | Feld: Bridge `--no-audio` mit `msc.reads`, Auswahl ab Kopf / Autoplay / RST; F1 per USB-Stick | [`FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../artifacts-2026-10-07-feld/FELDPROTOKOLL-NAECHSTER-TERMIN.md) |
+
+**Stall-Go erst wenn:** F1 entschieden **und** R10 geklärt, d. h. die Lesereihenfolge bei Auswahl ab Kopf ist bekannt und die feste Zuordnung im Lab (C4) bestätigt.

@@ -1,6 +1,6 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-10-06 · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` (USB-MSC Full-Speed, virtuelles FAT)
+**Stand:** 2026-10-07 (R13 korrigiert, R15–R22, F7/F8, Q8/Q9 neu) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` (USB-MSC Full-Speed, virtuelles FAT)
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.
 
 | Status | Bedeutung |
@@ -16,7 +16,7 @@ Begleitdokumente: [`../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-B
 
 ## 1. Gesamtbild in einem Satz
 
-Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien: Sie liest eine gewählte Datei **so schnell der Bus erlaubt bis zum Ende**, liest die **nächste Datei gleich mit vor**, spielt danach **aus ihrem Cache** und fordert erst beim nächsten Track wieder Daten an.
+Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien: Sie liest eine gewählte Datei **so schnell der Bus erlaubt bis zum Ende**, liest die **nächste Datei rund 15 s vor Track-Ende vor** (R21), spielt **aus ihrem Cache** und fordert erst beim nächsten Track wieder Daten an.
 
 ```mermaid
 flowchart LR
@@ -58,7 +58,9 @@ flowchart LR
 | F3 | Dateien mit ungültigem Inhalt (0xFF) → Decoder überspringt, Playlist „rauscht durch“ | [B] | FELDTEST §4.3 |
 | F4 | Volle Slot-Länge mit gültigen CBR-Stille-Frames + Xing → Datei bleibt stabil in der Liste | [S] | seit B2 (`Mp3Silence::fill`) |
 | F5 | HU-Listenreihenfolge ≠ Slot-Reihenfolge des ESP | [S] | L0-Test 03.10.: BOB oben, Rock unten (Slots fav0=Rock, fav1=Bayern, fav2=BOB) |
-| F6 | Volume-Label / Serial (`PDnnnn`) wechselt bei Remount | [B] | PD0082 → PD0084 (06.10.), PD0004 → PD0005 (01.10.) |
+| F6 | Volume-Label / Serial (`PDnnnn`) wechselt bei Remount | [B] | PD0082 → PD0084 (06.10.), PD0004 → PD0005 (01.10.). **Aber:** über ESP-RST bleibt sie gleich (PD0089, 7 Boots s1-morgen) |
+| F7 | Diese HU zeigt beim Abspielen nur einen **Fortschrittsbalken**, keinen Sekundenzähler | [B] | s1-morgen `f1-events.jsonl` 07:46:43 |
+| F8 | Autoplay-Reihenfolge BOB → Bayern → Rock (`fav2 → fav1 → fav0`) | [B] | s1-morgen, mehrfach |
 
 ---
 
@@ -89,9 +91,17 @@ flowchart LR
 | R9 | Cache-Treffer erzeugt keine Reads (Muster B) | [B] | 08:00 BOB, 08:04 Bayern, 08:06 BOB: `hostAbs=0`, Datei vorher `bytes=524288` |
 | R10 | Beim Scan nach Plug/RST wird groß vorgelesen | [B] | post-RST nach 5–14 s: `fav0` 3,8–5,6 MiB gelesen |
 | R11 | Erneute Auswahl einer gecachten Datei spielt denselben Inhalt nochmal | [B] | 01.10.: „erneute Wahl = dieselben ~6 s“ |
-| R12 | Ab wann die HU abspielt (sofort vs. nach Read-Ende) | [?] | **M4/F1 nicht entschieden** (s1-1700: kein Video/Spielzeit-Zähler; Pause 17:28) |
-| R13 | Überlebt der Cache einen Remount / neue Serial? | [?] | **M5/F2 offen**; Teilbefund s1-1700 nach RST: HU Autoplay BOB, ESP `playingUid=""`, aber `fav2.bytes→524288` / Scan-Reads → **USB-Re-Read nach Remount**, kein reiner Cache-only-Beweis |
+| R12 | Ab wann die HU abspielt (sofort vs. nach Read-Ende) | [?] / Indiz [S] inkrementell | **F1 formal offen** (HU zeigt nur Balken, s1-morgen). Indiz: R16/R17 — die HU holt zuerst Daten um die Wiedergabeposition und füllt dann im Hintergrund; bei Batch-then-Play wäre diese Priorisierung unnötig |
+| R13 | Überlebt der Cache einen ESP-RST (gleiche Serial)? | **[B] nein** | s1-morgen 07.10.: in **6/6** RSTs ist im ersten Poll (Uptime 2–3 s) eine Datei vollständig frisch gelesen (`maxSeq` = Dateigröße, `rc=167`). Frühere Lesart „BOB cache_hit_like nach RST“ war ein Poll-Artefakt ([`KORREKTUR-F2C-RST-ARTEFAKT.md`](../betrieb/artifacts-2026-10-07-feld/feld-s1-morgen/KORREKTUR-F2C-RST-ARTEFAKT.md)). Neue Serial: nicht getestet |
 | R14 | LED-Blinken korreliert mit Cold-Body-/MSC-Aktivität | [S] | s1-1700: erster Autoplay (Bayern) ohne Blink; BOB/Rock cold mit Blink; frühere Läufe `cold_body_burst`. **Nicht** alleiniger Cache-Orakelzustand — operativ: Blink ≈ Body-Read/MSC-Aktivität |
+| R15 | Lesetakt: **4,0 ms pro 4 KiB** (≈ 250 Reads/s, 1,02 MB/s) = Bulk-Grenze USB Full-Speed (~1,2 KB/ms + CBW/CSW). Mit ESP-Play-Erkennung **5,1 ms** (≈ 195/s, 0,80 MB/s) | [B] Takt / [S] Ursache | s1-morgen: 250/s in Boot 0, 2, 5 (`playingUid` leer), 195/s in Boot 1, 3, 4, 6 jeweils ~1–2 s nach `playingUid=fav0`; `msc.reads` 03./04.10.: Segmente 1,04–1,07 MB/s. Ursache (ESP-Servicezeit im Zustand Play) → Lab-Test C2 |
+| R16 | Lesen **außer der Reihe** bei Wiederaufnahme an Position P: vorwärts 8, rückwärts 120, rückwärts 120, vorwärts 360, rückwärts 360, vorwärts 968 KiB (Summe **1.982.464 B**), dann **5,1 s Pause**, dann sequenziell ab P + 1336 KiB bis EOF (6.057.984 B) | [B] Summen / [S] Reihenfolge | `msc.reads` p1-run-a ms 364034–365907 und p1-run-b ms 171378–173250: beide exakt 1.982.464 B ab LBA 1953 (P = Dateioffset 958.464), danach Lauf ab LBA 4625 (= P + 1336 KiB). m3seq 03.10. Ep. 7 ab LBA 1953 größer (4.407.296 B) |
+| R17 | Frische Auswahl: erster sequenzieller Lauf **immer 368.640 B** (360 KiB) ab Kopf, danach 2–3 s Fragmente, dann ein Lauf bis EOF | [B] | s1-morgen 5/5 (`slotMap.fav0.maxSeq`); Endlauf 5.201.920 B in 3/4 angetippten Fällen. Keine Meta-Reads dazwischen (Δ`readCount`·4096 = Δ`bytes`) |
+| R18 | 51 Blöcke (208.896 B) von fav0 werden in der Rampe nach RST nie gelesen | [B] Zahl / [?] Ursache | s1-morgen: Summe 4× exakt **8.179.712** B; welche Blöcke → LBA-Trace (`msc.reads`) |
+| R19 | Autoplay-Wechsel: Rampe pausiert nach ~4 MiB für 2–3 s, angetippte Auswahl nicht | [S] | s1-morgen Boot 0 (bei 4.194.304 B, 07:44:12–14), Boot 1 (3.985.408 B, 07:49:43–44) |
+| R20 | Wiederanlauf nach RST: aktueller Titel in ≤ 3 s komplett neu gelesen (ein Lauf), dazu **8 verstreute 4-KiB-Reads** auf fav0 (`maxSeq` 4096); gesamt `rc=167` | [B] | s1-morgen 4/4 bei 512-KiB-Titel; bei Rock als aktuellem Titel startet direkt die Rampe (2/2) |
+| R21 | Next-Track-Prefetch hängt an der **Wiedergabezeit**: ~15 s vor Wiedergabe-Ende, nicht direkt nach Read-EOF | [S] | s1-morgen: Bayern 07:48:10 vs. BOB-Ende 07:48:25; Rock 07:49:38 vs. Bayern-Ende ~07:49:52; Ausreißer Boot 0 ~7 s. Nach Rock-Read-EOF nie Prefetch |
+| R22 | Scan nach Plug: erster Lese-Burst ab LBA 0 ist **1.374.720 B** (3× identisch), danach ein Burst von 176.128 B auf einem Datei-Kopf | [B] | `msc.reads` p1-run-a/-b ms 217113–218891, m3seq Ep. 6 ms 148817; 176.128 B: p1 ab LBA 17377, m3seq Ep. 9 ab LBA 18161. Lab-Signatur für C7 |
 
 ### 5.2 Log-Beleg: Burst bei leerem Ring (07:58, Correlate-Watch)
 
@@ -178,10 +188,10 @@ Mit Stille-bei-Miss sind pro Auswahl höchstens **Ringinhalt beim Arm + R_prod �
 
 | # | Fakt | Status | Beleg |
 |---|------|--------|-------|
-| D1 | MPEG-1 Layer III CBR 48 kbit/s wird dekodiert, hörbar | [B] | 01.10., 02.10. (Kurzton) |
+| D1 | Layer III CBR 48 kbit/s aus der Bridge wird dekodiert, hörbar. Die Bridge kodiert mono 22,05 kHz = **MPEG-2** (`pump_bridge.py`: `-ac 1 -ar 22050`) | [B] Ton / [S] Format | 01.10., 02.10. (Kurzton) |
 | D2 | Stille-Frames (`kSil`, 156 B, 48 kbit/s / 44,1 kHz, LAME-Tag) werden ohne Fehler „gespielt“ | [B] | 07:58: ~87 s Stille aus dem Cache ohne Abbruch, danach regulärer Track-Wechsel |
 | D3 | Spieldauer ergibt sich aus Dateigröße und Bitrate | [S] | R6 |
-| D4 | Verhalten bei Bitratenwechsel innerhalb der Datei | [?] | nicht getestet |
+| D4 | Format-Wechsel in der Datei (Live MPEG-2 22,05 kHz mono ↔ `kSil` MPEG-1 44,1 kHz) bei jedem Underrun | [?] | nicht isoliert getestet (Stufenplan R7) |
 | D5 | Andere Bitraten (96k/128k) | [?] | nicht im Feld getestet |
 
 ---
@@ -192,7 +202,9 @@ Mit Stille-bei-Miss sind pro Auswahl höchstens **Ringinhalt beim Arm + R_prod �
 |----|-------|---------------------|
 | Q1 | Wie lange darf ein READ10 dauern, ohne dass die HU resettet? | Stall-Leiter 300/700/1500/3000 ms bei 128k; `inquiry`/`plugCount`/`remountGen` beobachten |
 | Q2 | Spielt die HU während des Lesens oder erst nach Read-Ende? | s1-1700 **nicht entschieden** (kein Video/Timer). Nächster Termin: Spielzeit-Zähler + Video gegen `slotMap.fav0.b` / EOF (Stufenplan 1.2) |
-| Q3 | Invalidiert Remount / neue Serial / geänderte Dateigröße den Cache? | Teil: nach ESP-RST in s1-1700 wurde fav2 erneut per USB gelesen (`F2-TEIL-s1-1700.md`). Saubere fav1→fav2→fav1- + OTG-Kette fehlt |
+| Q3 | Invalidiert Remount / neue Serial / geänderte Dateigröße den Cache? | **ESP-RST: ja** (R13, 6/6). Offen: In-Session-Abwahl fav1→fav2→fav1 mit `msc.reads`, Serial-Wechsel (F2d) |
+| Q8 | Welche Blöcke liest die HU bei frischer Auswahl ab Kopf, in welcher Reihenfolge, wie weit voraus? | Bridge `--no-audio` + `msc.reads` im Feld ([`FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../betrieb/artifacts-2026-10-07-feld/FELDPROTOKOLL-NAECHSTER-TERMIN.md)). **Entscheidend für Stall** (Risiko R10 im Stufenplan) |
+| Q9 | Warum 5,1 statt 4,0 ms pro Read bei ESP-Play? | Lab-Test C2 ([`AUFTRAG-LAB-CURSOR-C1-C7.md`](../betrieb/artifacts-2026-10-07-lab/AUFTRAG-LAB-CURSOR-C1-C7.md)) |
 | Q4 | Wie groß ist der HU-Cache / Read-Ahead? | **Aufteilen** — siehe Katalog [`EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md`](../betrieb/artifacts-2026-10-06-feld/EXPERIMENTKATALOG-Q4-CACHE-MARKER-2026-10-07.md) |
 | Q4a | Max. Eager-Read **einer** Datei? | Größenleiter 512 KiB…64 MiB Silence; `maxSeq`/`bytes` ohne Abwahl |
 | Q4b | Max. Bytes/Anzahl **mehrerer** gecachter Dateien? | N=1…64 × 512 KiB; Re-Select → Hit (keine Body-Reads) vs Miss |

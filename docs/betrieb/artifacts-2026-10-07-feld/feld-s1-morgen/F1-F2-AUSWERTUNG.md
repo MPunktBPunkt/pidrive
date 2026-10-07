@@ -2,6 +2,8 @@
 
 Begleitend zu [`GESAMTBERICHT-FELD-S1-MORGEN.md`](GESAMTBERICHT-FELD-S1-MORGEN.md). Zahlen aus Poll + Dense-Watch.
 
+> **Korrektur 2026-10-07:** Zeile „F2c RST → BOB … cache_hit_like“ ist ein Poll-Artefakt. Der Burst lag vor dem ersten Poll nach dem RST, die HU liest nach jedem RST neu. Siehe [`KORREKTUR-F2C-RST-ARTEFAKT.md`](KORREKTUR-F2C-RST-ARTEFAKT.md)
+
 ## F1 Entscheidungsmatrix
 
 | Beobachtung | Schluss |

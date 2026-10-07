@@ -1,6 +1,6 @@
 # Stufenplan: HU verstehen und Live-Ton hörbar machen
 
-**Stand:** 2026-10-06 · **FW-Freeze aktiv:** Stufe 3 ist nur spezifiziert; Umsetzung erst nach explizitem Go.
+**Stand:** 2026-10-07 (Stufe 3.2/3.3 auf feste Offset-Zuordnung umgestellt, R10/R11) · **FW-Freeze aktiv:** Stufe 3 ist nur spezifiziert; Umsetzung erst nach explizitem Go.
 **Grundlagen:**
 - [ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md](../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) (Modell und Lösung)
 - [KONZEPT-HU-SIM-NBT-2026-10-06.md](../betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md) (Lab-Simulator)
@@ -235,26 +235,48 @@ Umsetzung durch die zweite Cursor-Instanz nach [KONZEPT-HU-SIM-NBT](../betrieb/a
 - Neue Zähler im Status: `stallPolls`, `stallMsMax`, `stallTimeouts`, `partialReplies`, `liveServed`, `silServed`.
 - **Per-Read-Trace:** den vorhandenen Export `msc.reads` (`MscReadBurst`, Drain in `loop()`) um Felder erweitern: `fileOff0`, `live`, `sil`, `stallMs`, `cur` (hostAbsCursor), `end` (absEnd). Die Bridge schreibt diese als JSONL mit Wanduhr. Das ersetzt das 96er-`mscTrace`-Fenster als Hauptquelle.
 
-### 3.2 StreamBuffer: Cursor zählt nur echte Bytes
-In [StreamBuffer.h](../../../../esp32.pidrive-main/esp32.pidrive-main/src/core/StreamBuffer.h) zwei neue Methoden. `readAt` bleibt für `stall_ms = 0` unverändert.
+### 3.2 StreamBuffer: feste Zuordnung Dateioffset → Stromoffset
 
-```cpp
-// Bytes ab Cursor, die sofort lieferbar sind (nur sinnvoll bei sequenziellem Cursor-Read).
-size_t availAtCursor() const {
-    if (!active_ || !cursorArmed_ || !size_) return 0;
-    uint32_t cur = hostAbsCursor_ < absBase_ ? absBase_ : hostAbsCursor_;
-    return cur < absEnd_ ? (size_t)(absEnd_ - cur) : 0;
-}
+> **Geändert 2026-10-07 (Risiko R10).** Der frühere Entwurf (`availAtCursor`/`readAtStrict` mit zählendem `hostAbsCursor_`) setzt voraus, dass die HU sequenziell liest. Das stimmt nicht. Die HU liest Segmente außer der Reihe, rückwärts und vorwärts um die Wiedergabeposition, bis 968 KiB voraus (HU-Facts R16/R17). Ein zählender Cursor würde dabei Live-Bytes an falsche Dateioffsets vergeben. Ersetzt durch eine feste, zustandslose Zuordnung.
 
-// Wie readAt, aber: Cursor wächst nur um tatsächlich aus dem Ring gelieferte Bytes;
-// fehlende Bytes werden mit kSil gefüllt, ohne den Cursor zu bewegen.
-// Rückgabe: Anzahl Live-Bytes.
-size_t readAtStrict(uint32_t fileOff, uint8_t* out, size_t n);
+Beim Arm wird **einmal** festgelegt:
+
+```text
+armFileOff_ = id3Len                  // erster Body-Offset der Live-Datei
+armAbs_     = max(absBase_, absEnd_ - preroll)   // Stromposition, die bei armFileOff_ liegt
+pos(fileOff) = armAbs_ + (fileOff - armFileOff_) // gilt für die ganze Session, nie fortgeschrieben
 ```
 
-Dazu zwei kleine Accessoren für den Adapter: `id3Len()` und `isSequentialCursorRead(fileOff)`. Letzterer verwendet dieselbe `nearHead`/`sequential`/`cursorArmed_`-Logik wie `readAt`, ohne Zustand zu ändern.
+Jeder Read wird nach `s = pos(fileOff)` gegen den Ring `[absBase_, absEnd_)` eingeordnet:
 
-Wichtig: `hostExpectFileOff_` (Dateiraum) wird weiter um `n` fortgeschrieben, `hostAbsCursor_` (Stromraum) nur um die Live-Bytes. Dann bleibt die HU nach einem Timeout „sequenziell“, und der Cursor verliert keine Live-Daten.
+| Klasse | Bedingung | Antwort | Zähler |
+|--------|-----------|---------|--------|
+| Kopf | `fileOff < armFileOff_` | Sticky-ID3 wie heute | — |
+| vergangen | `s + n ≤ absBase_` | sofort `kSil` | `liveMissPast` |
+| vorhanden | `s + n ≤ absEnd_` (Teil-Überlappung mit Vergangenem: Live-Teil + `kSil`) | Live | `liveServed` |
+| nahe Zukunft | `s < absEnd_ + stallAhead` | Stall / Teilantwort (3.3) | `stallPolls`, `partialReplies` |
+| ferne Zukunft | `s ≥ absEnd_ + stallAhead` | sofort `kSil` | `liveMissFar` |
+
+```cpp
+// Stromposition für einen Dateioffset (nur gültig, wenn armed_).
+uint32_t posFor(uint32_t fileOff) const { return armAbs_ + (fileOff - armFileOff_); }
+
+// Bytes ab posFor(fileOff), die jetzt lieferbar sind; 0 wenn vergangen oder Zukunft.
+size_t availAt(uint32_t fileOff) const;
+
+// Kopiert alles Lieferbare aus dem Ring, füllt den Rest frame-ausgerichtet mit kSil.
+// Bewegt keinen Zustand. Rückgabe: Anzahl Live-Bytes.
+size_t readMapped(uint32_t fileOff, uint8_t* out, size_t n);
+```
+
+Eigenschaften:
+- **Idempotent:** Ein erneuter Read desselben Offsets liefert denselben Inhalt, solange er im Ring liegt (Rückwärtssegmente, Wiederanlauf R20).
+- **Frame-Grenzen bleiben erhalten:** Die Zuordnung ist linear und beginnt an einer Frame-Grenze (`armAbs_` auf Frame-Start runden). Nur an Übergängen zu `kSil` gibt es einen Resync.
+- **`stallAhead`** begrenzt, wie weit voraus gestallt wird. Startwert `= stall_ms × Bitrate/8` (das, was der Producer in der Stall-Zeit liefert), mindestens 4 KiB. Alles darüber kann innerhalb von `stall_ms` nicht kommen und bekommt sofort Stille.
+- **`preroll`** (Startwert: Ringfüllung beim Arm) bestimmt die Latenz. Mehr Preroll heißt weniger Stall beim ersten Lauf (360 KiB, R17), aber mehr Verzögerung zum Radio.
+- `readAt` und `hostAbsCursor_` bleiben für `stall_ms = 0` unverändert (Bitgleichheit).
+
+**Was die Zuordnung nicht löst:** Liest die HU bei frischer Auswahl weit vor die Live-Kante, z. B. 360 KiB ≈ 61 s bei 48k oder ≈ 23 s bei 128k, landen diese Offsets als Stille im HU-Cache. Ob das bei **Auswahl ab Kopf** passiert, klärt Q8 im nächsten Feldtermin ([`FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../betrieb/artifacts-2026-10-07-feld/FELDPROTOKOLL-NAECHSTER-TERMIN.md)). Das Ergebnis entscheidet zwischen zwei Wegen: Stall nur für den ersten sequenziellen Lauf, oder Stall auch für vorauslesende Segmente mit großem `stallAhead` bei hoher Bitrate.
 
 ### 3.3 Stall-Adapter im Live-Pfad von `onRead`
 Heute ([UsbMscGadget.cpp](../../../../esp32.pidrive-main/esp32.pidrive-main/src/msc/UsbMscGadget.cpp), ~Zeile 739):
@@ -270,10 +292,10 @@ Entwurf:
 
 ```cpp
 if (live) {
-    const bool stallable = stallMs_ > 0 && stream_->isSequentialCursorRead(fileOff)
-                           && fileOff >= stream_->id3Len();
+    const bool stallable = stallMs_ > 0 && fileOff >= stream_->id3Len()
+                           && stream_->isNearFuture(fileOff, bufsize, stallAhead_);
     if (stallable) {
-        const size_t avail = stream_->availAtCursor();
+        const size_t avail = stream_->availAt(fileOff);
         if (avail < bufsize) {
             const uint32_t now = millis();
             if (stallKeyLba_ != lba || stallKeyOff_ != offset) {
@@ -289,20 +311,23 @@ if (live) {
                 bufsize = part;                     // Teilantwort, Vielfaches von 512
                 partialReplies_++;
             } else {
-                stallTimeouts_++;                   // Rest als Stille, Cursor bleibt
+                stallTimeouts_++;                   // Rest als Stille; Zuordnung bleibt fest
             }
             stallMsMax_ = max(stallMsMax_, now - stallT0_);
         }
     }
-    const size_t liveN = stallMs_ > 0 ? stream_->readAtStrict(fileOff, out, bufsize)
+    const size_t liveN = stallMs_ > 0 ? stream_->readMapped(fileOff, out, bufsize)
                                       : (stream_->readAt(fileOff, out, bufsize), bufsize);
     streamBytesServed_ += liveN;
 }
 ```
 
+`isNearFuture(fileOff, n, ahead)` heißt: `posFor(fileOff) + n > absEnd_` und `posFor(fileOff) < absEnd_ + ahead`. Vergangene und vorhandene Bereiche brauchen keinen Stall, ferne Zukunft bekommt sofort Stille (Tabelle 3.2).
+
 Regeln:
-- **Stall nur** für den aktiven Live-Slot, sequenziellen Cursor-Read und Offset hinter dem ID3-Block.
-- **Sofort Stille** für Sprünge > `kSeqSlop`, Nicht-Live-Slots, Next-Prefetch, Index-Scan und Head-Reads.
+- **Stall nur** für den aktiven Live-Slot, Offset hinter dem ID3-Block und Stromposition in der nahen Zukunft. Die Lesereihenfolge spielt keine Rolle mehr.
+- **Sofort Stille** für ferne Zukunft, vergangene Ringbereiche, Nicht-Live-Slots, Next-Prefetch und Index-Scan.
+- Trace pro Read: `fileOff`, `pos`, `absBase`, `absEnd`, Klasse, `live`, `stallMs`. Nur damit lässt sich im Lab (C4) und im Feld prüfen, welcher Dateioffset welchen Strominhalt bekommen hat.
 - Der Pfad mit `return 0` darf `noteDataRead` nicht aufrufen. Sonst zählt jeder Retry als Read und verfälscht die Play-Erkennung.
 - Der statische FAT-, Root- und Dir-Teil von `onRead` bleibt unberührt, denn er läuft vor dem File-Payload.
 - `bufsize` wird vor dem Payload-Zweig verkleinert. Der Demo- und Zero-Fill oben in `onRead` schreibt dann nur ins Puffer-Ende, das nicht gesendet wird.
@@ -447,6 +472,8 @@ flowchart LR
 | **R7** | **Format-Wechsel Live (MPEG-2 22,05 kHz mono) ↔ Stille (MPEG-1 44,1 kHz)** bei jedem Underrun | Stufe 5.3 A/B |
 | **R8** | **Bridge-Drossel 9.000 B/s unter Echtzeit bei 128k** | Stufe 3.5 (Pi) |
 | R9 | Busy-Retry verhungert Producer | Stufe 4.1 CPU-Check |
+| **R10** | **HU liest außer der Reihe und weit voraus** (Segmente bis 968 KiB um die Wiedergabeposition, erster Lauf 360 KiB ≈ 61 s bei 48k). Zählender Cursor vergibt Live-Bytes an falsche Offsets; Vorauslesen cacht Stille | 3.2 feste Zuordnung; Lab C4/C6; Feld Q8 (Auswahl ab Kopf mit `msc.reads`). **Stall-Go erst nach F1 und R10** |
+| R11 | Lesetakt 5,1 statt 4,0 ms, sobald der ESP Play erkennt (Ursache unbekannt) | Lab C2 |
 
 ## Was bewusst nicht passiert
 - Kein weiteres Prefill- oder Ringgrößen-Tuning ohne Stall.

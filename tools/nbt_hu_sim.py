@@ -7,6 +7,16 @@ read bytes, and runs Golden G1–G5 (ALL) plus optional G6 against FW 0.4.46 (st
   sg disk -c 'python3 tools/nbt_hu_sim.py --golden G1 --sg /dev/sg0'
   python3 tools/nbt_hu_sim.py --self-test   # classifier / producer offline
 
+Field-fit scenarios (s1-morgen 07.10., HU-Facts R15–R21):
+  --period-ms 4.0|5.1     start-to-start schedule instead of gap after read
+  --golden G7             fresh select from head (368640 / fragments / 5201920)
+  --golden GW             resume around position P (out-of-order segments, R16)
+  --golden G8             restart after remount (rc=167 signature)
+  --golden G4N            next-prefetch 15 s before playback end
+  --golden BENCH          C1/C3 back-to-back reads per size
+  --golden REPLAY --replay <msc_reads.jsonl|bridge.log> [--replay-ms-from/--replay-ms-to]  (C6)
+Every read goes to <out>/reads.jsonl (off, lba, n, klass, dur_ms, wall_ms, seq0/seq1).
+
 See docs/betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md
 """
 from __future__ import annotations
@@ -23,7 +33,7 @@ import urllib.request
 import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 SECTOR = 512
 SG_IO = 0x2285
@@ -158,18 +168,26 @@ class LiveStamp:
     abs_off: int
 
 
-def find_pdsq(blob: bytes) -> LiveStamp | None:
+def find_pdsq_all(blob: bytes) -> list[LiveStamp]:
     magic = b"PDSQ"
+    out: list[LiveStamp] = []
     i = 0
     while True:
         j = blob.find(magic, i)
         if j < 0 or j + 16 > len(blob):
-            return None
+            return out
         seq, abs_off, crc = struct.unpack_from(">III", blob, j + 4)
         body = blob[j : j + 12]
         if zlib.crc32(body) & 0xFFFFFFFF == crc:
-            return LiveStamp(seq=seq, abs_off=abs_off)
-        i = j + 1
+            out.append(LiveStamp(seq=seq, abs_off=abs_off))
+            i = j + 16
+        else:
+            i = j + 1
+
+
+def find_pdsq(blob: bytes) -> LiveStamp | None:
+    stamps = find_pdsq_all(blob)
+    return stamps[0] if stamps else None
 
 
 def silence_hits(blob: bytes) -> tuple[int, int]:
@@ -238,17 +256,18 @@ class VirtualEar:
 
     def on_block(self, klass: str, blob: bytes, t_mono: float) -> None:
         if klass == "LIVE":
-            st = find_pdsq(blob)
             n = len(blob)
             self.live_bytes += n
             self._armed_bytes += n
-            if st:
+            # A 4 KiB block carries ~16 stamps (256 B chunks); compare every stamp and
+            # keep the last one, otherwise each block looks like a +16 gap.
+            for st in find_pdsq_all(blob):
                 if self.last_seq is not None:
                     if st.seq > self.last_seq + 1:
                         self.events.append(
                             EarEvent(t_mono, "gap_in_content", {"from": self.last_seq, "to": st.seq})
                         )
-                    elif st.seq < self.last_seq:
+                    elif st.seq <= self.last_seq:
                         self.events.append(
                             EarEvent(t_mono, "duplicate", {"seq": st.seq, "last": self.last_seq})
                         )
@@ -409,6 +428,32 @@ class SlotInfo:
 @dataclass
 class CacheEntry:
     covered: int = 0  # bytes read from head
+    blocks: set[int] = field(default_factory=set)  # 4 KiB block indices read (any order)
+
+
+# s1-morgen 07.10. (HU-Facts R17/R18): fresh select of fav0 (8 MiB)
+SELECT_HEAD_RUN = 368640
+SELECT_FINAL_RUN = 5201920
+SELECT_HOLE = 208896  # 51 blocks never read; position is a hypothesis (C6)
+# msc.reads 03./04.10. (HU-Facts R16): resume around position P
+# p1-run-a/b: 1 982 464 B around P = LBA 1953, then the sequential run starts at LBA 4625 = P + 1336 KiB
+# -> forward 8+360+968 KiB, backward 120+120+360 KiB (interleave order per msc.reads timeline)
+WINDOW_SEGS_KIB = (("F", 8), ("B", 120), ("B", 120), ("F", 360), ("B", 360), ("F", 968))
+WINDOW_PAUSE_S = 5.0
+# HU-Facts R20: restart after RST
+REMOUNT_META_READS = 31
+REMOUNT_PROBES = 8
+
+
+def percentiles(xs: list[float], ps: tuple[int, ...] = (5, 50, 95, 99)) -> dict:
+    if not xs:
+        return {}
+    s = sorted(xs)
+    out = {f"p{p}": round(s[min(len(s) - 1, int(len(s) * p / 100))], 3) for p in ps}
+    out["min"] = round(s[0], 3)
+    out["max"] = round(s[-1], 3)
+    out["n"] = len(s)
+    return out
 
 
 class HuSim:
@@ -419,10 +464,15 @@ class HuSim:
         gap_ms: float | None = None,
         cmd_timeout_ms: int = 5000,
         events: list | None = None,
+        period_ms: float | None = None,
+        reads_jsonl: Path | None = None,
     ):
         self.sg_path = sg_path
         self.profile = profile
         self.gap_ms = gap_ms if gap_ms is not None else float(profile.get("read", {}).get("gap_ms_target", 4))
+        # period_ms: start-to-start schedule like the HU (4.0 / 5.1 ms). None = legacy gap after read.
+        self.period_ms = period_ms
+        self._t_next: float | None = None
         self.cmd_timeout_ms = cmd_timeout_ms
         self.events = events if events is not None else []
         self.cache: dict[str, CacheEntry] = {}
@@ -433,6 +483,12 @@ class HuSim:
         self.bytes_after_arm = 0
         self._armed = False
         self.sg_fd = -1
+        self.dur_ms: list[float] = []
+        self.wall_ms: list[float] = []
+        self.start_gap_ms: list[float] = []
+        self.late_reads = 0
+        self._t_last_start: float | None = None
+        self._reads_fh = open(reads_jsonl, "a", encoding="utf-8") if reads_jsonl else None
 
     def open(self) -> None:
         if self.sg_fd >= 0:
@@ -466,6 +522,39 @@ class HuSim:
         if self.sg_fd >= 0:
             os.close(self.sg_fd)
             self.sg_fd = -1
+        if self._reads_fh is not None:
+            self._reads_fh.close()
+            self._reads_fh = None
+
+    def timing_report(self) -> dict:
+        return {
+            "period_ms": self.period_ms,
+            "gap_ms": None if self.period_ms else self.gap_ms,
+            "sg_duration_ms": percentiles(self.dur_ms),
+            "wall_ms": percentiles(self.wall_ms),
+            "start_to_start_ms": percentiles(self.start_gap_ms),
+            "late_reads": self.late_reads,
+        }
+
+    def _pace_before(self) -> None:
+        if not self.period_ms:
+            return
+        now = time.monotonic()
+        period = self.period_ms / 1000.0
+        if self._t_next is None:
+            self._t_next = now
+        elif now > self._t_next + period:
+            # previous read (or a status poll) overran its slot: restart the schedule, no catch-up burst
+            self.late_reads += 1
+            self._t_next = now
+        delay = self._t_next - now
+        if delay > 0:
+            time.sleep(delay)
+        self._t_next += period
+
+    def idle(self, seconds: float) -> None:
+        time.sleep(seconds)
+        self._t_next = None
 
     def refresh_slots(self, esp: str) -> None:
         st = http_json(f"{esp.rstrip('/')}/api/status")
@@ -480,6 +569,9 @@ class HuSim:
     def _log(self, **kw: Any) -> None:
         kw["t"] = time.monotonic()
         self.events.append(kw)
+        if self._reads_fh is not None:
+            kw["wall"] = time.time()
+            self._reads_fh.write(json.dumps(kw, separators=(",", ":")) + "\n")
 
     def read_n(self, uid: str, file_off: int, n: int = READ_N) -> bytes:
         slot = self.slots[uid]
@@ -491,27 +583,171 @@ class HuSim:
         if n <= 0:
             return b""
         lba = slot.lba0 + file_off // SECTOR
-        blob, meta = read_sg(self.sg_fd, lba, n, self.cmd_timeout_ms)
+        blob, meta = self._timed_read(lba, n)
         klass = classify_block(blob, file_off)
         self.class_counts[klass] = self.class_counts.get(klass, 0) + 1
         self.ear.on_block(klass, blob, time.monotonic())
         ce = self.cache.setdefault(uid, CacheEntry())
-        ce.covered = max(ce.covered, file_off + len(blob))
+        if file_off <= ce.covered:
+            ce.covered = max(ce.covered, file_off + len(blob))
+        for b in range(file_off // READ_N, (file_off + len(blob) + READ_N - 1) // READ_N):
+            ce.blocks.add(b)
         if self._armed:
             self.bytes_after_arm += len(blob)
         else:
             self.bytes_before_arm += len(blob)
+        stamps = find_pdsq_all(blob) if klass == "LIVE" else []
         self._log(
             op="read",
             uid=uid,
             off=file_off,
+            lba=lba,
             n=len(blob),
             klass=klass,
             dur_ms=meta.get("duration_ms"),
+            wall_ms=meta.get("wall_ms"),
+            seq0=stamps[0].seq if stamps else None,
+            seq1=stamps[-1].seq if stamps else None,
+            abs0=stamps[0].abs_off if stamps else None,
         )
-        if self.gap_ms > 0:
-            time.sleep(self.gap_ms / 1000.0)
         return blob
+
+    def read_raw(self, lba: int, n: int = READ_N, tag: str = "meta") -> bytes:
+        """Non-file read (FAT/root/dir), counted by the ESP as a meta read."""
+        blob, meta = self._timed_read(lba, n)
+        self._log(op="read", uid=tag, off=None, lba=lba, n=len(blob), klass="META",
+                  dur_ms=meta.get("duration_ms"), wall_ms=meta.get("wall_ms"))
+        return blob
+
+    def _timed_read(self, lba: int, n: int) -> tuple[bytes, dict]:
+        self._pace_before()
+        t0 = time.monotonic()
+        if self._t_last_start is not None:
+            self.start_gap_ms.append((t0 - self._t_last_start) * 1000.0)
+        self._t_last_start = t0
+        blob, meta = read_sg(self.sg_fd, lba, n, self.cmd_timeout_ms)
+        wall = (time.monotonic() - t0) * 1000.0
+        meta["wall_ms"] = round(wall, 3)
+        self.wall_ms.append(wall)
+        if meta.get("duration_ms") is not None:
+            self.dur_ms.append(float(meta["duration_ms"]))
+        if not self.period_ms and self.gap_ms > 0:
+            time.sleep(self.gap_ms / 1000.0)
+        return blob, meta
+
+    # --- read-order models (HU-Facts R16/R17/R20/R21) -------------------
+
+    def read_segment(self, uid: str, start: int, length: int, backward: bool = False) -> int:
+        """Read [start, start+length) in 4 KiB steps, ascending (backward only changes the log tag)."""
+        size = self.slots[uid].size
+        start = max(0, (start // READ_N) * READ_N)
+        end = min(size, start + length)
+        self._log(op="segment", uid=uid, start=start, end=end, backward=backward)
+        off = start
+        n = 0
+        while off < end:
+            blob = self.read_n(uid, off, min(READ_N, end - off))
+            if not blob:
+                break
+            off += len(blob)
+            n += len(blob)
+        return n
+
+    def select_head(self, uid: str, head_run: int = SELECT_HEAD_RUN, final_run: int = SELECT_FINAL_RUN,
+                    hole: int = SELECT_HOLE, frag_seg: int = 64 * 1024,
+                    autoplay_pause_at: int | None = None, autoplay_pause_s: float = 2.5,
+                    on_phase: Callable[[str], None] | None = None) -> dict:
+        """Fresh select from head, field model R17/R18 (fav0 8 MiB).
+
+        head_run sequential, then the fragment region [head_run, size-final_run-hole) in
+        frag_seg pieces with pairwise swapped order (breaks the ESP maxSeq run), then a
+        never-read hole, then the final run to EOF. With the defaults the total equals the
+        field sum 8 179 712 B for an 8 MiB slot.
+        """
+        size = self.slots[uid].size
+        final_start = max(head_run, size - final_run)
+        frag_end = max(head_run, final_start - hole)
+        t0 = time.monotonic()
+        total = 0
+        paused = False
+
+        def maybe_pause() -> None:
+            nonlocal paused
+            if autoplay_pause_at is not None and not paused and total >= autoplay_pause_at:
+                paused = True
+                self._log(op="autoplay_pause", at=total, s=autoplay_pause_s)
+                self.idle(autoplay_pause_s)
+
+        total += self.read_segment(uid, 0, min(head_run, size))
+        if on_phase:
+            on_phase("head")
+        segs = list(range(head_run, frag_end, frag_seg))
+        order = []
+        for i in range(0, len(segs), 2):
+            order.extend(reversed(segs[i : i + 2]))
+        for s in order:
+            total += self.read_segment(uid, s, min(frag_seg, frag_end - s))
+            maybe_pause()
+        if on_phase:
+            on_phase("frag")
+        if final_start < size:
+            total += self.read_segment(uid, final_start, size - final_start)
+        return {"bytes": total, "head_run": head_run, "frag_end": frag_end,
+                "final_start": final_start, "dt_s": round(time.monotonic() - t0, 3)}
+
+    def window_read(self, uid: str, pos: int, segs_kib: tuple[tuple[str, int], ...] = WINDOW_SEGS_KIB,
+                    pause_s: float = WINDOW_PAUSE_S, to_eof: bool = True) -> dict:
+        """Resume around play position pos, field model R16: "F" segments extend above the
+        highest read offset, "B" segments extend below the lowest one."""
+        size = self.slots[uid].size
+        pos = (pos // READ_N) * READ_N
+        lo = hi = pos
+        total = 0
+        for direction, kib in segs_kib:
+            n = kib * 1024
+            if direction == "F":
+                total += self.read_segment(uid, hi, n)
+                hi = min(size, hi + n)
+            else:
+                start = max(0, lo - n)
+                total += self.read_segment(uid, start, lo - start, backward=True)
+                lo = start
+        if to_eof and hi < size:
+            self.idle(pause_s)
+            total += self.read_segment(uid, hi, size - hi)
+        return {"bytes": total, "lo": lo, "hi": size if to_eof else hi}
+
+    def remount_restart(self, current_uid: str, probe_uid: str = "fav0",
+                        meta_reads: int = REMOUNT_META_READS, probes: int = REMOUNT_PROBES) -> dict:
+        """Restart after RST/remount, field model R20: meta reads, scattered probes on
+        probe_uid, then the current track. A large current track starts select_head."""
+        first_file_lba = min(s.lba0 for s in self.slots.values()) if self.slots else 81
+        for i in range(meta_reads):
+            lba = (i * 8) % max(8, first_file_lba - 8)
+            self.read_raw(lba)
+        ps = self.slots[probe_uid].size
+        for k in range(probes):
+            self.read_n(probe_uid, ((ps * k // probes) // READ_N) * READ_N)
+        cur = self.slots[current_uid]
+        if cur.size > 1024 * 1024:
+            res = self.select_head(current_uid)
+        else:
+            res = {"bytes": self.read_segment(current_uid, 0, cur.size)}
+        res["expect_readCount"] = meta_reads + probes + (cur.size // READ_N)
+        return res
+
+    def prefetch_at_playback(self, play_uid: str, next_uid: str, t_play0: float,
+                             bitrate_bps: int = 48000, lead_s: float = 15.0, id3_len: int = 3044) -> dict:
+        """Next-track prefetch tied to playback time (R21): read next_uid at t_play_end - lead_s."""
+        play_s = (self.slots[play_uid].size - id3_len) / (bitrate_bps / 8)
+        t_fire = t_play0 + max(0.0, play_s - lead_s)
+        wait = t_fire - time.monotonic()
+        if wait > 0:
+            self.idle(wait)
+        t0 = time.monotonic()
+        n = self.read_segment(next_uid, 0, self.slots[next_uid].size)
+        return {"play_s": round(play_s, 1), "lead_s": lead_s, "fired_after_s": round(t0 - t_play0, 2),
+                "bytes": n, "dt_s": round(time.monotonic() - t0, 3)}
 
     def eager_read(self, uid: str, until: int | None = None, stop_at: int | None = None) -> int:
         """Sequential 4 KiB reads. stop_at = absolute file off to stop before (for G1 mid-arm)."""
@@ -975,6 +1211,217 @@ def run_g4(hu: HuSim, esp: str, pump: PumpTcp, out: Path) -> dict:
     return checks
 
 
+def slot_of(s: dict, uid: str) -> dict:
+    return next((x for x in s.get("slots") or [] if x.get("uid") == uid), {})
+
+
+def run_gw(hu: HuSim, esp: str, out: Path, uid: str = "fav0", pos: int = 958464) -> dict:
+    """Resume around position P (R16, msc.reads 03./04.10.). Report-only: the ESP has no
+    per-read export without the bridge, compare reads.jsonl against bridge msc.reads (C6)."""
+    hu.refresh_slots(esp)
+    pre = snap(esp)
+    res = hu.window_read(uid, pos)
+    post = snap(esp)
+    (out / "status-gw.json").write_text(json.dumps(post, indent=2))
+    res["bytes_delta_esp"] = int(slot_of(post, uid).get("bytes") or 0) - int(slot_of(pre, uid).get("bytes") or 0)
+    res["maxSeq"] = slot_of(post, uid).get("maxSeq")
+    res["pass"] = near(res["bytes_delta_esp"], res["bytes"])
+    return res
+
+
+def run_g7(hu: HuSim, esp: str, out: Path, uid: str = "fav0", autoplay: bool = False) -> dict:
+    """Fresh select from head (R17/R18): maxSeq 368640 after the first run, final run
+    5201920, slot bytes 8179712 for an 8 MiB slot. Checks the sim model against the ESP
+    counters, not the HU itself (replay of the field pattern, C6)."""
+    hu.refresh_slots(esp)
+    pre = snap(esp)
+    size = hu.slots[uid].size
+    head = SELECT_HEAD_RUN
+    snaps: dict[str, dict] = {}
+    res = hu.select_head(uid, autoplay_pause_at=4194304 if autoplay else None,
+                         on_phase=lambda name: snaps.__setitem__(name, snap(esp)))
+    time.sleep(0.5)
+    post = snap(esp)
+    mid, frag = snaps.get("head", {}), snaps.get("frag", {})
+    final_start, frag_end = res["final_start"], res["frag_end"]
+    for name, s in (("pre", pre), ("mid", mid), ("frag", frag), ("post", post)):
+        (out / f"status-g7-{name}.json").write_text(json.dumps(s, indent=2))
+    b_pre = int(slot_of(pre, uid).get("bytes") or 0)
+    expect_total = res["bytes"]
+    checks = {
+        "slot_size": size,
+        "maxSeq_after_head": slot_of(mid, uid).get("maxSeq"),
+        "maxSeq_after_frag": slot_of(frag, uid).get("maxSeq"),
+        "maxSeq_final": slot_of(post, uid).get("maxSeq"),
+        "bytes_delta": int(slot_of(post, uid).get("bytes") or 0) - b_pre,
+        "expect_total": expect_total,
+        "field_total_8mib": 8179712,
+        "timing": hu.timing_report(),
+    }
+    checks["head_ok"] = near(int(checks["maxSeq_after_head"] or 0), head)
+    checks["frag_ok"] = int(checks["maxSeq_after_frag"] or 0) < head + 2 * 64 * 1024
+    checks["final_ok"] = near(int(checks["maxSeq_final"] or 0), size - final_start)
+    checks["total_ok"] = near(checks["bytes_delta"], expect_total)
+    checks["pass"] = bool(checks["head_ok"] and checks["frag_ok"] and checks["final_ok"] and checks["total_ok"])
+    return checks
+
+
+def run_g8(hu: HuSim, esp: str, out: Path, current_uid: str = "fav2") -> dict:
+    """Restart after remount (R20): field signature rc=167, current 512 KiB track complete,
+    fav0 8 scattered 4 KiB probes (bytes 32768, maxSeq 4096)."""
+    hu.refresh_slots(esp)
+    pre = snap(esp)
+    res = hu.remount_restart(current_uid)
+    time.sleep(0.5)
+    post = snap(esp)
+    (out / "status-g8-pre.json").write_text(json.dumps(pre, indent=2))
+    (out / "status-g8.json").write_text(json.dumps(post, indent=2))
+    rc_delta = int(post.get("readCount") or 0) - int(pre.get("readCount") or 0)
+    cur = slot_of(post, current_uid)
+    f0 = slot_of(post, "fav0")
+    f0_pre = slot_of(pre, "fav0")
+    checks = {
+        "readCount_delta": rc_delta,
+        "expect_readCount": res.get("expect_readCount"),
+        "field_readCount": 167,
+        "current_maxSeq": cur.get("maxSeq"),
+        "fav0_bytes_delta": int(f0.get("bytes") or 0) - int(f0_pre.get("bytes") or 0),
+        "fav0_maxSeq": f0.get("maxSeq"),
+    }
+    checks["rc_ok"] = abs(rc_delta - int(res.get("expect_readCount") or 0)) <= 2
+    checks["current_ok"] = near(int(cur.get("maxSeq") or 0), hu.slots[current_uid].size)
+    checks["probes_ok"] = checks["fav0_bytes_delta"] == REMOUNT_PROBES * READ_N
+    checks["pass"] = bool(checks["rc_ok"] and checks["current_ok"] and checks["probes_ok"])
+    return checks
+
+
+def run_g4n(hu: HuSim, esp: str, out: Path, play_uid: str = "fav2", next_uid: str = "fav1",
+            lead_s: float = 15.0) -> dict:
+    """Next-prefetch tied to playback (R21): play_uid read, prefetch next_uid at play_end - lead_s.
+    Runs ~play time - lead (512 KiB @ 48k: ~72 s)."""
+    hu.refresh_slots(esp)
+    hu.read_segment(play_uid, 0, hu.slots[play_uid].size)
+    t_play0 = time.monotonic()
+    pf = hu.prefetch_at_playback(play_uid, next_uid, t_play0, lead_s=lead_s)
+    post = snap(esp)
+    (out / "status-g4n.json").write_text(json.dumps(post, indent=2))
+    nxt = slot_of(post, next_uid)
+    checks = {**pf, "next_maxSeq": nxt.get("maxSeq")}
+    checks["timing_ok"] = abs(pf["fired_after_s"] - (pf["play_s"] - lead_s)) < 1.0
+    checks["next_full"] = near(int(nxt.get("maxSeq") or 0), hu.slots[next_uid].size)
+    checks["pass"] = bool(checks["timing_ok"] and checks["next_full"])
+    return checks
+
+
+def load_msc_reads(path: Path, ms_from: int | None = None, ms_to: int | None = None) -> list[dict]:
+    """Bridge msc.reads rows from JSONL (/tmp/pidrive_msc_reads.jsonl copies) or from a
+    bridge journal log ('[rx] {...\"op\":\"msc.reads\"...}' lines)."""
+    rows: list[dict] = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        j = line.find("{")
+        if j < 0 or "msc.reads" not in line and "lba0" not in line:
+            continue
+        try:
+            r = json.loads(line[j:])
+        except json.JSONDecodeError:
+            continue
+        if "lba0" not in r or "bytes" not in r:
+            continue
+        ms = r.get("ms")
+        if ms is None:
+            continue
+        if ms_from is not None and ms < ms_from:
+            continue
+        if ms_to is not None and ms > ms_to:
+            continue
+        rows.append(r)
+    return rows
+
+
+def run_replay(hu: HuSim, esp: str, out: Path, rows: list[dict], speed: float = 1.0) -> dict:
+    """C6: replay field msc.reads bursts (absolute LBAs, same L3 geometry) with their ESP
+    timestamps; within a burst the sim pacing applies. Compare slot bytes/maxSeq with the field."""
+    hu.refresh_slots(esp)
+    pre = snap(esp)
+    if not rows:
+        return {"pass": False, "err": "no rows"}
+    ms0 = int(rows[0]["ms"])
+    t0 = time.monotonic()
+    n_reads = 0
+    ov = [int(r.get("ov") or 0) for r in rows]
+    for r in rows:
+        t_due = t0 + (int(r["ms"]) - ms0) / 1000.0 / speed
+        wait = t_due - time.monotonic()
+        if wait > 0.002:
+            hu.idle(wait)
+        lba = int(r["lba0"])
+        left = int(r["bytes"])
+        while left > 0:
+            n = min(READ_N, left)
+            hu.read_raw(lba, n, tag=f"replay:k{r.get('kind')}")
+            lba += n // SECTOR
+            left -= n
+            n_reads += 1
+    time.sleep(0.5)
+    post = snap(esp)
+    (out / "status-replay.json").write_text(json.dumps(post, indent=2))
+    slots = {}
+    for s in post.get("slots") or []:
+        p = slot_of(pre, s.get("uid"))
+        slots[s.get("uid")] = {"bytes_delta": int(s.get("bytes") or 0) - int(p.get("bytes") or 0),
+                               "maxSeq": s.get("maxSeq")}
+    return {
+        "rows": len(rows),
+        "reads": n_reads,
+        "field_span_s": round((int(rows[-1]["ms"]) - ms0) / 1000.0, 2),
+        "replay_s": round(time.monotonic() - t0, 2),
+        "field_ov_first_last": [ov[0], ov[-1]],
+        "readCount_delta": int(post.get("readCount") or 0) - int(pre.get("readCount") or 0),
+        "slots": slots,
+        "timing": hu.timing_report(),
+        "pass": True,
+    }
+
+
+def run_bench(hu: HuSim, esp: str, out: Path, uid: str, sizes: list[int], n_reads: int) -> dict:
+    """C1/C3: back-to-back sequential reads per size (no pacing): reads/s, MB/s, durations."""
+    hu.refresh_slots(esp)
+    saved = (hu.period_ms, hu.gap_ms)
+    hu.period_ms, hu.gap_ms = None, 0.0
+    res: dict[str, Any] = {}
+    try:
+        for sz in sizes:
+            hu.dur_ms.clear(); hu.wall_ms.clear(); hu.start_gap_ms.clear()
+            hu._t_last_start = None
+            pre = snap(esp)
+            size = hu.slots[uid].size
+            off = 0
+            t0 = time.monotonic()
+            done = 0
+            for _ in range(n_reads):
+                if off + sz > size:
+                    off = 0
+                blob = hu.read_n(uid, off, sz)
+                off += len(blob)
+                done += len(blob)
+            dt = time.monotonic() - t0
+            post = snap(esp)
+            res[str(sz)] = {
+                "reads": n_reads,
+                "bytes": done,
+                "dt_s": round(dt, 3),
+                "reads_per_s": round(n_reads / dt, 1) if dt else None,
+                "MBps": round(done / dt / 1e6, 3) if dt else None,
+                "ms_per_4k": round(dt * 1000 / (done / 4096), 3) if done else None,
+                "esp_readCount_delta": int(post.get("readCount") or 0) - int(pre.get("readCount") or 0),
+                **{k: v for k, v in hu.timing_report().items() if k.endswith("_ms")},
+            }
+    finally:
+        hu.period_ms, hu.gap_ms = saved
+    (out / "bench.json").write_text(json.dumps(res, indent=2))
+    return {"sizes": res, "pass": True}
+
+
 def run_g5(producer: RealisticProducer, duration_s: float = 70.0) -> dict:
     """Producer profile: ~8.4–8.9 KB/s for ~60 s then ~6 KB/s."""
     t0 = time.monotonic()
@@ -1034,6 +1481,17 @@ def self_test() -> int:
     for i in range(20):
         ear.on_block("LIVE", make_pdsq_chunk(i, i * 256, 256), t + i * 0.01)
     ear.tick(t + 2)
+    # ear: contiguous 4 KiB blocks (16 stamps each) must not report gaps
+    ear2 = VirtualEar(decode_start="incremental:1")
+    for b in range(4):
+        blk = b"".join(make_pdsq_chunk(b * 16 + i, (b * 16 + i) * 256, 256) for i in range(16))
+        ear2.on_block("LIVE", blk, t + b * 0.004)
+    assert ear2.report()["events"] == {}, ear2.report()["events"]
+    assert ear2.last_seq == 63
+    gap = b"".join(make_pdsq_chunk(100 + i, 0, 256) for i in range(16))
+    ear2.on_block("LIVE", gap, t + 1)
+    assert ear2.report()["events"].get("gap_in_content") == 1
+    assert percentiles([1.0, 2.0, 3.0])["p50"] == 2.0
     # producer chunk size
     assert len(make_pdsq_chunk(0, 0, 256)) == 256
     print("self-test PASS")
@@ -1047,10 +1505,30 @@ def main() -> int:
     ap.add_argument("--esp-ip", default="192.168.178.88")
     ap.add_argument("--sg", default="/dev/sg0")
     ap.add_argument("--profile", default="tools/profiles/nbt_evo_2026-10-06.json")
-    ap.add_argument("--golden", default="", help="G1,G2,G3,G4,G5,G6 or comma list / all (ALL=G1–G5 only)")
+    ap.add_argument("--golden", default="",
+                    help="G1..G8, G4N, BENCH or comma list / all (ALL=G1–G5 only)")
     ap.add_argument("--soft-rst", action="store_true")
     ap.add_argument("--out", default="")
     ap.add_argument("--g5-s", type=float, default=70.0)
+    ap.add_argument("--period-ms", type=float, default=None,
+                    help="HU start-to-start schedule (field: 4.0 idle, 5.1 with ESP play). "
+                         "Default: legacy gap after each read")
+    ap.add_argument("--gap-ms", type=float, default=None, help="legacy pause after each read")
+    ap.add_argument("--reads-jsonl", default="", help="per-read JSONL (default: <out>/reads.jsonl)")
+    ap.add_argument("--no-reads-jsonl", action="store_true")
+    ap.add_argument("--g4n-lead", type=float, default=15.0)
+    ap.add_argument("--g7-autoplay", action="store_true", help="2.5 s pause after 4 MiB (R19)")
+    ap.add_argument("--gw-pos", type=int, default=958464, help="file offset P for GW (field LBA 1953)")
+    ap.add_argument("--live", default="", help="arm this uid before G7/G8/GW/G4N/BENCH/REPLAY (C2/C4)")
+    ap.add_argument("--live-no-producer", action="store_true", help="with --live: armed, no audio")
+    ap.add_argument("--live-prefill-s", type=float, default=8.0, help="producer head start before reads")
+    ap.add_argument("--replay", default="", help="msc.reads JSONL or bridge log for REPLAY (C6)")
+    ap.add_argument("--replay-ms-from", type=int, default=None, help="ESP ms window start")
+    ap.add_argument("--replay-ms-to", type=int, default=None)
+    ap.add_argument("--replay-speed", type=float, default=1.0)
+    ap.add_argument("--bench-uid", default="fav0")
+    ap.add_argument("--bench-sizes", default="512,4096,16384,65536")
+    ap.add_argument("--bench-n", type=int, default=1000)
     args = ap.parse_args()
 
     if args.self_test:
@@ -1071,16 +1549,50 @@ def main() -> int:
     if "ALL" in goldens:
         goldens = ["G1", "G2", "G3", "G4", "G5"]
 
-    report: dict[str, Any] = {"golden": goldens, "results": {}}
+    report: dict[str, Any] = {"golden": goldens, "results": {},
+                              "period_ms": args.period_ms, "gap_ms": args.gap_ms}
 
     if args.soft_rst:
         soft_rst(esp)
         time.sleep(2)
 
+    reads_path = None if args.no_reads_jsonl else Path(args.reads_jsonl or (out / "reads.jsonl"))
     pump: PumpTcp | None = None
     stop = threading.Event()
     producer: RealisticProducer | None = None
-    hu = HuSim(args.sg, profile)
+    hu = HuSim(args.sg, profile, gap_ms=args.gap_ms, period_ms=args.period_ms, reads_jsonl=reads_path)
+
+    live_prod: list[RealisticProducer] = []
+
+    def fresh(remount: bool = True) -> None:
+        nonlocal pump
+        stop_live()
+        pump = prep_lab(esp, args.esp_ip, pump, remount=remount)
+        hu.open()
+        hu.cache.clear()
+        hu.class_counts.clear()
+        hu.bytes_before_arm = hu.bytes_after_arm = 0
+        hu._armed = False
+        hu.ear = VirtualEar()
+        hu.refresh_slots(esp)
+        if args.live:
+            # C2/C4: ESP armed on a live slot (optionally with PDSQ producer) during the scenario
+            arm_uid(pump, args.live)
+            hu.mark_armed()
+            if not args.live_no_producer:
+                p = RealisticProducer(pump, stop, start_delay_s=0.0)
+                p.start()
+                live_prod.append(p)
+                time.sleep(args.live_prefill_s)
+
+    def stop_live() -> None:
+        if not live_prod:
+            return
+        stop.set()
+        for p in live_prod:
+            p.join(timeout=2)
+        live_prod.clear()
+        stop.clear()
     try:
         pump = prep_lab(esp, args.esp_ip, None, remount=True)
         hu.open()
@@ -1145,6 +1657,38 @@ def main() -> int:
             hu.refresh_slots(esp)
             g6, pump = run_g6(hu, esp, args.esp_ip, pump, out)
             report["results"]["G6"] = g6
+
+        if "G7" in goldens:
+            fresh()
+            report["results"]["G7"] = run_g7(hu, esp, out, autoplay=args.g7_autoplay)
+
+        if "GW" in goldens:
+            fresh()
+            report["results"]["GW"] = run_gw(hu, esp, out, pos=args.gw_pos)
+
+        if "G8" in goldens:
+            fresh()
+            report["results"]["G8"] = run_g8(hu, esp, out)
+
+        if "G4N" in goldens:
+            fresh()
+            report["results"]["G4N"] = run_g4n(hu, esp, out, lead_s=args.g4n_lead)
+
+        if "BENCH" in goldens:
+            fresh()
+            sizes = [int(x) for x in args.bench_sizes.split(",") if x.strip()]
+            report["results"]["BENCH"] = run_bench(hu, esp, out, args.bench_uid, sizes, args.bench_n)
+
+        if "REPLAY" in goldens:
+            if not args.replay:
+                ap.error("REPLAY needs --replay <msc_reads.jsonl|bridge.log>")
+            fresh()
+            rows = load_msc_reads(Path(args.replay), args.replay_ms_from, args.replay_ms_to)
+            report["results"]["REPLAY"] = run_replay(hu, esp, out, rows, args.replay_speed)
+
+        stop_live()
+        report["timing"] = hu.timing_report()
+        report["ear"] = hu.ear.report()
 
     finally:
         stop.set()

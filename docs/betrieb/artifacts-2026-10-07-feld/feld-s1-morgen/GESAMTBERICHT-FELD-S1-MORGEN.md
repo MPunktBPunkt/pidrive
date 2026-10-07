@@ -5,6 +5,8 @@
 **Ziel:** F1 Decode-Start + F2 Cache/Remount (Silence, Bridge gestoppt)  
 **Ergebnis:** **Daten-PASS** (reproduzierbare Episoden) · **F1 nicht eindeutig geschlossen** · **F2 Mischbefund, gut belegt** · Stall-Go **noch nicht**
 
+> **Korrektur 2026-10-07:** F2c „BOB eher Cache nach RST“ ist ein Poll-Artefakt. Die HU liest nach jedem RST neu (6/6). Details und weitere Muster: [`KORREKTUR-F2C-RST-ARTEFAKT.md`](KORREKTUR-F2C-RST-ARTEFAKT.md)
+
 Maschinenlesbar: [`SUMMARY.json`](SUMMARY.json) · Kompakt-Poll: [`status-poll-compact.csv`](status-poll-compact.csv) · Boots: [`boots.json`](boots.json) · Wechsel: [`play-transitions.json`](play-transitions.json)
 
 ---
