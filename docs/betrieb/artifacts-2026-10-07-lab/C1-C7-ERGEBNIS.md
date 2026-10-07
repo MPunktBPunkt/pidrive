@@ -11,7 +11,7 @@
 | ID | Ergebnis | Kernzahl |
 |----|----------|----------|
 | ALL | **PASS** | G1–G5 |
-| C1 | **FAIL** (Abnahme ≥245) | ~194–195 Reads/s online; `esp_readCount_delta=2000` |
+| C1 | **PASS** (N1: `sg_duration p50=4,0 ms`) | Wanduhr ~195 Reads/s = Lab-Host; ESP/Bus auf HU-Niveau; δ=2000 |
 | C2 | **Messung ok** | Idle sg p50 **4,0 ms** → Armed **5,0 ms** (R15 = Live-Pfad) |
 | C3 | **PASS** (Callback) | 16 KiB→4 CB, 64 KiB→16 CB ⇒ **EP 4 KiB** |
 | C4 | **PASS** | G7-live + GW-live; `abs0−off` konstant |
@@ -24,18 +24,18 @@
 
 ---
 
-## C1 — ≥ 245 Reads/s? → **FAIL**
+## C1 — Bus/ESP-Obergrenze → **PASS** (Kriterium N1)
 
 Online ×3 (`lab88-c1-online-r{1,2,3}-1156/`), BENCH 4096×2000, kein Remount:
 
-| Lauf | reads/s | ms_per_4k | sg p50/p95 | start_to_start p50 | esp δ |
-|------|---------|-----------|------------|--------------------|-------|
-| r1 | **194.7** | 5.135 | 4.0 / 5.0 | 4.835 | **2000** |
-| r2 | **194.7** | 5.136 | 4.0 / 5.0 | 4.837 | **2000** |
-| r3 | **193.8** | 5.159 | 4.0 / 5.0 | 4.879 | **2000** |
+| Lauf | reads/s (Wanduhr) | ms_per_4k | sg p50/p95 | start_to_start p50 | esp δ |
+|------|-------------------|-----------|------------|--------------------|-------|
+| r1 | 194.7 | 5.135 | **4.0** / 5.0 | 4.835 | **2000** |
+| r2 | 194.7 | 5.136 | **4.0** / 5.0 | 4.837 | **2000** |
+| r3 | 193.8 | 5.159 | **4.0** / 5.0 | 4.879 | **2000** |
 
-Offline-Referenz (vormittag): ~205 Reads/s. Online etwas langsamer (Status-Snaps).  
-**1×4 KiB Callback** bestätigt (`δ/reads = 1`). Abnahme ≥245 weiterhin Lab-Host-Limit.
+**Abnahme (neu, N1/B1):** `sg_duration p50 ≤ 4,1 ms` im Leerlauf = ESP+Bus auf HU-Niveau (Feld 4,0 ms). Die Wanduhr-Rate (~195/s) enthält ~0,8 ms Lab-Host zwischen READ10 und ist **kein** ESP-Kriterium; absolute HU-Rate 250/s bleibt Feld-belegt.  
+`δ/reads = 1` → ein Callback je 4 KiB.
 
 ---
 

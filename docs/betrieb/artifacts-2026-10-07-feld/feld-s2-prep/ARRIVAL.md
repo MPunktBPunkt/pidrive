@@ -1,6 +1,6 @@
 # Arrival — Feld s2 (30 min)
 
-**Protokoll:** [`../FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../FELDPROTOKOLL-NAECHSTER-TERMIN.md)
+**Protokoll:** [`../FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../FELDPROTOKOLL-NAECHSTER-TERMIN.md) · Pocket: [`GO.md`](GO.md)
 **FW:** 0.4.46-dev Freeze — **kein Stall-OTA**
 **ESP:** `.89` · L3
 
@@ -8,12 +8,15 @@
 
 ```bash
 cd /home/martin/projects/pidrive
-sudo apt-get install -y espeak-ng   # falls fehlt
-BR=128k ./docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/make-f1-stick.sh /mnt/stick
+git pull   # Commit 0d671bf (oder: tar xf …/SYNC-TO-PI.tgz -C ~/projects/pidrive)
+# Stick-MP3s liegen fertig unter feld-s2-prep/f1-stick/ (espeak-ng, BR=128k)
+# USB-Stick mounten, dann:
+./docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/copy-f1-to-stick.sh /mnt/stick
+# kurz anhören: Marker „0“, „10“…
 chmod +x docs/betrieb/artifacts-2026-10-07-feld/feld-s2-prep/*.sh
 ```
 
-Einpacken: USB-1.1-Hub, Stick mit `F1-*.mp3`, Handy-Halter.
+Einpacken: Pi, USB-1.1-Hub, Stick mit `F1-5MB_128k.mp3` + `F1-100MB_128k.mp3`, Handy-Halter, ESP-Kabel.
 
 ## Am Auto
 

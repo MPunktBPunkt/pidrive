@@ -391,7 +391,17 @@ def max_off_first_s(ep: list[dict], slot_lba0: int, slot_bytes: int, window_ms: 
 def classify_r10(segs: list[Segment], head_bytes: int = SELECT_HEAD) -> dict[str, Any]:
     slot_segs = [s for s in segs if s.in_slot and s.file_off0 is not None]
     if not slot_segs:
-        return {"verdict": "no_slot_reads", "note": "keine Reads im Slot"}
+        return {
+            "verdict": "no_slot_reads",
+            "note": "keine Reads im Slot",
+            "stall_implication": "keine Slot-Daten — Episode/Fenster prüfen",
+            "head_like": False,
+            "first_seg_bytes": 0,
+            "max_file_off": 0,
+            "max_jump_past_head": 0,
+            "slot_bytes_total": 0,
+            "n_slot_segments": 0,
+        }
 
     # first contiguous forward from 0?
     first = slot_segs[0]

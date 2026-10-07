@@ -1,5 +1,3 @@
 # Operator-Log Feld s2 — Uhrzeit + Aktion (Video-Uhr im Bild!)
-# Vorlage: A1 BOB antippen …
-#
+# Vor jeder HU-Bedienung: ./mark.sh "…"
 # t=HH:MM:SS  aktion
-#
