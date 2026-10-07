@@ -1,6 +1,6 @@
 # Stufenplan: HU verstehen und Live-Ton hörbar machen
 
-**Stand:** 2026-10-07 (Stufe 3.2/3.3 auf feste Offset-Zuordnung umgestellt, R10/R11) · **FW-Freeze aktiv:** Stufe 3 ist nur spezifiziert; Umsetzung erst nach explizitem Go.
+**Stand:** 2026-10-07 Abend (Stufe 3.2/3.3 feste Offset-Zuordnung; F1 [S] inkrementell + R23 P-Persistenz; T3-Abnahme für 3.2) · **FW-Freeze aktiv:** Stufe 3 ist nur spezifiziert; Umsetzung erst nach explizitem Go.
 **Grundlagen:**
 - [ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md](../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) (Modell und Lösung)
 - [KONZEPT-HU-SIM-NBT-2026-10-06.md](../betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md) (Lab-Simulator)
@@ -15,7 +15,7 @@
 2. Der ESP liefert bei fehlenden Live-Daten Stille und zählt den Host-Cursor trotzdem weiter (`StreamBuffer::readAt`). Damit wird live Gelieferte nie mehr erreicht.
 3. Hebel ist deshalb **Rückstau im MSC-Read-Pfad** (Stall), nicht Ringgröße, Prefill oder PSRAM.
 4. TinyUSB unterstützt Stall ohne Blockade: Rückgabe 0 heißt „nochmal fragen“, eine Teilantwort in 512-B-Schritten ist möglich (Spike).
-5. Offen und entscheidend: Spielt die HU **während** des Lesens (inkrementell) oder **erst danach** (Batch-then-Play)? Und wie lange toleriert sie einen hängenden READ10?
+5. F1 ist praktisch **inkrementell [S]** (Abend-Stick); formal fehlt Video-Timing. Neu und entscheidend: die HU speichert **P** über Medienwechsel (R23) — Stall muss P≠0 beherrschen. Weiter offen: READ10-Toleranz (Q1) und P-Identität.
 
 ### Neue Funde aus dem Code (2026-10-06, Nachmittag)
 
@@ -278,6 +278,8 @@ Eigenschaften:
 
 **Was die Zuordnung nicht löst:** Liest die HU bei frischer Auswahl weit vor die Live-Kante, z. B. 360 KiB ≈ 61 s bei 48k oder ≈ 23 s bei 128k, landen diese Offsets als Stille im HU-Cache. Ob das bei **Auswahl ab Kopf** passiert, klärt Q8 im nächsten Feldtermin ([`FELDPROTOKOLL-NAECHSTER-TERMIN.md`](../betrieb/artifacts-2026-10-07-feld/FELDPROTOKOLL-NAECHSTER-TERMIN.md)). Das Ergebnis entscheidet zwischen zwei Wegen: Stall nur für den ersten sequenziellen Lauf, oder Stall auch für vorauslesende Segmente mit großem `stallAhead` bei hoher Bitrate.
 
+**Abnahme Lab (T3 → Stufe 3.2):** Gleiche OOO-Lesereihenfolge wie Lab-Probe T3 (`docs/betrieb/artifacts-2026-10-07-lab/T1-T4-ERGEBNIS.md`, Lauf `T3-1616/`). Erwartung nach Umsetzung der festen Zuordnung: `abs0−off` **konstant** über die LIVE-Reads (heute mit zählendem Cursor 0.4.46: **FAIL**, 53 unique Werte). Ohne bestandenes T3 kein Stall-Go.
+
 ### 3.3 Stall-Adapter im Live-Pfad von `onRead`
 Heute ([UsbMscGadget.cpp](../../../../esp32.pidrive-main/esp32.pidrive-main/src/msc/UsbMscGadget.cpp), ~Zeile 739):
 
@@ -472,7 +474,7 @@ flowchart LR
 | **R7** | **Format-Wechsel Live (MPEG-2 22,05 kHz mono) ↔ Stille (MPEG-1 44,1 kHz)** bei jedem Underrun | Stufe 5.3 A/B |
 | **R8** | **Bridge-Drossel 9.000 B/s unter Echtzeit bei 128k** | Stufe 3.5 (Pi) |
 | R9 | Busy-Retry verhungert Producer | Stufe 4.1 CPU-Check |
-| **R10** | **HU liest außer der Reihe und weit voraus** (Segmente bis 968 KiB um die Wiedergabeposition, erster Lauf 360 KiB ≈ 61 s bei 48k). Zählender Cursor vergibt Live-Bytes an falsche Offsets; Vorauslesen cacht Stille | 3.2 feste Zuordnung; Lab C4/C6; Feld Q8 (Auswahl ab Kopf mit `msc.reads`). **Stall-Go erst nach F1 und R10** |
+| **R10** | **HU liest außer der Reihe und weit voraus** (Segmente bis 968 KiB um die Wiedergabeposition, erster Lauf 360 KiB ≈ 61 s bei 48k). Zählender Cursor vergibt Live-Bytes an falsche Offsets; Vorauslesen cacht Stille. Feld s2: oft Resume trotz UI-Tap (R23/P) | 3.2 feste Zuordnung + T3-Abnahme (`abs0−off` const); Lab C4/C6; Feld Q8. **Stall-Go erst nach F1-Formalgo, P-Quelle und T3** |
 | R11 | Lesetakt 5,1 statt 4,0 ms, sobald der ESP Play erkennt (Ursache unbekannt) | Lab C2 |
 
 ## Was bewusst nicht passiert

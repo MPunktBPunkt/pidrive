@@ -8,7 +8,7 @@
 
 1. Erster Einsteck / Antippen: Stimme zählt **`0 → 10 → 20 → …`** (Start vorn).
 2. Ausstecken bei ~**10**, ESP dazwischen (u. a. Rock), ESP wieder ab, Stick rein.
-3. Weiterzählen ab ~**20** — **Position am Stick/Datei gemerkt**, nicht Reset auf 0.
+3. Weiterzählen ab ~**20** — **Position P in der HU gemerkt** (Stick speichert nichts), nicht Reset auf 0.
 4. Mit **beiden** Dateien gleich.
 
 ## Deutung (Protokoll-Tabellen)
