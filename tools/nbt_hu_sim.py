@@ -836,6 +836,19 @@ def snap(esp: str) -> dict:
     }
 
 
+def snap_retry(esp: str, retries: int = 6, delay_s: float = 1.5) -> dict:
+    """Status snap with backoff — Wi-Fi often stalls during heavy MSC load."""
+    last: Exception | None = None
+    for i in range(max(1, retries)):
+        try:
+            return snap(esp)
+        except Exception as e:
+            last = e
+            time.sleep(delay_s * (1.0 + 0.5 * i))
+    assert last is not None
+    raise last
+
+
 def near(a: int, b: int, tol: int = TOL) -> bool:
     return abs(int(a) - int(b)) <= tol
 
@@ -1234,9 +1247,10 @@ def run_gw(hu: HuSim, esp: str, out: Path, uid: str = "fav0", pos: int = 958464)
     """Resume around position P (R16, msc.reads 03./04.10.). Report-only: the ESP has no
     per-read export without the bridge, compare reads.jsonl against bridge msc.reads (C6)."""
     hu.refresh_slots(esp)
-    pre = snap(esp)
+    pre = snap_retry(esp)
     res = hu.window_read(uid, pos)
-    post = snap(esp)
+    time.sleep(2.0)
+    post = snap_retry(esp)
     (out / "status-gw.json").write_text(json.dumps(post, indent=2))
     res["bytes_delta_esp"] = int(slot_of(post, uid).get("bytes") or 0) - int(slot_of(pre, uid).get("bytes") or 0)
     res["maxSeq"] = slot_of(post, uid).get("maxSeq")
@@ -1249,14 +1263,21 @@ def run_g7(hu: HuSim, esp: str, out: Path, uid: str = "fav0", autoplay: bool = F
     5201920, slot bytes 8179712 for an 8 MiB slot. Checks the sim model against the ESP
     counters, not the HU itself (replay of the field pattern, C6)."""
     hu.refresh_slots(esp)
-    pre = snap(esp)
+    pre = snap_retry(esp)
     size = hu.slots[uid].size
     head = SELECT_HEAD_RUN
     snaps: dict[str, dict] = {}
-    res = hu.select_head(uid, autoplay_pause_at=4194304 if autoplay else None,
-                         on_phase=lambda name: snaps.__setitem__(name, snap(esp)))
-    time.sleep(0.5)
-    post = snap(esp)
+
+    def _phase(name: str) -> None:
+        time.sleep(1.0)
+        try:
+            snaps[name] = snap_retry(esp, retries=8, delay_s=1.5)
+        except Exception as e:
+            snaps[name] = {"snap_error": f"{type(e).__name__}: {e}"}
+
+    res = hu.select_head(uid, autoplay_pause_at=4194304 if autoplay else None, on_phase=_phase)
+    time.sleep(2.0)
+    post = snap_retry(esp)
     mid, frag = snaps.get("head", {}), snaps.get("frag", {})
     final_start, frag_end = res["final_start"], res["frag_end"]
     for name, s in (("pre", pre), ("mid", mid), ("frag", frag), ("post", post)):
@@ -1413,7 +1434,12 @@ def run_bench(
         if uid not in hu.slots:
             hu.load_slots_l3()
     else:
-        hu.refresh_slots(esp)
+        try:
+            hu.refresh_slots(esp)
+        except Exception:
+            # Wi-Fi flake: keep prior slots or fall back to L3 map
+            if uid not in hu.slots:
+                hu.load_slots_l3()
     saved = (hu.period_ms, hu.gap_ms)
     hu.period_ms, hu.gap_ms = None, 0.0
     res: dict[str, Any] = {}
@@ -1422,43 +1448,82 @@ def run_bench(
             hu.dur_ms.clear(); hu.wall_ms.clear(); hu.start_gap_ms.clear()
             hu._t_last_start = None
             pre_rc = None
+            snap_err = None
             if not offline:
-                pre_rc = int(snap(esp).get("readCount") or 0)
+                try:
+                    pre_rc = int(snap_retry(esp).get("readCount") or 0)
+                except Exception as e:
+                    snap_err = f"pre:{e}"
             size = hu.slots[uid].size
             off = 0
             t0 = time.monotonic()
             done = 0
+            n_done = 0
+            io_err: str | None = None
             for _ in range(n_reads):
                 if off + sz > size:
                     off = 0
-                blob = hu.read_n(uid, off, sz)
+                try:
+                    blob = hu.read_n(uid, off, sz)
+                except OSError as e:
+                    # LXC USB passthrough often drops mid-sweep (ENODEV); one reopen, else soft-fail size
+                    try:
+                        hu.open()
+                        blob = hu.read_n(uid, off, sz)
+                    except OSError as e2:
+                        io_err = f"{type(e2).__name__}: {e2}"
+                        break
                 off += len(blob)
                 done += len(blob)
+                n_done += 1
             dt = time.monotonic() - t0
             rc_delta = None
             if not offline:
-                post_rc = int(snap(esp).get("readCount") or 0)
-                rc_delta = post_rc - (pre_rc or 0)
+                # Let Wi-Fi recover after MSC burst before HTTP snap
+                time.sleep(2.0)
+                try:
+                    post_rc = int(snap_retry(esp).get("readCount") or 0)
+                    if pre_rc is not None:
+                        rc_delta = post_rc - pre_rc
+                except Exception as e:
+                    snap_err = (snap_err + ";" if snap_err else "") + f"post:{e}"
             # Host-side 4 KiB-equivalent rate (for sizes != 4096 still normalize by bytes)
-            res[str(sz)] = {
-                "reads": n_reads,
+            row = {
+                "reads": n_done,
                 "bytes": done,
                 "dt_s": round(dt, 3),
-                "reads_per_s": round(n_reads / dt, 1) if dt else None,
-                "MBps": round(done / dt / 1e6, 3) if dt else None,
+                "reads_per_s": round(n_done / dt, 1) if dt and n_done else None,
+                "MBps": round(done / dt / 1e6, 3) if dt and done else None,
                 "ms_per_4k": round(dt * 1000 / (done / 4096), 3) if done else None,
                 "esp_readCount_delta": rc_delta,
                 "offline": offline,
                 **{k: v for k, v in hu.timing_report().items() if k.endswith("_ms")},
             }
+            if n_done < n_reads:
+                row["incomplete"] = True
+                row["requested_reads"] = n_reads
+            if io_err:
+                row["io_error"] = io_err[:200]
+            if snap_err:
+                row["snap_error"] = snap_err[:200]
+            res[str(sz)] = row
+            if io_err:
+                break
     finally:
         hu.period_ms, hu.gap_ms = saved
     (out / "bench.json").write_text(json.dumps(res, indent=2))
     # C1 acceptance uses host reads_per_s for size 4096 when available
     c1 = res.get("4096") or {}
     rps = c1.get("reads_per_s")
-    c1_pass = (rps is not None and rps >= 245) if "4096" in res else True
-    return {"sizes": res, "pass": bool(c1_pass), "c1_reads_per_s": rps, "offline": offline}
+    incomplete = any(isinstance(v, dict) and v.get("incomplete") for v in res.values())
+    c1_pass = (rps is not None and rps >= 245 and not incomplete) if "4096" in res else (not incomplete)
+    return {
+        "sizes": res,
+        "pass": bool(c1_pass),
+        "c1_reads_per_s": rps,
+        "offline": offline,
+        "incomplete": incomplete,
+    }
 
 
 def run_g5(producer: RealisticProducer, duration_s: float = 70.0) -> dict:
@@ -1660,7 +1725,9 @@ def main() -> int:
             hu.open()
             hu.load_slots_l3()
         else:
-            pump = prep_lab(esp, args.esp_ip, None, remount=True)
+            # BENCH-only: skip remount (C1/C2/C3) — remount storms starve Wi-Fi under MSC load
+            need_rm = not (set(goldens) <= {"BENCH"})
+            pump = prep_lab(esp, args.esp_ip, None, remount=need_rm)
             hu.open()
             hu.refresh_slots(esp)
 
@@ -1741,7 +1808,11 @@ def main() -> int:
             report["results"]["G4N"] = run_g4n(hu, esp, out, lead_s=args.g4n_lead)
 
         if "BENCH" in goldens:
-            fresh()
+            # Avoid remount storm for C1/C2/C3 (Wi-Fi flakes under MSC); still need slots + open sg
+            if args.offline:
+                fresh(remount=False)
+            else:
+                fresh(remount=False)
             sizes = [int(x) for x in args.bench_sizes.split(",") if x.strip()]
             report["results"]["BENCH"] = run_bench(
                 hu, esp, out, args.bench_uid, sizes, args.bench_n, offline=bool(args.offline)
@@ -1772,7 +1843,10 @@ def main() -> int:
                 pass
 
     try:
-        report["snap_final"] = snap(esp)
+        try:
+            report["snap_final"] = snap_retry(esp)
+        except Exception as e:
+            report["snap_final"] = {"snap_error": f"{type(e).__name__}: {e}"}
     except Exception as e:
         report["snap_final"] = {"error": str(e)}
     (out / "REPORT.json").write_text(json.dumps(report, indent=2))

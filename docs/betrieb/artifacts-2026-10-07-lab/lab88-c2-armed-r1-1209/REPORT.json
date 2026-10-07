@@ -1,0 +1,140 @@
+{
+  "golden": [
+    "BENCH"
+  ],
+  "results": {
+    "BENCH": {
+      "sizes": {
+        "4096": {
+          "reads": 2000,
+          "bytes": 8192000,
+          "dt_s": 12.533,
+          "reads_per_s": 159.6,
+          "MBps": 0.654,
+          "ms_per_4k": 6.266,
+          "esp_readCount_delta": null,
+          "offline": false,
+          "period_ms": null,
+          "gap_ms": 0.0,
+          "sg_duration_ms": {
+            "p5": 5.0,
+            "p50": 5.0,
+            "p95": 6.0,
+            "p99": 18.0,
+            "min": 4.0,
+            "max": 66.0,
+            "n": 2000
+          },
+          "wall_ms": {
+            "p5": 4.968,
+            "p50": 5.221,
+            "p95": 5.616,
+            "p99": 18.848,
+            "min": 4.902,
+            "max": 66.128,
+            "n": 2000
+          },
+          "start_to_start_ms": {
+            "p5": 5.554,
+            "p50": 5.855,
+            "p95": 6.325,
+            "p99": 19.451,
+            "min": 5.484,
+            "max": 66.76,
+            "n": 1999
+          },
+          "snap_error": "post:<urlopen error timed out>"
+        }
+      },
+      "pass": false,
+      "c1_reads_per_s": 159.6,
+      "offline": false
+    }
+  },
+  "period_ms": null,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": null,
+    "gap_ms": 4.0,
+    "sg_duration_ms": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 18.0,
+      "min": 4.0,
+      "max": 66.0,
+      "n": 2000
+    },
+    "wall_ms": {
+      "p5": 4.968,
+      "p50": 5.221,
+      "p95": 5.616,
+      "p99": 18.848,
+      "min": 4.902,
+      "max": 66.128,
+      "n": 2000
+    },
+    "start_to_start_ms": {
+      "p5": 5.554,
+      "p50": 5.855,
+      "p95": 6.325,
+      "p99": 19.451,
+      "min": 5.484,
+      "max": 66.76,
+      "n": 1999
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "5min 56s",
+    "play": "fav0",
+    "armed": true,
+    "hostAbs": 8191969,
+    "absEnd": 0,
+    "absBase": 0,
+    "streamBytes": 8192000,
+    "underruns": 8191969,
+    "liveBytes": 31,
+    "ring_size": 0,
+    "ring_cap": 49152,
+    "readCount": 6132,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 24899584,
+        "maxSeq": 8192000,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

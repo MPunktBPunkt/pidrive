@@ -1,0 +1,343 @@
+{
+  "golden": [
+    "BENCH"
+  ],
+  "results": {
+    "BENCH": {
+      "sizes": {
+        "4096": {
+          "reads": 1500,
+          "bytes": 6144000,
+          "dt_s": 9.792,
+          "reads_per_s": 153.2,
+          "MBps": 0.627,
+          "ms_per_4k": 6.528,
+          "esp_readCount_delta": 1500,
+          "offline": false,
+          "period_ms": null,
+          "gap_ms": 0.0,
+          "sg_duration_ms": {
+            "p5": 5.0,
+            "p50": 5.0,
+            "p95": 6.0,
+            "p99": 19.0,
+            "min": 5.0,
+            "max": 66.0,
+            "n": 1500
+          },
+          "wall_ms": {
+            "p5": 5.205,
+            "p50": 5.476,
+            "p95": 6.096,
+            "p99": 18.963,
+            "min": 5.113,
+            "max": 66.391,
+            "n": 1500
+          },
+          "start_to_start_ms": {
+            "p5": 5.771,
+            "p50": 6.137,
+            "p95": 6.814,
+            "p99": 19.737,
+            "min": 5.505,
+            "max": 67.845,
+            "n": 1499
+          }
+        }
+      },
+      "pass": false,
+      "c1_reads_per_s": 153.2,
+      "offline": false,
+      "incomplete": false
+    }
+  },
+  "period_ms": 4.0,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": 4.0,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 66.0,
+      "n": 1500
+    },
+    "wall_ms": {
+      "p5": 5.205,
+      "p50": 5.476,
+      "p95": 6.096,
+      "p99": 18.963,
+      "min": 5.113,
+      "max": 66.391,
+      "n": 1500
+    },
+    "start_to_start_ms": {
+      "p5": 5.771,
+      "p50": 6.137,
+      "p95": 6.814,
+      "p99": 19.737,
+      "min": 5.505,
+      "max": 67.845,
+      "n": 1499
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 49152,
+    "consumed": 0,
+    "events": {
+      "silence_in_play": 1487
+    },
+    "event_list": [
+      {
+        "t": 1892985.606991517,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.613420547,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.619932394,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.626506688,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.63286766,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.639330514,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.645493431,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.651569083,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.657886532,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.66397061,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.670322985,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.677269924,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.684297656,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.690971548,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.697497662,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.703879112,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.710441875,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.716902935,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.723477831,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.729935255,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.736556247,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.742720627,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.748831236,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.755208859,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.761573367,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.768036591,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.774773553,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.781451644,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.788012373,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.794543446,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.800675194,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.806994717,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.813646438,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.819913211,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.826263883,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.832446558,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.838838147,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.844937073,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.85095205,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.856967679,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.863014417,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.870256814,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.877750075,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.884099765,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.890651527,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.89678022,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.902906438,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.908994453,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.914941823,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1892985.920903239,
+        "kind": "silence_in_play"
+      }
+    ]
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "5min 43s",
+    "play": "fav0",
+    "armed": true,
+    "hostAbs": 6164193,
+    "absEnd": 129024,
+    "absBase": 79872,
+    "streamBytes": 14532608,
+    "underruns": 6093281,
+    "liveBytes": 8439327,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "readCount": 8414,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 33116160,
+        "maxSeq": 8388608,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

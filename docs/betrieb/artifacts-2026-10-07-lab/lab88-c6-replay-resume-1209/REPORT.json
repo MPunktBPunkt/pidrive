@@ -1,0 +1,155 @@
+{
+  "golden": [
+    "REPLAY"
+  ],
+  "results": {
+    "REPLAY": {
+      "rows": 589,
+      "reads": 1963,
+      "field_span_s": 12.72,
+      "replay_s": 22.48,
+      "field_ov_first_last": [
+        0,
+        0
+      ],
+      "readCount_delta": 1963,
+      "slots": {
+        "fav0": {
+          "bytes_delta": 8040448,
+          "maxSeq": 7049216
+        },
+        "fav1": {
+          "bytes_delta": 0,
+          "maxSeq": 0
+        },
+        "fav2": {
+          "bytes_delta": 0,
+          "maxSeq": 0
+        },
+        "pump:page_next": {
+          "bytes_delta": 0,
+          "maxSeq": 0
+        }
+      },
+      "timing": {
+        "period_ms": 4.0,
+        "gap_ms": null,
+        "sg_duration_ms": {
+          "p5": 4.0,
+          "p50": 4.0,
+          "p95": 5.0,
+          "p99": 5.0,
+          "min": 3.0,
+          "max": 65.0,
+          "n": 1963
+        },
+        "wall_ms": {
+          "p5": 3.983,
+          "p50": 4.271,
+          "p95": 4.665,
+          "p99": 5.481,
+          "min": 3.923,
+          "max": 65.152,
+          "n": 1963
+        },
+        "start_to_start_ms": {
+          "p5": 4.009,
+          "p50": 4.338,
+          "p95": 4.752,
+          "p99": 5.873,
+          "min": 3.95,
+          "max": 4846.8,
+          "n": 1962
+        },
+        "late_reads": 168
+      },
+      "pass": true
+    }
+  },
+  "period_ms": 4.0,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": 4.0,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 4.0,
+      "p95": 5.0,
+      "p99": 5.0,
+      "min": 3.0,
+      "max": 65.0,
+      "n": 1963
+    },
+    "wall_ms": {
+      "p5": 3.983,
+      "p50": 4.271,
+      "p95": 4.665,
+      "p99": 5.481,
+      "min": 3.923,
+      "max": 65.152,
+      "n": 1963
+    },
+    "start_to_start_ms": {
+      "p5": 4.009,
+      "p50": 4.338,
+      "p95": 4.752,
+      "p99": 5.873,
+      "min": 3.95,
+      "max": 4846.8,
+      "n": 1962
+    },
+    "late_reads": 168
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "1min 24s",
+    "play": "fav0",
+    "armed": false,
+    "hostAbs": 0,
+    "absEnd": 0,
+    "absBase": 0,
+    "streamBytes": 0,
+    "underruns": 0,
+    "liveBytes": 0,
+    "ring_size": 0,
+    "ring_cap": 49152,
+    "readCount": 4829,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 18444288,
+        "maxSeq": 7049216,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

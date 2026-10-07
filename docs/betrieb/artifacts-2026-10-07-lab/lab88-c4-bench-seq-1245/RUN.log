@@ -1,0 +1,52 @@
+=== c4-bench-seq → docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-bench-seq-1245 ===
+{
+  "BENCH": {
+    "pass": false,
+    "sizes": {
+      "4096": {
+        "reads": 2048,
+        "bytes": 8388608,
+        "dt_s": 13.47,
+        "reads_per_s": 152.0,
+        "MBps": 0.623,
+        "ms_per_4k": 6.577,
+        "esp_readCount_delta": 2048,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 5.0,
+          "p50": 5.0,
+          "p95": 6.0,
+          "p99": 19.0,
+          "min": 5.0,
+          "max": 69.0,
+          "n": 2048
+        },
+        "wall_ms": {
+          "p5": 5.2,
+          "p50": 5.379,
+          "p95": 5.836,
+          "p99": 19.157,
+          "min": 5.12,
+          "max": 70.611,
+          "n": 2048
+        },
+        "start_to_start_ms": {
+          "p5": 5.77,
+          "p50": 6.071,
+          "p95": 6.552,
+          "p99": 19.716,
+          "min": 5.603,
+          "max": 71.142,
+          "n": 2047
+        }
+      }
+    },
+    "c1_reads_per_s": 152.0,
+    "offline": false,
+    "incomplete": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-bench-seq-1245 overall=FAIL
+DONE c4-bench-seq exit=1

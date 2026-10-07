@@ -1,0 +1,67 @@
+=== c6-replay-resume → docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-replay-resume-1209 ===
+{
+  "REPLAY": {
+    "pass": true,
+    "rows": 589,
+    "reads": 1963,
+    "field_span_s": 12.72,
+    "replay_s": 22.48,
+    "field_ov_first_last": [
+      0,
+      0
+    ],
+    "readCount_delta": 1963,
+    "slots": {
+      "fav0": {
+        "bytes_delta": 8040448,
+        "maxSeq": 7049216
+      },
+      "fav1": {
+        "bytes_delta": 0,
+        "maxSeq": 0
+      },
+      "fav2": {
+        "bytes_delta": 0,
+        "maxSeq": 0
+      },
+      "pump:page_next": {
+        "bytes_delta": 0,
+        "maxSeq": 0
+      }
+    },
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 5.0,
+        "min": 3.0,
+        "max": 65.0,
+        "n": 1963
+      },
+      "wall_ms": {
+        "p5": 3.983,
+        "p50": 4.271,
+        "p95": 4.665,
+        "p99": 5.481,
+        "min": 3.923,
+        "max": 65.152,
+        "n": 1963
+      },
+      "start_to_start_ms": {
+        "p5": 4.009,
+        "p50": 4.338,
+        "p95": 4.752,
+        "p99": 5.873,
+        "min": 3.95,
+        "max": 4846.8,
+        "n": 1962
+      },
+      "late_reads": 168
+    }
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-replay-resume-1209 overall=PASS
+DONE c6-replay-resume exit=0

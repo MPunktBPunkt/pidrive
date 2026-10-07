@@ -1,0 +1,52 @@
+=== c3-sz65536 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c3-sz65536-1245 ===
+{
+  "BENCH": {
+    "pass": true,
+    "sizes": {
+      "65536": {
+        "reads": 500,
+        "bytes": 32768000,
+        "dt_s": 38.341,
+        "reads_per_s": 13.0,
+        "MBps": 0.855,
+        "ms_per_4k": 4.793,
+        "esp_readCount_delta": 8000,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 61.0,
+          "p50": 62.0,
+          "p95": 122.0,
+          "p99": 123.0,
+          "min": 61.0,
+          "max": 183.0,
+          "n": 500
+        },
+        "wall_ms": {
+          "p5": 61.516,
+          "p50": 61.958,
+          "p95": 122.349,
+          "p99": 123.318,
+          "min": 61.428,
+          "max": 183.094,
+          "n": 500
+        },
+        "start_to_start_ms": {
+          "p5": 69.102,
+          "p50": 70.235,
+          "p95": 130.369,
+          "p99": 131.763,
+          "min": 64.6,
+          "max": 191.387,
+          "n": 499
+        }
+      }
+    },
+    "c1_reads_per_s": null,
+    "offline": false,
+    "incomplete": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c3-sz65536-1245 overall=PASS
+DONE c3-sz65536 exit=0

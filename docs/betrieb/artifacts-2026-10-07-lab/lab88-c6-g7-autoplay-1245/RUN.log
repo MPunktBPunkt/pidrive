@@ -1,0 +1,51 @@
+=== c6-g7-autoplay → docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-autoplay-1245 ===
+{
+  "G7": {
+    "pass": false,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 8388608,
+    "maxSeq_after_frag": 8388608,
+    "maxSeq_final": 8388608,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 4.0,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 4.0,
+        "p50": 4.0,
+        "p95": 5.0,
+        "p99": 17.0,
+        "min": 3.0,
+        "max": 65.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 4.003,
+        "p50": 4.167,
+        "p95": 4.609,
+        "p99": 17.643,
+        "min": 3.945,
+        "max": 65.103,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 4.594,
+        "p50": 4.844,
+        "p95": 5.435,
+        "p99": 18.489,
+        "min": 4.493,
+        "max": 1127.762,
+        "n": 1996
+      },
+      "late_reads": 412
+    },
+    "head_ok": false,
+    "frag_ok": false,
+    "final_ok": false,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c6-g7-autoplay-1245 overall=FAIL
+DONE c6-g7-autoplay exit=1

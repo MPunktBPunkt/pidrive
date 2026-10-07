@@ -1,0 +1,26 @@
+=== c4-gw-live → docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-gw-live-1245 ===
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1861, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1800, in main
+    report["results"]["GW"] = run_gw(hu, esp, out, pos=args.gw_pos)
+                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1251, in run_gw
+    res = hu.window_read(uid, pos)
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 732, in window_read
+    total += self.read_segment(uid, hi, size - hi)
+             ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 664, in read_segment
+    blob = self.read_n(uid, off, min(READ_N, end - off))
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 601, in read_n
+    blob, meta = self._timed_read(lba, n)
+                 ~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 643, in _timed_read
+    blob, meta = read_sg(self.sg_fd, lba, n, self.cmd_timeout_ms)
+                 ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 150, in read_sg
+    fcntl.ioctl(sg_fd, SG_IO, hdr)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 19] No such device
+DONE c4-gw-live exit=1

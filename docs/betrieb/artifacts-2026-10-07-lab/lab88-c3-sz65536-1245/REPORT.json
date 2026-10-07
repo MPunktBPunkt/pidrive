@@ -1,0 +1,140 @@
+{
+  "golden": [
+    "BENCH"
+  ],
+  "results": {
+    "BENCH": {
+      "sizes": {
+        "65536": {
+          "reads": 500,
+          "bytes": 32768000,
+          "dt_s": 38.341,
+          "reads_per_s": 13.0,
+          "MBps": 0.855,
+          "ms_per_4k": 4.793,
+          "esp_readCount_delta": 8000,
+          "offline": false,
+          "period_ms": null,
+          "gap_ms": 0.0,
+          "sg_duration_ms": {
+            "p5": 61.0,
+            "p50": 62.0,
+            "p95": 122.0,
+            "p99": 123.0,
+            "min": 61.0,
+            "max": 183.0,
+            "n": 500
+          },
+          "wall_ms": {
+            "p5": 61.516,
+            "p50": 61.958,
+            "p95": 122.349,
+            "p99": 123.318,
+            "min": 61.428,
+            "max": 183.094,
+            "n": 500
+          },
+          "start_to_start_ms": {
+            "p5": 69.102,
+            "p50": 70.235,
+            "p95": 130.369,
+            "p99": 131.763,
+            "min": 64.6,
+            "max": 191.387,
+            "n": 499
+          }
+        }
+      },
+      "pass": true,
+      "c1_reads_per_s": null,
+      "offline": false,
+      "incomplete": false
+    }
+  },
+  "period_ms": null,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": null,
+    "gap_ms": 4.0,
+    "sg_duration_ms": {
+      "p5": 61.0,
+      "p50": 62.0,
+      "p95": 122.0,
+      "p99": 123.0,
+      "min": 61.0,
+      "max": 183.0,
+      "n": 500
+    },
+    "wall_ms": {
+      "p5": 61.516,
+      "p50": 61.958,
+      "p95": 122.349,
+      "p99": 123.318,
+      "min": 61.428,
+      "max": 183.094,
+      "n": 500
+    },
+    "start_to_start_ms": {
+      "p5": 69.102,
+      "p50": 70.235,
+      "p95": 130.369,
+      "p99": 131.763,
+      "min": 64.6,
+      "max": 191.387,
+      "n": 499
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "24min 3s",
+    "play": "fav0",
+    "armed": false,
+    "hostAbs": 0,
+    "absEnd": 0,
+    "absBase": 0,
+    "streamBytes": 0,
+    "underruns": 0,
+    "liveBytes": 0,
+    "ring_size": 0,
+    "ring_cap": 49152,
+    "readCount": 13134,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 47335424,
+        "maxSeq": 8388608,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 1048576,
+        "maxSeq": 524288,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 1048576,
+        "maxSeq": 524288,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

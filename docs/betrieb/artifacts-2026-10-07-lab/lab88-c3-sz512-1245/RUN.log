@@ -1,0 +1,52 @@
+=== c3-sz512 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c3-sz512-1245 ===
+{
+  "BENCH": {
+    "pass": true,
+    "sizes": {
+      "512": {
+        "reads": 500,
+        "bytes": 256000,
+        "dt_s": 0.501,
+        "reads_per_s": 998.1,
+        "MBps": 0.511,
+        "ms_per_4k": 8.016,
+        "esp_readCount_delta": 500,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 0.0,
+          "p50": 1.0,
+          "p95": 1.0,
+          "p99": 2.0,
+          "min": 0.0,
+          "max": 15.0,
+          "n": 500
+        },
+        "wall_ms": {
+          "p5": 0.663,
+          "p50": 0.723,
+          "p95": 1.161,
+          "p99": 1.465,
+          "min": 0.637,
+          "max": 15.023,
+          "n": 500
+        },
+        "start_to_start_ms": {
+          "p5": 0.784,
+          "p50": 0.869,
+          "p95": 1.338,
+          "p99": 1.627,
+          "min": 0.759,
+          "max": 15.171,
+          "n": 499
+        }
+      }
+    },
+    "c1_reads_per_s": null,
+    "offline": false,
+    "incomplete": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c3-sz512-1245 overall=PASS
+DONE c3-sz512 exit=0

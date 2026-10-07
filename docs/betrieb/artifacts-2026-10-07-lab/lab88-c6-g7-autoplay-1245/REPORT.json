@@ -1,0 +1,139 @@
+{
+  "golden": [
+    "G7"
+  ],
+  "results": {
+    "G7": {
+      "slot_size": 8388608,
+      "maxSeq_after_head": 8388608,
+      "maxSeq_after_frag": 8388608,
+      "maxSeq_final": 8388608,
+      "bytes_delta": 8179712,
+      "expect_total": 8179712,
+      "field_total_8mib": 8179712,
+      "timing": {
+        "period_ms": 4.0,
+        "gap_ms": null,
+        "sg_duration_ms": {
+          "p5": 4.0,
+          "p50": 4.0,
+          "p95": 5.0,
+          "p99": 17.0,
+          "min": 3.0,
+          "max": 65.0,
+          "n": 1997
+        },
+        "wall_ms": {
+          "p5": 4.003,
+          "p50": 4.167,
+          "p95": 4.609,
+          "p99": 17.643,
+          "min": 3.945,
+          "max": 65.103,
+          "n": 1997
+        },
+        "start_to_start_ms": {
+          "p5": 4.594,
+          "p50": 4.844,
+          "p95": 5.435,
+          "p99": 18.489,
+          "min": 4.493,
+          "max": 1127.762,
+          "n": 1996
+        },
+        "late_reads": 412
+      },
+      "head_ok": false,
+      "frag_ok": false,
+      "final_ok": false,
+      "total_ok": true,
+      "pass": false
+    }
+  },
+  "period_ms": 4.0,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": 4.0,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 4.0,
+      "p95": 5.0,
+      "p99": 17.0,
+      "min": 3.0,
+      "max": 65.0,
+      "n": 1997
+    },
+    "wall_ms": {
+      "p5": 4.003,
+      "p50": 4.167,
+      "p95": 4.609,
+      "p99": 17.643,
+      "min": 3.945,
+      "max": 65.103,
+      "n": 1997
+    },
+    "start_to_start_ms": {
+      "p5": 4.594,
+      "p50": 4.844,
+      "p95": 5.435,
+      "p99": 18.489,
+      "min": 4.493,
+      "max": 1127.762,
+      "n": 1996
+    },
+    "late_reads": 412
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "4min 8s",
+    "play": "fav0",
+    "armed": true,
+    "hostAbs": 8409057,
+    "absEnd": 113664,
+    "absBase": 64512,
+    "streamBytes": 8388608,
+    "underruns": 8337889,
+    "liveBytes": 50719,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "readCount": 6912,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 26972160,
+        "maxSeq": 8388608,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

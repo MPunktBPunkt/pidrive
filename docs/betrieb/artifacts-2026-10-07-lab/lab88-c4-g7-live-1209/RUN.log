@@ -1,0 +1,51 @@
+=== c4-g7-live → docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-g7-live-1209 ===
+{
+  "G7": {
+    "pass": true,
+    "slot_size": 8388608,
+    "maxSeq_after_head": 368640,
+    "maxSeq_after_frag": 368640,
+    "maxSeq_final": 5201920,
+    "bytes_delta": 8179712,
+    "expect_total": 8179712,
+    "field_total_8mib": 8179712,
+    "timing": {
+      "period_ms": 5.1,
+      "gap_ms": null,
+      "sg_duration_ms": {
+        "p5": 5.0,
+        "p50": 5.0,
+        "p95": 6.0,
+        "p99": 19.0,
+        "min": 5.0,
+        "max": 66.0,
+        "n": 1997
+      },
+      "wall_ms": {
+        "p5": 5.059,
+        "p50": 5.304,
+        "p95": 5.758,
+        "p99": 19.252,
+        "min": 4.992,
+        "max": 66.382,
+        "n": 1997
+      },
+      "start_to_start_ms": {
+        "p5": 5.609,
+        "p50": 5.916,
+        "p95": 6.621,
+        "p99": 19.965,
+        "min": 5.534,
+        "max": 66.987,
+        "n": 1996
+      },
+      "late_reads": 315
+    },
+    "head_ok": true,
+    "frag_ok": true,
+    "final_ok": true,
+    "total_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c4-g7-live-1209 overall=PASS
+DONE c4-g7-live exit=0

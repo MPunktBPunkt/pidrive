@@ -1,0 +1,51 @@
+=== c2-idle-r2 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c2-idle-r2-1209 ===
+{
+  "BENCH": {
+    "pass": false,
+    "sizes": {
+      "4096": {
+        "reads": 2000,
+        "bytes": 8192000,
+        "dt_s": 10.272,
+        "reads_per_s": 194.7,
+        "MBps": 0.797,
+        "ms_per_4k": 5.136,
+        "esp_readCount_delta": 2000,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 4.0,
+          "p50": 4.0,
+          "p95": 5.0,
+          "p99": 5.0,
+          "min": 3.0,
+          "max": 65.0,
+          "n": 2000
+        },
+        "wall_ms": {
+          "p5": 3.996,
+          "p50": 4.165,
+          "p95": 4.628,
+          "p99": 6.185,
+          "min": 3.922,
+          "max": 64.545,
+          "n": 2000
+        },
+        "start_to_start_ms": {
+          "p5": 4.562,
+          "p50": 4.846,
+          "p95": 5.421,
+          "p99": 7.217,
+          "min": 4.479,
+          "max": 65.184,
+          "n": 1999
+        }
+      }
+    },
+    "c1_reads_per_s": 194.7,
+    "offline": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c2-idle-r2-1209 overall=FAIL
+DONE c2-idle-r2 exit=1

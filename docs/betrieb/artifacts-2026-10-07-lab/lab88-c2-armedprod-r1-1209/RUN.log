@@ -1,0 +1,51 @@
+=== c2-armedprod-r1 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c2-armedprod-r1-1209 ===
+{
+  "BENCH": {
+    "pass": false,
+    "sizes": {
+      "4096": {
+        "reads": 2000,
+        "bytes": 8192000,
+        "dt_s": 13.066,
+        "reads_per_s": 153.1,
+        "MBps": 0.627,
+        "ms_per_4k": 6.533,
+        "esp_readCount_delta": 2000,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 5.0,
+          "p50": 5.0,
+          "p95": 6.0,
+          "p99": 19.0,
+          "min": 5.0,
+          "max": 66.0,
+          "n": 2000
+        },
+        "wall_ms": {
+          "p5": 5.179,
+          "p50": 5.355,
+          "p95": 5.843,
+          "p99": 19.07,
+          "min": 5.103,
+          "max": 66.452,
+          "n": 2000
+        },
+        "start_to_start_ms": {
+          "p5": 5.743,
+          "p50": 5.991,
+          "p95": 6.575,
+          "p99": 19.662,
+          "min": 5.651,
+          "max": 67.093,
+          "n": 1999
+        }
+      }
+    },
+    "c1_reads_per_s": 153.1,
+    "offline": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c2-armedprod-r1-1209 overall=FAIL
+DONE c2-armedprod-r1 exit=1

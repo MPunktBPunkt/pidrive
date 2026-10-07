@@ -1,0 +1,51 @@
+=== c1-online-r3 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c1-online-r3-1156 ===
+{
+  "BENCH": {
+    "pass": false,
+    "sizes": {
+      "4096": {
+        "reads": 2000,
+        "bytes": 8192000,
+        "dt_s": 10.319,
+        "reads_per_s": 193.8,
+        "MBps": 0.794,
+        "ms_per_4k": 5.159,
+        "esp_readCount_delta": 2000,
+        "offline": false,
+        "period_ms": null,
+        "gap_ms": 0.0,
+        "sg_duration_ms": {
+          "p5": 4.0,
+          "p50": 4.0,
+          "p95": 5.0,
+          "p99": 6.0,
+          "min": 3.0,
+          "max": 65.0,
+          "n": 2000
+        },
+        "wall_ms": {
+          "p5": 4.002,
+          "p50": 4.166,
+          "p95": 4.634,
+          "p99": 6.799,
+          "min": 3.936,
+          "max": 65.19,
+          "n": 2000
+        },
+        "start_to_start_ms": {
+          "p5": 4.58,
+          "p50": 4.879,
+          "p95": 5.407,
+          "p99": 7.356,
+          "min": 4.446,
+          "max": 66.047,
+          "n": 1999
+        }
+      }
+    },
+    "c1_reads_per_s": 193.8,
+    "offline": false
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c1-online-r3-1156 overall=FAIL
+DONE c1-online-r3 exit=1

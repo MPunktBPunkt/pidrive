@@ -1,0 +1,63 @@
+{
+  "golden": [
+    "G6"
+  ],
+  "results": {
+    "G6": {
+      "a_fav1_full": true,
+      "b_fav2_full": true,
+      "c_cache_hit": true,
+      "c_new_sim_reads": 0,
+      "c_readCount_delta": 0,
+      "d_remount_reread": true,
+      "d_readCount_delta": 128,
+      "d_fav1_maxSeq": 524288,
+      "note": "Lab G6 models sim-cache + ESP remount; field HU-cache over OTG is F2/M5",
+      "pass": true
+    }
+  },
+  "period_ms": null,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": null,
+    "gap_ms": 4.0,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 4.0,
+      "p95": 5.0,
+      "p99": 18.0,
+      "min": 4.0,
+      "max": 38.0,
+      "n": 384
+    },
+    "wall_ms": {
+      "p5": 4.124,
+      "p50": 4.397,
+      "p95": 4.838,
+      "p99": 18.813,
+      "min": 4.006,
+      "max": 38.323,
+      "n": 384
+    },
+    "start_to_start_ms": {
+      "p5": 8.766,
+      "p50": 9.098,
+      "p95": 10.144,
+      "p99": 40.827,
+      "min": 8.619,
+      "max": 8125.082,
+      "n": 383
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

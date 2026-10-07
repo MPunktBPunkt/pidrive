@@ -1,0 +1,63 @@
+{
+  "golden": [
+    "G8"
+  ],
+  "results": {
+    "G8": {
+      "readCount_delta": 167,
+      "expect_readCount": 167,
+      "field_readCount": 167,
+      "current_maxSeq": 524288,
+      "fav0_bytes_delta": 32768,
+      "fav0_maxSeq": 188416,
+      "rc_ok": true,
+      "current_ok": true,
+      "probes_ok": true,
+      "pass": true
+    }
+  },
+  "period_ms": null,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": null,
+    "gap_ms": 4.0,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 4.0,
+      "p95": 6.0,
+      "p99": 36.0,
+      "min": 3.0,
+      "max": 43.0,
+      "n": 167
+    },
+    "wall_ms": {
+      "p5": 4.127,
+      "p50": 4.384,
+      "p95": 5.905,
+      "p99": 35.976,
+      "min": 4.013,
+      "max": 42.634,
+      "n": 167
+    },
+    "start_to_start_ms": {
+      "p5": 8.817,
+      "p50": 9.134,
+      "p95": 10.13,
+      "p99": 40.227,
+      "min": 8.528,
+      "max": 48.254,
+      "n": 166
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

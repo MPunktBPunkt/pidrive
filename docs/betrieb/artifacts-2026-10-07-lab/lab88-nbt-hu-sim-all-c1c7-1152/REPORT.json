@@ -1,0 +1,592 @@
+{
+  "golden": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5"
+  ],
+  "results": {
+    "G5": {
+      "samples": [
+        {
+          "t": 61.0,
+          "bps": 5887.5,
+          "bytes": 525056
+        },
+        {
+          "t": 62.0,
+          "bps": 6143.5,
+          "bytes": 531200
+        },
+        {
+          "t": 63.0,
+          "bps": 5887.5,
+          "bytes": 537088
+        },
+        {
+          "t": 64.0,
+          "bps": 5887.5,
+          "bytes": 542976
+        },
+        {
+          "t": 65.0,
+          "bps": 6143.4,
+          "bytes": 549120
+        },
+        {
+          "t": 66.0,
+          "bps": 5887.4,
+          "bytes": 555008
+        },
+        {
+          "t": 67.0,
+          "bps": 5887.5,
+          "bytes": 560896
+        },
+        {
+          "t": 68.0,
+          "bps": 6143.4,
+          "bytes": 567040
+        },
+        {
+          "t": 69.0,
+          "bps": 5887.4,
+          "bytes": 572928
+        },
+        {
+          "t": 70.0,
+          "bps": 5887.5,
+          "bytes": 578816
+        }
+      ],
+      "burst_median_bps": 8703.2,
+      "late_median_bps": 5887.5,
+      "burst_ok": true,
+      "late_ok": true,
+      "err": null,
+      "pass": true
+    },
+    "G1": {
+      "bytes_before_arm": 86016,
+      "expect_before": 86016,
+      "before_ok": true,
+      "hostAbs": 438272,
+      "underruns": 438272,
+      "expect_und_host": 438272,
+      "und_ok": true,
+      "host_ok": true,
+      "und_host_ok": true,
+      "liveBytes_fw": 0,
+      "liveBytes_ear": 0,
+      "live_ok": true,
+      "class_counts": {
+        "ID3": 2,
+        "SILENCE": 254
+      },
+      "ear": {
+        "live_bytes": 0,
+        "consumed": 0,
+        "events": {},
+        "event_list": []
+      },
+      "silence_ratio": 1.0,
+      "other_ratio": 0.0,
+      "classifier_ok": true,
+      "pass": true
+    },
+    "G3": {
+      "fill_pre": 49152,
+      "fill_wait_s": 1.255,
+      "fill_ok": true,
+      "liveBytes_fw": 487455,
+      "liveBytes_ear": 45056,
+      "expect_live": 49152,
+      "live_ok": true,
+      "underruns": 475105,
+      "hostAbs": 543457,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 11,
+        "SILENCE": 116
+      },
+      "ear": {
+        "live_bytes": 45056,
+        "consumed": 0,
+        "events": {
+          "silence_in_play": 116
+        },
+        "event_list": [
+          {
+            "t": 1889409.67831913,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.688417692,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.698538105,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.708970046,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.719314492,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.72941699,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.739427295,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.74962284,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.759923583,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.770450383,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.780663501,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.790900454,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.801908083,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.8124435,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.822921618,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.833238131,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.844703646,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.855102855,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.865498668,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.876029987,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.886549003,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.896996153,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.907396104,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.917778081,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.927961863,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.938245554,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.94841534,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.958763222,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.968884827,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.979389265,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889409.989715397,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.000163288,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.010710818,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.02120123,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.031307916,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.041541152,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.052686161,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.064594031,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.07558588,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.08759954,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.099659748,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.110183923,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.120416488,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.130604298,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.140669125,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.150800388,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.16140707,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.171636529,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.182448057,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1889410.193222946,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "silence_after_live": true,
+      "pass": true
+    },
+    "G4": {
+      "fav2_maxSeq": 524288,
+      "prefetch_s": 1.228,
+      "prefetch_ok": true,
+      "within_few_s": true,
+      "pass": true
+    },
+    "G2": {
+      "maxSeq": 524288,
+      "hostAbs_pre": 524257,
+      "hostAbs_after_arm": 0,
+      "und_delta": -1048545,
+      "host_delta": -524257,
+      "armed": false,
+      "file_full": true,
+      "host_ok": true,
+      "und_ok": true,
+      "pass": true
+    }
+  },
+  "period_ms": null,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": null,
+    "gap_ms": 4.0,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 4.0,
+      "max": 38.0,
+      "n": 768
+    },
+    "wall_ms": {
+      "p5": 4.158,
+      "p50": 5.279,
+      "p95": 5.921,
+      "p99": 19.523,
+      "min": 4.011,
+      "max": 37.749,
+      "n": 768
+    },
+    "start_to_start_ms": {
+      "p5": 8.817,
+      "p50": 9.952,
+      "p95": 11.139,
+      "p99": 25.122,
+      "min": 8.65,
+      "max": 10718.002,
+      "n": 767
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 45056,
+    "consumed": 0,
+    "events": {
+      "silence_in_play": 497
+    },
+    "event_list": [
+      {
+        "t": 1889409.67831913,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.688417692,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.698538105,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.708970046,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.719314492,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.72941699,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.739427295,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.74962284,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.759923583,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.770450383,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.780663501,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.790900454,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.801908083,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.8124435,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.822921618,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.833238131,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.844703646,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.855102855,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.865498668,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.876029987,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.886549003,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.896996153,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.907396104,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.917778081,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.927961863,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.938245554,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.94841534,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.958763222,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.968884827,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.979389265,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889409.989715397,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.000163288,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.010710818,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.02120123,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.031307916,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.041541152,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.052686161,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.064594031,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.07558588,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.08759954,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.099659748,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.110183923,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.120416488,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.130604298,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.140669125,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.150800388,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.16140707,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.171636529,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.182448057,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1889410.193222946,
+        "kind": "silence_in_play"
+      }
+    ]
+  },
+  "snap_final": {
+    "error": "[Errno 104] Connection reset by peer"
+  }
+}

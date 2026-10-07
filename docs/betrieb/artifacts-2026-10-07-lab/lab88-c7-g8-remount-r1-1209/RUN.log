@@ -1,0 +1,17 @@
+=== c7-g8-remount-r1 → docs/betrieb/artifacts-2026-10-07-lab/lab88-c7-g8-remount-r1-1209 ===
+{
+  "G8": {
+    "pass": true,
+    "readCount_delta": 167,
+    "expect_readCount": 167,
+    "field_readCount": 167,
+    "current_maxSeq": 524288,
+    "fav0_bytes_delta": 32768,
+    "fav0_maxSeq": 7049216,
+    "rc_ok": true,
+    "current_ok": true,
+    "probes_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-c7-g8-remount-r1-1209 overall=PASS
+DONE c7-g8-remount-r1 exit=0

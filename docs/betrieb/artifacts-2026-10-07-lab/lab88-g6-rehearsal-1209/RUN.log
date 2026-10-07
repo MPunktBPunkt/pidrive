@@ -1,0 +1,17 @@
+=== g6-rehearsal → docs/betrieb/artifacts-2026-10-07-lab/lab88-g6-rehearsal-1209 ===
+{
+  "G6": {
+    "pass": true,
+    "a_fav1_full": true,
+    "b_fav2_full": true,
+    "c_cache_hit": true,
+    "c_new_sim_reads": 0,
+    "c_readCount_delta": 0,
+    "d_remount_reread": true,
+    "d_readCount_delta": 128,
+    "d_fav1_maxSeq": 524288,
+    "note": "Lab G6 models sim-cache + ESP remount; field HU-cache over OTG is F2/M5"
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-07-lab/lab88-g6-rehearsal-1209 overall=PASS
+DONE g6-rehearsal exit=0

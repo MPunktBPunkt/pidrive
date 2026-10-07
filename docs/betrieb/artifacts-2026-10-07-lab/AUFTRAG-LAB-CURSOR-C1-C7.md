@@ -203,13 +203,15 @@ Dazu `usbSerial` vor und nach notieren.
 
 ---
 
-## Zwischenstand 2026-10-07 ~11:30
+## Zwischenstand 2026-10-07 ~13:00
 
-Siehe [`C1-C7-ERGEBNIS.md`](C1-C7-ERGEBNIS.md).
+Siehe [`C1-C7-ERGEBNIS.md`](C1-C7-ERGEBNIS.md) (Online-Läufe stamp 1152/1156/1209/1245).
 
-- Lab-ESP `.88` **ohne WLAN** (USB MSC ok) → C1/C3 mit neuem `--offline` gefahren; C2–C7 blockiert.
-- **C1 FAIL:** ~205 Reads/s (Ziel ≥245). SG p50=4,0 ms, Host start-to-start ≈4,7 ms.
-- **C3:** Dauer skaliert mit 4-KiB-Chunks; ESP-Callback-Zähler ausstehend (online).
+- ESP `.88` wieder online; ALL G1–G5 **PASS**; C7 G8 **PASS** (rc=167); G6 **PASS**.
+- **C1 FAIL:** ~195 Reads/s online, `esp_readCount_delta=2000`.
+- **C2:** Idle sg p50 4,0 → Armed 5,0 ms → R15 = Live-Pfad.
+- **C3 online:** δ/reads = 1/4/16 bei 4/16/64 KiB ⇒ EP-Buf **4 KiB**.
+- C4 Mapping-CSVs abgelegt; C5/C6 teilweise (USB-ENODEV / Wi-Fi unter MSC).
 
 ## Rückmeldung
 
