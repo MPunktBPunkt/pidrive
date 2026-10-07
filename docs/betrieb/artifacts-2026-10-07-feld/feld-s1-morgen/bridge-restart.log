@@ -1,0 +1,15 @@
+bridge_compile_OK
+active
+286685 bash -c python3 -m py_compile /home/pidrive/pump_bridge.py && echo bridge_compile_OK echo *** | sudo -S systemctl restart pidrive_pump_bridge sleep 2 : > /tmp/pidrive_msc_reads.jsonl : > /tmp/pidrive_msc_lock.jsonl : > /tmp/pidrive_msc_diag.jsonl systemctl is-active pidrive_pump_bridge || true pgrep -af pump_bridge.py | head -1 || true echo *** | sudo -S journalctl -u pidrive_pump_bridge -n 12 --no-pager | tail -12 
+Oct 07 06:54:22 Pidrive python3[3796074]: [bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+Oct 07 06:54:28 Pidrive python3[3796074]: [bridge] reconnect failed: [Errno 113] No route to host
+Oct 07 06:54:30 Pidrive python3[3796074]: [bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+Oct 07 06:54:36 Pidrive python3[3796074]: [bridge] reconnect failed: [Errno 113] No route to host
+Oct 07 06:54:38 Pidrive python3[3796074]: [bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+Oct 07 06:54:44 Pidrive python3[3796074]: [bridge] reconnect failed: [Errno 113] No route to host
+Oct 07 06:54:46 Pidrive python3[3796074]: [bridge] link lost ([Errno 32] Broken pipe) — reconnect in 3.0s
+Oct 07 06:54:48 Pidrive systemd[1]: Stopping pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü)...
+Oct 07 06:54:48 Pidrive systemd[1]: pidrive_pump_bridge.service: Deactivated successfully.
+Oct 07 06:54:48 Pidrive systemd[1]: Stopped pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).
+Oct 07 06:54:48 Pidrive systemd[1]: pidrive_pump_bridge.service: Consumed 27.541s CPU time.
+Oct 07 06:54:48 Pidrive systemd[1]: Started pidrive_pump_bridge.service - PiDrive PUMP Bridge (UART/TCP ↔ esp32.pidrive Live-MP3 + Menü).

@@ -1,22 +1,15 @@
 #!/usr/bin/env bash
-# Gate-Check für feld-s1-morgen (Fahrzeug-ESP .89)
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-ESP="${ESP:-http://192.168.178.89}"
-curl -sS "$ESP/api/status" -o "$ROOT/status-gate.json"
-curl -sS "$ESP/api/menu" -o "$ROOT/menu-gate.json" 2>/dev/null || true
-python3 - <<PY
+curl -sS http://192.168.178.89/api/status -o "docs/betrieb/artifacts-2026-10-07-feld/feld-s1-morgen/status-gate.json"
+curl -sS http://192.168.178.89/api/menu -o "docs/betrieb/artifacts-2026-10-07-feld/feld-s1-morgen/menu-gate.json" 2>/dev/null || true
+python3 - <<'PY'
 import json
-st=json.load(open("$ROOT/status-gate.json"))
-m=st.get("msc") or {}
-names=[s.get("name") for s in (st.get("slotMap") or m.get("slotMap") or [])]
+st=json.load(open("docs/betrieb/artifacts-2026-10-07-feld/feld-s1-morgen/status-gate.json"))
+names=[s.get("name") for s in (st.get("slotMap") or (st.get("msc") or {}).get("slotMap") or [])]
 print("version", st.get("version"))
-print("fwType", st.get("fwType"))
-print("serial", m.get("usbSerial"))
 print("slotMap", names)
 need={"Rock Antenne","Rock Antenne Bayern","Radio BOB!"}
 ok=need.issubset(set(names or []))
 print("GATE_NAMES", "PASS" if ok else "FAIL")
-print("stall_hint: FW must be 0.4.46-dev, kein Stall-OTA")
 PY
-echo "Bridge: ssh pidrive@192.168.178.105 'journalctl -u pidrive_pump_bridge -n 40 --no-pager | grep -iE FROZEN|frozen|error || true'"
+echo "Bridge: ssh pidrive@192.168.178.105 'grep MSC_MAP_FROZEN /tmp/pump_bridge*.log 2>/dev/null | tail -3; journalctl -u pidrive_pump_bridge -n 30 --no-pager | grep -E FROZEN|frozen'"

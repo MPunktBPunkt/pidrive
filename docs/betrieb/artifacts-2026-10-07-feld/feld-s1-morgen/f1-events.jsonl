@@ -1,0 +1,24 @@
+{"wall_iso": "2026-10-07T07:42:49.937+02:00", "kind": "operator_note", "uid": "fav2", "note": "07:41 eingesteckt mit autoplay BOB"}
+{"wall_iso": "2026-10-07T07:42:49.937+02:00", "kind": "operator_note", "uid": "fav1", "note": "wechsle jetzt zu Bayern (fav1)"}
+{"wall_iso": "2026-10-07T07:44:22.278+02:00", "kind": "heard", "uid": "fav1", "note": "kein Ton"}
+{"wall_iso": "2026-10-07T07:44:22.278+02:00", "kind": "t_eof", "uid": "fav1", "note": "operator: fertig (Bayern)", "slots": {"fav0": {"b": 8388608, "maxSeq": 6406144}, "fav1": {"b": 524288, "maxSeq": 262144}, "fav2": {"b": 524288, "maxSeq": 262144}, "pump:page_next": {"b": 6656, "maxSeq": 6656}}, "readCount": 2337, "playingUid": ""}
+{"wall_iso": "2026-10-07T07:46:43.148+02:00", "kind": "hu_ui", "note": "HU hat nur Fortschrittsbalken, keinen Sekundenzähler"}
+{"wall_iso": "2026-10-07T07:46:43.148+02:00", "kind": "operator_note", "note": "Autoplay-Reihenfolge: BOB → Bayern → Rock Antenne (fav2→fav1→fav0)"}
+{"wall_iso": "2026-10-07T07:46:43.148+02:00", "kind": "f1_method", "note": "F1 umgestellt: t_timer = Fortschrittsbalken beginnt zu laufen; t_eof = Balken/Track fertig bzw. Slot-b stagniert/EOF"}
+{"wall_iso": "2026-10-07T07:47:01.668+02:00", "kind": "rst", "note": "operator RST 07:46"}
+{"wall_iso": "2026-10-07T07:47:39.129+02:00", "kind": "operator_note", "uid": "fav2", "note": "nach RST: BOB Autoplay läuft durch, kein Ton", "uptime": "39s", "readCount": 167, "otgUp": true, "serial": "PD0089", "slots": {"fav0": {"b": 32768, "maxSeq": 4096, "name": "Rock Antenne"}, "fav1": {"b": 0, "maxSeq": 0, "name": "Rock Antenne Bayern"}, "fav2": {"b": 524288, "maxSeq": 524288, "name": "Radio BOB!"}}}
+{"wall_iso": "2026-10-07T07:48:25.638+02:00", "kind": "track_change", "note": "BOB fertig → Wechsel Bayern", "from": "fav2", "to": "fav1", "uptime": "1min 26s", "readCount": 295, "slots": {"fav0": 32768, "fav1": 524288, "fav2": 524288}, "playingUid": "fav1"}
+{"wall_iso": "2026-10-07T07:48:32.353+02:00", "kind": "operator_note", "note": "LED blinkt vor Ende (während Bayern nach BOB-Wechsel)"}
+{"wall_iso": "2026-10-07T07:49:53.258+02:00", "kind": "operator_note", "uid": "fav1", "note": "Bayern läuft durch ohne Ton; Operator tippt fertig genau am Ende", "uptime": "2min 54s", "playingUid": "fav0", "playingName": "Rock Antenne", "readCount": 2284, "slots": {"fav0": 8179712, "fav1": 524288, "fav2": 524288}}
+{"wall_iso": "2026-10-07T07:51:14.696+02:00", "kind": "operator_note", "note": "LED stark am Ende Bayern + kurz Beginn Rock Antenne; kein Ton", "playingUid": "fav0", "playingName": "Rock Antenne", "readCount": 2284, "uptime": "4min 15s", "slots": {"fav0": 8179712, "fav1": 524288, "fav2": 524288}}
+{"wall_iso": "2026-10-07T07:51:14.696+02:00", "kind": "t_eof", "uid": "fav1", "note": "operator: LED stark am Ende Bayern (≈fertig)", "readCount": 2284, "slots": {"fav0": 8179712, "fav1": 524288, "fav2": 524288}}
+{"wall_iso": "2026-10-07T07:51:14.696+02:00", "kind": "t_sel", "uid": "fav0", "note": "Autoplay → Rock Antenne; LED kurz zu Beginn", "readCount": 2284, "slots": {"fav0": 8179712, "fav1": 524288, "fav2": 524288}}
+{"wall_iso": "2026-10-07T07:51:14.696+02:00", "kind": "heard", "uid": "fav0", "note": "kein Ton"}
+{"wall_iso": "2026-10-07T07:51:50.642+02:00", "kind": "operator_plan", "note": "Rock ewig — RST + schnelle Senderdurchwahl 07:51"}
+{"wall_iso": "2026-10-07T07:52:45.438+02:00", "kind": "operator_note", "note": "alle Sender durch; RST-Wiederholung 07:52"}
+{"wall_iso": "2026-10-07T07:52:45.438+02:00", "kind": "rst", "note": "operator RST 07:52 (nach schnellem Senderdurchlauf; Wiederholung)"}
+{"wall_iso": "2026-10-07T07:53:42.592+02:00", "kind": "operator_plan", "note": "Wiederholung RST+Durchlauf 07:53; weiterhin kein Ton"}
+{"wall_iso": "2026-10-07T07:53:42.592+02:00", "kind": "heard", "note": "alles immer ohne Ton"}
+{"wall_iso": "2026-10-07T07:54:36.392+02:00", "kind": "operator_note", "note": "alle Sender getippt (Pass 07:53)", "uptime": "45s", "playingUid": "fav2", "playingName": "Radio BOB!", "readCount": 2284, "otg": true, "slots": {"fav0": 8179712, "fav1": 524288, "fav2": 524288}}
+{"wall_iso": "2026-10-07T07:55:01.596+02:00", "kind": "operator_plan", "note": "Wiederholung RST+Sender antippen 07:54; kein Ton"}
+{"wall_iso": "2026-10-07T07:57:09.823+02:00", "kind": "operator_plan", "note": "LETZTER Pass RST+alle Sender 07:56; dann Abfahrt; kein Ton"}

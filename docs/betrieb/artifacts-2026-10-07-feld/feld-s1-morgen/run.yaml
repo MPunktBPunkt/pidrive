@@ -1,5 +1,5 @@
 # Stufe 1 Feld — F1 Decode-Start + F2 Cache (2026-10-07 Morgen)
-# Lab-Vorbereitung: Tools + Q4-Dry-Run; kein Stall-OTA
+# Session gefahren 07:41–07:59; Bridge während Probes gestoppt; kein Stall-OTA
 run_id: feld-s1-morgen
 stufe: 1
 env: feld
@@ -13,25 +13,54 @@ bridge:
   audio_target_bps: 9000
   ffmpeg_ar: 22050
   ffmpeg_ac: 1
+  state_during_probes: stopped
 stall_ms: 0
 station: mixed
 bitrate_kbps: 48
-device: ""
+device: PD0089
 clock_sync:
   esp_uptime_ms: 0
-  wall: ""
-actions: []
-observations: []
+  wall: "2026-10-07T07:41:27+02:00"
+actions:
+  - {t: "07:41:40", a: otg_up}
+  - {t: "07:41:57", a: bridge_stop}
+  - {t: "07:41", a: autoplay_bob_then_bayern}
+  - {t: "07:44:08", a: autoplay_rock_fav0_8mib_ramp}
+  - {t: "07:46", a: rst}
+  - {t: "07:47-49", a: post_rst_autoplay_bob_bayern_rock}
+  - {t: "07:51-56", a: rst_and_quick_cycle_x5}
+  - {t: "07:58", a: ingest}
+observations:
+  - hu_ui_progress_bar_only
+  - autoplay_order_bob_bayern_rock
+  - rock_8mib_eager_read_then_flat_play_repro
+  - bob_often_cache_like_after_rst
+  - bayern_and_rock_usb_reread_after_rst
+  - led_equals_msc_body
+  - no_audio_expected_silence
 heard: none
 notes: >
-  F1: Bridge stop, Video Spielzeit, f1-events.jsonl (s/t/e).
-  F2: f2-watch.jsonl während fav1→fav2→fav1 + OTG.
-  Lab prep: markers + q4 cache matrix dry-run on .88.
+  F1 not closed (no second counter; bar-vs-ramp timing unconfirmed).
+  F2 mixed: session cache ok; after RST BOB often cache-like, Rock always USB re-read.
+  Stall-Go deferred. See GESAMTBERICHT-FELD-S1-MORGEN.md and SUMMARY.json.
 status_poll:
   interval_s: 1.0
   out: status-poll.jsonl
+verdict:
+  f1: open_leaning_after_eof
+  f2a: pass_leaning
+  f2c: mixed
+  stall_go: false
 artifacts:
   - status-poll.jsonl
+  - status-poll-session.jsonl
+  - status-poll-compact.csv
   - f1-events.jsonl
   - f2-watch.jsonl
+  - SUMMARY.json
+  - boots.json
+  - play-transitions.json
+  - GESAMTBERICHT-FELD-S1-MORGEN.md
+  - F1-F2-AUSWERTUNG.md
+  - OPERATOR-LIVE.txt
   - ARRIVAL.md

@@ -1,0 +1,16 @@
+ingest 1 run(s)
+- feld-s1-morgen (/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-07-feld/feld-s1-morgen)
+  runs: 1 rows -> /home/martin/projects/pidrive/data/runs.parquet
+  status: 1967 rows -> /home/martin/projects/pidrive/data/status.parquet
+  slots: 4344 rows -> /home/martin/projects/pidrive/data/slots.parquet
+  bridge_events: 4 rows -> /home/martin/projects/pidrive/data/bridge_events.parquet
+  observations: 1 rows -> /home/martin/projects/pidrive/data/observations.parquet
+  duckdb: /home/martin/projects/pidrive/data/pidrive.duckdb
+{
+  "runs": 1,
+  "status": 1967,
+  "slots": 4344,
+  "msc_reads": 0,
+  "bridge_events": 4,
+  "observations": 1
+}

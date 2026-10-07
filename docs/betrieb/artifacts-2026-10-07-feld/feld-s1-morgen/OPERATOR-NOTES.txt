@@ -1,0 +1,10 @@
+# Operator — kurz (Auto)
+
+PASS streaming: live>0 AND und=0 AND behind=0 (Ohr!)
+Ziel: Erstburst-Länge + Ton bei gültigem MP3 (nicht nur und-Zähler).
+
+1) USB + WLAN: .89 erreichbar
+2) Gate: Favoriten Rock/Bayern/BOB + Bridge MSC_MAP_FROZEN (siehe FELD-AV-OPERATOR.md)
+3) Ein Sender tippen, ~30s hörig
+4) Parallel: run-correlate.sh (90s dense)
+5) Notieren: Ton ja/nein, welcher Sender

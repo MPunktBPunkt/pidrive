@@ -1,0 +1,20 @@
+otg_not_connected_at_start wall=2026-10-07T07:41:27+02:00
+otg_up_seen wall=2026-10-07T07:41:51+02:00 readCount jumped
+bridge_stopped_for_f1 wall=2026-10-07T07:41:57+02:00
+wall=2026-10-07T07:42:49+02:00 note=operator: 07:41 plugged autoplay BOB; now switching to Bayern
+wall=2026-10-07T07:44:22.278+02:00 bayern fertig, kein Ton; fav1 b={'b': 524288, 'maxSeq': 262144}
+wall=2026-10-07T07:46:43.148+02:00 HU: nur Fortschrittsbalken; Autoplay BOB→Bayern→Rock Antenne; F1 via Balken-Start vs Read-EOF
+wall=2026-10-07T07:47:01.668+02:00 RST 07:46
+wall=2026-10-07T07:47:39.129+02:00 post-RST BOB autoplay silent through; rc=167 slots={'fav0': {'b': 32768, 'maxSeq': 4096, 'name': 'Rock Antenne'}, 'fav1': {'b': 0, 'maxSeq': 0, 'name': 'Rock Antenne Bayern'}, 'fav2': {'b': 524288, 'maxSeq': 524288, 'name': 'Radio BOB!'}}
+wall=2026-10-07T07:48:25.638+02:00 BOB fertig → Bayern; rc=295 slots={'fav0': 32768, 'fav1': 524288, 'fav2': 524288}
+wall=2026-10-07T07:48:32.353+02:00 LED blinkt vor Ende
+wall=2026-10-07T07:49:53.258+02:00 Bayern silent through; waiting operator fertig@EOF
+wall=2026-10-07T07:51:14.696+02:00 LED stark Ende Bayern + kurz Start Rock; kein Ton; rc=2284 slots={'fav0': 8179712, 'fav1': 524288, 'fav2': 524288} play=fav0
+wall=2026-10-07T07:51:50.642+02:00 plan: RST + quick station cycle 07:51 (skip long Rock)
+wall=2026-10-07T07:52:45.438+02:00 alle durch; RST 07:52 repeat
+wall=2026-10-07T07:53:42.592+02:00 repeat cycle 07:53; no audio throughout
+wall=2026-10-07T07:54:36.392+02:00 alle Sender getippt (07:53 pass); live={'uptime': '45s', 'playingUid': 'fav2', 'playingName': 'Radio BOB!', 'readCount': 2284, 'otg': True, 'slots': {'fav0': 8179712, 'fav1': 524288, 'fav2': 524288}}
+wall=2026-10-07T07:55:01.596+02:00 repeat RST+tap 07:54
+wall=2026-10-07T07:57:09.823+02:00 LAST pass RST+cycle 07:56 then leave
+2026-10-07T07:58:53+02:00
+session_end_ingest_start

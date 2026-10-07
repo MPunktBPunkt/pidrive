@@ -1,0 +1,1 @@
+OUT=docs/betrieb/artifacts-2026-10-07-feld/feld-s1-morgen
