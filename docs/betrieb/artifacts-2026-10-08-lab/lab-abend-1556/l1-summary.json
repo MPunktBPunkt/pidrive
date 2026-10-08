@@ -1,0 +1,110 @@
+[
+  {
+    "run": "l1-16k-r1",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 33,
+    "read_ms": 793.4,
+    "live_s": 8.36,
+    "undDelta": 470812,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.25
+  },
+  {
+    "run": "l1-16k-r2",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 33,
+    "read_ms": 788.4,
+    "live_s": 8.36,
+    "undDelta": 470812,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.25
+  },
+  {
+    "run": "l1-16k-r3",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 33,
+    "read_ms": 793.9,
+    "live_s": 8.41,
+    "undDelta": 470528,
+    "identity_ok": true,
+    "seq_gaps": 1,
+    "sg_p50": 5.25
+  },
+  {
+    "run": "l1-4k-r1",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 128,
+    "read_ms": 843.7,
+    "live_s": 8.32,
+    "undDelta": 471068,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.0
+  },
+  {
+    "run": "l1-4k-r2",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 128,
+    "read_ms": 848.3,
+    "live_s": 8.41,
+    "undDelta": 470528,
+    "identity_ok": true,
+    "seq_gaps": 1,
+    "sg_p50": 5.0
+  },
+  {
+    "run": "l1-4k-r3",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 128,
+    "read_ms": 851.0,
+    "live_s": 8.36,
+    "undDelta": 470812,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.0
+  },
+  {
+    "run": "l1-64k-r1",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 9,
+    "read_ms": 777.5,
+    "live_s": 8.28,
+    "undDelta": 471324,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.188
+  },
+  {
+    "run": "l1-64k-r2",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 9,
+    "read_ms": 774.5,
+    "live_s": 8.32,
+    "undDelta": 471068,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.25
+  },
+  {
+    "run": "l1-64k-r3",
+    "pass": true,
+    "bytes": 524288,
+    "commands": 9,
+    "read_ms": 774.7,
+    "live_s": 8.32,
+    "undDelta": 471068,
+    "identity_ok": true,
+    "seq_gaps": 0,
+    "sg_p50": 5.25
+  }
+]

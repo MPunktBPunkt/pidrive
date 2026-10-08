@@ -1,0 +1,226 @@
+{
+  "golden": [
+    "REPLUG"
+  ],
+  "results": {
+    "REPLUG": {
+      "uid": "fav2",
+      "cmd_kib": 64,
+      "commands": 9,
+      "bytes": 524288,
+      "read_ms": 777.5,
+      "head_ms": 19.44,
+      "head_pause_ms": 19.0,
+      "field_read_ms": [
+        651,
+        665
+      ],
+      "rate_kBps": 674.3,
+      "sg_ms_per_4k": {
+        "p5": 5.125,
+        "p50": 5.188,
+        "p95": 19.0,
+        "p99": 19.0,
+        "min": 5.125,
+        "max": 19.0,
+        "n": 9
+      },
+      "ring_pre": 49152,
+      "ring_full_pre": true,
+      "producer_bytes": 78848,
+      "producer_err": null,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 1,
+        "SILENCE": 7
+      },
+      "ear": {
+        "live_bytes": 65536,
+        "consumed": 0,
+        "events": {
+          "silence_in_play": 7
+        },
+        "event_list": [
+          {
+            "t": 1991845.768801142,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1991845.861471786,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1991845.953439612,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1991846.044919787,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1991846.138469272,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1991846.229692771,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 1991846.316578474,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "id3Len_dump": 3300,
+      "id3Len_fw": 3300,
+      "live_span": {
+        "stamps": 194,
+        "seq_gaps": 0,
+        "file_first": 3300,
+        "file_end": 52964,
+        "seq_first": 91,
+        "seq_last": 284,
+        "abs_first": 23296,
+        "abs_end": 72960
+      },
+      "live_bytes_file": 49664,
+      "live_s_at_48k": 8.28,
+      "undDelta": 471324,
+      "expect_undDelta": 471324,
+      "field_undDelta": [
+        470616,
+        471640
+      ],
+      "hostAbs_after": 544284,
+      "absEnd_pre": 72192,
+      "absEnd_post": 78080,
+      "abs_cross_fw": 72960,
+      "abs_cross_pdsq": 72960,
+      "und_ok": true,
+      "identity_diff": 0,
+      "identity_ok": true,
+      "cross_in_window": true,
+      "complete_ok": true,
+      "timing_ok": true,
+      "pass": true
+    }
+  },
+  "period_ms": 5.1,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": 5.1,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 19.0,
+      "p50": 83.0,
+      "p95": 98.0,
+      "p99": 98.0,
+      "min": 19.0,
+      "max": 98.0,
+      "n": 9
+    },
+    "wall_ms": {
+      "p5": 19.265,
+      "p50": 83.408,
+      "p95": 98.862,
+      "p99": 98.862,
+      "min": 19.265,
+      "max": 98.862,
+      "n": 9
+    },
+    "start_to_start_ms": {
+      "p5": 38.74,
+      "p50": 91.962,
+      "p95": 100.085,
+      "p99": 100.085,
+      "min": 38.74,
+      "max": 100.085,
+      "n": 8
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 65536,
+    "consumed": 0,
+    "events": {
+      "silence_in_play": 7
+    },
+    "event_list": [
+      {
+        "t": 1991845.768801142,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1991845.861471786,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1991845.953439612,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1991846.044919787,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1991846.138469272,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1991846.229692771,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 1991846.316578474,
+        "kind": "silence_in_play"
+      }
+    ]
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "23h 23min",
+    "play": "",
+    "armed": true,
+    "hostAbs": 544284,
+    "absEnd": 78080,
+    "absBase": 28928,
+    "streamBytes": 5681152,
+    "underruns": 471324,
+    "liveBytes": 5209828,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 5034,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 9416704,
+        "maxSeq": 991232,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 2097152,
+        "maxSeq": 524288,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 4718592,
+        "maxSeq": 524288,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "GW": {
+    "pass": true,
+    "bytes": 1613824,
+    "lo": 0,
+    "hi": 1613824,
+    "bytes_delta_esp": 1613824,
+    "maxSeq": 1359872
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-08-lab/lab-abend-1556/l3-no-rst overall=PASS

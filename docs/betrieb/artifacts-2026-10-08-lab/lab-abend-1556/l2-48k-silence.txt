@@ -1,0 +1,22 @@
+[mp3float @ 0x592571fbbd40] invalid new backstep -1
+Input #0, mp3, from 'docs/betrieb/artifacts-2026-10-08-lab/lab-abend-1556/l2-48k.bin':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Duration: 00:01:27.75, start: 0.000000, bitrate: 47 kb/s
+  Stream #0:0: Audio: mp3 (mp3float), 44100 Hz, stereo, fltp, 48 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (mp3 (mp3float) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+[mp3float @ 0x592571fcc040] invalid new backstep -1
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Stream #0:0: Audio: pcm_s16le, 44100 Hz, stereo, s16, 1411 kb/s
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[silencedetect @ 0x70b360002380] silence_start: 0
+[mp3float @ 0x592571fcc040] invalid new backstep -1
+    Last message repeated 2 times
+[silencedetect @ 0x70b360002380] silence_end: 87.771429 | silence_duration: 87.771429
+[out#0/null @ 0x592571fbde80] video:0KiB audio:15120KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=N/A time=00:01:27.77 bitrate=N/A speed=1.32e+03x    

@@ -1,0 +1,285 @@
+{
+  "G5": {
+    "pass": true,
+    "burst_median_bps": 8703.0,
+    "late_median_bps": 5887.3,
+    "burst_ok": true,
+    "late_ok": true,
+    "err": null
+  },
+  "G1": {
+    "pass": true,
+    "bytes_before_arm": 86016,
+    "expect_before": 86016,
+    "before_ok": true,
+    "hostAbs": 438272,
+    "underruns": 438272,
+    "expect_und_host": 438272,
+    "und_ok": true,
+    "host_ok": true,
+    "und_host_ok": true,
+    "liveBytes_fw": 0,
+    "liveBytes_ear": 0,
+    "live_ok": true,
+    "class_counts": {
+      "ID3": 2,
+      "SILENCE": 254
+    },
+    "ear": {
+      "live_bytes": 0,
+      "consumed": 0,
+      "events": {},
+      "event_list": []
+    },
+    "silence_ratio": 1.0,
+    "other_ratio": 0.0,
+    "classifier_ok": true
+  },
+  "G3": {
+    "pass": true,
+    "fill_pre": 49152,
+    "fill_wait_s": 1.253,
+    "fill_ok": true,
+    "liveBytes_fw": 487455,
+    "liveBytes_ear": 45056,
+    "expect_live": 49152,
+    "live_ok": true,
+    "underruns": 475105,
+    "hostAbs": 543969,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 11,
+      "SILENCE": 116
+    },
+    "ear": {
+      "live_bytes": 45056,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 116
+      },
+      "event_list": [
+        {
+          "t": 1990467.721729616,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.731809693,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.741810692,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.751809676,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.761895725,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.771982525,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.782068203,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.792557935,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.80294367,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.813195202,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.82336527,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.833800628,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.843923387,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.853975722,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.864036323,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.874161546,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.884232707,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.894615085,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.904913155,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.914983745,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.925024227,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.935115887,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.945175887,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.955265172,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.96526616,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.975277227,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.985333199,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990467.995393359,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.005488245,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.015504782,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.025485552,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.035496228,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.045507105,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.05562782,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.065742633,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.076046333,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.08655997,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.097060041,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.107298999,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.117519141,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.127718454,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.13803014,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.148460018,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.158897682,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.169021562,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.179633585,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.189973413,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.200231217,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.210341742,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1990468.22050138,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "silence_after_live": true
+  },
+  "G4": {
+    "pass": true,
+    "fav2_maxSeq": 524288,
+    "prefetch_s": 1.209,
+    "prefetch_ok": true,
+    "within_few_s": true
+  },
+  "G2": {
+    "pass": true,
+    "maxSeq": 524288,
+    "hostAbs_pre": 524257,
+    "hostAbs_after_arm": 0,
+    "und_delta": -1048545,
+    "host_delta": -524257,
+    "armed": false,
+    "file_full": true,
+    "host_ok": true,
+    "und_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-08-lab/lab-abend-1556/l0-all overall=PASS

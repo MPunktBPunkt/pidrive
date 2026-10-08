@@ -1,0 +1,64 @@
+  # Zeit       Serial  Slot  Reads          Bereich seq Live Prod-s   Ring  Live-B Live-s Stille-B    undΔ   ID3~
+  0 07:43:46.4 PD0096  fav1     96       128K..512K ja  ja    -17.3  40096   40096   6.68   353120       -      -
+  1 07:46:58.9 PD0097  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+  2 07:46:59.0 PD0097  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+  3 07:47:58.8 PD0097  fav0   1148      336K..4928K nein -         -      0       0    0.0  4702208       -      -
+  4 07:48:07.0 PD0097  fav0    815     4928K..8188K nein -         -      0       0    0.0  3338240       -      -
+  5 07:49:05.8 PD0098  fav0   1997        0K..8192K nein -         -      0       0    0.0  8179712       -      -
+  6 07:50:03.7 PD0098  fav2    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+  7 07:50:49.2 PD0099  fav0      8       19K..2011K nein -     234.1  49152       0    0.0    32768       -      -
+  8 07:50:49.7 PD0099  fav2    128         0K..512K nein ja    234.7  49152   49461   8.24   474827  471640   3187
+  9 07:52:54.5 PD0099  fav1    128         0K..512K nein ja      0.3      0       0    0.0   524288       -      -
+ 10 07:54:03.7 PD0099  fav0   1975        0K..8192K nein ja      0.5      0       0    0.0  8089600       -      -
+ 11 07:54:49.2 PD0100  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 13 07:54:50.2 PD0100  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+ 14 07:54:50.5 PD0100  fav1     12         16K..64K ja  -         -      0       0    0.0    49152       -      -
+ 25 07:54:50.5 PD0100  fav2     59       256K..512K nein -         -      0       0    0.0   241664       -      -
+ 26 07:54:50.7 PD0100  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 27 07:55:20.3 PD0100  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 28 07:55:55.9 PD0101  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+ 29 07:55:56.2 PD0101  fav1    128         0K..512K ja  -         -      0       0    0.0   524288       -      -
+ 30 07:56:35.3 PD0101  fav2    128         0K..512K ja  -         -      0       0    0.0   524288       -      -
+ 31 07:57:26.1 PD0102  fav0      8       19K..2011K nein -     163.9  49152       0    0.0    32768       -      -
+ 32 07:57:26.6 PD0102  fav2    128         0K..512K nein ja    164.4  49152   99129  16.52   425159  450560      -
+ 33 07:59:15.3 PD0103  fav0      8       19K..2011K nein -     273.1  49152       0    0.0    32768       -      -
+ 34 07:59:15.7 PD0103  fav2    128         0K..512K ja  ja    273.5  49152   49707   8.28   474581  471640   2941
+ 35 08:00:35.7 PD0104  fav0      8       19K..2011K nein -     353.6  49152       0    0.0    32768       -      -
+ 36 08:00:36.2 PD0104  fav2    128         0K..512K ja  ja    354.0  49152   49570   8.26   474718  470616   4102
+ 37 08:01:28.1 PD0105  fav0      8       19K..2011K nein -     405.9  49152       0    0.0    32768       -      -
+ 38 08:01:28.6 PD0105  fav2    128         0K..512K nein ja    406.4  49152   49586   8.26   474702  401408      -
+ 39 08:02:39.8 PD0106  fav0      8       19K..2011K nein -     477.6  49152       0    0.0    32768       -      -
+ 40 08:02:40.2 PD0106  fav2    128         0K..512K ja  ja    478.0  49152   49610   8.27   474678  471567   3111
+ 41 08:04:02.0 PD0106  fav1    128         0K..512K nein ja      0.6      0       0    0.0   524288       -      -
+  #0: 07:44:07 s3 start P-Quelle PD0096 07:43 | 07:44:07 serial PD0096 | 07:45:01 C Rock build
+  #1: 07:47:06 C serial? PD0097 (war PD0096) | 07:48:03 C Rock tap (nach Autoplay BOB) | 07:48:03 note Autoplay BOB nach Replug trotz Rock zuletzt
+  #2: 07:47:06 C serial? PD0097 (war PD0096) | 07:48:03 C Rock tap (nach Autoplay BOB) | 07:48:03 note Autoplay BOB nach Replug trotz Rock zuletzt
+  #3: 07:48:03 C Rock tap (nach Autoplay BOB) | 07:48:03 note Autoplay BOB nach Replug trotz Rock zuletzt | 07:48:48 C2 unplug (zweiter OTG)
+  #4: 07:48:03 C Rock tap (nach Autoplay BOB) | 07:48:03 note Autoplay BOB nach Replug trotz Rock zuletzt | 07:48:48 C2 unplug (zweiter OTG) | 07:49:39 C2 plug
+  #5: 07:49:39 C2 plug | 07:49:39 C2 note Autoplay Rock Antenne (nicht BOB) | 07:49:40 C2 serial? PD0098 | 07:50:08 operator BOB tap
+  #6: 07:50:08 operator BOB tap | 07:50:25 C3 unplug (von BOB) | 07:51:33 C3 plug | 07:51:33 C3 serial? PD0099
+  #7: 07:51:33 C3 plug | 07:51:33 C3 serial? PD0099 | 07:51:33 C3 note Autoplay BOB Bild ohne Ton
+  #8: 07:51:33 C3 plug | 07:51:33 C3 serial? PD0099 | 07:51:33 C3 note Autoplay BOB Bild ohne Ton
+  #9: 07:52:54 operator Bayern tap | 07:53:37 note Bayern: kein Bild kein Ton | 07:53:37 operator BOB tap (von Bayern) | 07:53:45 note BOB: gleiches Bild + gleicher Tonabschnitt (Resume/P)
+  #10: 07:54:04 operator Rock Antenne tap | 07:54:39 note Rock: kein Bild kein Ton | 07:54:39 C4 unplug (von Rock tot) | 07:55:13 C4 plug
+  #11: 07:55:13 C4 plug | 07:55:13 C4 serial? PD0100 | 07:55:13 C4 note Autoplay BOB ohne Bild ohne Ton | 07:55:23 operator Bayern tap
+  #13: 07:55:13 C4 plug | 07:55:13 C4 serial? PD0100 | 07:55:13 C4 note Autoplay BOB ohne Bild ohne Ton | 07:55:23 operator Bayern tap
+  #14: 07:55:13 C4 plug | 07:55:13 C4 serial? PD0100 | 07:55:13 C4 note Autoplay BOB ohne Bild ohne Ton | 07:55:23 operator Bayern tap
+  #25: 07:55:13 C4 plug | 07:55:13 C4 serial? PD0100 | 07:55:13 C4 note Autoplay BOB ohne Bild ohne Ton | 07:55:23 operator Bayern tap
+  #26: 07:55:13 C4 plug | 07:55:13 C4 serial? PD0100 | 07:55:13 C4 note Autoplay BOB ohne Bild ohne Ton | 07:55:23 operator Bayern tap
+  #27: 07:55:23 operator Bayern tap | 07:55:55 C5 unplug 07:55 (von Bayern) | 07:56:33 C5 plug | 07:56:33 C5 serial? PD0101
+  #28: 07:55:55 C5 unplug 07:55 (von Bayern) | 07:56:33 C5 plug | 07:56:33 C5 serial? PD0101 | 07:56:33 C5 note Autoplay Bayern ohne Bild ohne Ton
+  #29: 07:55:55 C5 unplug 07:55 (von Bayern) | 07:56:33 C5 plug | 07:56:33 C5 serial? PD0101 | 07:56:33 C5 note Autoplay Bayern ohne Bild ohne Ton
+  #30: 07:56:33 C5 plug | 07:56:33 C5 serial? PD0101 | 07:56:33 C5 note Autoplay Bayern ohne Bild ohne Ton | 07:56:44 operator BOB tap
+  #31: 07:57:49 C6 plug | 07:57:49 C6 serial? PD0102 | 07:57:49 C6 note Autoplay BOB Bild da | 07:58:24 note BOB: Cursor mitten → Stille; von vorn starten → Ton wieder
+  #32: 07:57:49 C6 plug | 07:57:49 C6 serial? PD0102 | 07:57:49 C6 note Autoplay BOB Bild da | 07:58:24 note BOB: Cursor mitten → Stille; von vorn starten → Ton wieder
+  #33: 08:00:31 C7 plug | 08:00:31 C7 serial? PD0104 | 08:00:31 C7 note REPRO: BOB Resume Mitte Bild ja Ton nein; von vorn = Ton
+  #34: 08:00:31 C7 plug | 08:00:31 C7 serial? PD0104 | 08:00:31 C7 note REPRO: BOB Resume Mitte Bild ja Ton nein; von vorn = Ton
+  #35: 08:00:31 C7 plug | 08:00:31 C7 serial? PD0104 | 08:00:31 C7 note REPRO: BOB Resume Mitte Bild ja Ton nein; von vorn = Ton | 08:01:28 C8 unplug (Repro-Runde)
+  #36: 08:00:31 C7 plug | 08:00:31 C7 serial? PD0104 | 08:00:31 C7 note REPRO: BOB Resume Mitte Bild ja Ton nein; von vorn = Ton | 08:01:28 C8 unplug (Repro-Runde)
+  #37: 08:01:28 C8 unplug (Repro-Runde) | 08:02:32 C9 unplug 08:02 | 08:02:49 C8 plug (nachträglich aus Watch/Status) | 08:02:49 C8 serial? PD0106
+  #38: 08:01:28 C8 unplug (Repro-Runde) | 08:02:32 C9 unplug 08:02 | 08:02:49 C8 plug (nachträglich aus Watch/Status) | 08:02:49 C8 serial? PD0106
+  #39: 08:02:49 C8 plug (nachträglich aus Watch/Status) | 08:02:49 C8 serial? PD0106 | 08:02:53 C9 plug | 08:02:53 C9 serial? PD0106
+  #40: 08:02:49 C8 plug (nachträglich aus Watch/Status) | 08:02:49 C8 serial? PD0106 | 08:02:53 C9 plug | 08:02:53 C9 serial? PD0106
+  #41: 08:03:58 C9 note REPRO: Resume hinten Bild ja Ton nein; von vorn = wenige Sek Ton | 08:04:13 s3 ende
+wrote docs/betrieb/artifacts-2026-10-08-feld/feld-s3-prep/s3-20261008-074403/live-window/LIVE-WINDOW.json

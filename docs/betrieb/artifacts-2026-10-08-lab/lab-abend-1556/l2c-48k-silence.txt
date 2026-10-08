@@ -1,0 +1,23 @@
+[mp3 @ 0x568d60f02200] Skipping 43 bytes of junk at 0.
+[mp3 @ 0x568d60f02200] Estimating duration from bitrate, this may be inaccurate
+Input #0, mp3, from 'docs/betrieb/artifacts-2026-10-08-lab/lab-abend-1556/l2c-48k.bin':
+  Duration: 00:01:27.37, start: 0.000000, bitrate: 48 kb/s
+  Stream #0:0: Audio: mp3 (mp3float), 22050 Hz, mono, fltp, 48 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (mp3 (mp3float) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Stream #0:0: Audio: pcm_s16le, 22050 Hz, mono, s16, 352 kb/s
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[mp3float @ 0x568d60f14bc0] Header missing
+[aist#0:0/mp3 @ 0x568d60f05200] [dec:mp3float @ 0x568d60f14380] Error submitting packet to decoder: Invalid data found when processing input
+[af#0:0 @ 0x568d60f12fc0] Reconfiguring filter graph because audio parameters changed to 22050 Hz, stereo, fltp
+[af#0:0 @ 0x568d60f12fc0] Reconfiguring filter graph because audio parameters changed to 44100 Hz, stereo, fltp
+[silencedetect @ 0x7d1fe40037c0] silence_start: 8.254694
+[mp3float @ 0x568d60f14bc0] invalid new backstep -1
+[silencedetect @ 0x7d1fe40037c0] silence_end: 87.745306 | silence_duration: 79.490612
+[out#0/null @ 0x568d60f04e40] video:0KiB audio:3779KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=N/A time=00:01:27.74 bitrate=N/A speed=1.06e+03x    

@@ -1,0 +1,102 @@
+{
+  "golden": [
+    "GW"
+  ],
+  "results": {
+    "GW": {
+      "bytes": 1613824,
+      "lo": 0,
+      "hi": 1613824,
+      "bytes_delta_esp": 1613824,
+      "maxSeq": 1359872,
+      "pass": true
+    }
+  },
+  "period_ms": null,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": null,
+    "gap_ms": 4.0,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 4.0,
+      "p95": 5.0,
+      "p99": 19.0,
+      "min": 4.0,
+      "max": 44.0,
+      "n": 394
+    },
+    "wall_ms": {
+      "p5": 4.051,
+      "p50": 4.356,
+      "p95": 4.769,
+      "p99": 18.738,
+      "min": 3.99,
+      "max": 44.382,
+      "n": 394
+    },
+    "start_to_start_ms": {
+      "p5": 8.684,
+      "p50": 9.026,
+      "p95": 9.91,
+      "p99": 23.535,
+      "min": 8.607,
+      "max": 49.9,
+      "n": 393
+    },
+    "late_reads": 0
+  },
+  "ear": {
+    "live_bytes": 0,
+    "consumed": 0,
+    "events": {},
+    "event_list": []
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "59s",
+    "play": "fav0",
+    "armed": false,
+    "hostAbs": 0,
+    "absEnd": 0,
+    "absBase": 0,
+    "streamBytes": 0,
+    "underruns": 0,
+    "liveBytes": 0,
+    "ring_size": 0,
+    "ring_cap": 49152,
+    "id3Len": 0,
+    "readCount": 859,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 2801664,
+        "maxSeq": 1359872,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "REPLUG": {
+    "pass": true,
+    "uid": "fav2",
+    "cmd_kib": 4,
+    "commands": 128,
+    "bytes": 524288,
+    "read_ms": 848.3,
+    "head_ms": 19.47,
+    "head_pause_ms": 19.0,
+    "field_read_ms": [
+      651,
+      665
+    ],
+    "rate_kBps": 618.1,
+    "sg_ms_per_4k": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 19.0,
+      "n": 128
+    },
+    "ring_pre": 49152,
+    "ring_full_pre": true,
+    "producer_bytes": 79616,
+    "producer_err": null,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 13,
+      "SILENCE": 114
+    },
+    "ear": {
+      "live_bytes": 53248,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 114
+      },
+      "event_list": [
+        {
+          "t": 1991120.816059958,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.822592512,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.829149893,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.835591385,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.841880569,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.848091606,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.854445733,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.860782908,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.866938179,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.87319369,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.880087677,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.886417458,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.892730707,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.899198108,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.905684866,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.911750598,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.917905769,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.924237804,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.930556544,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.93705281,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.943148538,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.948974688,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.954748097,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.960765348,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.966805802,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.972808515,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.978891289,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.984775989,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.99055577,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991120.996422787,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.002994275,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.009551956,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.015696277,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.021706865,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.027651067,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.033560153,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.039406831,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.045281101,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.05171006,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.057709116,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.063648248,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.069579817,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.075415995,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.081275477,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.087156851,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.093224767,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.09935444,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.105383442,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.11143652,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1991121.117338964,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "id3Len_dump": 3300,
+    "id3Len_fw": 3300,
+    "live_span": {
+      "stamps": 198,
+      "seq_gaps": 1,
+      "file_first": 3300,
+      "file_end": 53760,
+      "seq_first": 87,
+      "seq_last": 285,
+      "abs_first": 22272,
+      "abs_end": 73216
+    },
+    "live_bytes_file": 50460,
+    "live_s_at_48k": 8.41,
+    "undDelta": 470528,
+    "expect_undDelta": 470528,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 543744,
+    "absEnd_pre": 71424,
+    "absEnd_post": 78592,
+    "abs_cross_fw": 73216,
+    "abs_cross_pdsq": 73216,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": true
+  }
+}
+OUT docs/betrieb/artifacts-2026-10-08-lab/lab-abend-1556/l1-4k-r2 overall=PASS

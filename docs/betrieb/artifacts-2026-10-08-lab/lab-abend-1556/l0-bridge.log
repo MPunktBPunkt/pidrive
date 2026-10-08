@@ -1,0 +1,39 @@
+[audio] target_bps=6000 bitrate=48k marker=True marker_period=1 re_local=True
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] enabled=True seed_plugged=True
+[tx] {"t":"hello","ver":1}
+[rx] {"t":"hello_ack","ver":"0.4.46-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+[hello_ack] ver=0.4.46-dev slots=4 page=True tcp=True
+[tx] {"t":"audio_stop"}
+[bridge] tcp:192.168.178.88:9090 audio=48k paging=on
+[tx] {"t":"ping"}
+[tx] {"t":"menu_set","rev":9301,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"}]}
+[msc-lock] sealing publish (seal)
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[audio] stop (SoftAP/Remote)
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[rx] {"t":"pong"}
+[rx] {"t":"menu_ack","ok":true,"n":3,"rev":9301}
+[menu_ack] ok=True n=3 rev=9301
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!]
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[rx] {"t":"event","op":"play_uid","uid":"fav2"}
+[trace] t=0ms play_uid=fav2
+[trace] t=50ms audio.start fav fav2
+[id3] cover DEFAULT /home/martin/projects/pidrive/assets/usb-msc-covers/default.jpg (2018 B)
+[tx] {"t":"audio_start","uid":"fav2","codec":"mp3","br":"48k","cSrc":"default","cPath":"default.jpg","cTry":"stations/bob.jpg|stations/radio_bob.jpg"}
+[trace] audio_start sent uid=fav2 cover=default
+[id3] skip: python3-mutagen missing
+[audio] ffmpeg https://streams.radiobob.de/bob-national/mp3-128 @ 48k target_bps=6000 marker=1s
+[audio] marker_t0=1791468165.533
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav2","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav2', 'id3': True, 'warmup': 0}
+[audio] forwarded 13024 B / 2s
+[audio] forwarded 10976 B / 2s
+[audio] forwarded 12000 B / 2s
+[audio] forwarded 12000 B / 2s
+[audio] forwarded 12000 B / 2s
+[audio] forwarded 12000 B / 2s
