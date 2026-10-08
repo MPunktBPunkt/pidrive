@@ -14,8 +14,12 @@
 | P-Schlüssel = Dateiname? | **nein allein** — Rename/Cache-Bust, HU weiter Mid-File |
 | Reboot-Rate Stecken | **hoch** (~24 Uptime-Drops, 38 Serials) — Versorgung |
 
-## Nächste Lab-Schritte
+## Lab-Nachlauf (gleicher Abend)
 
-1. Software-Anteil Reboots: viele REPLUG unter Sim bei stabilem Netzteil (L4).
-2. P ohne Name: Größe/Pfad-Hypothese (nur Spec bis FW-Go).
-3. Optional: Head-Play → Mid-Continue → Silence-Zeit vs. Ring.
+[`../artifacts-2026-10-08-lab/lab-abend-nach-s4-1741/ERGEBNIS-LAB-NACH-S4.md`](../artifacts-2026-10-08-lab/lab-abend-nach-s4-1741/ERGEBNIS-LAB-NACH-S4.md): REPLUG×10 → **0 ESP-Uptime-Drops**. Software-Host-Pfad unwahrscheinlich als Feld-Reset-Ursache → Versorgung.
+
+## Nächste Schritte
+
+1. Feld: Netzteil-A/B / VBUS-Blocker (O3/O4), weniger Stecken.
+2. P ohne Name: Größe/Pfad (FW-Go).
+3. Lab: authorized/VBUS wo sysfs schreibbar + UART-Reset-Grund.

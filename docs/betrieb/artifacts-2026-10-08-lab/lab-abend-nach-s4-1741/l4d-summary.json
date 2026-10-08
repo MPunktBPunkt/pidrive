@@ -1,0 +1,12 @@
+{
+  "cycles": 10,
+  "pass": 2,
+  "fail": 8,
+  "uptime_drops": 0,
+  "first_up": "1h 47min",
+  "last_up": "1h 51min",
+  "first_sec": 6420,
+  "last_sec": 6660,
+  "usb_authorized": "RO \u2014 not used",
+  "method": "REPLUG\u00d710 sudo -A; sim owns pump"
+}

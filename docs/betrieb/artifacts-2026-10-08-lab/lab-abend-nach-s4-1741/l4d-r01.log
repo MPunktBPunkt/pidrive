@@ -1,0 +1,276 @@
+{
+  "REPLUG": {
+    "pass": false,
+    "uid": "fav2",
+    "cmd_kib": 4,
+    "commands": 128,
+    "bytes": 524288,
+    "read_ms": 847.0,
+    "head_ms": 19.2,
+    "head_pause_ms": 19.0,
+    "field_read_ms": [
+      651,
+      665
+    ],
+    "rate_kBps": 619.0,
+    "sg_ms_per_4k": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 31.0,
+      "n": 128
+    },
+    "ring_pre": 47872,
+    "ring_full_pre": false,
+    "producer_bytes": 55552,
+    "producer_err": null,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 12,
+      "SILENCE": 115
+    },
+    "ear": {
+      "live_bytes": 49152,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 115
+      },
+      "event_list": [
+        {
+          "t": 1998452.003604026,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.009855048,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.015945417,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.022312369,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.028907762,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.035461126,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.041613222,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.047505406,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.053280419,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.059053789,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.064824023,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.070705547,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.076869696,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.083199497,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.089486988,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.095626921,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.101426781,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.107308375,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.113318533,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.119490807,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.125749994,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.131710458,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.137560843,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.143690927,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.149980082,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.156329711,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.162673469,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.168760982,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.174714392,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.180493864,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.186271071,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.19220278,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.198807741,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.205351808,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.211509123,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.217321276,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.223042748,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.228721259,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.234527611,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.240984262,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.24744957,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.253738454,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.259845073,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.26564333,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.271385551,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.277205068,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.283210737,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.289204283,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.295204021,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 1998452.301216052,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "id3Len_dump": 3300,
+    "id3Len_fw": 3300,
+    "live_span": {
+      "stamps": 191,
+      "seq_gaps": 0,
+      "file_first": 3300,
+      "file_end": 52196,
+      "seq_first": 0,
+      "seq_last": 190,
+      "abs_first": 0,
+      "abs_end": 48896
+    },
+    "live_bytes_file": 48896,
+    "live_s_at_48k": 8.15,
+    "undDelta": 472092,
+    "expect_undDelta": 472092,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 520988,
+    "absEnd_pre": 47872,
+    "absEnd_post": 54272,
+    "abs_cross_fw": 48896,
+    "abs_cross_pdsq": 48896,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": true
+  }
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1741/l4d-r01 overall=FAIL

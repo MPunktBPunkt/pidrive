@@ -1,9 +1,42 @@
 {
-  "cycles": 0,
+  "cycles": 15,
+  "rc_nonzero": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
   "uptime_drops": 0,
-  "fail_lines": 30,
+  "passed_reports_PASS_string": 0,
   "reports": 0,
-  "first_up": null,
-  "last_up": null,
-  "serials": []
+  "first": {
+    "uptime": "1h 44min",
+    "sec": 0,
+    "serial": "PD0262",
+    "peer": "",
+    "otg": true,
+    "n": 1,
+    "rc": 1
+  },
+  "last": {
+    "uptime": "1h 45min",
+    "sec": 0,
+    "serial": "PD0262",
+    "peer": "",
+    "otg": true,
+    "n": 15,
+    "rc": 1
+  },
+  "note": "sysfs USB authorized RO on this host; L4 via REPLUG\u00d7N (sim owns pump)"
 }
