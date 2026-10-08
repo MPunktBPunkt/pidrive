@@ -1,0 +1,774 @@
+{
+  "ok": true,
+  "nextSeq": 1109,
+  "events": [
+    {
+      "seq": 981,
+      "ms": 12170347,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0314"
+    },
+    {
+      "seq": 982,
+      "ms": 12170347,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 983,
+      "ms": 12170947,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 984,
+      "ms": 12173007,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0315"
+    },
+    {
+      "seq": 985,
+      "ms": 12173007,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 986,
+      "ms": 12173607,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 987,
+      "ms": 12175163,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=4096 +4096B age=2967770ms prefetch"
+    },
+    {
+      "seq": 988,
+      "ms": 12175173,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 989,
+      "ms": 12175233,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=120..8192 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"
+    },
+    {
+      "seq": 990,
+      "ms": 12175686,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0316"
+    },
+    {
+      "seq": 991,
+      "ms": 12175686,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 992,
+      "ms": 12206076,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 993,
+      "ms": 12206185,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=264 +4096B age=2998792ms prefetch"
+    },
+    {
+      "seq": 994,
+      "ms": 12206195,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 995,
+      "ms": 12206224,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=264..320 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"
+    },
+    {
+      "seq": 996,
+      "ms": 12206986,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=136 +53248B age=2999593ms prefetch"
+    },
+    {
+      "seq": 997,
+      "ms": 12206996,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 998,
+      "ms": 12290597,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 999,
+      "ms": 12290597,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1000,
+      "ms": 12291690,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0317"
+    },
+    {
+      "seq": 1001,
+      "ms": 12291690,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1002,
+      "ms": 12292290,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1003,
+      "ms": 12295376,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0318"
+    },
+    {
+      "seq": 1004,
+      "ms": 12295376,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1005,
+      "ms": 12295976,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1006,
+      "ms": 12297623,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=4096 +4096B age=3090230ms prefetch"
+    },
+    {
+      "seq": 1007,
+      "ms": 12297634,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 1008,
+      "ms": 12297697,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=120..8192 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"
+    },
+    {
+      "seq": 1009,
+      "ms": 12298426,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=2048 +4096B age=3091033ms prefetch"
+    },
+    {
+      "seq": 1010,
+      "ms": 12298437,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 1011,
+      "ms": 12299070,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0319"
+    },
+    {
+      "seq": 1012,
+      "ms": 12299070,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1013,
+      "ms": 12299670,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1014,
+      "ms": 12302747,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0320"
+    },
+    {
+      "seq": 1015,
+      "ms": 12302747,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1016,
+      "ms": 12303347,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1017,
+      "ms": 12304787,
+      "code": "play.reject",
+      "detail": "plug_window uid=fav0 from=88 +4096B age=3097394ms prefetch"
+    },
+    {
+      "seq": 1018,
+      "ms": 12304797,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 1019,
+      "ms": 12304830,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=96..152 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"
+    },
+    {
+      "seq": 1020,
+      "ms": 12305588,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=136 +184320B age=3098195ms prefetch"
+    },
+    {
+      "seq": 1021,
+      "ms": 12305598,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 1022,
+      "ms": 12306436,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0321"
+    },
+    {
+      "seq": 1023,
+      "ms": 12306436,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1024,
+      "ms": 12307036,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1025,
+      "ms": 12311792,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1026,
+      "ms": 12312027,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1027,
+      "ms": 12312028,
+      "code": "pump.play_replay",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1028,
+      "ms": 12312030,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1029,
+      "ms": 12312034,
+      "code": "audio.stop",
+      "detail": ""
+    },
+    {
+      "seq": 1030,
+      "ms": 12312071,
+      "code": "menu.set",
+      "detail": "n=3 rev=9301"
+    },
+    {
+      "seq": 1031,
+      "ms": 12328105,
+      "code": "pump.tcp.replace",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1032,
+      "ms": 12328107,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1033,
+      "ms": 12328110,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1034,
+      "ms": 12328789,
+      "code": "audio.stop",
+      "detail": ""
+    },
+    {
+      "seq": 1035,
+      "ms": 12328796,
+      "code": "msc.slots",
+      "detail": "slots=4"
+    },
+    {
+      "seq": 1036,
+      "ms": 12328797,
+      "code": "msc.remount",
+      "detail": "menu ser=PD0322"
+    },
+    {
+      "seq": 1037,
+      "ms": 12328800,
+      "code": "menu.set",
+      "detail": "n=4 rev=1"
+    },
+    {
+      "seq": 1038,
+      "ms": 12329397,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1039,
+      "ms": 12329512,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0323"
+    },
+    {
+      "seq": 1040,
+      "ms": 12329512,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1041,
+      "ms": 12330112,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1042,
+      "ms": 12331035,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=4096 +4096B age=3123642ms prefetch"
+    },
+    {
+      "seq": 1043,
+      "ms": 12331046,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 1044,
+      "ms": 12331108,
+      "code": "cold_body_burst",
+      "detail": "s=0 lba=120..8192 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"
+    },
+    {
+      "seq": 1045,
+      "ms": 12331850,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav0 from=120 +4096B age=3124457ms prefetch"
+    },
+    {
+      "seq": 1046,
+      "ms": 12331861,
+      "code": "msc.prefetch",
+      "detail": "fav0"
+    },
+    {
+      "seq": 1047,
+      "ms": 12333192,
+      "code": "pump.tcp.replace",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1048,
+      "ms": 12333194,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1049,
+      "ms": 12333197,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1050,
+      "ms": 12333500,
+      "code": "menu.set",
+      "detail": "n=4 rev=1"
+    },
+    {
+      "seq": 1051,
+      "ms": 12336674,
+      "code": "pump.tcp.replace",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1052,
+      "ms": 12336674,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1053,
+      "ms": 12336677,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1054,
+      "ms": 12336982,
+      "code": "menu.set",
+      "detail": "n=4 rev=1"
+    },
+    {
+      "seq": 1055,
+      "ms": 12337601,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0324"
+    },
+    {
+      "seq": 1056,
+      "ms": 12337601,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1057,
+      "ms": 12338201,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1058,
+      "ms": 12341179,
+      "code": "pump.tcp.replace",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1059,
+      "ms": 12341181,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1060,
+      "ms": 12341184,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1061,
+      "ms": 12341490,
+      "code": "menu.set",
+      "detail": "n=4 rev=1"
+    },
+    {
+      "seq": 1062,
+      "ms": 12342136,
+      "code": "audio.start",
+      "detail": "fav2"
+    },
+    {
+      "seq": 1063,
+      "ms": 12342137,
+      "code": "msc.stream_on",
+      "detail": "fav2"
+    },
+    {
+      "seq": 1064,
+      "ms": 12342137,
+      "code": "msc.overlay_warm",
+      "detail": "warm=0 pre=0"
+    },
+    {
+      "seq": 1065,
+      "ms": 12354623,
+      "code": "play.reject",
+      "detail": "plug_window uid=fav2 from=17489 +4096B age=3147230ms"
+    },
+    {
+      "seq": 1066,
+      "ms": 12354708,
+      "code": "cold_body_burst",
+      "detail": "s=2 lba=17505..17561 n=8 B=32768 w=0 ev=not_from_head set=0 fav2"
+    },
+    {
+      "seq": 1067,
+      "ms": 12355423,
+      "code": "play.reject",
+      "detail": "plug_window uid=fav2 from=17489 +507904B age=3148030ms"
+    },
+    {
+      "seq": 1068,
+      "ms": 12375872,
+      "code": "pump.tcp.down",
+      "detail": ""
+    },
+    {
+      "seq": 1069,
+      "ms": 13396618,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 1070,
+      "ms": 13396618,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1071,
+      "ms": 13400813,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1072,
+      "ms": 13401052,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1073,
+      "ms": 13401052,
+      "code": "pump.play_replay",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1074,
+      "ms": 13401054,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1075,
+      "ms": 13401055,
+      "code": "msc.stream_off",
+      "detail": ""
+    },
+    {
+      "seq": 1076,
+      "ms": 13401058,
+      "code": "audio.stop",
+      "detail": ""
+    },
+    {
+      "seq": 1077,
+      "ms": 13401099,
+      "code": "msc.slots",
+      "detail": "slots=3"
+    },
+    {
+      "seq": 1078,
+      "ms": 13401101,
+      "code": "msc.remount",
+      "detail": "menu ser=PD0325"
+    },
+    {
+      "seq": 1079,
+      "ms": 13401103,
+      "code": "menu.set",
+      "detail": "n=3 rev=9301"
+    },
+    {
+      "seq": 1080,
+      "ms": 13401701,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1081,
+      "ms": 13406652,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 1082,
+      "ms": 13406654,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1083,
+      "ms": 13407679,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0326"
+    },
+    {
+      "seq": 1084,
+      "ms": 13407679,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1085,
+      "ms": 13408279,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1086,
+      "ms": 13412898,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 1087,
+      "ms": 13412901,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1088,
+      "ms": 13413926,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0327"
+    },
+    {
+      "seq": 1089,
+      "ms": 13413926,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1090,
+      "ms": 13414526,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1091,
+      "ms": 13439696,
+      "code": "lab.stop",
+      "detail": "remote"
+    },
+    {
+      "seq": 1092,
+      "ms": 13439696,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1093,
+      "ms": 13442291,
+      "code": "msc.remount",
+      "detail": "lab ser=PD0328"
+    },
+    {
+      "seq": 1094,
+      "ms": 13442291,
+      "code": "lab.remount",
+      "detail": "softap"
+    },
+    {
+      "seq": 1095,
+      "ms": 13442891,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1096,
+      "ms": 13445596,
+      "code": "pump.tcp.replace",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1097,
+      "ms": 13445598,
+      "code": "pump.tcp.up",
+      "detail": "192.168.178.187"
+    },
+    {
+      "seq": 1098,
+      "ms": 13445601,
+      "code": "pump.hello",
+      "detail": "tcp"
+    },
+    {
+      "seq": 1099,
+      "ms": 13445601,
+      "code": "pump.play_replay",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1100,
+      "ms": 13445604,
+      "code": "pump.event",
+      "detail": "pump:stop"
+    },
+    {
+      "seq": 1101,
+      "ms": 13446278,
+      "code": "audio.stop",
+      "detail": ""
+    },
+    {
+      "seq": 1102,
+      "ms": 13446336,
+      "code": "msc.slots",
+      "detail": "slots=4"
+    },
+    {
+      "seq": 1103,
+      "ms": 13446338,
+      "code": "msc.remount",
+      "detail": "menu ser=PD0329"
+    },
+    {
+      "seq": 1104,
+      "ms": 13446340,
+      "code": "menu.set",
+      "detail": "n=4 rev=1"
+    },
+    {
+      "seq": 1105,
+      "ms": 13449931,
+      "code": "msc.media_on",
+      "detail": "remount"
+    },
+    {
+      "seq": 1106,
+      "ms": 13450198,
+      "code": "play.reject",
+      "detail": "not_from_head uid=fav2 from=17617 +4096B age=4242804ms prefetch"
+    },
+    {
+      "seq": 1107,
+      "ms": 13450211,
+      "code": "msc.prefetch",
+      "detail": "fav2"
+    },
+    {
+      "seq": 1108,
+      "ms": 13450279,
+      "code": "cold_body_burst",
+      "detail": "s=2 lba=17617..17673 n=8 B=32768 w=0 ev=not_from_head set=0 fav2"
+    }
+  ]
+}

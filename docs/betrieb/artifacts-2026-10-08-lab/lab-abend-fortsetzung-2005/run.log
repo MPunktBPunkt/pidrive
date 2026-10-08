@@ -1,0 +1,15 @@
+K3 {'override_file': '/tmp/pidrive-name-overrides-lab2005.json', 'want': 'Radio BOB LAB 1008', 'name_after_override': 'Radio BOB LAB 1008', 'override_ok': True, 'name_after_clear': 'Radio BOB LAB 1008', 'restore_ok': True, 'uptime': '3h 43min', 'serial': 'PD0327', 'pass': True}
+reject_matrix {'rej_pre': 2351, 'rej_after_mid': 2383, 'mid_delta': 32, 'mid_reject_samples': ['not_from_head uid=fav0 from=136 +184320B age=3098195ms prefetch', 'not_from_head uid=fav0 from=4096 +4096B age=3123642ms prefetch', 'not_from_head uid=fav0 from=120 +4096B age=3124457ms prefetch', 'plug_window uid=fav2 from=17489 +4096B age=3147230ms', 'plug_window uid=fav2 from=17489 +507904B age=3148030ms', 'not_from_head uid=fav2 from=17617 +4096B age=4242804ms prefetch'], 'mid_saw_not_from_head': True, 'mid_sg_rc': 0, 'mid_sg_out': '{"bytes": 131072, "rej": null}\n', 'head_replug_pass': True, 'live_s_at_bps': 8.32, 'live_bytes_file': 49920, 'pass': True}
+48k": 8.41, "live_s_at_bps": 12.62, "realtime_bps": 4000, "identity_ok": true, "ring_full_pre": true, "sim_rc": 0}
+{"i": 2, "pass": true, "live_bytes_file": 50176, "live_s_at_48k": 8.36, "live_s_at_bps": 12.54, "realtime_bps": 4000, "identity_ok": true, "ring_full_pre": true, "sim_rc": 0}
+{"i": 3, "pass": true, "live_bytes_file": 50176, "live_s_at_48k": 8.36, "live_s_at_bps": 12.54, "realtime_bps": 4000, "identity_ok": true, "ring_full_pre": true, "sim_rc": 0}
+SUMMARY {"bitrate": "32k", "bps": 4000, "rounds": 3, "pass_n": 3, "results": [{"i": 1, "pass": true, "live_bytes_file": 50460, "live_s_at_48k": 8.41, "live_s_at_bps": 12.62, "realtime_bps": 4000, "identity_ok": true, "ring_full_pre": true, "sim_rc": 0}, {"i": 2, "pass": true, "live_bytes_file": 50176, "live_s_at_48k": 8.36, "live_s_at_bps": 12.54, "realtime_bps": 4000, "identity_ok": true, "ring_full_pre": true, "sim_rc": 0}, {"i": 3, "pass": true, "live_bytes_file": 50176, "live_s_at_48k": 8.36, "live_s_at_bps": 12.54, "realtime_bps": 4000, "identity_ok": true, "ring_full_pre": true, "sim_rc": 0}], "pass": true}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-2005/fenster-32k-x3
+
+OVERALL {
+  "k3_override": true,
+  "reject_matrix": true,
+  "fenster_32k_x3": true,
+  "uptime": "3h 47min"
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-2005

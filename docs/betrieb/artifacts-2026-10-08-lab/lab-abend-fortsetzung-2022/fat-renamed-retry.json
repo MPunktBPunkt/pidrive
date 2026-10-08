@@ -1,0 +1,94 @@
+{
+  "bpb": {
+    "bps": 512,
+    "spc": 8,
+    "reserved": 1,
+    "nfats": 2,
+    "root_ents": 512,
+    "fatsz16": 16,
+    "totsec16": 32768,
+    "totsec32": 0
+  },
+  "root": [
+    {
+      "short": "PD0353",
+      "lfn": null,
+      "name": "PD0353",
+      "attr": 8,
+      "dir": false,
+      "cluster": 0,
+      "size": 0
+    },
+    {
+      "short": "STATIONS",
+      "lfn": null,
+      "name": "STATIONS",
+      "attr": 16,
+      "dir": true,
+      "cluster": 2,
+      "size": 0
+    },
+    {
+      "short": "SETTINGS",
+      "lfn": null,
+      "name": "SETTINGS",
+      "attr": 16,
+      "dir": true,
+      "cluster": 3,
+      "size": 0
+    }
+  ],
+  "path": "STATIONS",
+  "entries": [
+    {
+      "short": ".",
+      "lfn": null,
+      "name": ".",
+      "attr": 16,
+      "dir": true,
+      "cluster": 2,
+      "size": 0
+    },
+    {
+      "short": "..",
+      "lfn": null,
+      "name": "..",
+      "attr": 16,
+      "dir": true,
+      "cluster": 0,
+      "size": 0
+    },
+    {
+      "short": "1OCKANTE.MP3",
+      "lfn": "Rock Antenne.mp3",
+      "name": "Rock Antenne.mp3",
+      "attr": 32,
+      "dir": false,
+      "cluster": 4,
+      "size": 8388608
+    },
+    {
+      "short": "2OCKANTE.MP3",
+      "lfn": "Rock Antenne Bayern.mp3",
+      "name": "Rock Antenne Bayern.mp3",
+      "attr": 32,
+      "dir": false,
+      "cluster": 2052,
+      "size": 524288
+    },
+    {
+      "short": "3ADIOBOB.MP3",
+      "lfn": "Radio BOB LAB 1008.mp3",
+      "name": "Radio BOB LAB 1008.mp3",
+      "attr": 32,
+      "dir": false,
+      "cluster": 2180,
+      "size": 524288
+    }
+  ],
+  "names": [
+    "Rock Antenne.mp3",
+    "Rock Antenne Bayern.mp3",
+    "Radio BOB LAB 1008.mp3"
+  ]
+}

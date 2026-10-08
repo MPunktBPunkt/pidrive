@@ -70,6 +70,10 @@ Zwei Episodenklassen immer trennen:
 
 **Freeze halten — kein OTA / kein Stall-Flash ohne explizites Go.**
 
+**Lab-Gate (08.10. Abend): geschlossen** für Ringfenster, Bitrate-Leiter, Q10-4 KiB, Klasse-A-Remount, K3-FAT, Mid-Reject. UART/`authorized` im Lab-CT nicht verfügbar.  
+**Gesamtbericht Lab:** [`../artifacts-2026-10-08-lab/GESAMTBERICHT-LAB-ABEND-NACH-S4-2026-10-08.md`](../artifacts-2026-10-08-lab/GESAMTBERICHT-LAB-ABEND-NACH-S4-2026-10-08.md)  
+**Weiter = Feld s5:** [`feld-s5-prep/`](feld-s5-prep/) · [`FELDPROTOKOLL-S5-FENSTER-Q11.md`](FELDPROTOKOLL-S5-FENSTER-Q11.md) · Default Bridge **32k**.
+
 ### P0 — Feld: Reset-Ursache (Q11)
 
 1. UART-Bootlog **ohne** DTR/RTS.  
@@ -96,11 +100,18 @@ Erst nach P0/P1-Eingrenzung; Spec: `STALL-BUILD-SPEC-2026-10-08.md`. Reset-Telem
 ### Lab parallel
 
 - REPLUG mit Prefill: erledigt `lab-abend-nach-s4-1837` — **5/5 PASS**, live_s 8,28–8,41 s, **0** Drops ([`ERGEBNIS`](../artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/ERGEBNIS.md)).  
-- authorized/VBUS wo sysfs schreibbar oder `uhubctl`.  
-- `Live-s`-Metrik immer mit Ring/undΔ zitieren (Mehrdeutigkeit #167).
+- Bitrate-Leiter ohne FW: 32k ≈12,6 s · 24k ≈16,6 s (`lab-fenster-32k-1917`, `lab-fenster-24k-1919`).  
+- Fortsetzung 19:40: Q10-Sniff **4 KiB**, Klasse-A Remount×5 **0** Drops, authorized weiter RO — [`lab-abend-fortsetzung-1940/ERGEBNIS`](../artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/ERGEBNIS.md). Tool: `tools/lab_q10_read_sniff.py`; Sim: `live_s_at_bps` / `--replug-bps`.  
+- Fortsetzung 20:05: K3 Name-Override+Remount **PASS**, Mid-SG Reject vs Head-REPLUG **PASS**, 32k×3 **12,5–12,6 s** — [`lab-abend-fortsetzung-2005/ERGEBNIS`](../artifacts-2026-10-08-lab/lab-abend-fortsetzung-2005/ERGEBNIS.md); Tool `tools/lab_fenster_bitrate.py`.  
+- Fortsetzung 20:22: K3 **FAT** `Radio BOB LAB 1008.mp3` sichtbar (`lab_fat_list.py`), 24k×3 **16,7–16,8 s**, UART im Lab-CT **fehlt** — [`lab-abend-fortsetzung-2022/ERGEBNIS`](../artifacts-2026-10-08-lab/lab-abend-fortsetzung-2022/ERGEBNIS.md).  
+- Regression 20:35: 32k **12,61 s** + Mid-Reject + playDetect-Snapshot — [`lab-abend-fortsetzung-2035/ERGEBNIS`](../artifacts-2026-10-08-lab/lab-abend-fortsetzung-2035/ERGEBNIS.md).  
+- **s5-Prep bereit:** [`feld-s5-prep/`](feld-s5-prep/) (`run-s5.sh`, `GO.md`, `ANKUNFT.md`).
+
+- authorized/VBUS nur mit Host-`uhubctl` (CT: sysfs RO).  
+- `Live-s`-Metrik immer mit Ring/undΔ **und** `live_s_at_bps` zitieren (Mehrdeutigkeit #167).
 
 ---
 
 ## 4. Ein Satz für den Kontext
 
-Der ESP-Datenpfad kann nach OTG-Replug **ohne Reset** senderübergreifend (BOB / Antenne / Bayern) Bild und ~5–6 s Ton liefern; eine instrumentierte Episode trifft das 48‑KiB-Ringmodell bei **8,26 s**, während längere `Live-s`-Zahlen andere Metrikbedeutung haben. Offen und priorisiert: **Reset-Grund im Auto**, **P jenseits des Dateinamens**, **Q10-Sniffer** — Stall weiter nur Spec.
+Lab kann Ringfenster und K3-FAT ohne FW verlängern/umbenennen; im Auto bleiben **Q11-Reset** und **Ohr @32k unter Klasse A** die Blocker. Stall weiter nur Spec.

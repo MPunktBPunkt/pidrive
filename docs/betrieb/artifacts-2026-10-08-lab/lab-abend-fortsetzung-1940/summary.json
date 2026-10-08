@@ -1,0 +1,60 @@
+{
+  "esp": "http://192.168.178.88",
+  "blocks": {
+    "L4f_authorized": {
+      "path": "/sys/bus/usb/devices/2-3.2/authorized",
+      "exists": true,
+      "value": "1",
+      "writable": false,
+      "write_error": "PermissionError: [Errno 13] Permission denied: '/sys/bus/usb/devices/2-3.2/authorized'",
+      "note": "PVE/CT: sysfs authorized not writable without host-side uhubctl"
+    },
+    "Q10": {
+      "rc": 0,
+      "n_files": 7,
+      "out": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/q10-sniff.json",
+      "summary": {
+        "body_mode_votes": {
+          "4096": 7
+        },
+        "head_pause_est_ms_median": 5.88,
+        "all_q10_4kib": true
+      }
+    },
+    "class_a_remount": {
+      "n": 5,
+      "drops": 0,
+      "remount_advanced": 5,
+      "pass": true,
+      "pre_uptime": "3h 24min",
+      "post_uptime": "3h 25min"
+    },
+    "reject_matrix": {
+      "rej_pre": 1991,
+      "rej_after_mid": 1991,
+      "mid_delta": 0,
+      "mid_last_rejects": [
+        "not_from_head uid=fav0 from=136 +53248B age=2999593ms prefetch",
+        "not_from_head uid=fav0 from=4096 +4096B age=3090230ms prefetch",
+        "not_from_head uid=fav0 from=2048 +4096B age=3091033ms prefetch",
+        "plug_window uid=fav0 from=88 +4096B age=3097394ms prefetch",
+        "not_from_head uid=fav0 from=136 +184320B age=3098195ms prefetch"
+      ],
+      "mid": {
+        "overlay": "ok"
+      },
+      "replug_pass": true,
+      "live_s_at_48k": 8.41,
+      "live_s_at_bps": 8.41,
+      "live_bytes_file": 50460,
+      "identity_ok": true,
+      "ring_full_pre": true
+    }
+  },
+  "overall": {
+    "authorized_still_ro": true,
+    "class_a_remount_pass": true,
+    "q10_4kib": true,
+    "replug_pass": true
+  }
+}

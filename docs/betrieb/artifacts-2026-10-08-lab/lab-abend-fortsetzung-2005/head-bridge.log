@@ -1,0 +1,773 @@
+[audio] target_bps=6000 bitrate=48k marker=True marker_period=1 re_local=False
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] enabled=True seed_plugged=True
+[tx] {"t":"hello","ver":1}
+[rx] {"t":"hello_ack","ver":"0.4.46-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+[hello_ack] ver=0.4.46-dev slots=4 page=True tcp=True
+[tx] {"t":"audio_stop"}
+[bridge] tcp:192.168.178.88:9090 audio=48k paging=on
+[tx] {"t":"ping"}
+[tx] {"t":"menu_set","rev":9301,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"}]}
+[msc-lock] sealing publish (seal)
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[rx] {"t":"pong"}
+[rx] {"t":"menu_ack","ok":true,"n":3,"rev":9301}
+[menu_ack] ok=True n=3 rev=9301
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!]
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[rx] {"t":"event","op":"msc.reads","ms":13457329,"gap":6813,"lba0":0,"lba1":0,"bytes":512,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=512 lba=0..0 gap=6813 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457345,"gap":16,"lba0":0,"lba1":0,"bytes":4096,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=0..0 gap=16 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457352,"gap":7,"lba0":32640,"lba1":32640,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32640..32640 gap=7 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457356,"gap":4,"lba0":32752,"lba1":32752,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32752..32752 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457361,"gap":5,"lba0":8,"lba1":8,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8..8 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457366,"gap":5,"lba0":32760,"lba1":32762,"bytes":1536,"n":3,"kind":0,"ov":0}
+[msc.reads] n=3 bytes=1536 lba=32760..32762 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457368,"gap":1,"lba0":32763,"lba1":32504,"bytes":6656,"n":6,"kind":0,"ov":0}
+[msc.reads] n=6 bytes=6656 lba=32763..32504 gap=1 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457376,"gap":4,"lba0":32704,"lba1":32704,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32704..32704 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457380,"gap":4,"lba0":32512,"lba1":32512,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32512..32512 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457384,"gap":4,"lba0":32368,"lba1":32368,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32368..32368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457389,"gap":5,"lba0":32176,"lba1":32176,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32176..32176 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457393,"gap":4,"lba0":32088,"lba1":32088,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32088..32088 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457397,"gap":4,"lba0":32032,"lba1":32032,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32032..32032 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457401,"gap":4,"lba0":31856,"lba1":31856,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31856..31856 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457406,"gap":5,"lba0":31792,"lba1":31792,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31792..31792 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457410,"gap":4,"lba0":31776,"lba1":31776,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31776..31776 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457414,"gap":4,"lba0":31816,"lba1":31816,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31816..31816 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457419,"gap":5,"lba0":29680,"lba1":29680,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=29680..29680 gap=5 ov=0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=4096 +4096B age=4250030ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=4096 +4096B age=4250030ms prefetch
+[rx] {"t":"event","op":"msc.reads","ms":13457423,"gap":4,"lba0":4096,"lba1":4096,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=4096..4096 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457442,"gap":19,"lba0":30720,"lba1":30720,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=30720..30720 gap=19 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457446,"gap":4,"lba0":32,"lba1":32,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32..32 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457450,"gap":4,"lba0":64,"lba1":64,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=64..64 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457455,"gap":5,"lba0":128,"lba1":128,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=128..128 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457459,"gap":4,"lba0":256,"lba1":256,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=256..256 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457464,"gap":5,"lba0":512,"lba1":512,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=512..512 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457468,"gap":4,"lba0":1024,"lba1":1024,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=1024..1024 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457473,"gap":5,"lba0":2048,"lba1":2048,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=2048..2048 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457477,"gap":4,"lba0":8192,"lba1":8192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8192..8192 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457481,"gap":4,"lba0":40,"lba1":40,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=40..40 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457485,"gap":4,"lba0":48,"lba1":48,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=48..48 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457489,"gap":4,"lba0":56,"lba1":56,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=56..56 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457495,"gap":6,"lba0":24,"lba1":24,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=24..24 gap=6 ov=0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=120..8192 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"}
+[msc] cold_body_burst s=0 lba=120..8192 n=8 B=32768 w=0 ev=not_from_head set=0 fav0
+[rx] {"t":"event","op":"msc.reads","ms":13457513,"gap":18,"lba0":120,"lba1":120,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=120..120 gap=18 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457519,"gap":6,"lba0":16,"lba1":16,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=16..16 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457523,"gap":4,"lba0":72,"lba1":72,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=72..72 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457527,"gap":4,"lba0":80,"lba1":80,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=80..80 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457531,"gap":4,"lba0":88,"lba1":88,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=88..88 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457536,"gap":5,"lba0":96,"lba1":96,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=96..96 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457540,"gap":4,"lba0":104,"lba1":104,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=104..104 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457544,"gap":4,"lba0":112,"lba1":112,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=112..112 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457549,"gap":5,"lba0":136,"lba1":136,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=136..136 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457553,"gap":4,"lba0":144,"lba1":144,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=144..144 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457558,"gap":5,"lba0":152,"lba1":152,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=152..152 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457562,"gap":4,"lba0":160,"lba1":160,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=160..160 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457566,"gap":4,"lba0":168,"lba1":168,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=168..168 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457571,"gap":5,"lba0":176,"lba1":176,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=176..176 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457575,"gap":4,"lba0":184,"lba1":184,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=184..184 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457579,"gap":4,"lba0":192,"lba1":192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=192..192 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457584,"gap":5,"lba0":200,"lba1":200,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=200..200 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457588,"gap":4,"lba0":208,"lba1":208,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=208..208 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457593,"gap":5,"lba0":216,"lba1":216,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=216..216 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457597,"gap":4,"lba0":224,"lba1":232,"bytes":8192,"n":2,"kind":2,"ov":0}
+[msc.reads] n=2 bytes=8192 lba=224..232 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457606,"gap":5,"lba0":240,"lba1":240,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=240..240 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457610,"gap":4,"lba0":248,"lba1":248,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=248..248 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457614,"gap":4,"lba0":264,"lba1":264,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=264..264 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457619,"gap":5,"lba0":272,"lba1":272,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=272..272 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457623,"gap":4,"lba0":280,"lba1":280,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=280..280 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457627,"gap":4,"lba0":288,"lba1":288,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=288..288 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457631,"gap":4,"lba0":296,"lba1":296,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=296..296 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457635,"gap":4,"lba0":304,"lba1":304,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=304..304 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457640,"gap":5,"lba0":312,"lba1":312,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=312..312 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457644,"gap":4,"lba0":320,"lba1":320,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=320..320 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457648,"gap":4,"lba0":328,"lba1":328,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=328..328 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457652,"gap":4,"lba0":336,"lba1":336,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=336..336 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457656,"gap":4,"lba0":344,"lba1":344,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=344..344 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457661,"gap":5,"lba0":352,"lba1":352,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=352..352 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457665,"gap":4,"lba0":360,"lba1":360,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=360..360 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457669,"gap":4,"lba0":368,"lba1":368,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=368..368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457673,"gap":4,"lba0":376,"lba1":376,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=376..376 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457677,"gap":4,"lba0":384,"lba1":384,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=384..384 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457682,"gap":5,"lba0":392,"lba1":392,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=392..392 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457686,"gap":4,"lba0":400,"lba1":400,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=400..400 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457690,"gap":4,"lba0":408,"lba1":408,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=408..408 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457694,"gap":4,"lba0":416,"lba1":416,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=416..416 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457698,"gap":4,"lba0":424,"lba1":424,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=424..424 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457702,"gap":4,"lba0":432,"lba1":432,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=432..432 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457707,"gap":5,"lba0":440,"lba1":440,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=440..440 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457711,"gap":4,"lba0":448,"lba1":448,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=448..448 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457715,"gap":4,"lba0":456,"lba1":456,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=456..456 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457719,"gap":4,"lba0":464,"lba1":464,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=464..464 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457723,"gap":4,"lba0":472,"lba1":472,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=472..472 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457727,"gap":4,"lba0":480,"lba1":480,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=480..480 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457731,"gap":4,"lba0":488,"lba1":488,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=488..488 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457736,"gap":5,"lba0":496,"lba1":496,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=496..496 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457740,"gap":4,"lba0":504,"lba1":504,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=504..504 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457756,"gap":16,"lba0":0,"lba1":0,"bytes":4096,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=0..0 gap=16 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457760,"gap":4,"lba0":32640,"lba1":32640,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32640..32640 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457764,"gap":4,"lba0":32752,"lba1":32752,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32752..32752 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457770,"gap":6,"lba0":8,"lba1":8,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8..8 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457774,"gap":4,"lba0":32760,"lba1":32762,"bytes":1536,"n":3,"kind":0,"ov":0}
+[msc.reads] n=3 bytes=1536 lba=32760..32762 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457776,"gap":0,"lba0":32763,"lba1":32504,"bytes":6656,"n":6,"kind":0,"ov":0}
+[msc.reads] n=6 bytes=6656 lba=32763..32504 gap=0 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457784,"gap":4,"lba0":32704,"lba1":32704,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32704..32704 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457788,"gap":4,"lba0":32512,"lba1":32512,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32512..32512 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457793,"gap":5,"lba0":32368,"lba1":32368,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32368..32368 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457797,"gap":4,"lba0":32176,"lba1":32176,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32176..32176 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457801,"gap":4,"lba0":32088,"lba1":32088,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32088..32088 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457806,"gap":5,"lba0":32032,"lba1":32032,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32032..32032 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457810,"gap":4,"lba0":31856,"lba1":31856,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31856..31856 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457814,"gap":4,"lba0":31792,"lba1":31792,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31792..31792 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457818,"gap":4,"lba0":31776,"lba1":31776,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31776..31776 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457823,"gap":5,"lba0":31816,"lba1":31816,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31816..31816 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457827,"gap":4,"lba0":29680,"lba1":29680,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=29680..29680 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457831,"gap":4,"lba0":4096,"lba1":4096,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=4096..4096 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457835,"gap":4,"lba0":30720,"lba1":30720,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=30720..30720 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457840,"gap":5,"lba0":32,"lba1":32,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32..32 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457845,"gap":5,"lba0":64,"lba1":64,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=64..64 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457849,"gap":4,"lba0":128,"lba1":128,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=128..128 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457854,"gap":5,"lba0":256,"lba1":256,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=256..256 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457858,"gap":4,"lba0":512,"lba1":512,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=512..512 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457863,"gap":5,"lba0":1024,"lba1":1024,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=1024..1024 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457867,"gap":4,"lba0":2048,"lba1":2048,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=2048..2048 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457872,"gap":5,"lba0":8192,"lba1":8192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8192..8192 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457876,"gap":4,"lba0":40,"lba1":40,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=40..40 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457880,"gap":4,"lba0":48,"lba1":48,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=48..48 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457885,"gap":5,"lba0":56,"lba1":56,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=56..56 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457890,"gap":5,"lba0":24,"lba1":24,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=24..24 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457894,"gap":4,"lba0":120,"lba1":120,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=120..120 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457899,"gap":5,"lba0":16,"lba1":16,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=16..16 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457904,"gap":5,"lba0":72,"lba1":72,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=72..72 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457908,"gap":4,"lba0":80,"lba1":80,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=80..80 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457912,"gap":4,"lba0":88,"lba1":88,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=88..88 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457917,"gap":5,"lba0":96,"lba1":96,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=96..96 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457921,"gap":4,"lba0":104,"lba1":104,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=104..104 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457925,"gap":4,"lba0":112,"lba1":112,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=112..112 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457930,"gap":5,"lba0":136,"lba1":136,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=136..136 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457934,"gap":4,"lba0":144,"lba1":144,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=144..144 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457939,"gap":5,"lba0":152,"lba1":152,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=152..152 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457944,"gap":5,"lba0":160,"lba1":160,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=160..160 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457948,"gap":4,"lba0":168,"lba1":168,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=168..168 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457952,"gap":4,"lba0":176,"lba1":176,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=176..176 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457956,"gap":4,"lba0":184,"lba1":184,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=184..184 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457961,"gap":5,"lba0":192,"lba1":192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=192..192 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457965,"gap":4,"lba0":200,"lba1":200,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=200..200 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457970,"gap":5,"lba0":208,"lba1":208,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=208..208 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457974,"gap":4,"lba0":216,"lba1":216,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=216..216 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457979,"gap":5,"lba0":224,"lba1":224,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=224..224 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457983,"gap":4,"lba0":232,"lba1":232,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=232..232 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457987,"gap":4,"lba0":240,"lba1":240,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=240..240 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457992,"gap":5,"lba0":248,"lba1":248,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=248..248 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13457997,"gap":5,"lba0":264,"lba1":264,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=264..264 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458001,"gap":4,"lba0":272,"lba1":280,"bytes":8192,"n":2,"kind":2,"ov":0}
+[msc.reads] n=2 bytes=8192 lba=272..280 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458009,"gap":4,"lba0":288,"lba1":288,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=288..288 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458014,"gap":5,"lba0":296,"lba1":296,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=296..296 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458018,"gap":4,"lba0":304,"lba1":304,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=304..304 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458022,"gap":4,"lba0":312,"lba1":312,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=312..312 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458027,"gap":5,"lba0":320,"lba1":320,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=320..320 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458031,"gap":4,"lba0":328,"lba1":328,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=328..328 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458036,"gap":5,"lba0":336,"lba1":336,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=336..336 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458040,"gap":4,"lba0":344,"lba1":344,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=344..344 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458044,"gap":4,"lba0":352,"lba1":352,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=352..352 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458049,"gap":5,"lba0":360,"lba1":360,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=360..360 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458053,"gap":4,"lba0":368,"lba1":368,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=368..368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458057,"gap":4,"lba0":376,"lba1":376,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=376..376 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458061,"gap":4,"lba0":384,"lba1":384,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=384..384 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458065,"gap":4,"lba0":392,"lba1":392,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=392..392 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458070,"gap":5,"lba0":400,"lba1":400,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=400..400 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458074,"gap":4,"lba0":408,"lba1":408,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=408..408 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458078,"gap":4,"lba0":416,"lba1":416,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=416..416 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458082,"gap":4,"lba0":424,"lba1":424,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=424..424 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458087,"gap":5,"lba0":432,"lba1":432,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=432..432 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458092,"gap":5,"lba0":440,"lba1":440,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=440..440 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458096,"gap":4,"lba0":448,"lba1":448,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=448..448 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458101,"gap":5,"lba0":456,"lba1":456,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=456..456 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458105,"gap":4,"lba0":464,"lba1":464,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=464..464 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458109,"gap":4,"lba0":472,"lba1":472,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=472..472 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458114,"gap":5,"lba0":480,"lba1":480,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=480..480 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458118,"gap":4,"lba0":488,"lba1":488,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=488..488 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458123,"gap":5,"lba0":496,"lba1":496,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=496..496 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458127,"gap":4,"lba0":504,"lba1":504,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=504..504 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458141,"gap":14,"lba0":0,"lba1":0,"bytes":4096,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=0..0 gap=14 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458145,"gap":4,"lba0":32640,"lba1":32640,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32640..32640 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458150,"gap":5,"lba0":32752,"lba1":32752,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32752..32752 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458155,"gap":5,"lba0":8,"lba1":8,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8..8 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458159,"gap":4,"lba0":32760,"lba1":32762,"bytes":1536,"n":3,"kind":0,"ov":0}
+[msc.reads] n=3 bytes=1536 lba=32760..32762 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458162,"gap":1,"lba0":32763,"lba1":32504,"bytes":6656,"n":6,"kind":0,"ov":0}
+[msc.reads] n=6 bytes=6656 lba=32763..32504 gap=1 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458170,"gap":4,"lba0":32704,"lba1":32704,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32704..32704 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458175,"gap":5,"lba0":32512,"lba1":32512,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32512..32512 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458179,"gap":4,"lba0":32368,"lba1":32368,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32368..32368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458183,"gap":4,"lba0":32176,"lba1":32176,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32176..32176 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458188,"gap":5,"lba0":32088,"lba1":32088,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32088..32088 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458192,"gap":4,"lba0":32032,"lba1":32032,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32032..32032 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458196,"gap":4,"lba0":31856,"lba1":31856,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31856..31856 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458200,"gap":4,"lba0":31792,"lba1":31792,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31792..31792 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458205,"gap":5,"lba0":31776,"lba1":31776,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31776..31776 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458209,"gap":4,"lba0":31816,"lba1":31816,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31816..31816 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458213,"gap":4,"lba0":29680,"lba1":29680,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=29680..29680 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458217,"gap":4,"lba0":4096,"lba1":4096,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=4096..4096 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458221,"gap":4,"lba0":30720,"lba1":30720,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=30720..30720 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458226,"gap":5,"lba0":32,"lba1":32,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32..32 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458231,"gap":5,"lba0":64,"lba1":64,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=64..64 gap=5 ov=0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"not_from_head uid=fav0 from=128 +4096B age=4250842ms prefetch"}
+[msc] play.reject not_from_head uid=fav0 from=128 +4096B age=4250842ms prefetch
+[rx] {"t":"event","op":"msc.reads","ms":13458235,"gap":4,"lba0":128,"lba1":128,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=128..128 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458253,"gap":18,"lba0":256,"lba1":256,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=256..256 gap=18 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458258,"gap":5,"lba0":512,"lba1":512,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=512..512 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458262,"gap":4,"lba0":1024,"lba1":1024,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=1024..1024 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458266,"gap":4,"lba0":2048,"lba1":2048,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=2048..2048 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458270,"gap":4,"lba0":8192,"lba1":8192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8192..8192 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458275,"gap":5,"lba0":40,"lba1":40,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=40..40 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458279,"gap":4,"lba0":48,"lba1":48,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=48..48 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458283,"gap":4,"lba0":56,"lba1":56,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=56..56 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458289,"gap":6,"lba0":24,"lba1":24,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=24..24 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458293,"gap":4,"lba0":120,"lba1":120,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=120..120 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458299,"gap":6,"lba0":16,"lba1":16,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=16..16 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458303,"gap":4,"lba0":72,"lba1":72,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=72..72 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458307,"gap":4,"lba0":80,"lba1":80,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=80..80 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458312,"gap":5,"lba0":88,"lba1":88,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=88..88 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458316,"gap":4,"lba0":96,"lba1":96,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=96..96 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458321,"gap":5,"lba0":104,"lba1":104,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=104..104 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458325,"gap":4,"lba0":112,"lba1":112,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=112..112 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458330,"gap":5,"lba0":136,"lba1":136,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=136..136 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458334,"gap":4,"lba0":144,"lba1":144,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=144..144 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458339,"gap":5,"lba0":152,"lba1":152,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=152..152 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458343,"gap":4,"lba0":160,"lba1":160,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=160..160 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458347,"gap":4,"lba0":168,"lba1":168,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=168..168 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458352,"gap":5,"lba0":176,"lba1":176,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=176..176 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458356,"gap":4,"lba0":184,"lba1":184,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=184..184 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458361,"gap":5,"lba0":192,"lba1":192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=192..192 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458365,"gap":4,"lba0":200,"lba1":200,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=200..200 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458370,"gap":5,"lba0":208,"lba1":208,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=208..208 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458374,"gap":4,"lba0":216,"lba1":216,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=216..216 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458378,"gap":4,"lba0":224,"lba1":224,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=224..224 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458383,"gap":5,"lba0":232,"lba1":232,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=232..232 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458387,"gap":4,"lba0":240,"lba1":240,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=240..240 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458392,"gap":5,"lba0":248,"lba1":248,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=248..248 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458396,"gap":4,"lba0":264,"lba1":264,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=264..264 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458401,"gap":5,"lba0":272,"lba1":272,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=272..272 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458405,"gap":4,"lba0":280,"lba1":280,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=280..280 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458409,"gap":4,"lba0":288,"lba1":288,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=288..288 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458413,"gap":4,"lba0":296,"lba1":296,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=296..296 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458418,"gap":5,"lba0":304,"lba1":304,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=304..304 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458422,"gap":4,"lba0":312,"lba1":312,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=312..312 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458426,"gap":4,"lba0":320,"lba1":320,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=320..320 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458430,"gap":4,"lba0":328,"lba1":328,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=328..328 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458434,"gap":4,"lba0":336,"lba1":336,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=336..336 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458439,"gap":5,"lba0":344,"lba1":344,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=344..344 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458443,"gap":4,"lba0":352,"lba1":352,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=352..352 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458447,"gap":4,"lba0":360,"lba1":360,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=360..360 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458451,"gap":4,"lba0":368,"lba1":368,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=368..368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458455,"gap":4,"lba0":376,"lba1":376,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=376..376 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458460,"gap":5,"lba0":384,"lba1":384,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=384..384 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458464,"gap":4,"lba0":392,"lba1":392,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=392..392 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458469,"gap":5,"lba0":400,"lba1":400,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=400..400 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458473,"gap":4,"lba0":408,"lba1":408,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=408..408 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458477,"gap":4,"lba0":416,"lba1":424,"bytes":8192,"n":2,"kind":2,"ov":0}
+[msc.reads] n=2 bytes=8192 lba=416..424 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458485,"gap":4,"lba0":432,"lba1":432,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=432..432 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458490,"gap":5,"lba0":440,"lba1":440,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=440..440 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458494,"gap":4,"lba0":448,"lba1":448,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=448..448 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458498,"gap":4,"lba0":456,"lba1":456,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=456..456 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458503,"gap":5,"lba0":464,"lba1":464,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=464..464 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458507,"gap":4,"lba0":472,"lba1":472,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=472..472 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458511,"gap":4,"lba0":480,"lba1":480,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=480..480 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458516,"gap":5,"lba0":488,"lba1":488,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=488..488 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458521,"gap":5,"lba0":496,"lba1":496,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=496..496 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458525,"gap":4,"lba0":504,"lba1":504,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=504..504 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458540,"gap":15,"lba0":0,"lba1":0,"bytes":4096,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=0..0 gap=15 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458544,"gap":4,"lba0":32640,"lba1":32640,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32640..32640 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458549,"gap":5,"lba0":32752,"lba1":32752,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32752..32752 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458554,"gap":5,"lba0":8,"lba1":8,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8..8 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458558,"gap":4,"lba0":32760,"lba1":32761,"bytes":1024,"n":2,"kind":0,"ov":0}
+[msc.reads] n=2 bytes=1024 lba=32760..32761 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458560,"gap":1,"lba0":32762,"lba1":32767,"bytes":3072,"n":6,"kind":0,"ov":0}
+[msc.reads] n=6 bytes=3072 lba=32762..32767 gap=1 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458565,"gap":1,"lba0":32504,"lba1":32504,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32504..32504 gap=1 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458569,"gap":4,"lba0":32704,"lba1":32704,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32704..32704 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458573,"gap":4,"lba0":32512,"lba1":32512,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32512..32512 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458577,"gap":4,"lba0":32368,"lba1":32368,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32368..32368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458581,"gap":4,"lba0":32176,"lba1":32176,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32176..32176 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458585,"gap":4,"lba0":32088,"lba1":32088,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32088..32088 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458589,"gap":4,"lba0":32032,"lba1":32032,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32032..32032 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458593,"gap":4,"lba0":31856,"lba1":31856,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31856..31856 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458598,"gap":5,"lba0":31792,"lba1":31792,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31792..31792 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458602,"gap":4,"lba0":31776,"lba1":31776,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31776..31776 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458606,"gap":4,"lba0":31816,"lba1":31816,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=31816..31816 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458610,"gap":4,"lba0":29680,"lba1":29680,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=29680..29680 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458614,"gap":4,"lba0":4096,"lba1":4096,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=4096..4096 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458618,"gap":4,"lba0":30720,"lba1":30720,"bytes":4096,"n":1,"kind":0,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=30720..30720 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458623,"gap":5,"lba0":32,"lba1":32,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32..32 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458628,"gap":5,"lba0":64,"lba1":64,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=64..64 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458633,"gap":5,"lba0":128,"lba1":128,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=128..128 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458638,"gap":5,"lba0":256,"lba1":256,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=256..256 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458642,"gap":4,"lba0":512,"lba1":512,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=512..512 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458647,"gap":5,"lba0":1024,"lba1":1024,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=1024..1024 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458651,"gap":4,"lba0":2048,"lba1":2048,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=2048..2048 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458656,"gap":5,"lba0":8192,"lba1":8192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8192..8192 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458660,"gap":4,"lba0":40,"lba1":40,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=40..40 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458665,"gap":5,"lba0":48,"lba1":48,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=48..48 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458669,"gap":4,"lba0":56,"lba1":56,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=56..56 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458675,"gap":6,"lba0":24,"lba1":24,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=24..24 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458679,"gap":4,"lba0":120,"lba1":120,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=120..120 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458685,"gap":6,"lba0":16,"lba1":16,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=16..16 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458689,"gap":4,"lba0":72,"lba1":72,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=72..72 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458693,"gap":4,"lba0":80,"lba1":80,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=80..80 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458698,"gap":5,"lba0":88,"lba1":88,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=88..88 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458702,"gap":4,"lba0":96,"lba1":96,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=96..96 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458706,"gap":4,"lba0":104,"lba1":104,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=104..104 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458711,"gap":5,"lba0":112,"lba1":112,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=112..112 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458716,"gap":5,"lba0":136,"lba1":136,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=136..136 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458720,"gap":4,"lba0":144,"lba1":152,"bytes":8192,"n":2,"kind":2,"ov":0}
+[msc.reads] n=2 bytes=8192 lba=144..152 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458729,"gap":5,"lba0":160,"lba1":160,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=160..160 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458733,"gap":4,"lba0":168,"lba1":168,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=168..168 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458737,"gap":4,"lba0":176,"lba1":176,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=176..176 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458742,"gap":5,"lba0":184,"lba1":184,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=184..184 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458746,"gap":4,"lba0":192,"lba1":192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=192..192 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458750,"gap":4,"lba0":200,"lba1":200,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=200..200 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458755,"gap":5,"lba0":208,"lba1":208,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=208..208 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458759,"gap":4,"lba0":216,"lba1":216,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=216..216 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458763,"gap":4,"lba0":224,"lba1":232,"bytes":8192,"n":2,"kind":2,"ov":0}
+[msc.reads] n=2 bytes=8192 lba=224..232 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458771,"gap":4,"lba0":240,"lba1":240,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=240..240 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458776,"gap":5,"lba0":248,"lba1":248,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=248..248 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458780,"gap":4,"lba0":264,"lba1":264,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=264..264 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458784,"gap":4,"lba0":272,"lba1":272,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=272..272 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458789,"gap":5,"lba0":280,"lba1":280,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=280..280 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458793,"gap":4,"lba0":288,"lba1":288,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=288..288 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458797,"gap":4,"lba0":296,"lba1":296,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=296..296 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458802,"gap":5,"lba0":304,"lba1":304,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=304..304 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458806,"gap":4,"lba0":312,"lba1":312,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=312..312 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458811,"gap":5,"lba0":320,"lba1":320,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=320..320 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458815,"gap":4,"lba0":328,"lba1":328,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=328..328 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458819,"gap":4,"lba0":336,"lba1":336,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=336..336 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458823,"gap":4,"lba0":344,"lba1":344,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=344..344 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458828,"gap":5,"lba0":352,"lba1":352,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=352..352 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458832,"gap":4,"lba0":360,"lba1":360,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=360..360 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458836,"gap":4,"lba0":368,"lba1":368,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=368..368 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458840,"gap":4,"lba0":376,"lba1":376,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=376..376 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458844,"gap":4,"lba0":384,"lba1":384,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=384..384 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458849,"gap":5,"lba0":392,"lba1":392,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=392..392 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458853,"gap":4,"lba0":400,"lba1":400,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=400..400 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458858,"gap":5,"lba0":408,"lba1":408,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=408..408 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458862,"gap":4,"lba0":416,"lba1":416,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=416..416 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458866,"gap":4,"lba0":424,"lba1":424,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=424..424 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458871,"gap":5,"lba0":432,"lba1":432,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=432..432 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458875,"gap":4,"lba0":440,"lba1":440,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=440..440 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458879,"gap":4,"lba0":448,"lba1":448,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=448..448 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458883,"gap":4,"lba0":456,"lba1":456,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=456..456 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458888,"gap":5,"lba0":464,"lba1":472,"bytes":8192,"n":2,"kind":2,"ov":0}
+[msc.reads] n=2 bytes=8192 lba=464..472 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458896,"gap":4,"lba0":480,"lba1":480,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=480..480 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458900,"gap":4,"lba0":488,"lba1":488,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=488..488 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458905,"gap":5,"lba0":496,"lba1":496,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=496..496 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13458909,"gap":4,"lba0":504,"lba1":504,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=504..504 gap=4 ov=0
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[rx] {"t":"event","op":"msc.reads","ms":13465484,"gap":6575,"lba0":0,"lba1":0,"bytes":4096,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=0..0 gap=6575 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465490,"gap":6,"lba0":8,"lba1":8,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8..8 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465494,"gap":4,"lba0":16,"lba1":16,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=16..16 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465500,"gap":6,"lba0":24,"lba1":24,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=24..24 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465504,"gap":4,"lba0":32,"lba1":32,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32..32 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465508,"gap":4,"lba0":40,"lba1":40,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=40..40 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465513,"gap":5,"lba0":48,"lba1":48,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=48..48 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465517,"gap":4,"lba0":56,"lba1":56,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=56..56 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465521,"gap":4,"lba0":64,"lba1":64,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=64..64 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465525,"gap":4,"lba0":72,"lba1":72,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=72..72 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465530,"gap":5,"lba0":80,"lba1":80,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=80..80 gap=5 ov=0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav0 from=88 +4096B age=4258141ms prefetch"}
+[msc] play.reject plug_window uid=fav0 from=88 +4096B age=4258141ms prefetch
+[rx] {"t":"event","op":"msc.reads","ms":13465534,"gap":4,"lba0":88,"lba1":88,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=88..88 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465552,"gap":18,"lba0":96,"lba1":96,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=96..96 gap=18 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465556,"gap":4,"lba0":104,"lba1":104,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=104..104 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465560,"gap":4,"lba0":112,"lba1":112,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=112..112 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465564,"gap":4,"lba0":120,"lba1":120,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=120..120 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465568,"gap":4,"lba0":128,"lba1":128,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=128..128 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465573,"gap":5,"lba0":136,"lba1":136,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=136..136 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465577,"gap":4,"lba0":144,"lba1":144,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=144..144 gap=4 ov=0
+[rx] {"t":"event","op":"diag","code":"cold_body_burst","detail":"s=0 lba=96..152 n=8 B=32768 w=0 ev=not_from_head set=0 fav0"}
+[msc] cold_body_burst s=0 lba=96..152 n=8 B=32768 w=0 ev=not_from_head set=0 fav0
+[rx] {"t":"event","op":"msc.reads","ms":13465595,"gap":18,"lba0":152,"lba1":152,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=152..152 gap=18 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465599,"gap":4,"lba0":160,"lba1":160,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=160..160 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465604,"gap":5,"lba0":168,"lba1":168,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=168..168 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465608,"gap":4,"lba0":176,"lba1":176,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=176..176 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465612,"gap":4,"lba0":184,"lba1":184,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=184..184 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465617,"gap":5,"lba0":192,"lba1":192,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=192..192 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465621,"gap":4,"lba0":200,"lba1":200,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=200..200 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465626,"gap":5,"lba0":208,"lba1":208,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=208..208 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465630,"gap":4,"lba0":216,"lba1":216,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=216..216 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465634,"gap":4,"lba0":224,"lba1":224,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=224..224 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465639,"gap":5,"lba0":232,"lba1":232,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=232..232 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465643,"gap":4,"lba0":240,"lba1":240,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=240..240 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":13465648,"gap":5,"lba0":248,"lba1":248,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=248..248 gap=5 ov=0

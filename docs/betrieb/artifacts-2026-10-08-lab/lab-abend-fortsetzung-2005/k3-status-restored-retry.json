@@ -1,0 +1,1005 @@
+{
+  "ok": true,
+  "version": "0.4.46-dev",
+  "fwType": "pidrive",
+  "name": "PiDrive-Lab",
+  "ip": "192.168.178.88",
+  "softApSsid": "pidrive-29339C",
+  "softApIp": "192.168.4.1",
+  "softApPass": "pidrive12",
+  "mac": "68B6B329339C",
+  "uptime": "3h 47min",
+  "freeHeap": 107244,
+  "wifiRssi": -36,
+  "hubOk": true,
+  "usbEnumerated": true,
+  "otgUp": true,
+  "otgSuspended": false,
+  "uartUp": false,
+  "uartState": "idle",
+  "mscReady": true,
+  "pumpUp": true,
+  "pumpTcp": true,
+  "pumpTcpPort": 9090,
+  "pumpTcpUp": true,
+  "pumpTcpPeer": "192.168.178.187",
+  "bufferMs": 0,
+  "bufferTargetMs": 5000,
+  "playingUid": "",
+  "playingName": "",
+  "menuRev": 9301,
+  "menuCount": 3,
+  "cover": {
+    "src": "",
+    "path": "",
+    "try": "",
+    "folder": "assets/usb-msc-covers/",
+    "default": "default.jpg"
+  },
+  "labMode": true,
+  "chipModel": "ESP32-S3",
+  "led": "otg",
+  "msc": {
+    "ready": true,
+    "plugged": true,
+    "suspended": false,
+    "readCount": 5941,
+    "writeCount": 0,
+    "writeReject": 0,
+    "lastReadLba": 18505,
+    "bytesRead": 22710784,
+    "bytesMeta": 6011392,
+    "bytesBoot": 244224,
+    "bytesFat": 917504,
+    "bytesDir": 1376256,
+    "bytesFile": 16699392,
+    "prefetchHits": 3161,
+    "playRejectCount": 4076,
+    "playGuessCount": 1,
+    "streamSlot": -1,
+    "streamBytes": 4620288,
+    "preWarmHostBytes": 0,
+    "preWarmUid": "",
+    "bodySeed": {
+      "active": false,
+      "slot": -1,
+      "tag": "",
+      "fromOff": 348160,
+      "bytesServed": 0
+    },
+    "coldBodyBurstCount": 66,
+    "readOverflow": 0,
+    "readsEmit": 11229,
+    "fatMode": "static",
+    "phase": "play",
+    "mediaPresented": true,
+    "remountGen": 341,
+    "usbSerial": "PD0341",
+    "mediaWaitMs": 0,
+    "playDetect": {
+      "plugWindowMs": 500,
+      "minSeqBytes": 6000,
+      "navMinSeqBytes": 4096,
+      "headLbaSlop": 12,
+      "cooldownMs": 5000,
+      "prefetchLbaSlop": 2
+    },
+    "xfer": {
+      "n512": 453,
+      "n2k": 0,
+      "n4k": 5488,
+      "n8kPlus": 0
+    },
+    "host": {
+      "inquiry": 1,
+      "capacity": 15,
+      "tur": 3889,
+      "turNotReady": 104,
+      "prevent": 497,
+      "otherScsi": 0,
+      "startStop": 0,
+      "lastOpcode": 30,
+      "msToInquiry": 1019,
+      "msToCapacity": 1021,
+      "msToTur": 1020,
+      "hint": "poll-heavy"
+    },
+    "stream": {
+      "active": false,
+      "uid": "fav2",
+      "size": 49152,
+      "cap": 49152,
+      "absBase": 30208,
+      "absEnd": 79360,
+      "underruns": 470812,
+      "id3Len": 3300,
+      "headResyncs": 1,
+      "cursorArmed": true,
+      "hostAbsCursor": 543516,
+      "hasCover": true
+    },
+    "msSincePlug": 4449229,
+    "msSinceChange": 4449229,
+    "msPlugToFirstRead": 1021,
+    "msPlugToPlayGuess": 7694,
+    "plugCount": 4,
+    "unplugCount": 3,
+    "sectorCount": 32768,
+    "imageBytes": 262144,
+    "dataStartLba": 65,
+    "slots": 4,
+    "port": "otg",
+    "role": "car-host",
+    "slotMap": [
+      {
+        "i": 0,
+        "uid": "fav0",
+        "name": "Rock Antenne",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 12898304,
+        "fromHead": 56,
+        "midFile": 3093,
+        "maxSeq": 188416,
+        "lastAgeMs": 43432
+      },
+      {
+        "i": 1,
+        "uid": "fav1",
+        "name": "Rock Antenne Bayern",
+        "kind": "station",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      },
+      {
+        "i": 2,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 3801088,
+        "fromHead": 14,
+        "midFile": 914,
+        "maxSeq": 524288,
+        "lastAgeMs": 21539
+      },
+      {
+        "i": 3,
+        "uid": "",
+        "name": "",
+        "kind": "",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": false,
+        "bytes": 0,
+        "fromHead": 0,
+        "midFile": 0,
+        "maxSeq": 0,
+        "lastAgeMs": 0
+      }
+    ]
+  },
+  "mscTrace": [
+    {
+      "ms": 13634455,
+      "gap": 6,
+      "lba": 17745,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634461,
+      "gap": 6,
+      "lba": 17753,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634468,
+      "gap": 7,
+      "lba": 17761,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634474,
+      "gap": 6,
+      "lba": 17769,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634480,
+      "gap": 6,
+      "lba": 17777,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634486,
+      "gap": 6,
+      "lba": 17785,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634492,
+      "gap": 6,
+      "lba": 17793,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634499,
+      "gap": 7,
+      "lba": 17801,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634505,
+      "gap": 6,
+      "lba": 17809,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634511,
+      "gap": 6,
+      "lba": 17817,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634517,
+      "gap": 6,
+      "lba": 17825,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634523,
+      "gap": 6,
+      "lba": 17833,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634530,
+      "gap": 7,
+      "lba": 17841,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634536,
+      "gap": 6,
+      "lba": 17849,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634542,
+      "gap": 6,
+      "lba": 17857,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634548,
+      "gap": 6,
+      "lba": 17865,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634554,
+      "gap": 6,
+      "lba": 17873,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634560,
+      "gap": 6,
+      "lba": 17881,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634566,
+      "gap": 6,
+      "lba": 17889,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634573,
+      "gap": 7,
+      "lba": 17897,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634579,
+      "gap": 6,
+      "lba": 17905,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634585,
+      "gap": 6,
+      "lba": 17913,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634591,
+      "gap": 6,
+      "lba": 17921,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634597,
+      "gap": 6,
+      "lba": 17929,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634603,
+      "gap": 6,
+      "lba": 17937,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634609,
+      "gap": 6,
+      "lba": 17945,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634616,
+      "gap": 7,
+      "lba": 17953,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634622,
+      "gap": 6,
+      "lba": 17961,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634628,
+      "gap": 6,
+      "lba": 17969,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634634,
+      "gap": 6,
+      "lba": 17977,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634640,
+      "gap": 6,
+      "lba": 17985,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634645,
+      "gap": 5,
+      "lba": 17993,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634651,
+      "gap": 6,
+      "lba": 18001,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634658,
+      "gap": 7,
+      "lba": 18009,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634664,
+      "gap": 6,
+      "lba": 18017,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634670,
+      "gap": 6,
+      "lba": 18025,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634676,
+      "gap": 6,
+      "lba": 18033,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634682,
+      "gap": 6,
+      "lba": 18041,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634688,
+      "gap": 6,
+      "lba": 18049,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634693,
+      "gap": 5,
+      "lba": 18057,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634699,
+      "gap": 6,
+      "lba": 18065,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634706,
+      "gap": 7,
+      "lba": 18073,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634712,
+      "gap": 6,
+      "lba": 18081,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634718,
+      "gap": 6,
+      "lba": 18089,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634724,
+      "gap": 6,
+      "lba": 18097,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634730,
+      "gap": 6,
+      "lba": 18105,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634736,
+      "gap": 6,
+      "lba": 18113,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634742,
+      "gap": 6,
+      "lba": 18121,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634749,
+      "gap": 7,
+      "lba": 18129,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634755,
+      "gap": 6,
+      "lba": 18137,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634761,
+      "gap": 6,
+      "lba": 18145,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634767,
+      "gap": 6,
+      "lba": 18153,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634774,
+      "gap": 7,
+      "lba": 18161,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634779,
+      "gap": 5,
+      "lba": 18169,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634785,
+      "gap": 6,
+      "lba": 18177,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634792,
+      "gap": 7,
+      "lba": 18185,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634798,
+      "gap": 6,
+      "lba": 18193,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634804,
+      "gap": 6,
+      "lba": 18201,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634810,
+      "gap": 6,
+      "lba": 18209,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634816,
+      "gap": 6,
+      "lba": 18217,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634822,
+      "gap": 6,
+      "lba": 18225,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634829,
+      "gap": 7,
+      "lba": 18233,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634835,
+      "gap": 6,
+      "lba": 18241,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634841,
+      "gap": 6,
+      "lba": 18249,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634847,
+      "gap": 6,
+      "lba": 18257,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634853,
+      "gap": 6,
+      "lba": 18265,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634859,
+      "gap": 6,
+      "lba": 18273,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634866,
+      "gap": 7,
+      "lba": 18281,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634872,
+      "gap": 6,
+      "lba": 18289,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634881,
+      "gap": 9,
+      "lba": 18297,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634887,
+      "gap": 6,
+      "lba": 18305,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634895,
+      "gap": 8,
+      "lba": 18313,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634901,
+      "gap": 6,
+      "lba": 18321,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634909,
+      "gap": 8,
+      "lba": 18329,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634916,
+      "gap": 7,
+      "lba": 18337,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634924,
+      "gap": 8,
+      "lba": 18345,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634930,
+      "gap": 6,
+      "lba": 18353,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634940,
+      "gap": 10,
+      "lba": 18361,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634946,
+      "gap": 6,
+      "lba": 18369,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634954,
+      "gap": 8,
+      "lba": 18377,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634962,
+      "gap": 8,
+      "lba": 18385,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634970,
+      "gap": 8,
+      "lba": 18393,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634976,
+      "gap": 6,
+      "lba": 18401,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634982,
+      "gap": 6,
+      "lba": 18409,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634988,
+      "gap": 6,
+      "lba": 18417,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13634994,
+      "gap": 6,
+      "lba": 18425,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635000,
+      "gap": 6,
+      "lba": 18433,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635006,
+      "gap": 6,
+      "lba": 18441,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635012,
+      "gap": 6,
+      "lba": 18449,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635019,
+      "gap": 7,
+      "lba": 18457,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635053,
+      "gap": 34,
+      "lba": 18465,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635059,
+      "gap": 6,
+      "lba": 18473,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635066,
+      "gap": 7,
+      "lba": 18481,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635072,
+      "gap": 6,
+      "lba": 18489,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635078,
+      "gap": 6,
+      "lba": 18497,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    },
+    {
+      "ms": 13635084,
+      "gap": 6,
+      "lba": 18505,
+      "n": 4096,
+      "kind": "file",
+      "tag": "Radio BOB!"
+    }
+  ],
+  "uart": {
+    "linkUp": false,
+    "state": "idle",
+    "rxBytes": 0,
+    "lastRxMs": 0,
+    "msSinceChange": 13656069,
+    "msSinceRx": 0,
+    "changeCount": 0,
+    "sense": "serial-activity",
+    "idleMs": 4000,
+    "note": "kein Plug-Sensor \u2014 up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+  },
+  "ports": {
+    "otg": {
+      "label": "AUTO",
+      "role": "car-host",
+      "up": true,
+      "suspended": false,
+      "msSinceChange": 4449233,
+      "plugCount": 4,
+      "unplugCount": 3,
+      "sense": "tinyusb-mount"
+    },
+    "uart": {
+      "label": "PI",
+      "role": "uart-bridge",
+      "up": false,
+      "state": "idle",
+      "msSinceChange": 13656069,
+      "msSinceRx": 0,
+      "rxBytes": 0,
+      "sense": "serial-activity"
+    },
+    "pumpTcp": {
+      "label": "PUMP-TCP",
+      "role": "wlan-bridge",
+      "port": 9090,
+      "listening": true,
+      "up": true,
+      "peer": "192.168.178.187",
+      "sense": "tcp-client"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/replug-48k-head/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.73ms q10_4k=True
+msc.xfer {'n512': 280, 'n2k': 0, 'n4k': 3232, 'n8kPlus': 0}
+summary {"body_mode_votes": {"4096": 1}, "head_pause_est_ms_median": 5.73, "all_q10_4kib": true}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/q10-fresh-replug.json
+L4f authorized {'path': '/sys/bus/usb/devices/2-3.2/authorized', 'exists': True, 'value': '1', 'writable': False, 'write_error': "PermissionError: [Errno 13] Permission denied: '/sys/bus/usb/devices/2-3.2/authorized'", 'note': 'PVE/CT: sysfs authorized not writable without host-side uhubctl'}
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r01/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.45ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r02/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=6.13ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r03/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.88ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r04/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.85ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r05/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=6.12ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-fenster-24k-1919/replug-24k/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=6.51ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-fenster-32k-1917/replug-32k/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.65ms q10_4k=True
+msc.xfer {'n512': 179, 'n2k': 0, 'n4k': 2064, 'n8kPlus': 0}
+summary {"body_mode_votes": {"4096": 7}, "head_pause_est_ms_median": 5.88, "all_q10_4kib": true}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/q10-sniff.json
+
+remount {'i': 1, 'before': ('3h 24min', 'PD0316', 316, True), 'after': ('3h 24min', 'PD0317', 317, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0317'}
+remount {'i': 2, 'before': ('3h 24min', 'PD0317', 317, True), 'after': ('3h 24min', 'PD0318', 318, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0318'}
+remount {'i': 3, 'before': ('3h 24min', 'PD0318', 318, True), 'after': ('3h 25min', 'PD0319', 319, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0319'}
+remount {'i': 4, 'before': ('3h 25min', 'PD0319', 319, True), 'after': ('3h 25min', 'PD0320', 320, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0320'}
+remount {'i': 5, 'before': ('3h 25min', 'PD0320', 320, True), 'after': ('3h 25min', 'PD0321', 321, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0321'}
+aps": 1,
+      "file_first": 3300,
+      "file_end": 53760,
+      "seq_first": 86,
+      "seq_last": 285,
+      "abs_first": 22016,
+      "abs_end": 73216
+    },
+    "live_bytes_file": 50460,
+    "live_s_at_48k": 8.41,
+    "realtime_bps": 6000,
+    "live_s_at_bps": 8.41,
+    "undDelta": 470528,
+    "expect_undDelta": 470528,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 543744,
+    "absEnd_pre": 71168,
+    "absEnd_post": 79104,
+    "abs_cross_fw": 73216,
+    "abs_cross_pdsq": 73216,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": true
+  }
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/replug-48k-head overall=PASS
+
+{
+  "authorized_still_ro": true,
+  "class_a_remount_pass": true,
+  "q10_4kib": true,
+  "replug_pass": true
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940

@@ -1,0 +1,31 @@
+{
+  "reads": [
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 25.15,
+      "head_pause_est_ms": 5.73,
+      "dur_ms_p50": 5.45,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/replug-48k-head/reads.jsonl"
+    }
+  ],
+  "msc_xfer": {
+    "n512": 280,
+    "n2k": 0,
+    "n4k": 3232,
+    "n8kPlus": 0
+  },
+  "summary": {
+    "body_mode_votes": {
+      "4096": 1
+    },
+    "head_pause_est_ms_median": 5.73,
+    "all_q10_4kib": true
+  }
+}

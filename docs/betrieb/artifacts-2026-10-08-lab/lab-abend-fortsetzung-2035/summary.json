@@ -1,0 +1,33 @@
+{
+  "fenster_32k": {
+    "pass": true,
+    "live_s_at_bps": 12.61
+  },
+  "mid_reject": {
+    "rej0": 5772,
+    "rej1": 0,
+    "delta": -5772,
+    "samples": [
+      "not_from_head uid=fav0 from=120 +4096B age=7020469ms prefetch",
+      "plug_window uid=fav0 from=88 +4096B age=7027772ms prefetch",
+      "plug_window uid=fav2 from=17489 +4096B age=7042425ms",
+      "plug_window uid=fav2 from=17489 +503808B age=7043230ms",
+      "not_from_head uid=fav2 from=17617 +4096B age=7052819ms prefetch"
+    ],
+    "pass": true
+  },
+  "fat_names": [
+    "Rock Antenne.mp3",
+    "Rock Antenne Bayern.mp3",
+    "Radio BOB!.mp3"
+  ],
+  "playDetect": {
+    "playPlugWindowMs": 500,
+    "playMinSeqBytes": 6000,
+    "playNavMinSeqBytes": 4096,
+    "playHeadLbaSlop": 12,
+    "playCooldownMs": 5000,
+    "playPrefetchLbaSlop": 2
+  },
+  "overall": true
+}

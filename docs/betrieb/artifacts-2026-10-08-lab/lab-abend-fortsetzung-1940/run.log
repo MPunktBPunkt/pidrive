@@ -1,0 +1,57 @@
+L4f authorized {'path': '/sys/bus/usb/devices/2-3.2/authorized', 'exists': True, 'value': '1', 'writable': False, 'write_error': "PermissionError: [Errno 13] Permission denied: '/sys/bus/usb/devices/2-3.2/authorized'", 'note': 'PVE/CT: sysfs authorized not writable without host-side uhubctl'}
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r01/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.45ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r02/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=6.13ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r03/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.88ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r04/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.85ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r05/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=6.12ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-fenster-24k-1919/replug-24k/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=6.51ms q10_4k=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-fenster-32k-1917/replug-32k/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 pause_est=5.65ms q10_4k=True
+msc.xfer {'n512': 146, 'n2k': 0, 'n4k': 1716, 'n8kPlus': 0}
+summary {"body_mode_votes": {"4096": 7}, "head_pause_est_ms_median": 5.88, "all_q10_4kib": true}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/q10-sniff.json
+
+remount {'i': 1, 'before': ('3h 22min', 'PD0309', 309, True), 'after': ('3h 22min', 'PD0310', 310, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0310'}
+remount {'i': 2, 'before': ('3h 22min', 'PD0310', 310, True), 'after': ('3h 22min', 'PD0311', 311, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0311'}
+remount {'i': 3, 'before': ('3h 22min', 'PD0311', 311, True), 'after': ('3h 22min', 'PD0312', 312, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0312'}
+remount {'i': 4, 'before': ('3h 22min', 'PD0312', 312, True), 'after': ('3h 22min', 'PD0313', 313, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0313'}
+remount {'i': 5, 'before': ('3h 22min', 'PD0313', 313, True), 'after': ('3h 22min', 'PD0314', 314, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0314'}
+remount {'i': 6, 'before': ('3h 22min', 'PD0314', 314, True), 'after': ('3h 22min', 'PD0315', 315, True), 'remount_advanced': True, 'reboot': False, 'ser': 'PD0315'}
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/run-lab-fortsetzung.py", line 301, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/run-lab-fortsetzung.py", line 130, in main
+    after = status()
+  File "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/run-lab-fortsetzung.py", line 32, in status
+    return http_json(f"{ESP.rstrip('/')}/api/status")
+  File "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-1940/run-lab-fortsetzung.py", line 26, in http_json
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+    response = self._open(req, data)
+  File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.13/urllib/request.py", line 1348, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/urllib/request.py", line 1323, in do_open
+    r = h.getresponse()
+  File "/usr/lib/python3.13/http/client.py", line 1459, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/http/client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out

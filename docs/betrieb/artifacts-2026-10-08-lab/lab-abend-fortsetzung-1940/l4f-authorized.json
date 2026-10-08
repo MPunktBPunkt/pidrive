@@ -1,0 +1,8 @@
+{
+  "path": "/sys/bus/usb/devices/2-3.2/authorized",
+  "exists": true,
+  "value": "1",
+  "writable": false,
+  "write_error": "PermissionError: [Errno 13] Permission denied: '/sys/bus/usb/devices/2-3.2/authorized'",
+  "note": "PVE/CT: sysfs authorized not writable without host-side uhubctl"
+}

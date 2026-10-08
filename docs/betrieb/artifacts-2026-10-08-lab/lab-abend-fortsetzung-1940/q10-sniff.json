@@ -1,0 +1,115 @@
+{
+  "reads": [
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 24.66,
+      "head_pause_est_ms": 5.45,
+      "dur_ms_p50": 5.44,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r01/reads.jsonl"
+    },
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 24.88,
+      "head_pause_est_ms": 6.13,
+      "dur_ms_p50": 5.45,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r02/reads.jsonl"
+    },
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 25.08,
+      "head_pause_est_ms": 5.88,
+      "dur_ms_p50": 5.44,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r03/reads.jsonl"
+    },
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 25.1,
+      "head_pause_est_ms": 5.85,
+      "dur_ms_p50": 5.47,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r04/reads.jsonl"
+    },
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 25.36,
+      "head_pause_est_ms": 6.12,
+      "dur_ms_p50": 5.49,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-nach-s4-1837/r05/reads.jsonl"
+    },
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 25.35,
+      "head_pause_est_ms": 6.51,
+      "dur_ms_p50": 5.51,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-fenster-24k-1919/replug-24k/reads.jsonl"
+    },
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 24.72,
+      "head_pause_est_ms": 5.65,
+      "dur_ms_p50": 5.45,
+      "q10_candidate_4kib": true,
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-fenster-32k-1917/replug-32k/reads.jsonl"
+    }
+  ],
+  "msc_xfer": {
+    "n512": 179,
+    "n2k": 0,
+    "n4k": 2064,
+    "n8kPlus": 0
+  },
+  "summary": {
+    "body_mode_votes": {
+      "4096": 7
+    },
+    "head_pause_est_ms_median": 5.88,
+    "all_q10_4kib": true
+  }
+}

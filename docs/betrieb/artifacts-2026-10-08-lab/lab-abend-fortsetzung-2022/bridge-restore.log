@@ -1,0 +1,69 @@
+[audio] target_bps=6000 bitrate=48k marker=False marker_period=10 re_local=False
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] enabled=True seed_plugged=True
+[tx] {"t":"hello","ver":1}
+[rx] {"t":"hello_ack","ver":"0.4.46-dev","fw":"pidrive","slots":4,"page":true,"audio":true,"bin":true,"tcp":true,"tcpPort":9090}
+[hello_ack] ver=0.4.46-dev slots=4 page=True tcp=True
+[tx] {"t":"audio_stop"}
+[bridge] tcp:192.168.178.88:9090 audio=48k paging=on
+[tx] {"t":"ping"}
+[tx] {"t":"menu_set","rev":9301,"page":0,"items":[{"uid":"fav0","name":"Rock Antenne","kind":"station"},{"uid":"fav1","name":"Rock Antenne Bayern","kind":"station"},{"uid":"fav2","name":"Radio BOB!","kind":"station"}]}
+[msc-lock] sealing publish (seal)
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[audio] stop (SoftAP/Remote)
+[rx] {"t":"audio_ack","ok":true,"op":"stop"}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'stop'}
+[rx] {"t":"pong"}
+[rx] {"t":"menu_ack","ok":true,"n":3,"rev":9301}
+[menu_ack] ok=True n=3 rev=9301
+[msc-lock] MSC_MAP_FROZEN [Rock Antenne,Rock Antenne Bayern,Radio BOB!]
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[rx] {"t":"event","op":"play_uid","uid":"pump:stop"}
+[trace] t=0ms play_uid=pump:stop
+[audio] stop (SoftAP/Remote)
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[tx] {"t":"ping"}
+[rx] {"t":"pong"}
+[rx] {"t":"event","op":"msc.reads","ms":14723725,"gap":12819,"lba0":0,"lba1":0,"bytes":4096,"n":1,"kind":4,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=0..0 gap=12819 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723730,"gap":5,"lba0":8,"lba1":8,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=8..8 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723735,"gap":5,"lba0":16,"lba1":16,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=16..16 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723741,"gap":6,"lba0":24,"lba1":24,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=24..24 gap=6 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723745,"gap":4,"lba0":32,"lba1":32,"bytes":4096,"n":1,"kind":5,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=32..32 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723750,"gap":5,"lba0":40,"lba1":40,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=40..40 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723754,"gap":4,"lba0":48,"lba1":48,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=48..48 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723758,"gap":4,"lba0":56,"lba1":56,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=56..56 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723763,"gap":5,"lba0":64,"lba1":64,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=64..64 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723767,"gap":4,"lba0":72,"lba1":72,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=72..72 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723771,"gap":4,"lba0":80,"lba1":80,"bytes":4096,"n":1,"kind":1,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=80..80 gap=4 ov=0
+[rx] {"t":"event","op":"diag","code":"play.reject","detail":"plug_window uid=fav0 from=88 +4096B age=5516383ms prefetch"}
+[msc] play.reject plug_window uid=fav0 from=88 +4096B age=5516383ms prefetch
+[rx] {"t":"event","op":"msc.reads","ms":14723776,"gap":5,"lba0":88,"lba1":88,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=88..88 gap=5 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723794,"gap":18,"lba0":96,"lba1":96,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=96..96 gap=18 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723798,"gap":4,"lba0":104,"lba1":104,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=104..104 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723802,"gap":4,"lba0":112,"lba1":112,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=112..112 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723806,"gap":4,"lba0":120,"lba1":120,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=120..120 gap=4 ov=0
+[rx] {"t":"event","op":"msc.reads","ms":14723811,"gap":5,"lba0":128,"lba1":128,"bytes":4096,"n":1,"kind":2,"ov":0}
+[msc.reads] n=1 bytes=4096 lba=128..128 gap=5 ov=0

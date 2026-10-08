@@ -1404,9 +1404,14 @@ REPLUG_FIELD_MS = (651, 665)
 REPLUG_FIELD_UND = (470616, 471640)
 
 
-def replug_eval(dump: bytes, size: int, pre: dict, post: dict, fw_id3: int | None) -> dict:
+def replug_eval(dump: bytes, size: int, pre: dict, post: dict, fw_id3: int | None,
+                realtime_bps: int = 6000) -> dict:
     """M2 balance of one replug read: host bytes = ID3 + live (ring + growth) + silence,
-    hostAbs_after - undDelta = absEnd at the crossing."""
+    hostAbs_after - undDelta = absEnd at the crossing.
+
+    live_s_at_48k always uses 6000 B/s (48k stereo model). live_s_at_bps uses realtime_bps
+    (Bridge --target-bps / Bitrate) — cite both when bitrate ≠ 48k (#167 / Fenster-Leiter).
+    """
     id3 = id3_len_of(dump)
     span = live_span(dump)
     und_d = int(post.get("underruns") or 0) - int(pre.get("underruns") or 0)
@@ -1416,12 +1421,15 @@ def replug_eval(dump: bytes, size: int, pre: dict, post: dict, fw_id3: int | Non
     if span.get("stamps"):
         live_file = max(0, int(span["file_end"]) - id3)
     expect_und = size - id3 - live_file
+    bps = max(1, int(realtime_bps))
     res = {
         "id3Len_dump": id3,
         "id3Len_fw": fw_id3,
         "live_span": span,
         "live_bytes_file": live_file,
         "live_s_at_48k": round(live_file / 6000.0, 2),
+        "realtime_bps": bps,
+        "live_s_at_bps": round(live_file / float(bps), 2),
         "undDelta": und_d,
         "expect_undDelta": expect_und,
         "field_undDelta": list(REPLUG_FIELD_UND),
@@ -1446,7 +1454,7 @@ def replug_eval(dump: bytes, size: int, pre: dict, post: dict, fw_id3: int | Non
 def run_replug(hu: HuSim, esp: str, pump: PumpTcp, out: Path, uid: str = "fav2",
                cmd_kib: int = 4, head_pause_ms: float = 19.0, period_ms: float | None = 5.1,
                prefill_s: float = 12.0, burst: float = 1.0, id3_bytes: int = 3300,
-               dump_slot: bool = False) -> dict:
+               dump_slot: bool = False, realtime_bps: int = 6000) -> dict:
     """Field s3 replug (R26): ring full with a producer at field rate, then the HU reads the
     current track sequentially from 0 — head callback, ~19 ms pause, rest at ~5 ms per 4 KiB."""
     hu.refresh_slots(esp)
@@ -1516,7 +1524,8 @@ def run_replug(hu: HuSim, esp: str, pump: PumpTcp, out: Path, uid: str = "fav2",
         "class_counts": dict(hu.class_counts),
         "ear": hu.ear.report(),
     }
-    res.update(replug_eval(bytes(dump), size, pre, post, pre.get("id3Len")))
+    res.update(replug_eval(bytes(dump), size, pre, post, pre.get("id3Len"),
+                           realtime_bps=realtime_bps))
     res["complete_ok"] = len(dump) == size
     p50 = (res["sg_ms_per_4k"] or {}).get("p50")
     res["timing_ok"] = cmd_kib != 4 or (p50 is not None and 4.0 <= p50 <= 5.6)
@@ -1864,6 +1873,8 @@ def main() -> int:
                     help="REPLUG: producer run time before the read (ring full after ~8.2 s)")
     ap.add_argument("--replug-id3-bytes", type=int, default=3300,
                     help="REPLUG: sticky ID3 size (field with cover ~3.1–3.5 KB)")
+    ap.add_argument("--replug-bps", type=int, default=6000,
+                    help="REPLUG: bytes/s for live_s_at_bps (48k→6000, 32k→4000, 24k→3000)")
     ap.add_argument("--dump-slot", action="store_true", help="REPLUG: save the read slot as .bin")
     args = ap.parse_args()
 
@@ -2064,7 +2075,8 @@ def main() -> int:
                 period_ms=args.period_ms if args.period_ms is not None else 5.1,
                 prefill_s=args.replug_prefill_s,
                 burst=1.0 if args.producer_burst is None else args.producer_burst,
-                id3_bytes=args.replug_id3_bytes, dump_slot=args.dump_slot)
+                id3_bytes=args.replug_id3_bytes, dump_slot=args.dump_slot,
+                realtime_bps=args.replug_bps)
 
         stop_live()
         report["timing"] = hu.timing_report()

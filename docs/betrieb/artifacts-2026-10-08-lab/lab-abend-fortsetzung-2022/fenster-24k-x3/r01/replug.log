@@ -1,0 +1,279 @@
+{
+  "REPLUG": {
+    "pass": true,
+    "uid": "fav2",
+    "cmd_kib": 4,
+    "commands": 128,
+    "bytes": 524288,
+    "read_ms": 863.3,
+    "head_ms": 19.14,
+    "head_pause_ms": 19.0,
+    "field_read_ms": [
+      651,
+      665
+    ],
+    "rate_kBps": 607.3,
+    "sg_ms_per_4k": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 28.0,
+      "n": 128
+    },
+    "ring_pre": 49152,
+    "ring_full_pre": true,
+    "producer_bytes": 79104,
+    "producer_err": null,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 12,
+      "SILENCE": 115
+    },
+    "ear": {
+      "live_bytes": 49152,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 115
+      },
+      "event_list": [
+        {
+          "t": 2006781.999973287,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.007394773,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.014500072,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.021315122,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.027386847,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.033727009,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.039719194,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.045940221,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.052841504,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.059931855,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.066798362,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.073643529,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.080147841,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.086743507,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.093427429,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.099473315,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.105498522,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.111507499,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.117700794,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.123567491,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.129459637,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.136157986,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.142896662,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.149062936,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.155394302,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.161855312,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.167896871,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.173837047,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.1803943,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.18699232,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.193556996,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.199804083,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.205671151,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.21160741,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.217654349,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.223838266,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.230167808,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.236670588,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.243048882,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.249602318,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.255510434,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.261692167,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.26815416,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.274582018,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.280924955,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.286943029,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.292803365,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.298482368,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.304266038,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2006782.310409048,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "id3Len_dump": 3300,
+    "id3Len_fw": 3300,
+    "live_span": {
+      "stamps": 196,
+      "seq_gaps": 0,
+      "file_first": 3300,
+      "file_end": 53476,
+      "seq_first": 88,
+      "seq_last": 283,
+      "abs_first": 22528,
+      "abs_end": 72704
+    },
+    "live_bytes_file": 50176,
+    "live_s_at_48k": 8.36,
+    "realtime_bps": 3000,
+    "live_s_at_bps": 16.73,
+    "undDelta": 470812,
+    "expect_undDelta": 470812,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 543516,
+    "absEnd_pre": 71680,
+    "absEnd_post": 78848,
+    "abs_cross_fw": 72704,
+    "abs_cross_pdsq": 72704,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": true
+  }
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-lab/lab-abend-fortsetzung-2022/fenster-24k-x3/r01/replug overall=PASS
+

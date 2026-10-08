@@ -1,0 +1,25 @@
+{
+    "ok": true,
+    "config": {
+        "deviceName": "PiDrive-Lab",
+        "hubHost": "192.168.178.113",
+        "hubPort": 8093,
+        "enableHub": true,
+        "heartbeatIntervalS": 30,
+        "enableMdns": true,
+        "bufferTargetMs": 5000,
+        "labMode": true,
+        "timingProfile": 0,
+        "enableSoftAp": true,
+        "softApPass": "pidrive12",
+        "enableSta": true,
+        "enablePumpTcp": true,
+        "pumpTcpPort": 9090,
+        "playPlugWindowMs": 500,
+        "playMinSeqBytes": 6000,
+        "playNavMinSeqBytes": 4096,
+        "playHeadLbaSlop": 12,
+        "playCooldownMs": 5000,
+        "playPrefetchLbaSlop": 2
+    }
+}
