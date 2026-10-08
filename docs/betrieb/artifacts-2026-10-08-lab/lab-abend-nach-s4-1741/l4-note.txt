@@ -1,0 +1,2 @@
+authorized_ro=1
+fallback: 30x nbt_hu_sim REPLUG, count ESP uptime drops

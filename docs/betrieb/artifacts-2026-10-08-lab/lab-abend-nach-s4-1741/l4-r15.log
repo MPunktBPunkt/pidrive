@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 2102, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1961, in main
+    pump = prep_lab(esp, args.esp_ip, None, remount=need_rm)
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 992, in prep_lab
+    raise ConnectionError(f"prep_lab handshake failed: {last}")
+ConnectionError: prep_lab handshake failed: [Errno 104] Connection reset by peer

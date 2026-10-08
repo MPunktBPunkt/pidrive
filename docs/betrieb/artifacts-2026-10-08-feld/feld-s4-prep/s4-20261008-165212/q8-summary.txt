@@ -1,0 +1,441 @@
+rows: msc.reads=5666 trace=20292 -> single=20292; jump bursts=0 (not resolved: 0)
+ep0: ms 1810–6448 (4.638s) rows=4097 bytes=16633344 ovΔ=0 unread_4k=1961 (8032256 B) max_off_2s=8388607 → r16_resume_like
+  stall: Startposition ≠ 0 — R16-Muster; P-Quelle klären
+  pattern: F4 X4 F4 X4 F4 X4 F4 X4 B4 F4 F4 B4 F4 F4 B4 F4 B32 X4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F8 B4 F4 B4 F4 B16 F12 B4 F4 B4 F4 B4 F4 B4 F232 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F8 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 F4 B4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F12 F28 F4 B36 F24 F4 F4 F4 F4 F4 F8 F4 F4 B4 F16 F4 B4 F4 F4 B4 F4 B16 F20 F20 F8 F4 F4 F4 F4 F4 F8 B4 F4 B4 F8 F8 F4 B4 F4 B4 F4 F4 B4 F4 B4 X4 F4 X4 F4 X4 F4 X4 B4 F4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 F4 F4 F8 F4 B4 F4 B4 F4 B4 F4 F4 B4 F4 B4 B4 F4 F4 B4 F4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 F4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 F4 B4 F4 B4 B4 F4 B4 B4 F4 B4 B4 F4 B4 B4 F4 B4 B4 F4 B4 F4 B4 F4 X4 B4 B4 F4 F4 B4 B4 F4 B4 B4 F4 B4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 B4 F4 F4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 B4 F4 B4 B4 F4 B4 F4 B4 F4 F4 B4 F4 B4 F4 B4 B4 F4 B4 B4 F4 B4 B4 F4 B4 F4 B4 F4 B4 F4 B4 B4 F4 B4 F4 B4 F4 B4 F4 F4 B4 F4 F4 F4 B4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 B4 F4 B4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 B4 F4 F4 B4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F16 F36
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=0…7 B=4096
+  seg3: META lba=0…7 B=4096
+  seg4: META lba=32…39 B=4096
+  seg5: META lba=32…39 B=4096
+  seg6: META lba=40…47 B=4096
+  seg7: META lba=40…47 B=4096
+  seg8: META lba=48…55 B=4096
+  seg9: META lba=48…55 B=4096
+  seg10: META lba=56…63 B=4096
+  seg11: META lba=56…63 B=4096
+  … +3961 Segmente
+ep1: ms 6452–6665 (0.213s) rows=97 bytes=397312 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17377…17384 B=4096
+  seg1: META lba=16473…16480 B=4096
+  seg2: META lba=17385…17392 B=4096
+  seg3: META lba=16481…16488 B=4096
+  seg4: META lba=17393…17400 B=4096
+  seg5: META lba=16489…16496 B=4096
+  seg6: META lba=17401…17408 B=4096
+  seg7: META lba=17489…17496 B=4096
+  seg8: META lba=17409…17416 B=4096
+  seg9: META lba=17497…17504 B=4096
+  seg10: META lba=17417…17424 B=4096
+  seg11: META lba=17505…17512 B=4096
+  … +85 Segmente
+ep2: ms 6667–14908 (8.241s) rows=1792 bytes=7312384 ovΔ=0 unread_4k=754 (3088384 B) max_off_2s=None → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4 F420 F4 F4 F4 F4 F4 F4 F4 F4 F4 F16 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F20 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F16 F4 F4 F4 F4 F16 F904 F668 F24 F4 F4 F8 F4 B4 F20 F4 B4 F4 B4 F4 B4 F16 F92 F4 F4 F4 F4 F4 F4 F32 F4 F4 F4 F4 F4 F4 F4 F8 F4 B4 F4 F4 B4 F4 B4 F8 B4 F128 F28 F68 F68 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F20 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F220 F976 F476
+  seg0: META lba=17377…17384 B=4096
+  seg1: META lba=17897…17904 B=4096
+  seg2: META lba=17905…17912 B=4096
+  seg3: META lba=17913…17920 B=4096
+  seg4: META lba=17921…17928 B=4096
+  seg5: META lba=17385…17392 B=4096
+  seg6: META lba=17929…17936 B=4096
+  seg7: META lba=17393…17400 B=4096
+  seg8: META lba=17937…17944 B=4096
+  seg9: META lba=17401…17408 B=4096
+  seg10: META lba=17945…17952 B=4096
+  seg11: META lba=17409…17416 B=4096
+  … +735 Segmente
+ep3: ms 17417–17417 (0.0s) rows=1 bytes=4096 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=0…7 B=4096
+ep4: ms 17425–17498 (0.073s) rows=21 bytes=86016 ovΔ=0 unread_4k=2046 (8380416 B) max_off_2s=24063 → unclear
+  stall: kein Kopf-Lauf 360 KiB; Segmente manuell prüfen
+  pattern: F4
+  seg0: META lba=17377…17384 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=17385…17392 B=4096
+  seg4: META lba=40…47 B=4096
+  seg5: META lba=17393…17400 B=4096
+  seg6: META lba=48…55 B=4096
+  seg7: META lba=17401…17408 B=4096
+  seg8: META lba=56…63 B=4096
+  seg9: META lba=17409…17416 B=4096
+  seg10: META lba=64…71 B=4096
+  seg11: META lba=17417…17424 B=4096
+  … +9 Segmente
+ep5: ms 17500–18498 (0.998s) rows=175 bytes=716800 ovΔ=0 unread_4k=2042 (8364032 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4
+  seg0: META lba=17137…17144 B=4096
+  seg1: META lba=17473…17480 B=4096
+  seg2: META lba=17137…17144 B=4096
+  seg3: META lba=16…23 B=4096
+  seg4: META lba=17145…17152 B=4096
+  seg5: forward  off=24064… B=4096 lba=128…135
+  seg6: META lba=17153…17160 B=4096
+  seg7: forward  off=220672… B=4096 lba=512…519
+  seg8: META lba=17145…17152 B=4096
+  seg9: META lba=17161…17168 B=4096
+  seg10: forward  off=2055680… B=4096 lba=4096…4103
+  seg11: META lba=17153…17160 B=4096
+  … +163 Segmente
+ep6: ms 19672–19858 (0.186s) rows=43 bytes=176128 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17377…17384 B=4096
+  seg1: META lba=17385…17392 B=4096
+  seg2: META lba=17393…17400 B=4096
+  seg3: META lba=17401…17408 B=4096
+  seg4: META lba=17409…17416 B=4096
+  seg5: META lba=17417…17424 B=4096
+  seg6: META lba=17425…17432 B=4096
+  seg7: META lba=17433…17440 B=4096
+  seg8: META lba=17441…17448 B=4096
+  seg9: META lba=17449…17456 B=4096
+  seg10: META lba=17457…17464 B=4096
+  seg11: META lba=17465…17472 B=4096
+  … +31 Segmente
+ep7: ms 19905–20090 (0.185s) rows=43 bytes=176128 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17377…17384 B=4096
+  seg1: META lba=17385…17392 B=4096
+  seg2: META lba=17393…17400 B=4096
+  seg3: META lba=17401…17408 B=4096
+  seg4: META lba=17409…17416 B=4096
+  seg5: META lba=17417…17424 B=4096
+  seg6: META lba=17425…17432 B=4096
+  seg7: META lba=17433…17440 B=4096
+  seg8: META lba=17441…17448 B=4096
+  seg9: META lba=17449…17456 B=4096
+  seg10: META lba=17457…17464 B=4096
+  seg11: META lba=17465…17472 B=4096
+  … +31 Segmente
+ep8: ms 21040–25369 (4.329s) rows=1464 bytes=5967872 ovΔ=0 unread_4k=911 (3731456 B) max_off_2s=2445311 → r16_resume_like
+  stall: Startposition ≠ 0 — R16-Muster; P-Quelle klären
+  pattern: F96 B104 B120 F288 F1096 F24 F4 F4 F4 F4 F4 F8 F4 F4 B4 F56 F4 B4 F4 B4 F4 B4 F16 F124 F4 F4 F4 F4 F4 F4 F44 F4 F4 F4 F4 F4 F4 F8 F4 F4 B4 F8 F4 B4 F4 B4 F4 B4 F192 F8 F72 F20 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F24 F4 F4 F4 F4 F4 F4 F4 F16 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F8 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 B4 F4 F4 F4 F4 F4 F4 F4 B4 F4 B4 F4 B4 F4 F4 F4 F4 F8 F4 F4 F8 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F48 F4 F4 F4 F4 F4 F8 F8 F4 B4 F4 F8 B4 F4 B4 F24 B4 F116 F4 F44 F16 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F8 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F8 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F396 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F4 B4 F20 B4 F4 B4 F4 B4 F304
+  seg0: forward  off=868352… B=98304 lba=1777…1968
+  seg1: forward  off=466944… B=106496 lba=993…1200
+  seg2: forward  off=344064… B=122880 lba=753…992
+  seg3: forward  off=573440… B=294912 lba=1201…1776
+  seg4: forward  off=966656… B=1122304 lba=1969…4160
+  seg5: META lba=0…7 B=4096
+  seg6: forward  off=2088960… B=24576 lba=4161…4208
+  seg7: META lba=0…7 B=4096
+  seg8: forward  off=2113536… B=4096 lba=4209…4216
+  seg9: META lba=32…39 B=4096
+  seg10: forward  off=2117632… B=4096 lba=4217…4224
+  seg11: META lba=40…47 B=4096
+  … +641 Segmente
+ep9: ms 29693–30835 (1.142s) rows=147 bytes=589824 ovΔ=0 unread_4k=2041 (8359936 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +135 Segmente
+ep10: ms 31128–31319 (0.191s) rows=43 bytes=176128 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17137…17144 B=4096
+  seg1: META lba=17145…17152 B=4096
+  seg2: META lba=17153…17160 B=4096
+  seg3: META lba=17161…17168 B=4096
+  seg4: META lba=17169…17176 B=4096
+  seg5: META lba=17177…17184 B=4096
+  seg6: META lba=17185…17192 B=4096
+  seg7: META lba=17193…17200 B=4096
+  seg8: META lba=17201…17208 B=4096
+  seg9: META lba=17209…17216 B=4096
+  seg10: META lba=17217…17224 B=4096
+  seg11: META lba=17225…17232 B=4096
+  … +31 Segmente
+ep11: ms 34094–36263 (2.169s) rows=334 bytes=1343488 ovΔ=0 unread_4k=2041 (8359936 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4 B4 F4 F4 F4 B4 F4 F4 F4
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +322 Segmente
+ep12: ms 40949–45412 (4.463s) rows=1135 bytes=4648960 ovΔ=0 unread_4k=913 (3739648 B) max_off_2s=2428927 → r16_resume_like
+  stall: Startposition ≠ 0 — R16-Muster; P-Quelle klären
+  pattern: F8 B120 B120 F360 B360 F2748 F824
+  seg0: forward  off=958464… B=8192 lba=1953…1968
+  seg1: forward  off=835584… B=122880 lba=1713…1952
+  seg2: forward  off=712704… B=122880 lba=1473…1712
+  seg3: forward  off=966656… B=368640 lba=1969…2688
+  seg4: forward  off=344064… B=368640 lba=753…1472
+  seg5: forward  off=1335296… B=2813952 lba=2689…8184
+  seg6: forward  off=4202496… B=843776 lba=8289…9936
+ep13: ms 47738–47928 (0.19s) rows=43 bytes=176128 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17137…17144 B=4096
+  seg1: META lba=17145…17152 B=4096
+  seg2: META lba=17153…17160 B=4096
+  seg3: META lba=17161…17168 B=4096
+  seg4: META lba=17169…17176 B=4096
+  seg5: META lba=17177…17184 B=4096
+  seg6: META lba=17185…17192 B=4096
+  seg7: META lba=17193…17200 B=4096
+  seg8: META lba=17201…17208 B=4096
+  seg9: META lba=17209…17216 B=4096
+  seg10: META lba=17217…17224 B=4096
+  seg11: META lba=17225…17232 B=4096
+  … +31 Segmente
+ep14: ms 51585–61580 (9.995s) rows=1989 bytes=8146944 ovΔ=0 unread_4k=59 (241664 B) max_off_2s=8388607 → unclear
+  stall: manuell prüfen
+  pattern: F16 B120 B120 F360 F4 B632 F360 B360 F360 B184 F5440
+  seg0: forward  off=245760… B=16384 lba=561…592
+  seg1: forward  off=122880… B=122880 lba=321…560
+  seg2: forward  off=0… B=122880 lba=81…320
+  seg3: forward  off=262144… B=368640 lba=593…1312
+  seg4: forward  off=8384512… B=4096 lba=16457…16464
+  seg5: forward  off=630784… B=647168 lba=1313…2576
+  seg6: forward  off=1835008… B=368640 lba=3665…4384
+  seg7: forward  off=1277952… B=368640 lba=2577…3296
+  seg8: forward  off=2203648… B=368640 lba=4385…5104
+  seg9: forward  off=1646592… B=188416 lba=3297…3664
+  seg10: forward  off=2572288… B=5570560 lba=5105…15984
+ep15: ms 67397–67586 (0.189s) rows=43 bytes=176128 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17377…17384 B=4096
+  seg1: META lba=17385…17392 B=4096
+  seg2: META lba=17393…17400 B=4096
+  seg3: META lba=17401…17408 B=4096
+  seg4: META lba=17409…17416 B=4096
+  seg5: META lba=17417…17424 B=4096
+  seg6: META lba=17425…17432 B=4096
+  seg7: META lba=17433…17440 B=4096
+  seg8: META lba=17441…17448 B=4096
+  seg9: META lba=17449…17456 B=4096
+  seg10: META lba=17457…17464 B=4096
+  seg11: META lba=17465…17472 B=4096
+  … +31 Segmente
+ep16: ms 93549–94933 (1.384s) rows=263 bytes=1077248 ovΔ=0 unread_4k=1785 (7311360 B) max_off_2s=8388607 → unclear
+  stall: manuell prüfen
+  pattern: F16 B120 B120 F360 F4 B48 F296 F88
+  seg0: forward  off=245760… B=16384 lba=561…592
+  seg1: forward  off=122880… B=122880 lba=321…560
+  seg2: forward  off=0… B=122880 lba=81…320
+  seg3: forward  off=262144… B=368640 lba=593…1312
+  seg4: forward  off=8384512… B=4096 lba=16457…16464
+  seg5: forward  off=630784… B=49152 lba=1313…1408
+  seg6: forward  off=729088… B=303104 lba=1505…2096
+  seg7: forward  off=1835008… B=90112 lba=3665…3840
+ep17: ms 97696–98137 (0.441s) rows=96 bytes=393216 ovΔ=0 unread_4k=1952 (7995392 B) max_off_2s=3948543 → unclear
+  stall: manuell prüfen
+  pattern: F384
+  seg0: forward  off=3555328… B=393216 lba=7025…7792
+ep18: ms 100683–105687 (5.004s) rows=560 bytes=2293760 ovΔ=0 unread_4k=1488 (6094848 B) max_off_2s=5521407 → unclear
+  stall: manuell prüfen
+  pattern: F384 F832 F384 F640
+  seg0: forward  off=3993600… B=393216 lba=7881…8648
+  seg1: forward  off=4669440… B=851968 lba=9201…10864
+  seg2: forward  off=6520832… B=393216 lba=12817…13584
+  seg3: forward  off=7487488… B=655360 lba=14705…15984
+ep19: ms 120322–121409 (1.087s) rows=167 bytes=671744 ovΔ=0 unread_4k=2041 (8359936 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +155 Segmente
+ep20: ms 139878–150957 (11.079s) rows=2048 bytes=8376320 ovΔ=0 unread_4k=39 (159744 B) max_off_2s=8388607 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4 B256 F4 B7776
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +30 Segmente
+ep21: ms 202328–203456 (1.128s) rows=167 bytes=671744 ovΔ=0 unread_4k=2041 (8359936 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +155 Segmente
+ep22: ms 247607–248972 (1.365s) rows=253 bytes=1019904 ovΔ=0 unread_4k=2041 (8359936 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +241 Segmente
+ep23: ms 249320–260796 (11.476s) rows=2161 bytes=8851456 ovΔ=0 unread_4k=59 (241664 B) max_off_2s=569343 → unclear
+  stall: manuell prüfen
+  pattern: F16 B120 B120 F360 F4 B632 F360 B360 F360 B184 F3956 F4 X1484
+  seg0: META lba=16465…16472 B=4096
+  seg1: META lba=16473…16480 B=4096
+  seg2: META lba=16481…16488 B=4096
+  seg3: META lba=16489…16496 B=4096
+  seg4: META lba=16497…16504 B=4096
+  seg5: META lba=16505…16512 B=4096
+  seg6: META lba=16513…16520 B=4096
+  seg7: META lba=16521…16528 B=4096
+  seg8: META lba=16529…16536 B=4096
+  seg9: META lba=16537…16544 B=4096
+  seg10: META lba=16545…16552 B=4096
+  seg11: META lba=16553…16560 B=4096
+  … +172 Segmente
+ep24: ms 461576–462006 (0.43s) rows=36 bytes=135168 ovΔ=0 unread_4k=2041 (8359936 B) max_off_2s=2059775 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=32…39 B=4096
+  seg2: META lba=40…47 B=4096
+  seg3: META lba=48…55 B=4096
+  seg4: META lba=56…63 B=4096
+  seg5: META lba=64…71 B=4096
+  seg6: META lba=8…15 B=4096
+  seg7: META lba=24…31 B=4096
+  seg8: forward  off=19968… B=4096 lba=120…127
+  seg9: META lba=16…23 B=4096
+  seg10: forward  off=24064… B=4096 lba=128…135
+  seg11: forward  off=220672… B=4096 lba=512…519
+  … +24 Segmente
+ep25: ms 489978–490325 (0.347s) rows=96 bytes=393216 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=16721…16728 B=4096
+  seg1: META lba=16729…16736 B=4096
+  seg2: META lba=16737…16744 B=4096
+  seg3: META lba=16745…16752 B=4096
+  seg4: META lba=16753…16760 B=4096
+  seg5: META lba=16761…16768 B=4096
+  seg6: META lba=16769…16776 B=4096
+  seg7: META lba=16777…16784 B=4096
+  seg8: META lba=16785…16792 B=4096
+  seg9: META lba=16793…16800 B=4096
+  seg10: META lba=16801…16808 B=4096
+  seg11: META lba=16809…16816 B=4096
+  … +84 Segmente
+ep26: ms 494049–498266 (4.217s) rows=539 bytes=2207744 ovΔ=0 unread_4k=1625 (6656000 B) max_off_2s=2306047 → unclear
+  stall: manuell prüfen
+  pattern: F16 B120 B20 F56 F328 F384 F60 F324 F384
+  seg0: forward  off=245760… B=16384 lba=561…592
+  seg1: forward  off=122880… B=122880 lba=321…560
+  seg2: forward  off=0… B=20480 lba=81…120
+  seg3: forward  off=65536… B=57344 lba=209…320
+  seg4: forward  off=262144… B=335872 lba=593…1248
+  seg5: forward  off=851968… B=393216 lba=1745…2512
+  seg6: forward  off=1585152… B=61440 lba=3177…3296
+  seg7: forward  off=2203648… B=331776 lba=4385…5032
+  seg8: forward  off=3440640… B=393216 lba=6801…7568
+  seg9: META lba=17585…17592 B=4096
+  seg10: META lba=17593…17600 B=4096
+  seg11: META lba=17601…17608 B=4096
+  … +113 Segmente
+ep27: ms 508725–512727 (4.002s) rows=1024 bytes=4194304 ovΔ=0 unread_4k=1024 (4194304 B) max_off_2s=6053887 → unclear
+  stall: manuell prüfen
+  pattern: F120 B120 F120 B1680 F2056
+  seg0: forward  off=5791744… B=122880 lba=11393…11632
+  seg1: forward  off=5668864… B=122880 lba=11153…11392
+  seg2: forward  off=5914624… B=122880 lba=11633…11872
+  seg3: forward  off=3948544… B=1720320 lba=7793…11152
+  seg4: forward  off=6037504… B=2105344 lba=11873…15984
+ep28: ms 574770–576405 (1.635s) rows=296 bytes=1200128 ovΔ=0 unread_4k=1961 (8032256 B) max_off_2s=8388607 → unclear
+  stall: manuell prüfen
+  pattern: F4 F4 F4 F4 B4 F4 F4 F4 B80 F4 B256
+  seg0: META lba=0…7 B=4096
+  seg1: META lba=0…7 B=4096
+  seg2: META lba=32…39 B=4096
+  seg3: META lba=40…47 B=4096
+  seg4: META lba=48…55 B=4096
+  seg5: META lba=56…63 B=4096
+  seg6: META lba=64…71 B=4096
+  seg7: META lba=8…15 B=4096
+  seg8: META lba=24…31 B=4096
+  seg9: forward  off=19968… B=4096 lba=120…127
+  seg10: META lba=16…23 B=4096
+  seg11: forward  off=24064… B=4096 lba=128…135
+  … +202 Segmente
+ep29: ms 579885–580070 (0.185s) rows=43 bytes=176128 ovΔ=0 unread_4k=2048 (8388608 B) max_off_2s=None → no_slot_reads
+  stall: keine Slot-Daten — Episode/Fenster prüfen
+  pattern: 
+  seg0: META lba=17137…17144 B=4096
+  seg1: META lba=17145…17152 B=4096
+  seg2: META lba=17153…17160 B=4096
+  seg3: META lba=17161…17168 B=4096
+  seg4: META lba=17169…17176 B=4096
+  seg5: META lba=17177…17184 B=4096
+  seg6: META lba=17185…17192 B=4096
+  seg7: META lba=17193…17200 B=4096
+  seg8: META lba=17201…17208 B=4096
+  seg9: META lba=17209…17216 B=4096
+  seg10: META lba=17217…17224 B=4096
+  seg11: META lba=17225…17232 B=4096
+  … +31 Segmente
+ep30: ms 597324–601596 (4.272s) rows=1076 bytes=4407296 ovΔ=0 unread_4k=972 (3981312 B) max_off_2s=2699263 → r16_resume_like
+  stall: Startposition ≠ 0 — R16-Muster; P-Quelle klären
+  pattern: F8 B120 F120 B480 F480 F360 B360 F360 B256 F1760
+  seg0: forward  off=958464… B=8192 lba=1953…1968
+  seg1: forward  off=835584… B=122880 lba=1713…1952
+  seg2: forward  off=966656… B=122880 lba=1969…2208
+  seg3: forward  off=344064… B=491520 lba=753…1712
+  seg4: forward  off=1089536… B=491520 lba=2209…3168
+  seg5: forward  off=2211840… B=368640 lba=4401…5120
+  seg6: forward  off=1581056… B=368640 lba=3169…3888
+  seg7: forward  off=2580480… B=368640 lba=5121…5840
+  seg8: forward  off=1949696… B=262144 lba=3889…4400
+  seg9: forward  off=2949120… B=1802240 lba=5841…9360
+wrote /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-feld/feld-s4-prep/s4-20261008-165212/q8/Q8-REPORT.json

@@ -1,0 +1,50 @@
+t=16:52:30  RUN START s4-20261008-165212
+t=16:54:15  K1 BOB autoplay running
+t=16:54:15  K1 unplug
+t=16:54:15  K1 plug PD0109 16:54
+t=16:54:23  K1 plugged back
+t=16:55:27  K1 no tone no picture - try other stations + otg
+t=16:55:46  ESP reboot uptime=2s PD0111 — silence explained
+t=16:58:21  all stations + replugs: no picture no tone
+t=16:58:48  recovery: wait stable — OTG AN lassen, von VORN starten
+t=16:59:26  K2 Bayern tap
+t=17:00:03  K2 Bayern reject not_from_head from=17377 — need start from head
+t=17:01:09  K2 Bayern claimed from-head — still silent
+t=17:01:36  recovery: plugWindow=0 minSeq=4096; rename Bayern to break P
+t=17:02:27  OTG unplug for Bayern rename
+t=17:02:31  rename done — plug + tip Bayern/Rock Bayern 1008
+t=17:03:30  K3 Rock Bayern 1008 tap
+t=17:04:27  K3 1008 tap: HU still mid-file LBA~173xx; name change did NOT reset P; no new play
+t=17:04:34  lab/play fav1 forced after 1008 tap
+t=17:04:58  stream LIVE fav1 abs growing hostAbs=0 — HU not reading yet
+t=17:05:50  config: headLbaSlop=2048 prefetchSlop=0 — accept mid-ish as play
+t=17:06:00  config headSlop=64 pfSlop=32 cd=1s — tip Rock Antenne (fav0 worked 16:56)
+t=17:06:05  HU activity: fav0
+t=17:06:39  operator: HU file cache — no LED / no USB reads
+t=17:07:54  OTG unplug for cache-bust publish
+t=17:07:59  names published — plug now, open USB folder, tip new name
+t=17:08:43  OTG plugged PD0122 after cache-bust — waiting tip
+t=17:09:21  tip after cache-bust (BOB 1008?)
+t=17:09:52  still not_from_head after rename — force lab/play fav2
+t=17:11:00  after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+t=17:13:10  SUCCESS: BOB picture + ~5s tone; ESP no crash on plug; LED not white
+t=17:14:08  LED white again, no tone
+t=17:14:17  ESP reboot PD0129 — wait scan, tip BOB without unplug
+t=17:15:39  again LED white no tone
+t=17:15:56  OTG currently OUT — plug once and leave
+t=17:15:57  plugged PD0134 — wait quiet then tip BOB, no unplug
+t=17:16:15  ESP timeout after replug — power instability
+t=17:16:58  BOB running several seconds — live
+t=17:17:22  operator: BOB several seconds (ESP status already idle at check)
+t=17:17:51  autoplay about to switch
+t=17:18:28  K1-ish: unplug/plug during/after Antenne autoplay
+t=17:19:12  SUCCESS: Rock Antenne picture+tone ~17:18 (operator)
+t=17:19:28  end unplug-plug watch
+t=17:20:12  K2: tip Bayern then unplug/plug
+t=17:20:53  Bayern retry after white LED
+t=17:21:55  end Bayern replug watch
+t=17:22:22  end Bayern retry watch
+t=17:22:48  wait stable then tip Bayern only — delay unplug
+t=17:24:43  SUCCESS: Rock Antenne again after many tries ~17:24
+t=17:25:24  LIVE: picture+tone now ~17:25
+t=17:25:49  SUCCESS picture+tone 17:24 PD0153 (operator)

@@ -1,0 +1,53 @@
+{"wall": 1791471150.077, "hms": "16:52:30", "run": "s4-20261008-165212", "text": "RUN START s4-20261008-165212"}
+{"wall": 1791471255.13, "hms": "16:54:15", "run": "s4-20261008-165212", "text": "K1 BOB autoplay running"}
+{"wall": 1791471255.258, "hms": "16:54:15", "run": "s4-20261008-165212", "text": "K1 unplug"}
+{"wall": 1791471255.36, "hms": "16:54:15", "run": "s4-20261008-165212", "text": "K1 plug PD0109 16:54"}
+{"wall": 1791471263.222, "hms": "16:54:23", "run": "s4-20261008-165212", "text": "K1 plugged back"}
+{"wall": 1791471327.61, "hms": "16:55:27", "run": "s4-20261008-165212", "text": "K1 no tone no picture - try other stations + otg"}
+{"wall": 1791471346.747, "hms": "16:55:46", "run": "s4-20261008-165212", "text": "ESP reboot uptime=2s PD0111 — silence explained"}
+{"wall": 1791471501.445, "hms": "16:58:21", "run": "s4-20261008-165212", "text": "all stations + replugs: no picture no tone"}
+{"wall": 1791471528.235, "hms": "16:58:48", "run": "s4-20261008-165212", "text": "recovery: wait stable — OTG AN lassen, von VORN starten"}
+{"wall": 1791471566.72, "hms": "16:59:26", "run": "s4-20261008-165212", "text": "K2 Bayern tap"}
+{"wall": 1791471603.458, "hms": "17:00:03", "run": "s4-20261008-165212", "text": "K2 Bayern reject not_from_head from=17377 — need start from head"}
+{"wall": 1791471669.738, "hms": "17:01:09", "run": "s4-20261008-165212", "text": "K2 Bayern claimed from-head — still silent"}
+{"wall": 1791471696.602, "hms": "17:01:36", "run": "s4-20261008-165212", "text": "recovery: plugWindow=0 minSeq=4096; rename Bayern to break P"}
+{"wall": 1791471747.8, "hms": "17:02:27", "run": "s4-20261008-165212", "text": "OTG unplug for Bayern rename"}
+{"wall": 1791471751.522, "hms": "17:02:31", "run": "s4-20261008-165212", "text": "rename done — plug + tip Bayern/Rock Bayern 1008"}
+{"wall": 1791471810.289, "hms": "17:03:30", "run": "s4-20261008-165212", "text": "K3 Rock Bayern 1008 tap"}
+{"wall": 1791471867.703, "hms": "17:04:27", "run": "s4-20261008-165212", "text": "K3 1008 tap: HU still mid-file LBA~173xx; name change did NOT reset P; no new play"}
+{"wall": 1791471874.64, "hms": "17:04:34", "run": "s4-20261008-165212", "text": "lab/play fav1 forced after 1008 tap"}
+{"wall": 1791471898.876, "hms": "17:04:58", "run": "s4-20261008-165212", "text": "stream LIVE fav1 abs growing hostAbs=0 — HU not reading yet"}
+{"wall": 1791471950.445, "hms": "17:05:50", "run": "s4-20261008-165212", "text": "config: headLbaSlop=2048 prefetchSlop=0 — accept mid-ish as play"}
+{"wall": 1791471960.819, "hms": "17:06:00", "run": "s4-20261008-165212", "text": "config headSlop=64 pfSlop=32 cd=1s — tip Rock Antenne (fav0 worked 16:56)"}
+{"wall": 1791471965.343, "hms": "17:06:05", "run": "s4-20261008-165212", "text": "HU activity: fav0"}
+{"wall": 1791471999.28, "hms": "17:06:39", "run": "s4-20261008-165212", "text": "operator: HU file cache — no LED / no USB reads"}
+{"wall": 1791472074.55, "hms": "17:07:54", "run": "s4-20261008-165212", "text": "OTG unplug for cache-bust publish"}
+{"wall": 1791472079.132, "hms": "17:07:59", "run": "s4-20261008-165212", "text": "names published — plug now, open USB folder, tip new name"}
+{"wall": 1791472123.823, "hms": "17:08:43", "run": "s4-20261008-165212", "text": "OTG plugged PD0122 after cache-bust — waiting tip"}
+{"wall": 1791472161.48, "hms": "17:09:21", "run": "s4-20261008-165212", "text": "tip after cache-bust (BOB 1008?)"}
+{"wall": 1791472192.709, "hms": "17:09:52", "run": "s4-20261008-165212", "text": "still not_from_head after rename — force lab/play fav2"}
+{"wall": 1791472260.157, "hms": "17:11:00", "run": "s4-20261008-165212", "text": "after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry"}
+{"wall": 1791472390.582, "hms": "17:13:10", "run": "s4-20261008-165212", "text": "SUCCESS: BOB picture + ~5s tone; ESP no crash on plug; LED not white"}
+{"wall": 1791472448.607, "hms": "17:14:08", "run": "s4-20261008-165212", "text": "LED white again, no tone"}
+{"wall": 1791472457.767, "hms": "17:14:17", "run": "s4-20261008-165212", "text": "ESP reboot PD0129 — wait scan, tip BOB without unplug"}
+{"wall": 1791472539.463, "hms": "17:15:39", "run": "s4-20261008-165212", "text": "again LED white no tone"}
+{"wall": 1791472556.894, "hms": "17:15:56", "run": "s4-20261008-165212", "text": "OTG currently OUT — plug once and leave"}
+{"wall": 1791472557.399, "hms": "17:15:57", "run": "s4-20261008-165212", "text": "plugged PD0134 — wait quiet then tip BOB, no unplug"}
+{"wall": 1791472575.357, "hms": "17:16:15", "run": "s4-20261008-165212", "text": "ESP timeout after replug — power instability"}
+{"wall": 1791472618.528, "hms": "17:16:58", "run": "s4-20261008-165212", "text": "BOB running several seconds — live"}
+{"wall": 1791472642.276, "hms": "17:17:22", "run": "s4-20261008-165212", "text": "operator: BOB several seconds (ESP status already idle at check)"}
+{"wall": 1791472671.511, "hms": "17:17:51", "run": "s4-20261008-165212", "text": "autoplay about to switch"}
+{"wall": 1791472708.158, "hms": "17:18:28", "run": "s4-20261008-165212", "text": "K1-ish: unplug/plug during/after Antenne autoplay"}
+{"wall": 1791472752.947, "hms": "17:19:12", "run": "s4-20261008-165212", "text": "SUCCESS: Rock Antenne picture+tone ~17:18 (operator)"}
+{"wall": 1791472768.768, "hms": "17:19:28", "run": "s4-20261008-165212", "text": "end unplug-plug watch"}
+{"wall": 1791472812.363, "hms": "17:20:12", "run": "s4-20261008-165212", "text": "K2: tip Bayern then unplug/plug"}
+{"wall": 1791472853.514, "hms": "17:20:53", "run": "s4-20261008-165212", "text": "Bayern retry after white LED"}
+{"wall": 1791472915.412, "hms": "17:21:55", "run": "s4-20261008-165212", "text": "end Bayern replug watch"}
+{"wall": 1791472942.781, "hms": "17:22:22", "run": "s4-20261008-165212", "text": "end Bayern retry watch"}
+{"wall": 1791472968.43, "hms": "17:22:48", "run": "", "text": "wait stable then tip Bayern only — delay unplug"}
+{"wall": 1791473083.122, "hms": "17:24:43", "run": "", "text": "SUCCESS: Rock Antenne again after many tries ~17:24"}
+{"wall": 1791473092.0559995, "hms": "17:24:52", "run": "s4-20261008-165212", "text": "SUCCESS: Rock Antenne again after many tries ~17:24"}
+{"wall": 1791473124.773, "hms": "17:25:24", "run": "s4-20261008-165212", "text": "LIVE: picture+tone now ~17:25"}
+{"wall": 1791473130.9507215, "hms": "17:25:30", "run": "s4-20261008-165212", "text": "LIVE: picture+tone now ~17:25"}
+{"wall": 1791473149.86, "hms": "17:25:49", "run": "s4-20261008-165212", "text": "SUCCESS picture+tone 17:24 PD0153 (operator)"}
+{"wall": 1791473150.2463892, "hms": "17:25:50", "run": "s4-20261008-165212", "text": "SUCCESS picture+tone 17:24 PD0153 (operator confirmed)"}

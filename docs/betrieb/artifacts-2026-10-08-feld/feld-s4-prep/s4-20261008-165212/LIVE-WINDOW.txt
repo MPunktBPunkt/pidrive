@@ -1,0 +1,241 @@
+  # Zeit       Serial  Slot  Reads          Bereich seq Live Prod-s   Ring  Live-B Live-s Stille-B    undΔ   ID3~
+  0 16:51:23.5 PD0108  fav0     96     5416K..5800K ja  -         -      0       0    0.0   393216       -      -
+  1 16:52:59.2 PD0109  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+  2 16:52:59.7 PD0109  fav2    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+  3 16:54:21.2 PD0110  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+  4 16:54:21.7 PD0110  fav2    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+  5 16:55:32.0 PD0111  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+  7 16:55:32.9 PD0111  fav2     22          0K..88K ja  -         -      0       0    0.0    90112       -      -
+ 31 16:55:33.0 PD0111  fav2     82       132K..512K nein -         -      0       0    0.0   335872       -      -
+ 32 16:55:33.3 PD0111  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 33 16:55:47.5 PD0111  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 34 16:56:01.0 PD0112  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 36 16:56:02.0 PD0112  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+ 37 16:56:02.3 PD0112  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+ 38 16:56:02.4 PD0112  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+ 39 16:56:02.6 PD0112  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 40 16:56:11.9 PD0112  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 41 16:56:29.5 PD0113  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+ 42 16:56:29.8 PD0113  fav1    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+ 43 16:56:47.1 PD0113  fav0   1989        0K..8192K nein -         -      0       0    0.0  8146944       -      -
+ 44 16:57:04.9 PD0114  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 46 16:57:05.9 PD0114  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+ 47 16:57:06.1 PD0114  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+ 48 16:57:06.2 PD0114  fav2     64       256K..512K nein -         -      0       0    0.0   262144       -      -
+ 49 16:57:06.4 PD0114  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 50 16:57:24.7 PD0115  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+ 51 16:57:25.1 PD0115  fav2    128         0K..512K ja  -         -      0       0    0.0   524288       -      -
+ 52 16:58:23.5 PD0116  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 54 16:58:25.2 PD0116  fav2     64         0K..256K nein -         -      0       0    0.0   262144       -      -
+ 55 16:58:25.4 PD0116  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+ 56 16:58:25.5 PD0116  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+ 57 16:58:25.8 PD0116  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 58 16:59:30.0 PD0116  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 59 17:02:30.3 PD0118  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+ 60 17:02:30.7 PD0118  fav1     85         0K..512K nein -         -      0       0    0.0   348160       -      -
+ 61 17:02:31.1 PD0118  fav2    128         0K..512K ja  -         -      0       0    0.0   524288       -      -
+ 62 17:02:33.4 PD0118  fav0   1990        0K..8192K nein -         -      0       0    0.0  8151040       -      -
+ 63 17:02:43.2 PD0118  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 64 17:06:04.2 PD0119  fav0      8       19K..2011K nein ja      0.5      0       0    0.0    32768       -      -
+ 65 17:06:31.4 PD0119  fav1     96       128K..512K ja  ja      0.6      0       0    0.0   393216       -      -
+ 66 17:06:36.4 PD0119  fav0    423        0K..3744K nein ja      0.8      0       0    0.0  1732608       -      -
+ 67 17:06:40.4 PD0119  fav2    116        48K..512K ja  -       4.8  10240       0    0.0   475136       -      -
+ 68 17:06:51.3 PD0119  fav0   1024     3856K..7952K nein -         -      0       0    0.0  4194304       -      -
+ 69 17:07:57.5 PD0122  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 71 17:07:58.1 PD0122  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+ 72 17:07:58.4 PD0122  fav1      8         16K..48K ja  -         -      0       0    0.0    32768       -      -
+ 73 17:07:58.5 PD0122  fav2     32       384K..512K ja  -         -      0       0    0.0   131072       -      -
+ 74 17:07:58.6 PD0122  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 75 17:08:02.4 PD0122  fav1     43       336K..508K ja  -         -      0       0    0.0   176128       -      -
+ 76 17:08:20.0 PD0122  fav0   1076      336K..4640K nein -         -      0       0    0.0  4407296       -      -
+ 77 17:08:48.2 PD0123  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 79 17:08:49.1 PD0123  fav2     89         0K..492K nein -         -      0       0    0.0   364544       -      -
+ 90 17:08:49.4 PD0123  fav1     27        36K..512K nein -         -      0       0    0.0   110592       -      -
+ 92 17:08:49.5 PD0123  fav1     49        80K..320K nein -         -      0       0    0.0   200704       -      -
+ 93 17:09:24.5 PD0123  fav0   1135      336K..4928K nein -         -      0       0    0.0  4648960       -      -
+ 94 17:09:31.3 PD0123  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 95 17:09:55.9 PD0124  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+ 96 17:09:56.0 PD0124  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 97 17:10:14.6 PD0124  fav0   1036      336K..4480K nein -         -      0       0    0.0  4243456       -      -
+ 98 17:10:24.8 PD0124  fav1     43       336K..508K ja  -         -      0       0    0.0   176128       -      -
+ 99 17:10:52.7 PD0125  fav2     94       136K..512K ja  -         -      0       0    0.0   385024       -      -
+100 17:10:55.8 PD0125  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+101 17:11:06.2 PD0126  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+102 17:11:06.3 PD0126  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+103 17:11:12.6 PD0126  fav0   1287     2744K..8188K nein -         -      0       0    0.0  5271552       -      -
+104 17:11:21.5 PD0126  fav1     43       336K..508K ja  -      18.6      0       0    0.0   176128       -      -
+105 17:11:39.1 PD0127  fav0      8       19K..2011K nein -      36.2  49152       0    0.0    32768       -      -
+106 17:11:39.6 PD0127  fav2    128         0K..512K nein ja     36.7  49152   49589   8.26   474699  471640   3059
+107 17:13:44.6 PD0128  fav0     94        0K..8192K nein -         -      0       0    0.0   385024       -      -
+108 17:13:45.4 PD0128  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+110 17:13:45.8 PD0128  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+111 17:13:46.0 PD0128  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+112 17:14:10.2 PD0129  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+113 17:14:10.7 PD0129  fav2    108         0K..512K nein -         -      0       0    0.0   442368       -      -
+114 17:14:29.6 PD0130  fav0     16        0K..2011K nein -         -      0       0    0.0    65536       -      -
+115 17:14:30.5 PD0130  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+116 17:14:30.6 PD0130  fav1     13       200K..336K nein -         -      0       0    0.0    53248       -      -
+144 17:14:30.8 PD0130  fav1     31        80K..320K nein -         -      0       0    0.0   126976       -      -
+145 17:14:48.3 PD0131  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+146 17:14:48.9 PD0131  fav2    125         0K..512K nein -         -      0       0    0.0   512000       -      -
+147 17:15:15.5 PD0132  fav2     13       460K..512K ja  -         -      0       0    0.0    53248       -      -
+148 17:15:15.5 PD0132  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+149 17:15:43.0 PD0133  fav2      9       476K..512K ja  -         -      0       0    0.0    36864       -      -
+150 17:15:43.1 PD0133  fav1     85         0K..512K nein -         -      0       0    0.0   348160       -      -
+151 17:15:50.6 PD0134  fav2     62       128K..376K ja  -         -      0       0    0.0   253952       -      -
+153 17:15:50.8 PD0134  fav2     12       376K..424K ja  -         -      0       0    0.0    49152       -      -
+159 17:15:50.9 PD0134  fav2     20       432K..512K ja  -         -      0       0    0.0    81920       -      -
+160 17:16:06.4 PD0134  fav0     28        0K..2011K nein -         -      0       0    0.0   114688       -      -
+161 17:16:08.3 PD0136  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+162 17:16:08.4 PD0136  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+163 17:16:17.2 PD0136  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+164 17:16:17.7 PD0136  fav2    128         0K..512K ja  -         -      0       0    0.0   524288       -      -
+165 17:17:39.1 PD0136  fav0    359        0K..8192K nein -         -      0       0    0.0  1470464       -      -
+166 17:17:45.5 PD0136  fav0    560     3900K..7952K nein ja    246.3   7707    7737   1.29  2286023 4194304      -
+167 17:18:25.4 PD0137  fav0   2017        0K..8192K nein ja    286.2  49152  106054  17.68  8155578 8176201      -
+168 17:20:14.7 PD0137  fav1    128         0K..512K ja  ja      0.3      0       0    0.0   524288       -      -
+169 17:20:31.1 PD0138  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+171 17:20:33.0 PD0138  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+172 17:20:33.3 PD0138  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+173 17:20:33.4 PD0138  fav2     64       256K..512K nein -         -      0       0    0.0   262144       -      -
+174 17:20:33.5 PD0138  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+175 17:20:48.8 PD0138  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+176 17:21:02.1 PD0139  fav2     29       140K..256K ja  -         -      0       0    0.0   118784       -      -
+177 17:21:02.2 PD0139  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+178 17:21:02.3 PD0139  fav2     64       256K..512K nein -         -      0       0    0.0   262144       -      -
+179 17:21:02.5 PD0139  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+180 17:21:04.6 PD0139  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+181 17:21:13.4 PD0140  fav2     13       460K..512K ja  -         -      0       0    0.0    53248       -      -
+182 17:21:13.4 PD0140  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+183 17:21:16.1 PD0140  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+184 17:21:28.0 PD0141  fav2     20       176K..256K ja  -         -      0       0    0.0    81920       -      -
+186 17:21:28.1 PD0141  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+187 17:21:28.4 PD0141  fav1    124        16K..512K nein -         -      0       0    0.0   507904       -      -
+188 17:21:35.9 PD0142  fav2     13       460K..512K ja  -         -      0       0    0.0    53248       -      -
+189 17:21:35.9 PD0142  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+190 17:21:38.1 PD0142  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+191 17:21:43.8 PD0143  fav2     43       340K..512K ja  -         -      0       0    0.0   176128       -      -
+192 17:21:44.0 PD0143  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+193 17:21:48.0 PD0143  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+194 17:21:52.5 PD0143  fav2     24       416K..512K ja  -         -      0       0    0.0    98304       -      -
+195 17:21:52.6 PD0143  fav1    124        16K..512K nein -         -      0       0    0.0   507904       -      -
+196 17:21:59.2 PD0145  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+197 17:22:02.0 PD0145  fav0     85        0K..8192K nein -         -      0       0    0.0   348160       -      -
+198 17:22:02.4 PD0145  fav2      9          0K..36K ja  -         -      0       0    0.0    36864       -      -
+199 17:22:17.1 PD0147  fav2     60        16K..256K ja  -         -      0       0    0.0   245760       -      -
+200 17:22:17.4 PD0147  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+201 17:22:17.5 PD0147  fav2     52       256K..512K nein -         -      0       0    0.0   212992       -      -
+226 17:22:17.8 PD0147  fav1     52        80K..320K nein -         -      0       0    0.0   212992       -      -
+  #0: 16:52:30 RUN START s4-20261008-165212
+  #1: 16:54:15 K1 BOB autoplay running | 16:54:15 K1 unplug | 16:54:15 K1 plug PD0109 16:54 | 16:54:23 K1 plugged back
+  #2: 16:54:15 K1 BOB autoplay running | 16:54:15 K1 unplug | 16:54:15 K1 plug PD0109 16:54 | 16:54:23 K1 plugged back
+  #3: 16:54:23 K1 plugged back | 16:55:27 K1 no tone no picture - try other stations + otg | 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #4: 16:54:23 K1 plugged back | 16:55:27 K1 no tone no picture - try other stations + otg | 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #5: 16:55:27 K1 no tone no picture - try other stations + otg | 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #7: 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #31: 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #32: 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #33: 16:55:46 ESP reboot uptime=2s PD0111 — silence explained
+  #43: 16:58:21 all stations + replugs: no picture no tone
+  #44: 16:58:21 all stations + replugs: no picture no tone
+  #46: 16:58:21 all stations + replugs: no picture no tone
+  #47: 16:58:21 all stations + replugs: no picture no tone
+  #48: 16:58:21 all stations + replugs: no picture no tone
+  #49: 16:58:21 all stations + replugs: no picture no tone
+  #50: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten
+  #51: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten
+  #52: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten | 16:59:26 K2 Bayern tap
+  #54: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten | 16:59:26 K2 Bayern tap
+  #55: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten | 16:59:26 K2 Bayern tap
+  #56: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten | 16:59:26 K2 Bayern tap
+  #57: 16:58:21 all stations + replugs: no picture no tone | 16:58:48 recovery: wait stable — OTG AN lassen, von VORN starten | 16:59:26 K2 Bayern tap
+  #58: 16:59:26 K2 Bayern tap | 17:00:03 K2 Bayern reject not_from_head from=17377 — need start from head
+  #59: 17:02:27 OTG unplug for Bayern rename | 17:02:31 rename done — plug + tip Bayern/Rock Bayern 1008 | 17:03:30 K3 Rock Bayern 1008 tap
+  #60: 17:02:27 OTG unplug for Bayern rename | 17:02:31 rename done — plug + tip Bayern/Rock Bayern 1008 | 17:03:30 K3 Rock Bayern 1008 tap
+  #61: 17:02:27 OTG unplug for Bayern rename | 17:02:31 rename done — plug + tip Bayern/Rock Bayern 1008 | 17:03:30 K3 Rock Bayern 1008 tap
+  #62: 17:02:31 rename done — plug + tip Bayern/Rock Bayern 1008 | 17:03:30 K3 Rock Bayern 1008 tap
+  #63: 17:03:30 K3 Rock Bayern 1008 tap
+  #64: 17:06:00 config headSlop=64 pfSlop=32 cd=1s — tip Rock Antenne (fav0 worked 16:56) | 17:06:05 HU activity: fav0 | 17:06:39 operator: HU file cache — no LED / no USB reads
+  #65: 17:06:39 operator: HU file cache — no LED / no USB reads | 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name
+  #66: 17:06:39 operator: HU file cache — no LED / no USB reads | 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name
+  #67: 17:06:39 operator: HU file cache — no LED / no USB reads | 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name
+  #68: 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name
+  #69: 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name | 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?)
+  #71: 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name | 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?)
+  #72: 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name | 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?)
+  #73: 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name | 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?)
+  #74: 17:07:54 OTG unplug for cache-bust publish | 17:07:59 names published — plug now, open USB folder, tip new name | 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?)
+  #75: 17:07:59 names published — plug now, open USB folder, tip new name | 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?)
+  #76: 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?) | 17:09:52 still not_from_head after rename — force lab/play fav2
+  #77: 17:08:43 OTG plugged PD0122 after cache-bust — waiting tip | 17:09:21 tip after cache-bust (BOB 1008?) | 17:09:52 still not_from_head after rename — force lab/play fav2
+  #79: 17:09:21 tip after cache-bust (BOB 1008?) | 17:09:52 still not_from_head after rename — force lab/play fav2
+  #90: 17:09:21 tip after cache-bust (BOB 1008?) | 17:09:52 still not_from_head after rename — force lab/play fav2
+  #92: 17:09:21 tip after cache-bust (BOB 1008?) | 17:09:52 still not_from_head after rename — force lab/play fav2
+  #93: 17:09:21 tip after cache-bust (BOB 1008?) | 17:09:52 still not_from_head after rename — force lab/play fav2
+  #94: 17:09:52 still not_from_head after rename — force lab/play fav2 | 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #95: 17:09:52 still not_from_head after rename — force lab/play fav2 | 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #96: 17:09:52 still not_from_head after rename — force lab/play fav2 | 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #97: 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #98: 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #99: 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #100: 17:11:00 after tip: USB reads yes but not_from_head; ESP reboot; lab/play fav2 retry
+  #107: 17:14:08 LED white again, no tone | 17:14:17 ESP reboot PD0129 — wait scan, tip BOB without unplug
+  #108: 17:14:08 LED white again, no tone | 17:14:17 ESP reboot PD0129 — wait scan, tip BOB without unplug
+  #110: 17:14:08 LED white again, no tone | 17:14:17 ESP reboot PD0129 — wait scan, tip BOB without unplug
+  #111: 17:14:08 LED white again, no tone | 17:14:17 ESP reboot PD0129 — wait scan, tip BOB without unplug
+  #112: 17:14:08 LED white again, no tone | 17:14:17 ESP reboot PD0129 — wait scan, tip BOB without unplug | 17:15:39 again LED white no tone
+  #113: 17:14:08 LED white again, no tone | 17:14:17 ESP reboot PD0129 — wait scan, tip BOB without unplug | 17:15:39 again LED white no tone
+  #114: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug
+  #115: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug
+  #116: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug
+  #144: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug
+  #145: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability
+  #146: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability
+  #147: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability
+  #148: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability
+  #149: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability
+  #150: 17:15:39 again LED white no tone | 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability
+  #151: 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live
+  #153: 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live
+  #159: 17:15:56 OTG currently OUT — plug once and leave | 17:15:57 plugged PD0134 — wait quiet then tip BOB, no unplug | 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live
+  #160: 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live | 17:17:22 operator: BOB several seconds (ESP status already idle at check)
+  #161: 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live | 17:17:22 operator: BOB several seconds (ESP status already idle at check)
+  #162: 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live | 17:17:22 operator: BOB several seconds (ESP status already idle at check)
+  #163: 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live | 17:17:22 operator: BOB several seconds (ESP status already idle at check)
+  #164: 17:16:15 ESP timeout after replug — power instability | 17:16:58 BOB running several seconds — live | 17:17:22 operator: BOB several seconds (ESP status already idle at check)
+  #165: 17:17:51 autoplay about to switch | 17:18:28 K1-ish: unplug/plug during/after Antenne autoplay
+  #166: 17:17:51 autoplay about to switch | 17:18:28 K1-ish: unplug/plug during/after Antenne autoplay | 17:19:12 SUCCESS: Rock Antenne picture+tone ~17:18 (operator)
+  #167: 17:18:28 K1-ish: unplug/plug during/after Antenne autoplay | 17:19:12 SUCCESS: Rock Antenne picture+tone ~17:18 (operator) | 17:19:28 end unplug-plug watch
+  #168: 17:20:12 K2: tip Bayern then unplug/plug | 17:20:53 Bayern retry after white LED
+  #169: 17:20:53 Bayern retry after white LED | 17:21:55 end Bayern replug watch
+  #171: 17:20:53 Bayern retry after white LED | 17:21:55 end Bayern replug watch
+  #172: 17:20:53 Bayern retry after white LED | 17:21:55 end Bayern replug watch
+  #173: 17:20:53 Bayern retry after white LED | 17:21:55 end Bayern replug watch
+  #174: 17:20:53 Bayern retry after white LED | 17:21:55 end Bayern replug watch
+  #175: 17:20:53 Bayern retry after white LED | 17:21:55 end Bayern replug watch
+  #176: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #177: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #178: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #179: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #180: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #181: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #182: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #183: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch
+  #184: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #186: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #187: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #188: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #189: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #190: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #191: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #192: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #193: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #194: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #195: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #196: 17:21:55 end Bayern replug watch | 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #197: 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #198: 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #199: 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #200: 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #201: 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
+  #226: 17:22:22 end Bayern retry watch | 17:22:48 wait stable then tip Bayern only — delay unplug
