@@ -1,0 +1,38 @@
+{
+  "label": "burst gap=0 batch=4",
+  "config": {
+    "duration_s": 8.0,
+    "chunk": 4096,
+    "frame_max": 512,
+    "gap_s": 0.0,
+    "batch_frames": 4
+  },
+  "wall_s": 8.001463890075684,
+  "loops": 1621,
+  "pumped_bytes": 6592300,
+  "pumped_bps": 823886.7400472197,
+  "absEnd0": 0,
+  "absEnd1": 6592300,
+  "abs_delta": 6592300,
+  "abs_bps": 823886.7400472197,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791408236.4216452,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791408244.711787,
+    "absBase": 6543148,
+    "absEnd": 6592300,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

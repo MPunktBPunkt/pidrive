@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+Content-Type: audio/mpeg
+Cache-Control: no-store
+X-Stream-Uid: fav0
+X-Stream-Size: 16384
+X-Stream-Id3: 29
+X-Stream-AbsEnd: 16384
+Content-Length: 12288
+Connection: close
+

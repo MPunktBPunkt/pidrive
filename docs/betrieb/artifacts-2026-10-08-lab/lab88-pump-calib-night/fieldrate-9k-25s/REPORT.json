@@ -1,0 +1,38 @@
+{
+  "label": "fieldlike 9kB/s batch=8 gap=0.455",
+  "config": {
+    "duration_s": 25.0,
+    "chunk": 4096,
+    "frame_max": 512,
+    "gap_s": 0.455,
+    "batch_frames": 8
+  },
+  "wall_s": 25.03749990463257,
+  "loops": 55,
+  "pumped_bytes": 225280,
+  "pumped_bps": 8997.703479104857,
+  "absEnd0": 0,
+  "absEnd1": 225280,
+  "abs_delta": 225280,
+  "abs_bps": 8997.703479104857,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791409001.3516562,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791409026.6452713,
+    "absBase": 176128,
+    "absEnd": 225280,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}
