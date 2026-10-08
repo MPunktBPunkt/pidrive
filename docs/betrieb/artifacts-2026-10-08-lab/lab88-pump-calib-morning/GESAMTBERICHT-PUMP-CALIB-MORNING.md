@@ -18,6 +18,8 @@ Fix in `esp32.pidrive` `pump_bridge.py`: `-reconnect*` nur noch für `http://` /
 | `bridge-48k-rock` | Bridge 48k · Rock-HTTPS · ~80 s | **PASS** · ~**6,8 kB/s** · underruns 0 · SoftAP listen ok |
 | `bridge-96k-rock` | Bridge 96k · Rock · ~36 s | **PASS** · ~**17,3 kB/s** (target 18 k) · underruns 0 |
 | Rock-Regression nach L1-Retest | fav1 umschalten | **PASS** · underruns 0 |
+| `bridge-48k-marker` | Rock + `--marker` ~25 s | **PASS** · ~8,7 kB/s · marker_t0 gesetzt · underruns 0 |
+| `bridge-48k-bob` | BOB nach Marker-Switch | **PASS** · fav2 aktiv · underruns 0 |
 | `soak-9k-120s` | `m3_lab_pump_idle` batch=8 · 120 s | **PASS** · **8932 B/s** = absEnd |
 
 Bridge-Forward bei 48k typisch ~8–9 kB/s (`target_bps=9000`); absEnd etwas darunter, wenn Ring am Cap und kein Host liest.

@@ -1,0 +1,10 @@
+{
+  "label": "bridge-48k-rock --marker ~25s",
+  "wall_s": 26.119999999999997,
+  "abs_bps": 8723.43032159265,
+  "abs_delta": 227856,
+  "underruns_end": 0,
+  "marker_in_log": true,
+  "ffmpeg_exit8": false,
+  "forwarded_seen": true
+}

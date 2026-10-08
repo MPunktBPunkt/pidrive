@@ -1,0 +1,11 @@
+{
+  "label": "bridge-48k-bob after marker",
+  "playing": "Radio BOB!",
+  "uid": "fav2",
+  "absEnd": 105144,
+  "size": 49152,
+  "underruns": 0,
+  "active": true,
+  "bob_ffmpeg": true,
+  "exit8": false
+}

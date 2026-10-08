@@ -1,0 +1,20 @@
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[rx] {"t":"event","op":"play_uid","uid":"fav2"}
+[trace] t=0ms play_uid=fav2
+[audio] switch fav1 → fav2 (age=37.3s)
+[trace] t=50ms audio.start fav fav2
+[tx] {"t":"audio_start","uid":"fav2","codec":"mp3","br":"48k","cSrc":"default","cPath":"default.jpg","cTry":"stations/bob.jpg|stations/radio_bob.jpg"}
+[trace] audio_start sent uid=fav2 cover=default
+[audio] ffmpeg https://streams.radiobob.de/bob-national/mp3-128 @ 48k target_bps=9000 marker=on
+[audio] forwarded 18000 B / 2s
+[rx] {"t":"audio_ack","ok":true,"op":"start","uid":"fav2","id3":true,"warmup":0}
+[audio_ack] {'t': 'audio_ack', 'ok': True, 'op': 'start', 'uid': 'fav2', 'id3': True, 'warmup': 0}
+[audio] forwarded 15144 B / 2s
+[audio] forwarded 16976 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
+[audio] forwarded 18000 B / 2s
