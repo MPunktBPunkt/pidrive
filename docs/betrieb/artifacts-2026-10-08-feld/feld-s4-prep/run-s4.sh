@@ -4,7 +4,19 @@
 #   BRIDGE_ARGS='--bitrate 32k --target-bps 4000 --marker --marker-period 1' ./run-s4.sh
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-PROJ="${PROJ:-/home/martin/projects/pidrive}"
+# Auto-Pi: /home/pidrive/pidrive · Dev: …/projects/pidrive
+if [[ -z "${PROJ:-}" ]]; then
+  for cand in \
+    "$(cd "$ROOT/../../../../.." && pwd)" \
+    /home/pidrive/pidrive \
+    /home/martin/projects/pidrive; do
+    if [[ -f "$cand/tools/feld_status_poll.py" ]]; then
+      PROJ="$cand"
+      break
+    fi
+  done
+fi
+PROJ="${PROJ:?pidrive-Root nicht gefunden (PROJ=… setzen)}"
 ESP_HOST="${ESP_HOST:-192.168.178.89}"
 ESP="http://$ESP_HOST"
 BRIDGE="${BRIDGE:-/home/pidrive/pump_bridge.py}"
@@ -20,14 +32,19 @@ echo "$RUN" > "$ROOT/CURRENT_RUN"
 
 if [[ ! -f "$BRIDGE" ]]; then
   # Fallback Lab-/Dev-Host
-  ALT="/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py"
-  if [[ -f "$ALT" ]]; then
-    BRIDGE="$ALT"
-    echo "WARN: nutze Bridge $BRIDGE"
-  else
-    echo "Bridge nicht gefunden: $BRIDGE (BRIDGE=... setzen)" >&2
-    exit 1
-  fi
+  for ALT in \
+    "$PROJ/../esphub/esp32.pidrive/tools/pump_bridge.py" \
+    /home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py; do
+    if [[ -f "$ALT" ]]; then
+      BRIDGE="$ALT"
+      echo "WARN: nutze Bridge $BRIDGE"
+      break
+    fi
+  done
+fi
+if [[ ! -f "$BRIDGE" ]]; then
+  echo "Bridge nicht gefunden: $BRIDGE (BRIDGE=… setzen)" >&2
+  exit 1
 fi
 if ! curl -s -m 3 "$ESP/api/metrics" -o /dev/null; then
   echo "WARN: $ESP/api/metrics nicht erreichbar — Polls laufen trotzdem weiter" >&2
