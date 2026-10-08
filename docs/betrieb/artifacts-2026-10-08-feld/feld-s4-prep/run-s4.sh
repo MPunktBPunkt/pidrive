@@ -77,8 +77,16 @@ finish() {
 trap finish INT TERM EXIT
 
 sudo systemctl stop pidrive_pump_bridge 2>/dev/null || true
+# Cron/ensure darf nicht sofort wieder starten — manuelle Prozesse killen
+pkill -f '/home/pidrive/pump_bridge.py' 2>/dev/null || true
+sleep 5
 if systemctl is-active --quiet pidrive_pump_bridge 2>/dev/null; then
   echo "ABBRUCH: pidrive_pump_bridge läuft noch (stop fehlgeschlagen)" >&2
+  exit 2
+fi
+if pgrep -f '/home/pidrive/pump_bridge.py' >/dev/null 2>&1; then
+  echo "ABBRUCH: fremde pump_bridge noch aktiv" >&2
+  pgrep -af pump_bridge.py >&2 || true
   exit 2
 fi
 : > "$READS"
@@ -87,10 +95,10 @@ BRIDGE_LOG="$RUN/bridge-audio.log"
 python3 "$BRIDGE" --transport tcp --host "$ESP_HOST" $BRIDGE_ARGS > "$BRIDGE_LOG" 2>&1 &
 pids+=($!)
 
-sleep 10
+sleep 12
 if ! kill -0 "${pids[0]}" 2>/dev/null; then
-  echo "ABBRUCH: Capture-Bridge nach 10 s tot — Log: $BRIDGE_LOG" >&2
-  tail -n 20 "$BRIDGE_LOG" >&2
+  echo "ABBRUCH: Capture-Bridge nach 12 s tot — Log: $BRIDGE_LOG" >&2
+  tail -n 40 "$BRIDGE_LOG" >&2
   exit 3
 fi
 MY_IP="$(ip route get "$ESP_HOST" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')"
