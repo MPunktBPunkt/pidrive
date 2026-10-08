@@ -1,0 +1,61 @@
+id: ble-peripheral-hr-relay
+title: "BLE Peripheral — HR-Relay (0x180D)"
+taxonomy:
+  category: bt-peripheral
+  tags: [production, docs-good, field-proven]
+maturity: L2
+
+summary: >
+  Nur ESP32-S3 (`HR_RELAY=1`): zusätzlicher NimBLE GATT-Server mit Heart Rate Service,
+  der empfangene HR/RR-Daten an bis zu zwei Consumer (Handy, Radcomputer) weiterleitet.
+  Default aus, persistent in Config; Advertising restart nach erstem Client (Commit 72acae4).
+
+implementation:
+  paths:
+    - src/ble/HrServer.cpp
+    - src/ble/HrServer.h
+    - platformio.ini (env heartrate-s3)
+  compile_flags:
+    - CONFIG_BT_NIMBLE_MAX_CONNECTIONS=3
+  hardware:
+    - ESP32-S3 (heartrate-s3 env)
+
+data_flow: |
+  Gurt --> BleCentral (parse)
+       --> HrServer (GATT 0x180D, NOTIFY 0x2A37)
+       --> bis zu 2 BLE Peripheral-Clients
+  Parallel: WebUI /api/relay, relay_enabled in Hub heartbeat
+
+boundaries:
+  works_well:
+    - Treue Weiterleitung laut PFLICHTENHEFT v0.3
+    - Idle-Disconnect des Central-Links pausiert bei Relay-Subscribern
+  known_limits:
+    - D1 Mini env deaktiviert Peripheral komplett → API relay returns 501
+    - Max 2 Relay-Clients (README)
+  failure_modes:
+    - Advertising/Subscribe-Race → fix restart advertising after first connect
+
+documentation:
+  internal:
+    - docs/PFLICHTENHEFT-v0.3-RELAY.md
+    - README (Relay-Badge, Feature-Tabelle)
+
+evidence:
+  commits:
+    - 72acae4 fix(relay): restart advertising after first client connects
+  ci:
+    - build.yml matrix env heartrate-s3
+
+reuse:
+  suitable_for:
+    - „Ein Gurt, zwei Listener“ (Bike Computer + Handy)
+    - Protokoll-Brücke ohne proprietäre App
+  avoid_when:
+    - Single-Chip ohne S3/RAM für 3 Connections
+
+related_sheets:
+  - ble-central-nimble-hrm
+
+last_reviewed: 2026-10-08
+reviewed_against_commit: 72acae4

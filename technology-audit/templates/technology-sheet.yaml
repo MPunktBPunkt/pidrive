@@ -1,0 +1,22 @@
+id: example
+title: ""
+taxonomy:
+  category: embedded
+  tags: []
+maturity: L1
+summary: ""
+implementation:
+  paths: []
+data_flow: ""
+boundaries:
+  works_well: []
+  known_limits: []
+documentation:
+  internal: []
+  external: []
+evidence:
+  commits: []
+reuse:
+  suitable_for: []
+last_reviewed: 2026-10-08
+reviewed_against_commit: null

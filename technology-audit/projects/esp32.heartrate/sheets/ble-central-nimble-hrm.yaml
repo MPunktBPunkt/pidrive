@@ -1,0 +1,70 @@
+id: ble-central-nimble-hrm
+title: "BLE Central — Heart Rate Profile (NimBLE)"
+taxonomy:
+  category: bt-media
+  tags: [production, docs-good, field-proven]
+maturity: L2
+
+summary: >
+  ESP verbindet sich als BLE Central mit HR-Gurten (z. B. Polar H9), subscribed auf
+  Heart Rate Measurement (0x2A37), parst BPM und RR-Intervalle. Kein Auto-Connect —
+  Nutzer wählt Gerät in der Web-UI (Scan / Remember / Connect).
+
+implementation:
+  paths:
+    - src/ble/BleCentral.cpp
+    - src/ble/BleCentral.h
+    - src/ble/HrParser.cpp
+    - src/ble/BleTypes.h
+  external_tools:
+    - h2zero/NimBLE-Arduino
+  hardware:
+    - ESP32 D1 Mini (nur Central, Peripheral disabled via build flags)
+    - ESP32-S3 (Central + optional Relay)
+
+data_flow: |
+  HR-Gurt --[BLE GATT Notify 0x180D/0x2A37]--> BleCentral
+       --> HrParser (BPM, RR 1/1024 s)
+       --> SessionSeries / BeatTimeline / WebUI history
+       --> HubClient heartbeat (live metrics)
+
+boundaries:
+  works_well:
+    - Polar H9 getestet (README)
+    - Scan filter HR-only default, Toggle „alle BLE-Geräte“
+    - Session-Reconnect ~5 min nach Linkverlust
+  known_limits:
+    - Sensor Contact Flag oft n/a (H9) → strapFit abgeleitet
+    - D1 Mini max 1 NimBLE connection (build flags)
+  failure_modes:
+    - Idle-Disconnect (configurable), ausgesetzt bei aktiven Relay-Subscribern
+
+documentation:
+  internal:
+    - docs/PFLICHTENHEFT.md
+    - docs/PFLICHTENHEFT-v0.2.md
+  external:
+    - url: https://www.bluetooth.com/specifications/specs/
+      quality: 4
+      notes: "GATT HR Service; Geräte-Quirks nicht abgedeckt"
+
+evidence:
+  tests: []
+  ci:
+    - .github/workflows/build.yml (Compile beider Envs)
+
+reuse:
+  suitable_for:
+    - Beliebige BLE-HR-Gateway-Firmware auf ESP32
+    - RR/HRV-Rohdaten-Pipeline vor Cloud-Analyse
+  prerequisites:
+    - NimBLE Central role, ausreichend Heap für Scan + Connection
+  avoid_when:
+    - Medizinische Zertifizierung erforderlich
+
+related_sheets:
+  - ble-peripheral-hr-relay
+  - web-sse-rest-ui
+
+last_reviewed: 2026-10-08
+reviewed_against_commit: 72acae4

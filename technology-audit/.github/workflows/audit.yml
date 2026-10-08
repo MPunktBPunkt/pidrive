@@ -1,0 +1,57 @@
+name: Technology Audit
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: "Optional git URL to scan (read-only checkout)"
+        required: false
+        default: "https://github.com/MPunktBPunkt/esp32.heartrate.git"
+      target_ref:
+        description: "Branch or tag to checkout"
+        required: false
+        default: "main"
+
+concurrency:
+  group: audit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate audit repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate structure and sheets
+        run: bash tools/audit_validate.sh
+
+  scan:
+    name: Scan target repo (signals)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout target project
+        run: |
+          git clone --depth 1 --branch "${{ inputs.target_ref || 'main' }}" \
+            "${{ inputs.target_repo || 'https://github.com/MPunktBPunkt/esp32.heartrate.git' }}" \
+            /tmp/audit-target
+
+      - name: Run signal scan
+        run: |
+          bash tools/audit_scan.sh /tmp/audit-target scan-output.json
+          test -s scan-output.json
+
+      - name: Upload scan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-scan-${{ github.run_id }}
+          path: scan-output.json

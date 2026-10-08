@@ -1,0 +1,49 @@
+id: web-sse-rest-ui
+title: "Embedded Web — REST API + SSE Live"
+taxonomy:
+  category: web-ui
+  tags: [production, docs-good]
+maturity: L2
+
+summary: >
+  On-device HTTP server liefert Konfiguration, BLE-Steuerung, Session-Modi, Archiv und
+  Live-Charts. Server-Sent Events auf `/events` für BPM/RR/Battery/RSSI ohne Polling.
+
+implementation:
+  paths:
+    - src/web/UiPages.h
+    - src/app/App.cpp
+  api_surface:
+    - README § API (Auswahl) — /api/status, /api/history, /api/ble/*, /events
+
+data_flow: |
+  Browser --HTTP--> ESP AsyncWeb (routes in App/UiPages)
+         <--SSE-- /events (live metrics)
+         --POST--> config save → ConfigStore → HubClient.sendNow()
+
+boundaries:
+  works_well:
+    - Live-Charts laut README v0.3.1
+    - Config→Hub sofortiger Heartbeat nach save
+  known_limits:
+    - Kein separates Frontend-Repo — UI embedded in firmware
+  failure_modes:
+    - WiFi/AP-Setup über WiFiManager Hotspot ESP-HR-Setup
+
+documentation:
+  internal:
+    - README API table
+    - docs/PFLICHTENHEFT.md
+
+reuse:
+  suitable_for:
+    - ESP-Projekte mit Browser-Setup statt native App
+  prerequisites:
+    - Stabil WiFi STA oder SoftAP
+
+related_sheets:
+  - esp-hub-integration
+  - ble-central-nimble-hrm
+
+last_reviewed: 2026-10-08
+reviewed_against_commit: 72acae4

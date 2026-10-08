@@ -1,0 +1,51 @@
+id: esp-hub-integration
+title: "ESP-Hub — Heartbeat, OTA, Session-Export"
+taxonomy:
+  category: network
+  tags: [production, docs-good]
+maturity: L2
+
+summary: >
+  Periodischer HTTP-Heartbeat an iobroker.esp-hub mit fwType heartrate, Live-Metriken
+  und Relay-Status. Session-Export per POST an Hub /api/session-export; Hub kann OTA URL triggern.
+
+implementation:
+  paths:
+    - src/core/HubClient.cpp
+    - src/core/HubClient.h
+    - src/core/ConfigStore.cpp
+  defaults:
+    - HUB_PORT_DEFAULT 8093 (platformio.ini)
+
+data_flow: |
+  HubClient.loop → sendHeartbeat (JSON builder from App)
+  User → POST /api/session/export/send → HubClient.postJson(/api/session-export)
+  Hub → OTA URL in heartbeat response → performOta
+
+boundaries:
+  works_well:
+    - IO-Keys dokumentiert in README (continuity, strap_fit, relay_*)
+  known_limits:
+    - Hub muss im LAN erreichbar sein (kein Cloud-Sync ohne Hub)
+  failure_modes:
+    - lastOk / lastSuccessMs für Diagnose
+
+documentation:
+  internal:
+    - README § Hub-IO-Werte
+  external:
+    - url: https://github.com/MPunktBPunkt/iobroker.esp-hub
+      quality: 3
+      notes: "Separates Repo — Audit nur Schnittstelle"
+
+reuse:
+  suitable_for:
+    - Weitere ESP-Nodes im gleichen Hub-Ökosystem
+  prerequisites:
+    - Hub-IP/Port in Config oder WiFiManager-Setup
+
+related_sheets:
+  - web-sse-rest-ui
+
+last_reviewed: 2026-10-08
+reviewed_against_commit: 72acae4
