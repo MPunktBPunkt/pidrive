@@ -80,7 +80,7 @@ Analog K2–K4. Aussagen nach Gehör immer durch Video absichern.
 |---|---|---|---|---|---|---|---|---|
 | K1a | ja | fav2 | gemischt | ja | ja | ~5 s Ohr / **8,26 s** Live | oft P | 17:13; Live-Window PD0127 |
 | K1b | ja | fav2/auto | — | — | ja | mehrere Sek. | — | 17:16 Operator |
-| K2 | teilweise | fav1 17:20 | nein (Replug-Reset) | — | unklar | Stream an | P | PD0137→0138 |
+| K2 | ja (Ohr) | fav1 17:20 | gemischt | — | ja (Op.) | ~5–6 s Op. | P | Op. Bayern; teils Reset |
 | K3 | ja (Negativ) | — | — | — | — | — | **P bleibt** | Rename ≠ P-Reset |
 | K4 | — | — | — | — | — | — | — | nicht sauber |
 | K5 | — | — | **24** Drops | — | — | — | — | Versorgung |

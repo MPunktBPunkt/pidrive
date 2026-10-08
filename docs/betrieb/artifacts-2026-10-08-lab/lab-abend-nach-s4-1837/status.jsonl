@@ -1,0 +1,5 @@
+{"uptime": "2h 18min", "sec": 8280, "serial": "PD0289", "peer": "192.168.178.187", "pump": true, "n": 1, "rc": 0, "pass": true, "fail": false, "live_s": 8.41}
+{"uptime": "2h 18min", "sec": 8280, "serial": "PD0291", "peer": "192.168.178.187", "pump": true, "n": 2, "rc": 0, "pass": true, "fail": false, "live_s": 8.32}
+{"uptime": "2h 19min", "sec": 8340, "serial": "PD0293", "peer": "192.168.178.187", "pump": true, "n": 3, "rc": 0, "pass": true, "fail": false, "live_s": 8.28}
+{"uptime": "2h 20min", "sec": 8400, "serial": "PD0295", "peer": "192.168.178.187", "pump": true, "n": 4, "rc": 0, "pass": true, "fail": false, "live_s": 8.36}
+{"uptime": "2h 21min", "sec": 8460, "serial": "PD0297", "peer": "192.168.178.187", "pump": true, "n": 5, "rc": 0, "pass": true, "fail": false, "live_s": 8.41}

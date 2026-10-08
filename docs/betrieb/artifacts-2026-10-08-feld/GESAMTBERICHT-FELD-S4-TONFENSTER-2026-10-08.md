@@ -1,7 +1,8 @@
 # Gesamtbericht Feld s4 — Tonfenster · 2026-10-08
 
-**Ein Satz:** Ringfenster im Auto = Lab (**~8,2 s** instrumentiert); Ohr oft ~5 s; Bild+Ton für BOB und Antenne; Steck-Reboots und Resume-P dominieren die Ausfälle.
+**Ein Satz:** Ring-äquivalente Episode **8,26 s** = Lab; Ohr ~5–6 s nach Replug **ohne Reset** bei BOB/Antenne/**Bayern**; längere `Live-s`-Zahlen ≠ Hörgrenze; Steck-Resets vs. Lab 0 Drops → Versorgung priorisieren.
 
+**Übergabe nächste KI:** [`UEBERGABE-S4-NAECHSTE-KI-2026-10-08.md`](UEBERGABE-S4-NAECHSTE-KI-2026-10-08.md) · Kritik Mistral: [`KRITIK-MISTRAL-S4-2026-10-08.md`](KRITIK-MISTRAL-S4-2026-10-08.md)  
 **Detail:** [`feld-s4-prep/s4-20261008-165212/ERGEBNIS-S4.md`](feld-s4-prep/s4-20261008-165212/ERGEBNIS-S4.md)  
 **Lab-Gate:** [`../artifacts-2026-10-08-lab/lab-abend-1556/ERGEBNIS-LAB-ABEND.md`](../artifacts-2026-10-08-lab/lab-abend-1556/ERGEBNIS-LAB-ABEND.md)
 

@@ -6,14 +6,14 @@
 
 ## Kurzfassung
 
-Hörbares Tonfenster existiert im Auto. Instrumentiert war **Live-s ≈ 8,26 s** am Ring (BOB, `PD0127` 17:11:39) — **gleich Lab L2**. Operator hörte oft **~5 s**; Differenz = HU-Anlauf/Format, nicht kleinerer Ring. Bild+Ton gelang für **BOB** und **Rock Antenne** (R28). Stecken löst häufig **ESP-Reboot** aus (Versorgung); Resume-Mitte (`not_from_head`) und HU-Cache blockieren viele Tips.
+Hörbares Tonfenster existiert im Auto. Instrumentiert war **Live-s ≈ 8,26 s** in einer Ring-äquivalenten Episode (BOB, `PD0127` 17:11:39) — **gleich Lab L2**. Operator: **~5–6 s** Bild+Ton nach Replug **ohne ESP-Reset** bei **BOB, Rock Antenne und Bayern**. Differenz Ohr↔Instrument: wahrscheinlich HU-Anlauf/Format (nicht strikt E2E bewiesen). **Live-s ≠ immer 8,2 s** (z. B. #167 fav0 Live-s 17,68 bei Ring 48 KiB — Metrik Live-Bytes, nicht Hördauer). Stecken oft mit Reset (Klasse B); nutzbare Episoden = Klasse A. Resume-Mitte (`not_from_head`) und Cache blockieren viele Tips.
 
 ## Protokoll-Tabelle
 
 | ID | gültig | Play-Detect | kein Reboot | Autoplay | Bild | Ton-s | Start 0/P | Bemerkung |
 |----|--------|-------------|-------------|----------|------|-------|-----------|-----------|
 | K1 BOB | ja (spät) | ja `fav2` | gemischt | ja | ja | ~5 s Ohr / **8,26 s** Live | oft P, dann Treffer | 17:13 SUCCESS; Live-Window #106 |
-| K2 Bayern | teilweise | ja `fav1` 17:20 | nein beim Replug | — | unklar | Stream startete | P/`not_from_head` | Reset `PD0137`→`PD0138` |
+| K2 Bayern | ja (Ohr) | ja `fav1` 17:20 | gemischt | — | ja (Op.) | ~5–6 s Op. | P/`not_from_head` | Op. bestätigt; Log Stream; Replug teils Reset |
 | K3 Rename | ja (Negativ) | — | — | — | — | — | **P bleibt** | Name allein setzt P nicht zurück |
 | K4 | nicht sauber | — | — | — | — | — | — | Zeit/Reboots |
 | K5 Reboots | — | — | **24** Uptime-Drops | — | — | — | — | 38 Serials in Poll |

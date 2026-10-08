@@ -1,0 +1,570 @@
+{
+  "golden": [
+    "REPLUG"
+  ],
+  "results": {
+    "REPLUG": {
+      "uid": "fav2",
+      "cmd_kib": 4,
+      "commands": 128,
+      "bytes": 524288,
+      "read_ms": 837.8,
+      "head_ms": 19.34,
+      "head_pause_ms": 19.0,
+      "field_read_ms": [
+        651,
+        665
+      ],
+      "rate_kBps": 625.8,
+      "sg_ms_per_4k": {
+        "p5": 5.0,
+        "p50": 5.0,
+        "p95": 6.0,
+        "p99": 19.0,
+        "min": 5.0,
+        "max": 19.0,
+        "n": 128
+      },
+      "ring_pre": 49152,
+      "ring_full_pre": true,
+      "producer_bytes": 79872,
+      "producer_err": null,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 12,
+        "SILENCE": 115
+      },
+      "ear": {
+        "live_bytes": 49152,
+        "consumed": 0,
+        "events": {
+          "silence_in_play": 115
+        },
+        "event_list": [
+          {
+            "t": 2000397.303580288,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.309483323,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.315440962,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.321444908,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.32739436,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.333224548,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.338989192,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.344853033,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.350874592,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.356868409,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.36292815,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.368906898,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.374782802,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.38050191,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.386374387,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.392712054,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.399382299,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.406244046,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.412735823,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.419021171,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.424998006,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.430947308,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.437254146,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.443277208,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.449296413,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.45524269,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.461040927,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.466782427,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.472551609,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.478773397,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.484928819,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.491009199,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.496927734,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.502865605,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.508966724,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.5150978,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.521440366,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.527660691,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.533811625,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.540190619,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.546036206,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.55189659,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.557739161,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.563928407,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.570094399,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.576220526,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.582238258,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.58804964,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.593773527,
+            "kind": "silence_in_play"
+          },
+          {
+            "t": 2000397.599466154,
+            "kind": "silence_in_play"
+          }
+        ]
+      },
+      "id3Len_dump": 3300,
+      "id3Len_fw": 3300,
+      "live_span": {
+        "stamps": 194,
+        "seq_gaps": 0,
+        "file_first": 3300,
+        "file_end": 52964,
+        "seq_first": 92,
+        "seq_last": 285,
+        "abs_first": 23552,
+        "abs_end": 73216
+      },
+      "live_bytes_file": 49664,
+      "live_s_at_48k": 8.28,
+      "undDelta": 471324,
+      "expect_undDelta": 471324,
+      "field_undDelta": [
+        470616,
+        471640
+      ],
+      "hostAbs_after": 544540,
+      "absEnd_pre": 72448,
+      "absEnd_post": 79872,
+      "abs_cross_fw": 73216,
+      "abs_cross_pdsq": 73216,
+      "und_ok": true,
+      "identity_diff": 0,
+      "identity_ok": true,
+      "cross_in_window": true,
+      "complete_ok": true,
+      "timing_ok": true,
+      "pass": true
+    }
+  },
+  "period_ms": 5.1,
+  "gap_ms": null,
+  "offline": false,
+  "timing": {
+    "period_ms": 5.1,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 19.0,
+      "n": 128
+    },
+    "wall_ms": {
+      "p5": 5.2,
+      "p50": 5.442,
+      "p95": 5.782,
+      "p99": 19.197,
+      "min": 5.134,
+      "max": 19.331,
+      "n": 128
+    },
+    "start_to_start_ms": {
+      "p5": 5.726,
+      "p50": 6.065,
+      "p95": 6.594,
+      "p99": 19.591,
+      "min": 5.509,
+      "max": 38.442,
+      "n": 127
+    },
+    "late_reads": 22
+  },
+  "ear": {
+    "live_bytes": 49152,
+    "consumed": 0,
+    "events": {
+      "silence_in_play": 115
+    },
+    "event_list": [
+      {
+        "t": 2000397.303580288,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.309483323,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.315440962,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.321444908,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.32739436,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.333224548,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.338989192,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.344853033,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.350874592,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.356868409,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.36292815,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.368906898,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.374782802,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.38050191,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.386374387,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.392712054,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.399382299,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.406244046,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.412735823,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.419021171,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.424998006,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.430947308,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.437254146,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.443277208,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.449296413,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.45524269,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.461040927,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.466782427,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.472551609,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.478773397,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.484928819,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.491009199,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.496927734,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.502865605,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.508966724,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.5150978,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.521440366,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.527660691,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.533811625,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.540190619,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.546036206,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.55189659,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.557739161,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.563928407,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.570094399,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.576220526,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.582238258,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.58804964,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.593773527,
+        "kind": "silence_in_play"
+      },
+      {
+        "t": 2000397.599466154,
+        "kind": "silence_in_play"
+      }
+    ]
+  },
+  "snap_final": {
+    "version": "0.4.46-dev",
+    "uptime": "2h 19min",
+    "play": "",
+    "armed": true,
+    "hostAbs": 544540,
+    "absEnd": 79872,
+    "absBase": 30720,
+    "streamBytes": 7864320,
+    "underruns": 471324,
+    "liveBytes": 7392996,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 7727,
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 16076800,
+        "maxSeq": 1359872,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 7864320,
+        "maxSeq": 524288,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  }
+}

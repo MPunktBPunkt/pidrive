@@ -1,0 +1,16 @@
+{
+  "cycles": 5,
+  "pass": 5,
+  "fail": 0,
+  "uptime_drops": 0,
+  "live_s": [
+    8.41,
+    8.32,
+    8.28,
+    8.36,
+    8.41
+  ],
+  "first_up": "2h 18min",
+  "last_up": "2h 21min",
+  "method": "prefill bridge 12s \u2192 stop \u2192 REPLUG (sim pump) \u2192 restart bridge \u00d75"
+}
