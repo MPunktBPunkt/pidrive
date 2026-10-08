@@ -1,0 +1,54 @@
+{"wall": 1791438247.492, "hms": "07:44:07", "run": "s3-20261008-074403", "text": "s3 start P-Quelle PD0096 07:43"}
+{"wall": 1791438247.528, "hms": "07:44:07", "run": "s3-20261008-074403", "text": "serial PD0096"}
+{"wall": 1791438301.014, "hms": "07:45:01", "run": "s3-20261008-074403", "text": "C Rock build"}
+{"wall": 1791438332.739, "hms": "07:45:32", "run": "s3-20261008-074403", "text": "C Rock build (nach Autoplay Bayern)"}
+{"wall": 1791438356.873, "hms": "07:45:56", "run": "s3-20261008-074403", "text": "C unplug"}
+{"wall": 1791438412.253, "hms": "07:46:52", "run": "s3-20261008-074403", "text": "C plug"}
+{"wall": 1791438426.25, "hms": "07:47:06", "run": "s3-20261008-074403", "text": "C serial? PD0097 (war PD0096)"}
+{"wall": 1791438483.189, "hms": "07:48:03", "run": "s3-20261008-074403", "text": "C Rock tap (nach Autoplay BOB)"}
+{"wall": 1791438483.217, "hms": "07:48:03", "run": "s3-20261008-074403", "text": "note Autoplay BOB nach Replug trotz Rock zuletzt"}
+{"wall": 1791438528.673, "hms": "07:48:48", "run": "s3-20261008-074403", "text": "C2 unplug (zweiter OTG)"}
+{"wall": 1791438579.852, "hms": "07:49:39", "run": "s3-20261008-074403", "text": "C2 plug"}
+{"wall": 1791438579.96, "hms": "07:49:39", "run": "s3-20261008-074403", "text": "C2 note Autoplay Rock Antenne (nicht BOB)"}
+{"wall": 1791438580.041, "hms": "07:49:40", "run": "s3-20261008-074403", "text": "C2 serial? PD0098"}
+{"wall": 1791438608.213, "hms": "07:50:08", "run": "s3-20261008-074403", "text": "operator BOB tap"}
+{"wall": 1791438625.809, "hms": "07:50:25", "run": "s3-20261008-074403", "text": "C3 unplug (von BOB)"}
+{"wall": 1791438693.719, "hms": "07:51:33", "run": "s3-20261008-074403", "text": "C3 plug"}
+{"wall": 1791438693.802, "hms": "07:51:33", "run": "s3-20261008-074403", "text": "C3 serial? PD0099"}
+{"wall": 1791438693.829, "hms": "07:51:33", "run": "s3-20261008-074403", "text": "C3 note Autoplay BOB Bild ohne Ton"}
+{"wall": 1791438750.017, "hms": "07:52:30", "run": "s3-20261008-074403", "text": "note BOB von vorn: ID3 Bild + ~5-6s Ton dann Stille"}
+{"wall": 1791438774.424, "hms": "07:52:54", "run": "s3-20261008-074403", "text": "operator Bayern tap"}
+{"wall": 1791438817.889, "hms": "07:53:37", "run": "s3-20261008-074403", "text": "note Bayern: kein Bild kein Ton"}
+{"wall": 1791438817.918, "hms": "07:53:37", "run": "s3-20261008-074403", "text": "operator BOB tap (von Bayern)"}
+{"wall": 1791438825.957, "hms": "07:53:45", "run": "s3-20261008-074403", "text": "note BOB: gleiches Bild + gleicher Tonabschnitt (Resume/P)"}
+{"wall": 1791438844.951, "hms": "07:54:04", "run": "s3-20261008-074403", "text": "operator Rock Antenne tap"}
+{"wall": 1791438879.656, "hms": "07:54:39", "run": "s3-20261008-074403", "text": "note Rock: kein Bild kein Ton"}
+{"wall": 1791438879.683, "hms": "07:54:39", "run": "s3-20261008-074403", "text": "C4 unplug (von Rock tot)"}
+{"wall": 1791438913.24, "hms": "07:55:13", "run": "s3-20261008-074403", "text": "C4 plug"}
+{"wall": 1791438913.359, "hms": "07:55:13", "run": "s3-20261008-074403", "text": "C4 serial? PD0100"}
+{"wall": 1791438913.389, "hms": "07:55:13", "run": "s3-20261008-074403", "text": "C4 note Autoplay BOB ohne Bild ohne Ton"}
+{"wall": 1791438923.678, "hms": "07:55:23", "run": "s3-20261008-074403", "text": "operator Bayern tap"}
+{"wall": 1791438955.612, "hms": "07:55:55", "run": "s3-20261008-074403", "text": "C5 unplug 07:55 (von Bayern)"}
+{"wall": 1791438993.307, "hms": "07:56:33", "run": "s3-20261008-074403", "text": "C5 plug"}
+{"wall": 1791438993.401, "hms": "07:56:33", "run": "s3-20261008-074403", "text": "C5 serial? PD0101"}
+{"wall": 1791438993.431, "hms": "07:56:33", "run": "s3-20261008-074403", "text": "C5 note Autoplay Bayern ohne Bild ohne Ton"}
+{"wall": 1791439004.272, "hms": "07:56:44", "run": "s3-20261008-074403", "text": "operator BOB tap"}
+{"wall": 1791439039.976, "hms": "07:57:19", "run": "s3-20261008-074403", "text": "note BOB: kein Bild kein Ton"}
+{"wall": 1791439040.004, "hms": "07:57:20", "run": "s3-20261008-074403", "text": "C6 unplug (von BOB tot)"}
+{"wall": 1791439069.125, "hms": "07:57:49", "run": "s3-20261008-074403", "text": "C6 plug"}
+{"wall": 1791439069.217, "hms": "07:57:49", "run": "s3-20261008-074403", "text": "C6 serial? PD0102"}
+{"wall": 1791439069.249, "hms": "07:57:49", "run": "s3-20261008-074403", "text": "C6 note Autoplay BOB Bild da"}
+{"wall": 1791439104.68, "hms": "07:58:24", "run": "s3-20261008-074403", "text": "note BOB: Cursor mitten → Stille; von vorn starten → Ton wieder"}
+{"wall": 1791439104.711, "hms": "07:58:24", "run": "s3-20261008-074403", "text": "note = Resume/P mitten im File, nicht Kopf"}
+{"wall": 1791439147.226, "hms": "07:59:07", "run": "s3-20261008-074403", "text": "C7 unplug (noch auf BOB, nach vorn-Ton)"}
+{"wall": 1791439231.846, "hms": "08:00:31", "run": "s3-20261008-074403", "text": "C7 plug"}
+{"wall": 1791439231.932, "hms": "08:00:31", "run": "s3-20261008-074403", "text": "C7 serial? PD0104"}
+{"wall": 1791439231.959, "hms": "08:00:31", "run": "s3-20261008-074403", "text": "C7 note REPRO: BOB Resume Mitte Bild ja Ton nein; von vorn = Ton"}
+{"wall": 1791439288.088, "hms": "08:01:28", "run": "s3-20261008-074403", "text": "C8 unplug (Repro-Runde)"}
+{"wall": 1791439352.428, "hms": "08:02:32", "run": "s3-20261008-074403", "text": "C9 unplug 08:02"}
+{"wall": 1791439369.577, "hms": "08:02:49", "run": "s3-20261008-074403", "text": "C8 plug (nachträglich aus Watch/Status)"}
+{"wall": 1791439369.605, "hms": "08:02:49", "run": "s3-20261008-074403", "text": "C8 serial? PD0106"}
+{"wall": 1791439373.358, "hms": "08:02:53", "run": "s3-20261008-074403", "text": "C9 plug"}
+{"wall": 1791439373.386, "hms": "08:02:53", "run": "s3-20261008-074403", "text": "C9 serial? PD0106"}
+{"wall": 1791439438.737, "hms": "08:03:58", "run": "s3-20261008-074403", "text": "C9 note REPRO: Resume hinten Bild ja Ton nein; von vorn = wenige Sek Ton"}
+{"wall": 1791439453.516, "hms": "08:04:13", "run": "", "text": "s3 ende"}

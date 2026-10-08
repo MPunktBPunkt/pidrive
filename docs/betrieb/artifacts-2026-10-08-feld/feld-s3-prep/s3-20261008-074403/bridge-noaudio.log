@@ -1,0 +1,19 @@
+[audio] target_bps=9000 bitrate=48k marker=False
+[msc-lock] USB_SESSION_START → sealing (next menu_set freezes map)
+[msc-lock] enabled=True seed_plugged=True
+[tx] {"t":"hello","ver":1}
+[bridge] warn: no hello_ack yet — continuing
+Traceback (most recent call last):
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 2116, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 1565, in main
+    send({"t": "audio_stop"})
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 1513, in send
+    ser.write((line + "\n").encode("utf-8"))
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/esphub/esp32.pidrive/tools/pump_bridge.py", line 317, in write
+    self._sock.sendall(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
