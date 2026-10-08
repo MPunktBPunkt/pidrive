@@ -11,6 +11,12 @@ ESP_HOST="${ESP_HOST:-192.168.178.89}"
 ESP="http://$ESP_HOST"
 BRIDGE="${BRIDGE:-/home/pidrive/pump_bridge.py}"
 READS="${MSC_READS:-/tmp/pidrive_msc_reads.jsonl}"
+# Nutzung: run-s2.sh [--with-audio] [SEKUNDEN]; ALLOW_FOREIGN_BRIDGE=1 siehe Liveness-Check
+WITH_AUDIO=0
+if [[ "${1:-}" == "--with-audio" ]]; then
+  WITH_AUDIO=1
+  shift
+fi
 SECONDS_MAX="${1:-2400}"
 RUN="$ROOT/s2-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$RUN"
@@ -64,9 +70,35 @@ PY
 trap finish INT TERM EXIT
 
 sudo systemctl stop pidrive_pump_bridge 2>/dev/null || true
+if systemctl is-active --quiet pidrive_pump_bridge 2>/dev/null; then
+  echo "ABBRUCH: pidrive_pump_bridge läuft noch (stop fehlgeschlagen)" >&2
+  exit 2
+fi
 : > "$READS"
-python3 "$BRIDGE" --transport tcp --host "$ESP_HOST" --no-audio > "$RUN/bridge-noaudio.log" 2>&1 &
+if [[ "$WITH_AUDIO" == "1" ]]; then
+  BRIDGE_LOG="$RUN/bridge-audio.log"
+  python3 "$BRIDGE" --transport tcp --host "$ESP_HOST" > "$BRIDGE_LOG" 2>&1 &
+else
+  BRIDGE_LOG="$RUN/bridge-noaudio.log"
+  python3 "$BRIDGE" --transport tcp --host "$ESP_HOST" --no-audio > "$BRIDGE_LOG" 2>&1 &
+fi
 pids+=($!)
+
+# Liveness (s3-Lehre): ESP hält bestehenden Pump-Link sticky; eine zweite Bridge
+# stirbt sofort mit BrokenPipe und msc.reads bleibt leer.
+sleep 10
+if ! kill -0 "${pids[0]}" 2>/dev/null; then
+  echo "ABBRUCH: Capture-Bridge nach 10 s tot — Log: $BRIDGE_LOG" >&2
+  tail -n 15 "$BRIDGE_LOG" >&2
+  exit 3
+fi
+MY_IP="$(ip route get "$ESP_HOST" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')"
+PEER="$(curl -s -m 3 "$ESP/api/status" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("pumpTcpPeer") or "")' 2>/dev/null)"
+if [[ -n "$PEER" && -n "$MY_IP" && "$PEER" != "$MY_IP" && "${ALLOW_FOREIGN_BRIDGE:-0}" != "1" ]]; then
+  echo "ABBRUCH: ESP-Pump-Link gehört $PEER, nicht diesem Host ($MY_IP). Fremde Bridge stoppen oder ALLOW_FOREIGN_BRIDGE=1" >&2
+  exit 4
+fi
+echo "   Pump-Link: peer=${PEER:-?} self=${MY_IP:-?} audio=$WITH_AUDIO"
 
 cd "$PROJ"
 python3 tools/feld_status_poll.py --esp "$ESP" --run-id "$(basename "$RUN")" \

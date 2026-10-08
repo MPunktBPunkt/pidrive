@@ -281,6 +281,9 @@ Eigenschaften:
 **Abnahme Lab (T3 → Stufe 3.2):** Gleiche OOO-Lesereihenfolge wie Lab-Probe T3 (`docs/betrieb/artifacts-2026-10-07-lab/T1-T4-ERGEBNIS.md`, Lauf `T3-1616/`). Erwartung nach Umsetzung der festen Zuordnung: `abs0−off` **konstant** über die LIVE-Reads (heute mit zählendem Cursor 0.4.46: **FAIL**, 53 unique Werte). Ohne bestandenes T3 kein Stall-Go.
 
 ### 3.3 Stall-Adapter im Live-Pfad von `onRead`
+
+> **Begriff:** „Stall“ heißt in diesem Plan **Busy-Retry** — `return 0` (mit kurzer Pause), TinyUSB ruft dieselbe LBA erneut auf, die HU sieht auf dem Bus nur NAK (normale Flusskontrolle). Ein **USB-STALL** im Sinne der Spezifikation entsteht bei `return <0` (Kommando FAILED, Sense „medium not present“) und ist für Live-Lücken **verboten**. Details: [SPIKE-TINYUSB-READ10](../betrieb/artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md), Begriffe in [ANALYSE-S3-TONFENSTER Teil 2](../betrieb/artifacts-2026-10-08-feld/ANALYSE-S3-TONFENSTER-2026-10-08.md).
+
 Heute ([UsbMscGadget.cpp](../../../../esp32.pidrive-main/esp32.pidrive-main/src/msc/UsbMscGadget.cpp), ~Zeile 739):
 
 ```cpp
@@ -461,11 +464,26 @@ flowchart LR
 
 ---
 
+## Optionen nach Feld s3 (Tonfenster, 2026-10-08)
+
+s3 hat gezeigt: Nach OTG-Remount liest die HU den aktuellen Titel **ab 0 komplett** in < 1 s (R24 HU-Facts) und spielt den **Ringinhalt** ≈ 8,2 s (R25). Lesetakt ~800 KB/s gegen Producer 6 KB/s = Faktor ~133. Analyse: [`ANALYSE-S3-TONFENSTER-2026-10-08.md`](../betrieb/artifacts-2026-10-08-feld/ANALYSE-S3-TONFENSTER-2026-10-08.md).
+
+| Option | Mechanik | Zahlen @48k | Dauerstrom? | Go |
+|--------|----------|-------------|-------------|----|
+| **a) Stall** (Stufe 3.3) | READ10 im Live-Slot erst beantworten, wenn `absEnd` den Host-Cursor deckt | 4 KiB-Read wartet ≈ 0,68 s; 512 KiB = 87 s Lesedauer | **ja**, falls HU-Timeout (R1) > 0,7 s je Read | FW |
+| **b) Zeitversatz + Dateikette** | Slot erst „freigeben“, wenn 512 KiB Vergangenheit im PSRAM liegen; dann Remount/Next-Track | 512 KiB = 87 s Vorlauf; Lücke beim Wechsel ~6 s (R7 HU-Facts) | quasi, mit Lücken | FW + PSRAM-Größe klären |
+| **c) Ring größer** | `kCapacity` 48 KiB → 160 KiB (SRAM) | Fenster 8,2 s → 27 s | nein | FW (klein) |
+| **d) Bitrate runter** | Bridge `--bitrate 32k` / `24k` | Fenster 12,3 s / 16,4 s | nein — **Modelltest ohne FW** | Pi |
+
+Reihenfolge: d) in s4 als Modellbeweis (Fensterlänge skaliert mit 1/Bitrate), danach a) im Lab (Stufe 4) mit dem Replug-Fall „sequentiell ab 0“ als erstem, einfachstem Szenario.
+
+---
+
 ## Risiken und offene Punkte
 
 | ID | Risiko | Wird geklärt in |
 |----|--------|-----------------|
-| R1 | HU-READ10-Timeout unbekannt | Stufe 5 Leiter |
+| R1 | HU-READ10-Timeout unbekannt. Gilt **je Kommando**, nicht je Titel: Bremsdauer bei 48k = 0,68 s je 4-KiB-Kommando bzw. 10,9 s je 64-KiB-Kommando (Kommandogröße: HU-Facts Q10, [S] 4 KiB); der ganze 512-KiB-Titel dauert gebremst 87 s = Echtzeit | Stufe 5 Leiter (Stufen bis ~11 s genügen) |
 | R2 | Batch-then-Play | Stufe 1 (F1) |
 | R3 | Muster B: Prefetch vor Play cacht Stille | Stufe 1 (F2), Stufe 6 |
 | R4 | 164-KiB-Fall vom 01.10. ungeklärt (FW 0.4.31) | Sim-Gegenprobe, niedrige Priorität |
@@ -476,6 +494,8 @@ flowchart LR
 | R9 | Busy-Retry verhungert Producer | Stufe 4.1 CPU-Check |
 | **R10** | **HU liest außer der Reihe und weit voraus** (Segmente bis 968 KiB um die Wiedergabeposition, erster Lauf 360 KiB ≈ 61 s bei 48k). Zählender Cursor vergibt Live-Bytes an falsche Offsets; Vorauslesen cacht Stille. Feld s2: oft Resume trotz UI-Tap (R23/P) | 3.2 feste Zuordnung + T3-Abnahme (`abs0−off` const); Lab C4/C6; Feld Q8. **Stall-Go erst nach F1-Formalgo, P-Quelle und T3** |
 | R11 | Lesetakt 5,1 statt 4,0 ms, sobald der ESP Play erkennt (Ursache unbekannt) | Lab C2 |
+| **R12** | **Tap startet den Stream erst durch den Read selbst** (Play-Detect → `audio_start` → Ring+ID3 leer). Tap-Burst bekommt nie Bild/Ton (s3) | Stall (a) oder Vorab-Producer je Slot |
+| R13 | `StreamBuffer::push` (loop-Task) und `readAt` (USB-Task) ohne Lock | Code-Review 08.10.; Lab-Stresstest |
 
 ## Was bewusst nicht passiert
 - Kein weiteres Prefill- oder Ringgrößen-Tuning ohne Stall.

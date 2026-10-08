@@ -16,7 +16,13 @@ Field-fit scenarios (s1-morgen 07.10., HU-Facts R15–R21):
   --golden G4N            next-prefetch 15 s before playback end
   --golden BENCH          C1/C3 back-to-back reads per size
   --golden REPLAY --replay <msc_reads.jsonl|bridge.log> [--replay-ms-from/--replay-ms-to]  (C6)
+  --golden REPLUG         field s3 replug read (R26/R27): producer at 6000 B/s, ring full,
+                          head 4 KiB, --head-pause-ms 19, rest in --replug-cmd-kib 4|16|64
+                          commands at --period-ms 5.1 per 4 KiB; M2 identity + dump analysis
+                          [--dump-slot: <out>/slot-<uid>.bin for ffmpeg / listening on a PC]
   --offline               SG-only BENCH when ESP HTTP is down (static L3 LBAs)
+  --producer-burst F      producer burst factor (default 1.45 for --live, 1.0 for REPLUG)
+  --cmd-timeout-ms N      SG_IO timeout per command (default 5000)
 Every read goes to <out>/reads.jsonl (off, lba, n, klass, dur_ms, wall_ms, seq0/seq1).
 
 See docs/betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md
@@ -315,13 +321,62 @@ def make_pdsq_chunk(seq: int, abs_off: int, n: int = 256) -> bytes:
     return FF_F3_HDR + stamp + (b"\x00" * pad)
 
 
-def id3_tag(title: str) -> bytes:
+def id3_tag(title: str, total: int = 0) -> bytes:
+    """ID3v2.3 with TIT2; total > 0 pads the tag to that many bytes (field cover ~3.1–3.5 KB)."""
     enc = b"\x03" + title.encode("utf-8")
     frame = b"TIT2" + struct.pack(">I", len(enc)) + b"\x00\x00" + enc
-    size = len(frame)
+    pad = max(0, total - 10 - len(frame))
+    size = len(frame) + pad
     return b"ID3\x03\x00\x00" + bytes(
         [(size >> 21) & 0x7F, (size >> 14) & 0x7F, (size >> 7) & 0x7F, size & 0x7F]
-    ) + frame
+    ) + frame + b"\x00" * pad
+
+
+def id3_len_of(blob: bytes) -> int:
+    """Total ID3v2 length (header + body + optional footer) at blob start, else 0."""
+    if len(blob) < 10 or not blob.startswith(b"ID3"):
+        return 0
+    b = blob[6:10]
+    size = (b[0] << 21) | (b[1] << 14) | (b[2] << 7) | b[3]
+    return 10 + size + (10 if blob[5] & 0x10 else 0)
+
+
+def live_span(blob: bytes) -> dict:
+    """PDSQ stamps in a slot dump: file range and producer abs range of the live part."""
+    magic = b"PDSQ"
+    hdr = len(FF_F3_HDR)
+    first = last = None
+    n = seq_gaps = 0
+    prev_seq = None
+    i = 0
+    while True:
+        j = blob.find(magic, i)
+        if j < 0 or j + 16 > len(blob):
+            break
+        seq, abs_off, crc = struct.unpack_from(">III", blob, j + 4)
+        if zlib.crc32(blob[j : j + 12]) & 0xFFFFFFFF != crc:
+            i = j + 1
+            continue
+        if first is None:
+            first = (j - hdr, seq, abs_off)
+        if prev_seq is not None and seq != prev_seq + 1:
+            seq_gaps += 1
+        prev_seq = seq
+        last = (j - hdr, seq, abs_off)
+        n += 1
+        i = j + 16
+    if first is None or last is None:
+        return {"stamps": 0}
+    return {
+        "stamps": n,
+        "seq_gaps": seq_gaps,
+        "file_first": first[0],
+        "file_end": last[0] + 256,
+        "seq_first": first[1],
+        "seq_last": last[1],
+        "abs_first": first[2],
+        "abs_end": last[2] + 256,
+    }
 
 
 class PumpTcp:
@@ -832,6 +887,7 @@ def snap(esp: str) -> dict:
         "liveBytes": max(0, sb - und),
         "ring_size": ring_size,
         "ring_cap": int(s.get("cap") or 49152),
+        "id3Len": s.get("id3Len"),
         "readCount": m.get("readCount"),
         "slots": slots,
     }
@@ -961,7 +1017,7 @@ def prep_lab(esp: str, esp_ip: str, pump: PumpTcp | None, *, remount: bool = Tru
     return pump_out
 
 
-def arm_uid(pump: PumpTcp, uid: str) -> None:
+def arm_uid(pump: PumpTcp, uid: str, id3_bytes: int = 0) -> None:
     pump.send_json(
         {
             "t": "audio_start",
@@ -974,7 +1030,9 @@ def arm_uid(pump: PumpTcp, uid: str) -> None:
         }
     )
     pump.drain(0.3)
-    pump.send_bin(KIND_ID3, id3_tag("nbt_hu_sim"))
+    tag = id3_tag("nbt_hu_sim", id3_bytes)
+    for i in range(0, len(tag), 512):
+        pump.send_bin(KIND_ID3, tag[i : i + 512])
 
 
 # --- Golden scenarios -------------------------------------------------------
@@ -1341,6 +1399,132 @@ def run_g8(hu: HuSim, esp: str, out: Path, current_uid: str = "fav2") -> dict:
     return checks
 
 
+# Feld s3 08.10. (HU-Facts R26/R27, ANALYSE-S3-TONFENSTER M1/M2)
+REPLUG_FIELD_MS = (651, 665)
+REPLUG_FIELD_UND = (470616, 471640)
+
+
+def replug_eval(dump: bytes, size: int, pre: dict, post: dict, fw_id3: int | None) -> dict:
+    """M2 balance of one replug read: host bytes = ID3 + live (ring + growth) + silence,
+    hostAbs_after - undDelta = absEnd at the crossing."""
+    id3 = id3_len_of(dump)
+    span = live_span(dump)
+    und_d = int(post.get("underruns") or 0) - int(pre.get("underruns") or 0)
+    host_after = int(post.get("hostAbs") or 0)
+    abs_cross_fw = host_after - und_d
+    live_file = 0
+    if span.get("stamps"):
+        live_file = max(0, int(span["file_end"]) - id3)
+    expect_und = size - id3 - live_file
+    res = {
+        "id3Len_dump": id3,
+        "id3Len_fw": fw_id3,
+        "live_span": span,
+        "live_bytes_file": live_file,
+        "live_s_at_48k": round(live_file / 6000.0, 2),
+        "undDelta": und_d,
+        "expect_undDelta": expect_und,
+        "field_undDelta": list(REPLUG_FIELD_UND),
+        "hostAbs_after": host_after,
+        "absEnd_pre": pre.get("absEnd"),
+        "absEnd_post": post.get("absEnd"),
+        "abs_cross_fw": abs_cross_fw,
+        "abs_cross_pdsq": span.get("abs_end"),
+    }
+    res["und_ok"] = near(und_d, expect_und)
+    if span.get("abs_end") is not None:
+        res["identity_diff"] = abs_cross_fw - int(span["abs_end"])
+        res["identity_ok"] = abs(res["identity_diff"]) <= TOL
+    else:
+        res["identity_diff"] = None
+        res["identity_ok"] = False
+    lo, hi = int(pre.get("absEnd") or 0), int(post.get("absEnd") or 0)
+    res["cross_in_window"] = lo - TOL <= abs_cross_fw <= hi + TOL
+    return res
+
+
+def run_replug(hu: HuSim, esp: str, pump: PumpTcp, out: Path, uid: str = "fav2",
+               cmd_kib: int = 4, head_pause_ms: float = 19.0, period_ms: float | None = 5.1,
+               prefill_s: float = 12.0, burst: float = 1.0, id3_bytes: int = 3300,
+               dump_slot: bool = False) -> dict:
+    """Field s3 replug (R26): ring full with a producer at field rate, then the HU reads the
+    current track sequentially from 0 — head callback, ~19 ms pause, rest at ~5 ms per 4 KiB."""
+    hu.refresh_slots(esp)
+    size = hu.slots[uid].size
+    cmd = max(SECTOR, cmd_kib * 1024)
+    stop = threading.Event()
+    arm_uid(pump, uid, id3_bytes)
+    hu.mark_armed()
+    prod = RealisticProducer(pump, stop, start_delay_s=0.0, burst_factor=burst)
+    prod.start()
+    try:
+        hu.idle(prefill_s)
+        pre = snap_retry(esp)
+        hu.class_counts.clear()
+        hu.ear = VirtualEar(decode_start="incremental:8")
+        i0 = len(hu.dur_ms)
+        sizes: list[int] = []
+        dump = bytearray()
+        saved_period = hu.period_ms
+        t0 = time.monotonic()
+        blob = hu.read_n(uid, 0, READ_N)
+        dump += blob
+        sizes.append(len(blob))
+        t_head = time.monotonic()
+        hu.idle(head_pause_ms / 1000.0)
+        hu.period_ms = period_ms * (cmd / READ_N) if period_ms else None
+        try:
+            off = len(blob)
+            while off < size:
+                blob = hu.read_n(uid, off, min(cmd, size - off))
+                if not blob:
+                    break
+                dump += blob
+                sizes.append(len(blob))
+                off += len(blob)
+        finally:
+            hu.period_ms = saved_period
+            hu._t_next = None
+        t_end = time.monotonic()
+        time.sleep(0.3)
+        post = snap_retry(esp)
+    finally:
+        stop.set()
+        prod.join(timeout=2)
+    (out / f"status-replug-pre-{cmd_kib}k.json").write_text(json.dumps(pre, indent=2))
+    (out / f"status-replug-{cmd_kib}k.json").write_text(json.dumps(post, indent=2))
+    if dump_slot:
+        (out / f"slot-{uid}-{cmd_kib}k.bin").write_bytes(bytes(dump))
+    durs = hu.dur_ms[i0:]
+    per4k = [d / (n / READ_N) for d, n in zip(durs, sizes) if n]
+    ring_pre = int(pre.get("ring_size") or 0)
+    res = {
+        "uid": uid,
+        "cmd_kib": cmd_kib,
+        "commands": len(sizes),
+        "bytes": len(dump),
+        "read_ms": round((t_end - t0) * 1000.0, 1),
+        "head_ms": round((t_head - t0) * 1000.0, 2),
+        "head_pause_ms": head_pause_ms,
+        "field_read_ms": list(REPLUG_FIELD_MS),
+        "rate_kBps": round(len(dump) / max(1e-6, t_end - t0) / 1000.0, 1),
+        "sg_ms_per_4k": percentiles(per4k),
+        "ring_pre": ring_pre,
+        "ring_full_pre": ring_pre >= 49152 - 1024,
+        "producer_bytes": prod.stats.get("bytes"),
+        "producer_err": prod.stats.get("err"),
+        "class_counts": dict(hu.class_counts),
+        "ear": hu.ear.report(),
+    }
+    res.update(replug_eval(bytes(dump), size, pre, post, pre.get("id3Len")))
+    res["complete_ok"] = len(dump) == size
+    p50 = (res["sg_ms_per_4k"] or {}).get("p50")
+    res["timing_ok"] = cmd_kib != 4 or (p50 is not None and 4.0 <= p50 <= 5.6)
+    res["pass"] = bool(res["complete_ok"] and res["ring_full_pre"] and res["und_ok"]
+                       and res["identity_ok"] and not res["producer_err"])
+    return res
+
+
 def run_g4n(hu: HuSim, esp: str, out: Path, play_uid: str = "fav2", next_uid: str = "fav1",
             lead_s: float = 15.0) -> dict:
     """Next-prefetch tied to playback (R21): play_uid read, prefetch next_uid at play_end - lead_s.
@@ -1608,6 +1792,26 @@ def self_test() -> int:
     assert percentiles([1.0, 2.0, 3.0])["p50"] == 2.0
     # producer chunk size
     assert len(make_pdsq_chunk(0, 0, 256)) == 256
+    # REPLUG: padded ID3 length + M2 balance on a synthetic field-like slot dump
+    tag = id3_tag("x", 3300)
+    assert len(tag) == 3300 and id3_len_of(tag) == 3300
+    assert id3_len_of(id3_tag("nbt_hu_sim")) == len(id3_tag("nbt_hu_sim"))
+    size = 512 * 1024
+    base = 990000 // 256 * 256
+    nlive = 49152 // 256 + 2  # ring + growth until the crossing
+    live_blob = b"".join(make_pdsq_chunk(base // 256 + i, base + i * 256, 256) for i in range(nlive))
+    sil_n = size - len(tag) - len(live_blob)
+    dump = tag + live_blob + (KSIL * (sil_n // len(KSIL) + 1))[:sil_n]
+    span = live_span(dump)
+    assert span["stamps"] == nlive and span["seq_gaps"] == 0, span
+    assert span["file_first"] == len(tag) and span["file_end"] == len(tag) + len(live_blob)
+    cross = base + nlive * 256
+    pre = {"underruns": 1000, "absEnd": cross - 300, "hostAbs": 0}
+    post = {"underruns": 1000 + sil_n, "absEnd": cross + 1800, "hostAbs": cross + sil_n}
+    ev = replug_eval(dump, size, pre, post, 3300)
+    assert ev["undDelta"] == sil_n and ev["expect_undDelta"] == sil_n, ev
+    assert ev["identity_diff"] == 0 and ev["identity_ok"] and ev["und_ok"] and ev["cross_in_window"]
+    assert 471000 < sil_n < 472500  # field s3 range (R25/R27)
     print("self-test PASS")
     return 0
 
@@ -1620,7 +1824,7 @@ def main() -> int:
     ap.add_argument("--sg", default="/dev/sg0")
     ap.add_argument("--profile", default="tools/profiles/nbt_evo_2026-10-06.json")
     ap.add_argument("--golden", default="",
-                    help="G1..G8, G4N, BENCH or comma list / all (ALL=G1–G5 only)")
+                    help="G1..G8, G4N, BENCH, REPLAY, REPLUG or comma list / all (ALL=G1–G5 only)")
     ap.add_argument("--soft-rst", action="store_true")
     ap.add_argument("--out", default="")
     ap.add_argument("--g5-s", type=float, default=70.0)
@@ -1649,6 +1853,18 @@ def main() -> int:
         action="store_true",
         help="SG-only: skip ESP HTTP/Pump (BENCH/C1/C3 when Wi-Fi down). Uses static L3 LBAs.",
     )
+    ap.add_argument("--cmd-timeout-ms", type=int, default=5000, help="SG_IO timeout per command")
+    ap.add_argument("--producer-burst", type=float, default=None,
+                    help="producer burst factor for the first 60 s (default 1.45 --live, 1.0 REPLUG)")
+    ap.add_argument("--replug-uid", default="fav2", help="REPLUG: current track (field: BOB = fav2)")
+    ap.add_argument("--replug-cmd-kib", type=int, default=4, choices=(4, 16, 64),
+                    help="REPLUG: READ10 size after the head callback (HU-Facts Q10)")
+    ap.add_argument("--head-pause-ms", type=float, default=19.0, help="REPLUG: pause after head (R26)")
+    ap.add_argument("--replug-prefill-s", type=float, default=12.0,
+                    help="REPLUG: producer run time before the read (ring full after ~8.2 s)")
+    ap.add_argument("--replug-id3-bytes", type=int, default=3300,
+                    help="REPLUG: sticky ID3 size (field with cover ~3.1–3.5 KB)")
+    ap.add_argument("--dump-slot", action="store_true", help="REPLUG: save the read slot as .bin")
     args = ap.parse_args()
 
     if args.self_test:
@@ -1676,6 +1892,8 @@ def main() -> int:
             ap.error(f"--offline only supports {sorted(offline_ok)}; got {bad}")
         if args.live or args.soft_rst:
             ap.error("--offline incompatible with --live / --soft-rst")
+    if "REPLUG" in goldens and args.live:
+        ap.error("REPLUG arms its own stream; drop --live")
 
     report: dict[str, Any] = {"golden": goldens, "results": {},
                               "period_ms": args.period_ms, "gap_ms": args.gap_ms,
@@ -1689,7 +1907,9 @@ def main() -> int:
     pump: PumpTcp | None = None
     stop = threading.Event()
     producer: RealisticProducer | None = None
-    hu = HuSim(args.sg, profile, gap_ms=args.gap_ms, period_ms=args.period_ms, reads_jsonl=reads_path)
+    hu = HuSim(args.sg, profile, gap_ms=args.gap_ms, cmd_timeout_ms=args.cmd_timeout_ms,
+               period_ms=args.period_ms, reads_jsonl=reads_path)
+    live_burst = 1.45 if args.producer_burst is None else args.producer_burst
 
     live_prod: list[RealisticProducer] = []
 
@@ -1718,7 +1938,7 @@ def main() -> int:
             arm_uid(pump, args.live)
             hu.mark_armed()
             if not args.live_no_producer:
-                p = RealisticProducer(pump, stop, start_delay_s=0.0)
+                p = RealisticProducer(pump, stop, start_delay_s=0.0, burst_factor=live_burst)
                 p.start()
                 live_prod.append(p)
                 time.sleep(args.live_prefill_s)
@@ -1835,6 +2055,16 @@ def main() -> int:
             fresh()
             rows = load_msc_reads(Path(args.replay), args.replay_ms_from, args.replay_ms_to)
             report["results"]["REPLAY"] = run_replay(hu, esp, out, rows, args.replay_speed)
+
+        if "REPLUG" in goldens:
+            fresh()
+            report["results"]["REPLUG"] = run_replug(
+                hu, esp, pump, out, uid=args.replug_uid, cmd_kib=args.replug_cmd_kib,
+                head_pause_ms=args.head_pause_ms,
+                period_ms=args.period_ms if args.period_ms is not None else 5.1,
+                prefill_s=args.replug_prefill_s,
+                burst=1.0 if args.producer_burst is None else args.producer_burst,
+                id3_bytes=args.replug_id3_bytes, dump_slot=args.dump_slot)
 
         stop_live()
         report["timing"] = hu.timing_report()

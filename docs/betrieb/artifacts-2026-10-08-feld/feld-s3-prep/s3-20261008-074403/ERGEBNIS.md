@@ -9,7 +9,7 @@
 | Beobachtung | Evidenz |
 |-------------|---------|
 | Nach Replug oft **Resume mitten/hinten** im File | Bild da, **kein Ton** |
-| **BOB von vorn** starten | **wenige Sekunden Ton**, dann Stille (Ringpolster; Capture ohne Live-Audio) |
+| **BOB von vorn** starten | **wenige Sekunden Ton**, dann Stille (Ringinhalt 48 KiB ≈ 8,2 s Live-Audio; Producer lief über den Bridge-Service) |
 | Bayern → zurück BOB | **gleiches Bild + gleicher Tonabschnitt** |
 | Repro mehrfach (C7, C9) | stabil reproduzierbar |
 
@@ -39,6 +39,8 @@ Nicht immer „letzter Song“.
 ## Schluss (eine Zeile)
 
 **Evidenz heute:** P überlebt Remount + Serial-Wechsel; Resume mitten → Stille bis „von vorn“; Suchraum Richtung persistente Track-/Medien-Bindung, nicht nur Serial.
+
+**Korrektur (Analyse s3, 08.10.):** Die Capture-Bridge `--no-audio` starb sofort (BrokenPipe, ESP hält den bestehenden TCP-Client sticky). Verbunden war der reguläre Bridge-Service **mit Audio** (`absEnd` +~6000 B/s). Nach Replug liest die HU den BOB-Slot **komplett ab 0** (R24); hörbar sind die letzten ~8 s Ring (R25). Details: [`ANALYSE-S3-TONFENSTER-2026-10-08.md`](../../ANALYSE-S3-TONFENSTER-2026-10-08.md)
 
 **Muster-Bericht:** [`../../GESAMTBERICHT-FELD-S3-P-QUELLE-2026-10-08.md`](../../GESAMTBERICHT-FELD-S3-P-QUELLE-2026-10-08.md)
 

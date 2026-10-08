@@ -22,7 +22,7 @@ HU speichert P (Byte-Position im Track)
                                                               ▼
                                                          TON (wenige Sekunden)
                                                          dann wieder Stille
-                                                         (kein Live-Producer)
+                                                         (Ring 48 KiB ≈ 8,2 s, R25)
 ```
 
 **Ein Satz:** Wir hatten oft „keinen Ton“, weil die HU **mitten im File weiterspielt** — nicht weil der Pump-Pfad tot war. „Von vorn“ holt den Kopf mit Ringpolster → kurz Ton. Das ist **P/Resume**, nicht ein kaputter Stream an sich.
@@ -36,7 +36,9 @@ HU speichert P (Byte-Position im Track)
 | Bayern → zurück BOB | **gleiches Bild + gleicher Tonabschnitt** |
 | C7 / C9 | bewusst reproduziert |
 
-Capture ohne Live-Audio erklärt die kurze Tonfenster-Länge (nur Ring), nicht das Resume-Muster.
+**Korrektur (Analyse s3):** Der Producer lief (Bridge-Service verbunden, `absEnd` +~6000 B/s; die Capture-Bridge `--no-audio` war sofort per BrokenPipe raus). Das kurze Tonfenster ist der **Ringinhalt 48 KiB ≈ 8,2 s**, nicht „fehlendes Live-Audio“. Und: Nach Replug liest die HU **ab 0 komplett** (R24); P bestimmt nur, *wo sie abspielt*. Siehe [`ANALYSE-S3-TONFENSTER-2026-10-08.md`](ANALYSE-S3-TONFENSTER-2026-10-08.md).
+
+**Warum nur BOB Bild/Ton hatte:** nicht senderspezifisch. Bayern und Rock hatten ebenfalls volle Streams, scheiterten aber an zwei ESP-Reboots beim Plug/Unplug, einem Replug außerhalb des Stream-Fensters und einem abgelehnten Play-Detect. Abschnitt „Warum Bild nur bei BOB“ in der Analyse, HU-Facts R28, offene Punkte Q11/Q12.
 
 ## Was P **nicht** ist
 
@@ -60,9 +62,9 @@ Kein `head_like` in den bewerteten Episoden — passt zu Resume≠0.
 
 ## Folgen für Stall / Stufe 3
 
-1. Stall **muss P≠0** bedienen (R23 [S]→ stärker; s3 bestätigt Remount+Serial).  
-2. Stall-Start „immer bei 0 nach Replug“ ist **falsch** als Annahme.  
-3. Kurzton nach „von vorn“ ≠ Dauer-Live — ohne Producer endet der Ring.  
+1. Stall **muss P≠0** bedienen, wenn per **Tap** gestartet wird (Tap liest um P).  
+2. ~~Stall-Start „immer bei 0 nach Replug“ ist falsch~~ — **korrigiert:** Nach Replug liest die HU den Titel sequentiell ab 0 (R24); das ist der einfachste Stall-Fall. P wirkt nur auf die Abspielposition.  
+3. Kurzton nach „von vorn“ ≠ Dauer-Live — der Ring (48 KiB ≈ 8,2 s) endet, obwohl der Producer weiterläuft (R25).  
 4. Freeze bleibt: kein Stall-OTA heute; nächster Schritt = P-Identität eingrenzen (Name/Größe) + Stall-Go-Kriterien unverändert (T3, F1-Formal).
 
 ## Artefakte
