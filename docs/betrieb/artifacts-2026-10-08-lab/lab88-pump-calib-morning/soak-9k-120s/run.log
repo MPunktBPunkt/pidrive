@@ -1,0 +1,11 @@
+== idle pump 120.0s chunk=4096 frame=512 gap=0.455 batch=8 ==
+  start absEnd=0 size=0
+OUT=docs/betrieb/artifacts-2026-10-08-lab/lab88-pump-calib-morning/soak-9k-120s
+{
+  "pumped_bps": 8932,
+  "abs_bps": 8932,
+  "pumped": 1073458,
+  "abs_delta": 1073458,
+  "wall_s": 120.181,
+  "size1": 49152
+}

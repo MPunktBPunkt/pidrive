@@ -1,0 +1,14 @@
+{
+  "label": "bridge-48k-rock ~75s",
+  "wall_s": 80.04,
+  "absEnd0": 326048,
+  "absEnd1": 869959,
+  "abs_delta": 543911,
+  "abs_bps": 6795.4897551224385,
+  "underruns_end": 0,
+  "size_end": 49152,
+  "samples": 76,
+  "uid": "fav1",
+  "active_end": true,
+  "heap_min": 104588
+}

@@ -1,0 +1,38 @@
+{
+  "label": "soak 9kB/s 120s batch=8",
+  "config": {
+    "duration_s": 120.0,
+    "chunk": 4096,
+    "frame_max": 512,
+    "gap_s": 0.455,
+    "batch_frames": 8
+  },
+  "wall_s": 120.18137574195862,
+  "loops": 264,
+  "pumped_bytes": 1073458,
+  "pumped_bps": 8931.982958031876,
+  "absEnd0": 0,
+  "absEnd1": 1073458,
+  "abs_delta": 1073458,
+  "abs_bps": 8931.982958031876,
+  "size0": 0,
+  "size1": 49152,
+  "start": {
+    "ts": 1791433542.0975354,
+    "absBase": 0,
+    "absEnd": 0,
+    "size": 0,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  },
+  "end": {
+    "ts": 1791433662.5455184,
+    "absBase": 1024306,
+    "absEnd": 1073458,
+    "size": 49152,
+    "active": true,
+    "underruns": 0,
+    "streamBytes": 0
+  }
+}

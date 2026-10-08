@@ -1,0 +1,25 @@
+Input #0, mp3, from '/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-03-m3/mp3/L1.mp3':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Duration: 00:01:29.42, start: 0.025057, bitrate: 48 kb/s
+  Stream #0:0: Audio: mp3 (mp3float), 44100 Hz, mono, fltp, 48 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (mp3 (mp3float) -> mp3 (libmp3lame))
+Press [q] to stop, [?] for help
+Output #0, mp3, to 'pipe:':
+  Metadata:
+    TSSE            : Lavf61.7.103
+  Stream #0:0: Audio: mp3, 44100 Hz, mono, fltp, 48 kb/s
+      Metadata:
+        encoder         : Lavc61.19.101 libmp3lame
+[aost#0:0/libmp3lame @ 0x5b219ee37f40] Error submitting a packet to the muxer: Broken pipe
+    Last message repeated 1 times
+[out#0/mp3 @ 0x5b219ee2a000] Error muxing a packet
+[out#0/mp3 @ 0x5b219ee2a000] Task finished with error code: -32 (Broken pipe)
+[out#0/mp3 @ 0x5b219ee2a000] Terminating thread with return code -32 (Broken pipe)
+[libmp3lame @ 0x5b219ee28000] Trying to remove 1152 samples, but the queue is empty
+[out#0/mp3 @ 0x5b219ee2a000] Error writing trailer: Broken pipe
+[out#0/mp3 @ 0x5b219ee2a000] Error closing file: Broken pipe
+[out#0/mp3 @ 0x5b219ee2a000] video:0KiB audio:4KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=       4KiB time=00:00:00.78 bitrate=  42.0kbits/s speed=77.7x    
+Conversion failed!

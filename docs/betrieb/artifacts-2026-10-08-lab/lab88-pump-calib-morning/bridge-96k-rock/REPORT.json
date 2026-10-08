@@ -1,0 +1,14 @@
+{
+  "label": "bridge-96k-rock ~35s",
+  "wall_s": 36.35,
+  "absEnd0": 10240,
+  "absEnd1": 639216,
+  "abs_delta": 628976,
+  "abs_bps": 17303.328748280604,
+  "underruns_end": 0,
+  "size_end": 49152,
+  "target_bps_expected": 18000,
+  "samples": 36,
+  "uid": "fav1",
+  "active_end": true
+}

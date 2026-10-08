@@ -1,0 +1,14 @@
+{
+  "label": "bridge-48k-l1-retest after reconnect-flag fix",
+  "wall_s": 30.14,
+  "absEnd0": 119048,
+  "absEnd1": 384144,
+  "abs_delta": 265096,
+  "abs_bps": 8795.487723954877,
+  "underruns_end": 0,
+  "size_end": 49152,
+  "uid": "fav0",
+  "active_end": true,
+  "ffmpeg_exit8": false,
+  "forwarded_seen": true
+}
