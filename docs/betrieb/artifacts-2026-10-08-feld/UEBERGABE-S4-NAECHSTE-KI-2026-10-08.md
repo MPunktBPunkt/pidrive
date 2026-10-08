@@ -72,6 +72,7 @@ Zwei Episodenklassen immer trennen:
 
 **Lab-Gate (08.10. Abend): geschlossen** für Ringfenster, Bitrate-Leiter, Q10-4 KiB, Klasse-A-Remount, K3-FAT, Mid-Reject. UART/`authorized` im Lab-CT nicht verfügbar.  
 **Gesamtbericht Lab:** [`../artifacts-2026-10-08-lab/GESAMTBERICHT-LAB-ABEND-NACH-S4-2026-10-08.md`](../artifacts-2026-10-08-lab/GESAMTBERICHT-LAB-ABEND-NACH-S4-2026-10-08.md)  
+**Aktuelle Übergabe (nach Lab-Abend):** [`UEBERGABE-S5-NAECHSTE-KI-2026-10-08.md`](UEBERGABE-S5-NAECHSTE-KI-2026-10-08.md) · Reviews: [`KRITIK-MISTRAL-GPT-LAB-S5-2026-10-08.md`](KRITIK-MISTRAL-GPT-LAB-S5-2026-10-08.md)  
 **Weiter = Feld s5:** [`feld-s5-prep/`](feld-s5-prep/) · [`FELDPROTOKOLL-S5-FENSTER-Q11.md`](FELDPROTOKOLL-S5-FENSTER-Q11.md) · Default Bridge **32k**.
 
 ### P0 — Feld: Reset-Ursache (Q11)
