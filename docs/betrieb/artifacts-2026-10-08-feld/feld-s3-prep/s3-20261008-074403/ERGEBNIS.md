@@ -40,6 +40,8 @@ Nicht immer „letzter Song“.
 
 **Evidenz heute:** P überlebt Remount + Serial-Wechsel; Resume mitten → Stille bis „von vorn“; Suchraum Richtung persistente Track-/Medien-Bindung, nicht nur Serial.
 
+**Muster-Bericht:** [`../../GESAMTBERICHT-FELD-S3-P-QUELLE-2026-10-08.md`](../../GESAMTBERICHT-FELD-S3-P-QUELLE-2026-10-08.md)
+
 ## Artefakte
 
 - `marks.jsonl` / `OPERATOR-LIVE.txt` · `status-poll.jsonl` · `trace.jsonl` · `q8/`

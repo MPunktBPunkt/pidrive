@@ -1,6 +1,6 @@
 # Stufenplan: HU verstehen und Live-Ton hörbar machen
 
-**Stand:** 2026-10-07 Abend (Stufe 3.2/3.3 feste Offset-Zuordnung; F1 [S] inkrementell + R23 P-Persistenz; T3-Abnahme für 3.2) · **FW-Freeze aktiv:** Stufe 3 ist nur spezifiziert; Umsetzung erst nach explizitem Go.
+**Stand:** 2026-10-08 (s3: P überlebt Remount+Serial; Resume-Mitte = Stille erklärt „kein Ton“) · **FW-Freeze aktiv:** Stufe 3 ist nur spezifiziert; Umsetzung erst nach explizitem Go.
 **Grundlagen:**
 - [ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md](../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) (Modell und Lösung)
 - [KONZEPT-HU-SIM-NBT-2026-10-06.md](../betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md) (Lab-Simulator)
@@ -15,7 +15,7 @@
 2. Der ESP liefert bei fehlenden Live-Daten Stille und zählt den Host-Cursor trotzdem weiter (`StreamBuffer::readAt`). Damit wird live Gelieferte nie mehr erreicht.
 3. Hebel ist deshalb **Rückstau im MSC-Read-Pfad** (Stall), nicht Ringgröße, Prefill oder PSRAM.
 4. TinyUSB unterstützt Stall ohne Blockade: Rückgabe 0 heißt „nochmal fragen“, eine Teilantwort in 512-B-Schritten ist möglich (Spike).
-5. F1 ist praktisch **inkrementell [S]** (Abend-Stick); formal fehlt Video-Timing. Neu und entscheidend: die HU speichert **P** über Medienwechsel (R23) — Stall muss P≠0 beherrschen. Weiter offen: READ10-Toleranz (Q1) und P-Identität.
+5. F1 praktisch **inkrementell [S]**; formal Video-Timing offen. **Feld s3:** P überlebt Remount **trotz neuer Serial** — „kein Ton“ oft = Resume in leerem Ringbereich; „von vorn“ = Kurzton. Stall muss P≠0. Offen: exakte P-Identität (nicht Serial allein), Q1, F1-Formal.
 
 ### Neue Funde aus dem Code (2026-10-06, Nachmittag)
 
