@@ -148,7 +148,7 @@ E7-B NBT PASS → Dauerstrom-Architektur = BUSY-Pacing; Ring/PSRAM nicht primär
 | Desk-Audit Busy/Async | `technology-audit` | ✅ closed |
 | E7-A/B Messläufe PC | Lab | ✅ L0/L1/L3/L4; L2 TEIL (siehe ERGEBNIS) |
 | Busy-Timer-Fix 0.4.48 | `esp32.pidrive` | ✅ Lab `.88` |
-| NBT E7 (C) | Feld | ⬜ nach Q11/Go |
+| NBT E7 (C) | Feld | ⬜ nach Q11/Go — Prep: [`../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/) |
 
 **Nächster Operator-Befehl (Lab `.88`):**
 
