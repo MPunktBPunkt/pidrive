@@ -1,0 +1,93 @@
+  # Zeit       Serial  Slot  Reads          Bereich seq Live Prod-s   Ring  Live-B Live-s Stille-B    undΔ   ID3~
+  0 18:46:13.6 PD0197  fav0     96     7804K..8188K ja  -         -      0       0    0.0   393216       -      -
+  1 18:49:22.5 PD0199  fav0     87        0K..8192K nein -         -      0       0    0.0   356352       -      -
+  8 18:49:23.3 PD0199  fav2     61        12K..256K ja  -         -      0       0    0.0   249856       -      -
+ 10 18:49:23.5 PD0199  fav2     39       256K..512K nein -         -      0       0    0.0   159744       -      -
+ 49 18:49:23.8 PD0199  fav1     62        88K..336K ja  -         -      0       0    0.0   253952       -      -
+ 50 18:50:32.0 PD0200  fav2     44       336K..512K ja  -         -      0       0    0.0   180224       -      -
+ 51 18:50:32.1 PD0200  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 52 18:50:59.8 PD0201  fav2     25       412K..512K ja  -         -      0       0    0.0   102400       -      -
+ 53 18:50:59.9 PD0201  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+ 54 18:51:11.0 PD0201  fav1     16        20K..512K nein -         -      0       0    0.0    65536       -      -
+ 55 18:51:11.0 PD0201  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+ 56 18:51:11.3 PD0201  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 57 18:52:30.5 PD0202  fav0     93        0K..8192K nein -         -      0       0    0.0   380928       -      -
+ 59 18:52:32.2 PD0204  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+ 60 18:52:32.5 PD0204  fav1      9         16K..52K ja  -         -      0       0    0.0    36864       -      -
+ 75 18:52:32.6 PD0204  fav2     57       256K..512K nein -         -      0       0    0.0   233472       -      -
+ 76 18:52:32.7 PD0204  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 77 18:52:44.4 PD0205  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+ 78 18:52:44.8 PD0205  fav2    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+ 79 18:53:33.8 PD0207  fav0     55        80K..320K nein -         -      0       0    0.0   225280       -      -
+ 81 18:53:34.0 PD0207  fav2     64         0K..256K ja  -         -      0       0    0.0   262144       -      -
+ 82 18:53:35.3 PD0207  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+ 83 18:53:35.4 PD0207  fav2     64       256K..512K nein -         -      0       0    0.0   262144       -      -
+ 84 18:53:35.7 PD0207  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 85 18:53:43.2 PD0208  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+ 86 18:53:43.6 PD0208  fav2    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+ 87 18:55:54.1 PD0208  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+ 88 18:55:54.2 PD0208  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 89 18:55:56.7 PD0209  fav0   1949      336K..8188K nein -         -      0       0    0.0  7983104       -      -
+ 90 18:56:08.6 PD0210  fav2     38       360K..512K ja  -         -      0       0    0.0   155648       -      -
+ 91 18:56:08.8 PD0210  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+ 92 18:56:12.2 PD0210  fav0   1505      336K..6360K nein -         -      0       0    0.0  6164480       -      -
+ 95 18:56:21.7 PD0211  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+ 96 18:56:22.0 PD0211  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+ 97 18:56:26.4 PD0211  fav1     43       336K..508K nein -         -      0       0    0.0   176128       -      -
+ 98 18:56:34.2 PD0212  fav2     21       428K..512K ja  -         -      0       0    0.0    86016       -      -
+ 99 18:56:34.2 PD0212  fav1     81        16K..512K nein -         -      0       0    0.0   331776       -      -
+100 18:56:39.4 PD0213  fav0      8       19K..2011K nein -         -      0       0    0.0    32768       -      -
+101 18:56:39.9 PD0213  fav2    128         0K..512K nein -         -      0       0    0.0   524288       -      -
+102 18:58:53.5 PD0214  fav0     11       19K..2011K nein -         -      0       0    0.0    45056       -      -
+132 18:58:54.0 PD0214  fav2     45        76K..256K ja  -         -      0       0    0.0   184320       -      -
+133 18:58:54.2 PD0214  fav1     17        16K..512K nein -         -      0       0    0.0    69632       -      -
+134 18:58:54.2 PD0214  fav2     38       256K..512K nein -         -      0       0    0.0   155648       -      -
+135 18:58:54.8 PD0214  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+136 18:59:51.8 PD0215  fav2     30       392K..512K ja  -         -      0       0    0.0   122880       -      -
+137 18:59:51.9 PD0215  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+138 19:00:06.8 PD0216  fav1      9        48K..512K nein -         -      0       0    0.0    36864       -      -
+139 19:00:06.8 PD0216  fav2     64       256K..512K ja  -         -      0       0    0.0   262144       -      -
+140 19:00:07.0 PD0216  fav1     64        80K..336K nein -         -      0       0    0.0   262144       -      -
+  #0: 18:46:40 RUN START s5-20261011-184623 bitrate=32k | 18:46:41 18:45 pd0197 online — s5 start; pre: OTG×n ohne LED bis WLAN | 18:46:41 Q11 next: UART if available; else 1× OTG under stream — watch white LED | 18:47:41 O2 BOB tip — no pic/tone (expected hen-egg)
+  #1: 18:49:35 after RST: PD0199 up — OTG AN lassen, neu von Tip | 18:50:21 O2 BOB half-running — operator OTG reconnect NOW
+  #8: 18:49:35 after RST: PD0199 up — OTG AN lassen, neu von Tip | 18:50:21 O2 BOB half-running — operator OTG reconnect NOW
+  #10: 18:49:35 after RST: PD0199 up — OTG AN lassen, neu von Tip | 18:50:21 O2 BOB half-running — operator OTG reconnect NOW
+  #49: 18:49:35 after RST: PD0199 up — OTG AN lassen, neu von Tip | 18:50:21 O2 BOB half-running — operator OTG reconnect NOW
+  #50: 18:50:56 Klasse B kurz — weiße LED kurz, Operator wiederholt Replug
+  #51: 18:50:56 Klasse B kurz — weiße LED kurz, Operator wiederholt Replug
+  #52: 18:50:56 Klasse B kurz — weiße LED kurz, Operator wiederholt Replug | 18:52:13 Operator: 2× mehr versucht — ohne Reset kein Erfolg (Klasse A nicht erreichbar unter Last)
+  #53: 18:50:56 Klasse B kurz — weiße LED kurz, Operator wiederholt Replug | 18:52:13 Operator: 2× mehr versucht — ohne Reset kein Erfolg (Klasse A nicht erreichbar unter Last)
+  #54: 18:52:13 Operator: 2× mehr versucht — ohne Reset kein Erfolg (Klasse A nicht erreichbar unter Last)
+  #55: 18:52:13 Operator: 2× mehr versucht — ohne Reset kein Erfolg (Klasse A nicht erreichbar unter Last)
+  #56: 18:52:13 Operator: 2× mehr versucht — ohne Reset kein Erfolg (Klasse A nicht erreichbar unter Last)
+  #79: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton
+  #81: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton
+  #82: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton
+  #83: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton
+  #84: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton
+  #85: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton | 18:55:08 O2 BOB tip (getippt)
+  #86: 18:54:20 Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton | 18:55:08 O2 BOB tip (getippt)
+  #87: 18:57:12 O2 BOB tip #2
+  #88: 18:57:12 O2 BOB tip #2
+  #89: 18:57:12 O2 BOB tip #2
+  #90: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #91: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #92: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #95: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #96: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #97: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #98: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #99: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #100: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #101: 18:57:12 O2 BOB tip #2 | 18:57:35 Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid
+  #102: 18:59:38 O2 BOB tip after cache-bust plug | 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215
+  #132: 18:59:38 O2 BOB tip after cache-bust plug | 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215
+  #133: 18:59:38 O2 BOB tip after cache-bust plug | 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215
+  #134: 18:59:38 O2 BOB tip after cache-bust plug | 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215
+  #135: 18:59:38 O2 BOB tip after cache-bust plug | 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215
+  #136: 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215 | 19:00:48 Abend: Operator Haus — ohne RST/Klasse-A kein Erfolg; s5 O2 nicht auswertbar | 19:00:48 Hyp bestätigt: unter WLAN/Last OTG→weiß/Reset; Tip oft ohne play_uid (HU-Cache)
+  #137: 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215 | 19:00:48 Abend: Operator Haus — ohne RST/Klasse-A kein Erfolg; s5 O2 nicht auswertbar | 19:00:48 Hyp bestätigt: unter WLAN/Last OTG→weiß/Reset; Tip oft ohne play_uid (HU-Cache)
+  #138: 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215 | 19:00:48 Abend: Operator Haus — ohne RST/Klasse-A kein Erfolg; s5 O2 nicht auswertbar | 19:00:48 Hyp bestätigt: unter WLAN/Last OTG→weiß/Reset; Tip oft ohne play_uid (HU-Cache)
+  #139: 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215 | 19:00:48 Abend: Operator Haus — ohne RST/Klasse-A kein Erfolg; s5 O2 nicht auswertbar | 19:00:48 Hyp bestätigt: unter WLAN/Last OTG→weiß/Reset; Tip oft ohne play_uid (HU-Cache)
+  #140: 19:00:04 Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215 | 19:00:48 Abend: Operator Haus — ohne RST/Klasse-A kein Erfolg; s5 O2 nicht auswertbar | 19:00:48 Hyp bestätigt: unter WLAN/Last OTG→weiß/Reset; Tip oft ohne play_uid (HU-Cache)
+wrote /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-08-feld/feld-s5-prep/s5-20261011-184623/live-window/LIVE-WINDOW.json

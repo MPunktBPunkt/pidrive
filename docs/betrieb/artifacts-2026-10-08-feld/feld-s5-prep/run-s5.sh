@@ -89,10 +89,12 @@ if pgrep -f '/home/pidrive/pump_bridge.py' >/dev/null 2>&1; then
 fi
 : > "$READS"
 BRIDGE_LOG="$RUN/bridge-audio.log"
-OVERRIDE_ARGS=()
-if [[ -n "${NAME_OVERRIDE_FILE:-}" ]]; then
-  OVERRIDE_ARGS=(--name-override-file "$NAME_OVERRIDE_FILE")
+# K3 braucht Override-Watch (Default = rename.sh). Ohne Flag liest die Bridge die Datei nicht.
+NAME_OVERRIDE_FILE="${NAME_OVERRIDE_FILE:-/tmp/pidrive-name-overrides.json}"
+if [[ ! -f "$NAME_OVERRIDE_FILE" ]]; then
+  echo '{}' > "$NAME_OVERRIDE_FILE"
 fi
+OVERRIDE_ARGS=(--name-override-file "$NAME_OVERRIDE_FILE")
 # shellcheck disable=SC2086
 python3 "$BRIDGE" --transport tcp --host "$ESP_HOST" $BRIDGE_ARGS \
   "${OVERRIDE_ARGS[@]}" > "$BRIDGE_LOG" 2>&1 &

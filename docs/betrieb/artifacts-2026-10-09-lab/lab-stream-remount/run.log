@@ -1,0 +1,90 @@
+== baseline ==
+{'t': '13:20:46', 'uptime': '20h 56min', 'serial': 'PD0360', 'remountGen': 360, 'plugged': True, 'otgUp': True, 'peer': '', 'pumpTcpUp': False, 'freeHeap': 110048, 'stream_active': False, 'absEnd': 78592, 'hostAbs': 543260, 'underruns': 470556, 'ring': 49152}
+== idle remount x10 ==
+idle #1: reboot=False adv=True up 20h 56min→20h 57min ser PD0360→PD0361 peer='' absEnd=78592
+idle #2: reboot=False adv=True up 20h 57min→20h 57min ser PD0361→PD0362 peer='' absEnd=78592
+idle #3: reboot=False adv=True up 20h 57min→20h 57min ser PD0362→PD0363 peer='' absEnd=78592
+idle #4: reboot=False adv=True up 20h 57min→20h 57min ser PD0363→PD0364 peer='' absEnd=78592
+idle #5: reboot=False adv=True up 20h 57min→20h 57min ser PD0364→PD0365 peer='' absEnd=78592
+idle #9: reboot=False adv=True up 20h 58min→20h 59min ser PD0368→PD0369 peer='' absEnd=78592
+idle #10: reboot=False adv=True up 20h 59min→20h 59min ser PD0369→PD0370 peer='' absEnd=78592
+== load 48k remount x10 (stream ON) ==
+load48k #1: reboot=False adv=True up 20h 59min→21h 0min ser PD0371→PD0372 peer='192.168.178.187' absEnd=78592
+load48k #2: reboot=False adv=True up 21h 0min→21h 0min ser PD0372→PD0373 peer='192.168.178.187' absEnd=78592
+load48k #3: reboot=False adv=True up 21h 0min→21h 0min ser PD0373→PD0374 peer='192.168.178.187' absEnd=78592
+load48k #4: reboot=False adv=True up 21h 0min→21h 0min ser PD0374→PD0375 peer='192.168.178.187' absEnd=78592
+load48k #5: reboot=False adv=True up 21h 0min→21h 0min ser PD0375→PD0376 peer='192.168.178.187' absEnd=78592
+load48k #7: reboot=False adv=True up 21h 1min→21h 1min ser PD0377→PD0378 peer='192.168.178.187' absEnd=78592
+load48k #8: reboot=False adv=True up 21h 1min→21h 1min ser PD0378→PD0379 peer='192.168.178.187' absEnd=78592
+load48k #10: reboot=False adv=True up 21h 1min→21h 1min ser PD0380→PD0381 peer='192.168.178.187' absEnd=78592
+== load 32k remount x5 (stream ON) ==
+load32k #1: reboot=False adv=True up 21h 2min→21h 2min ser PD0381→PD0382 peer='192.168.178.187' absEnd=78592
+load32k #3: reboot=False adv=True up 21h 2min→21h 2min ser PD0383→PD0384 peer='192.168.178.187' absEnd=78592
+load32k #4: reboot=False adv=True up 21h 2min→21h 2min ser PD0384→PD0385 peer='192.168.178.187' absEnd=78592
+== summary ==
+{
+  "esp": "http://192.168.178.88",
+  "host": "192.168.178.187",
+  "fw_freeze": "0.4.46-dev",
+  "note": "API remount only; authorized/VBUS RO; no UART",
+  "arms": {
+    "idle": {
+      "arm": "idle",
+      "n": 10,
+      "remount_ok": 7,
+      "soft_resets": 0,
+      "freeHeap_min": 108916,
+      "pass": false
+    },
+    "load48k": {
+      "arm": "load48k",
+      "n": 10,
+      "remount_ok": 8,
+      "soft_resets": 0,
+      "freeHeap_min": 104064,
+      "pass": false
+    },
+    "load32k": {
+      "arm": "load32k",
+      "n": 5,
+      "remount_ok": 3,
+      "soft_resets": 0,
+      "freeHeap_min": 100900,
+      "pass": false
+    }
+  },
+  "baseline": {
+    "t": "13:20:46",
+    "uptime": "20h 56min",
+    "serial": "PD0360",
+    "remountGen": 360,
+    "plugged": true,
+    "otgUp": true,
+    "peer": "",
+    "pumpTcpUp": false,
+    "freeHeap": 110048,
+    "stream_active": false,
+    "absEnd": 78592,
+    "hostAbs": 543260,
+    "underruns": 470556,
+    "ring": 49152
+  },
+  "final": {
+    "t": "13:27:13",
+    "uptime": "21h 3min",
+    "serial": "PD0386",
+    "remountGen": 386,
+    "plugged": true,
+    "otgUp": true,
+    "peer": "192.168.178.187",
+    "pumpTcpUp": true,
+    "freeHeap": 109968,
+    "stream_active": false,
+    "absEnd": 78592,
+    "hostAbs": 543260,
+    "underruns": 470556,
+    "ring": 49152
+  },
+  "all_pass": false,
+  "soft_resets_total": 0
+}

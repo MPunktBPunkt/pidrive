@@ -1,0 +1,42 @@
+{
+  "esp": "http://192.168.178.88",
+  "host": "192.168.178.187",
+  "method": "play→stop→remount peer-up",
+  "load48k-psr": {
+    "arm": "load48k-psr",
+    "n": 10,
+    "bitrate": "48k",
+    "target_bps": 6000,
+    "remount_ok": 9,
+    "stream_ok": 9,
+    "soft_resets": 0,
+    "freeHeap_min": 100876,
+    "pass": true
+  },
+  "load32k-psr": {
+    "arm": "load32k-psr",
+    "n": 5,
+    "bitrate": "32k",
+    "target_bps": 4000,
+    "remount_ok": 5,
+    "stream_ok": 5,
+    "soft_resets": 0,
+    "freeHeap_min": 107084,
+    "pass": true
+  },
+  "soft_resets_total": 0,
+  "all_pass": true,
+  "final": {
+    "t": "13:35:05",
+    "uptime": "21h 11min",
+    "serial": "PD0401",
+    "remountGen": 401,
+    "peer": "192.168.178.187",
+    "freeHeap": 107084,
+    "stream_active": false,
+    "absEnd": 15072,
+    "underruns": 0,
+    "ring": 15072,
+    "phase": "play"
+  }
+}

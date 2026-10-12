@@ -1,0 +1,3 @@
+2026-10-09T11:29:08+02:00
+head=b61df4d sync=waiting waiter=386442 386483 386510 
+fix: run-s5 name-override default ON; SYNC-TO-PI-S5.tgz ready

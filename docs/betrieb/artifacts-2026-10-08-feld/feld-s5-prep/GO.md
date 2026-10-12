@@ -31,5 +31,5 @@ cd ~/projects/pidrive/docs/betrieb/artifacts-2026-10-08-feld/feld-s5-prep
 | **P1a** | nur wenn K3 klar: gleicher Name, **Hinweis Größe** noch ohne FW — skip oder notieren | Größe offen |
 | **K5** | Reboots zählen | Versorgung |
 
-Override-Datei: `NAME_OVERRIDE_FILE=/tmp/pidrive-name-overrides.json` (rename.sh Default).  
+Override: `run-s5.sh` setzt `--name-override-file` auf `/tmp/pidrive-name-overrides.json` (rename.sh Default).  
 Auswertung: `python3 tools/feld_live_window.py --run <RUN>` — **live_s mit 4000 B/s** rechnen, nicht blind 48k.

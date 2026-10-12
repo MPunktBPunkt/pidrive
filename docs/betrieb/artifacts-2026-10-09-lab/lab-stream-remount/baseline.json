@@ -1,0 +1,16 @@
+{
+  "t": "13:28:44",
+  "uptime": "21h 4min",
+  "serial": "PD0386",
+  "remountGen": 386,
+  "plugged": true,
+  "otgUp": true,
+  "peer": "",
+  "pumpTcpUp": false,
+  "freeHeap": 110408,
+  "stream_active": false,
+  "absEnd": 78592,
+  "hostAbs": 543260,
+  "underruns": 470556,
+  "ring": 49152
+}

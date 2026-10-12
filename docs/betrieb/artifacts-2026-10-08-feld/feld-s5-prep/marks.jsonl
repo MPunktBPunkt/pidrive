@@ -1,0 +1,20 @@
+{"wall": 1791737200.517, "hms": "18:46:40", "run": "s5-20261011-184623", "text": "RUN START s5-20261011-184623 bitrate=32k"}
+{"wall": 1791737201.313, "hms": "18:46:41", "run": "s5-20261011-184623", "text": "18:45 pd0197 online — s5 start; pre: OTG×n ohne LED bis WLAN"}
+{"wall": 1791737201.414, "hms": "18:46:41", "run": "s5-20261011-184623", "text": "Q11 next: UART if available; else 1× OTG under stream — watch white LED"}
+{"wall": 1791737261.472, "hms": "18:47:41", "run": "s5-20261011-184623", "text": "O2 BOB tip — no pic/tone (expected hen-egg)"}
+{"wall": 1791737311.024, "hms": "18:48:31", "run": "s5-20261011-184623", "text": "Klasse B — weiße LED kam und bleibt nach OTG replug"}
+{"wall": 1791737350.796, "hms": "18:49:10", "run": "s5-20261011-184623", "text": "Operator RST — weiße LED blieb; warten Boot"}
+{"wall": 1791737375.139, "hms": "18:49:35", "run": "s5-20261011-184623", "text": "after RST: PD0199 up — OTG AN lassen, neu von Tip"}
+{"wall": 1791737421.27, "hms": "18:50:21", "run": "s5-20261011-184623", "text": "O2 BOB half-running — operator OTG reconnect NOW"}
+{"wall": 1791737456.759, "hms": "18:50:56", "run": "s5-20261011-184623", "text": "Klasse B kurz — weiße LED kurz, Operator wiederholt Replug"}
+{"wall": 1791737533.839, "hms": "18:52:13", "run": "s5-20261011-184623", "text": "Operator: 2× mehr versucht — ohne Reset kein Erfolg (Klasse A nicht erreichbar unter Last)"}
+{"wall": 1791737660.444, "hms": "18:54:20", "run": "s5-20261011-184623", "text": "Replug OK ohne Ton → dann weiße LED → wieder OK ohne Ton"}
+{"wall": 1791737708.139, "hms": "18:55:08", "run": "s5-20261011-184623", "text": "O2 BOB tip (getippt)"}
+{"wall": 1791737736.466, "hms": "18:55:36", "run": "s5-20261011-184623", "text": "Tip ohne Stream: kein play_uid/audio_start, streamSlot=-1 — kein Replug"}
+{"wall": 1791737832.41, "hms": "18:57:12", "run": "s5-20261011-184623", "text": "O2 BOB tip #2"}
+{"wall": 1791737855.639, "hms": "18:57:35", "run": "s5-20261011-184623", "text": "Tip#2: kein Stream PD0213 — HU-Cache? keine neuen USB-Reads/play_uid"}
+{"wall": 1791737925.051, "hms": "18:58:45", "run": "s5-20261011-184623", "text": "OTG out — LED blau→weiß→blau; Operator fragt einstecken?"}
+{"wall": 1791737978.336, "hms": "18:59:38", "run": "s5-20261011-184623", "text": "O2 BOB tip after cache-bust plug"}
+{"wall": 1791738004.346, "hms": "19:00:04", "run": "s5-20261011-184623", "text": "Tip nach Plug: kein Stream; mittenin Reset PD0214→PD0215"}
+{"wall": 1791738048.093, "hms": "19:00:48", "run": "s5-20261011-184623", "text": "Abend: Operator Haus — ohne RST/Klasse-A kein Erfolg; s5 O2 nicht auswertbar"}
+{"wall": 1791738048.223, "hms": "19:00:48", "run": "s5-20261011-184623", "text": "Hyp bestätigt: unter WLAN/Last OTG→weiß/Reset; Tip oft ohne play_uid (HU-Cache)"}

@@ -1,0 +1,91 @@
+== baseline ==
+{'t': '13:28:44', 'uptime': '21h 4min', 'serial': 'PD0386', 'remountGen': 386, 'plugged': True, 'otgUp': True, 'peer': '', 'pumpTcpUp': False, 'freeHeap': 110408, 'stream_active': False, 'absEnd': 78592, 'hostAbs': 543260, 'underruns': 470556, 'ring': 49152}
+== load 48k remount x10 (stream ON) ==
+lab/play {'ok': True, 'playingUid': 'fav2', 'playingName': 'Radio BOB!', 'known': True, 'pumpUp': True}
+stream ready {'t': '13:28:50', 'uptime': '21h 5min', 'serial': 'PD0386', 'remountGen': 386, 'plugged': True, 'otgUp': True, 'peer': '192.168.178.187', 'pumpTcpUp': True, 'freeHeap': 107244, 'stream_active': True, 'absEnd': 9216, 'hostAbs': 0, 'underruns': 0, 'ring': 9216}
+load48k #1: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=47120 active=True err=None
+load48k #2: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=18000 active=True err=None
+load48k #3: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=0 active=True err=None
+load48k #4: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=1024 active=True err=None
+load48k #5: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=5120 active=True err=None
+load48k #6: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=0 active=True err=None
+load48k #7: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=0 active=True err=None
+load48k #8: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=1024 active=True err=None
+load48k #9: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=24000 active=True err=None
+load48k #10: reboot=False adv=False up 21h 5min→21h 5min ser PD0386→PD0386 peer='192.168.178.187' absEnd=1024 active=True err=None
+== load 32k remount x5 (stream ON) ==
+lab/play {'ok': True, 'playingUid': 'fav2', 'playingName': 'Radio BOB!', 'known': True, 'pumpUp': True}
+stream ready {'t': '13:29:54', 'uptime': '21h 6min', 'serial': 'PD0386', 'remountGen': 386, 'plugged': True, 'otgUp': True, 'peer': '192.168.178.187', 'pumpTcpUp': True, 'freeHeap': 107244, 'stream_active': True, 'absEnd': 4000, 'hostAbs': 0, 'underruns': 0, 'ring': 4000}
+load32k #1: reboot=False adv=False up 21h 6min→21h 6min ser PD0386→PD0386 peer='192.168.178.187' absEnd=3072 active=True err=None
+load32k #2: reboot=False adv=False up 21h 6min→21h 6min ser PD0386→PD0386 peer='192.168.178.187' absEnd=3072 active=True err=None
+load32k #3: reboot=False adv=False up 21h 6min→21h 6min ser PD0386→PD0386 peer='192.168.178.187' absEnd=4000 active=True err=None
+load32k #4: reboot=False adv=False up 21h 6min→21h 6min ser PD0386→PD0386 peer='192.168.178.187' absEnd=4000 active=True err=None
+load32k #5: reboot=False adv=False up 21h 6min→21h 6min ser PD0386→PD0386 peer='192.168.178.187' absEnd=0 active=True err=None
+== summary ==
+{
+  "esp": "http://192.168.178.88",
+  "host": "192.168.178.187",
+  "fw_freeze": "0.4.46-dev",
+  "note": "API remount only; authorized/VBUS RO; no UART",
+  "arms": {
+    "idle": {
+      "arm": "idle",
+      "n": 10,
+      "remount_ok": 7,
+      "soft_resets": 0,
+      "freeHeap_min": 108916,
+      "pass": false,
+      "reused": true
+    },
+    "load48k": {
+      "arm": "load48k",
+      "n": 10,
+      "remount_ok": 0,
+      "soft_resets": 0,
+      "freeHeap_min": 104664,
+      "pass": false
+    },
+    "load32k": {
+      "arm": "load32k",
+      "n": 5,
+      "remount_ok": 0,
+      "soft_resets": 0,
+      "freeHeap_min": 107220,
+      "pass": false
+    }
+  },
+  "baseline": {
+    "t": "13:28:44",
+    "uptime": "21h 4min",
+    "serial": "PD0386",
+    "remountGen": 386,
+    "plugged": true,
+    "otgUp": true,
+    "peer": "",
+    "pumpTcpUp": false,
+    "freeHeap": 110408,
+    "stream_active": false,
+    "absEnd": 78592,
+    "hostAbs": 543260,
+    "underruns": 470556,
+    "ring": 49152
+  },
+  "final": {
+    "t": "13:30:27",
+    "uptime": "21h 6min",
+    "serial": "PD0386",
+    "remountGen": 386,
+    "plugged": true,
+    "otgUp": true,
+    "peer": "192.168.178.187",
+    "pumpTcpUp": true,
+    "freeHeap": 107240,
+    "stream_active": true,
+    "absEnd": 0,
+    "hostAbs": 0,
+    "underruns": 0,
+    "ring": 0
+  },
+  "all_pass": false,
+  "soft_resets_total": 0
+}

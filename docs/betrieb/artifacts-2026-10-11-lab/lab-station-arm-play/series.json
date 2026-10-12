@@ -1,0 +1,1416 @@
+[
+  {
+    "t": "19:29:40",
+    "label": "wait_menu_0",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": false,
+    "absEnd": 44000,
+    "ring": 44000,
+    "underruns": 25024,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 34279424,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 34279424,
+        "fromHead": 245,
+        "midFile": 8215,
+        "maxSeq": 655360,
+        "lastAgeMs": 25762
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 17150
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 17047
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 114483
+      }
+    }
+  },
+  {
+    "t": "19:29:41",
+    "label": "after_arm_play",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 0,
+    "ring": 0,
+    "underruns": 0,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 34279424,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 34279424,
+        "fromHead": 245,
+        "midFile": 8215,
+        "maxSeq": 655360,
+        "lastAgeMs": 27105
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 18493
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 18390
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 115826
+      }
+    }
+  },
+  {
+    "t": "19:29:42",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 8000,
+    "ring": 8000,
+    "underruns": 0,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 34279424,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 34279424,
+        "fromHead": 245,
+        "midFile": 8215,
+        "maxSeq": 655360,
+        "lastAgeMs": 28149
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 19538
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 19435
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 116871
+      }
+    }
+  },
+  {
+    "t": "19:29:43",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 12000,
+    "ring": 12000,
+    "underruns": 459232,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 34766848,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 34766848,
+        "fromHead": 247,
+        "midFile": 8332,
+        "maxSeq": 655360,
+        "lastAgeMs": 0
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 20580
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 20477
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 117913
+      }
+    }
+  },
+  {
+    "t": "19:29:44",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 16000,
+    "ring": 16000,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 298
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 21668
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 21565
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 119001
+      }
+    }
+  },
+  {
+    "t": "19:29:45",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 20000,
+    "ring": 20000,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 1423
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 22793
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 22690
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 120126
+      }
+    }
+  },
+  {
+    "t": "19:29:46",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 24000,
+    "ring": 24000,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 2550
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 23920
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 23817
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 121253
+      }
+    }
+  },
+  {
+    "t": "19:29:47",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 29024,
+    "ring": 29024,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 3676
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 25047
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 24944
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 122380
+      }
+    }
+  },
+  {
+    "t": "19:29:48",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 34048,
+    "ring": 34048,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 4709
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 26079
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 25976
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 123412
+      }
+    }
+  },
+  {
+    "t": "19:29:50",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 39072,
+    "ring": 39072,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 5741
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 27111
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 27008
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 124444
+      }
+    }
+  },
+  {
+    "t": "19:29:51",
+    "label": "prefill",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 43072,
+    "ring": 43072,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 6773
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 28143
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 28040
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 125476
+      }
+    }
+  },
+  {
+    "t": "19:29:51",
+    "label": "pre_live_read",
+    "uptime": "75h 5min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 44000,
+    "ring": 44000,
+    "underruns": 898176,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35229696,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35229696,
+        "fromHead": 249,
+        "midFile": 8443,
+        "maxSeq": 655360,
+        "lastAgeMs": 6805
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 28175
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 28072
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 125508
+      }
+    }
+  },
+  {
+    "t": "19:29:51",
+    "label": "after_live_read",
+    "uptime": "75h 6min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 44000,
+    "ring": 44000,
+    "underruns": 919200,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35295232,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5980160,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35295232,
+        "fromHead": 262,
+        "midFile": 8558,
+        "maxSeq": 655360,
+        "lastAgeMs": 12
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 28372
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5980160,
+        "fromHead": 54,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 28269
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 125705
+      }
+    }
+  },
+  {
+    "t": "19:29:52",
+    "label": "after_stop",
+    "uptime": "75h 6min",
+    "serial": "PD0409",
+    "peer": "192.168.178.187",
+    "playingUid": "pump:arm:fav2",
+    "stream_active": true,
+    "absEnd": 48000,
+    "ring": 48000,
+    "underruns": 919200,
+    "id3Len": 0,
+    "slotMap": [
+      {
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "lba0": 81,
+        "bytes": 35295232,
+        "kind": "station"
+      },
+      {
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "lba0": 16465,
+        "bytes": 73728,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:stop",
+        "name": "Stop",
+        "lba0": 17489,
+        "bytes": 5988352,
+        "kind": "action"
+      },
+      {
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "lba0": 18513,
+        "bytes": 8192,
+        "kind": "action"
+      }
+    ],
+    "slots": {
+      "fav2": {
+        "i": 0,
+        "uid": "fav2",
+        "name": "Radio BOB!",
+        "kind": "station",
+        "lba0": 81,
+        "lba1": 16464,
+        "active": true,
+        "bytes": 35295232,
+        "fromHead": 262,
+        "midFile": 8558,
+        "maxSeq": 655360,
+        "lastAgeMs": 965
+      },
+      "pump:arm:fav2": {
+        "i": 1,
+        "uid": "pump:arm:fav2",
+        "name": "Play Radio BOB!",
+        "kind": "action",
+        "lba0": 16465,
+        "lba1": 17488,
+        "active": true,
+        "bytes": 73728,
+        "fromHead": 29,
+        "midFile": 115,
+        "maxSeq": 65536,
+        "lastAgeMs": 29325
+      },
+      "pump:stop": {
+        "i": 2,
+        "uid": "pump:stop",
+        "name": "Stop",
+        "kind": "action",
+        "lba0": 17489,
+        "lba1": 18512,
+        "active": true,
+        "bytes": 5988352,
+        "fromHead": 70,
+        "midFile": 1434,
+        "maxSeq": 524288,
+        "lastAgeMs": 861
+      },
+      "pump:page_next": {
+        "i": 3,
+        "uid": "pump:page_next",
+        "name": "Menue",
+        "kind": "action",
+        "lba0": 18513,
+        "lba1": 18525,
+        "active": true,
+        "bytes": 8192,
+        "fromHead": 16,
+        "midFile": 0,
+        "maxSeq": 4096,
+        "lastAgeMs": 126658
+      }
+    }
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "esp": "http://192.168.178.88",
+  "uid": "fav2",
+  "bitrate": "32k",
+  "target_bps": 4000,
+  "serial0": "PD0409",
+  "serial1": "PD0409",
+  "uptime0": "75h 5min",
+  "uptime1": "75h 6min",
+  "soft_reset": false,
+  "prefill_absEnd": 44000,
+  "prefill_ring": 44000,
+  "stream_active_pre": true,
+  "dump_bytes": 65536,
+  "dump_nonzero": 62621,
+  "dump_has_id3": true,
+  "live_like": true,
+  "bridge_arm_lines": [
+    "[audio] ARM fav2 (Play) \u2192 prefill"
+  ],
+  "bridge_keep_lines": [],
+  "audio_start_count": 1,
+  "slot_names": [
+    "Radio BOB!",
+    "Play Radio BOB!",
+    "Stop",
+    "Menue"
+  ],
+  "verdict": "PASS"
+}

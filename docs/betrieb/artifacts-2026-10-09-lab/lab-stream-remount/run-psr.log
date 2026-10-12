@@ -1,0 +1,59 @@
+== load48k play-stop-remount x10 ==
+load48k-psr #1: reboot=False adv=True stream_abs=20048 up 21h 8min→21h 8min ser PD0387→PD0388 peer='192.168.178.187'
+load48k-psr #2: reboot=False adv=True stream_abs=19024 up 21h 8min→21h 9min ser PD0388→PD0389 peer='192.168.178.187'
+load48k-psr #3: reboot=False adv=True stream_abs=19024 up 21h 9min→21h 9min ser PD0389→PD0390 peer='192.168.178.187'
+load48k-psr #4: reboot=False adv=True stream_abs=20048 up 21h 9min→21h 9min ser PD0390→PD0391 peer='192.168.178.187'
+load48k-psr #5: reboot=False adv=False stream_abs=21072 up 21h 9min→21h 9min ser PD0391→PD0391 peer='192.168.178.187'
+load48k-psr #6: reboot=False adv=True stream_abs=19024 up 21h 9min→21h 9min ser PD0391→PD0392 peer='192.168.178.187'
+load48k-psr #7: reboot=False adv=True stream_abs=0 up 21h 9min→21h 9min ser PD0392→PD0393 peer='192.168.178.187'
+load48k-psr #8: reboot=False adv=True stream_abs=15072 up 21h 9min→21h 10min ser PD0393→PD0394 peer='192.168.178.187'
+load48k-psr #9: reboot=False adv=True stream_abs=21072 up 21h 10min→21h 10min ser PD0394→PD0395 peer='192.168.178.187'
+load48k-psr #10: reboot=False adv=True stream_abs=20048 up 21h 10min→21h 10min ser PD0395→PD0396 peer='192.168.178.187'
+== load32k play-stop-remount x5 ==
+load32k-psr #1: reboot=False adv=True stream_abs=13024 up 21h 10min→21h 10min ser PD0396→PD0397 peer='192.168.178.187'
+load32k-psr #2: reboot=False adv=True stream_abs=16000 up 21h 10min→21h 10min ser PD0397→PD0398 peer='192.168.178.187'
+load32k-psr #3: reboot=False adv=True stream_abs=14048 up 21h 10min→21h 10min ser PD0398→PD0399 peer='192.168.178.187'
+load32k-psr #4: reboot=False adv=True stream_abs=16000 up 21h 10min→21h 11min ser PD0399→PD0400 peer='192.168.178.187'
+load32k-psr #5: reboot=False adv=True stream_abs=14048 up 21h 11min→21h 11min ser PD0400→PD0401 peer='192.168.178.187'
+{
+  "esp": "http://192.168.178.88",
+  "host": "192.168.178.187",
+  "method": "play→stop→remount peer-up",
+  "load48k-psr": {
+    "arm": "load48k-psr",
+    "n": 10,
+    "bitrate": "48k",
+    "target_bps": 6000,
+    "remount_ok": 9,
+    "stream_ok": 9,
+    "soft_resets": 0,
+    "freeHeap_min": 100876,
+    "pass": true
+  },
+  "load32k-psr": {
+    "arm": "load32k-psr",
+    "n": 5,
+    "bitrate": "32k",
+    "target_bps": 4000,
+    "remount_ok": 5,
+    "stream_ok": 5,
+    "soft_resets": 0,
+    "freeHeap_min": 107084,
+    "pass": true
+  },
+  "soft_resets_total": 0,
+  "all_pass": true,
+  "final": {
+    "t": "13:35:05",
+    "uptime": "21h 11min",
+    "serial": "PD0401",
+    "remountGen": 401,
+    "peer": "192.168.178.187",
+    "freeHeap": 107084,
+    "stream_active": false,
+    "absEnd": 15072,
+    "underruns": 0,
+    "ring": 15072,
+    "phase": "play"
+  }
+}

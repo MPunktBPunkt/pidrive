@@ -1,6 +1,6 @@
 # Spezifikation Stall-Build (Bremsen) · Vorlage für das nächste Firmware-Go · 2026-10-08
 
-**Status:** Vorlage. **Kein** Firmware-Go, kein OTA. Umsetzung erst nach ausdrücklicher Freigabe.
+**Status:** Umsetzung gestartet (2026-10-12) in `esp32.pidrive` — Defaults `stallEnable=false`. **Kein** Feld-OTA ohne Go. Lab-Flash nur mit Operator-Go. Siehe [`MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md`](MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md).
 Ziel: **ein** Flash, der alle offenen HU-Fragen zum Bremsen (HU-Facts E7, Q10, R12, Teilantworten) **über Laufzeit-Stellschrauben** prüfbar macht — ohne weiteren Flash pro Variante.
 Grundlage: [`ANALYSE-STREAM-WEG-2026-10-08.md`](../betrieb/artifacts-2026-10-08-feld/ANALYSE-STREAM-WEG-2026-10-08.md), [`SPIKE-TINYUSB-READ10`](../betrieb/artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md), [`ESP-REVIEW-UND-STELLSCHRAUBEN`](../betrieb/artifacts-2026-10-08-feld/ESP-REVIEW-UND-STELLSCHRAUBEN-2026-10-08.md), Stufenplan 3.3.
 

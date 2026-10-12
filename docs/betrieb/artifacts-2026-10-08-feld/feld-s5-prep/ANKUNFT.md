@@ -5,11 +5,13 @@ Ziel: Q11 Reset-Grund + Ohr-Fenster @32k + K3 Name (FAT).
 
 ```bash
 ssh pidrive@192.168.178.105
+cd ~/pidrive && git pull --ff-only || true
+# K3-Fix (name-override) + Prep: Sync-Tar falls pull die Dateien noch nicht hat
+#   tar xzf /tmp/SYNC-TO-PI-S5.tgz -C ~/pidrive   # vom Dev-Host sync-when-online.sh
 cd ~/pidrive/docs/betrieb/artifacts-2026-10-08-feld/feld-s5-prep
-# Repo sync falls nötig: git pull
 ./s5-check.sh before
 # UART zuerst (Laptop/USB-UART, DTR/RTS aus), dann:
-./run-s5.sh 1800
+./run-s5.sh 1800   # setzt --name-override-file automatisch (K3)
 ```
 
 Zweites Terminal:

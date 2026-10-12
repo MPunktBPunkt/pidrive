@@ -1,0 +1,52 @@
+{
+  "esp": "http://192.168.178.88",
+  "host": "192.168.178.187",
+  "fw": "0.4.46-dev",
+  "date": "2026-10-09",
+  "scope": "API remount only; no physical VBUS/UART",
+  "soft_resets_total": 0,
+  "arms": {
+    "idle": {
+      "n": 10,
+      "remount_ok": 7,
+      "soft_resets": 0,
+      "http_timeouts": 3,
+      "note": "serial advanced PD0360→PD0370; 3× HTTP timeout still remounted"
+    },
+    "peer_only_48k": {
+      "n": 10,
+      "remount_ok": 8,
+      "soft_resets": 0,
+      "note": "peer up, stream_active false; MSC FAT reads under bridge"
+    },
+    "stream_remount_skip": {
+      "n": 15,
+      "soft_resets": 0,
+      "note": "FW remountMedia skips while stream_->active(); events msc.remount_skip; no soft reboot"
+    },
+    "load48k_psr": {
+      "arm": "load48k-psr",
+      "n": 10,
+      "bitrate": "48k",
+      "target_bps": 6000,
+      "remount_ok": 9,
+      "stream_ok": 9,
+      "soft_resets": 0,
+      "freeHeap_min": 100876,
+      "pass": true
+    },
+    "load32k_psr": {
+      "arm": "load32k-psr",
+      "n": 5,
+      "bitrate": "32k",
+      "target_bps": 4000,
+      "remount_ok": 5,
+      "stream_ok": 5,
+      "soft_resets": 0,
+      "freeHeap_min": 107084,
+      "pass": true
+    }
+  },
+  "all_pass": true,
+  "verdict": "Software/API remount path does not soft-reboot under idle or post-stream peer load. Field OTG resets remain VBUS/power candidates; TCP/stream alone does not reboot Lab ESP."
+}
