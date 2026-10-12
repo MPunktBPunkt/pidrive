@@ -113,29 +113,32 @@ Tools: `tools/lab_e7_delay_ladder.py` · Spec [`STALL-BUILD-SPEC-2026-10-08.md`]
 11. Volume-Label von Serial entkoppelt testen (`lab_k3_volume_label.py`).  
 12. Nicht mit K3-Dateiname vermischen; Ergebnis = Cache-Hypothese, nicht Tonlösung.
 
-### P3 — Fallback (erst nach E7-Negativ)
+### P3 — Nach E7-C (s6) — Endlos-Radio
 
-13. PSRAM-Zeitversatz (≥512 KiB / Slot-Kette) spezifizieren.  
-14. Q10-CDB-Sniffer nur bei Gesamtdauer-Limit-Verdacht.  
-15. ASYNC (#2967) nur tracken, falls 0.15-Busy unter Last scheitert — Port hat ASYNC heute nicht.
+**Kanonischer Auftrag:** [`../betrieb/artifacts-2026-10-12-feld/UEBERGABE-S6-NAECHSTE-KI-2026-10-12.md`](../betrieb/artifacts-2026-10-12-feld/UEBERGABE-S6-NAECHSTE-KI-2026-10-12.md)
 
-### Entscheidungsgate
+13. **Hauptpfad D:** Fixed Huge Live File (feste Größe von Anfang an) + BUSY; **nicht** dynamisch FAT-Size wachsen.  
+14. **S7 zuerst:** Startup-Usability / Stall nur aktiver Body nach Head-Play (20 s-Problem).  
+15. **D0–D3 Leiter** 512 KiB→1→2→8 MiB inkl. **Resume-P-Test** oder Identitäts-Rotation.  
+16. Slot-Kette **B** nur als Fallback; PSRAM-Burst-Primärpfad obsolet.  
+17. Q10-CDB / ASYNC nur bei Bedarf.
+
+### Entscheidungsgate (aktualisiert nach s6)
 
 ```text
-E7-B PC FAIL  → Architektur BUSY verwerfen für Produktpfad; P3 PSRAM
-E7-B PC PASS, NBT FAIL → BUSY bleibt Lab-Fakt; Produkt = PSRAM / anderer Host-Pfad
-E7-B NBT PASS → Dauerstrom-Architektur = BUSY-Pacing; Ring/PSRAM nicht primär
+E7-C NBT PASS (s6) → Busy-Pacing = Produktkern
+  → D Fixed Huge File (+ Resume-Abwehr) zuerst
+  → B Slot-Kette nur wenn D scheitert
+  → PSRAM nicht gegen HU-Burst
 ```
 
 ### Nicht tun
 
-- Architektur weiter diskutieren statt E7-A/B messen  
-- Q10 als Hauptspur; Ring-FW als Dauerstrom-Lösung  
-- Stall-Feld unter Klasse B / ohne Go  
-- NBT-Timeout-ms als Sheet-**A**-FACT schreiben  
-- Label als „Tonfix“; neues Gadget-Repo  
-- Sofort 5 s Delay als Produktverhalten
-
+- Dyn. Dateigröße unter laufendem Mount als Hauptpfad  
+- Sofort 2 GiB ohne Offset-Zuordnung + Resume-Plan  
+- Slot-Kette als *einzigen* nächsten Schritt  
+- „FAT/DIR werden gebusyt“ als Code-FACT (trifft 0.4.48 nicht)  
+- Stall-Feld ohne Go; NBT-ms als Sheet-A-FACT
 ---
 
 ## 5. Umsetzungsschnitt
@@ -149,18 +152,10 @@ E7-B NBT PASS → Dauerstrom-Architektur = BUSY-Pacing; Ring/PSRAM nicht primär
 | Desk-Audit Busy/Async | `technology-audit` | ✅ closed |
 | E7-A/B Messläufe PC | Lab | ✅ L0/L1/L3/L4; L2 TEIL (siehe ERGEBNIS) |
 | Busy-Timer-Fix 0.4.48 | `esp32.pidrive` | ✅ Lab `.88` |
-| NBT E7 (C) | Feld | ✅ s6: ~65 s Dauer bis EOF (Bayern); Rock/Menü-Nebenwirkungen offen — [`ERGEBNIS-S6`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md) |
+| NBT E7 (C) | Feld | ✅ s6 — [`ERGEBNIS-S6`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md) |
+| Übergabe nächste KI | `pidrive` | ✅ [`UEBERGABE-S6`](../betrieb/artifacts-2026-10-12-feld/UEBERGABE-S6-NAECHSTE-KI-2026-10-12.md) |
 
-**Nächster Operator-Befehl (Lab `.88`):**
-
-```bash
-# L0 / Config-Leiter (Stall an für A, nach L0 wieder aus wenn nötig)
-python3 tools/lab_e7_delay_ladder.py --mode A --stall-ready --esp http://192.168.178.88
-
-# mit SG-Host:
-python3 tools/lab_e7_delay_ladder.py --mode A --stall-ready --esp http://192.168.178.88 --sg /dev/sgX
-python3 tools/lab_e7_delay_ladder.py --mode B --stall-ready --esp http://192.168.178.88 --sg /dev/sgX --bps 6000
-```
+**Nächster Fokus:** S7 (Usability) → D0–D3 Fixed Huge File (siehe Übergabe).
 
 **Freeze:** Flash/OTA Stall nur mit Go. Auto weiter Freeze. Q11 bleibt eigene Spur.
 
