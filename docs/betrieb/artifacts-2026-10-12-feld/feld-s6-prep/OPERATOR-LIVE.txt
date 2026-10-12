@@ -20,3 +20,4 @@ t=17:09:21  E7 PASS-ish: ~65s music+ID3 to EOF Bayern; then autoplay Rock Antenn
 t=17:13:53  operator leave: Rock Antenne resume/start stumm; Bayern tip frozen then Dauer bis EOF; Rock kein Dauer; OTG A no LED
 t=17:13:54  SESSION END — secure
 {"t": "17:13:54", "label": "session-end", "version": "0.4.48-dev", "uptime": "15min 40s", "serial": "PD0228", "volumeLabel": "PD0228", "plugged": true, "otgUp": true, "usbEnumerated": true, "mscReady": true, "playingUid": "fav2", "playingName": "Radio BOB!", "stream_active": true, "absEnd": 0, "ring": 0, "pumpTcpPeer": "192.168.178.105", "stall_enable": true, "stall_maxMs": 1000, "stall_retries": 147865, "stall_timeouts": 80, "stall_cmds": 2399, "klasse_hint": "A?"}
+2026-10-12T17:15:27+02:00 BOB neu gesteckt ~6s Bild+Ton (Stall vermutlich aus)

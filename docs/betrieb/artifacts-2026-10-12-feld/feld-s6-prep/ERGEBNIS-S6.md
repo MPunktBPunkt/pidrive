@@ -91,11 +91,18 @@ Kurze Hörlücken ≈ Silence-Fallback nach `maxMs` (timeouts).
 
 ---
 
+## Kontroll-Stichprobe nach Exit (17:15)
+
+OTG neu (keine Stall-Schärfung): Operator **BOB · Bild + ~6 s Ton**.  
+Status: `stall.enable=false`, Serial `PD0229`.  
+
+→ **A/B bestätigt:** ohne Stall wieder klassisches Ringfenster; die ~65 s waren Stall/E7, nicht Zufall.
+
 ## Geräte-Ende
 
 - FW bleibt **`0.4.48-dev`** auf `.89`  
-- **`stallEnable=false`** (Exit)  
-- Serial zuletzt `PD0228`
+- **`stallEnable=false`** (Exit + Kontrollstichprobe)  
+- Serial zuletzt `PD0229`
 
 ## Verweise
 
