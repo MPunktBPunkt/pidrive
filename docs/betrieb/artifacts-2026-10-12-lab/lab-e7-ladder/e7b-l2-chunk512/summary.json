@@ -1,0 +1,61 @@
+{
+  "mode": "B",
+  "math": {
+    "bps": 6000,
+    "callback_B": 4096,
+    "ms_per_4kib": 682.67,
+    "ms_per_512B": 85.33,
+    "ms_per_64kib_cmd": 10922.67,
+    "slot_read_s_paced": 87.38,
+    "ring_48kib_s": 8.19,
+    "note": "E7 braucht Host-Toleranz \u2265 ms_per_4kib (Gesamtdauer) oder Inaktivit\u00e4t-Reset durch 512-B-Teilantworten alle ms_per_512B"
+  },
+  "protocol": {
+    "stufe_A": {
+      "goal": "Host-Abort-Schwelle je 4 KiB Callback",
+      "steps_ms": [
+        100,
+        250,
+        500,
+        700,
+        1000,
+        2000,
+        5000,
+        11000
+      ],
+      "inject_us_audit": [
+        0,
+        100,
+        250,
+        500,
+        700,
+        1000,
+        2000,
+        5000,
+        10000,
+        100000,
+        1000000
+      ],
+      "hosts": [
+        "PC/dd",
+        "Lab-ESP+nbt_hu_sim",
+        "BMW NBT"
+      ],
+      "pass": "max dt ohne Abort bekannt; HU vs PC getrennt"
+    },
+    "stufe_B": {
+      "goal": "Live-Pacing: return 0 + Teilantwort 512 B",
+      "L1": "stallMaxMs=1000 chunk=4096 \u2192 sg_ms_per_4k\u2248683 @48k",
+      "L2": "chunk=512 \u2192 partials>0, gleiche Lesedauer",
+      "L3": "stallMaxMs=300 \u2192 timeouts>0, Stille-Fallback",
+      "L4": "cmd-timeout 500 < stall \u2192 botResets, ESP stabil"
+    },
+    "freeze": "stallEnable default false; Auto nur mit Go"
+  },
+  "stufe_B": {
+    "returncode": 1,
+    "out": "docs/betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/e7b-l2-chunk512/stufe-b-chunk512",
+    "chunk": 512,
+    "stderr_tail": "pen\n    return opener.open(url, data, timeout)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 489, in open\n    response = self._open(req, data)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 506, in _open\n    result = self._call_chain(self.handle_open, protocol, protocol +\n                              '_open', req)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 466, in _call_chain\n    result = func(*args)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 1348, in http_open\n    return self.do_open(http.client.HTTPConnection, req)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 1322, in do_open\n    raise URLError(err)\nurllib.error.URLError: <urlopen error timed out>\n"
+  }
+}

@@ -151,7 +151,9 @@ def run_stufe_a_sg_timeout(
             "returncode": p.returncode,
             "out": str(dest),
         }
-        report = dest / "report.json"
+        report = dest / "REPORT.json"
+        if not report.exists():
+            report = dest / "report.json"
         if report.exists():
             try:
                 row["report"] = json.loads(report.read_text())
@@ -220,11 +222,16 @@ def run_stufe_b(
     print("RUN", " ".join(cmd))
     p = subprocess.run(cmd, capture_output=True, text=True)
     result: dict[str, Any] = {"returncode": p.returncode, "out": str(dest), "chunk": chunk}
-    report_path = dest / "report.json"
+    report_path = dest / "REPORT.json"
+    if not report_path.exists():
+        report_path = dest / "report.json"
     if report_path.exists():
         rep = json.loads(report_path.read_text())
-        result["report"] = rep
-        result["eval"] = eval_stufe_b_report(rep, bps)
+        # nbt_hu_sim nests under results.REPLUG
+        replug = (rep.get("results") or {}).get("REPLUG") or rep.get("REPLUG") or rep
+        result["report"] = replug
+        result["eval"] = eval_stufe_b_report(replug, bps)
+        result["pass"] = replug.get("pass")
     else:
         result["stderr_tail"] = (p.stderr or "")[-800:]
     (out / f"stufe-b-chunk{chunk}.json").write_text(json.dumps(result, indent=2))

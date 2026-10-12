@@ -1,0 +1,168 @@
+{
+  "mode": "B",
+  "math": {
+    "bps": 6000,
+    "callback_B": 4096,
+    "ms_per_4kib": 682.67,
+    "ms_per_512B": 85.33,
+    "ms_per_64kib_cmd": 10922.67,
+    "slot_read_s_paced": 87.38,
+    "ring_48kib_s": 8.19,
+    "note": "E7 braucht Host-Toleranz \u2265 ms_per_4kib (Gesamtdauer) oder Inaktivit\u00e4t-Reset durch 512-B-Teilantworten alle ms_per_512B"
+  },
+  "protocol": {
+    "stufe_A": {
+      "goal": "Host-Abort-Schwelle je 4 KiB Callback",
+      "steps_ms": [
+        100,
+        250,
+        500,
+        700,
+        1000,
+        2000,
+        5000,
+        11000
+      ],
+      "inject_us_audit": [
+        0,
+        100,
+        250,
+        500,
+        700,
+        1000,
+        2000,
+        5000,
+        10000,
+        100000,
+        1000000
+      ],
+      "hosts": [
+        "PC/dd",
+        "Lab-ESP+nbt_hu_sim",
+        "BMW NBT"
+      ],
+      "pass": "max dt ohne Abort bekannt; HU vs PC getrennt"
+    },
+    "stufe_B": {
+      "goal": "Live-Pacing: return 0 + Teilantwort 512 B",
+      "L1": "stallMaxMs=1000 chunk=4096 \u2192 sg_ms_per_4k\u2248683 @48k",
+      "L2": "chunk=512 \u2192 partials>0, gleiche Lesedauer",
+      "L3": "stallMaxMs=300 \u2192 timeouts>0, Stille-Fallback",
+      "L4": "cmd-timeout 500 < stall \u2192 botResets, ESP stabil"
+    },
+    "freeze": "stallEnable default false; Auto nur mit Go"
+  },
+  "stufe_B": {
+    "returncode": 0,
+    "out": "docs/betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/e7b-l1-v048/stufe-b-chunk4096",
+    "chunk": 4096,
+    "report": {
+      "uid": "fav2",
+      "cmd_kib": 4,
+      "commands": 128,
+      "bytes": 524288,
+      "read_ms": 78996.4,
+      "head_ms": 24.16,
+      "head_pause_ms": 19.0,
+      "field_read_ms": [
+        651,
+        665
+      ],
+      "rate_kBps": 6.6,
+      "sg_ms_per_4k": {
+        "p5": 6.0,
+        "p50": 735.0,
+        "p95": 776.0,
+        "p99": 779.0,
+        "min": 5.0,
+        "max": 849.0,
+        "n": 128
+      },
+      "ring_pre": 49152,
+      "ring_full_pre": true,
+      "producer_bytes": 546560,
+      "producer_err": null,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 127
+      },
+      "ear": {
+        "live_bytes": 520192,
+        "consumed": 0,
+        "events": {
+          "gap_in_content": 4
+        },
+        "event_list": [
+          {
+            "t": 2326719.055475104,
+            "kind": "gap_in_content",
+            "from": 1022,
+            "to": 1024
+          },
+          {
+            "t": 2326719.055475104,
+            "kind": "gap_in_content",
+            "from": 1024,
+            "to": 1026
+          },
+          {
+            "t": 2326761.574025862,
+            "kind": "gap_in_content",
+            "from": 2014,
+            "to": 2016
+          },
+          {
+            "t": 2326761.574025862,
+            "kind": "gap_in_content",
+            "from": 2016,
+            "to": 2018
+          }
+        ]
+      },
+      "id3Len_dump": 3300,
+      "id3Len_fw": 3300,
+      "live_span": {
+        "stamps": 2032,
+        "seq_gaps": 4,
+        "file_first": 3300,
+        "file_end": 524516,
+        "seq_first": 91,
+        "seq_last": 2126,
+        "abs_first": 23296,
+        "abs_end": 544512
+      },
+      "live_bytes_file": 521216,
+      "live_s_at_48k": 86.87,
+      "realtime_bps": 6000,
+      "live_s_at_bps": 86.87,
+      "undDelta": 0,
+      "expect_undDelta": -228,
+      "field_undDelta": [
+        470616,
+        471640
+      ],
+      "hostAbs_after": 544284,
+      "absEnd_pre": 72448,
+      "absEnd_post": 546304,
+      "abs_cross_fw": 544284,
+      "abs_cross_pdsq": 544512,
+      "und_ok": true,
+      "identity_diff": -228,
+      "identity_ok": true,
+      "cross_in_window": true,
+      "complete_ok": true,
+      "timing_ok": false,
+      "pass": true
+    },
+    "eval": {
+      "want_ms_per_4k": 682.7,
+      "got_ms_per_4k_p50": 735.0,
+      "paced_like_L1": true,
+      "undDelta": 0,
+      "undDelta_ok": true,
+      "live_s": 86.87,
+      "hint": "Nach Vorsprung p50\u2248683ms @48k; undDelta=0; Lesedauer\u224887s"
+    },
+    "pass": true
+  }
+}

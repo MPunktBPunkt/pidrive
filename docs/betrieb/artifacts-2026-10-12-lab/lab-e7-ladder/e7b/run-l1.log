@@ -1,0 +1,2 @@
+RUN /usr/bin/python3 /home/martin/projects/pidrive/tools/nbt_hu_sim.py --golden REPLUG --esp http://192.168.178.88 --sg /dev/sg0 --out docs/betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/e7b/stufe-b-chunk4096 --replug-bps 6000 --replug-cmd-kib 4 --cmd-timeout-ms 5000
+wrote docs/betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/e7b/summary.json

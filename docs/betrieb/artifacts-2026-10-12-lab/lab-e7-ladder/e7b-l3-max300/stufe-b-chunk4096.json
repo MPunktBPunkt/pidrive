@@ -1,0 +1,290 @@
+{
+  "returncode": 0,
+  "out": "docs/betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/e7b-l3-max300/stufe-b-chunk4096",
+  "chunk": 4096,
+  "report": {
+    "uid": "fav2",
+    "cmd_kib": 4,
+    "commands": 128,
+    "bytes": 524288,
+    "read_ms": 36258.7,
+    "head_ms": 23.46,
+    "head_pause_ms": 19.0,
+    "field_read_ms": [
+      651,
+      665
+    ],
+    "rate_kBps": 14.5,
+    "sg_ms_per_4k": {
+      "p5": 6.0,
+      "p50": 307.0,
+      "p95": 321.0,
+      "p99": 335.0,
+      "min": 5.0,
+      "max": 335.0,
+      "n": 128
+    },
+    "ring_pre": 49152,
+    "ring_full_pre": true,
+    "producer_bytes": 291072,
+    "producer_err": null,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 13,
+      "SILENCE": 114
+    },
+    "ear": {
+      "live_bytes": 53248,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 114
+      },
+      "event_list": [
+        {
+          "t": 2326608.33346118,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326608.654999543,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326608.961671951,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326609.270177273,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326609.590678166,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326609.898684114,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326610.206422226,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326610.528513834,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326610.850169428,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326611.158422873,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326611.480190829,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326611.787408778,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326612.09542758,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326612.417070329,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326612.736840481,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326613.044432958,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326613.35279545,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326613.672816115,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326613.994295205,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326614.302409347,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326614.624891532,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326614.933089653,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326615.240021563,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326615.560553173,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326615.868460073,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326616.1773018,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326616.499058986,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326616.806054185,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326617.126656679,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326617.447513774,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326617.756286681,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326618.065164867,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326618.385404565,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326618.694378372,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326619.002536046,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326619.324487098,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326619.633704244,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326619.942275901,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326620.278739869,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326620.586994046,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326620.893642279,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326621.215118253,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326621.522586907,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326621.830527912,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326622.152734285,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326622.461200342,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326622.768078029,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326623.087906551,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326623.410403754,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2326623.718730899,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "id3Len_dump": 3300,
+    "id3Len_fw": 3300,
+    "live_span": {
+      "stamps": 199,
+      "seq_gaps": 0,
+      "file_first": 3300,
+      "file_end": 54244,
+      "seq_first": 90,
+      "seq_last": 288,
+      "abs_first": 23040,
+      "abs_end": 73984
+    },
+    "live_bytes_file": 50944,
+    "live_s_at_48k": 8.49,
+    "realtime_bps": 6000,
+    "live_s_at_bps": 8.49,
+    "undDelta": 470044,
+    "expect_undDelta": 470044,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 544028,
+    "absEnd_pre": 72192,
+    "absEnd_post": 290560,
+    "abs_cross_fw": 73984,
+    "abs_cross_pdsq": 73984,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": false,
+    "pass": true
+  },
+  "eval": {
+    "want_ms_per_4k": 682.7,
+    "got_ms_per_4k_p50": 307.0,
+    "paced_like_L1": false,
+    "undDelta": 470044,
+    "undDelta_ok": false,
+    "live_s": 8.49,
+    "hint": "Nach Vorsprung p50\u2248683ms @48k; undDelta=0; Lesedauer\u224887s"
+  },
+  "pass": true
+}

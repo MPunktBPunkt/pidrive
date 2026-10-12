@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 2114, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 2072, in main
+    report["results"]["REPLUG"] = run_replug(
+                                  ~~~~~~~~~~^
+        hu, esp, pump, out, uid=args.replug_uid, cmd_kib=args.replug_cmd_kib,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        id3_bytes=args.replug_id3_bytes, dump_slot=args.dump_slot,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        realtime_bps=args.replug_bps)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 1487, in run_replug
+    blob = hu.read_n(uid, off, min(cmd, size - off))
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 657, in read_n
+    blob, meta = self._timed_read(lba, n)
+                 ~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 699, in _timed_read
+    blob, meta = read_sg(self.sg_fd, lba, n, self.cmd_timeout_ms)
+                 ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/martin/projects/pidrive/tools/nbt_hu_sim.py", line 157, in read_sg
+    fcntl.ioctl(sg_fd, SG_IO, hdr)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 19] No such device
