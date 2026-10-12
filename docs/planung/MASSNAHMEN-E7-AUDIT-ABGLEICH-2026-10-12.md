@@ -3,8 +3,9 @@
 **Quellen:** GPT nach `technology-audit` Kampagne `tinyusb-msc-busy-retry-2026` (closed) · Sheet `usb-msc` Busy/Async · Method `msc-busy-retry-semantics` · Application B `esp32-pidrive/usb-msc` · PiDrive Stall-Spec · Feld s5 (11.10.)  
 **Status:** kanonischer Arbeitsauftrag. **Kein** OTA-/Stall-Feld-Flash ohne explizites Go. Stall-Defaults bleiben `stallEnable=false` (= 0.4.46-Verhalten).
 
-**Lab-Stand (heute):** `.88` = **`0.4.48-dev`** (Busy-Timer-Fix), nach Tests `stallEnable=false`. Feld `.89` unberührt.  
-E7-PC-Leiter: [`../betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md`](../betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md) — **L0/L1/L3/L4 PASS; L2 TEIL; NBT offen.**
+**Lab-Stand:** `.88` = **`0.4.48-dev`**, `stallEnable=false`.  
+**Feld s6 (12.10.):** `.89` = **`0.4.48-dev`** (Go-OTA); E7-NBT **belegt** (~65 s Dauer bis EOF); Exit `stallEnable=false`.  
+E7-PC: [`../betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md`](../betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md) · Feld: [`../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md).
 
 ---
 
@@ -21,7 +22,7 @@ E7-PC-Leiter: [`../betrieb/artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md`](
 | TinyUSB Device-BUSY-Timeout? | **REJECTED** (kein Driver-Timeout) |
 | Arduino-ESP32 0.15: onRead 1:1, kein ASYNC, EP 4096? | **FACT** |
 | PiDrive: `vTaskDelay` + `return 0`, nie `<0`? | **FACT (B)** `onReadLiveStall` |
-| PC/NBT toleriert lange BUSY-Zyklen? | **UNKNOWN** → E7 Lab/C |
+| PC/NBT toleriert lange BUSY-Zyklen? | **PC FACT** · **NBT FACT (C)** s6 ~65 s bis EOF |
 | Hybrid B′ unter Producer/WiFi-Last stabil? | **UNKNOWN** (#3) |
 | Löst BUSY das 132:1-Problem grundsätzlich? | **potentiell JA** — nur wenn Host wartet |
 
@@ -148,7 +149,7 @@ E7-B NBT PASS → Dauerstrom-Architektur = BUSY-Pacing; Ring/PSRAM nicht primär
 | Desk-Audit Busy/Async | `technology-audit` | ✅ closed |
 | E7-A/B Messläufe PC | Lab | ✅ L0/L1/L3/L4; L2 TEIL (siehe ERGEBNIS) |
 | Busy-Timer-Fix 0.4.48 | `esp32.pidrive` | ✅ Lab `.88` |
-| NBT E7 (C) | Feld | ⬜ nach Q11/Go — Prep: [`../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/) |
+| NBT E7 (C) | Feld | ✅ s6: ~65 s Dauer bis EOF (Bayern); Rock/Menü-Nebenwirkungen offen — [`ERGEBNIS-S6`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md) |
 
 **Nächster Operator-Befehl (Lab `.88`):**
 

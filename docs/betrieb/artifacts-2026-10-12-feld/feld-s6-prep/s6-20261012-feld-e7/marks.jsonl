@@ -1,0 +1,19 @@
+{"wall": 1791816651.249, "hms": "16:50:51", "run": "", "text": "OTG replug first try: Bild+Ton PD0220 (operator 16:50)"}
+{"wall": 1791816689.906, "hms": "16:51:29", "run": "", "text": "O2 ear window ~6s after OTG PD0220 (operator)"}
+{"wall": 1791816730.323, "hms": "16:52:10", "run": "", "text": "Klasse A: keine weiße LED bei OTG PD0220, Ohr ~6s"}
+{"wall": 1791816774.369, "hms": "16:52:54", "run": "", "text": "K2 intent: autoplay→Bayern, OTG out/in now"}
+{"wall": 1791816794.543, "hms": "16:53:14", "run": "", "text": "Klasse B: weiße LED nach OTG Bayern PD0221"}
+{"wall": 1791816924.689, "hms": "16:55:24", "run": "", "text": "O2 Rock Antenne Bayern Ohr ~6s (operator)"}
+{"wall": 1791816924.785, "hms": "16:55:24", "run": "", "text": "iDrive OFF — ESP still powered, secure now"}
+{"wall": 1791816991.658, "hms": "16:56:31", "run": "", "text": "iDrive ON again: Bayern ~6s audio (operator)"}
+{"wall": 1791817082.665, "hms": "16:58:02", "run": "", "text": "GO: OTA 0.4.48 stall field"}
+{"wall": 1791817122.949, "hms": "16:58:42", "run": "", "text": "E7-A2 armed: stallEnable=true maxMs=1000 chunk=4096"}
+{"wall": 1791817244.799, "hms": "17:00:44", "run": "", "text": "operator: BOB autoplay, OTG A no LED, no ton?; switch Bayern stuck"}
+{"wall": 1791817257.3, "hms": "17:00:57", "run": "", "text": "fix playDetect defaults; stall stays on — OTG replug for Bayern head"}
+{"wall": 1791817268.726, "hms": "17:01:08", "run": "", "text": "operator: after OTG directly Rock Antenne"}
+{"wall": 1791817364.543, "hms": "17:02:44", "run": "", "text": "E7 Rock Antenne: Bild + ~8s Ton; files slow to appear; Klasse?"}
+{"wall": 1791817444.449, "hms": "17:04:04", "run": "", "text": "OTG reconnect → Bayern intent PD0226 ~17:03"}
+{"wall": 1791817566.727, "hms": "17:06:06", "run": "", "text": "E7 HINT: files ~20s delay; only BOB first; then LONG dauerstrom with short gaps"}
+{"wall": 1791817761.796, "hms": "17:09:21", "run": "", "text": "E7 PASS-ish: ~65s music+ID3 to EOF Bayern; then autoplay Rock Antenne NO ton"}
+{"wall": 1791818033.979, "hms": "17:13:53", "run": "", "text": "operator leave: Rock Antenne resume/start stumm; Bayern tip frozen then Dauer bis EOF; Rock kein Dauer; OTG A no LED"}
+{"wall": 1791818034.099, "hms": "17:13:54", "run": "", "text": "SESSION END — secure"}

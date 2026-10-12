@@ -1,0 +1,9 @@
+t=16:50:51  OTG replug first try: Bild+Ton PD0220 (operator 16:50)
+{"t": "16:50:51", "label": "after-otg-pd0220", "version": "0.4.46-dev", "uptime": "3min 9s", "serial": "PD0220", "volumeLabel": null, "plugged": true, "otgUp": true, "usbEnumerated": true, "mscReady": true, "playingUid": "", "playingName": "", "stream_active": true, "absEnd": 918091, "ring": 49152, "pumpTcpPeer": "192.168.178.105", "stall_enable": null, "stall_maxMs": null, "stall_retries": null, "stall_timeouts": null, "stall_cmds": null, "klasse_hint": "A?"}
+t=16:51:29  O2 ear window ~6s after OTG PD0220 (operator)
+t=16:52:10  Klasse A: keine weiße LED bei OTG PD0220, Ohr ~6s
+t=16:52:54  K2 intent: autoplay→Bayern, OTG out/in now
+t=16:53:14  Klasse B: weiße LED nach OTG Bayern PD0221
+t=16:55:24  O2 Rock Antenne Bayern Ohr ~6s (operator)
+t=16:55:24  iDrive OFF — ESP still powered, secure now
+{"t": "16:55:24", "label": "idrive-off-esp-alive", "version": "0.4.46-dev", "uptime": "2min 31s", "serial": "PD0224", "volumeLabel": null, "plugged": true, "otgUp": true, "usbEnumerated": true, "mscReady": true, "playingUid": "fav1", "playingName": "Rock Antenne Bayern", "stream_active": true, "absEnd": 36000, "ring": 36000, "pumpTcpPeer": "192.168.178.105", "stall_enable": null, "stall_maxMs": null, "stall_retries": null, "stall_timeouts": null, "stall_cmds": null, "klasse_hint": "A?"}

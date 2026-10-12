@@ -1,0 +1,22 @@
+t=16:50:51  OTG replug first try: Bild+Ton PD0220 (operator 16:50)
+{"t": "16:50:51", "label": "after-otg-pd0220", "version": "0.4.46-dev", "uptime": "3min 9s", "serial": "PD0220", "volumeLabel": null, "plugged": true, "otgUp": true, "usbEnumerated": true, "mscReady": true, "playingUid": "", "playingName": "", "stream_active": true, "absEnd": 918091, "ring": 49152, "pumpTcpPeer": "192.168.178.105", "stall_enable": null, "stall_maxMs": null, "stall_retries": null, "stall_timeouts": null, "stall_cmds": null, "klasse_hint": "A?"}
+t=16:51:29  O2 ear window ~6s after OTG PD0220 (operator)
+t=16:52:10  Klasse A: keine weiße LED bei OTG PD0220, Ohr ~6s
+t=16:52:54  K2 intent: autoplay→Bayern, OTG out/in now
+t=16:53:14  Klasse B: weiße LED nach OTG Bayern PD0221
+t=16:55:24  O2 Rock Antenne Bayern Ohr ~6s (operator)
+t=16:55:24  iDrive OFF — ESP still powered, secure now
+{"t": "16:55:24", "label": "idrive-off-esp-alive", "version": "0.4.46-dev", "uptime": "2min 31s", "serial": "PD0224", "volumeLabel": null, "plugged": true, "otgUp": true, "usbEnumerated": true, "mscReady": true, "playingUid": "fav1", "playingName": "Rock Antenne Bayern", "stream_active": true, "absEnd": 36000, "ring": 36000, "pumpTcpPeer": "192.168.178.105", "stall_enable": null, "stall_maxMs": null, "stall_retries": null, "stall_timeouts": null, "stall_cmds": null, "klasse_hint": "A?"}
+t=16:56:31  iDrive ON again: Bayern ~6s audio (operator)
+t=16:58:02  GO: OTA 0.4.48 stall field
+t=16:58:42  E7-A2 armed: stallEnable=true maxMs=1000 chunk=4096
+t=17:00:44  operator: BOB autoplay, OTG A no LED, no ton?; switch Bayern stuck
+t=17:00:57  fix playDetect defaults; stall stays on — OTG replug for Bayern head
+t=17:01:08  operator: after OTG directly Rock Antenne
+t=17:02:44  E7 Rock Antenne: Bild + ~8s Ton; files slow to appear; Klasse?
+t=17:04:04  OTG reconnect → Bayern intent PD0226 ~17:03
+t=17:06:06  E7 HINT: files ~20s delay; only BOB first; then LONG dauerstrom with short gaps
+t=17:09:21  E7 PASS-ish: ~65s music+ID3 to EOF Bayern; then autoplay Rock Antenne NO ton
+t=17:13:53  operator leave: Rock Antenne resume/start stumm; Bayern tip frozen then Dauer bis EOF; Rock kein Dauer; OTG A no LED
+t=17:13:54  SESSION END — secure
+{"t": "17:13:54", "label": "session-end", "version": "0.4.48-dev", "uptime": "15min 40s", "serial": "PD0228", "volumeLabel": "PD0228", "plugged": true, "otgUp": true, "usbEnumerated": true, "mscReady": true, "playingUid": "fav2", "playingName": "Radio BOB!", "stream_active": true, "absEnd": 0, "ring": 0, "pumpTcpPeer": "192.168.178.105", "stall_enable": true, "stall_maxMs": 1000, "stall_retries": 147865, "stall_timeouts": 80, "stall_cmds": 2399, "klasse_hint": "A?"}
