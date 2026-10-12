@@ -1,0 +1,19 @@
+STREAM {"armed": false, "active": true, "ring": 3840}
+PHASE_A PASS p50 5.5 d_skip 8 d_ret 0
+tip head…
+AFTER-TIP {"armed": false, "ring": 5120, "retries": 2654, "playing": "fav2"}
+DRAINED {"ring": 5120, "retries": 2654, "armed": false}
+PHASE_C FAIL p50 5.4 d_ret 0 [5.4, 5.3, 19.1, 5.4, 5.2, 5.1]
+S7_PROBE FAIL
+{
+  "ok": false,
+  "phase_a_ok": true,
+  "phase_c_ok": false,
+  "p50_a_ms": 5.530579015612602,
+  "p50_c_ms": 5.361765157431364,
+  "d_skip_a": 8,
+  "d_retries_a": 0,
+  "d_retries_c": 0,
+  "fw": "0.4.49-dev",
+  "note": "S7: stream_on !armed \u2192 skip+fast; tip arms; empty-ring armed \u2192 paced BUSY"
+}

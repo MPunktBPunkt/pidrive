@@ -92,12 +92,14 @@ Damit ist GPT-Formulierung „BUSY bremst FAT/Directory“ als **Code-Claim REJE
 ### P1 — S7 Startup-Usability (vor Größenleiter im Feld)
 
 4. **S7-A:** Stall an; Timing mit `tools/lab_s7_startup_poll.py`.  
-5. **S7-B:** ✅ in **0.4.49-dev** — `stallScope=1` BUSY erst nach `play.guess` (`stallArmed`); siehe [`S7-D-LEITER-SPEC`](../../../planung/S7-D-LEITER-SPEC-2026-10-12.md). Lab-Flash + Feld-Go offen.  
+5. **S7-B:** ✅ in **0.4.49-dev** — Lab `.88` grün ([startup](../../artifacts-2026-10-12-lab/lab-s7-startup/ERGEBNIS.md), [stream-before-guess](../../artifacts-2026-10-12-lab/lab-s7-stream-before-guess/ERGEBNIS.md)); Feld-Go offen. Siehe [`S7-D-LEITER-SPEC`](../../../planung/S7-D-LEITER-SPEC-2026-10-12.md).  
+ 
 6. Dokumentiere 20 s als Usability-FACT, nicht als „NBT mountet 20 s“.
 
 ### P2 — D-Leiter (Lab zuerst, dann Feld Go)
 
-7. **D0:** Regression 512 KiB + Stall → &gt;60 s bis EOF (PC + optional NBT).  
+7. **D0:** ✅ Lab Regression 512 KiB ([ERGEBNIS](../../artifacts-2026-10-12-lab/lab-d0-regression/ERGEBNIS.md)) — p50≈734 ms, undDelta=0, ~87 s live. NBT optional.  
+ 
 8. **D1–D3:** 1 MiB → 2 MiB → 8 MiB Fixed Size; BUSY an; **jede Stufe mit Resume-Test** (Replug bei P≫0: Ton? oder Identity-Rotate → Head).  
 9. **D4:** ID3/Cover/Head-Start je Größe.  
 10. Telemetrie-**Poll während** Dauerstrom (nicht nur kumuliert).

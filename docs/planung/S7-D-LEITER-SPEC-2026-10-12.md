@@ -1,6 +1,6 @@
 # S7 Startup + D Fixed-Huge-File · Spezifikation · 2026-10-12
 
-**Status:** Umsetzung gestartet in `esp32.pidrive` **0.4.49-dev** (S7-B Gate).  
+**Status:** S7-B + D0 Lab auf `.88` **grün** (`0.4.49-dev`). Feld-Go offen.  
 **Auftrag:** [`../betrieb/artifacts-2026-10-12-feld/UEBERGABE-S6-NAECHSTE-KI-2026-10-12.md`](../betrieb/artifacts-2026-10-12-feld/UEBERGABE-S6-NAECHSTE-KI-2026-10-12.md)
 
 ## S7 — Stall nur nach Head-Play
@@ -29,6 +29,9 @@ python3 tools/lab_s7_startup_poll.py --esp http://192.168.178.88 --arm-stall --s
 
 Soll: vor `stall_armed` steigt `skipNotArmed`; Retries erst danach.
 
+**Lab 2026-10-12:** Poll [`lab-s7-startup/ERGEBNIS`](../betrieb/artifacts-2026-10-12-lab/lab-s7-startup/ERGEBNIS.md) — armed@play.guess.  
+Stream-before-guess [`lab-s7-stream-before-guess/ERGEBNIS`](../betrieb/artifacts-2026-10-12-lab/lab-s7-stream-before-guess/ERGEBNIS.md) — **PASS** (p50 !armed≈5 ms / armed≈1021 ms).
+
 ## D — Fixed Huge Live File (Leiter)
 
 Nicht dynamisch FAT-Size wachsen. Feste Slot-Bytes von Anfang an.
@@ -41,7 +44,8 @@ Nicht dynamisch FAT-Size wachsen. Feste Slot-Bytes von Anfang an.
 | D3 | 8 MiB | ~22 min | L3 fav0 schon 8 MiB — mit S7+Identity |
 | D4 | + Resume-Test | Mid-P stumm? → Rotate Serial/Label | |
 
-**D0 jetzt:** bestehendes L3 + Stall scope 1 + `lab_e7_delay_ladder.py --mode B`.
+**D0 jetzt:** bestehendes L3 + Stall scope 1 + `lab_e7_delay_ladder.py --mode B`.  
+**Lab 2026-10-12:** [`lab-d0-regression/ERGEBNIS`](../betrieb/artifacts-2026-10-12-lab/lab-d0-regression/ERGEBNIS.md) — **PASS** (p50≈734 ms, undDelta=0, ~87 s live).
 
 Resume-P: bei Mid-File-Start Identity-Rotation (`remount` ohne keepIdentity / Label-Override) — separates Go.
 

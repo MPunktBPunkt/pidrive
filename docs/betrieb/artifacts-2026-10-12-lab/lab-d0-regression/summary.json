@@ -1,0 +1,324 @@
+{
+  "mode": "B",
+  "math": {
+    "bps": 6000,
+    "callback_B": 4096,
+    "ms_per_4kib": 682.67,
+    "ms_per_512B": 85.33,
+    "ms_per_64kib_cmd": 10922.67,
+    "slot_read_s_paced": 87.38,
+    "ring_48kib_s": 8.19,
+    "note": "E7 braucht Host-Toleranz \u2265 ms_per_4kib (Gesamtdauer) oder Inaktivit\u00e4t-Reset durch 512-B-Teilantworten alle ms_per_512B"
+  },
+  "protocol": {
+    "stufe_A": {
+      "goal": "Host-Abort-Schwelle je 4 KiB Callback",
+      "steps_ms": [
+        100,
+        250,
+        500,
+        700,
+        1000,
+        2000,
+        5000,
+        11000
+      ],
+      "inject_us_audit": [
+        0,
+        100,
+        250,
+        500,
+        700,
+        1000,
+        2000,
+        5000,
+        10000,
+        100000,
+        1000000
+      ],
+      "hosts": [
+        "PC/dd",
+        "Lab-ESP+nbt_hu_sim",
+        "BMW NBT"
+      ],
+      "pass": "max dt ohne Abort bekannt; HU vs PC getrennt"
+    },
+    "stufe_B": {
+      "goal": "Live-Pacing: return 0 + Teilantwort 512 B",
+      "L1": "stallMaxMs=1000 chunk=4096 \u2192 sg_ms_per_4k\u2248683 @48k",
+      "L2": "chunk=512 \u2192 partials>0, gleiche Lesedauer",
+      "L3": "stallMaxMs=300 \u2192 timeouts>0, Stille-Fallback",
+      "L4": "cmd-timeout 500 < stall \u2192 botResets, ESP stabil"
+    },
+    "freeze": "stallEnable default false; Auto nur mit Go"
+  },
+  "stufe_B": {
+    "returncode": 0,
+    "out": "docs/betrieb/artifacts-2026-10-12-lab/lab-d0-regression/stufe-b-chunk4096",
+    "chunk": 4096,
+    "report": {
+      "uid": "fav2",
+      "cmd_kib": 4,
+      "commands": 128,
+      "bytes": 524288,
+      "read_ms": 78998.8,
+      "head_ms": 22.98,
+      "head_pause_ms": 19.0,
+      "field_read_ms": [
+        651,
+        665
+      ],
+      "rate_kBps": 6.6,
+      "sg_ms_per_4k": {
+        "p5": 6.0,
+        "p50": 734.0,
+        "p95": 765.0,
+        "p99": 785.0,
+        "min": 5.0,
+        "max": 842.0,
+        "n": 128
+      },
+      "ring_pre": 49152,
+      "ring_full_pre": true,
+      "producer_bytes": 546304,
+      "producer_err": null,
+      "class_counts": {
+        "ID3": 1,
+        "LIVE": 127
+      },
+      "ear": {
+        "live_bytes": 520192,
+        "consumed": 0,
+        "events": {
+          "gap_in_content": 30
+        },
+        "event_list": [
+          {
+            "t": 2357503.720696734,
+            "kind": "gap_in_content",
+            "from": 333,
+            "to": 335
+          },
+          {
+            "t": 2357504.499437015,
+            "kind": "gap_in_content",
+            "from": 348,
+            "to": 350
+          },
+          {
+            "t": 2357504.499437015,
+            "kind": "gap_in_content",
+            "from": 350,
+            "to": 352
+          },
+          {
+            "t": 2357504.499437015,
+            "kind": "gap_in_content",
+            "from": 352,
+            "to": 354
+          },
+          {
+            "t": 2357505.734688177,
+            "kind": "gap_in_content",
+            "from": 381,
+            "to": 383
+          },
+          {
+            "t": 2357506.483862932,
+            "kind": "gap_in_content",
+            "from": 396,
+            "to": 398
+          },
+          {
+            "t": 2357506.483862932,
+            "kind": "gap_in_content",
+            "from": 400,
+            "to": 402
+          },
+          {
+            "t": 2357509.233780581,
+            "kind": "gap_in_content",
+            "from": 461,
+            "to": 463
+          },
+          {
+            "t": 2357511.984926971,
+            "kind": "gap_in_content",
+            "from": 524,
+            "to": 526
+          },
+          {
+            "t": 2357511.984926971,
+            "kind": "gap_in_content",
+            "from": 526,
+            "to": 528
+          },
+          {
+            "t": 2357511.984926971,
+            "kind": "gap_in_content",
+            "from": 528,
+            "to": 530
+          },
+          {
+            "t": 2357517.484008994,
+            "kind": "gap_in_content",
+            "from": 654,
+            "to": 656
+          },
+          {
+            "t": 2357522.225941146,
+            "kind": "gap_in_content",
+            "from": 764,
+            "to": 766
+          },
+          {
+            "t": 2357522.225941146,
+            "kind": "gap_in_content",
+            "from": 766,
+            "to": 768
+          },
+          {
+            "t": 2357533.229231035,
+            "kind": "gap_in_content",
+            "from": 1020,
+            "to": 1022
+          },
+          {
+            "t": 2357548.995210259,
+            "kind": "gap_in_content",
+            "from": 1388,
+            "to": 1390
+          },
+          {
+            "t": 2357548.995210259,
+            "kind": "gap_in_content",
+            "from": 1390,
+            "to": 1392
+          },
+          {
+            "t": 2357548.995210259,
+            "kind": "gap_in_content",
+            "from": 1392,
+            "to": 1394
+          },
+          {
+            "t": 2357551.744289264,
+            "kind": "gap_in_content",
+            "from": 1453,
+            "to": 1455
+          },
+          {
+            "t": 2357551.744289264,
+            "kind": "gap_in_content",
+            "from": 1455,
+            "to": 1457
+          },
+          {
+            "t": 2357554.497248067,
+            "kind": "gap_in_content",
+            "from": 1516,
+            "to": 1518
+          },
+          {
+            "t": 2357554.497248067,
+            "kind": "gap_in_content",
+            "from": 1520,
+            "to": 1522
+          },
+          {
+            "t": 2357561.985406121,
+            "kind": "gap_in_content",
+            "from": 1692,
+            "to": 1694
+          },
+          {
+            "t": 2357561.985406121,
+            "kind": "gap_in_content",
+            "from": 1694,
+            "to": 1696
+          },
+          {
+            "t": 2357561.985406121,
+            "kind": "gap_in_content",
+            "from": 1696,
+            "to": 1698
+          },
+          {
+            "t": 2357569.49931688,
+            "kind": "gap_in_content",
+            "from": 1869,
+            "to": 1872
+          },
+          {
+            "t": 2357570.249116325,
+            "kind": "gap_in_content",
+            "from": 1885,
+            "to": 1887
+          },
+          {
+            "t": 2357570.249116325,
+            "kind": "gap_in_content",
+            "from": 1887,
+            "to": 1889
+          },
+          {
+            "t": 2357575.00267434,
+            "kind": "gap_in_content",
+            "from": 1997,
+            "to": 1999
+          },
+          {
+            "t": 2357575.752309354,
+            "kind": "gap_in_content",
+            "from": 2013,
+            "to": 2016
+          }
+        ]
+      },
+      "id3Len_dump": 3300,
+      "id3Len_fw": 3300,
+      "live_span": {
+        "stamps": 2004,
+        "seq_gaps": 30,
+        "file_first": 3300,
+        "file_end": 524516,
+        "seq_first": 89,
+        "seq_last": 2124,
+        "abs_first": 22784,
+        "abs_end": 544000
+      },
+      "live_bytes_file": 521216,
+      "live_s_at_48k": 86.87,
+      "realtime_bps": 6000,
+      "live_s_at_bps": 86.87,
+      "undDelta": 0,
+      "expect_undDelta": -228,
+      "field_undDelta": [
+        470616,
+        471640
+      ],
+      "hostAbs_after": 543772,
+      "absEnd_pre": 71936,
+      "absEnd_post": 546048,
+      "abs_cross_fw": 543772,
+      "abs_cross_pdsq": 544000,
+      "und_ok": true,
+      "identity_diff": -228,
+      "identity_ok": true,
+      "cross_in_window": true,
+      "complete_ok": true,
+      "timing_ok": false,
+      "pass": true
+    },
+    "eval": {
+      "want_ms_per_4k": 682.7,
+      "got_ms_per_4k_p50": 734.0,
+      "paced_like_L1": true,
+      "undDelta": 0,
+      "undDelta_ok": true,
+      "live_s": 86.87,
+      "hint": "Nach Vorsprung p50\u2248683ms @48k; undDelta=0; Lesedauer\u224887s"
+    },
+    "pass": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "phase_a_ok": true,
+  "phase_c_ok": true,
+  "p50_a_ms": 5.8242937084287405,
+  "p50_c_ms": 1020.8455878309906,
+  "d_skip_a": 8,
+  "d_retries_a": 0,
+  "d_retries_c": 3006,
+  "after_stream_on_armed": false,
+  "after_tip_armed": true,
+  "playing_before_tip": "",
+  "fw": "0.4.49-dev",
+  "note": "S7 gate: stream_on before head tip; !armed live skips BUSY; tip arms pacing"
+}

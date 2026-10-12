@@ -1,0 +1,23 @@
+AFTER-STREAM-ON {"armed": false, "skip": 0, "retries": 0, "stream_active": true, "streamSlot": 2, "ring": 11776}
+PHASE_A [19.5, 5.6, 5.3, 5.4, 5.4, 5.6, 5.4, 19.0] p50 5.5 d_skip 8 d_retries 0 armed False
+PHASE_A PASS
+tip head…
+AFTER-TIP {"armed": true, "playing": "fav2", "msPlugToPlayGuess": 161077, "skip": 10, "retries": 2654}
+PHASE_C [19.9, 19.1, 5.7, 5.6, 5.7, 5.3] p50 5.7 d_retries 0 armed True
+PHASE_C FAIL
+S7_PROBE FAIL
+{
+  "ok": false,
+  "phase_a_ok": true,
+  "phase_c_ok": false,
+  "p50_a_ms": 5.520609673112631,
+  "p50_c_ms": 5.701511632651091,
+  "d_skip_a": 8,
+  "d_retries_a": 0,
+  "d_retries_c": 0,
+  "after_stream_on_armed": false,
+  "after_tip_armed": true,
+  "fw": "0.4.49-dev",
+  "note": "startStream clears armed; mid-file !armed fast+skip; tip re-arms; paced"
+}
+left_stall_off

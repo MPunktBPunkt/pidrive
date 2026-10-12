@@ -1,0 +1,30 @@
+{
+  "stall": {
+    "enable": true,
+    "scope": 1,
+    "timer": 0,
+    "maxMs": 1000,
+    "chunkBytes": 4096,
+    "retryMs": 2,
+    "leadBytes": 0,
+    "underrunCursorHold": false,
+    "armed": true,
+    "skipNotArmed": 2,
+    "cmds": 127,
+    "retries": 39105,
+    "partials": 0,
+    "partialBytes": 0,
+    "timeouts": 1,
+    "waitMsMax": 1001,
+    "waitMsLast": 1001,
+    "waitMsSum": 77147,
+    "waitHist": [
+      11,
+      13,
+      102,
+      0,
+      0
+    ]
+  },
+  "streamSlot": 2
+}

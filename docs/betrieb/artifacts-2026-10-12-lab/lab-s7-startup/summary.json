@@ -1,0 +1,13 @@
+{
+  "esp": "http://192.168.178.88",
+  "seconds": 110.0,
+  "marks_s": {
+    "serial_seen": 11.465,
+    "first_read_fw": 11.465,
+    "play_guess_fw": 28.393,
+    "stall_armed": 28.393,
+    "playingUid": 28.393,
+    "retries_gt0": 28.393
+  },
+  "note": "scope=1 expects stall_armed only after play.guess; skipNotArmed should rise before that"
+}

@@ -1,0 +1,25 @@
+lab/stop {'ok': True, 'pumpUp': False}
+AFTER-STREAM-ON {"armed": false, "playing": "", "active": true, "ring": 4096, "skip": 84, "retries": 2654}
+PHASE_A PASS {'p50': 5.8, 'd_skip': 8, 'd_ret': 0, 'armed': False}
+playing before tip: ''
+tip fav2 head…
+AFTER-TIP {"armed": true, "playing": "fav2", "msPlugToPlayGuess": 250289, "ring": 4096, "retries": 13676, "skip": 94}
+PHASE_C PASS {'p50': 1020.8, 'd_ret': 3006, 'dts': [1020.9, 1034.8, 1020.7, 1021.0, 1020.8, 1020.4]}
+S7_PROBE PASS
+{
+  "ok": true,
+  "phase_a_ok": true,
+  "phase_c_ok": true,
+  "p50_a_ms": 5.8242937084287405,
+  "p50_c_ms": 1020.8455878309906,
+  "d_skip_a": 8,
+  "d_retries_a": 0,
+  "d_retries_c": 3006,
+  "after_stream_on_armed": false,
+  "after_tip_armed": true,
+  "playing_before_tip": "",
+  "fw": "0.4.49-dev",
+  "note": "S7 gate: stream_on before head tip; !armed live skips BUSY; tip arms pacing"
+}
+stall_off warn [Errno 104] Connection reset by peer
+done

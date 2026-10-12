@@ -1,0 +1,41 @@
+remount ok, waiting sg…
+POST-REMOUNT {"serial": "PD0427", "armed": true, "skip": 2, "retries": 39105, "streamSlot": 2, "playing": ""}
+lab/play {'ok': True, 'playingUid': 'fav2', 'playingName': 'Radio BOB!', 'known': True, 'pumpUp': False}
+BEFORE-PROBE {"armed": true, "skip": 2, "retries": 39105, "lba0": 17489, "mid_lba": 17745, "streamSlot": 2}
+PHASE_A dts [16.4, 5.2, 5.0, 5.0, 4.9, 5.0, 5.0, 15.7] p50 5.0
+PHASE_A stall {"armed": true, "skip": 2, "retries": 39105, "d_skip": 0, "d_retries": 0}
+PHASE_A FAIL
+tipping head for arm…
+AFTER-TIP {"armed": true, "playing": "fav2", "msPlugToPlayGuess": 11411400, "skip": 2, "retries": 41108}
+PHASE_C dts [1016.3, 1015.6, 1015.8, 1016.0, 1015.7, 1015.7, 1036.5, 1017.2] p50 1015.9
+PHASE_C stall {"armed": true, "skip": 2, "retries": 45109, "d_retries": 4001}
+PHASE_C PASS
+S7_PROBE FAIL
+{
+  "ok": false,
+  "phase_a_ok": false,
+  "phase_c_ok": true,
+  "p50_a_ms": 5.000872537493706,
+  "p50_c_ms": 1015.8645275514573,
+  "before": {
+    "armed": true,
+    "skip": 2,
+    "retries": 39105
+  },
+  "after_a": {
+    "armed": true,
+    "skip": 2,
+    "retries": 39105
+  },
+  "after_tip": {
+    "armed": true,
+    "msPlugToPlayGuess": 11411400
+  },
+  "after_c": {
+    "armed": true,
+    "skip": 2,
+    "retries": 45109
+  },
+  "note": "lab/play starts stream but does not arm; only MSC head play.guess arms"
+}
+left_stall_off
