@@ -154,8 +154,10 @@ E7-C NBT PASS (s6) → Busy-Pacing = Produktkern
 | Busy-Timer-Fix 0.4.48 | `esp32.pidrive` | ✅ Lab `.88` |
 | NBT E7 (C) | Feld | ✅ s6 — [`ERGEBNIS-S6`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md) |
 | Übergabe nächste KI | `pidrive` | ✅ [`UEBERGABE-S6`](../betrieb/artifacts-2026-10-12-feld/UEBERGABE-S6-NAECHSTE-KI-2026-10-12.md) |
+| S7-B `stallArmed` | `esp32.pidrive` **0.4.49-dev** | ✅ Lab `.88` geflasht; Feld-Go offen |
+| `lab_s7_startup_poll.py` + [`S7-D-LEITER-SPEC`](S7-D-LEITER-SPEC-2026-10-12.md) | `pidrive` | ✅ |
 
-**Nächster Fokus:** S7 (Usability) → D0–D3 Fixed Huge File (siehe Übergabe).
+**Nächster Fokus:** S7-Lab-Messung / D0 Regression → Feld-Go 0.4.49.
 
 **Freeze:** Flash/OTA Stall nur mit Go. Auto weiter Freeze. Q11 bleibt eigene Spur.
 

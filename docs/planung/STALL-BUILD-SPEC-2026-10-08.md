@@ -41,7 +41,7 @@ Regeln:
 | Feld | Typ | Default | Werte | Zweck |
 |---|---|---|---|---|
 | `stallEnable` | bool | false | | Hauptschalter |
-| `stallScope` | uint8 | 1 | 0 = aus, 1 = nur nach Kopf-Snap sequentiell (Replug-Pfad), 2 = alle Live-Reads | Tap-Pfad (R16, außer der Reihe) erst später |
+| `stallScope` | uint8 | 1 | 0 = aus, **1 = BUSY erst nach MSC `play.guess` from head** (`stallArmed`, S7-B ab 0.4.49), 2 = alle Live-Body-Reads | Scope 1 verhindert ~20 s BUSY vor Play (s6) |
 | `stallTimer` | uint8 | 0 | 0 = `cmd`, 1 = `cb` | Gesamt- oder Inaktivitäts-Limit testen (E7) |
 | `stallMaxMs` | uint16 | 500 | 0–15 000 | Höchstwartezeit, danach Fallback |
 | `stallChunkBytes` | uint16 | 4096 | 512 / 1024 / 2048 / 4096 | 4096 = keine Teilantworten |

@@ -91,8 +91,8 @@ Damit ist GPT-Formulierung „BUSY bremst FAT/Directory“ als **Code-Claim REJE
 
 ### P1 — S7 Startup-Usability (vor Größenleiter im Feld)
 
-4. **S7-A:** Stall an wie s6; nach OTG Zeitstempel: first FAT/DIR (Host), first file body, first `playingUid`, first audio; `playReject`‑Rate.  
-5. **S7-B:** Stall **nur** Body des aktiven Slots **nach** Head-Play; alles andere sofort (Silence/Meta). Ziel: Dateien &lt;~3 s nutzbar.  
+4. **S7-A:** Stall an; Timing mit `tools/lab_s7_startup_poll.py`.  
+5. **S7-B:** ✅ in **0.4.49-dev** — `stallScope=1` BUSY erst nach `play.guess` (`stallArmed`); siehe [`S7-D-LEITER-SPEC`](../../../planung/S7-D-LEITER-SPEC-2026-10-12.md). Lab-Flash + Feld-Go offen.  
 6. Dokumentiere 20 s als Usability-FACT, nicht als „NBT mountet 20 s“.
 
 ### P2 — D-Leiter (Lab zuerst, dann Feld Go)
