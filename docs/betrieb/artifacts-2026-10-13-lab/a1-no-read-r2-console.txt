@@ -1,0 +1,229 @@
+{
+  "selection_requested": "no-read",
+  "status_initial": {
+    "version": "0.4.49-dev",
+    "uptime": "16h 36min",
+    "play": "fav2",
+    "usbSerial": "PD0430",
+    "productRevision": null,
+    "bpbVolumeId": null,
+    "bpbLabel": null,
+    "rootLabel": null,
+    "armed": true,
+    "hostAbs": 63772,
+    "absEnd": 94464,
+    "absBase": 45312,
+    "streamBytes": 663552,
+    "underruns": 12316,
+    "liveBytes": 651236,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 3031,
+    "readOverflow": 746,
+    "readsEmit": 1341,
+    "xfer": {
+      "n512": 79,
+      "n2k": 0,
+      "n4k": 2952,
+      "n8kPlus": 0
+    },
+    "stall": {
+      "enable": true,
+      "scope": 1,
+      "timer": 0,
+      "maxMs": 1000,
+      "chunkBytes": 4096,
+      "retryMs": 2,
+      "leadBytes": 0,
+      "underrunCursorHold": false,
+      "armed": false,
+      "skipNotArmed": 110,
+      "cmds": 52,
+      "retries": 16682,
+      "partials": 0,
+      "partialBytes": 0,
+      "timeouts": 28,
+      "waitMsMax": 1001,
+      "waitMsLast": 1001,
+      "waitMsSum": 5303,
+      "waitHist": [
+        8,
+        15,
+        1,
+        0,
+        0
+      ]
+    },
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 10432512,
+        "maxSeq": 8294400,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 65536,
+        "maxSeq": 65536,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 598016,
+        "maxSeq": 163840,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  },
+  "slots_initial": {
+    "fav0": {
+      "lba0": 81,
+      "lba1": 16464,
+      "size": 8388608
+    },
+    "fav1": {
+      "lba0": 16465,
+      "lba1": 17488,
+      "size": 524288
+    },
+    "fav2": {
+      "lba0": 17489,
+      "lba1": 18512,
+      "size": 524288
+    },
+    "pump:page_next": {
+      "lba0": 18513,
+      "lba1": 18525,
+      "size": 6656
+    }
+  },
+  "media_initial": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 69129583,
+    "volumeIdHex": "0x041ED56F",
+    "bpbLabel": "PIDRIVE",
+    "fsType": "FAT16",
+    "rootLabel": "PD0430",
+    "bootSha256": "709d3ce551234c2df537f3528658a437737c1b0bf39f0e8dd9ee4c0436b93b9a",
+    "rootSha256": "d6193c7cce99f0bc0310985d8fac9be00abd25b56561cb2d318c85a529b9cdef"
+  },
+  "status_fav1_live": {
+    "version": "0.4.49-dev",
+    "uptime": "16h 36min",
+    "play": "fav2",
+    "usbSerial": "PD0430",
+    "productRevision": null,
+    "bpbVolumeId": null,
+    "bpbLabel": null,
+    "rootLabel": null,
+    "armed": true,
+    "hostAbs": 63260,
+    "absEnd": 51712,
+    "absBase": 2560,
+    "streamBytes": 729088,
+    "underruns": 11804,
+    "liveBytes": 717284,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 3056,
+    "readOverflow": 746,
+    "readsEmit": 1352,
+    "xfer": {
+      "n512": 79,
+      "n2k": 0,
+      "n4k": 2977,
+      "n8kPlus": 0
+    },
+    "stall": {
+      "enable": true,
+      "scope": 1,
+      "timer": 0,
+      "maxMs": 1000,
+      "chunkBytes": 4096,
+      "retryMs": 2,
+      "leadBytes": 0,
+      "underrunCursorHold": false,
+      "armed": false,
+      "skipNotArmed": 126,
+      "cmds": 52,
+      "retries": 16682,
+      "partials": 0,
+      "partialBytes": 0,
+      "timeouts": 28,
+      "waitMsMax": 1001,
+      "waitMsLast": 1001,
+      "waitMsSum": 5303,
+      "waitHist": [
+        8,
+        15,
+        1,
+        0,
+        0
+      ]
+    },
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 10432512,
+        "maxSeq": 8294400,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 131072,
+        "maxSeq": 65536,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 598016,
+        "maxSeq": 163840,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  },
+  "fav1_classes": {
+    "ID3": 1,
+    "LIVE": 13,
+    "SILENCE": 2
+  },
+  "prefetch": {
+    "bytes": 8294400,
+    "slot_size": 8388608,
+    "coverage_pct": 98.877,
+    "classes": {
+      "ID3": 1,
+      "SILENCE": 2024
+    }
+  },
+  "error": "URLError: <urlopen error timed out>",
+  "pass": false
+}
+OUT docs/betrieb/artifacts-2026-10-13-lab/a1-no-read-r2

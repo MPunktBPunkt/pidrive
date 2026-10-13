@@ -40,6 +40,7 @@ from nbt_hu_sim import (
     prep_lab,
     read_sg,
     snap_retry,
+    wait_esp,
 )
 
 SCHEMA = 1
@@ -419,6 +420,17 @@ def run_replay(args: argparse.Namespace) -> int:
         result["status_fav1_live"] = snap_retry(esp)
         result["fav1_classes"] = dict(hu.class_counts)
 
+        # End fav1 producer before the long non-live prefetch. Silence fill for
+        # non-live slots does not need TCP audio, and MSC bursts starve Wi-Fi.
+        stop.set()
+        producer.join(timeout=3)
+        result["producer_fav1"] = dict(producer.stats)
+        try:
+            pump.close()
+        except Exception:
+            pass
+        pump = None
+
         art.mark("fav0.non_live_prefetch.begin", bytes=args.prefetch_bytes)
         hu._armed = False
         hu.class_counts.clear()
@@ -432,16 +444,20 @@ def run_replay(args: argparse.Namespace) -> int:
             "coverage_pct": round(100.0 * prefetch_n / hu.slots["fav0"].size, 3),
             "classes": dict(hu.class_counts),
         }
-        result["status_after_prefetch"] = snap_retry(esp)
+        wait_esp(esp, 60.0)
+        result["status_after_prefetch"] = snap_retry(esp, retries=10, delay_s=2.0)
 
         selection_event_index = len(hu.events)
         hu.class_counts.clear()
         hu.ear = VirtualEar()
-        # Do not multiplex audio_start and producer frames from two Python
-        # threads onto the same TCP stream. End fav1 cleanly, then start fav0.
-        stop.set()
-        producer.join(timeout=3)
-        result["producer_fav1"] = dict(producer.stats)
+        wait_esp(esp, 60.0)
+        pump = PumpTcp(args.esp_ip)
+        pump.send_json({"t": "hello", "ver": 1})
+        time.sleep(0.35)
+        try:
+            pump.drain(0.35)
+        except Exception:
+            pass
         stop = threading.Event()
         art.mark("fav0.select", selection=args.selection)
         arm_uid(pump, "fav0", args.id3_bytes)

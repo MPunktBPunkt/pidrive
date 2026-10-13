@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "rule": "one dimension per run; never combine identity rotation and head-force",
+  "runnable_now": [
+    {
+      "dimension": "volume-id",
+      "command": "identity --dimension volume-id"
+    },
+    {
+      "dimension": "label",
+      "command": "identity --dimension label"
+    },
+    {
+      "dimension": "serial",
+      "command": "identity --dimension serial"
+    }
+  ],
+  "compile_or_geometry_variants": [
+    {
+      "dimension": "size",
+      "status": "build-variant-required",
+      "evidence": "msc.slotMap[].fileBytes + root directory file size"
+    },
+    {
+      "dimension": "path",
+      "status": "firmware/menu-layout-variant-required",
+      "evidence": "msc.slotMap[].path + directory sector"
+    },
+    {
+      "dimension": "startcluster",
+      "status": "geometry-build-variant-required",
+      "evidence": "msc.slotMap[].startCluster + FAT chain"
+    }
+  ]
+}
