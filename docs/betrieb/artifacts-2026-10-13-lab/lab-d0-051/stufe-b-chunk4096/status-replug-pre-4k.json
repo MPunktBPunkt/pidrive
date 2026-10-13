@@ -1,0 +1,86 @@
+{
+  "version": "0.4.51-dev",
+  "uptime": "21min 50s",
+  "play": "fav0",
+  "usbSerial": "PD0448",
+  "productRevision": "0448",
+  "bpbVolumeId": 1346634176,
+  "bpbLabel": "PD0448",
+  "rootLabel": "PD0448",
+  "armed": false,
+  "hostAbs": 0,
+  "absEnd": 71936,
+  "absBase": 22784,
+  "streamBytes": 327680,
+  "underruns": 0,
+  "liveBytes": 327680,
+  "ring_size": 49152,
+  "ring_cap": 49152,
+  "id3Len": 3300,
+  "readCount": 6656,
+  "readOverflow": 0,
+  "readsEmit": 6077,
+  "xfer": {
+    "n512": 48,
+    "n2k": 0,
+    "n4k": 6608,
+    "n8kPlus": 0
+  },
+  "stall": {
+    "enable": true,
+    "scope": 1,
+    "timer": 0,
+    "maxMs": 1000,
+    "chunkBytes": 4096,
+    "retryMs": 2,
+    "leadBytes": 0,
+    "underrunCursorHold": false,
+    "armed": false,
+    "skipNotArmed": 24,
+    "cmds": 56,
+    "retries": 3916,
+    "partials": 0,
+    "partialBytes": 0,
+    "timeouts": 0,
+    "waitMsMax": 824,
+    "waitMsLast": 482,
+    "waitMsSum": 7831,
+    "waitHist": [
+      44,
+      2,
+      10,
+      0,
+      0
+    ]
+  },
+  "slots": [
+    {
+      "uid": "fav0",
+      "bytes": 26202112,
+      "maxSeq": 8294400,
+      "lba0": 81,
+      "lba1": 16464
+    },
+    {
+      "uid": "fav1",
+      "bytes": 196608,
+      "maxSeq": 65536,
+      "lba0": 16465,
+      "lba1": 17488
+    },
+    {
+      "uid": "fav2",
+      "bytes": 24576,
+      "maxSeq": 8192,
+      "lba0": 17489,
+      "lba1": 18512
+    },
+    {
+      "uid": "pump:page_next",
+      "bytes": 0,
+      "maxSeq": 0,
+      "lba0": 18513,
+      "lba1": 18525
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "fw_target": "0.4.51-dev",
+  "uid": "fav0",
+  "target_bytes": 1048576,
+  "bps": 6000,
+  "settle_phase": "play",
+  "after_tip": {
+    "play": "fav0",
+    "armed": true,
+    "skip": 2
+  },
+  "paced": {
+    "n_cmds": 240,
+    "bytes": 1048576,
+    "p50_ms": 736.0,
+    "p95_ms": 763.0,
+    "max_ms": 785.0,
+    "want_ms": 682.7,
+    "paced_like_L1": true,
+    "classes": {
+      "ID3": 1,
+      "LIVE": 255
+    },
+    "stall_cmds": 254,
+    "stall_retries": 83836,
+    "waitMsMax": 766,
+    "underruns": 0,
+    "liveBytes": 1048576
+  },
+  "live_s_approx": 174.21,
+  "pass": true
+}

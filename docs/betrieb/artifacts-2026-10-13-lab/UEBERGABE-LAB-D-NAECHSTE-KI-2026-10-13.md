@@ -190,3 +190,18 @@ Wenn F0 scheitert (keine Dimension hilft) → Option B (Slot-Kette) und/oder Hea
 3. Mit **P1 Feld-Go 0.4.51** starten (nach Operator-Go), dann **P2 F0**.  
 4. Epistemik: Prefetch = FACT Lab / INFERENCE für Stummheit; Identity-P = UNKNOWN bis F0.  
 5. Stall bleibt eingefroren bis neues Go.
+
+---
+
+## 8. Lab-Nachzug (ohne Feld, 2026-10-13 nachmittag)
+
+Ohne NBT-Zeit zusätzlich gelaufen auf `.88` / `0.4.51-dev`:
+
+| Test | Ergebnis | Artefakt |
+|------|----------|----------|
+| **D0** Regression (fav2 512 KiB, Mode B) | **PASS** — p50≈736 ms, undDelta=0, ~86,9 s | [`lab-d0-051/`](lab-d0-051/) |
+| **D3-Partial** 1 MiB paced auf fav0 8 MiB | **PASS** — armed + p50≈736 ms, LIVE, und=0 | [`lab-d3-partial-051/`](lab-d3-partial-051/) |
+
+**Nicht** erledigt (braucht Build bzw. Feld): D1/D2-Geometrie-Flags, volles D3-EOF (~22 min), F0.
+
+Freeze danach: `stallEnable=false`.
