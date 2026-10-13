@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "name": "usb_cycle",
+  "usbAttached": false,
+  "otgPlugged": true,
+  "mediaPresented": true,
+  "streamActive": false,
+  "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+}

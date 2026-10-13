@@ -1,0 +1,115 @@
+{
+  "host_reads": [
+    {
+      "tag": "r4k",
+      "lba": 0,
+      "req": 4096,
+      "got": 4096,
+      "ms": 12.94,
+      "status": 0,
+      "resid": 0,
+      "duration_ms": 5
+    },
+    {
+      "tag": "r4k_b",
+      "lba": 8,
+      "req": 4096,
+      "got": 4096,
+      "ms": 5.76,
+      "status": 0,
+      "resid": 0,
+      "duration_ms": 6
+    },
+    {
+      "tag": "r16k",
+      "lba": 100,
+      "req": 16384,
+      "got": 16384,
+      "ms": 28.37,
+      "status": 0,
+      "resid": 0,
+      "duration_ms": 28
+    },
+    {
+      "tag": "r64k",
+      "lba": 200,
+      "req": 65536,
+      "got": 65536,
+      "ms": 78.48,
+      "status": 0,
+      "resid": 0,
+      "duration_ms": 78
+    },
+    {
+      "tag": "r512",
+      "lba": 300,
+      "req": 512,
+      "got": 512,
+      "ms": 1.69,
+      "status": 0,
+      "resid": 0,
+      "duration_ms": 2
+    }
+  ],
+  "match": [
+    {
+      "tag": "r4k",
+      "want_blocks": 8,
+      "got_blocks": 8,
+      "got_bytes": 4096,
+      "chunks": 1,
+      "dur_us": 3864,
+      "gap_us": 0,
+      "pass": true,
+      "n_after_mark": 1
+    },
+    {
+      "tag": "r4k_b",
+      "want_blocks": 8,
+      "got_blocks": 8,
+      "got_bytes": 4096,
+      "chunks": 1,
+      "dur_us": 3871,
+      "gap_us": 171734,
+      "pass": true,
+      "n_after_mark": 1
+    },
+    {
+      "tag": "r16k",
+      "want_blocks": 32,
+      "got_blocks": 32,
+      "got_bytes": 16384,
+      "chunks": 4,
+      "dur_us": 16540,
+      "gap_us": 175203,
+      "pass": true,
+      "n_after_mark": 1
+    },
+    {
+      "tag": "r64k",
+      "want_blocks": 128,
+      "got_blocks": 128,
+      "got_bytes": 65536,
+      "chunks": 16,
+      "dur_us": 77311,
+      "gap_us": 106914,
+      "pass": true,
+      "n_after_mark": 1
+    },
+    {
+      "tag": "r512",
+      "want_blocks": 1,
+      "got_blocks": 1,
+      "got_bytes": 512,
+      "chunks": 1,
+      "dur_us": 686,
+      "gap_us": 132232,
+      "pass": true,
+      "n_after_mark": 1
+    }
+  ],
+  "all_pass": true,
+  "cmdCapture": true,
+  "n_cmds": 12,
+  "n_reads": 5
+}

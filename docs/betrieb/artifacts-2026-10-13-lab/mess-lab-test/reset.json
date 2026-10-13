@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "mess": {
+    "enabled": true,
+    "usbAttached": true,
+    "usbDetachN": 2,
+    "usbAttachN": 2,
+    "cmds": 0,
+    "drops": 0,
+    "chunks": 0,
+    "ring": 0,
+    "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+    "build": "mess"
+  }
+}

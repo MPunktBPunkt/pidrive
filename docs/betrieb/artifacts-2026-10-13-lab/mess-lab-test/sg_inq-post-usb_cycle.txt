@@ -1,0 +1,1 @@
+--: line 23: sg_inq: command not found

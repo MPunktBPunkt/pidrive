@@ -1,0 +1,18 @@
+{
+  "version": "0.4.52-mess",
+  "labMode": true,
+  "otgUp": true,
+  "mess": {
+    "enabled": true,
+    "usbAttached": true,
+    "usbDetachN": 2,
+    "usbAttachN": 2,
+    "cmds": 46,
+    "drops": 0,
+    "chunks": 94,
+    "ring": 46,
+    "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+    "build": "mess"
+  },
+  "softUsbAttached": true
+}

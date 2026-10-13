@@ -1,0 +1,12 @@
+r4k {'tag': 'r4k', 'lba': 0, 'req': 4096, 'got': 4096, 'ms': 12.94, 'status': 0, 'resid': 0, 'duration_ms': 5}
+r4k_b {'tag': 'r4k_b', 'lba': 8, 'req': 4096, 'got': 4096, 'ms': 5.76, 'status': 0, 'resid': 0, 'duration_ms': 6}
+r16k {'tag': 'r16k', 'lba': 100, 'req': 16384, 'got': 16384, 'ms': 28.37, 'status': 0, 'resid': 0, 'duration_ms': 28}
+r64k {'tag': 'r64k', 'lba': 200, 'req': 65536, 'got': 65536, 'ms': 78.48, 'status': 0, 'resid': 0, 'duration_ms': 78}
+r512 {'tag': 'r512', 'lba': 300, 'req': 512, 'got': 512, 'ms': 1.69, 'status': 0, 'resid': 0, 'duration_ms': 2}
+MATCH r4k PASS {'tag': 'r4k', 'want_blocks': 8, 'got_blocks': 8, 'got_bytes': 4096, 'chunks': 1, 'dur_us': 3864, 'gap_us': 0, 'pass': True, 'n_after_mark': 1}
+MATCH r4k_b PASS {'tag': 'r4k_b', 'want_blocks': 8, 'got_blocks': 8, 'got_bytes': 4096, 'chunks': 1, 'dur_us': 3871, 'gap_us': 171734, 'pass': True, 'n_after_mark': 1}
+MATCH r16k PASS {'tag': 'r16k', 'want_blocks': 32, 'got_blocks': 32, 'got_bytes': 16384, 'chunks': 4, 'dur_us': 16540, 'gap_us': 175203, 'pass': True, 'n_after_mark': 1}
+MATCH r64k PASS {'tag': 'r64k', 'want_blocks': 128, 'got_blocks': 128, 'got_bytes': 65536, 'chunks': 16, 'dur_us': 77311, 'gap_us': 106914, 'pass': True, 'n_after_mark': 1}
+MATCH r512 PASS {'tag': 'r512', 'want_blocks': 1, 'got_blocks': 1, 'got_bytes': 512, 'chunks': 1, 'dur_us': 686, 'gap_us': 132232, 'pass': True, 'n_after_mark': 1}
+ALL_PASS True
+post_remount_read 8192 21.0ms

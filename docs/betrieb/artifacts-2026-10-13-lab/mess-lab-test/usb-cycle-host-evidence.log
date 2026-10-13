@@ -1,0 +1,11 @@
+mediaPresented True otg True
+reattach+cmds at 1.0s cmds=2 attachN=5
+Traceback (most recent call last):
+  File "<stdin>", line 36, in <module>
+OSError: [Errno 6] No such device or address: '/dev/sg0'
+sg0 ready after 0s
+post_cycle host 16k 16384 dur_ms 17
+reads 45 Counter({8: 29, 1: 10, 24: 1, 48: 1, 120: 1, 232: 1, 16: 1, 32: 1})
+capture None
+PASS_16K False
+usbDetachN 5

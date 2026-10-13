@@ -1,0 +1,20 @@
+cmds=1
+{
+  "cmdCapture": true,
+  "mess": {
+    "enabled": true,
+    "usbAttached": true,
+    "usbDetachN": 3,
+    "usbAttachN": 3,
+    "cmds": 1,
+    "drops": 0,
+    "chunks": 0,
+    "ring": 1,
+    "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+    "build": "mess"
+  },
+  "q10": {
+    "n": 0,
+    "error": "no READ10 cmds"
+  }
+}

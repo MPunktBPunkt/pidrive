@@ -1,0 +1,52 @@
+{
+  "raw": {
+    "ok": true,
+    "mess": {
+      "enabled": true,
+      "usbAttached": true,
+      "usbDetachN": 3,
+      "usbAttachN": 3,
+      "cmds": 1,
+      "drops": 0,
+      "chunks": 0,
+      "ring": 1,
+      "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+      "build": "mess"
+    },
+    "cmdCapture": true,
+    "cmds": [
+      {
+        "t0_us": 2921643660,
+        "dur_us": 0,
+        "gap_us": 0,
+        "op": 255,
+        "lba": 0,
+        "bytes": 0,
+        "blocks": 0,
+        "chunks": 0,
+        "busy": 0,
+        "st": 2,
+        "tag": "q10_start"
+      }
+    ]
+  },
+  "summary": {
+    "cmdCapture": true,
+    "mess": {
+      "enabled": true,
+      "usbAttached": true,
+      "usbDetachN": 3,
+      "usbAttachN": 3,
+      "cmds": 1,
+      "drops": 0,
+      "chunks": 0,
+      "ring": 1,
+      "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+      "build": "mess"
+    },
+    "q10": {
+      "n": 0,
+      "error": "no READ10 cmds"
+    }
+  }
+}

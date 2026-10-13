@@ -1,0 +1,2 @@
+NAME SIZE MODEL            TRAN
+sda   16M USB_MEDIA        usb
