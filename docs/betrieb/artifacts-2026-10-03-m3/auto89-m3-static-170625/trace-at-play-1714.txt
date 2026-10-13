@@ -1,3 +1,0 @@
-41172 /tmp/pidrive_msc_reads.jsonl
-  948 /tmp/pidrive_msc_diag.jsonl
-42120 total

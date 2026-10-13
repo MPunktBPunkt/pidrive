@@ -1,26 +1,22 @@
-# Artefakte Heimabend 2026-10-01 (Auto ESP `.89`, FW 0.4.31-dev)
+# Archiviert: `artifacts-2026-10-01-heimabend`
 
-**Ohr:** kurz Live-Ton + ID3-Cover Rock Antenne Bayern → nach ~6 s weg; erneute Wahl = dieselben ~6 s (HU-Cache).
+Dieses Hot-Verzeichnis wurde am 2026-10-13 nach
+[`docs/archiv/ARTIFACTS-POLICY.md`](../../archiv/ARTIFACTS-POLICY.md) ausgelagert.
 
-## Kernzahlen (Status nach Loop)
+| | Pfad |
+|--|--|
+| Berichte (kept) | [`docs/archiv/betrieb-artifacts/kept/artifacts-2026-10-01-heimabend`](../../archiv/betrieb-artifacts/kept/artifacts-2026-10-01-heimabend/) |
+| Rohdaten (tar.gz) | [`docs/archiv/betrieb-artifacts/roh/artifacts-2026-10-01-heimabend.tar.gz`](../../archiv/betrieb-artifacts/roh/artifacts-2026-10-01-heimabend.tar.gz) |
+| Index | [`docs/archiv/betrieb-artifacts/index.sqlite`](../../archiv/betrieb-artifacts/index.sqlite) |
 
-| Key | Wert |
-|-----|------|
-| `streamBytes` | ≈ 167 936 (Live-Consume) |
-| `underruns` | hoch (nach Stopp der Host-Reads) |
-| `msc.trace` | **leer** in allen Snapshots |
-| Serial | `PD0004`→`PD0005` (OTG) |
-| Bridge | zeitweise falsch auf `.88` (Cron `ensure_pump_bridge.sh`) — behoben → `.89` |
+SHA-256 Tar: `1492f5421e0961778b21be749fb2d9c799a63cd6e392b227370996d33f1124c3` · 19018 Bytes · 20 Dateien → 1 kept
 
-## Dateien
+## Kept (Auszug)
 
-- `esp89-*-*.json` — Status-Snapshots
-- `esp89-events-*.json` / `*-play-filter.txt` — Event-Ring
-- `pump_bridge_manual.log` / `bridge-*-filter.txt` — Bridge
-- `feld_esp_poll.txt` — 2 s-Poll (pump=false-Phase)
-- `pidrive_msc_diag-*.jsonl` — Diag
+- `README.md`
 
-## Debian-Sim
+Restore Rohdaten:
 
-Synthetischer Trace: `esp32.pidrive/tools/traces/feld_heimabend_6s_cache.replay.json`  
-(lab-safe 16 KiB; Feldgröße nur in `meta` / `field_live_bytes_approx`).
+```bash
+tar -xzf docs/archiv/betrieb-artifacts/roh/artifacts-2026-10-01-heimabend.tar.gz -C /tmp
+```

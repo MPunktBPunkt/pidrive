@@ -1,3 +1,0 @@
-ONLINE version 0.4.46-dev serial PD0085 plugged True
-pumpTcpUp True peer 192.168.178.105
-playing  

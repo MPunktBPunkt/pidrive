@@ -1,38 +1,31 @@
-# Artefakte M0 — Lab Messintegrität 2026-10-03
+# Archiviert: `artifacts-2026-10-03-m0`
 
-**ESP:** `.88` · Bridge Pi `.105` · Host Proxmox `.108`  
-**Tool:** `tools/m0_lab_mount_sweep.py`  
-**Auftrag:** [`../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
+Dieses Hot-Verzeichnis wurde am 2026-10-13 nach
+[`docs/archiv/ARTIFACTS-POLICY.md`](../../archiv/ARTIFACTS-POLICY.md) ausgelagert.
 
-## Ergebnis
+| | Pfad |
+|--|--|
+| Berichte (kept) | [`docs/archiv/betrieb-artifacts/kept/artifacts-2026-10-03-m0`](../../archiv/betrieb-artifacts/kept/artifacts-2026-10-03-m0/) |
+| Rohdaten (tar.gz) | [`docs/archiv/betrieb-artifacts/roh/artifacts-2026-10-03-m0.tar.gz`](../../archiv/betrieb-artifacts/roh/artifacts-2026-10-03-m0.tar.gz) |
+| Index | [`docs/archiv/betrieb-artifacts/index.sqlite`](../../archiv/betrieb-artifacts/index.sqlite) |
 
-| Pass | Ordner | FW | Verdict | ΔreadCount | Σ burst.n | emitΔ = lines |
-|------|--------|-----|---------|------------|-----------|---------------|
-| Lernlauf (falsche Absolut-Gleichung / leerer Export) | `lab88-140905/` | 0.4.37 | FAIL (lehrreich) | — | — | — |
-| **M0 Abnahme** | **`lab88-141005/`** | 0.4.37 | **PASS ×2** | 296 / 295 | 296 / 295 | ja |
-| **M0 Reconfirm L3** | **`lab88-l3-m0-1542/`** | **0.4.42** | **PASS ×2** | **457 / 457** | 457 / 457 | ja |
+SHA-256 Tar: `1bf22d3f2c832e6188456595398c6fc5ebe7540670f785523b2b0675ec07f2bd` · 46557 Bytes · 50 Dateien → 10 kept
 
-**Gleichung (normativ für Soft-Remount-Fenster):**
+## Kept (Auszug)
 
-`ΔreadCount = Σ(burst.n) + Δdrops`
+- `README.md`
+- `lab88-140905/report.json`
+- `lab88-140905/sweep-1/summary.json`
+- `lab88-140905/sweep-2/summary.json`
+- `lab88-141005/report.json`
+- `lab88-141005/sweep-1/summary.json`
+- `lab88-141005/sweep-2/summary.json`
+- `lab88-l3-m0-1542/report.json`
+- `lab88-l3-m0-1542/sweep-1/summary.json`
+- `lab88-l3-m0-1542/sweep-2/summary.json`
 
-Zusätzlich bestätigt: `ΔreadsEmit = Anzahl JSONL-Burst-Zeilen`.
+Restore Rohdaten:
 
-Streubreite: 296 vs 295 (0.4.37); unter L3/0.4.42 **457/457** (identisch).
-
-## Code-/Betriebs-Hinweise aus dem Lauf
-
-1. Soft-`remountMedia` **resettet `readCount` nicht** (Reset nur USB-Plug-Kante). Absolut-`readCount` ≠ Session-Fenster.  
-2. `readsEmit` resettet ebenfalls nicht beim Remount.  
-3. Ohne Bridge: `readsEmit=0` und leerer Export trotz Reads.  
-4. B7-A 0-Byte-JSONL = Exportpfad/Bridge-Problem, kein Beweis für Telemetrieverlust.  
-5. Stimulus hier: Host-`dd`-Nudge (Remount ggf. `skip` bei aktivem Stream) — Bilanz gilt trotzdem.
-
-## Abnahme-Checkliste
-
-- [x] Gleichung pro Fenster  
-- [x] Zwei Sweeps, Trace >0, diag >0  
-- [x] Session-Hinweis dokumentiert (Δ, nicht Absolut)  
-- [x] Leerer Export = Fail (Lernlauf)
-
-**M3 freigegeben** aus Messintegritäts-Sicht (Lab). Feld weiter Session-Δ + nicht-leeren Export verlangen.
+```bash
+tar -xzf docs/archiv/betrieb-artifacts/roh/artifacts-2026-10-03-m0.tar.gz -C /tmp
+```

@@ -1,52 +1,55 @@
-# Artefakte Lab / Review — 2026-10-04
+# Archiviert: `artifacts-2026-10-04-lab`
 
-**ESP Lab:** `192.168.178.88` · FW `0.4.44-dev` · Host-CT `DebianCursor` `192.168.178.187` (Proxmox VMID 100)  
-**Einstieg:** [`../MSC-AKTUELL.md`](../MSC-AKTUELL.md) · **Übergabe:** [`GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md`](GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md) · Plan Rev.5
+Dieses Hot-Verzeichnis wurde am 2026-10-13 nach
+[`docs/archiv/ARTIFACTS-POLICY.md`](../../archiv/ARTIFACTS-POLICY.md) ausgelagert.
 
-| Ordner / Datei | Inhalt |
-|----------------|--------|
-| `GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md` | **Aktuelle Übergabe** — Feldauftrag |
-| `GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md` | Detect-Log Lab |
-| `lab88-detect-cold-1536/` | `cold_body_burst` Log **PASS** (Cold loggt, Warm feuert Detect) |
-| `detect-cold-vs-warm-offline/` | PD0056/57 → `not_from_head` Offline |
-| `GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md` | Q3b Lab PASS |
-| `lab88-av-burst-2143/` | Burst-Sim: `hostAbs` läuft; LBA 761 außerhalb → Underrun |
-| `lab88-av-window-2124/` | Fenster-Grenzen: innen `live↑`, außen `underruns↑`; Sync allein schwach |
-| `lab88-av-mpeg-2035/` | AV A+B **PASS**: Ring voll + MPEG Sync an Host-LBA (`liveBytes>0`) |
-| `lab88-seed-survive-2029/` | Seed Survive 30 s + Hit **PASS** (`0.4.45`, bytesServed +32 KiB) |
-| `lab88-q3b-1515/` | Q3b Prefill Oracles A/B/C **PASS** (fromOff=348160 / LBA 761) |
-| `lab88-av-stream-1400/` | `bufferMs` tote Telemetrie; Ring füllt |
-| `GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md` | Konsolidierung Mistral/Claude/GPT |
-| `GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md` | P0-Deploy / Q3a PASS_WEAK |
-| `lab88-baseline-0818/` | Live-Baseline vor Device-Pass-through |
-| `lab88-q3a-0826/` | Q3a erster Lauf (`PASS_WEAK`) |
-| `lab88-q3a-0828/` | Q3a zweiter Lauf (`PASS_WEAK`) |
-| `lab88-p0-lock-0832/` | **P0** Menü-Lock Provokation **PASS** |
-| `lab88-p0-lock-deploy-105/` | **P0** Deploy auf Bridge-Pi `.105` **PASS** |
+| | Pfad |
+|--|--|
+| Berichte (kept) | [`docs/archiv/betrieb-artifacts/kept/artifacts-2026-10-04-lab`](../../archiv/betrieb-artifacts/kept/artifacts-2026-10-04-lab/) |
+| Rohdaten (tar.gz) | [`docs/archiv/betrieb-artifacts/roh/artifacts-2026-10-04-lab.tar.gz`](../../archiv/betrieb-artifacts/roh/artifacts-2026-10-04-lab.tar.gz) |
+| Index | [`docs/archiv/betrieb-artifacts/index.sqlite`](../../archiv/betrieb-artifacts/index.sqlite) |
 
-## Host-Zugang
+SHA-256 Tar: `9f54d8eff4fa36a5c3e2d37138eb863c6c2260a64cdc43d65e8bfadba01155f9` · 147292 Bytes · 145 Dateien → 34 kept
 
-Unprivileged LXC blockiert `mknod`. Dauerhaft auf Proxmox-Host:
+## Kept (Auszug)
+
+- `GESAMTBERICHT-DETECT-COLD-BODY-2026-10-04.md`
+- `GESAMTBERICHT-MSC-STRATEGIE-REVIEW-2026-10-04.md`
+- `GESAMTBERICHT-Q3B-PREFILL-2026-10-04.md`
+- `GESAMTBERICHT-UEBERGABE-FELD-BEREIT-2026-10-04.md`
+- `GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`
+- `LAB-NEXT-SEED-GATE-AV-2026-10-04.md`
+- `README.md`
+- `UEBERGABE-FELD-MORGEN-AV-C-PRIME-2026-10-04.md`
+- `detect-cold-vs-warm-offline/NOTES.md`
+- `detect-cold-vs-warm-offline/report.json`
+- `lab88-av-burst-2143/GESAMTBERICHT-AV-BURST-SIM.md`
+- `lab88-av-burst-2143/REPORT.json`
+- `lab88-av-mpeg-2035/GESAMTBERICHT-AV-MPEG-AT-HOST.md`
+- `lab88-av-mpeg-2035/KRITIK-MISTRAL-GPT-AV-AB.md`
+- `lab88-av-mpeg-2035/REPORT.json`
+- `lab88-av-stream-1400/NOTES.md`
+- `lab88-av-stream-1400/report.json`
+- `lab88-av-window-2124/GESAMTBERICHT-AV-WINDOW-BOUNDS.md`
+- `lab88-av-window-2124/REPORT.json`
+- `lab88-detect-cold-1533/NOTES.md`
+- `lab88-detect-cold-1533/report.json`
+- `lab88-detect-cold-1536/NOTES.md`
+- `lab88-detect-cold-1536/report.json`
+- `lab88-p0-lock-0832/NOTES.md`
+- `lab88-p0-lock-0832/report.json`
+- `lab88-p0-lock-deploy-105/NOTES.md`
+- `lab88-p0-lock-deploy-105/report.json`
+- `lab88-q3a-0826/report.json`
+- `lab88-q3a-0828/NOTES.md`
+- `lab88-q3a-0828/report.json`
+- `lab88-q3b-1515/NOTES.md`
+- `lab88-q3b-1515/report.json`
+- `lab88-seed-survive-2029/GESAMTBERICHT-SEED-SURVIVE.md`
+- `lab88-seed-survive-2029/REPORT.json`
+
+Restore Rohdaten:
 
 ```bash
-pct set 100 --dev0 path=/dev/sda,mode=0660,gid=6
-pct set 100 --dev1 path=/dev/sg0,mode=0660,gid=6
-# im CT: usermod -aG disk martin
+tar -xzf docs/archiv/betrieb-artifacts/roh/artifacts-2026-10-04-lab.tar.gz -C /tmp
 ```
-
-## Tools
-
-`tools/m3_lab_q3b_prefill.py` — Q3b Prefill Oracles A/B/C (ab LBA 761; len-check).  
-`tools/m3_lab_detect_cold_body.py` — Lab: `cold_body_burst` Log vs Warm-Head.  
-`tools/m3_lab_seed_survive.py` — Lab: Seed bleibt aktiv über Settle (+ optional Host-Hit).  
-`tools/m3_lab_av_mpeg_at_host.py` — Lab AV A/B: Pump-MP3 → Ring → Host-dd MPEG-Fingerprint.  
-`tools/m3_lab_av_window_bounds.py` — Lab: innen/außen Fenster + Underrun-Kontrast.  
-`tools/m3_lab_av_burst_sim.py` — Lab: sequentieller HU-artiger Burst + Prefill-761.  
-`tools/feld_av_correlate.py` — Feld/Lab: `hostAbs`/Reads vs. Live-Fenster.  
-`tools/feld_q3b_next_prepare.sh` — Feld-Prepare mit GO-Gate (kein toter Seed wie 1738).  
-`tools/feld_q3b_seed_watchdog.py` — Feld: Seed-Watchdog bis `bytesServed↑`.  
-`tools/m3_offline_detect_cold_vs_warm.py` — Offline PD0056/57 Detect-Regel.  
-`tools/m3_lab_q3a_freshness.py` — Q3a A/B overlay vs host hash.  
-`esp32.pidrive` SoftAP: `body_seed`/`body_read` (≥0.4.43); Event `cold_body_burst` (≥0.4.44).  
-Host-`dd`: Gruppe `disk` (`sg disk -c '…'`).  
-Weiterarbeit: [`LAB-NEXT-SEED-GATE-AV-2026-10-04.md`](LAB-NEXT-SEED-GATE-AV-2026-10-04.md).

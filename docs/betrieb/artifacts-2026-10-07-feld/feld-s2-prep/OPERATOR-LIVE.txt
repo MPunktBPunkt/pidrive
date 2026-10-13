@@ -1,3 +1,0 @@
-# Operator-Log Feld s2 — Uhrzeit + Aktion (Video-Uhr im Bild!)
-# Vor jeder HU-Bedienung: ./mark.sh "…"
-# t=HH:MM:SS  aktion
