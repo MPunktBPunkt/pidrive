@@ -1038,6 +1038,20 @@ def prep_lab(esp: str, esp_ip: str, pump: PumpTcp | None, *, remount: bool = Tru
         raise ConnectionError(f"prep_lab handshake failed: {last}")
 
     if remount:
+        # Soft remount is skipped while stream.active (msc.remount_skip).
+        # Without a real remount, indexSettled stays false and play.guess
+        # keeps rejecting with plug_window — S7 never arms.
+        try:
+            http_json(f"{esp}/api/lab/stop", method="POST", body=b"{}")
+        except Exception:
+            pass
+        try:
+            pump_out.send_json({"t": "audio_stop"})
+            time.sleep(0.15)
+            pump_out.drain(0.15)
+        except Exception:
+            pass
+        time.sleep(0.35)
         try:
             http_json(f"{esp}/api/lab/remount", method="POST", body=b"{}")
         except Exception:

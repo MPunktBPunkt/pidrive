@@ -1,0 +1,466 @@
+{
+  "selection_requested": "mid",
+  "index_settle": {
+    "phase": "play",
+    "waited_s": 8.187
+  },
+  "status_initial": {
+    "version": "0.4.51-dev",
+    "uptime": "5min 42s",
+    "play": "fav2",
+    "usbSerial": "PD0446",
+    "productRevision": "0446",
+    "bpbVolumeId": 1346634174,
+    "bpbLabel": "PD0446",
+    "rootLabel": "PD0446",
+    "armed": false,
+    "hostAbs": 0,
+    "absEnd": 75008,
+    "absBase": 25856,
+    "streamBytes": 196608,
+    "underruns": 0,
+    "liveBytes": 196608,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 4219,
+    "readOverflow": 0,
+    "readsEmit": 3862,
+    "xfer": {
+      "n512": 13,
+      "n2k": 0,
+      "n4k": 4206,
+      "n8kPlus": 0
+    },
+    "stall": {
+      "enable": true,
+      "scope": 1,
+      "timer": 0,
+      "maxMs": 1000,
+      "chunkBytes": 4096,
+      "retryMs": 2,
+      "leadBytes": 0,
+      "underrunCursorHold": false,
+      "armed": true,
+      "skipNotArmed": 6,
+      "cmds": 42,
+      "retries": 2968,
+      "partials": 0,
+      "partialBytes": 0,
+      "timeouts": 0,
+      "waitMsMax": 824,
+      "waitMsLast": 500,
+      "waitMsSum": 5935,
+      "waitHist": [
+        33,
+        1,
+        8,
+        0,
+        0
+      ]
+    },
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 16891904,
+        "maxSeq": 8294400,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 131072,
+        "maxSeq": 65536,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 24576,
+        "maxSeq": 8192,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  },
+  "slots_initial": {
+    "fav0": {
+      "lba0": 81,
+      "lba1": 16464,
+      "size": 8388608
+    },
+    "fav1": {
+      "lba0": 16465,
+      "lba1": 17488,
+      "size": 524288
+    },
+    "fav2": {
+      "lba0": 17489,
+      "lba1": 18512,
+      "size": 524288
+    },
+    "pump:page_next": {
+      "lba0": 18513,
+      "lba1": 18525,
+      "size": 6656
+    }
+  },
+  "media_initial": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634174,
+    "volumeIdHex": "0x504401BE",
+    "bpbLabel": "PD0446",
+    "fsType": "FAT16",
+    "rootLabel": "PD0446",
+    "bootSha256": "c98350ab7dcbf5f360eeb45c32b4a5ab53a418787afca05c6a56e031b48b4321",
+    "rootSha256": "3efc8be65d0fed53016540062f2a19d5021b4dc7d0787adb28c5039abfa8e86a"
+  },
+  "status_fav1_live": {
+    "version": "0.4.51-dev",
+    "uptime": "5min 53s",
+    "play": "fav1",
+    "usbSerial": "PD0446",
+    "productRevision": "0446",
+    "bpbVolumeId": 1346634174,
+    "bpbLabel": "PD0446",
+    "rootLabel": "PD0446",
+    "armed": true,
+    "hostAbs": 63004,
+    "absEnd": 63488,
+    "absBase": 14336,
+    "streamBytes": 262144,
+    "underruns": 0,
+    "liveBytes": 262144,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 4244,
+    "readOverflow": 0,
+    "readsEmit": 3884,
+    "xfer": {
+      "n512": 13,
+      "n2k": 0,
+      "n4k": 4231,
+      "n8kPlus": 0
+    },
+    "stall": {
+      "enable": true,
+      "scope": 1,
+      "timer": 0,
+      "maxMs": 1000,
+      "chunkBytes": 4096,
+      "retryMs": 2,
+      "leadBytes": 0,
+      "underrunCursorHold": false,
+      "armed": true,
+      "skipNotArmed": 8,
+      "cmds": 56,
+      "retries": 3916,
+      "partials": 0,
+      "partialBytes": 0,
+      "timeouts": 0,
+      "waitMsMax": 824,
+      "waitMsLast": 482,
+      "waitMsSum": 7831,
+      "waitHist": [
+        44,
+        2,
+        10,
+        0,
+        0
+      ]
+    },
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 16891904,
+        "maxSeq": 8294400,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 196608,
+        "maxSeq": 65536,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 24576,
+        "maxSeq": 8192,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  },
+  "fav1_classes": {
+    "ID3": 2,
+    "SILENCE": 1,
+    "LIVE": 15
+  },
+  "producer_fav1": {
+    "bytes": 63488,
+    "seq": 248,
+    "err": null
+  },
+  "prefetch": {
+    "bytes": 8294400,
+    "slot_size": 8388608,
+    "coverage_pct": 98.877,
+    "classes": {
+      "ID3": 1,
+      "SILENCE": 2024
+    }
+  },
+  "status_after_prefetch": {
+    "version": "0.4.51-dev",
+    "uptime": "6min 4s",
+    "play": "fav0",
+    "usbSerial": "PD0446",
+    "productRevision": "0446",
+    "bpbVolumeId": 1346634174,
+    "bpbLabel": "PD0446",
+    "rootLabel": "PD0446",
+    "armed": true,
+    "hostAbs": 63004,
+    "absEnd": 63488,
+    "absBase": 14336,
+    "streamBytes": 262144,
+    "underruns": 0,
+    "liveBytes": 262144,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 6269,
+    "readOverflow": 0,
+    "readsEmit": 5782,
+    "xfer": {
+      "n512": 13,
+      "n2k": 0,
+      "n4k": 6256,
+      "n8kPlus": 0
+    },
+    "stall": {
+      "enable": true,
+      "scope": 1,
+      "timer": 0,
+      "maxMs": 1000,
+      "chunkBytes": 4096,
+      "retryMs": 2,
+      "leadBytes": 0,
+      "underrunCursorHold": false,
+      "armed": true,
+      "skipNotArmed": 8,
+      "cmds": 56,
+      "retries": 3916,
+      "partials": 0,
+      "partialBytes": 0,
+      "timeouts": 0,
+      "waitMsMax": 824,
+      "waitMsLast": 482,
+      "waitMsSum": 7831,
+      "waitHist": [
+        44,
+        2,
+        10,
+        0,
+        0
+      ]
+    },
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 25186304,
+        "maxSeq": 8294400,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 196608,
+        "maxSeq": 65536,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 24576,
+        "maxSeq": 8192,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  },
+  "selection": {
+    "class": "mid",
+    "reads": 16,
+    "bytes": 65536,
+    "first_off": 1048576,
+    "min_off": 1048576,
+    "max_off": 1110016,
+    "classes": {
+      "LIVE": 13,
+      "SILENCE": 3
+    },
+    "stall_armed": false,
+    "playing_uid": "fav0",
+    "live_seen": true,
+    "matches_requested": true,
+    "gate_green": false
+  },
+  "status_final": {
+    "version": "0.4.51-dev",
+    "uptime": "6min 15s",
+    "play": "fav0",
+    "usbSerial": "PD0446",
+    "productRevision": "0446",
+    "bpbVolumeId": 1346634174,
+    "bpbLabel": "PD0446",
+    "rootLabel": "PD0446",
+    "armed": true,
+    "hostAbs": 66560,
+    "absEnd": 57600,
+    "absBase": 8448,
+    "streamBytes": 327680,
+    "underruns": 15104,
+    "liveBytes": 312576,
+    "ring_size": 49152,
+    "ring_cap": 49152,
+    "id3Len": 3300,
+    "readCount": 6285,
+    "readOverflow": 0,
+    "readsEmit": 5791,
+    "xfer": {
+      "n512": 13,
+      "n2k": 0,
+      "n4k": 6272,
+      "n8kPlus": 0
+    },
+    "stall": {
+      "enable": true,
+      "scope": 1,
+      "timer": 0,
+      "maxMs": 1000,
+      "chunkBytes": 4096,
+      "retryMs": 2,
+      "leadBytes": 0,
+      "underrunCursorHold": false,
+      "armed": false,
+      "skipNotArmed": 24,
+      "cmds": 56,
+      "retries": 3916,
+      "partials": 0,
+      "partialBytes": 0,
+      "timeouts": 0,
+      "waitMsMax": 824,
+      "waitMsLast": 482,
+      "waitMsSum": 7831,
+      "waitHist": [
+        44,
+        2,
+        10,
+        0,
+        0
+      ]
+    },
+    "slots": [
+      {
+        "uid": "fav0",
+        "bytes": 25251840,
+        "maxSeq": 8294400,
+        "lba0": 81,
+        "lba1": 16464
+      },
+      {
+        "uid": "fav1",
+        "bytes": 196608,
+        "maxSeq": 65536,
+        "lba0": 16465,
+        "lba1": 17488
+      },
+      {
+        "uid": "fav2",
+        "bytes": 24576,
+        "maxSeq": 8192,
+        "lba0": 17489,
+        "lba1": 18512
+      },
+      {
+        "uid": "pump:page_next",
+        "bytes": 0,
+        "maxSeq": 0,
+        "lba0": 18513,
+        "lba1": 18525
+      }
+    ]
+  },
+  "timing": {
+    "period_ms": 5.1,
+    "gap_ms": null,
+    "sg_duration_ms": {
+      "p5": 4.0,
+      "p50": 4.0,
+      "p95": 5.0,
+      "p99": 15.0,
+      "min": 4.0,
+      "max": 767.0,
+      "n": 2059
+    },
+    "wall_ms": {
+      "p5": 4.121,
+      "p50": 4.241,
+      "p95": 4.671,
+      "p99": 15.094,
+      "min": 4.058,
+      "max": 767.057,
+      "n": 2059
+    },
+    "start_to_start_ms": {
+      "p5": 4.818,
+      "p50": 5.1,
+      "p95": 5.74,
+      "p99": 15.807,
+      "min": 4.645,
+      "max": 17167.855,
+      "n": 2058
+    },
+    "late_reads": 38
+  },
+  "producer_fav0": {
+    "bytes": 57856,
+    "seq": 226,
+    "err": null
+  },
+  "poll": {
+    "samples": 100,
+    "errors": 0
+  },
+  "pass": true
+}

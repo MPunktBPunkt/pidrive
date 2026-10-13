@@ -1,9 +1,9 @@
 # Lab D-Startgate / HU-A1 · 2026-10-13
 
 **Host:** DebianCursor `192.168.178.187`  
-**ESP Lab:** `.88` · FW **`0.4.50-dev`** (ConfigStore-`fatVolumeId` + Analyse-OTA; gebaut aus `esp32.pidrive` L3)  
+**ESP Lab:** `.88` · FW **`0.4.51-dev`**  
 **OTG:** `/dev/sda` + `/dev/sg0` · UART: **nicht angeschlossen**  
-**Repos:** `pidrive` + lokaler Fix in `tools/lab_d_campaign.py` (Producer vor Prefetch stoppen, `wait_esp`/Pump-Reconnect)
+**Repos:** `pidrive` (`lab_d_campaign.py` / `nbt_hu_sim.prep_lab`) + `esp32.pidrive` soft-remount Phase-Fix
 
 ## Überblick Analyse (Eingang)
 
@@ -13,19 +13,26 @@
 | Audits 2026-10-13 (technology-audit) | NBT-Index liefert keinen Live-Cache-Beweis; HU-A1 zuerst |
 | Runbook `LAB-D-STARTGATE-RUNBOOK.md` | Lab = Mechanik; NBT entscheidet Resume/Cache |
 
+## Firmware-Fixes heute
+
+| Version | Inhalt |
+|---------|--------|
+| **0.4.50** | `ConfigStore.fatVolumeId` (Upload `35fa1b1` war unvollständig); BPB-ID/Label in Status |
+| **0.4.51** | Soft-Remount setzt `phase=Idle` + cleared stall/playGuess — sonst bleibt `phase=Play`, Quiet feuert nie, `indexSettled` bleibt false → dauernd `play.reject plug_window` |
+
+Lab-Tooling: Stream stoppen vor Remount; Prefetch ohne TCP-Producer; vor Head-Tip `lab/stop`; Quiet-Settle nach Remount.
+
 ## Preflight
 
-| Check | 0.4.49 | 0.4.50 |
-|-------|--------|--------|
-| SG READ(10) + OTG stabil + USB-Serial gleich | ok | ok |
-| `no_reboot_observed` (`uptimeMs`) | **FAIL** | **PASS** (`preflight-050/`) |
-| UART-Logger | skipped | skipped — kein `/dev/ttyACM*` |
+| Check | 0.4.49 | 0.4.50+ |
+|-------|--------|---------|
+| SG + OTG + Serial stabil | ok | ok |
+| `no_reboot_observed` (`uptimeMs`) | FAIL | **PASS** (`preflight-050/`) |
+| UART | skipped | skipped |
 
-Artefakte: `preflight/` (alt), `preflight-050/`
+## HU-A1 Replay
 
-## HU-A1 Replay (r3, getrennt)
-
-Gemeinsames Prefetch-Muster in **allen** Läufen:
+Gemeinsames Prefetch-Muster:
 
 | Prefetch fav0 | Wert |
 |---------------|------|
@@ -33,48 +40,34 @@ Gemeinsames Prefetch-Muster in **allen** Läufen:
 | Coverage | **98,877 %** (S6: 98,88 %) |
 | Klassen | **ID3:1 · SILENCE:2024** |
 
-| Selection | PASS | observed | gate_green | Bemerkung |
-|-----------|------|----------|------------|-----------|
-| `no-read` | ✅ | no-read | false | keine Post-Select-Reads; erwartet |
-| `mid` | ✅ | mid @1 MiB | false | LIVE nach fav0-Arm (Overlay) |
-| `head` | ✅ | head | **false** | LIVE ja, aber **`stall.armed=false`** |
+### Auf 0.4.51 (kanonisch)
 
-Artefakte: `a1-no-read-r3/`, `a1-mid-r3/`, `a1-head-r3/`  
-(r1/r2: Prefetch schon belegt, Selection-Phase an TCP/HTTP-Timeouts gescheitert → Tool gehärtet)
+| Selection | PASS | gate_green | stall_armed | Artefakt |
+|-----------|------|------------|-------------|----------|
+| `no-read` | ✅ | false | false | `a1-no-read-051/` |
+| `mid` | ✅ | false | false | `a1-mid-051/` |
+| `head` | ✅ | **true** | **true** | `a1-head-051/` |
 
-### gate_green
+Head-Events: `play.guess fav0` → `msc.stall_armed fav0`; cold_body `set=1`.
 
-Runbook: Lab-`gate_green` = Head-Read ∧ S7 armed ∧ LIVE.  
-Hier: Head+LIVE ✅, S7-B armed ❌ (`skipNotArmed` steigt, `stall.cmds` bleibt alt).  
-`playing_uid` im Final-Snap blieb `fav2` trotz `audio_start fav0` — Play-Guess/S7-Pfad greift in diesem Sim-Ablauf nicht wie am NBT. **Kein NBT-Resume-Beweis; kein D1-Go.**
+Frühere Läufe (`a1-*-r3`, `a1-*-050*`): Prefetch/Klassen ok, aber ohne 0.4.51 kein Lab-`gate_green` (Remount-Phase-Deadlock).
 
-## Media-/Identity
+## Identity-Smoke (0.4.50, vor 0.4.51)
 
-### Vorher (0.4.49)
+| Dimension | PASS | nur deklarierte Drift |
+|-----------|------|------------------------|
+| `volume-id` | ✅ | ✅ |
+| `label` | ✅ | ✅ (BPB+Root gemeinsam) |
+| `serial` | ✅ | ✅ |
 
-- BPB Volume-ID fest `0x041ED56F`, BPB-Label **`PIDRIVE`**
-- Root-Label **`PD0xxx`** → Identity unvollständig
-
-### Fix + OTA 0.4.50
-
-- `ConfigStore.fatVolumeId` ergänzt (Upload `35fa1b1` war ohne ConfigStore-Feld unvollständig)
-- L3-Build `pidrive-s3-l3` → `dist/pidrive.0.4.50-dev.ota.esp32s3.bin` → OTA `.88`
-- Status: `uptimeMs` / `resetReason` / `bpbVolumeId` / `bpbLabel`=`rootLabel` / `transportEpoch`
-
-| Identity-Smoke | PASS | Drift nur deklarierte Dimension | Device↔Status |
-|----------------|------|----------------------------------|---------------|
-| `volume-id` | ✅ | ✅ (`bpbVolumeId` 0x…B4→B5) | ✅ |
-| `label` | ✅ | ✅ (BPB+Root gemeinsam `PD0436X`) | ✅ |
-
-Artefakte: `identity-volume-id/`, `identity-label/`, `identity-plan/`
+Artefakte: `identity-volume-id/`, `identity-label/`, `identity-serial/`
 
 ## Freeze
 
-Nach Kampagne und Identity-Smoke: `stallEnable=false`.
+`stallEnable=false` auf `.88`.
 
 ## Nächste Schritte
 
-1. UART physisch verbinden → `lab_uart_reset_log.py`.
-2. Head-Pfad so fahren, dass Play-Guess/S7 armed messbar wird → Lab-`gate_green`.
-3. Identity `serial` + NBT-F0 nach reproduzierbarem Startmechanismus.
-4. Commits: `esp32.pidrive` 0.4.50 + `pidrive` Lab-Artefakte/`lab_d_campaign.py`-Härtung (noch lokal).
+1. UART physisch → `lab_uart_reset_log.py`
+2. Kurzes NBT-F0: Cache-/Resume-Wirkung der Identity-Dimensionen
+3. Danach D1–D3 Fixed-Huge-Leiter

@@ -400,6 +400,24 @@ def run_replay(args: argparse.Namespace) -> int:
         pump = prep_lab(esp, args.esp_ip, None, remount=not args.no_remount)
         hu.open()
         hu.refresh_slots(esp)
+        # Touch a short head then wait for msc.quiet so indexSettled becomes true.
+        # evaluatePlay rejects with plug_window until that happens (S7 gate).
+        try:
+            hu.read_segment("fav2", 0, min(8192, hu.slots["fav2"].size))
+        except Exception:
+            pass
+        art.mark("index.settle.wait")
+        settle_t0 = time.time()
+        settled_phase = None
+        while time.time() - settle_t0 < 8.0:
+            settled_phase = (http_json(f"{esp}/api/status").get("msc") or {}).get("phase")
+            if settled_phase == "quiet":
+                break
+            time.sleep(0.5)
+        result["index_settle"] = {
+            "phase": settled_phase,
+            "waited_s": round(time.time() - settle_t0, 3),
+        }
         result["status_initial"] = snap_retry(esp)
         result["slots_initial"] = {
             uid: {"lba0": slot.lba0, "lba1": slot.lba1, "size": slot.size}
@@ -467,7 +485,14 @@ def run_replay(args: argparse.Namespace) -> int:
         producer.start()
         hu.mark_armed()
         time.sleep(args.select_prefill_s)
+        # S7-B: clear playingUid before the Head-Tip so play.guess can arm stall.
+        # Stream overlay stays; already_playing would skip re-arm.
         if args.selection == "head":
+            try:
+                http_json(f"{esp}/api/lab/stop", "POST", {})
+            except Exception:
+                pass
+            time.sleep(0.2)
             hu.read_segment("fav0", 0, min(args.select_read_bytes, hu.slots["fav0"].size))
         elif args.selection == "mid":
             off = min(args.mid_offset, max(0, hu.slots["fav0"].size - args.select_read_bytes))

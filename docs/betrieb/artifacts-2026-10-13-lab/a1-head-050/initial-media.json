@@ -1,0 +1,15 @@
+{
+  "bytesPerSector": 512,
+  "reservedSectors": 1,
+  "fatCount": 2,
+  "rootEntries": 512,
+  "sectorsPerFat": 16,
+  "rootLba": 33,
+  "volumeId": 1346634169,
+  "volumeIdHex": "0x504401B9",
+  "bpbLabel": "PD0441",
+  "fsType": "FAT16",
+  "rootLabel": "PD0441",
+  "bootSha256": "ecaca9dbc1922413df797a1ef2db59f44d1d044f25e437ae4996aebf4217a848",
+  "rootSha256": "24d0a2d0b2a655d93a496fbf2fb8c1beeddbff05b241845a1755fbfb376082eb"
+}

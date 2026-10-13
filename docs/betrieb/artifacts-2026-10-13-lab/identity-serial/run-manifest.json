@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "run_id": "identity-20261013T150806",
+  "command": "identity",
+  "started_utc": "2026-10-13T13:08:06.871880+00:00",
+  "host": {
+    "node": "DebianCursor",
+    "platform": "Linux-7.0.14-14-pve-x86_64-with-glibc2.41",
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]"
+  },
+  "git_head": "f13b7a9a3fc148c1e5e11f4520f94a88cb4b1b75",
+  "argv": [
+    "tools/lab_d_campaign.py",
+    "identity",
+    "--dimension",
+    "serial",
+    "--device",
+    "/dev/sda",
+    "--esp",
+    "http://192.168.178.88",
+    "--out",
+    "docs/betrieb/artifacts-2026-10-13-lab/identity-serial"
+  ],
+  "inputs": {
+    "self_test": false,
+    "command": "identity",
+    "esp": "http://192.168.178.88",
+    "out": "docs/betrieb/artifacts-2026-10-13-lab/identity-serial",
+    "dimension": "serial",
+    "device": "/dev/sda",
+    "volume_id": null,
+    "label": "",
+    "settle_s": 2.0
+  },
+  "finished_utc": "2026-10-13T13:08:09.122391+00:00",
+  "duration_s": 2.251,
+  "result": {
+    "dimension": "serial",
+    "before": {
+      "usbSerial": "PD0436",
+      "productRevision": "0436",
+      "bpbVolumeId": 1346634165,
+      "bpbLabel": "PD0436X",
+      "rootLabel": "PD0436X"
+    },
+    "after": {
+      "usbSerial": "PD0437",
+      "productRevision": "0437",
+      "bpbVolumeId": 1346634165,
+      "bpbLabel": "PD0436X",
+      "rootLabel": "PD0436X"
+    },
+    "changed_fields": [
+      "productRevision",
+      "usbSerial"
+    ],
+    "expected_changed_fields": [
+      "productRevision",
+      "usbSerial"
+    ],
+    "media_before": {
+      "bytesPerSector": 512,
+      "reservedSectors": 1,
+      "fatCount": 2,
+      "rootEntries": 512,
+      "sectorsPerFat": 16,
+      "rootLba": 33,
+      "volumeId": 1346634165,
+      "volumeIdHex": "0x504401B5",
+      "bpbLabel": "PD0436X",
+      "fsType": "FAT16",
+      "rootLabel": "PD0436X",
+      "bootSha256": "25dea9f3833cd7dd15ae0df05ce1734ce595fe6663713581531c742ff4c8738c",
+      "rootSha256": "3d01b31dddccbcbffb5f310807e7a8374c99374f4ea228be0ca3aa092b556e2b"
+    },
+    "media_after": {
+      "bytesPerSector": 512,
+      "reservedSectors": 1,
+      "fatCount": 2,
+      "rootEntries": 512,
+      "sectorsPerFat": 16,
+      "rootLba": 33,
+      "volumeId": 1346634165,
+      "volumeIdHex": "0x504401B5",
+      "bpbLabel": "PD0436X",
+      "fsType": "FAT16",
+      "rootLabel": "PD0436X",
+      "bootSha256": "25dea9f3833cd7dd15ae0df05ce1734ce595fe6663713581531c742ff4c8738c",
+      "rootSha256": "3d01b31dddccbcbffb5f310807e7a8374c99374f4ea228be0ca3aa092b556e2b"
+    },
+    "one_dimension_only": true,
+    "device_matches_status": true,
+    "pass": true
+  }
+}

@@ -1,0 +1,6 @@
+{"schema":1,"run_id":"replay-20261013T152509","wall":"2026-10-13T13:25:09.502223+00:00","mono_s":0.004524,"event":"prepare.begin"}
+{"schema":1,"run_id":"replay-20261013T152509","wall":"2026-10-13T13:25:16.450907+00:00","mono_s":6.953218,"event":"index.settle.wait"}
+{"schema":1,"run_id":"replay-20261013T152509","wall":"2026-10-13T13:25:25.114430+00:00","mono_s":15.616741,"event":"fav1.live.begin"}
+{"schema":1,"run_id":"replay-20261013T152509","wall":"2026-10-13T13:25:34.191046+00:00","mono_s":24.693372,"event":"fav0.non_live_prefetch.begin","bytes":8294400}
+{"schema":1,"run_id":"replay-20261013T152509","wall":"2026-10-13T13:25:45.632689+00:00","mono_s":36.13501,"event":"fav0.select","selection":"head"}
+{"schema":1,"run_id":"replay-20261013T152509","wall":"2026-10-13T13:25:55.961909+00:00","mono_s":46.464227,"event":"replay.end","gate_green":false,"observed":"head"}
