@@ -155,12 +155,21 @@ def read_sg(sg_fd: int, lba: int, nbytes: int, timeout_ms: int = 5000) -> tuple[
     hdr.sbp = ctypes.addressof(sb_arr)
     hdr.timeout = timeout_ms
     fcntl.ioctl(sg_fd, SG_IO, hdr)
+    sense = bytes(sb_arr[: hdr.sb_len_wr])
     meta = {
+        # Host-side BOT/SCSI evidence. These fields describe the actual SG_IO
+        # command, not TinyUSB callback boundaries on the device.
+        "cdb_hex": cmd.hex(),
+        "opcode": cmd[0],
+        "cdb_lba": lba,
+        "cdb_blocks": nsec,
+        "dxfer_len": nbytes,
         "status": hdr.status,
         "host_status": hdr.host_status,
         "driver_status": hdr.driver_status,
         "duration_ms": hdr.duration,
         "resid": hdr.resid,
+        "sense_hex": sense.hex(),
     }
     if hdr.status not in (0,):
         raise OSError(f"SG_IO status={hdr.status} host={hdr.host_status} drv={hdr.driver_status}")
@@ -675,6 +684,16 @@ class HuSim:
             lba=lba,
             n=len(blob),
             klass=klass,
+            cdb_hex=meta.get("cdb_hex"),
+            opcode=meta.get("opcode"),
+            cdb_lba=meta.get("cdb_lba"),
+            cdb_blocks=meta.get("cdb_blocks"),
+            dxfer_len=meta.get("dxfer_len"),
+            resid=meta.get("resid"),
+            scsi_status=meta.get("status"),
+            host_status=meta.get("host_status"),
+            driver_status=meta.get("driver_status"),
+            sense_hex=meta.get("sense_hex"),
             dur_ms=meta.get("duration_ms"),
             wall_ms=meta.get("wall_ms"),
             seq0=stamps[0].seq if stamps else None,
@@ -686,8 +705,26 @@ class HuSim:
     def read_raw(self, lba: int, n: int = READ_N, tag: str = "meta") -> bytes:
         """Non-file read (FAT/root/dir), counted by the ESP as a meta read."""
         blob, meta = self._timed_read(lba, n)
-        self._log(op="read", uid=tag, off=None, lba=lba, n=len(blob), klass="META",
-                  dur_ms=meta.get("duration_ms"), wall_ms=meta.get("wall_ms"))
+        self._log(
+            op="read",
+            uid=tag,
+            off=None,
+            lba=lba,
+            n=len(blob),
+            klass="META",
+            cdb_hex=meta.get("cdb_hex"),
+            opcode=meta.get("opcode"),
+            cdb_lba=meta.get("cdb_lba"),
+            cdb_blocks=meta.get("cdb_blocks"),
+            dxfer_len=meta.get("dxfer_len"),
+            resid=meta.get("resid"),
+            scsi_status=meta.get("status"),
+            host_status=meta.get("host_status"),
+            driver_status=meta.get("driver_status"),
+            sense_hex=meta.get("sense_hex"),
+            dur_ms=meta.get("duration_ms"),
+            wall_ms=meta.get("wall_ms"),
+        )
         return blob
 
     def _timed_read(self, lba: int, n: int) -> tuple[bytes, dict]:
@@ -878,6 +915,11 @@ def snap(esp: str) -> dict:
         "version": st.get("version"),
         "uptime": st.get("uptime"),
         "play": st.get("playingUid"),
+        "usbSerial": m.get("usbSerial"),
+        "productRevision": m.get("productRevision"),
+        "bpbVolumeId": m.get("bpbVolumeId"),
+        "bpbLabel": m.get("bpbLabel"),
+        "rootLabel": m.get("rootLabel"),
         "armed": s.get("cursorArmed"),
         "hostAbs": int(s.get("hostAbsCursor") or 0),
         "absEnd": abs_end,
@@ -889,6 +931,10 @@ def snap(esp: str) -> dict:
         "ring_cap": int(s.get("cap") or 49152),
         "id3Len": s.get("id3Len"),
         "readCount": m.get("readCount"),
+        "readOverflow": m.get("readOverflow"),
+        "readsEmit": m.get("readsEmit"),
+        "xfer": m.get("xfer"),
+        "stall": m.get("stall"),
         "slots": slots,
     }
 
