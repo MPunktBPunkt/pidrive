@@ -43,16 +43,28 @@ def analyze(reads: list[dict]) -> dict:
     body = ns[1:] if ns else []
     body_mode = Counter(body).most_common(1)[0][0] if body else None
     dur = [float(r.get("wall_ms") or r.get("dur_ms") or 0) for r in reads if r.get("wall_ms") or r.get("dur_ms")]
+    # Field CBW transfer sizes (bytes): blocks=8 → 4096, blocks=240 → 122880
+    field_body_bytes = {4096, 122880}
+    cdb_blocks = None
+    if body_mode and body_mode % 512 == 0:
+        cdb_blocks = body_mode // 512
     return {
         "n_reads": len(reads),
         "n_hist": {str(k): v for k, v in sorted(hist.items())},
         "head_n": ns[0] if ns else None,
         "body_mode_n": body_mode,
+        "body_mode_cdb_blocks": cdb_blocks,
         "body_all_equal_mode": bool(body) and all(x == body_mode for x in body),
         "wall_gap_head_to_2nd_ms": wall_gap_ms,
         "head_pause_est_ms": head_pause_ms,
         "dur_ms_p50": round(statistics.median(dur), 2) if dur else None,
         "q10_candidate_4kib": body_mode == 4096 and (ns[0] == 4096 if ns else False),
+        "q10_matches_field_cbw": body_mode in field_body_bytes,
+        "field_cbw_body_bytes": sorted(field_body_bytes),
+        "epistemic": (
+            "Sim/SG transfer size ≠ TinyUSB callback chunk. "
+            "Field NBT often CBW 4 KiB (8) and 120 KiB (240); all_q10_4kib is not a fail gate."
+        ),
     }
 
 
@@ -82,8 +94,9 @@ def main() -> int:
         reports.append(a)
         print(
             f"{p}: n={a['n_reads']} hist={a['n_hist']} head={a['head_n']} "
-            f"body_mode={a['body_mode_n']} pause_est={a['head_pause_est_ms']}ms "
-            f"q10_4k={a['q10_candidate_4kib']}"
+            f"body_mode={a['body_mode_n']} blocks={a.get('body_mode_cdb_blocks')} "
+            f"pause_est={a['head_pause_est_ms']}ms "
+            f"q10_4k={a['q10_candidate_4kib']} field_cbw={a['q10_matches_field_cbw']}"
         )
 
     out: dict = {"reads": reports}
@@ -98,6 +111,9 @@ def main() -> int:
         "body_mode_votes": dict(Counter(modes)),
         "head_pause_est_ms_median": round(statistics.median(pauses), 2) if pauses else None,
         "all_q10_4kib": all(r.get("q10_candidate_4kib") for r in reports) if reports else False,
+        "any_field_cbw": any(r.get("q10_matches_field_cbw") for r in reports) if reports else False,
+        "field_cbw_body_bytes": [4096, 122880],
+        "note": "Prefer any_field_cbw / hist over all_q10_4kib (hu-probe S2 E11).",
     }
     print("summary", json.dumps(out["summary"]))
 

@@ -17,8 +17,9 @@ Field-fit scenarios (s1-morgen 07.10., HU-Facts R15–R21):
   --golden BENCH          C1/C3 back-to-back reads per size
   --golden REPLAY --replay <msc_reads.jsonl|bridge.log> [--replay-ms-from/--replay-ms-to]  (C6)
   --golden REPLUG         field s3 replug read (R26/R27): producer at 6000 B/s, ring full,
-                          head 4 KiB, --head-pause-ms 19, rest in --replug-cmd-kib 4|16|64
-                          commands at --period-ms 5.1 per 4 KiB; M2 identity + dump analysis
+                          head 4 KiB, --head-pause-ms 19, rest in --replug-cmd-kib 4|16|64|120
+                          (120 KiB = field CBW blocks=240; 4 KiB = blocks=8). Pace --period-ms
+                          5.1 per 4 KiB equivalent; M2 identity + dump analysis
                           [--dump-slot: <out>/slot-<uid>.bin for ffmpeg / listening on a PC]
   --offline               SG-only BENCH when ESP HTTP is down (static L3 LBAs)
   --producer-burst F      producer burst factor (default 1.45 for --live, 1.0 for REPLUG)
@@ -1569,6 +1570,12 @@ def run_replug(hu: HuSim, esp: str, pump: PumpTcp, out: Path, uid: str = "fav2",
     res = {
         "uid": uid,
         "cmd_kib": cmd_kib,
+        "cdb_blocks": cmd // SECTOR,
+        "field_cbw_kib": [4, 120],
+        "field_cbw_note": (
+            "hu-probe S2: READ10 blocks often 8 (=4 KiB) and 240 (=120 KiB); "
+            "event/callback n=4096 is stack chunking — EVID-HUPROBE-2026-10-15-004"
+        ),
         "commands": len(sizes),
         "bytes": len(dump),
         "read_ms": round((t_end - t0) * 1000.0, 1),
@@ -1926,8 +1933,14 @@ def main() -> int:
     ap.add_argument("--producer-burst", type=float, default=None,
                     help="producer burst factor for the first 60 s (default 1.45 --live, 1.0 REPLUG)")
     ap.add_argument("--replug-uid", default="fav2", help="REPLUG: current track (field: BOB = fav2)")
-    ap.add_argument("--replug-cmd-kib", type=int, default=4, choices=(4, 16, 64),
-                    help="REPLUG: READ10 size after the head callback (HU-Facts Q10)")
+    ap.add_argument(
+        "--replug-cmd-kib",
+        type=int,
+        default=4,
+        choices=(4, 16, 64, 120),
+        help="REPLUG: READ10 size after head (KiB). Field NBT CBW often 4 (blocks=8) "
+             "and 120 (blocks=240); 16/64 remain lab stress sizes (HU-Facts E11/Q10)",
+    )
     ap.add_argument("--head-pause-ms", type=float, default=19.0, help="REPLUG: pause after head (R26)")
     ap.add_argument("--replug-prefill-s", type=float, default=12.0,
                     help="REPLUG: producer run time before the read (ring full after ~8.2 s)")

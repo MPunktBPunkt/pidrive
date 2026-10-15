@@ -98,6 +98,7 @@ Heute liest `StreamBuffer::readAt` (usbd-Task) `absBase_/absEnd_/head_/size_` oh
 | L3 | `stallMaxMs=300` | `timeouts` > 0, danach Stille wie heute; kein `botResets` |
 | L4 | `--cmd-timeout-ms 500` im Simulator, `stallMaxMs=1000` | SG-Timeout → Linux-Reset → `botResets` steigt; ESP bleibt stabil (kein Watchdog-Reboot) |
 | L5 | `--replug-cmd-kib 64` | Gesamtwartezeit je Kommando ≈ 10,9 s → `cmd`-Timer schlägt bei `stallMaxMs<11000` zu; mit `cb` + Chunk 512 nicht |
+| L5b | `--replug-cmd-kib 120` | Feld-CBW blocks=240 (HU-Facts E11, 2026-10-15); Timeout **pro CBW**, nicht pro 4‑KiB-Callback; ~20× 4 KiB-Äquivalent vs. L1 |
 | L6 | Producer-Lücke (`RealisticProducer gaps`) 5 s | Vorsprung fängt sie ab, keine Stille im Dump |
 
 ### 5.2 Auto (Feld-ESP .89, nur im Stand, Replug-Pfad)

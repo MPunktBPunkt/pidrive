@@ -94,6 +94,10 @@ def cmd_dump(args: argparse.Namespace) -> int:
     return 0 if out.get("ok") else 1
 
 
+# Field NBT (hu-probe S2 / EVID-HUPROBE-2026-10-15-004): CBW blocks often 8 and 240.
+FIELD_CBW_BLOCKS = (8, 240)
+
+
 def summarize_q10(cmds: list[dict]) -> dict[str, Any]:
     reads = [c for c in cmds if c.get("op") == 0x28 and (c.get("bytes") or 0) > 0]
     if not reads:
@@ -103,6 +107,9 @@ def summarize_q10(cmds: list[dict]) -> dict[str, Any]:
     gaps = [int(c.get("gap_us") or 0) for c in reads if int(c.get("gap_us") or 0) > 0]
     durs = [int(c.get("dur_us") or 0) for c in reads]
     ctr = Counter(blocks)
+    n = len(reads)
+    n8 = ctr.get(8, 0)
+    n240 = ctr.get(240, 0)
 
     def pct(xs: list[int], p: float) -> float:
         if not xs:
@@ -112,14 +119,24 @@ def summarize_q10(cmds: list[dict]) -> dict[str, Any]:
         return float(s[i])
 
     return {
-        "n": len(reads),
+        "n": n,
         "blocks_mode": ctr.most_common(1)[0][0],
         "blocks_hist": dict(sorted(ctr.items())),
+        "blocks_8_share": round(n8 / n, 3),
+        "blocks_240_share": round(n240 / n, 3),
+        "field_cbw_blocks": list(FIELD_CBW_BLOCKS),
+        "field_modes_seen": sorted(b for b in FIELD_CBW_BLOCKS if ctr.get(b)),
+        "matches_field_cbw": bool(n8 or n240),
         "bytes_p50": pct(bytes_, 50),
         "dur_us_p50": pct(durs, 50),
         "gap_us_p50": pct(gaps, 50) if gaps else None,
         "gap_us_p95": pct(gaps, 95) if gaps else None,
+        # Legacy: True only if *every* READ10 is 4 KiB — field NBT is often mixed 8+240.
         "all_4kib": all(b == 8 for b in blocks),
+        "epistemic": (
+            "blocks=CBW/command size (mess-fw); not TinyUSB 4 KiB callback chunks. "
+            "Do not treat all_4kib=false as lab failure when 240 is present."
+        ),
         "head_gaps_ms": [
             round(g / 1000.0, 2)
             for g in gaps
@@ -161,10 +178,37 @@ def cmd_q10(args: argparse.Namespace) -> int:
     return 0 if summary.get("n", 0) > 0 else 1
 
 
+def self_test() -> int:
+    """Offline checks for field-aware Q10 summary (no ESP)."""
+    mixed = [
+        {"op": 0x28, "blocks": 8, "bytes": 4096, "gap_us": 3700, "dur_us": 3800},
+        {"op": 0x28, "blocks": 8, "bytes": 4096, "gap_us": 3710, "dur_us": 3810},
+        {"op": 0x28, "blocks": 240, "bytes": 122880, "gap_us": 90000, "dur_us": 95000},
+        {"op": 0x28, "blocks": 240, "bytes": 122880, "gap_us": 91000, "dur_us": 96000},
+    ]
+    s = summarize_q10(mixed)
+    assert s["n"] == 4
+    assert s["all_4kib"] is False
+    assert s["matches_field_cbw"] is True
+    assert s["blocks_8_share"] == 0.5
+    assert s["blocks_240_share"] == 0.5
+    assert s["field_modes_seen"] == [8, 240]
+    only8 = summarize_q10(mixed[:2])
+    assert only8["all_4kib"] is True
+    assert only8["matches_field_cbw"] is True
+    print("self_test OK", json.dumps({
+        "mixed_all_4kib": s["all_4kib"],
+        "mixed_matches_field": s["matches_field_cbw"],
+        "hist": s["blocks_hist"],
+    }))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--esp", required=True, help="ESP base URL, e.g. http://192.168.178.88")
-    sub = ap.add_subparsers(dest="cmd", required=True)
+    ap.add_argument("--esp", default="", help="ESP base URL, e.g. http://192.168.178.88")
+    ap.add_argument("--self-test", action="store_true", help="offline Q10 summary checks")
+    sub = ap.add_subparsers(dest="cmd", required=False)
 
     sub.add_parser("status", help="version + mess + soft USB")
     sub.add_parser("reset", help="clear capture ring")
@@ -193,6 +237,10 @@ def main() -> int:
     p_q10.add_argument("-o", "--out", default=None)
 
     args = ap.parse_args()
+    if args.self_test:
+        return self_test()
+    if not args.esp or not args.cmd:
+        ap.error("--esp and a subcommand are required (or pass --self-test)")
     if args.cmd == "usb" and getattr(args, "detach", False):
         args.attach = False
         args.cycle_ms = None

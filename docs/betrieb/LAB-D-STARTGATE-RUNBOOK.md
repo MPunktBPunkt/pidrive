@@ -105,8 +105,15 @@ verwendet. **Identity-Rotation und Head-Force nie kombinieren.**
 ## 4. BOT-Evidenz richtig lesen
 
 Die Arduino-MSC-Callbacks bleiben auf typischerweise 4 KiB begrenzt. Diese
-Callbackgröße ist **keine** CDB-/READ(10)-Länge. `reads.jsonl` protokolliert
-deshalb am SG-Kontrollhost zusätzlich:
+Callbackgröße ist **keine** CDB-/READ(10)-Länge. **Feld NBT (hu-probe S2):**
+READ10-CBW oft `blocks=8` (=4 KiB) **und** `blocks=240` (=120 KiB) — siehe
+HU-Facts E11/Q10 und Profil
+[`nbt_evo_lab_2026-10-15.json`](../../tools/profiles/nbt_evo_lab_2026-10-15.json).
+Lab-Sim: `--golden REPLUG --replug-cmd-kib 4` **und** `120`. Stall-/Timeout-Modelle
+pro offenem CBW, nicht „alle 4 KiB“. Burst-39 und Gap→Scheduler nicht als
+Lab-Konstanten.
+
+`reads.jsonl` protokolliert deshalb am SG-Kontrollhost zusätzlich:
 
 - vollständige READ(10)-CDB,
 - angeforderte Blockzahl und Transferlänge,

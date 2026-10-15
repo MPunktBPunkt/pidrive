@@ -276,6 +276,7 @@
   "notes": [
     "Burst = unread file remainder, not decoder buffer",
     "Stall only on active live slot sequential cursor reads",
-    "Prefetch other slots: silence immediately"
+    "Prefetch other slots: silence immediately",
+    "Transport update 2026-10-15: see nbt_evo_lab_2026-10-15.json — CBW blocks 8+240; gap=measurement; size_bytes 4096 is event/callback mode not CDB"
   ]
 }

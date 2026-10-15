@@ -1,0 +1,52 @@
+{
+  "source": "hu-probe BMW S0/S2 field audit 2026-10-15 + PiDrive HU-Facts E11/Q10/R15",
+  "generated": "2026-10-15",
+  "model": "nbt_evo_transport_lab",
+  "pin": {
+    "hu_probe": "5dbec43",
+    "audit": "hu-probe-bmw-s0s2-field-2026",
+    "evidence": [
+      "EVID-HUPROBE-2026-10-15-001",
+      "EVID-HUPROBE-2026-10-15-003",
+      "EVID-HUPROBE-2026-10-15-004",
+      "EVID-HUPROBE-2026-10-15-005",
+      "EVID-HUPROBE-2026-10-15-008",
+      "EVID-HUPROBE-2026-10-15-009"
+    ]
+  },
+  "read": {
+    "event_n_bytes_mode": 4096,
+    "event_n_note": "TinyUSB/application callback chunk — not CDB length",
+    "cbw_blocks_common": [8, 240],
+    "cbw_bytes_common": [4096, 122880],
+    "gap_us_p50_file_s0": 3739,
+    "gap_us_p50_file_s2": 3783,
+    "gap_epistemic": "MEASURED pace/link saturation; not HU scheduler FACT",
+    "gap_ms_target": 4,
+    "gap_ms_target_note": "ms-quantized lab convenience ≈ gap_us_p50/1000; do not invent scheduler from this",
+    "queue_depth": 1,
+    "writes_expected": false
+  },
+  "scsi": {
+    "mode_sense6_per_capacity": 2.0,
+    "mode_sense6_stall_is_hu_recovery": false,
+    "mode_sense6_stall_note": "REJECTED as HU-Recovery; instrument artifact before hu-probe 0.2.18"
+  },
+  "rejected_as_lab_constants": {
+    "burst_file_reads_always_39": true,
+    "hu_always_read10_4kib_cbw": true,
+    "gap_4096_is_scheduler": true
+  },
+  "semantics_still_inference": [
+    "eager_eof",
+    "prefetch_lead_s",
+    "cache_hit_no_reads"
+  ],
+  "lab_guidance": [
+    "REPLUG stress: --replug-cmd-kib 4 and 120 (field CBW); 16/64 optional",
+    "mess-fw Q10: score matches_field_cbw / hist, not all_4kib alone",
+    "Stall models: timeout per open CBW (blocks 8 vs 240), not per 4 KiB callback",
+    "F0 Identity/Cache remains primary product path — this profile is transport only"
+  ],
+  "inherits_geometry_from": "tools/profiles/nbt_evo_2026-10-06.json"
+}
