@@ -1,0 +1,284 @@
+{
+  "REPLUG": {
+    "pass": true,
+    "uid": "fav2",
+    "cmd_kib": 4,
+    "cdb_blocks": 8,
+    "field_cbw_kib": [
+      4,
+      120
+    ],
+    "field_cbw_note": "hu-probe S2: READ10 blocks often 8 (=4 KiB) and 240 (=120 KiB); event/callback n=4096 is stack chunking \u2014 EVID-HUPROBE-2026-10-15-004",
+    "commands": 128,
+    "bytes": 524288,
+    "read_ms": 847.2,
+    "head_ms": 19.52,
+    "head_pause_ms": 19.0,
+    "field_read_ms": [
+      651,
+      665
+    ],
+    "rate_kBps": 618.8,
+    "sg_ms_per_4k": {
+      "p5": 5.0,
+      "p50": 5.0,
+      "p95": 6.0,
+      "p99": 19.0,
+      "min": 5.0,
+      "max": 23.0,
+      "n": 128
+    },
+    "ring_pre": 49152,
+    "ring_full_pre": true,
+    "producer_bytes": 79360,
+    "producer_err": null,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 12,
+      "SILENCE": 115
+    },
+    "ear": {
+      "live_bytes": 49152,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 115
+      },
+      "event_list": [
+        {
+          "t": 2623610.464024754,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.470531141,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.476793958,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.483162364,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.489575895,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.4957477,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.502068465,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.50825598,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.514142966,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.520138096,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.526516782,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.532647629,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.538707842,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.545028218,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.551108289,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.557250948,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.563202336,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.569422933,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.575738719,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.581833939,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.58786076,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.593788583,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.599713801,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.605784024,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.612276034,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.618370291,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.624630844,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.630786918,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.636880535,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.643036941,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.648885053,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.65501597,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.661096362,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.667215096,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.673294907,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.67954553,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.685668803,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.691639818,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.698045374,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.704106219,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.710123772,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.716131236,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.722223189,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.728210134,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.7342606,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.740322647,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.746306887,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.752257653,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.758287419,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623610.76427717,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "id3Len_dump": 3300,
+    "id3Len_fw": 3300,
+    "live_span": {
+      "stamps": 196,
+      "seq_gaps": 0,
+      "file_first": 3300,
+      "file_end": 53476,
+      "seq_first": 89,
+      "seq_last": 284,
+      "abs_first": 22784,
+      "abs_end": 72960
+    },
+    "live_bytes_file": 50176,
+    "live_s_at_48k": 8.36,
+    "realtime_bps": 6000,
+    "live_s_at_bps": 8.36,
+    "undDelta": 470812,
+    "expect_undDelta": 470812,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 543772,
+    "absEnd_pre": 71936,
+    "absEnd_post": 77824,
+    "abs_cross_fw": 72960,
+    "abs_cross_pdsq": 72960,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": true
+  }
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/replug-4k overall=PASS

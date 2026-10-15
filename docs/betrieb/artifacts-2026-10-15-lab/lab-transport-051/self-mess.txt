@@ -1,0 +1,1 @@
+self_test OK {"mixed_all_4kib": false, "mixed_matches_field": true, "hist": {"8": 2, "240": 2}}

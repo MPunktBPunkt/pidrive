@@ -1,0 +1,68 @@
+{
+  "reads": [
+    {
+      "n_reads": 128,
+      "n_hist": {
+        "4096": 128
+      },
+      "head_n": 4096,
+      "body_mode_n": 4096,
+      "body_mode_cdb_blocks": 8,
+      "body_all_equal_mode": true,
+      "wall_gap_head_to_2nd_ms": 28.53,
+      "head_pause_est_ms": 19.43,
+      "dur_ms_p50": 5.49,
+      "q10_candidate_4kib": true,
+      "q10_matches_field_cbw": true,
+      "field_cbw_body_bytes": [
+        4096,
+        122880
+      ],
+      "epistemic": "Sim/SG transfer size \u2260 TinyUSB callback chunk. Field NBT often CBW 4 KiB (8) and 120 KiB (240); all_q10_4kib is not a fail gate.",
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/replug-4k/reads.jsonl"
+    },
+    {
+      "n_reads": 6,
+      "n_hist": {
+        "4096": 1,
+        "28672": 1,
+        "122880": 4
+      },
+      "head_n": 4096,
+      "body_mode_n": 122880,
+      "body_mode_cdb_blocks": 240,
+      "body_all_equal_mode": false,
+      "wall_gap_head_to_2nd_ms": 214.35,
+      "head_pause_est_ms": 21.6,
+      "dur_ms_p50": 155.72,
+      "q10_candidate_4kib": false,
+      "q10_matches_field_cbw": true,
+      "field_cbw_body_bytes": [
+        4096,
+        122880
+      ],
+      "epistemic": "Sim/SG transfer size \u2260 TinyUSB callback chunk. Field NBT often CBW 4 KiB (8) and 120 KiB (240); all_q10_4kib is not a fail gate.",
+      "path": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/replug-120k/reads.jsonl"
+    }
+  ],
+  "msc_xfer": {
+    "n512": 114,
+    "n2k": 0,
+    "n4k": 1380,
+    "n8kPlus": 0
+  },
+  "summary": {
+    "body_mode_votes": {
+      "4096": 1,
+      "122880": 1
+    },
+    "head_pause_est_ms_median": 20.52,
+    "all_q10_4kib": false,
+    "any_field_cbw": true,
+    "field_cbw_body_bytes": [
+      4096,
+      122880
+    ],
+    "note": "Prefer any_field_cbw / hist over all_q10_4kib (hu-probe S2 E11)."
+  }
+}

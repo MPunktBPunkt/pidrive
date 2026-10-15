@@ -1,0 +1,5 @@
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/replug-4k/reads.jsonl: n=128 hist={'4096': 128} head=4096 body_mode=4096 blocks=8 pause_est=19.43ms q10_4k=True field_cbw=True
+/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/replug-120k/reads.jsonl: n=6 hist={'4096': 1, '28672': 1, '122880': 4} head=4096 body_mode=122880 blocks=240 pause_est=21.6ms q10_4k=False field_cbw=True
+msc.xfer {'n512': 114, 'n2k': 0, 'n4k': 1380, 'n8kPlus': 0}
+summary {"body_mode_votes": {"4096": 1, "122880": 1}, "head_pause_est_ms_median": 20.52, "all_q10_4kib": false, "any_field_cbw": true, "field_cbw_body_bytes": [4096, 122880], "note": "Prefer any_field_cbw / hist over all_q10_4kib (hu-probe S2 E11)."}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/q10-sniff.json

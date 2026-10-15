@@ -1,0 +1,100 @@
+{
+  "REPLUG": {
+    "pass": true,
+    "uid": "fav2",
+    "cmd_kib": 120,
+    "cdb_blocks": 240,
+    "field_cbw_kib": [
+      4,
+      120
+    ],
+    "field_cbw_note": "hu-probe S2: READ10 blocks often 8 (=4 KiB) and 240 (=120 KiB); event/callback n=4096 is stack chunking \u2014 EVID-HUPROBE-2026-10-15-004",
+    "commands": 6,
+    "bytes": 524288,
+    "read_ms": 783.3,
+    "head_ms": 19.22,
+    "head_pause_ms": 19.0,
+    "field_read_ms": [
+      651,
+      665
+    ],
+    "rate_kBps": 669.3,
+    "sg_ms_per_4k": {
+      "p5": 5.167,
+      "p50": 5.286,
+      "p95": 19.0,
+      "p99": 19.0,
+      "min": 5.167,
+      "max": 19.0,
+      "n": 6
+    },
+    "ring_pre": 49152,
+    "ring_full_pre": true,
+    "producer_bytes": 78848,
+    "producer_err": null,
+    "class_counts": {
+      "ID3": 1,
+      "LIVE": 1,
+      "SILENCE": 4
+    },
+    "ear": {
+      "live_bytes": 122880,
+      "consumed": 0,
+      "events": {
+        "silence_in_play": 4
+      },
+      "event_list": [
+        {
+          "t": 2623641.967835826,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623642.137325194,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623642.307071178,
+          "kind": "silence_in_play"
+        },
+        {
+          "t": 2623642.347727196,
+          "kind": "silence_in_play"
+        }
+      ]
+    },
+    "id3Len_dump": 3300,
+    "id3Len_fw": 3300,
+    "live_span": {
+      "stamps": 196,
+      "seq_gaps": 0,
+      "file_first": 3300,
+      "file_end": 53476,
+      "seq_first": 89,
+      "seq_last": 284,
+      "abs_first": 22784,
+      "abs_end": 72960
+    },
+    "live_bytes_file": 50176,
+    "live_s_at_48k": 8.36,
+    "realtime_bps": 6000,
+    "live_s_at_bps": 8.36,
+    "undDelta": 470812,
+    "expect_undDelta": 470812,
+    "field_undDelta": [
+      470616,
+      471640
+    ],
+    "hostAbs_after": 543772,
+    "absEnd_pre": 71936,
+    "absEnd_post": 78336,
+    "abs_cross_fw": 72960,
+    "abs_cross_pdsq": 72960,
+    "und_ok": true,
+    "identity_diff": 0,
+    "identity_ok": true,
+    "cross_in_window": true,
+    "complete_ok": true,
+    "timing_ok": true
+  }
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-transport-051/replug-120k overall=PASS
