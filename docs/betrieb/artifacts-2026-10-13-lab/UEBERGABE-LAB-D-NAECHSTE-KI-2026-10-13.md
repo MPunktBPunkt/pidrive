@@ -25,7 +25,8 @@ Dieses Dokument ist der **kanonische** Auftrag nach Abgleich Mistral- + GPT-Beri
 
 **Nicht GREEN:** NBT-Cache/Resume-P, UART/Q11, Stall-Feld-Go, D1–D3.
 
-Nächster Meilenstein ist **F0 am NBT** (Identity vs. Silence-Cache diskriminieren) — **nach** Feld-Go OTA **0.4.51** auf `.89` mit Default `stallEnable=false`.
+Nächster Meilenstein ist **F0 am NBT** (Identity vs. Silence-Cache diskriminieren) — **nach** Feld-Go OTA **0.4.51** auf `.89` mit Default `stallEnable=false`.  
+**Feldauftrag (2026-10-15):** [`../artifacts-2026-10-15-feld/UEBERGABE-F0-NAECHSTE-KI-2026-10-15.md`](../artifacts-2026-10-15-feld/UEBERGABE-F0-NAECHSTE-KI-2026-10-15.md) · Prep [`../artifacts-2026-10-15-feld/feld-f0-prep/`](../artifacts-2026-10-15-feld/feld-f0-prep/).
 
 ---
 
