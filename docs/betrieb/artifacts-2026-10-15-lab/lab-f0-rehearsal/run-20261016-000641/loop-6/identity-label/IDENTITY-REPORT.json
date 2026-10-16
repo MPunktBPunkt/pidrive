@@ -1,0 +1,9 @@
+{
+  "dimension": "label",
+  "quiet": {
+    "ok": true,
+    "phase": "scan"
+  },
+  "error": "ValueError: target label equals current label",
+  "pass": false
+}

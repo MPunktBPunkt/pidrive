@@ -1,0 +1,232 @@
+== F0 Lab-Rehearsal 20261016-000305 ESP=http://192.168.178.88 loops=1 ==
+FW 0.4.51-dev serial PD0461 stall False
+self-test PASS
+== loop 1/1 ==
+B0 control snapshot OK
+-- identity serial --
+{
+  "dimension": "serial",
+  "before": {
+    "usbSerial": "PD0461",
+    "productRevision": "0461",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461",
+    "rootLabel": "PD0461"
+  },
+  "after": {
+    "usbSerial": "PD0461",
+    "productRevision": "0461",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461",
+    "rootLabel": "PD0461"
+  },
+  "changed_fields": [],
+  "expected_changed_fields": [
+    "productRevision",
+    "usbSerial"
+  ],
+  "media_before": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461",
+    "bootSha256": "ffbdf2509b6f26ce78a36c47b77f8e7c768e9666b846517198c742d4d47c5d9d",
+    "rootSha256": "10ba36783e18be434233805dbf064350e7f9f831ad7529f53ed901d9a8c95daa"
+  },
+  "media_after": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461",
+    "bootSha256": "ffbdf2509b6f26ce78a36c47b77f8e7c768e9666b846517198c742d4d47c5d9d",
+    "rootSha256": "10ba36783e18be434233805dbf064350e7f9f831ad7529f53ed901d9a8c95daa"
+  },
+  "one_dimension_only": false,
+  "device_matches_status": true,
+  "pass": false
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-000305/loop-1/identity-serial
+FAIL serial
+-- identity label --
+{
+  "dimension": "label",
+  "before": {
+    "usbSerial": "PD0461",
+    "productRevision": "0461",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461",
+    "rootLabel": "PD0461"
+  },
+  "after": {
+    "usbSerial": "PD0461",
+    "productRevision": "0461",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461X",
+    "rootLabel": "PD0461X"
+  },
+  "changed_fields": [
+    "bpbLabel",
+    "rootLabel"
+  ],
+  "expected_changed_fields": [
+    "bpbLabel",
+    "rootLabel"
+  ],
+  "media_before": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461",
+    "bootSha256": "ffbdf2509b6f26ce78a36c47b77f8e7c768e9666b846517198c742d4d47c5d9d",
+    "rootSha256": "10ba36783e18be434233805dbf064350e7f9f831ad7529f53ed901d9a8c95daa"
+  },
+  "media_after": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461X",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461X",
+    "bootSha256": "64eb7a05d35cb97056ba9f77fa4d8c2df041b39aac1fcea8288bb926b27edb5a",
+    "rootSha256": "971f79a143876c004b068f11f9e0273ed5d1ea5cf42b83313d088531a3536122"
+  },
+  "one_dimension_only": true,
+  "device_matches_status": true,
+  "pass": true
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-000305/loop-1/identity-label
+PASS label
+-- identity volume-id --
+{
+  "dimension": "volume-id",
+  "before": {
+    "usbSerial": "PD0461",
+    "productRevision": "0461",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461X",
+    "rootLabel": "PD0461X"
+  },
+  "after": {
+    "usbSerial": "PD0461",
+    "productRevision": "0461",
+    "bpbVolumeId": 1346634188,
+    "bpbLabel": "PD0461X",
+    "rootLabel": "PD0461X"
+  },
+  "changed_fields": [
+    "bpbVolumeId"
+  ],
+  "expected_changed_fields": [
+    "bpbVolumeId"
+  ],
+  "media_before": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461X",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461X",
+    "bootSha256": "64eb7a05d35cb97056ba9f77fa4d8c2df041b39aac1fcea8288bb926b27edb5a",
+    "rootSha256": "971f79a143876c004b068f11f9e0273ed5d1ea5cf42b83313d088531a3536122"
+  },
+  "media_after": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634188,
+    "volumeIdHex": "0x504401CC",
+    "bpbLabel": "PD0461X",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461X",
+    "bootSha256": "fc8e34b2a8ecbe890652f8837771a4ff0d36e4edd77ecf4748b3c4d8b41f890a",
+    "rootSha256": "971f79a143876c004b068f11f9e0273ed5d1ea5cf42b83313d088531a3536122"
+  },
+  "one_dimension_only": true,
+  "device_matches_status": true,
+  "pass": true
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-000305/loop-1/identity-volume-id
+PASS volume-id
+{
+  "loops": 1,
+  "pass_n": 2,
+  "fail_n": 1,
+  "all_pass": false,
+  "rows": [
+    {
+      "path": "loop-1/identity-label/IDENTITY-REPORT.json",
+      "dimension": "label",
+      "pass": true,
+      "changed": [
+        "bpbLabel",
+        "rootLabel"
+      ],
+      "expected": [
+        "bpbLabel",
+        "rootLabel"
+      ],
+      "one_dimension_only": true,
+      "device_matches_status": true
+    },
+    {
+      "path": "loop-1/identity-serial/IDENTITY-REPORT.json",
+      "dimension": "serial",
+      "pass": false,
+      "changed": [],
+      "expected": [
+        "productRevision",
+        "usbSerial"
+      ],
+      "one_dimension_only": false,
+      "device_matches_status": true
+    },
+    {
+      "path": "loop-1/identity-volume-id/IDENTITY-REPORT.json",
+      "dimension": "volume-id",
+      "pass": true,
+      "changed": [
+        "bpbVolumeId"
+      ],
+      "expected": [
+        "bpbVolumeId"
+      ],
+      "one_dimension_only": true,
+      "device_matches_status": true
+    }
+  ]
+}
+OUT /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-000305

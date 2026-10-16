@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "run_id": "identity-20261016T062959",
+  "command": "identity",
+  "started_utc": "2026-10-16T04:29:59.755965+00:00",
+  "host": {
+    "node": "DebianCursor",
+    "platform": "Linux-7.0.14-14-pve-x86_64-with-glibc2.41",
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]"
+  },
+  "git_head": "4b01275bd1bcf953b2a885aee02cf3036375cace",
+  "argv": [
+    "tools/lab_d_campaign.py",
+    "identity",
+    "--esp",
+    "http://192.168.178.88",
+    "--dimension",
+    "serial",
+    "--device",
+    "/dev/sda",
+    "--out",
+    "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-062936/loop-3/identity-serial"
+  ],
+  "inputs": {
+    "self_test": false,
+    "command": "identity",
+    "esp": "http://192.168.178.88",
+    "out": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-062936/loop-3/identity-serial",
+    "dimension": "serial",
+    "device": "/dev/sda",
+    "volume_id": null,
+    "label": "",
+    "settle_s": 2.0
+  },
+  "finished_utc": "2026-10-16T04:30:02.482483+00:00",
+  "duration_s": 2.727,
+  "result": {
+    "dimension": "serial",
+    "quiet": {
+      "ok": true,
+      "phase": "scan"
+    },
+    "before": {
+      "usbSerial": "PD0474",
+      "productRevision": "0474",
+      "bpbVolumeId": 1346634189,
+      "bpbLabel": "PD0461XXXXZ",
+      "rootLabel": "PD0461XXXXZ"
+    },
+    "after": {
+      "usbSerial": "PD0475",
+      "productRevision": "0475",
+      "bpbVolumeId": 1346634189,
+      "bpbLabel": "PD0461XXXXZ",
+      "rootLabel": "PD0461XXXXZ"
+    },
+    "changed_fields": [
+      "productRevision",
+      "usbSerial"
+    ],
+    "expected_changed_fields": [
+      "productRevision",
+      "usbSerial"
+    ],
+    "media_before": {
+      "bytesPerSector": 512,
+      "reservedSectors": 1,
+      "fatCount": 2,
+      "rootEntries": 512,
+      "sectorsPerFat": 16,
+      "rootLba": 33,
+      "volumeId": 1346634189,
+      "volumeIdHex": "0x504401CD",
+      "bpbLabel": "PD0461XXXXZ",
+      "fsType": "FAT16",
+      "rootLabel": "PD0461XXXXZ",
+      "bootSha256": "84215a7cd9f3d18f6ebcddb32d58120b2d2d57a7c7efec03c47164610ce321e7",
+      "rootSha256": "d1ba8bb2fd0d397d41e244c6a101fe2e0bac552676a6614380d1a45bf857208a"
+    },
+    "media_after": {
+      "bytesPerSector": 512,
+      "reservedSectors": 1,
+      "fatCount": 2,
+      "rootEntries": 512,
+      "sectorsPerFat": 16,
+      "rootLba": 33,
+      "volumeId": 1346634189,
+      "volumeIdHex": "0x504401CD",
+      "bpbLabel": "PD0461XXXXZ",
+      "fsType": "FAT16",
+      "rootLabel": "PD0461XXXXZ",
+      "bootSha256": "84215a7cd9f3d18f6ebcddb32d58120b2d2d57a7c7efec03c47164610ce321e7",
+      "rootSha256": "d1ba8bb2fd0d397d41e244c6a101fe2e0bac552676a6614380d1a45bf857208a"
+    },
+    "one_dimension_only": true,
+    "device_matches_status": true,
+    "pass": true
+  }
+}

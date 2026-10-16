@@ -1,0 +1,8 @@
+F0 Feld 2026-10-16 AM — BEENDET
+
+Ergebnis: feld-f0-prep/ERGEBNIS.md
+Ast: X (Matrix nicht gefahren) · Lesart P⊕C
+Kurz: ohne weiße LED selten ~6s Ton+Bild Bayern; Panic-Replug blockiert;
+Soft-Remount keepIdentity ändert Ton nicht; Stream aktiv ≠ hörbar.
+
+Nächste KI: Panic-OTG → LIVE-Fenster → dann B0…B3. Stall aus.

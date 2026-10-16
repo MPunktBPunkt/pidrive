@@ -14,7 +14,15 @@ cd ~/pidrive/docs/betrieb/artifacts-2026-10-15-feld/feld-f0-prep
 
 ### P1 — OTA 0.4.51 (einmal)
 
-Firmware von Lab-/Build-Quelle auf `.89` bringen (wie s6-OTA-Skript-Muster). Danach:
+Watcher (Desktop, wartet auf Auto-WLAN):
+
+```bash
+cd ~/projects/pidrive/docs/betrieb/artifacts-2026-10-15-feld/feld-f0-prep
+./ota-f0-051.sh          # wartet; nach HTTP-200 oft Minuten offline → Retry ohne Reflash
+# Log: ota-f0-051.log · Artefakte: ota-YYYYMMDD-HHMMSS/
+```
+
+Danach auf dem Auto-Pi:
 
 ```bash
 ./f0-check.sh after-ota

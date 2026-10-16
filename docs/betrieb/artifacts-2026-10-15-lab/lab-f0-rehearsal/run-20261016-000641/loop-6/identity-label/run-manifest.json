@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "run_id": "identity-20261016T000743",
+  "command": "identity",
+  "started_utc": "2026-10-15T22:07:43.026144+00:00",
+  "host": {
+    "node": "DebianCursor",
+    "platform": "Linux-7.0.14-14-pve-x86_64-with-glibc2.41",
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]"
+  },
+  "git_head": "4b01275bd1bcf953b2a885aee02cf3036375cace",
+  "argv": [
+    "tools/lab_d_campaign.py",
+    "identity",
+    "--esp",
+    "http://192.168.178.88",
+    "--dimension",
+    "label",
+    "--device",
+    "/dev/sda",
+    "--out",
+    "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-000641/loop-6/identity-label"
+  ],
+  "inputs": {
+    "self_test": false,
+    "command": "identity",
+    "esp": "http://192.168.178.88",
+    "out": "/home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-15-lab/lab-f0-rehearsal/run-20261016-000641/loop-6/identity-label",
+    "dimension": "label",
+    "device": "/dev/sda",
+    "volume_id": null,
+    "label": "",
+    "settle_s": 2.0
+  },
+  "finished_utc": "2026-10-15T22:07:43.497323+00:00",
+  "duration_s": 0.471,
+  "result": {
+    "dimension": "label",
+    "quiet": {
+      "ok": true,
+      "phase": "scan"
+    },
+    "error": "ValueError: target label equals current label",
+    "pass": false
+  }
+}

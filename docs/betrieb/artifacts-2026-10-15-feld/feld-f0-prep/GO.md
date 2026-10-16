@@ -33,7 +33,10 @@ cd ~/pidrive/docs/betrieb/artifacts-2026-10-15-feld/feld-f0-prep
 | **B2** | nur **label** (`./f0-identity.sh label`) | Diff nur Labels |
 | **B3** | nur **volume-id** (`./f0-identity.sh volume-id`) | Diff nur Volume-ID |
 
-Pro Lauf: `./f0-check.sh before-<id>` → Aktion → `./mark.sh "…"` → Ohr + `./f0-check.sh after-<id>` → `./f0-identity.sh verify` wenn Rotation.
+Pro Lauf: `./f0-check.sh before-<id>` → Aktion → `./mark.sh "…"` → Ohr + `./f0-check.sh after-<id>` → Isolation automatisch nach `./f0-identity.sh <dim>` (Report `identity-report-<dim>.json`).
+
+**Lab-Lessons (bereits im Script):** vor Remount Stream stoppen (`remount_skip`); Label-Mutation overnight-fest (11-Zeichen-Rotate).  
+OTA: `./ota-f0-051.sh` retried Verify nach Post-Flash-Offline.
 
 ### Pflicht mitschreiben (nicht nur Ohr)
 

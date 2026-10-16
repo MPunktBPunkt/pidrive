@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 # Identity + Stall Freeze Check für F0
+#   ./f0-check.sh [label]
+#   ./f0-check.sh isolate <serial|label|volume-id> <before.json> <after.json>
 set -euo pipefail
 ESP_HOST="${ESP_HOST:-192.168.178.89}"
 ESP="http://$ESP_HOST"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+if [[ "${1:-}" == "isolate" ]]; then
+  DIM="${2:?dim}"
+  BEFORE="${3:?before.json}"
+  AFTER="${4:?after.json}"
+  exec "$ROOT/f0-identity.sh" verify "$BEFORE" "$AFTER" "$DIM"
+fi
+
 LABEL="${1:-check}"
 curl -s -m 4 "$ESP/api/status" | python3 -c '
 import json,sys,time

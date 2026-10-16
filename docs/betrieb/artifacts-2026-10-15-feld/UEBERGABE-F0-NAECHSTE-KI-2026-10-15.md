@@ -133,3 +133,34 @@ Feld-Stall-Go nur nach F0, dann **CBW-aware** (blocks 8 und 240), nicht „alle 
 4. Stall eingefroren bis neues Go.
 
 **Meilenstein:** Mindestens eine isolierte Dimension erzeugt nach Replug bei P≫0 hörbaren Head/LIVE statt Silence-Cache **oder** widerlegt Rotate klar zugunsten Prefetch-Cache/Head-Force — mit dokumentierter Isolation.
+
+---
+
+## 9. Lab-Gate (2026-10-16, vor Feld)
+
+Identity-Tooling auf `.88` overnight + Fix verifiziert — **kein** NBT-Cache-Beweis:
+
+| Artefakt | Status |
+|----------|--------|
+| `lab-f0-rehearsal/run-20261016-000641` | serial+vid 8/8; label 3/8 (11-Zeichen-Stall) |
+| Fix `next_volume_label` + `ensure_stream_quiet` | in `lab_d_campaign.py` / `f0-identity.sh` |
+| Verify `run-20261016-062936` | **18/18 PASS** |
+| OTA-Watcher `.89` | Retry-Loop (HTTP-200 → oft Minuten offline) |
+
+Feld bleibt: Auto an → OTA-Gate → Smoke → B0…B3.
+
+---
+
+## 10. Feld 2026-10-16 AM — Ergebnis (kurz)
+
+**Vollbericht:** [`feld-f0-prep/ERGEBNIS.md`](feld-f0-prep/ERGEBNIS.md)
+
+| | |
+|--|--|
+| FW / Stall | `0.4.51-dev` · `stallEnable=false` |
+| F0 B0…B3 | **nicht gültig** (Smoke/Klasse-B-Lotterie) |
+| Ast | **X** · Produkt-Lesart **P⊕C** |
+| Positiv | Klasse A → selten ~**6 s Ton+Bild** Bayern; Play/Stream kann armieren |
+| Negativ | Panic/weiße LED bei Replug; Mid-Cache ohne Guess; Soft-Remount keepIdentity ändert Ton nicht; Stream≠Ohr |
+
+**Nächster Auftrag:** Panic-OTG fixen → LIVE>6 s reproduzierbar → erst dann F0-Matrix. Stall weiter eingefroren.

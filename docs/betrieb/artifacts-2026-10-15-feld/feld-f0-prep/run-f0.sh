@@ -46,7 +46,7 @@ finish() {
   for p in "${pids[@]:-}"; do kill -9 "$p" 2>/dev/null; done
   [[ -f "$ROOT/marks.jsonl" ]] && cp -a "$ROOT/marks.jsonl" "$RUN/marks.jsonl"
   cp -a "$ROOT/OPERATOR-LIVE.txt" "$RUN/OPERATOR-LIVE.txt" 2>/dev/null || true
-  for f in identity-before-*.json identity-after-*.json; do
+  for f in identity-before-*.json identity-after-*.json identity-report-*.json; do
     [[ -f "$ROOT/$f" ]] && cp -a "$ROOT/$f" "$RUN/$f" 2>/dev/null || true
   done
   rm -f "$ROOT/CURRENT_RUN"

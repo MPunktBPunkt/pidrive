@@ -1,0 +1,51 @@
+{
+  "loops": 1,
+  "pass_n": 3,
+  "fail_n": 0,
+  "all_pass": true,
+  "rows": [
+    {
+      "path": "loop-1/identity-label/IDENTITY-REPORT.json",
+      "dimension": "label",
+      "pass": true,
+      "changed": [
+        "bpbLabel",
+        "rootLabel"
+      ],
+      "expected": [
+        "bpbLabel",
+        "rootLabel"
+      ],
+      "one_dimension_only": true,
+      "device_matches_status": true
+    },
+    {
+      "path": "loop-1/identity-serial/IDENTITY-REPORT.json",
+      "dimension": "serial",
+      "pass": true,
+      "changed": [
+        "productRevision",
+        "usbSerial"
+      ],
+      "expected": [
+        "productRevision",
+        "usbSerial"
+      ],
+      "one_dimension_only": true,
+      "device_matches_status": true
+    },
+    {
+      "path": "loop-1/identity-volume-id/IDENTITY-REPORT.json",
+      "dimension": "volume-id",
+      "pass": true,
+      "changed": [
+        "bpbVolumeId"
+      ],
+      "expected": [
+        "bpbVolumeId"
+      ],
+      "one_dimension_only": true,
+      "device_matches_status": true
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "dimension": "label",
+  "quiet": {
+    "ok": true,
+    "phase": "scan"
+  },
+  "before": {
+    "usbSerial": "PD0475",
+    "productRevision": "0475",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461XXXXZ",
+    "rootLabel": "PD0461XXXXZ"
+  },
+  "after": {
+    "usbSerial": "PD0475",
+    "productRevision": "0475",
+    "bpbVolumeId": 1346634189,
+    "bpbLabel": "PD0461XXXX0",
+    "rootLabel": "PD0461XXXX0"
+  },
+  "changed_fields": [
+    "bpbLabel",
+    "rootLabel"
+  ],
+  "expected_changed_fields": [
+    "bpbLabel",
+    "rootLabel"
+  ],
+  "media_before": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461XXXXZ",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461XXXXZ",
+    "bootSha256": "84215a7cd9f3d18f6ebcddb32d58120b2d2d57a7c7efec03c47164610ce321e7",
+    "rootSha256": "d1ba8bb2fd0d397d41e244c6a101fe2e0bac552676a6614380d1a45bf857208a"
+  },
+  "media_after": {
+    "bytesPerSector": 512,
+    "reservedSectors": 1,
+    "fatCount": 2,
+    "rootEntries": 512,
+    "sectorsPerFat": 16,
+    "rootLba": 33,
+    "volumeId": 1346634189,
+    "volumeIdHex": "0x504401CD",
+    "bpbLabel": "PD0461XXXX0",
+    "fsType": "FAT16",
+    "rootLabel": "PD0461XXXX0",
+    "bootSha256": "73175c726c7007271a11ccc30a743e39a237c89e187768f3b5079996b7bea52b",
+    "rootSha256": "08a9c138cc3b174314255c41a1f5d6fc93521a2e68111edbca310a93cf7bade8"
+  },
+  "one_dimension_only": true,
+  "device_matches_status": true,
+  "pass": true
+}

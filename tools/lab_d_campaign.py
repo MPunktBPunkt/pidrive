@@ -564,12 +564,83 @@ def identity_diffs(before: dict, after: dict) -> list[str]:
     return sorted(key for key in before if before.get(key) != after.get(key))
 
 
+def next_volume_label(current: str, explicit: str = "") -> str:
+    """FAT volume label ≤11 chars. Overnight loops must never stall on equal label.
+
+    Append-X works until length 11; then rotate the last character (A–Z / 0–9).
+    """
+    if explicit:
+        out = explicit[:11]
+        if out == (current or "")[:11]:
+            raise ValueError("explicit --label equals current label")
+        return out
+    cur = (current or "").strip()[:11]
+    if len(cur) < 11:
+        return (cur + "X")[:11]
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    last = cur[-1].upper()
+    idx = alphabet.find(last)
+    start = idx if idx >= 0 else -1
+    for step in range(1, len(alphabet) + 1):
+        nxt = alphabet[(start + step) % len(alphabet)]
+        cand = cur[:-1] + nxt
+        if cand != cur:
+            return cand
+    flip = "Q" if not cur.startswith("Q") else "Z"
+    return (flip + cur[1:])[:11]
+
+
+def stream_active(status: dict) -> bool:
+    msc = status.get("msc") or {}
+    stream = msc.get("stream") or status.get("stream") or {}
+    return bool(stream.get("active"))
+
+
+def ensure_stream_quiet(esp: str, timeout_s: float = 8.0) -> dict[str, Any]:
+    """Remount is skipped while stream.active (msc.remount_skip). Stop first."""
+    try:
+        http_json(f"{esp}/api/lab/stop", "POST", {})
+    except Exception:
+        pass
+    # Best-effort pump audio_stop (same pattern as nbt_hu_sim.prep_lab)
+    try:
+        import socket
+
+        host = esp.split("://", 1)[-1].split(":", 1)[0].split("/", 1)[0]
+        with socket.create_connection((host, 9090), timeout=1.5) as sock:
+            sock.sendall(b'{"t":"audio_stop"}\n')
+            time.sleep(0.2)
+    except Exception:
+        pass
+    deadline = time.time() + timeout_s
+    last: dict[str, Any] = {}
+    while time.time() < deadline:
+        last = http_json(f"{esp}/api/status")
+        if not stream_active(last):
+            phase = str((last.get("msc") or {}).get("phase") or "")
+            if phase in ("", "quiet", "idle", "index", "settle"):
+                return {"ok": True, "phase": phase or "quiet"}
+            return {"ok": True, "phase": phase}
+        time.sleep(0.25)
+    return {
+        "ok": False,
+        "phase": (last.get("msc") or {}).get("phase"),
+        "stream_active": stream_active(last) if last else None,
+        "error": "stream still active — remount would remount_skip",
+    }
+
+
 def run_identity(args: argparse.Namespace) -> int:
     out = args.out or default_out(f"identity-{args.dimension}")
     art = RunArtifacts(out, "identity", args)
     esp = args.esp.rstrip("/")
     result: dict[str, Any] = {"dimension": args.dimension}
     try:
+        quiet = ensure_stream_quiet(esp)
+        result["quiet"] = quiet
+        if not quiet.get("ok"):
+            raise RuntimeError(quiet.get("error") or "stream not quiet")
+
         before_status = http_json(f"{esp}/api/status")
         before = identity_values(before_status)
         media_before = capture_media(args.device, out, "before")
@@ -584,9 +655,7 @@ def run_identity(args: argparse.Namespace) -> int:
             bump = False
         elif args.dimension == "label":
             target_id = fixed_id
-            target_label = (args.label or (fixed_label[:10] + "X") or "PIDRIVEX")[:11]
-            if target_label == fixed_label:
-                raise ValueError("target label equals current label")
+            target_label = next_volume_label(fixed_label, args.label or "")
             bump = False
         else:
             target_id = fixed_id
@@ -707,6 +776,14 @@ def self_test() -> int:
     assert identity_diffs(
         {"usbSerial": "A", "bpbLabel": "X"}, {"usbSerial": "B", "bpbLabel": "X"}
     ) == ["usbSerial"]
+    assert next_volume_label("PD0461") == "PD0461X"
+    assert next_volume_label("PD0461XXXXX") == "PD0461XXXXY"
+    assert next_volume_label("PD0461XXXX9") == "PD0461XXXXA"
+    lab = "PD0461XXXXX"
+    for _ in range(40):
+        nxt = next_volume_label(lab)
+        assert nxt != lab and len(nxt) <= 11
+        lab = nxt
     print("self-test PASS")
     return 0
 
