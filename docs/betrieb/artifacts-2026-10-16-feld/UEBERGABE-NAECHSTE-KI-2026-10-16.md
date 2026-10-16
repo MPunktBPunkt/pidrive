@@ -31,7 +31,7 @@ Der 512‑KiB-Modelltest hat die Vorhersage `8+4×240+56` widerlegt und durch da
 | A7 in drei Captures (Blöcke) | ☑ `240,240,32,240,240,32` Summe 1024 |
 | A7 kontinuierliche LBA | ☑ z. B. BOB `17489→17729→17969→18001→18241→18481`; Tip Bayern anderer Slot `16465…17457` |
 | Quiet-Gate `play`/`scan` | ☑ in `soft_cycle_orchestrator.py` |
-| Soft-USB `armSoftUsbKeepIdentity` auf GitHub | ✗ **nicht** auf `esp32.pidrive` origin; lokal dirty (3 Dateien) |
+| Soft-USB `armSoftUsbKeepIdentity` auf GitHub | ☑ esp32.pidrive `0ec4b89` (Abend). Lab-Nachtest: Soft-USB PASS + Serial-Keep |
 | R34 Rohquelle | ☑ in `HU-Technical-Facts.md` R34/R23 (S3/S4/F1) — **nicht** aus heutigem Feldlauf, aber nicht „ohne Quelle“ |
 | Matrix-Inkonsistenz | ⚠ §1 A2 = [S], aber §2-Tabelle „Max. READ10“ noch Status **[A]** — Housekeeping |
 | `HU-Technical-Facts.md` ohne A7-Blindcommit | ☑ korrekt freigehalten |
@@ -88,8 +88,8 @@ Der 512‑KiB-Modelltest hat die Vorhersage `8+4×240+56` widerlegt und durch da
 | ID | Punkt | Prio |
 |----|-------|------|
 | **B1** | Panic/Brownout physischer OTG: UART-Resetgrund, Panic-Tail, `resetReason`, Netzteil A/B, VBUS (Q11) | **P0** |
-| **B2** | MessCapture vor Tip/OTG armieren + Auto-Stop (`play` leer / Underrun-Spike); Lab-Smoke, dann Feld | C → vor nächstem Feld |
-| **B3** | `esp32.pidrive`: Soft-USB-Identity-Fix committen + pushen (`armSoftUsbKeepIdentity`) | C sofort |
+| **B2** | MessCapture `arm` + Auto-Stop | ☑ Lab (`tools/mess_hu_capture.py arm`); Feld-Erstnutzung offen |
+| **B3** | Soft-USB-Identity-Fix pushen | ☑ esp32.pidrive `0ec4b89` |
 | **B4** | Matrix §2 „Max. READ10“ Status [A]→[S] angleichen; R34-Zeile Quelle `Facts R34` explizit | Housekeeping |
 | **B5** | A3/A4: Stall-Leiter 10/20/30/45 s **pro 240-CBW** am NBT — erst dann Facts | nach B1 |
 | **B6** | A5 Prefetch [H] — Marker+LBA, keine Bestätigungsmessung | später |
@@ -141,7 +141,8 @@ Vorhersage **vorher schriftlich**, z. B. 256 KiB → `H0: 240,240,32` / Alte
 | Panic/OTG | 🔴 **alleiniges P0** |
 | Stall | 🔴 Freeze (korrekt) |
 | F0 | 🟡 Tooling bereit, zu früh |
-| esp32 Soft-USB-Push | 🟡 lokal dirty |
+| esp32 Soft-USB-Push | 🟢 `0ec4b89` |
+| Capture-Arm (B2) Lab | 🟢 |
 
 ---
 

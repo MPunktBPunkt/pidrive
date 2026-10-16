@@ -9,6 +9,7 @@ Examples:
   python3 tools/mess_hu_capture.py --esp http://192.168.178.88 sit usb_cycle --hold-ms 600
   python3 tools/mess_hu_capture.py --esp http://192.168.178.88 dump -o /tmp/mess-cmds.json
   python3 tools/mess_hu_capture.py --esp http://192.168.178.88 q10 --wait 20
+  python3 tools/mess_hu_capture.py --esp http://192.168.178.88 arm --sit usb_cycle --timeout 25 -o /tmp/arm.json
 """
 from __future__ import annotations
 
@@ -178,6 +179,185 @@ def cmd_q10(args: argparse.Namespace) -> int:
     return 0 if summary.get("n", 0) > 0 else 1
 
 
+def _stream_fields(status: dict) -> dict[str, Any]:
+    m = status.get("msc") or {}
+    s = m.get("stream") or {}
+    return {
+        "play": status.get("playingName") or "",
+        "uid": status.get("playingUid") or "",
+        "stream": bool(s.get("active")),
+        "host": int(s.get("hostAbsCursor") or 0),
+        "abs": int(s.get("absEnd") or 0),
+        "und": int(s.get("underruns") or 0),
+        "armed": bool(s.get("cursorArmed")),
+        "ser": m.get("usbSerial"),
+        "reset": status.get("resetReason"),
+        "uptime": status.get("uptime"),
+    }
+
+
+def decide_arm_stop(
+    *,
+    seen_play: bool,
+    play: str,
+    und: int,
+    baseline_und: int,
+    underrun_delta: int,
+    stream: bool,
+    host: int,
+    abs_end: int,
+    host_lag_blocks: int,
+    host_stuck_abs_min: int,
+    elapsed_s: float,
+    host_stuck_grace_s: float,
+) -> str | None:
+    """Return stop reason or None to keep watching."""
+    if seen_play and not play:
+        return "play_cleared"
+    if (und - baseline_und) >= underrun_delta:
+        return "underrun_spike"
+    host_stuck = (
+        stream
+        and abs_end > host_stuck_abs_min
+        and host > 0
+        and abs_end > host + host_lag_blocks
+    )
+    if host_stuck and elapsed_s >= host_stuck_grace_s:
+        return "host_stuck"
+    return None
+
+
+def cmd_arm(args: argparse.Namespace) -> int:
+    """Arm MessCapture *before* Tip/OTG (or soft sit), then auto-stop on episode end.
+
+    Stop reasons (field lesson 16.10.): play cleared after having play, underrun spike,
+    host cursor stuck while abs advances, or timeout.
+    """
+    base = esp_base(args)
+    mark = args.mark or "arm_window"
+    http_json(
+        f"{base}/api/lab/mess",
+        "POST",
+        {"enable": True, "reset": True, "mode": "ram_local", "mark": mark},
+    )
+    try:
+        http_json(f"{base}/api/lab/situation", "POST", {"name": "mark", "mark": f"{mark}_armed"})
+    except urllib.error.URLError:
+        pass
+
+    sit_out = None
+    if args.sit:
+        body: dict[str, Any] = {"name": args.sit, "holdMs": args.hold_ms or 600}
+        if args.keep_identity:
+            body["keepIdentity"] = True
+        sit_out = http_json(f"{base}/api/lab/situation", "POST", body)
+        print(f"sit {args.sit} ok={sit_out.get('ok')}", flush=True)
+    elif args.usb_cycle_ms is not None:
+        sit_out = http_json(f"{base}/api/lab/usb", "POST", {"cycleMs": args.usb_cycle_ms})
+        print(f"usb cycleMs={args.usb_cycle_ms} ok={sit_out.get('ok')}", flush=True)
+
+    t0 = time.time()
+    deadline = t0 + args.timeout
+    samples: list[dict[str, Any]] = []
+    seen_play = False
+    baseline_und: int | None = None
+    stop_reason = "timeout"
+    poll = max(0.2, float(args.poll))
+
+    while time.time() < deadline:
+        st = http_json(f"{base}/api/status")
+        f = _stream_fields(st)
+        f["t"] = round(time.time() - t0, 2)
+        samples.append(f)
+        if baseline_und is None:
+            baseline_und = f["und"]
+        if f["play"]:
+            seen_play = True
+        und_delta = f["und"] - (baseline_und or 0)
+        reason = decide_arm_stop(
+            seen_play=seen_play,
+            play=f["play"],
+            und=f["und"],
+            baseline_und=baseline_und or 0,
+            underrun_delta=args.underrun_delta,
+            stream=f["stream"],
+            host=f["host"],
+            abs_end=f["abs"],
+            host_lag_blocks=args.host_lag_blocks,
+            host_stuck_abs_min=args.host_stuck_abs_min,
+            elapsed_s=time.time() - t0,
+            host_stuck_grace_s=args.host_stuck_grace_s,
+        )
+        if reason:
+            stop_reason = reason
+            break
+        print(
+            f"t={f['t']:5.1f} play={f['play']!r} stream={f['stream']} "
+            f"host={f['host']} abs={f['abs']} und={f['und']} (+{und_delta})",
+            flush=True,
+        )
+        time.sleep(poll)
+
+    stop = http_json(
+        f"{base}/api/lab/mess",
+        "POST",
+        {"stop": True, "reason": stop_reason, "mark": f"{mark}_stop"},
+    )
+    mess = http_json(f"{base}/api/lab/mess")
+    cmds = mess.get("cmds") or []
+    # paginate if API supports after=
+    after = 0
+    all_cmds = list(cmds)
+    for _ in range(40):
+        page = http_json(f"{base}/api/lab/mess?after={after}")
+        page_cmds = page.get("cmds") or []
+        if not page_cmds:
+            break
+        all_cmds.extend(page_cmds)
+        seqs = [c.get("seq") for c in page_cmds if c.get("seq") is not None]
+        nxt = page.get("nextAfter") or page.get("nextSeq") or page.get("next")
+        if nxt is None and seqs:
+            nxt = max(seqs)
+        if nxt is None or int(nxt) <= after:
+            break
+        after = int(nxt)
+        if page.get("hasMore", page.get("more")) is False:
+            break
+
+    # de-dup by seq if present
+    seen: set[Any] = set()
+    uniq: list[dict] = []
+    for c in all_cmds:
+        key = c.get("seq")
+        if key is not None:
+            if key in seen:
+                continue
+            seen.add(key)
+        uniq.append(c)
+    summary = summarize_q10(uniq)
+    result = {
+        "ok": True,
+        "stop_reason": stop_reason,
+        "elapsed_s": round(time.time() - t0, 2),
+        "seen_play": seen_play,
+        "baseline_und": baseline_und,
+        "samples": samples,
+        "sit": sit_out,
+        "stop": {"ok": stop.get("ok"), "mess": stop.get("mess")},
+        "cmdCapture": mess.get("cmdCapture"),
+        "n_cmds": len(uniq),
+        "q10": summary,
+    }
+    if args.out:
+        Path(args.out).write_text(
+            json.dumps({"result": result, "commands": uniq}, indent=2),
+            encoding="utf-8",
+        )
+        print(f"wrote {args.out}", flush=True)
+    print(json.dumps({k: result[k] for k in result if k != "samples"}, indent=2))
+    return 0 if mess.get("cmdCapture") else 2
+
+
 def self_test() -> int:
     """Offline checks for field-aware Q10 summary (no ESP)."""
     mixed = [
@@ -196,10 +376,43 @@ def self_test() -> int:
     only8 = summarize_q10(mixed[:2])
     assert only8["all_4kib"] is True
     assert only8["matches_field_cbw"] is True
+    # arm helper: stream field extraction shape
+    fake = {
+        "playingName": "X",
+        "playingUid": "fav0",
+        "resetReason": "software",
+        "uptime": "1s",
+        "msc": {"usbSerial": "PD0001", "stream": {
+            "active": True, "hostAbsCursor": 100, "absEnd": 5000, "underruns": 10, "cursorArmed": True,
+        }},
+    }
+    f = _stream_fields(fake)
+    assert f["play"] == "X" and f["host"] == 100 and f["und"] == 10
+    assert decide_arm_stop(
+        seen_play=True, play="", und=0, baseline_und=0, underrun_delta=50_000,
+        stream=False, host=0, abs_end=0, host_lag_blocks=8000,
+        host_stuck_abs_min=20_000, elapsed_s=1.0, host_stuck_grace_s=3.0,
+    ) == "play_cleared"
+    assert decide_arm_stop(
+        seen_play=False, play="", und=60_000, baseline_und=0, underrun_delta=50_000,
+        stream=True, host=100, abs_end=100_000, host_lag_blocks=8000,
+        host_stuck_abs_min=20_000, elapsed_s=1.0, host_stuck_grace_s=3.0,
+    ) == "underrun_spike"
+    assert decide_arm_stop(
+        seen_play=False, play="", und=0, baseline_und=0, underrun_delta=50_000,
+        stream=True, host=100, abs_end=100_000, host_lag_blocks=8000,
+        host_stuck_abs_min=20_000, elapsed_s=4.0, host_stuck_grace_s=3.0,
+    ) == "host_stuck"
+    assert decide_arm_stop(
+        seen_play=False, play="X", und=0, baseline_und=0, underrun_delta=50_000,
+        stream=False, host=0, abs_end=0, host_lag_blocks=8000,
+        host_stuck_abs_min=20_000, elapsed_s=1.0, host_stuck_grace_s=3.0,
+    ) is None
     print("self_test OK", json.dumps({
         "mixed_all_4kib": s["all_4kib"],
         "mixed_matches_field": s["matches_field_cbw"],
         "hist": s["blocks_hist"],
+        "arm_fields": f["play"],
     }))
     return 0
 
@@ -236,6 +449,25 @@ def main() -> int:
     p_q10.add_argument("--hold-ms", type=int, default=600)
     p_q10.add_argument("-o", "--out", default=None)
 
+    p_arm = sub.add_parser(
+        "arm",
+        help="arm capture BEFORE tip/OTG/soft-sit; auto-stop on play clear / underrun / host-stuck",
+    )
+    p_arm.add_argument("--sit", default=None, help="situation after arm, e.g. usb_cycle")
+    p_arm.add_argument("--usb-cycle-ms", type=int, default=None, help="soft USB cycle after arm")
+    p_arm.add_argument("--hold-ms", type=int, default=600)
+    p_arm.add_argument("--keep-identity", action="store_true")
+    p_arm.add_argument("--timeout", type=float, default=30.0)
+    p_arm.add_argument("--poll", type=float, default=0.4)
+    p_arm.add_argument("--underrun-delta", type=int, default=50000,
+                       help="stop when underruns rise by this much vs baseline")
+    p_arm.add_argument("--host-lag-blocks", type=int, default=8000,
+                       help="abs-host lag that counts as stuck (blocks)")
+    p_arm.add_argument("--host-stuck-abs-min", type=int, default=20000)
+    p_arm.add_argument("--host-stuck-grace-s", type=float, default=3.0)
+    p_arm.add_argument("--mark", default="arm_window")
+    p_arm.add_argument("-o", "--out", default=None)
+
     args = ap.parse_args()
     if args.self_test:
         return self_test()
@@ -258,6 +490,8 @@ def main() -> int:
             return cmd_dump(args)
         if args.cmd == "q10":
             return cmd_q10(args)
+        if args.cmd == "arm":
+            return cmd_arm(args)
     except urllib.error.URLError as e:
         print(f"HTTP error: {e}", file=sys.stderr)
         return 1

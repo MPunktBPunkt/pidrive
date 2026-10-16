@@ -1,0 +1,120 @@
+usb cycleMs=600 ok=True
+t=  0.0 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  0.6 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  1.2 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  1.8 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  2.5 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  3.1 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  3.7 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  4.3 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  4.9 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  5.5 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  6.1 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  6.8 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  7.4 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  8.0 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  8.6 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  9.2 play='' stream=False host=0 abs=0 und=0 (+0)
+t=  9.8 play='' stream=False host=0 abs=0 und=0 (+0)
+t= 10.4 play='' stream=False host=0 abs=0 und=0 (+0)
+t= 11.1 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 11.7 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 12.3 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 12.9 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 13.5 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 14.1 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 14.8 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 15.4 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 16.0 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 16.6 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 17.2 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+t= 17.8 play='Rock Antenne' stream=False host=0 abs=0 und=0 (+0)
+wrote /home/martin/projects/pidrive/docs/betrieb/artifacts-2026-10-16-lab/lab-measures-after-handoff/arm-usb-cycle.json
+{
+  "ok": true,
+  "stop_reason": "timeout",
+  "elapsed_s": 18.49,
+  "seen_play": true,
+  "baseline_und": 0,
+  "sit": {
+    "ok": true,
+    "action": "cycle",
+    "usbAttached": false,
+    "otgPlugged": true,
+    "note": "soft_usb=D+_pullup_not_VBUS"
+  },
+  "stop": {
+    "ok": true,
+    "mess": {
+      "enabled": true,
+      "usbAttached": true,
+      "usbDetachN": 15,
+      "usbAttachN": 15,
+      "cmds": 50,
+      "drops": 0,
+      "chunks": 126,
+      "ring": 50,
+      "capacity": 512,
+      "mode": "ram_local",
+      "captureActive": false,
+      "startSeq": 1,
+      "endSeq": 49,
+      "overflow": 0,
+      "drop": 0,
+      "complete": true,
+      "endReason": "timeout",
+      "oldestSeq": 1,
+      "newestSeq": 50,
+      "emitSeq": 49,
+      "emitDrops": 0,
+      "activeCmd": false,
+      "healthy": true,
+      "clock": "probe-int64-us",
+      "port": "esp-capture-port",
+      "controlOwner": "app",
+      "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+      "build": "mess",
+      "wifiOff": false,
+      "wifiOffPending": false
+    }
+  },
+  "cmdCapture": true,
+  "n_cmds": 50,
+  "q10": {
+    "n": 46,
+    "blocks_mode": 8,
+    "blocks_hist": {
+      "1": 10,
+      "8": 29,
+      "16": 2,
+      "24": 1,
+      "48": 1,
+      "120": 1,
+      "232": 1,
+      "240": 1
+    },
+    "blocks_8_share": 0.63,
+    "blocks_240_share": 0.022,
+    "field_cbw_blocks": [
+      8,
+      240
+    ],
+    "field_modes_seen": [
+      8,
+      240
+    ],
+    "matches_field_cbw": true,
+    "bytes_p50": 4096.0,
+    "dur_us_p50": 3818.0,
+    "gap_us_p50": 253.0,
+    "gap_us_p95": 11004.0,
+    "all_4kib": false,
+    "epistemic": "blocks=CBW/command size (mess-fw); not TinyUSB 4 KiB callback chunks. Do not treat all_4kib=false as lab failure when 240 is present.",
+    "head_gaps_ms": [
+      13.5,
+      10.71,
+      10.84,
+      11.0
+    ]
+  }
+}
