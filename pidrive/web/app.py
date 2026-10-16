@@ -51,6 +51,7 @@ try:
     from web.api.routes_audio    import audio_bp;    app.register_blueprint(audio_bp)
     from web.api.routes_webradio import webradio_bp; app.register_blueprint(webradio_bp)
     from web.api.routes_music   import music_bp;    app.register_blueprint(music_bp)
+    from web.api.routes_fmtx    import fmtx_bp;     app.register_blueprint(fmtx_bp)
 except Exception as _bp_err:
     import log as _log
     _log.error(f"WebUI Blueprint-Import FEHLER: {_bp_err} — Betroffene API-Routen nicht verfügbar!")
@@ -141,6 +142,17 @@ def page_rf_tools():
         _log.error(f"build_view_model rf-tools.html: {_e}")
         vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
     return render_template("rf-tools.html", vm=vm)
+
+@app.route("/fm-tx")
+def page_fm_tx():
+    try:
+        vm = build_view_model()
+        vm = _sanitize_floats(vm)
+    except Exception as _e:
+        import log as _log
+        _log.error(f"build_view_model fm-tx.html: {_e}")
+        vm = {"version": "?", "ip": "?", "status": {}, "menu": {}, "settings": {}}
+    return render_template("fm-tx.html", vm=vm)
 
 @app.route("/diagnostics")
 def page_diagnostics():

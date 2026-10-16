@@ -99,6 +99,28 @@ _DEFAULTS = {
     "last_web_station":   None,
     # Menüvorrang am BMW (Q-L): Sekunden Menüanzeige nach Navigation
     "menu_view_window_s": 3.5,
+    # FM-Sender (docs/planung/KONZEPT-FM-TX.md) — Merge mit modules.tx.tx_manager.DEFAULTS
+    "fm_tx": {
+        "enabled":         False,
+        "band":            "ukw",          # ukw | pmr446 (nur mode=lab_dummy)
+        "freq_mhz":        91.0,
+        "pmr_channel":     8,
+        "pin":             4,              # nur GPCLK-Pins laut Backend
+        "backend":         "pifmrds",      # pifmrds | rpitx | chip
+        "source":          "mirror",       # mirror | tone1k | carrier | silence
+        "stereo":          True,
+        "preemph_us":      50,
+        "rds": {"enabled": True, "pi": "D3A2", "ps": "PIDRIVE",
+                "rt_mode": "auto", "rt": "", "ps_rotate": False},
+        "mode":            "lab_dummy",    # lab_dummy | cable | antenna
+        "consent_ts":      0,
+        "consent_mode":    "",
+        "max_runtime_min": 60,
+        "block_on_dab":    True,
+        "autostart":       "boot_only",    # off | boot_only | always (Boot-Ansage, danach aus/weiter)
+        "chip": {"type": "qn8027", "bus": 1, "addr": "", "power": 0,
+                 "reset_gpio": None, "xtal_24mhz": False},   # Backend chip (I2C)
+    },
 }
 
 

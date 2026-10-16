@@ -1,0 +1,26 @@
+[Unit]
+Description=PiDrive FM-Sender (UKW+RDS via GPCLK, PMR446 nur Labor)
+Documentation=file:///home/pidrive/pidrive/docs/planung/KONZEPT-FM-TX.md
+After=pidrive_core.service pipewire-pulse.service
+Wants=pipewire-pulse.service
+
+[Service]
+Type=simple
+# root: /dev/mem + DMA (PiFmRds/rpitx). Web/CLI sprechen nur über /tmp/pidrive_fmtx_*.
+User=root
+WorkingDirectory=/home/pidrive/pidrive/pidrive
+Environment=PYTHONPATH=/home/pidrive/pidrive/pidrive
+Environment=PULSE_SERVER=unix:/var/run/pulse/native
+ExecStart=/usr/bin/python3 -u -m modules.tx.service
+# SIGINT: Dienst stoppt den Sender, PiFmRds beendet DMA sauber
+KillSignal=SIGINT
+TimeoutStopSec=10
+# Takt-Reset auch nach Absturz/kill -9 (GPIO 4/21 → Eingang)
+ExecStopPost=/bin/bash /home/pidrive/pidrive/tools/fmtx_clock_reset.sh
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

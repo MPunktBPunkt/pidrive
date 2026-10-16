@@ -135,6 +135,13 @@
       "file": "pidrive/web/app.py"
     },
     {
+      "path": "/fm-tx",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/app.py"
+    },
+    {
       "path": "/diagnostics",
       "methods": [
         "GET"
@@ -598,6 +605,56 @@
         "GET"
       ],
       "file": "pidrive/web/api/routes_dab.py"
+    },
+    {
+      "path": "/api/fmtx/config",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
+    },
+    {
+      "path": "/api/fmtx/start",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
+    },
+    {
+      "path": "/api/fmtx/announce",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
+    },
+    {
+      "path": "/api/fmtx/stop",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
+    },
+    {
+      "path": "/api/fmtx/state",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
+    },
+    {
+      "path": "/api/fmtx/rds",
+      "methods": [
+        "POST"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
+    },
+    {
+      "path": "/api/fmtx/plan",
+      "methods": [
+        "GET"
+      ],
+      "file": "pidrive/web/api/routes_fmtx.py"
     },
     {
       "path": "/api/music/info",

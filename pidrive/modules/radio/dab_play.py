@@ -430,7 +430,16 @@ def _play_station_locked(station, S, settings=None):
             or str((settings or {}).get("audio_output") or "").lower()
             in ("usb_gadget", "usb", "esp")
         )
-        if _usb_gadget:
+        # FM-Sender spiegelt den Sink-Monitor → DAB ebenfalls über Pulse
+        _fmtx_mirror = False
+        try:
+            from modules.tx import tx_manager as _fmtx
+            _fmtx_mirror = _fmtx.needs_pulse_monitor()
+        except Exception:
+            _fmtx_mirror = False
+        if _fmtx_mirror and not _usb_gadget:
+            log.info("DAB: FM-Sender spiegelt → Pulse-Monitor-Pfad")
+        if _usb_gadget or _fmtx_mirror:
             _welle_env["PULSE_SERVER"] = "unix:/var/run/pulse/native"
             _sink = (_adec.get("sink") or "").strip()
             if not _sink:

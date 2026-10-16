@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% block title %}PiDrive — FM-Sender{% endblock %}
+{% block content %}
+<div class="card" id="txLegal" style="border-color:var(--yellow)">
+  <div class="card-title">⚠ Rechtshinweis</div>
+  <div style="font-size:12px;line-height:1.5;color:var(--muted)">
+    Der GPIO-Sender erzeugt ein <b style="color:var(--text)">Rechtecksignal mit starken Oberwellen</b>
+    (2. Harmonische von UKW liegt im DAB-Band III). Zulässig sind für Kfz-UKW-Sender nur
+    Kleinstleistungen (SRD, Größenordnung 50 nW ERP — vor Nutzung prüfen).
+    Antennenbetrieb nur mit <b style="color:var(--text)">Tiefpass am Pin</b>.
+    <b style="color:var(--text)">PMR446 aus einem GPIO ist nicht zulässig</b> und nur im Labor mit Dummy-Load freigeschaltet.
+    Verantwortung für Antenne, Leistung und Rechtslage liegt beim Betreiber.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">📻 Sender
+    <span id="txBadge" style="margin-left:8px;font-weight:normal;text-transform:none;letter-spacing:0">–</span>
+  </div>
+  <div id="txSummary" style="font-size:13px;line-height:1.6">Lade…</div>
+  <div id="txWarn" style="font-size:12px;color:var(--yellow);margin-top:6px;line-height:1.5"></div>
+  <div id="txErr" style="font-size:12px;color:#ff8080;margin-top:4px"></div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn primary" onclick="txStart()">▶ Senden</button>
+    <button class="btn" onclick="txStop()">■ Stopp</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">🎛 Frequenz &amp; Quelle</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)">
+    <label>Band
+      <select id="cfgBand" onchange="onBandChange()" class="fmtx-in">
+        <option value="ukw">UKW 87,5–108 MHz</option>
+        <option value="pmr446">PMR446 (nur Labor/Dummy-Load)</option>
+      </select>
+    </label>
+    <label id="wrapFreq">Frequenz MHz
+      <input id="cfgFreq" type="number" min="87.5" max="108" step="0.05" value="91.00"
+             onchange="loadPlan()" class="fmtx-in" style="width:90px">
+    </label>
+    <label id="wrapPmr" style="display:none">PMR-Kanal
+      <select id="cfgPmr" onchange="loadPlan()" class="fmtx-in"></select>
+    </label>
+    <label>Backend
+      <select id="cfgBackend" onchange="fillPins()" class="fmtx-in"></select>
+    </label>
+    <label>Pin
+      <select id="cfgPin" class="fmtx-in"></select>
+    </label>
+    <label>Quelle
+      <select id="cfgSource" class="fmtx-in">
+        <option value="mirror">Aktuelle Wiedergabe spiegeln</option>
+        <option value="tone1k">1-kHz-Testton</option>
+        <option value="carrier">Nur Träger</option>
+        <option value="silence">Stille</option>
+      </select>
+    </label>
+    <label><input id="cfgStereo" type="checkbox" checked> Stereo</label>
+    <label>Laufzeit max. min
+      <input id="cfgRuntime" type="number" min="1" max="600" value="60" class="fmtx-in" style="width:60px">
+    </label>
+    <label><input id="cfgBlockDab" type="checkbox" checked> Blockieren bei DAB-Konflikt</label>
+  </div>
+  <div id="freqHint" style="font-size:11px;color:var(--muted);margin-top:6px">
+    Raster 50 kHz · Pi 4: unter 93 MHz empfohlen · Pin nur GPCLK (GPIO 4, GPIO 21 nur mit passendem Backend)
+  </div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn primary" onclick="saveConfig()">Speichern</button>
+  </div>
+  <div id="planBox" style="font-size:12px;margin-top:8px;line-height:1.5"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">🧪 Betriebsart</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)">
+    <select id="cfgMode" class="fmtx-in">
+      <option value="lab_dummy">Labor / Dummy-Load (geschirmt)</option>
+      <option value="cable">Kabel + Dämpfungsglied</option>
+      <option value="antenna">Antenne (nur mit Tiefpass)</option>
+    </select>
+    <button class="btn" onclick="confirmMode()">Bestätigen…</button>
+    <span id="consentInfo"></span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">📢 Boot-Ansage</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)">
+    <label>Autostart
+      <select id="cfgAutostart" onchange="saveAutostart()" class="fmtx-in">
+        <option value="off">Aus — keine Ansage beim Start</option>
+        <option value="boot_only">Nur Ansage, danach aus</option>
+        <option value="always">Ansage, danach Quelle senden</option>
+      </select>
+    </label>
+    <button class="btn" onclick="txAnnounce()">Ansage testen</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-top:6px">
+    „PiDrive is starting“ einmal pro Boot am Ende der Initialisierung — nur wenn der Sender aktiviert
+    und die Betriebsart bestätigt ist. Ohne Sprachdatei kommt ein 1-kHz-Ton.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">🔤 RDS</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)">
+    <label><input id="rdsOn" type="checkbox" checked> RDS an</label>
+    <label>PI <input id="rdsPi" maxlength="4" class="fmtx-in" style="width:60px" value="D3A2"></label>
+    <label>PS <input id="rdsPs" maxlength="8" class="fmtx-in" style="width:90px" value="PIDRIVE"></label>
+    <label><input id="rdsRotate" type="checkbox"> PS rotiert Sendername</label>
+    <label>RT
+      <select id="rdsMode" class="fmtx-in">
+        <option value="auto">automatisch (Now-Playing)</option>
+        <option value="fixed">fest</option>
+      </select>
+    </label>
+    <input id="rdsRt" maxlength="64" placeholder="Radiotext (max. 64)" class="fmtx-in" style="width:260px">
+    <button class="btn" onclick="saveRds()">RDS übernehmen</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">🔭 Freie Frequenz suchen
+    <span style="font-weight:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px">
+      RTL-SDR-Range-Scan · DAB/FM-Empfang vorher stoppen · Sender aus
+    </span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)">
+    <label>Start <input id="scanStart" type="number" step="0.1" value="87.5" class="fmtx-in" style="width:70px"></label>
+    <label>Stop <input id="scanStop" type="number" step="0.1" value="93.0" class="fmtx-in" style="width:70px"></label>
+    <button class="btn" id="scanBtn" onclick="scanFree()">Suchen</button>
+  </div>
+  <div id="freeBox" style="font-size:12px;margin-top:8px;line-height:1.6"></div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<style>
+.fmtx-in{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px;margin-left:4px}
+</style>
+<script>
+let TX_CFG = null;
+let TX_CAPS = {};
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function postJson(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'},
+                              body: JSON.stringify(body || {})});
+  let j = {};
+  try { j = await r.json(); } catch(e) { j = {ok:false, error:'HTTP '+r.status}; }
+  return j;
+}
+
+function fillPins(){
+  const be = el('cfgBackend').value;
+  const caps = TX_CAPS[be] || {};
+  const pins = caps.pins || [4];
+  const cur = TX_CFG ? Number(TX_CFG.pin) : 4;
+  el('cfgPin').innerHTML = pins.map(p => `<option value="${p}" ${p===cur?'selected':''}>GPIO ${p}</option>`).join('');
+}
+
+function onBandChange(){
+  const pmr = el('cfgBand').value === 'pmr446';
+  el('wrapFreq').style.display = pmr ? 'none' : '';
+  el('wrapPmr').style.display = pmr ? '' : 'none';
+  if (pmr) el('cfgBackend').value = 'rpitx';
+  else if (el('cfgBackend').value === 'rpitx') el('cfgBackend').value = 'pifmrds';
+  fillPins();
+  loadPlan();
+}
+
+function applyConfig(j){
+  TX_CFG = j.config; TX_CAPS = j.capabilities || {};
+  const c = TX_CFG;
+  el('cfgBackend').innerHTML = Object.keys(TX_CAPS).map(n => {
+    const cp = TX_CAPS[n];
+    const lab = n + (cp.available ? '' : ' (nicht verfügbar)');
+    return `<option value="${n}" title="${esc(cp.why||'')}">${esc(lab)}</option>`;
+  }).join('');
+  el('cfgPmr').innerHTML = (j.pmr_channels||[]).map(p =>
+    `<option value="${p.channel}">K${p.channel} · ${p.freq_mhz.toFixed(5)} MHz</option>`).join('');
+  el('cfgBand').value = c.band;
+  el('cfgFreq').value = Number(c.freq_mhz).toFixed(2);
+  el('cfgPmr').value = c.pmr_channel;
+  el('cfgBackend').value = c.backend;
+  el('cfgSource').value = c.source;
+  el('cfgStereo').checked = !!c.stereo;
+  el('cfgRuntime').value = c.max_runtime_min;
+  el('cfgBlockDab').checked = !!c.block_on_dab;
+  el('cfgMode').value = c.mode;
+  el('cfgAutostart').value = c.autostart || 'off';
+  const pmrOpt = el('cfgBand').querySelector('option[value="pmr446"]');
+  pmrOpt.disabled = c.mode !== 'lab_dummy';
+  el('rdsOn').checked = !!c.rds.enabled;
+  el('rdsPi').value = c.rds.pi;
+  el('rdsPs').value = c.rds.ps;
+  el('rdsMode').value = c.rds.rt_mode;
+  el('rdsRt').value = c.rds.rt || '';
+  el('rdsRotate').checked = !!c.rds.ps_rotate;
+  el('consentInfo').innerHTML = j.consent_ok
+    ? `✅ bestätigt ${c.consent_ts ? new Date(c.consent_ts*1000).toLocaleString() : ''}`
+    : `<span style="color:var(--yellow)">⚠ ${esc(j.consent_why)}</span>`;
+  const isPi4 = (j.pi_model||'').includes('Raspberry Pi 4');
+  el('freqHint').textContent = 'Raster 50 kHz · ' + (isPi4 ? 'Pi 4: unter 93 MHz empfohlen' : ('Modell: ' + (j.pi_model||'?')))
+    + ' · Pin nur GPCLK (laut Backend)';
+  const wrapF = el('wrapFreq'), wrapP = el('wrapPmr');
+  wrapF.style.display = c.band === 'pmr446' ? 'none' : '';
+  wrapP.style.display = c.band === 'pmr446' ? '' : 'none';
+  fillPins();
+}
+
+async function loadConfig(){
+  try{
+    const r = await fetch('/api/fmtx/config');
+    const j = await r.json();
+    if (!j.ok) { showToast('Config: ' + (j.error||'?'), 3000); return; }
+    applyConfig(j);
+    loadPlan();
+  }catch(e){ showToast('Config nicht ladbar', 3000); }
+}
+
+function formPatch(){
+  return {
+    band: el('cfgBand').value,
+    freq_mhz: Number(el('cfgFreq').value),
+    pmr_channel: Number(el('cfgPmr').value || 8),
+    backend: el('cfgBackend').value,
+    pin: Number(el('cfgPin').value || 4),
+    source: el('cfgSource').value,
+    stereo: el('cfgStereo').checked,
+    max_runtime_min: Number(el('cfgRuntime').value || 60),
+    block_on_dab: el('cfgBlockDab').checked,
+  };
+}
+
+async function saveConfig(){
+  const j = await postJson('/api/fmtx/config', formPatch());
+  if (!j.ok) { showToast('Fehler: ' + (j.error||'?'), 4000); return false; }
+  applyConfig(j); showToast('Gespeichert'); loadPlan();
+  return true;
+}
+
+async function confirmMode(){
+  const m = el('cfgMode').value;
+  const txt = {
+    lab_dummy: 'Labor: Ausgang an Dummy-Load bzw. geschirmtem Aufbau, keine Abstrahlung.',
+    cable: 'Kabel: Tiefpass + Dämpfungsglied direkt an den Empfängereingang, keine Antenne.',
+    antenna: 'Antenne: Tiefpass am Pin ist Pflicht. SRD-Grenzwert (ca. 50 nW ERP) muss eingehalten werden. PMR446 bleibt gesperrt.',
+  }[m];
+  if (!window.confirm(txt + '\n\nIch übernehme die Verantwortung für Aufbau, Leistung und Rechtslage. Bestätigen?')) return;
+  const j = await postJson('/api/fmtx/config', Object.assign(formPatch(), {mode: m, confirm: true}));
+  if (!j.ok) { showToast('Fehler: ' + (j.error||'?'), 4000); return; }
+  applyConfig(j); showToast('Betriebsart bestätigt');
+}
+
+async function saveAutostart(){
+  const j = await postJson('/api/fmtx/config', {autostart: el('cfgAutostart').value});
+  if (!j.ok) { showToast('Fehler: ' + (j.error||'?'), 4000); return; }
+  applyConfig(j); showToast('Autostart gespeichert');
+}
+
+async function txAnnounce(){
+  if (!(await saveConfig())) return;
+  const j = await postJson('/api/fmtx/announce', {});
+  if (!j.ok) { showToast('Ansage abgelehnt: ' + (j.error||'?'), 5000); }
+  else showToast('Ansage gesendet');
+  if (j.warnings && j.warnings.length) el('txWarn').innerHTML = j.warnings.map(w => '⚠ ' + esc(w)).join('<br>');
+  setTimeout(loadTxState, 1200);
+}
+
+async function saveRds(){
+  const body = {
+    enabled: el('rdsOn').checked, pi: el('rdsPi').value.trim(),
+    ps: el('rdsPs').value, rt_mode: el('rdsMode').value, rt: el('rdsRt').value,
+    ps_rotate: el('rdsRotate').checked,
+  };
+  const j = await postJson('/api/fmtx/rds', body);
+  showToast(j.ok ? 'RDS übernommen' : ('Fehler: ' + (j.error||'?')), j.ok ? 2000 : 4000);
+}
+
+async function loadPlan(){
+  const band = el('cfgBand').value;
+  const f = el('cfgFreq').value, ch = el('cfgPmr').value || 8;
+  try{
+    const r = await fetch(`/api/fmtx/plan?band=${encodeURIComponent(band)}&f=${encodeURIComponent(f)}&ch=${encodeURIComponent(ch)}`);
+    const j = await r.json();
+    if (!j.ok) { el('planBox').textContent = j.error || '?'; return; }
+    const p = j.plan;
+    const harm = (p.harmonics||[]).map(h => `${h.order}×: ${h.freq_mhz.toFixed(3)} MHz`).join(' · ');
+    const dab = [...new Set((p.dab||[]).map(d => d.dab_channel + (d.active ? ' (aktiv!)' : '')))].join(', ');
+    el('planBox').innerHTML =
+      (p.freq_mhz != null ? `<b>Sendefrequenz:</b> ${Number(p.freq_mhz).toFixed(band==='pmr446'?5:2)} MHz<br>` : '') +
+      (harm ? `<b>Oberwellen:</b> ${harm}<br>` : '') +
+      (dab ? `<b>DAB-Blöcke getroffen:</b> ${esc(dab)}<br>` : '') +
+      (p.errors||[]).map(e => `<span style="color:#ff8080">✗ ${esc(e)}</span>`).join('<br>') +
+      ((p.errors||[]).length ? '<br>' : '') +
+      (p.warnings||[]).map(w => `<span style="color:var(--yellow)">⚠ ${esc(w)}</span>`).join('<br>');
+  }catch(e){ el('planBox').textContent = 'Plan nicht ladbar'; }
+}
+
+async function txStart(){
+  if (!(await saveConfig())) return;
+  const j = await postJson('/api/fmtx/start', {});
+  if (!j.ok) { showToast('Start abgelehnt: ' + (j.error||'?'), 5000); }
+  else showToast('Startbefehl gesendet');
+  if (j.warnings && j.warnings.length) el('txWarn').innerHTML = j.warnings.map(w => '⚠ ' + esc(w)).join('<br>');
+  setTimeout(loadTxState, 1200);
+}
+
+async function txStop(){
+  const j = await postJson('/api/fmtx/stop', {});
+  showToast(j.ok ? 'Stopp gesendet' : 'Stopp fehlgeschlagen');
+  setTimeout(loadTxState, 800);
+}
+
+async function loadTxState(){
+  try{
+    const r = await fetch('/api/fmtx/state');
+    const j = await r.json();
+    if (!j.ok) return;
+    const s = j.state || {};
+    const alive = !!s.service_alive;
+    const badge = !alive ? '⚪ Dienst aus' :
+      (s.state === 'on' && s.announcing ? '📢 Ansage läuft' :
+       s.state === 'on' ? '🔴 ON AIR' : s.state === 'starting' ? '🟡 startet' :
+       s.state === 'error' ? '❌ Fehler' : '⚫ aus');
+    el('txBadge').textContent = badge;
+    const f = s.freq_mhz != null ? Number(s.freq_mhz).toFixed(s.band === 'pmr446' ? 5 : 2) + ' MHz' : '–';
+    const left = s.runtime_left_s != null ? Math.floor(s.runtime_left_s/60) + ' min' : '–';
+    const proc = s.proc || {};
+    el('txSummary').innerHTML =
+      `<b>Frequenz:</b> ${f} (${esc(s.band||'–')}) · <b>Backend:</b> ${esc(s.backend||'–')} · <b>Pin:</b> GPIO ${esc(s.pin??'–')}<br>` +
+      `<b>Quelle:</b> ${esc(s.source||'–')} ${s.stereo ? '(Stereo)' : '(Mono)'} · <b>Betriebsart:</b> ${esc(s.mode||'–')} · <b>Rest:</b> ${left}<br>` +
+      `<b>Autostart:</b> ${esc(s.autostart||'–')}${s.announcing ? ' · Ansage läuft' : ''}<br>` +
+      `<b>RDS:</b> ${s.rds_enabled ? ('PI ' + esc(s.rds_pi) + ' · PS „' + esc(s.rds_ps) + '“ · RT „' + esc(s.rds_rt) + '“') : 'aus'}<br>` +
+      `<b>Prozess:</b> ${proc.running ? ('PID ' + proc.pid) : '–'}${proc.audio_ok === false ? ' · ⚠ Audio-Quelle beendet' : ''}` +
+      ` · Neustarts ${s.restarts||0}${s.throttled ? (' · throttled ' + esc(s.throttled)) : ''}`;
+    if (s.warnings && s.warnings.length) el('txWarn').innerHTML = s.warnings.map(w => '⚠ ' + esc(w)).join('<br>');
+    el('txErr').textContent = s.error ? ('✗ ' + s.error) : '';
+  }catch(e){}
+}
+
+async function scanFree(){
+  const start = Number(el('scanStart').value), stop = Number(el('scanStop').value);
+  const btn = el('scanBtn'); btn.disabled = true;
+  el('freeBox').textContent = 'Scan läuft…';
+  try{
+    const cap = await postJson('/api/spectrum/capture', {mode:'range', start_mhz:start, stop_mhz:stop});
+    if (!cap.ok) { el('freeBox').innerHTML = '<span style="color:#ff8080">✗ ' + esc(cap.error||'Scan fehlgeschlagen') + '</span>'; return; }
+    const peaks = (cap.peaks||[]).map(p => `${Number(p.freq_mhz).toFixed(3)}:${Number(p.db ?? p.mean_db ?? 0).toFixed(1)}`).join(',');
+    const r = await fetch(`/api/fmtx/plan?suggest=1&start=${start}&stop=${stop}&n=6&peaks=${encodeURIComponent(peaks)}`);
+    const j = await r.json();
+    const free = j.free || [];
+    if (!free.length) { el('freeBox').textContent = 'Keine freie Frequenz gefunden'; return; }
+    el('freeBox').innerHTML = `Belegte Peaks: ${(cap.peaks||[]).length}<br>` + free.map(x =>
+      `<button class="btn" style="font-size:11px;padding:3px 8px" onclick="pickFreq(${x.freq_mhz})">${x.freq_mhz.toFixed(2)} MHz</button>` +
+      ` Abstand ${x.nearest_occupied_mhz ?? '–'} MHz · Score ${x.score}` +
+      (x.dab_hits.length ? ` · 2f trifft ${esc(x.dab_hits.join(', '))}` : '')).join('<br>');
+  }catch(e){ el('freeBox').textContent = 'Scan-Fehler'; }
+  finally { btn.disabled = false; }
+}
+
+function pickFreq(f){
+  el('cfgBand').value = 'ukw'; onBandChange();
+  el('cfgFreq').value = Number(f).toFixed(2);
+  loadPlan(); showToast('Übernommen — Speichern nicht vergessen');
+}
+
+loadConfig();
+loadTxState();
+setInterval(loadTxState, 3000);
+</script>{% endblock %}

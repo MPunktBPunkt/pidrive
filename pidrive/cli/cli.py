@@ -54,6 +54,10 @@ Befehle:
   rtlsdr status|reset     RTL-SDR Status / Reset
   gain status|fm|dab|scanner <db>
 
+  fmtx status|start|stop  FM-Sender (UKW+RDS, PMR446 nur Labor)
+  fmtx freq|band|source|pin|backend|rds|mode|plan|scan-free|selftest
+  fmtx autostart off|boot-only|always · fmtx announce   Boot-Ansage
+
   system info             System-Informationen
   system resources        RAM, Speicher, Uptime
   system reboot [--yes]   Neustart (mit Bestätigung)
@@ -236,6 +240,20 @@ def main():
   pidrivectl spectrum peek 106.9           Einzelkanal (Offset, DC-sicher)
   pidrivectl spectrum last                 Letztes Scan-Ergebnis
 
+  pidrivectl fmtx status                   FM-Sender: Zustand, Frequenz, RDS
+  pidrivectl fmtx start | stop             Senden an/aus (pidrive-fmtx.service)
+  pidrivectl fmtx freq 91.0                UKW-Frequenz (87.5–108, 50 kHz, Default 91.0)
+  pidrivectl fmtx band ukw | pmr446 --channel 8   PMR446 nur mode lab
+  pidrivectl fmtx source mirror|tone|carrier|silence
+  pidrivectl fmtx pin 4                    nur GPCLK-Pins laut Backend
+  pidrivectl fmtx rds ps "PIDRIVE" | rt "Text" | auto on|off
+  pidrivectl fmtx mode lab|cable|antenna --confirm
+  pidrivectl fmtx autostart off|boot-only|always   Boot-Ansage, danach aus/Quelle senden
+  pidrivectl fmtx announce                 Boot-Ansage jetzt testen (danach aus)
+  pidrivectl fmtx plan [91.0]              Oberwellen/DAB/RTL-Konflikte
+  pidrivectl fmtx scan-free [87.5-93]      freie Frequenz per RTL-SDR
+  pidrivectl fmtx selftest                 TX an, RTL peek f/2f/3f, Report
+
   pidrivectl scanner pmr446 scan           PMR446 Einmal-Scan
   pidrivectl scanner monitor status        PMR446 Dauer-Detektor Status
   pidrivectl scanner monitor start         Detektor starten (optional Autotune)
@@ -388,6 +406,43 @@ Flags (vor dem Befehl angeben):
     p_speek.add_argument("--ppm", type=int, default=None)
     p_speek.add_argument("--avg", type=int, default=None)
     spec_sub.add_parser("last", help="Letztes Spektrum-/Scan-Ergebnis")
+
+    # ── fmtx (FM-Sender) ──────────────────────────────────────────────────
+    p_fmtx = sub.add_parser("fmtx", help="FM-Sender (UKW+RDS, PMR446 nur Labor)")
+    fmtx_sub = p_fmtx.add_subparsers(dest="fmtx_cmd")
+    fmtx_sub.add_parser("status", help="Zustand, Frequenz, RDS, Consent")
+    fmtx_sub.add_parser("start", help="Senden starten")
+    fmtx_sub.add_parser("stop", help="Senden stoppen")
+    p_fx_freq = fmtx_sub.add_parser("freq", help="UKW-Frequenz MHz")
+    p_fx_freq.add_argument("mhz", type=float)
+    p_fx_band = fmtx_sub.add_parser("band", help="ukw | pmr446 (nur mode lab)")
+    p_fx_band.add_argument("band", choices=["ukw", "pmr446"])
+    p_fx_band.add_argument("--channel", type=int, default=None, help="PMR-Kanal 1–16")
+    p_fx_src = fmtx_sub.add_parser("source", help="Audioquelle")
+    p_fx_src.add_argument("source", choices=["mirror", "tone", "tone1k", "carrier", "silence"])
+    p_fx_pin = fmtx_sub.add_parser("pin", help="Sendepin (nur GPCLK)")
+    p_fx_pin.add_argument("gpio", type=int)
+    p_fx_be = fmtx_sub.add_parser("backend", help="pifmrds | rpitx | chip")
+    p_fx_be.add_argument("name", choices=["pifmrds", "rpitx", "chip"])
+    p_fx_rt = fmtx_sub.add_parser("runtime", help="Laufzeitlimit Minuten")
+    p_fx_rt.add_argument("minutes", type=int)
+    p_fx_auto = fmtx_sub.add_parser("autostart", help="Boot-Ansage: off | boot-only | always")
+    p_fx_auto.add_argument("autostart", choices=["off", "boot-only", "boot_only", "always"])
+    fmtx_sub.add_parser("announce", help="Boot-Ansage jetzt testen (danach aus)")
+    p_fx_rds = fmtx_sub.add_parser("rds", help="ps|rt|pi|auto|rotate|on|off")
+    p_fx_rds.add_argument("what", choices=["ps", "rt", "pi", "auto", "rotate", "on", "off"])
+    p_fx_rds.add_argument("value", nargs="*")
+    p_fx_mode = fmtx_sub.add_parser("mode", help="lab | cable | antenna (mit --confirm)")
+    p_fx_mode.add_argument("mode")
+    p_fx_mode.add_argument("--confirm", action="store_true")
+    p_fx_plan = fmtx_sub.add_parser("plan", help="Konflikte für Frequenz")
+    p_fx_plan.add_argument("mhz", type=float, nargs="?", default=None)
+    p_fx_scan = fmtx_sub.add_parser("scan-free", help="Freie UKW-Frequenz per RTL-SDR")
+    p_fx_scan.add_argument("range", nargs="?", default=None, help="z.B. 87.5-93")
+    p_fx_scan.add_argument("-n", type=int, default=5)
+    p_fx_self = fmtx_sub.add_parser("selftest", help="TX an, RTL peek f/2f/3f, Report")
+    p_fx_self.add_argument("--settle", type=float, default=3.0)
+    p_fx_self.add_argument("--gain", type=int, default=0, help="RTL-Gain dB (klein halten)")
 
     # ── audio ─────────────────────────────────────────────────────────────
     p_audio = sub.add_parser("audio", help="Audio-Ausgang / Klang")
@@ -1393,6 +1448,11 @@ Flags (vor dem Befehl angeben):
                         fmt.out(f"Übernehmen:  pidrivectl ppm set {sug}")
                         fmt.out("Oder:        pidrivectl ppm calibrate --apply")
             sys.exit(EXIT_OK)
+
+    # fmtx
+    if args.cmd == "fmtx":
+        from cli import fmtx_cli
+        sys.exit(fmtx_cli.run(args, use_json))
 
     # spectrum
     if args.cmd == "spectrum":

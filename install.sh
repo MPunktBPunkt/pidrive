@@ -1241,6 +1241,67 @@ if [ -f "$INSTALL_DIR/systemd/pidrive_pump_bridge.service" ]; then
         warn "  Deploy: esp32.pidrive/tools/pump_bridge.py → $_BRIDGE_PY"
     fi
 fi
+# FM-Sender (docs/planung/KONZEPT-FM-TX.md): PiFmRds gepinnt, rpitx nur mit PIDRIVE_FMTX_RPITX=1
+FMTX_SRC=/opt/pidrive/src
+PIFMRDS_COMMIT=2707ecc
+RPITX_COMMIT=ee7ff57
+if $IS_PI && ! $IS_CONTAINER; then
+    if [ ! -x /usr/local/bin/pi_fm_rds ]; then
+        apt-get install -y -qq libsndfile1-dev build-essential git 2>/dev/null || true
+        mkdir -p "$FMTX_SRC"
+        if [ ! -d "$FMTX_SRC/PiFmRds/.git" ]; then
+            git clone -q https://github.com/ChristopheJacquet/PiFmRds.git "$FMTX_SRC/PiFmRds" 2>/dev/null || true
+        fi
+        make -C "$FMTX_SRC/PiFmRds/src" clean >/dev/null 2>&1 || true
+        if [ -d "$FMTX_SRC/PiFmRds/.git" ] \
+           && git -C "$FMTX_SRC/PiFmRds" checkout -q "$PIFMRDS_COMMIT" 2>/dev/null \
+           && make -C "$FMTX_SRC/PiFmRds/src" >/dev/null 2>&1 \
+           && install -m 755 "$FMTX_SRC/PiFmRds/src/pi_fm_rds" /usr/local/bin/pi_fm_rds; then
+            ok "FM-Sender: pi_fm_rds ($PIFMRDS_COMMIT) gebaut"
+        else
+            warn "FM-Sender: PiFmRds-Build fehlgeschlagen — Web-Tab zeigt Backend 'nicht verfügbar'"
+        fi
+    else
+        ok "FM-Sender: pi_fm_rds bereits installiert"
+    fi
+    if [ "${PIDRIVE_FMTX_RPITX:-0}" = "1" ] && [ ! -x /usr/local/bin/sendiq ]; then
+        # rpitx: Pi 4 "beta", verlangt gpu_freq=250 in config.txt (nicht automatisch gesetzt)
+        mkdir -p "$FMTX_SRC"
+        [ -d "$FMTX_SRC/rpitx/.git" ] || \
+            git clone -q https://github.com/F5OEO/rpitx.git "$FMTX_SRC/rpitx" 2>/dev/null || true
+        if [ -d "$FMTX_SRC/rpitx/.git" ] \
+           && git -C "$FMTX_SRC/rpitx" checkout -q "$RPITX_COMMIT" 2>/dev/null \
+           && make -C "$FMTX_SRC/rpitx/src" >/dev/null 2>&1; then
+            for b in rpitx sendiq tune pichirp; do
+                [ -x "$FMTX_SRC/rpitx/src/$b" ] && install -m 755 "$FMTX_SRC/rpitx/src/$b" "/usr/local/bin/$b"
+            done
+            ok "FM-Sender: rpitx ($RPITX_COMMIT) gebaut — gpu_freq=250 in config.txt prüfen"
+        else
+            warn "FM-Sender: rpitx-Build fehlgeschlagen (optional, nur PMR446-Labor)"
+        fi
+    fi
+fi
+# Boot-Ansage: einmal rendern; fehlt die WAV, sendet der Dienst einen 1-kHz-Beep
+FMTX_SHARE=/opt/pidrive/share/fmtx
+mkdir -p "$FMTX_SHARE"
+command -v espeak-ng >/dev/null 2>&1 || apt-get install -y -qq espeak-ng 2>/dev/null || true
+if command -v espeak-ng >/dev/null 2>&1 \
+   && espeak-ng -v en -s 145 -w "$FMTX_SHARE/pidrive_starting.wav" "PiDrive is starting" 2>/dev/null; then
+    chmod 644 "$FMTX_SHARE/pidrive_starting.wav" 2>/dev/null || true
+    ok "FM-Sender: Boot-Ansage $FMTX_SHARE/pidrive_starting.wav"
+else
+    warn "FM-Sender: espeak-ng fehlt — Boot-Ansage fällt auf 1-kHz-Beep zurück"
+fi
+if [ -f "$INSTALL_DIR/systemd/pidrive-fmtx.service" ]; then
+    cp "$INSTALL_DIR/systemd/pidrive-fmtx.service" "$SERVICE_DIR/pidrive-fmtx.service"
+    sed -i "s|/home/pidrive/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive-fmtx.service"
+    sed -i "s|/home/pi/pidrive|${INSTALL_DIR}|g" "$SERVICE_DIR/pidrive-fmtx.service"
+    chmod 755 "$INSTALL_DIR/tools/fmtx_clock_reset.sh" 2>/dev/null || true
+    # Dienst sendet nur auf Befehl (Web/pidrivectl fmtx start) oder einmal zur Boot-Ansage
+    # (fm_tx.enabled + gültiger Consent + autostart != off)
+    _sys_enable pidrive-fmtx.service || true
+    ok "FM-Sender: pidrive-fmtx.service"
+fi
 udevadm control --reload-rules 2>/dev/null || true
 systemctl daemon-reload
 
