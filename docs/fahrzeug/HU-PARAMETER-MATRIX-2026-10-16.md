@@ -52,7 +52,7 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 |-----------|------|--------|--------|--------------|------|---------------|
 | Callback-Chunk | 4096 B (Stack) | [B] | E5 | L | — | — |
 | Häufige CBW-Längen | 8 und 240 Blöcke, Rest bis EOF (z. B. 69) | [B]/[A] | E11, A1 | L | — | — |
-| Max. READ10-Transfer | 240 Blöcke = 120 KiB | [A] | A2 | L, U | P1 | `MessCapture`-Histogramm je Phase (Scan/Play/Prefetch) |
+| Max. READ10-Transfer | 240 Blöcke = 120 KiB | **[S]** | A2 (Feld 16.10.) | L, U | P1 | bestätigt; weitere Phasen optional |
 | Lesetakt ohne/mit ESP-Play | 3,74–3,78 ms / ~5 ms je 4 KiB | [B] | R15 | L | — | — |
 | BUSY-Toleranz kumuliert | ≥ ~65 s bis EOF | [B] | E7, R29 | L | — | — |
 | Timeout je READ10 | ≥ ~20 s (bedingt) | [A] | A4 | L | **P0** | Lab-Leiter Stall pro CBW 10/20/30/45 s am NBT, CBW-Länge mitloggen |
@@ -87,7 +87,7 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | Cache-Gesamtgröße (Q4b) | unbekannt | [?] | Q4b | L | P1 | N × 512 KiB, Re-Select Hit/Miss |
 | Eviction-Strategie (Q4c) | unbekannt | [?] | Q4c | L | P1 | Sequenz, dann frühe Datei |
 | Wiedergabeposition P persistiert | ja, auch über Medienwechsel | [S] | R23 | L | — | — |
-| P bricht bei Serial + Root-Label + Name | nein | [S] | R34 | L | — | — |
+| P bricht bei Serial + Root-Label + Name | nein | [S] | R34 (`HU-Technical-Facts`, S3/S4/F1 — nicht Feld 16.10.) | L | — | — |
 | Soft-Remount mit gleicher Identity ändert Ton | nein | [S] | F0 16.10. | L | — | — |
 | P/Cache-Bruch durch BPB-Volume-ID | unbekannt | [?] | Q3/Q14, F0 B3 | L | **P0** | F0 B3 isoliert (Lab-Tooling 18/18 grün) |
 | P/Cache-Bruch durch BPB+Root-Label | unbekannt | [?] | F0 B2 | L | **P0** | F0 B2 isoliert |

@@ -65,3 +65,6 @@ Siehe auch: [`../artifacts-2026-10-16-lab/lab-soft-cycle-052/PRIORITAET-SHIFT.md
 | `docs/fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md` | Feld-Nachtrag zur 512‑KiB-Sequenz |
 
 **Hinweis:** Soft-USB `armSoftUsbKeepIdentity` liegt in **esp32.pidrive** (separates Repo) — dort ggf. separat committen/pushen.
+
+**Nächste KI:** kanonische Übergabe  
+[`UEBERGABE-NAECHSTE-KI-2026-10-16.md`](UEBERGABE-NAECHSTE-KI-2026-10-16.md) (inkl. Review-Konsens + Verifikation HEAD `6e17ddd`).
