@@ -4,6 +4,10 @@
 NBT-Termin entscheidet anschließend nur noch Resume-/Cachewirkung und das
 D-Startgate. Das Runbook flasht keine Firmware und sendet kein RF.
 
+Für Betrieb, Gates und Lab-/Auto-Qualifizierung des neuen
+`soft_cycle_orchestrator` gilt ergänzend das
+[Soft-Cycle-Autotest-Runbook](SOFT-CYCLE-AUTOTEST-RUNBOOK.md).
+
 ## Topologie
 
 - ESP32-S3 OTG und zweite USB-/UART-Buchse: Proxmox-Debian-PC.
