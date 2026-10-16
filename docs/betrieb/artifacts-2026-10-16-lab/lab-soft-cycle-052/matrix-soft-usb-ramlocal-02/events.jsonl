@@ -1,0 +1,7 @@
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:27.988+00:00","mono_s":0.004448,"esp_uptime_ms":8430,"esp_uptime_start_ms":8430,"event":"run.begin","profile":"lab","dry_run":false}
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:27.988+00:00","mono_s":0.004605,"esp_uptime_ms":null,"esp_uptime_start_ms":8430,"event":"cell.begin","cell":"soft-usb"}
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:28.046+00:00","mono_s":0.06213,"esp_uptime_ms":null,"esp_uptime_start_ms":8430,"event":"capture.start","cell":"soft-usb","mode":"ram_local"}
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:28.057+00:00","mono_s":0.07391,"esp_uptime_ms":null,"esp_uptime_start_ms":8430,"event":"cell.action","cell":"soft-usb","action":{"endpoint":"/api/lab/usb","body":{"cycleMs":900},"hardware":false}}
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:35.081+00:00","mono_s":7.09766,"esp_uptime_ms":null,"esp_uptime_start_ms":8430,"event":"capture.stop","cell":"soft-usb","complete":true,"overflow":0,"healthy":true,"commands":47}
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:35.082+00:00","mono_s":7.09875,"esp_uptime_ms":14881,"esp_uptime_start_ms":8430,"event":"cell.end","cell":"soft-usb","valid":true,"outcome":"C"}
+{"schema_version":1,"run_id":"soft-cycle-1364a87ca9","wall":"2026-10-16T10:48:35.082+00:00","mono_s":7.09898,"esp_uptime_ms":null,"esp_uptime_start_ms":8430,"event":"run.end","hard_stop":null}

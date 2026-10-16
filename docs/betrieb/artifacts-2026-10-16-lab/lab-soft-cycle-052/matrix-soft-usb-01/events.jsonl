@@ -1,0 +1,7 @@
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.608+00:00","mono_s":0.00359,"esp_uptime_ms":21673,"esp_uptime_start_ms":21673,"event":"run.begin","profile":"lab","dry_run":false}
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.608+00:00","mono_s":0.00373,"esp_uptime_ms":null,"esp_uptime_start_ms":21673,"event":"cell.begin","cell":"soft-usb"}
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.666+00:00","mono_s":0.062072,"esp_uptime_ms":null,"esp_uptime_start_ms":21673,"event":"capture.start","cell":"soft-usb","mode":"ram_wifi_off"}
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.689+00:00","mono_s":0.084668,"esp_uptime_ms":null,"esp_uptime_start_ms":21673,"event":"capture.stop","cell":"soft-usb","complete":false,"overflow":0,"healthy":false,"commands":0}
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.726+00:00","mono_s":0.121643,"esp_uptime_ms":21793,"esp_uptime_start_ms":21673,"event":"cell.end","cell":"soft-usb","valid":false,"outcome":"C"}
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.726+00:00","mono_s":0.121704,"esp_uptime_ms":null,"esp_uptime_start_ms":21673,"event":"hard-stop","reason":"capture-incomplete","cell":"soft-usb"}
+{"schema_version":1,"run_id":"soft-cycle-29825241e0","wall":"2026-10-16T10:45:12.726+00:00","mono_s":0.121816,"esp_uptime_ms":null,"esp_uptime_start_ms":21673,"event":"run.end","hard_stop":"capture-incomplete"}

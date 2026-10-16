@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-872bd1aa30",
+  "cell": "label",
+  "capture_mode": "ram_local",
+  "command_count": 2,
+  "first_seq": 1,
+  "last_seq": 2,
+  "pages": [
+    {
+      "page": 1,
+      "after": 0,
+      "commands": 2,
+      "next_after": 2,
+      "has_more": null
+    },
+    {
+      "page": 2,
+      "after": 2,
+      "commands": 0,
+      "next_after": 2,
+      "has_more": null
+    }
+  ],
+  "commands": [
+    {
+      "seq": 1,
+      "t0_us": 197957511,
+      "dur_us": 0,
+      "gap_us": 0,
+      "op": 255,
+      "lba": 0,
+      "bytes": 0,
+      "blocks": 0,
+      "chunks": 0,
+      "busy": 0,
+      "st": 2,
+      "source": "marker",
+      "synthesized": false,
+      "tag": "soft-cycle-"
+    },
+    {
+      "seq": 2,
+      "t0_us": 205039778,
+      "dur_us": 0,
+      "gap_us": 0,
+      "op": 255,
+      "lba": 0,
+      "bytes": 0,
+      "blocks": 0,
+      "chunks": 0,
+      "busy": 0,
+      "st": 2,
+      "source": "marker",
+      "synthesized": false,
+      "tag": "soft-cycle-"
+    }
+  ],
+  "capture_health": {
+    "ok": true,
+    "complete": true,
+    "overflow": 0,
+    "cmdCapture": true,
+    "mode": "ram_local",
+    "expected_mode": "ram_local"
+  }
+}

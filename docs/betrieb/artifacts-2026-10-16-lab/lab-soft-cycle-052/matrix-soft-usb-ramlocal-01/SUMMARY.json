@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-f08e0c29f4",
+  "pass": false,
+  "hard_stop": "identity-drift",
+  "cells_completed": 1,
+  "cells_requested": [
+    "soft-usb"
+  ],
+  "outcomes": {
+    "soft-usb": "C"
+  },
+  "dry_run": false,
+  "finished": {
+    "wall": "2026-10-16T10:46:29.744+00:00",
+    "mono_s": 7.019332,
+    "esp_uptime_ms": 98165,
+    "esp_uptime_start_ms": 91793
+  }
+}

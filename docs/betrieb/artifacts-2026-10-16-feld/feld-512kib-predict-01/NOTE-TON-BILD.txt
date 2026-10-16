@@ -1,0 +1,3 @@
+TON+BILD nach OTG raus/rein (Operator: ~5s Ton + Bild).
+status-after5s: ser=PD0266 reset=panic stream=True play='' hostAbs>absEnd underruns hoch cover=file.
+Mark: kurzes Fenster, dann Stream underrun / play leer.

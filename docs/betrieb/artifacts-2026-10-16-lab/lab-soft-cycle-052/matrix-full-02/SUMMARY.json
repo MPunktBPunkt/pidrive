@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-d56dc261cf",
+  "pass": false,
+  "hard_stop": "not-quiet",
+  "cells_completed": 4,
+  "cells_requested": [
+    "soft-usb",
+    "media-hide",
+    "serial",
+    "label",
+    "volume-id"
+  ],
+  "outcomes": {
+    "soft-usb": "E",
+    "media-hide": "C",
+    "serial": "B",
+    "label": "E"
+  },
+  "dry_run": false,
+  "finished": {
+    "wall": "2026-10-16T10:50:29.228+00:00",
+    "mono_s": 36.456332,
+    "esp_uptime_ms": 129671,
+    "esp_uptime_start_ms": 93217
+  }
+}

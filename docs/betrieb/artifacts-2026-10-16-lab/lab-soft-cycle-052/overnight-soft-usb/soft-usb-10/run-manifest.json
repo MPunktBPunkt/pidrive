@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-ddf7d6cc07",
+  "started": {
+    "wall": "2026-10-16T11:14:39.531+00:00",
+    "mono_s": 0.000382,
+    "esp_uptime_ms": 1579962,
+    "esp_uptime_start_ms": 1579962
+  },
+  "host": {
+    "node": "DebianCursor",
+    "platform": "Linux-7.0.14-14-pve-x86_64-with-glibc2.41",
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]"
+  },
+  "git_head": "acac58c9d9387b0e304093431f3b6ed96614f61e",
+  "dry_run": false,
+  "profile": "lab",
+  "capture_mode": "ram_local",
+  "live_audio": false,
+  "matrix": [
+    "soft-usb"
+  ],
+  "preflight": {
+    "ok": true,
+    "otg_up": true,
+    "stall_frozen": true,
+    "version": "0.4.52-dev",
+    "version_matches": true,
+    "panic_at_start": null
+  },
+  "physical_replug": "never automated; optional operator marker only"
+}

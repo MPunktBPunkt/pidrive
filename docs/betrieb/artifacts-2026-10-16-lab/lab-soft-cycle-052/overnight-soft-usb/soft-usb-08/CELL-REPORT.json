@@ -1,0 +1,109 @@
+{
+  "run_id": "soft-cycle-eb3f1de29e",
+  "cells": [
+    {
+      "schema_version": 1,
+      "run_id": "soft-cycle-eb3f1de29e",
+      "cell": "soft-usb",
+      "operation": {
+        "endpoint": "/api/lab/usb",
+        "body": {
+          "cycleMs": 900
+        },
+        "hardware": false
+      },
+      "operation_error": null,
+      "capture_mode": "ram_local",
+      "capture_health": {
+        "ok": true,
+        "complete": true,
+        "overflow": 0,
+        "cmdCapture": true,
+        "mode": "ram_local",
+        "expected_mode": "ram_local"
+      },
+      "capture_artifact": "offline-bot-trace.json",
+      "capture_commands": 49,
+      "capture_pages": 2,
+      "episodes": {
+        "A": {
+          "meaning": "before-soft-cycle",
+          "identity": {
+            "usbSerial": "PD0483",
+            "productRevision": "0483",
+            "bpbVolumeId": 1346634189,
+            "bpbLabel": "PD0461XXXX5",
+            "rootLabel": "PD0461XXXX5"
+          }
+        },
+        "B": {
+          "meaning": "after-soft-cycle",
+          "identity": {
+            "usbSerial": "PD0483",
+            "productRevision": "0483",
+            "bpbVolumeId": 1346634189,
+            "bpbLabel": "PD0461XXXX5",
+            "rootLabel": "PD0461XXXX5"
+          }
+        }
+      },
+      "quiet_gate": {
+        "ok": true,
+        "stream_active": false,
+        "phase": "quiet"
+      },
+      "panic_gate": {
+        "ok": true,
+        "panic_reason": null,
+        "uptime_rollback": false,
+        "reset_reason_changed": false,
+        "before_uptime_ms": 1565468,
+        "after_uptime_ms": 1571871
+      },
+      "freeze_gate": {
+        "ok": true,
+        "stall_enabled": false
+      },
+      "identity_gate": {
+        "ok": true,
+        "before": {
+          "usbSerial": "PD0483",
+          "productRevision": "0483",
+          "bpbVolumeId": 1346634189,
+          "bpbLabel": "PD0461XXXX5",
+          "rootLabel": "PD0461XXXX5"
+        },
+        "after": {
+          "usbSerial": "PD0483",
+          "productRevision": "0483",
+          "bpbVolumeId": 1346634189,
+          "bpbLabel": "PD0461XXXX5",
+          "rootLabel": "PD0461XXXX5"
+        },
+        "changed_fields": [],
+        "expected_changed_fields": []
+      },
+      "outcome": {
+        "code": "B",
+        "name": "mid-body-read",
+        "evidence": {
+          "read_delta": 32,
+          "slot_bytes_delta": 86016,
+          "max_seq_before": 188416,
+          "max_seq_after": 188416,
+          "playing_uid": "",
+          "stream_active": false,
+          "live": false
+        }
+      },
+      "valid": true,
+      "hard_stop": null,
+      "finished": {
+        "wall": "2026-10-16T11:14:32.088+00:00",
+        "mono_s": 7.099869,
+        "esp_uptime_ms": 1571871,
+        "esp_uptime_start_ms": 1565419
+      }
+    }
+  ]
+}

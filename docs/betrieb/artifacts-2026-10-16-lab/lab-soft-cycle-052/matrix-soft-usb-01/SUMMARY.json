@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-29825241e0",
+  "pass": false,
+  "hard_stop": "capture-incomplete",
+  "cells_completed": 1,
+  "cells_requested": [
+    "soft-usb"
+  ],
+  "outcomes": {
+    "soft-usb": "C"
+  },
+  "dry_run": false,
+  "finished": {
+    "wall": "2026-10-16T10:45:12.726+00:00",
+    "mono_s": 0.121876,
+    "esp_uptime_ms": 21793,
+    "esp_uptime_start_ms": 21673
+  }
+}

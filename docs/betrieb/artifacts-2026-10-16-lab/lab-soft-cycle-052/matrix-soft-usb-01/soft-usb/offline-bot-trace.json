@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-29825241e0",
+  "cell": "soft-usb",
+  "capture_mode": "ram_wifi_off",
+  "command_count": 0,
+  "first_seq": null,
+  "last_seq": null,
+  "pages": [],
+  "commands": [],
+  "capture_health": {
+    "ok": false,
+    "complete": false,
+    "overflow": 0,
+    "cmdCapture": true,
+    "mode": "ram_wifi_off",
+    "expected_mode": "ram_wifi_off",
+    "error": "HTTPError: HTTP Error 409: Conflict"
+  }
+}

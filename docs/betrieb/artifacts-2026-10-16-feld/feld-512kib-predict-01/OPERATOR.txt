@@ -1,0 +1,22 @@
+P0 512-KiB Modelltest · NBT · ~15–25 min
+FW 0.4.52-dev mess · stall AUS · FM später
+
+Vorhersage: 512 KiB-Slot → READ10 ≈ 8 + 4×240 + 56 Blöcke
+
+ANKUNFT
+1) Zündung / WLAN — Desktop flasht .89 automatisch (ota-052.log)
+2) Kurz: Menü sichtbar? (kein Ton nötig für Capture-Start)
+3) Melden: „online“ / weiße LED ja|nein
+
+LAUF (Desktop steuert Capture)
+A) Stall aus, Capture an
+B) Station Bayern oder BOB tippen (512-KiB-Slot) ODER Replug ohne Weiß
+C) Ohr: Ton ja/nein + ca. Sekunden; UI-Freeze?
+D) Desktop: Capture stop + Dump
+
+ABBRUCH
+- Weiße LED / Panic → Episode notieren, optional 1× Soft-Remount keepIdentity statt physisch
+- Stall an → sofort aus
+
+NICHT
+FM-TX · Soft-Cycle-Overnight · F0-Matrix · Stall-Tuning · Ableitungen in HU-Facts

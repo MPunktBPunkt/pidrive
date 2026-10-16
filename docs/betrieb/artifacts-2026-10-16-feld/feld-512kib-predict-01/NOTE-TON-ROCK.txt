@@ -1,0 +1,2 @@
+Operator: Ton nach OTG raus/rein (Rock Antenne tip beforehand).
+Operator: Ton ~5-6s nach OTG raus/rein (Rock Antenne tip, kein Weiß). ser=PD0274 reset=power_on. Capture late: play leer, host>abs, underruns hoch.

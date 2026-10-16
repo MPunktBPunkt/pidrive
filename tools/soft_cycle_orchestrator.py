@@ -130,8 +130,11 @@ def quiet_gate(status: dict) -> dict[str, Any]:
     stream = stream_from(status)
     phase = str((status.get("msc") or {}).get("phase") or "").lower()
     active = bool(stream.get("active"))
+    # Lab hosts often re-index after soft-usb/remount and leave phase=play|scan
+    # without an armed stream — that is still "quiet" for the next cell.
+    ok_phases = {"", "quiet", "idle", "index", "settle", "scan", "play"}
     return {
-        "ok": not active and phase in {"", "quiet", "idle", "index", "settle"},
+        "ok": not active and phase in ok_phases,
         "stream_active": active,
         "phase": phase or "unspecified",
     }

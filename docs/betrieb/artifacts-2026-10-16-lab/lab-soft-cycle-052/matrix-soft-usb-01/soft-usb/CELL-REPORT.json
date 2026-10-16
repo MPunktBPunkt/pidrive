@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-cycle-29825241e0",
+  "cell": "soft-usb",
+  "operation": null,
+  "operation_error": "HTTPError: HTTP Error 409: Conflict",
+  "capture_mode": "ram_wifi_off",
+  "capture_health": {
+    "ok": false,
+    "complete": false,
+    "overflow": 0,
+    "cmdCapture": true,
+    "mode": "ram_wifi_off",
+    "expected_mode": "ram_wifi_off",
+    "error": "HTTPError: HTTP Error 409: Conflict"
+  },
+  "capture_artifact": "offline-bot-trace.json",
+  "capture_commands": 0,
+  "capture_pages": 0,
+  "episodes": {
+    "A": {
+      "meaning": "before-soft-cycle",
+      "identity": {
+        "usbSerial": "PD0479",
+        "productRevision": "0479",
+        "bpbVolumeId": 1346634188,
+        "bpbLabel": "PD0461XXXX4",
+        "rootLabel": "PD0461XXXX4"
+      }
+    },
+    "B": {
+      "meaning": "after-soft-cycle",
+      "identity": {
+        "usbSerial": "PD0479",
+        "productRevision": "0479",
+        "bpbVolumeId": 1346634188,
+        "bpbLabel": "PD0461XXXX4",
+        "rootLabel": "PD0461XXXX4"
+      }
+    }
+  },
+  "quiet_gate": {
+    "ok": true,
+    "stream_active": false,
+    "phase": "quiet"
+  },
+  "panic_gate": {
+    "ok": true,
+    "panic_reason": null,
+    "uptime_rollback": false,
+    "reset_reason_changed": false,
+    "before_uptime_ms": 21722,
+    "after_uptime_ms": 21793
+  },
+  "freeze_gate": {
+    "ok": true,
+    "stall_enabled": false
+  },
+  "identity_gate": {
+    "ok": true,
+    "before": {
+      "usbSerial": "PD0479",
+      "productRevision": "0479",
+      "bpbVolumeId": 1346634188,
+      "bpbLabel": "PD0461XXXX4",
+      "rootLabel": "PD0461XXXX4"
+    },
+    "after": {
+      "usbSerial": "PD0479",
+      "productRevision": "0479",
+      "bpbVolumeId": 1346634188,
+      "bpbLabel": "PD0461XXXX4",
+      "rootLabel": "PD0461XXXX4"
+    },
+    "changed_fields": [],
+    "expected_changed_fields": []
+  },
+  "outcome": {
+    "code": "C",
+    "name": "cache-no-read",
+    "evidence": {
+      "read_delta": 0,
+      "slot_bytes_delta": 0,
+      "max_seq_before": 188416,
+      "max_seq_after": 188416,
+      "playing_uid": "",
+      "stream_active": false,
+      "live": false
+    }
+  },
+  "valid": false,
+  "hard_stop": "capture-incomplete",
+  "finished": {
+    "wall": "2026-10-16T10:45:12.726+00:00",
+    "mono_s": 0.121496,
+    "esp_uptime_ms": 21793,
+    "esp_uptime_start_ms": 21673
+  }
+}

@@ -1,0 +1,4 @@
+{"schema_version":1,"run_id":"soft-cycle-7d8b20a42a","wall":"2026-10-16T10:48:41.403+00:00","mono_s":0.004379,"esp_uptime_ms":21844,"esp_uptime_start_ms":21844,"event":"run.begin","profile":"lab","dry_run":false}
+{"schema_version":1,"run_id":"soft-cycle-7d8b20a42a","wall":"2026-10-16T10:48:41.403+00:00","mono_s":0.004524,"esp_uptime_ms":null,"esp_uptime_start_ms":21844,"event":"cell.begin","cell":"soft-usb"}
+{"schema_version":1,"run_id":"soft-cycle-7d8b20a42a","wall":"2026-10-16T10:48:49.592+00:00","mono_s":8.193946,"esp_uptime_ms":null,"esp_uptime_start_ms":21844,"event":"hard-stop","reason":"not-quiet","cell":"soft-usb"}
+{"schema_version":1,"run_id":"soft-cycle-7d8b20a42a","wall":"2026-10-16T10:48:49.592+00:00","mono_s":8.194011,"esp_uptime_ms":null,"esp_uptime_start_ms":21844,"event":"run.end","hard_stop":"not-quiet"}

@@ -1,0 +1,8 @@
+[15:26:05] Bin /home/martin/projects/esphub/esp32.pidrive/dist/pidrive.0.4.52-dev.ota.esp32s3.bin (1411504 B) → http://192.168.178.89 0.4.52-dev
+[15:26:05] Warte auf 192.168.178.89 … (Auto WLAN)
+[16:02:52] ONLINE fw=0.4.51-dev
+[16:02:52] OTA 0.4.52-dev (aktuell 0.4.51-dev)…
+[16:03:07] OTA HTTP 200 body=OK
+AFTER fw=0.4.52-dev stall=False otg=True reset=panic
+[16:03:27] GATE PASS — Capture bereit (OPERATOR.txt)
+cmdCapture True build mess
