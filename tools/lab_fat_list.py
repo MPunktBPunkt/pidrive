@@ -94,7 +94,11 @@ def list_dir(fd: int, bpb: dict, cluster: int = 0) -> list[dict]:
 def main() -> int:
     ap = argparse.ArgumentParser(description="FAT list PiDrive MSC (ro)")
     ap.add_argument("--dev", default="/dev/sda")
-    ap.add_argument("--path", default="/STATIONS", help="subdir under root, or '' for root")
+    ap.add_argument(
+        "--path",
+        default="/FAVORITEN",
+        help="subdir under root (LFN Favoriten / 8.3 FAVORITE), or '' for root",
+    )
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
@@ -107,11 +111,16 @@ def main() -> int:
         result: dict = {"bpb": bpb, "root": root, "path": args.path or "/"}
         if args.path:
             target = None
+            want = args.path.upper().rstrip("/").lstrip("/")
+            aliases = {want, "FAVORITEN", "FAVORITE", "FAVORITEN", "MENUE", "SETTINGS", "STATIONS"}
             for e in root:
-                if e["dir"] and e["name"].rstrip("/").upper() == args.path.upper().rstrip("/"):
-                    target = e
-                    break
-                if e["dir"] and e["short"].rstrip(".").upper().startswith(args.path.upper()[:8]):
+                if not e["dir"]:
+                    continue
+                nm = e["name"].rstrip("/").upper()
+                sh = e["short"].split(".")[0].upper().rstrip()
+                if nm == want or sh == want or (want in ("FAVORITEN", "FAVORITE") and sh == "FAVORITE") or (
+                    want in ("MENUE", "SETTINGS") and sh in ("MENUE", "SETTINGS")
+                ):
                     target = e
                     break
             if not target:

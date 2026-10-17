@@ -32,6 +32,7 @@ Transport/Phasen (Menü→ID3→Audio) und Messmethode (SG_IO vs. Page-Cache) si
 | M9 | F0 Identity/Cache isoliert | P1 | ☐ nach M8 | Serial / Vol-ID / Label |
 | M10 | 128 kbit/s Gegenprobe | P1 | ☐ nach M8 | CBW-Dauer ~7,7 s |
 | M11 | Größenleiter 256→… | P2 | ☐ | erst nach Transport+Cache |
+| M12 | Root = Ordner Favoriten/Menue; Live unter Favoriten | P0 UX | ☑ FW `0.4.53-dev` Lab | `favoriten-layout-01/` |
 
 ## 3. Claims (Arbeitsstand)
 
