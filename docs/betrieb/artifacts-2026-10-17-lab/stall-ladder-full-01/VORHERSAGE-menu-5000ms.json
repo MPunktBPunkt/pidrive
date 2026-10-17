@@ -1,0 +1,14 @@
+{
+  "phase": "menu",
+  "stallMaxMs": 5000,
+  "predict": "Meta READ opens; UI/host waits \u2264 stallMaxMs then data or silence fallback; botResets==0 expected under 15s Lab SG timeout",
+  "measure": [
+    "stall.retries",
+    "stall.waitMsMax",
+    "stall.timeouts",
+    "stall.botResets",
+    "http_alive",
+    "host wall_ms",
+    "esp \u0394bytes"
+  ]
+}

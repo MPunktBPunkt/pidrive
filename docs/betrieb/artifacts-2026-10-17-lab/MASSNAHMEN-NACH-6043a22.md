@@ -23,8 +23,8 @@ Transport/Phasen (Menü→ID3→Audio) und Messmethode (SG_IO vs. Page-Cache) si
 |----|----------|------|--------|-----------------|
 | M1 | `sgio_read10.py` als kanonisches Lab-Tool | P0 | ☑ | `tools/sgio_read10.py` |
 | M2 | Q10 einmal kalibrieren (req blocks ↔ ESP) | P0 | ☑ **PASS** `q10-calib-01` all_match | `tools/lab_q10_calibrate.py` |
-| M3 | Lab-Stall-Leiter Menü→ID3→Audio (0…15 s) | P0 | ☑ Tool + Smoke `stall-ladder-smoke-01`; Full 0…15 s noch offen | `tools/lab_stall_phase_ladder.py` |
-| M4 | QD=1-Probe (240er offen halten) | P0 | in M3 Phase `audio` | Capture: zweite LBA während BUSY? |
+| M3 | Lab-Stall-Leiter Menü→ID3→Audio (0…15 s) | P0 | ☑ Full **`stall-ladder-full-01`** | `tools/lab_stall_phase_ladder.py` |
+| M4 | QD=1-Probe (240er offen halten) | P0 | ☑ Audio: nur LBA 88, keine 2nd LBA | Capture in Full-Leiter |
 | M5 | Overnight-Loop als **Smoke** markieren (n=1) | P0 Doku | ☑ | `overnight-loop-…/SMOKE.md` |
 | M6 | Matrix: A3 Ursache nur Inference; ID3 Lab-Fakt; Methodik | P0 Doku | ☑ | `HU-PARAMETER-MATRIX-2026-10-16.md` |
 | M7 | B4: Lab-`pread` 64er **nicht** als HU-Geometrie | P0 Doku | ☑ | diese Datei §3 |
@@ -33,6 +33,8 @@ Transport/Phasen (Menü→ID3→Audio) und Messmethode (SG_IO vs. Page-Cache) si
 | M10 | 128 kbit/s Gegenprobe | P1 | ☐ nach M8 | CBW-Dauer ~7,7 s |
 | M11 | Größenleiter 256→… | P2 | ☐ | erst nach Transport+Cache |
 | M12 | Root = Ordner Favoriten/Menue; Live unter Favoriten | P0 UX | ☑ FW `0.4.53-dev` Lab | `favoriten-layout-01/` |
+| M13 | Bin-Richtlinie OTA im Repo | C | ☑ | `BIN-RICHTLINIE.md` |
+| M14 | Behavior-Trigger nur SG_IO | C | ☑ Tool | `tools/lab_favoriten_read_behavior.py` |
 
 ## 3. Claims (Arbeitsstand)
 

@@ -1,0 +1,33 @@
+[
+  {
+    "seq": 1,
+    "t0_us": 996203998,
+    "dur_us": 0,
+    "gap_us": 0,
+    "op": 255,
+    "lba": 0,
+    "bytes": 0,
+    "blocks": 0,
+    "chunks": 0,
+    "busy": 0,
+    "st": 2,
+    "source": "marker",
+    "synthesized": false,
+    "tag": "stall_audio"
+  },
+  {
+    "seq": 2,
+    "t0_us": 997190679,
+    "dur_us": 177991,
+    "gap_us": 0,
+    "op": 40,
+    "lba": 88,
+    "bytes": 122880,
+    "blocks": 240,
+    "chunks": 30,
+    "busy": 0,
+    "st": 0,
+    "source": "synthesized",
+    "synthesized": true
+  }
+]

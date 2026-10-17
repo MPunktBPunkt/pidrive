@@ -251,12 +251,39 @@ def run_step(
         {"enable": True, "reset": True, "mode": "ram_local", "mark": f"stall_{phase}_{ms}"},
     )
 
-    # SG timeout: stall wait + transfer margin
-    sg_timeout = max(8000, ms + 5000)
+    # SG timeout: cmd-timer stall can span many Busy-Retries within one CBW.
+    # Smoke@1s → wall ~8s; leave headroom for 15s ladder without false host abort.
+    sg_timeout = max(30_000, ms * 5 + 15_000)
     host_row = sgio_read(host, pct, sg, lba, blocks, sg_timeout)
     time.sleep(0.2)
     after = snap(esp)
+    # HTTP alive check while stall may have stressed WiFi/pump
+    try:
+        http_probe = http_json(f"{esp.rstrip('/')}/api/status")
+        http_alive = True
+        wifi_rssi = http_probe.get("wifiRssi")
+        free_heap = http_probe.get("freeHeap")
+    except Exception as e:
+        http_alive = False
+        wifi_rssi = None
+        free_heap = None
+        http_probe = {"error": str(e)}
+
     http_json(f"{esp.rstrip('/')}/api/lab/mess", "POST", {"stop": True, "reason": f"stall_{phase}_{ms}"})
+    mess = http_json(f"{esp.rstrip('/')}/api/lab/mess")
+    cmds = list(mess.get("cmds") or [])
+    read10 = [c for c in cmds if int(c.get("op") or 0) == 40]
+    lbas = sorted({int(c["lba"]) for c in read10 if c.get("lba") is not None})
+    # QD=1 probe: during one outstanding host CBW, ESP should only see that LBA (retries OK).
+    qd1 = {
+        "host_lba": lba,
+        "host_blocks": blocks,
+        "esp_unique_lbas": lbas,
+        "esp_read10_n": len(read10),
+        "second_lba_while_busy": any(x != lba for x in lbas),
+        "qd1_consistent": (not lbas) or (lbas == [lba]) or (set(lbas) == {lba}),
+    }
+    (out_dir / f"mess-cmds-{phase}-{ms}ms.json").write_text(json.dumps(cmds, indent=2) + "\n")
 
     row = {
         "phase": phase,
@@ -273,7 +300,10 @@ def run_step(
         "d_timeouts": int((after.get("stall") or {}).get("timeouts") or 0)
         - int((before.get("stall") or {}).get("timeouts") or 0),
         "botResets": (after.get("stall") or {}).get("botResets"),
-        "http_alive": True,
+        "http_alive": http_alive,
+        "wifiRssi": wifi_rssi,
+        "freeHeap": free_heap,
+        "qd1": qd1,
         "prediction": pred,
     }
     stall_off(esp)
@@ -357,17 +387,39 @@ def main() -> int:
                 "wall_ms": (r.get("host") or {}).get("wall_ms"),
                 "starts_id3": (r.get("host") or {}).get("starts_id3"),
                 "error": (r.get("host") or {}).get("error"),
+                "http_alive": r.get("http_alive"),
+                "qd1_consistent": (r.get("qd1") or {}).get("qd1_consistent"),
+                "second_lba": (r.get("qd1") or {}).get("second_lba_while_busy"),
+                "esp_lbas": (r.get("qd1") or {}).get("esp_unique_lbas"),
             }
             for r in rows
         ],
     }
+    audio_qd = [r for r in summary["rows"] if r["phase"] == "audio"]
+    summary["qd1_audio"] = {
+        "n": len(audio_qd),
+        "all_consistent": all(r.get("qd1_consistent") for r in audio_qd) if audio_qd else None,
+        "any_second_lba": any(r.get("second_lba") for r in audio_qd) if audio_qd else None,
+    }
     (out / "SUMMARY.json").write_text(json.dumps(summary, indent=2) + "\n")
     md = ["# Stall-Phasen-Leiter", "", f"Phasen: `{phases}` · ms: `{ms_list}`", ""]
-    md += ["| phase | ms | Δbytes | Δretries | wall_ms | id3 | err |", "|---|---:|---:|---:|---:|:---:|---|"]
+    md += [
+        "| phase | ms | Δbytes | Δretries | wall_ms | id3 | http | qd1 | 2nd LBA | err |",
+        "|---|---:|---:|---:|---:|:---:|:---:|:---:|:---:|---|",
+    ]
     for r in summary["rows"]:
         md.append(
-            f"| {r['phase']} | {r['ms']} | {r['d_bytes']} | {r['d_retries']} | {r['wall_ms']} | {r['starts_id3']} | {r['error'] or ''} |"
+            f"| {r['phase']} | {r['ms']} | {r['d_bytes']} | {r['d_retries']} | {r['wall_ms']} | "
+            f"{r['starts_id3']} | {r['http_alive']} | {r['qd1_consistent']} | {r['second_lba']} | "
+            f"{r['error'] or ''} |"
         )
+    md += [
+        "",
+        "## QD=1 (Audio)",
+        f"- all_consistent: **{summary['qd1_audio']['all_consistent']}**",
+        f"- any second LBA during BUSY: **{summary['qd1_audio']['any_second_lba']}**",
+        "",
+    ]
     (out / "ERGEBNIS.md").write_text("\n".join(md) + "\n")
     print(json.dumps(summary, indent=2))
     return 0

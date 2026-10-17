@@ -1,0 +1,60 @@
+{
+  "version": "0.4.53-dev",
+  "phases": [
+    {
+      "label": "A_soft_cycle_alone",
+      "read10_n": 44,
+      "bands": {
+        "boot": 3,
+        "dir_favoriten": 1,
+        "fat": 4,
+        "file_fav0": 11,
+        "other": 23,
+        "root": 2
+      },
+      "file_slot_reads": 11,
+      "unique_file_bands": [
+        "file_fav0"
+      ],
+      "method": "SG_IO + MessCapture ram_local"
+    },
+    {
+      "label": "B_root_and_favoriten_dir_sgio",
+      "read10_n": 64,
+      "bands": {
+        "boot": 1,
+        "dir_favoriten": 3,
+        "fat": 7,
+        "file_fav0": 22,
+        "other": 27,
+        "root": 4
+      },
+      "file_slot_reads": 22,
+      "unique_file_bands": [
+        "file_fav0"
+      ],
+      "method": "SG_IO + MessCapture ram_local"
+    },
+    {
+      "label": "C_three_station_heads_sgio",
+      "read10_n": 3,
+      "bands": {
+        "file_fav0": 1,
+        "file_fav1": 1,
+        "file_fav2": 1
+      },
+      "file_slot_reads": 3,
+      "unique_file_bands": [
+        "file_fav0",
+        "file_fav1",
+        "file_fav2"
+      ],
+      "method": "SG_IO + MessCapture ram_local"
+    }
+  ],
+  "method_note": "All host triggers are SG_IO (METHODIK-MSC-WAHRHEIT).",
+  "gate": {
+    "C_all_three": true,
+    "B_no_fav12": true
+  }
+}

@@ -1,0 +1,33 @@
+[
+  {
+    "seq": 1,
+    "t0_us": 980543990,
+    "dur_us": 0,
+    "gap_us": 0,
+    "op": 255,
+    "lba": 0,
+    "bytes": 0,
+    "blocks": 0,
+    "chunks": 0,
+    "busy": 0,
+    "st": 2,
+    "source": "marker",
+    "synthesized": false,
+    "tag": "stall_id3_2"
+  },
+  {
+    "seq": 2,
+    "t0_us": 981497952,
+    "dur_us": 19620,
+    "gap_us": 0,
+    "op": 40,
+    "lba": 81,
+    "bytes": 8192,
+    "blocks": 16,
+    "chunks": 2,
+    "busy": 0,
+    "st": 0,
+    "source": "synthesized",
+    "synthesized": true
+  }
+]

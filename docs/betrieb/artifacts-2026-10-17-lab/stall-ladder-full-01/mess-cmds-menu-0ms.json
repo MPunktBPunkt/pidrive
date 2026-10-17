@@ -1,0 +1,33 @@
+[
+  {
+    "seq": 1,
+    "t0_us": 960680962,
+    "dur_us": 0,
+    "gap_us": 0,
+    "op": 255,
+    "lba": 0,
+    "bytes": 0,
+    "blocks": 0,
+    "chunks": 0,
+    "busy": 0,
+    "st": 2,
+    "source": "marker",
+    "synthesized": false,
+    "tag": "stall_menu_"
+  },
+  {
+    "seq": 2,
+    "t0_us": 961707334,
+    "dur_us": 3867,
+    "gap_us": 0,
+    "op": 40,
+    "lba": 0,
+    "bytes": 4096,
+    "blocks": 8,
+    "chunks": 1,
+    "busy": 0,
+    "st": 0,
+    "source": "synthesized",
+    "synthesized": true
+  }
+]

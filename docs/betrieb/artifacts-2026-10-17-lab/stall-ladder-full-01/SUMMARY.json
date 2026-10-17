@@ -1,0 +1,298 @@
+{
+  "n": 18,
+  "rows": [
+    {
+      "phase": "menu",
+      "ms": 0,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 5.04,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        0
+      ]
+    },
+    {
+      "phase": "menu",
+      "ms": 1000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 5.01,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        0
+      ]
+    },
+    {
+      "phase": "menu",
+      "ms": 2000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 4.9,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        0
+      ]
+    },
+    {
+      "phase": "menu",
+      "ms": 5000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 4.95,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        0
+      ]
+    },
+    {
+      "phase": "menu",
+      "ms": 10000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 4.87,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        0
+      ]
+    },
+    {
+      "phase": "menu",
+      "ms": 15000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 4.91,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        0
+      ]
+    },
+    {
+      "phase": "id3",
+      "ms": 0,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.31,
+      "starts_id3": true,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        81
+      ]
+    },
+    {
+      "phase": "id3",
+      "ms": 1000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.12,
+      "starts_id3": true,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        81
+      ]
+    },
+    {
+      "phase": "id3",
+      "ms": 2000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.08,
+      "starts_id3": true,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        81
+      ]
+    },
+    {
+      "phase": "id3",
+      "ms": 5000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.27,
+      "starts_id3": true,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        81
+      ]
+    },
+    {
+      "phase": "id3",
+      "ms": 10000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.06,
+      "starts_id3": true,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        81
+      ]
+    },
+    {
+      "phase": "id3",
+      "ms": 15000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.05,
+      "starts_id3": true,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        81
+      ]
+    },
+    {
+      "phase": "audio",
+      "ms": 0,
+      "d_bytes": 122880,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 190.3,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        88
+      ]
+    },
+    {
+      "phase": "audio",
+      "ms": 1000,
+      "d_bytes": 122880,
+      "d_retries": 13501,
+      "d_timeouts": 27,
+      "wall_ms": 27501.13,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        88
+      ]
+    },
+    {
+      "phase": "audio",
+      "ms": 2000,
+      "d_bytes": 73728,
+      "d_retries": 15034,
+      "d_timeouts": 15,
+      "wall_ms": 30495.73,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        88
+      ]
+    },
+    {
+      "phase": "audio",
+      "ms": 5000,
+      "d_bytes": 45056,
+      "d_retries": 21528,
+      "d_timeouts": 8,
+      "wall_ms": 43373.72,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        88
+      ]
+    },
+    {
+      "phase": "audio",
+      "ms": 10000,
+      "d_bytes": 36864,
+      "d_retries": 32766,
+      "d_timeouts": 6,
+      "wall_ms": 65818.33,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        88
+      ]
+    },
+    {
+      "phase": "audio",
+      "ms": 15000,
+      "d_bytes": 36864,
+      "d_retries": 45067,
+      "d_timeouts": 6,
+      "wall_ms": 90408.85,
+      "starts_id3": false,
+      "error": null,
+      "http_alive": true,
+      "qd1_consistent": true,
+      "second_lba": false,
+      "esp_lbas": [
+        88
+      ]
+    }
+  ],
+  "qd1_audio": {
+    "n": 6,
+    "all_consistent": true,
+    "any_second_lba": false
+  }
+}

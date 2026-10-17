@@ -1,0 +1,14 @@
+{
+  "phase": "audio",
+  "stallMaxMs": 2000,
+  "predict": "240-block body READ stays single outstanding (QD=1); retries rise with ms; no second LBA while first open",
+  "measure": [
+    "stall.retries",
+    "stall.waitMsMax",
+    "stall.timeouts",
+    "stall.botResets",
+    "http_alive",
+    "host wall_ms",
+    "esp \u0394bytes"
+  ]
+}
