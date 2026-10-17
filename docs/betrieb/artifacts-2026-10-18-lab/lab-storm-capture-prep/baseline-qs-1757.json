@@ -1,0 +1,461 @@
+{
+  "mode": "poll",
+  "path": "docs/betrieb/artifacts-2026-10-17-feld/feld-go-abend-01/m20-repro/poll-replug-1757.jsonl",
+  "gaps": {
+    "schema_note": "v1 polls lack prefetchHits/midFile — Storm detectable via ΔbytesFile only; upgrade to feld_status_poll schema v2 for full Q/S.",
+    "rows_with_prefetchHits": 0,
+    "rows_with_midFile": 0,
+    "n_ok": 113,
+    "n_err": 1
+  },
+  "label_counts": {
+    "Unknown": 2,
+    "S": 36,
+    "Q": 2,
+    "Normal": 73
+  },
+  "episodes": [
+    {
+      "label": "Unknown",
+      "start": "2026-10-17T17:58:05.983+02:00",
+      "end": "2026-10-17T17:58:05.983+02:00",
+      "n": 1
+    },
+    {
+      "label": "S",
+      "start": "2026-10-17T17:58:07.386+02:00",
+      "end": "2026-10-17T17:58:19.475+02:00",
+      "n": 21
+    },
+    {
+      "label": "Unknown",
+      "start": "2026-10-17T17:58:20.075+02:00",
+      "end": "2026-10-17T17:58:20.075+02:00",
+      "n": 1
+    },
+    {
+      "label": "Q",
+      "start": "2026-10-17T17:58:20.675+02:00",
+      "end": "2026-10-17T17:58:21.275+02:00",
+      "n": 2
+    },
+    {
+      "label": "Normal",
+      "start": "2026-10-17T17:58:21.876+02:00",
+      "end": "2026-10-17T17:58:21.876+02:00",
+      "n": 1
+    },
+    {
+      "label": "S",
+      "start": "2026-10-17T17:58:22.476+02:00",
+      "end": "2026-10-17T17:58:30.878+02:00",
+      "n": 15
+    },
+    {
+      "label": "Normal",
+      "start": "2026-10-17T17:58:31.478+02:00",
+      "end": "2026-10-17T17:59:16.630+02:00",
+      "n": 72
+    }
+  ],
+  "guess_events": [
+    {
+      "wall_iso": "2026-10-17T17:58:21.876+02:00",
+      "guess": 1,
+      "label_at": "Normal",
+      "reasons": [
+        "play+stream+guess"
+      ]
+    }
+  ],
+  "reads_minus_rej_unique": [
+    31,
+    32
+  ],
+  "invariant_ok": true,
+  "samples": [
+    {
+      "label": "Unknown",
+      "reasons": [
+        "insufficient_axes"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:05.983+02:00",
+        "mono_s": 2775268.84678913,
+        "prefetchHits": null,
+        "bytesFile": 741376,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 745472,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 212,
+        "rej": 181,
+        "reads_minus_rej": 31,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": null,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "S",
+      "reasons": [
+        "ΔbytesFile/s=819228>=80000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:12.187+02:00",
+        "mono_s": 2775275.051580405,
+        "prefetchHits": null,
+        "bytesFile": 5824512,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 5828608,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 1453,
+        "rej": 1422,
+        "reads_minus_rej": 31,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 819227.5573557282,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "S",
+      "reasons": [
+        "ΔbytesFile/s=457222>=80000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:17.589+02:00",
+        "mono_s": 2775280.453529835,
+        "prefetchHits": null,
+        "bytesFile": 8294400,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 8294400,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 2056,
+        "rej": 2025,
+        "reads_minus_rej": 31,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 457221.60709673184,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "S",
+      "reasons": [
+        "ΔbytesFile/s=95555>=80000",
+        "guess>0_in_storm",
+        "play+stream_in_storm"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:23.076+02:00",
+        "mono_s": 2775285.940288003,
+        "prefetchHits": null,
+        "bytesFile": 8818688,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 8818688,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2184,
+        "rej": 2152,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 95555.15004681236,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "S",
+      "reasons": [
+        "ΔbytesFile/s=97066>=80000",
+        "guess>0_in_storm",
+        "play+stream_in_storm"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:28.478+02:00",
+        "mono_s": 2775291.341637234,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 97066.11766146071,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:33.879+02:00",
+        "mono_s": 2775296.742880537,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:41.821+02:00",
+        "mono_s": 2775304.685181851,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:47.222+02:00",
+        "mono_s": 2775310.086574815,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:52.624+02:00",
+        "mono_s": 2775315.488050834,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:58:58.025+02:00",
+        "mono_s": 2775320.889247845,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:59:03.427+02:00",
+        "mono_s": 2775326.290808135,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Normal",
+      "reasons": [
+        "play+stream+guess",
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-17T17:59:08.829+02:00",
+        "mono_s": 2775331.692901292,
+        "prefetchHits": null,
+        "bytesFile": 9342976,
+        "bytesDir": null,
+        "bytesFat": null,
+        "bytesMeta": null,
+        "bytesBoot": null,
+        "midFile_sum": null,
+        "fromHead_sum": null,
+        "slot_bytes_sum": 9342976,
+        "guess": 1,
+        "stream_active": true,
+        "playingName": "Rock Antenne Bayern",
+        "readCount": 2312,
+        "rej": 2280,
+        "reads_minus_rej": 32,
+        "schema_version": 1,
+        "has_pref": false,
+        "has_mid": false
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    }
+  ]
+}

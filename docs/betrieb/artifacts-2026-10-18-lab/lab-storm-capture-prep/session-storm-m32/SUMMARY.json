@@ -1,0 +1,23 @@
+{
+  "out": "docs/betrieb/artifacts-2026-10-18-lab/lab-storm-capture-prep/session-storm-m32",
+  "qs_counts": {
+    "Unknown": 4,
+    "Q": 56
+  },
+  "guess_events": 0,
+  "invariant_ok": false,
+  "schema_note": "schema_ok",
+  "band": {
+    "read10_n": 44,
+    "file_body_share": 0.773,
+    "storm_hint": true,
+    "dominant_band": "file_menue_stub",
+    "bands": {
+      "boot_fat": 7,
+      "file_menue_stub": 23,
+      "file_fav0": 11,
+      "root_dir": 2,
+      "DIR_Favoriten_pad": 1
+    }
+  }
+}

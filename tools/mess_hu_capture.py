@@ -210,8 +210,15 @@ def decide_arm_stop(
     host_stuck_abs_min: int,
     elapsed_s: float,
     host_stuck_grace_s: float,
+    storm: bool = False,
 ) -> str | None:
-    """Return stop reason or None to keep watching."""
+    """Return stop reason or None to keep watching.
+
+    storm=True (M30): only timeout stops — play_cleared/underrun/host_stuck would
+    abort a Prefetch-Livelock window before LBA evidence accumulates.
+    """
+    if storm:
+        return None
     if seen_play and not play:
         return "play_cleared"
     if (und - baseline_und) >= underrun_delta:
@@ -287,12 +294,14 @@ def cmd_arm(args: argparse.Namespace) -> int:
             host_stuck_abs_min=args.host_stuck_abs_min,
             elapsed_s=time.time() - t0,
             host_stuck_grace_s=args.host_stuck_grace_s,
+            storm=bool(getattr(args, "storm", False)),
         )
         if reason:
             stop_reason = reason
             break
+        mode = "storm" if getattr(args, "storm", False) else "arm"
         print(
-            f"t={f['t']:5.1f} play={f['play']!r} stream={f['stream']} "
+            f"t={f['t']:5.1f} [{mode}] play={f['play']!r} stream={f['stream']} "
             f"host={f['host']} abs={f['abs']} und={f['und']} (+{und_delta})",
             flush=True,
         )
@@ -408,11 +417,18 @@ def self_test() -> int:
         stream=False, host=0, abs_end=0, host_lag_blocks=8000,
         host_stuck_abs_min=20_000, elapsed_s=1.0, host_stuck_grace_s=3.0,
     ) is None
+    assert decide_arm_stop(
+        seen_play=True, play="", und=0, baseline_und=0, underrun_delta=50_000,
+        stream=False, host=0, abs_end=0, host_lag_blocks=8000,
+        host_stuck_abs_min=20_000, elapsed_s=1.0, host_stuck_grace_s=3.0,
+        storm=True,
+    ) is None
     print("self_test OK", json.dumps({
         "mixed_all_4kib": s["all_4kib"],
         "mixed_matches_field": s["matches_field_cbw"],
         "hist": s["blocks_hist"],
         "arm_fields": f["play"],
+        "storm_ignores_play_clear": True,
     }))
     return 0
 
@@ -466,6 +482,11 @@ def main() -> int:
     p_arm.add_argument("--host-stuck-abs-min", type=int, default=20000)
     p_arm.add_argument("--host-stuck-grace-s", type=float, default=3.0)
     p_arm.add_argument("--mark", default="arm_window")
+    p_arm.add_argument(
+        "--storm",
+        action="store_true",
+        help="M30 Storm window: ignore play_cleared/underrun/host_stuck; stop only on --timeout",
+    )
     p_arm.add_argument("-o", "--out", default=None)
 
     args = ap.parse_args()

@@ -42,9 +42,9 @@ File-Body Reads
 
 | ID | Maßnahme | Prio | Wo | Status |
 |----|----------|------|-----|--------|
-| **M30** | **P0-Session:** UART **und** Storm-Capture in **einer** verwertbaren Session | **P0** | Feld | ☐ |
-| **M31** | Stuck-Klassifikator Q/S: Trigger **nie** auf reads/rej allein — Achsen `prefetchHits`, `fav*.midFile`, `bytesFile`, Ohr/Ton | **P0** | Feld (+Status-Poll) | ☐ |
-| **M32** | Während **S**: MessCapture/Journal → LBA / UID / Read-Klasse (Head vs midFile) + zeitliche Korrelation zu Guess-Events | **P0** | Feld | ☐ |
+| **M30** | **P0-Session:** UART **und** Storm-Capture in **einer** verwertbaren Session | **P0** | Feld | ☐ Feld · Lab-Harness ☑ `feld_storm_session.sh` + `arm --storm` |
+| **M31** | Stuck-Klassifikator Q/S: Trigger **nie** auf reads/rej allein — Achsen `prefetchHits`, `fav*.midFile`, `bytesFile`, Ohr/Ton | **P0** | Feld (+Status-Poll) | ☐ Feld · Tool ☑ `feld_qs_classify` + poll schema v2 |
+| **M32** | Während **S**: MessCapture/Journal → LBA→Band (`mess_band_report`) + Korrelation zu Guess | **P0** | Feld | ☐ Feld · Lab ☑ `band.json` in Session |
 | **M33** | Q vs S **reproduzierbar** machen (Zustandstabelle oben; mind. je 1 saubere Episode mit Label) | **P1** | Feld | ☐ |
 | **M34** | Reset-Isolation **nach** Storm-Capture: A kein Reset · B ESP-RST · C Soft-Detach/OTG · D HU-Power-Cycle — jeweils: verschwindet S? bleibt Guess-Verhalten? | **P1** | Feld | ☐ |
 | **M35** | Guess-Verteilung `msPlugToPlayGuess` **n≥10**; Storm-Guess-Auslöser-Klasse (welche Read-Klasse unmittelbar vor Guess?) | **P1** | Feld | ☐ |
@@ -109,5 +109,7 @@ UART ist **Instrumentierung**, kein eigenes Analyseziel. Ohne UART bleibt Panic 
 ## Artefakte / Anker
 
 - Facts: Meta-Bytes session-konstant · `reads−rej∈{31,32}` · Guess-im-Storm · midFile dominant · fromHead rar · fav2 oft voll ohne Play · hostAbs-Overshoot  
-- Tools: `tools/mess_hu_capture.py` · `tools/feld_status_poll.py` · UART an `.89`  
+- Tools: `feld_storm_session.sh` · `mess_hu_capture arm --storm` · `feld_status_poll` (schema 2) · `feld_qs_classify` · `mess_band_report` · UART an `.89`  
+- Lab-Prep: [`../artifacts-2026-10-18-lab/lab-storm-capture-prep/ERGEBNIS.md`](../artifacts-2026-10-18-lab/lab-storm-capture-prep/ERGEBNIS.md)  
+- Protokoll: [`CAPTURE-PROTOKOLL-STORM-M30.md`](CAPTURE-PROTOKOLL-STORM-M30.md)  
 - Kanone: [`TRI-REVIEW-ABEND-2026-10-17.md`](TRI-REVIEW-ABEND-2026-10-17.md) · [`UEBERGABE-NAECHSTE-KI-2026-10-17-FELD.md`](UEBERGABE-NAECHSTE-KI-2026-10-17-FELD.md)

@@ -1,0 +1,421 @@
+{
+  "mode": "poll",
+  "path": "docs/betrieb/artifacts-2026-10-18-lab/lab-storm-capture-prep/session-storm-m32/poll.jsonl",
+  "gaps": {
+    "schema_note": "schema_ok",
+    "rows_with_prefetchHits": 60,
+    "rows_with_midFile": 60,
+    "n_ok": 60,
+    "n_err": 0
+  },
+  "label_counts": {
+    "Unknown": 4,
+    "Q": 56
+  },
+  "episodes": [
+    {
+      "label": "Unknown",
+      "start": "2026-10-18T00:45:22.788+02:00",
+      "end": "2026-10-18T00:45:22.788+02:00",
+      "n": 1
+    },
+    {
+      "label": "Q",
+      "start": "2026-10-18T00:45:23.289+02:00",
+      "end": "2026-10-18T00:45:28.290+02:00",
+      "n": 11
+    },
+    {
+      "label": "Unknown",
+      "start": "2026-10-18T00:45:28.790+02:00",
+      "end": "2026-10-18T00:45:29.790+02:00",
+      "n": 3
+    },
+    {
+      "label": "Q",
+      "start": "2026-10-18T00:45:30.290+02:00",
+      "end": "2026-10-18T00:45:52.296+02:00",
+      "n": 45
+    }
+  ],
+  "guess_events": [],
+  "reads_minus_rej_unique": [
+    0,
+    36
+  ],
+  "invariant_ok": false,
+  "samples": [
+    {
+      "label": "Unknown",
+      "reasons": [
+        "insufficient_axes"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:22.788+02:00",
+        "mono_s": 2799705.652492921,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": null,
+      "d_prefetch_per_s": null,
+      "d_mid_per_s": null
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:25.289+02:00",
+        "mono_s": 2799708.153246685,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:27.790+02:00",
+        "mono_s": 2799710.653919847,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:30.290+02:00",
+        "mono_s": 2799713.154579153,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:32.791+02:00",
+        "mono_s": 2799715.655199424,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:35.292+02:00",
+        "mono_s": 2799718.155793897,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:37.792+02:00",
+        "mono_s": 2799720.65654197,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:40.293+02:00",
+        "mono_s": 2799723.157218769,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:42.794+02:00",
+        "mono_s": 2799725.657913893,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:45.294+02:00",
+        "mono_s": 2799728.158530458,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:47.795+02:00",
+        "mono_s": 2799730.659215502,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    },
+    {
+      "label": "Q",
+      "reasons": [
+        "ΔbytesFile/s=0<=8000"
+      ],
+      "axes": {
+        "wall_iso": "2026-10-18T00:45:50.296+02:00",
+        "mono_s": 2799733.159901189,
+        "prefetchHits": 58,
+        "bytesFile": 237568,
+        "bytesDir": 24576,
+        "bytesFat": 16384,
+        "bytesMeta": 111616,
+        "bytesBoot": 5120,
+        "midFile_sum": 57,
+        "fromHead_sum": 1,
+        "slot_bytes_sum": 237568,
+        "guess": 0,
+        "stream_active": false,
+        "playingName": "",
+        "readCount": 94,
+        "rej": 58,
+        "reads_minus_rej": 36,
+        "schema_version": 2,
+        "has_pref": true,
+        "has_mid": true
+      },
+      "d_bytesFile_per_s": 0.0,
+      "d_prefetch_per_s": 0.0,
+      "d_mid_per_s": 0.0
+    }
+  ]
+}

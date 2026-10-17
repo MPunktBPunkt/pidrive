@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""1 Hz ESP status poll with wall-clock timestamps (Stufe 0).
+"""ESP status poll with wall-clock timestamps (Stufe 0 / Storm Q/S).
 
-Writes JSONL rows suitable for field Stufe-1 Decode-Start / Cache tests.
+Schema v2 adds Prefetch-Livelock axes (M30/M31): prefetchHits, meta-byte
+counters, midFile/fromHead per slot, plug/guess latencies. Older v1 rows
+remain readable; classify tools tolerate missing axes.
 
 Example:
   python3 tools/feld_status_poll.py --esp http://192.168.178.89 \\
       --out docs/betrieb/artifacts-2026-10-06-feld/feld-av-0723/status-poll.jsonl \\
-      --seconds 90
+      --seconds 90 --print
 """
 from __future__ import annotations
 
@@ -16,6 +18,8 @@ import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+SCHEMA_VERSION = 2
 
 
 def http_json(url: str, timeout: float = 4.0) -> dict:
@@ -33,9 +37,15 @@ def slot_progress(slots: list) -> list[dict]:
                 "uid": s.get("uid"),
                 "name": s.get("name"),
                 "bytes": s.get("bytes"),
+                "fileBytes": s.get("fileBytes"),
                 "maxSeq": s.get("maxSeq"),
                 "b": s.get("b"),
                 "lba0": s.get("lba0"),
+                "lba1": s.get("lba1"),
+                "fromHead": s.get("fromHead"),
+                "midFile": s.get("midFile"),
+                "lastAgeMs": s.get("lastAgeMs"),
+                "kind": s.get("kind"),
             }
         )
     return out
@@ -47,8 +57,13 @@ def row_from_status(st: dict, wall_iso: str, mono: float, run_id: str = "") -> d
     slots = m.get("slotMap") or st.get("slotMap") or []
     sb = int(m.get("streamBytes") or 0)
     und = int(stream.get("underruns") or 0)
+    reads = m.get("readCount")
+    rej = m.get("playRejectCount")
+    inv = None
+    if isinstance(reads, (int, float)) and isinstance(rej, (int, float)):
+        inv = int(reads) - int(rej)
     return {
-        "schema_version": 1,
+        "schema_version": SCHEMA_VERSION,
         "run_id": run_id or None,
         "wall_iso": wall_iso,
         "mono_s": mono,
@@ -60,13 +75,24 @@ def row_from_status(st: dict, wall_iso: str, mono: float, run_id: str = "") -> d
         "serial": m.get("usbSerial"),
         "otgUp": st.get("otgUp"),
         "plugged": m.get("plugged"),
+        "plugCount": m.get("plugCount"),
+        "unplugCount": m.get("unplugCount"),
         "playingUid": st.get("playingUid") or "",
         "playingName": st.get("playingName") or "",
-        "readCount": m.get("readCount"),
+        "phase": m.get("phase"),
+        "readCount": reads,
         "transportEpoch": m.get("transportEpoch"),
         "botResetObservable": m.get("botResetObservable"),
         "bytesFile": m.get("bytesFile"),
+        "bytesDir": m.get("bytesDir"),
+        "bytesFat": m.get("bytesFat"),
+        "bytesMeta": m.get("bytesMeta"),
+        "bytesBoot": m.get("bytesBoot"),
         "bytesRead": m.get("bytesRead"),
+        "prefetchHits": m.get("prefetchHits"),
+        "msSincePlug": m.get("msSincePlug"),
+        "msPlugToFirstRead": m.get("msPlugToFirstRead"),
+        "msPlugToPlayGuess": m.get("msPlugToPlayGuess"),
         "streamBytes": sb,
         "underruns": und,
         "liveBytes": max(0, sb - und),
@@ -83,7 +109,8 @@ def row_from_status(st: dict, wall_iso: str, mono: float, run_id: str = "") -> d
         "pumpTcpUp": st.get("pumpTcpUp"),
         "pumpTcpPeer": st.get("pumpTcpPeer") or "",
         "guess": m.get("playGuessCount"),
-        "rej": m.get("playRejectCount"),
+        "rej": rej,
+        "reads_minus_rej": inv,
         "cold": m.get("coldBodyBurstCount"),
         "slotMap": slot_progress(slots),
     }
@@ -120,7 +147,7 @@ def main() -> int:
                 row = row_from_status(st, wall, mono, run_id=args.run_id)
             except Exception as e:
                 row = {
-                    "schema_version": 1,
+                    "schema_version": SCHEMA_VERSION,
                     "run_id": args.run_id or None,
                     "wall_iso": wall,
                     "mono_s": mono,
@@ -133,16 +160,27 @@ def main() -> int:
                 if "error" in row:
                     print(row["wall_iso"], "ERR", row["error"], flush=True)
                 else:
+                    slots = row.get("slotMap") or []
+                    mid = sum(int(s.get("midFile") or 0) for s in slots)
+                    head = sum(int(s.get("fromHead") or 0) for s in slots)
                     print(
                         row["wall_iso"],
                         "play",
                         repr(row.get("playingName") or "-"),
-                        "host",
-                        row.get("hostAbs"),
-                        "und",
-                        row.get("underruns"),
-                        "readCount",
+                        "guess",
+                        row.get("guess"),
+                        "pref",
+                        row.get("prefetchHits"),
+                        "bf",
+                        row.get("bytesFile"),
+                        "mid",
+                        mid,
+                        "head",
+                        head,
+                        "rc",
                         row.get("readCount"),
+                        "inv",
+                        row.get("reads_minus_rej"),
                         flush=True,
                     )
             # pace
