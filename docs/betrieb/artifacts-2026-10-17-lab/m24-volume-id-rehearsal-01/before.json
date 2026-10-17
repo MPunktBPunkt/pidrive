@@ -1,0 +1,19 @@
+{
+  "version": "0.4.53-dev",
+  "otgUp": true,
+  "resetReason": "software",
+  "uptime": "4h 41min",
+  "usbSerial": "PD0489",
+  "bpbVolumeId": 1358003479,
+  "bpbVolumeIdOverride": 1358003479,
+  "volumeLabel": "PD0461XXXX6",
+  "rootLabel": "PD0461XXXX6",
+  "remountGen": 489,
+  "productRevision": "0489",
+  "paths": [
+    "FAVORITEN/01.MP3",
+    "FAVORITEN/02.MP3",
+    "FAVORITEN/03.MP3",
+    "MENUE/04.MP3"
+  ]
+}
