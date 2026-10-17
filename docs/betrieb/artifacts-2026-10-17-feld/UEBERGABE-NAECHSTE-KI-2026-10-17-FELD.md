@@ -1,7 +1,7 @@
 # Übergabe · 2026-10-17 Feld (Abend + Tri-Review GPT/Grok/Mistral)
 
 **Repo:** MPunktBPunkt/pidrive · **HEAD:** `83ce815` (+ Folgecommits falls Review-Docs) · **FW:** `0.4.53-dev` · Stall aus  
-**Kanone:** [`TRI-REVIEW-ABEND-2026-10-17.md`](TRI-REVIEW-ABEND-2026-10-17.md) · [`feld-go-abend-01/ERGEBNIS.md`](feld-go-abend-01/ERGEBNIS.md) · [`MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md`](MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md)
+**Kanone:** [`TRI-REVIEW-ABEND-2026-10-17.md`](TRI-REVIEW-ABEND-2026-10-17.md) · [`MASSNAHMEN-NACH-LIVELOCK-AUDIT-2026-10-17.md`](MASSNAHMEN-NACH-LIVELOCK-AUDIT-2026-10-17.md) (M30+) · [`feld-go-abend-01/ERGEBNIS.md`](feld-go-abend-01/ERGEBNIS.md) · [`MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md`](MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md) (M20–M29)
 
 ## Ein Satz
 
@@ -27,13 +27,13 @@ M20/M21 reproduzierbar (~6–7 s Ton, Ring ≈8,2 s); danach Prefetch-Livelo
 4. **Guess-Latenz** 17–22 s; Operator ≥20 s warten; kein Replug-Sturm nach Tonfenster.
 5. **Stream≠Ohr** nach Fenster normal; underruns = Bytes; hostAbs kann über EOF (M27).
 
-## Auftrag (Prio)
+## Auftrag (Prio) — siehe M30+
 
-1. UART bei Weiß (Reset-Grund, Tail, ideal VBUS/Q11)
-2. Stuck-Capture ohne Sofort-Reset (LBA/UID/Offsets; Quiet vs Storm)
-3. Reset-Isolation: Panic allein / ESP-RST / OTG-Cycle / **HU-Power-Cycle**
-4. `msPlugToPlayGuess` n≥10 sammeln
-5. Optional M25 (Identity-Zeitpunkt), dann erst M23 Stall
+1. **M30 P0:** UART als Gate + Storm-Capture in **einer** Session (nicht UART allein)
+2. **M31/M32:** Q/S-Klassifikator (pref/midFile/bytesFile/Ohr) + LBA/Read-Klasse während S
+3. **M33/M34:** Q vs S reproduzierbar → Reset-Isolation A–D auf gefangenem Storm
+4. **M35:** `msPlugToPlayGuess` n≥10 + Storm-Guess-Auslöser-Klasse
+5. Optional M25, dann erst M23 Stall — **kein** 167/136- oder Transport-Tuning
 
 ## Nicht tun
 
@@ -45,5 +45,6 @@ Panic „gefixt“ · Stuck = USB-tot · 4 KiB = CBW-Architektur · M24 als Ca
 feld-go-abend-01/     Status, Polls, M24, ERGEBNIS
 feld-ota-053/         Mittag OTA + Bayern
 TRI-REVIEW-ABEND-2026-10-17.md
+MASSNAHMEN-NACH-LIVELOCK-AUDIT-2026-10-17.md   M30+
 claude-triage-lab-01/ Lab
 ```

@@ -32,6 +32,8 @@
 
 ## Reihenfolge nächstes Feld
 
+> **Aktualisiert:** siehe [`MASSNAHMEN-NACH-LIVELOCK-AUDIT-2026-10-17.md`](MASSNAHMEN-NACH-LIVELOCK-AUDIT-2026-10-17.md) — P0 = UART+Storm-Capture (M30), nicht 167/136.
+
 ```
 UART an → 3–5× OTG Klasse-A (M20/M21)
     ├─ alle A → Panic → P1 historisch
