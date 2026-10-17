@@ -1,0 +1,434 @@
+{
+  "geometry": "L3 corrected",
+  "bands_def": {
+    "boot": [
+      0,
+      0
+    ],
+    "fat": [
+      1,
+      32
+    ],
+    "root": [
+      33,
+      64
+    ],
+    "dir_favoriten": [
+      65,
+      72
+    ],
+    "dir_menue": [
+      73,
+      80
+    ],
+    "file_fav0": [
+      81,
+      16464
+    ],
+    "file_fav1": [
+      16465,
+      17488
+    ],
+    "file_fav2": [
+      17489,
+      18512
+    ],
+    "file_menue": [
+      18513,
+      18525
+    ]
+  },
+  "phases": [
+    {
+      "label": "A_soft_cycle_alone",
+      "read10_n": 44,
+      "bands": {
+        "boot": 3,
+        "dir_favoriten": 1,
+        "fat": 4,
+        "file_fav0": 11,
+        "other": 23,
+        "root": 2
+      },
+      "bytes_by_band": {
+        "boot": 5120,
+        "dir_favoriten": 24576,
+        "fat": 16384,
+        "file_fav0": 221184,
+        "other": 65536,
+        "root": 16384
+      },
+      "blocks_hist": {
+        "1": 10,
+        "8": 29,
+        "16": 1,
+        "24": 1,
+        "48": 1,
+        "120": 1,
+        "232": 1
+      },
+      "file_slot_reads": 11,
+      "meta_dir_reads": 10,
+      "file_detail": [
+        {
+          "band": "file_fav0",
+          "lba": 4096,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 128,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 256,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 512,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 1024,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 2048,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 8192,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 120,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 136,
+          "blocks": 120,
+          "bytes": 61440
+        },
+        {
+          "band": "file_fav0",
+          "lba": 264,
+          "blocks": 232,
+          "bytes": 118784
+        },
+        {
+          "band": "file_fav0",
+          "lba": 496,
+          "blocks": 16,
+          "bytes": 8192
+        }
+      ],
+      "unique_file_bands": [
+        "file_fav0"
+      ]
+    },
+    {
+      "label": "B_root_ls_only",
+      "read10_n": 64,
+      "bands": {
+        "boot": 1,
+        "dir_favoriten": 3,
+        "dir_menue": 2,
+        "fat": 5,
+        "file_fav0": 11,
+        "other": 8,
+        "root": 34
+      },
+      "bytes_by_band": {
+        "boot": 512,
+        "dir_favoriten": 28672,
+        "dir_menue": 4096,
+        "fat": 20480,
+        "file_fav0": 221184,
+        "other": 32768,
+        "root": 32768
+      },
+      "blocks_hist": {
+        "1": 36,
+        "7": 2,
+        "8": 20,
+        "15": 1,
+        "16": 1,
+        "24": 1,
+        "48": 1,
+        "120": 1,
+        "232": 1
+      },
+      "file_slot_reads": 11,
+      "meta_dir_reads": 45,
+      "file_detail": [
+        {
+          "band": "file_fav0",
+          "lba": 4096,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 128,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 256,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 512,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 1024,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 2048,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 8192,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 120,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 136,
+          "blocks": 120,
+          "bytes": 61440
+        },
+        {
+          "band": "file_fav0",
+          "lba": 264,
+          "blocks": 232,
+          "bytes": 118784
+        },
+        {
+          "band": "file_fav0",
+          "lba": 496,
+          "blocks": 16,
+          "bytes": 8192
+        }
+      ],
+      "unique_file_bands": [
+        "file_fav0"
+      ]
+    },
+    {
+      "label": "C_favoriten_ls_plus_head",
+      "read10_n": 64,
+      "bands": {
+        "dir_favoriten": 1,
+        "dir_menue": 2,
+        "fat": 3,
+        "file_fav0": 15,
+        "file_fav1": 4,
+        "file_fav2": 4,
+        "other": 12,
+        "root": 23
+      },
+      "bytes_by_band": {
+        "dir_favoriten": 512,
+        "dir_menue": 24064,
+        "fat": 8704,
+        "file_fav0": 237568,
+        "file_fav1": 16384,
+        "file_fav2": 16384,
+        "other": 49152,
+        "root": 15360
+      },
+      "blocks_hist": {
+        "1": 24,
+        "7": 1,
+        "8": 35,
+        "16": 1,
+        "40": 1,
+        "120": 1,
+        "232": 1
+      },
+      "file_slot_reads": 23,
+      "meta_dir_reads": 29,
+      "file_detail": [
+        {
+          "band": "file_fav0",
+          "lba": 4096,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 128,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 256,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 512,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 1024,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 2048,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 8192,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 120,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 136,
+          "blocks": 120,
+          "bytes": 61440
+        },
+        {
+          "band": "file_fav2",
+          "lba": 17489,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 264,
+          "blocks": 232,
+          "bytes": 118784
+        },
+        {
+          "band": "file_fav2",
+          "lba": 17497,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 496,
+          "blocks": 16,
+          "bytes": 8192
+        },
+        {
+          "band": "file_fav1",
+          "lba": 16465,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav1",
+          "lba": 16473,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 81,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav0",
+          "lba": 89,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav2",
+          "lba": 17489,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav2",
+          "lba": 17497,
+          "blocks": 8,
+          "bytes": 4096
+        },
+        {
+          "band": "file_fav1",
+          "lba": 16465,
+          "blocks": 8,
+          "bytes": 4096
+        }
+      ],
+      "unique_file_bands": [
+        "file_fav0",
+        "file_fav1",
+        "file_fav2"
+      ]
+    }
+  ],
+  "prev_stations_era_A": {
+    "source": "docs/betrieb/artifacts-2026-10-16-lab/lab-continue-20261016T225133Z/A_soft_cycle_alone.json",
+    "read10_n": 44,
+    "blocks_hist": {
+      "1": 10,
+      "8": 29,
+      "24": 1,
+      "48": 1,
+      "120": 1,
+      "232": 1,
+      "16": 1
+    },
+    "bytes_total": 349184
+  },
+  "interpretation": {
+    "A_linux_still_probes_fav0": true,
+    "B_root_ls_still_probes_fav0_plus_dirs": true,
+    "C_enters_all_three_stations": true,
+    "delta_C_vs_A_file_reads": 12,
+    "delta_C_vs_B_file_reads": 12
+  }
+}
