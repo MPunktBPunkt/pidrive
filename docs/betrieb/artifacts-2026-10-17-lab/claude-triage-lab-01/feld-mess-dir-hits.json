@@ -1,0 +1,55 @@
+{
+  "claim": "NBT read new Favoriten/Menue DIR clusters (not only legacy fav1 LBA)",
+  "hits": [
+    {
+      "seq": 14,
+      "t0_us": 77853220,
+      "dur_us": 15308,
+      "gap_us": 676,
+      "op": 40,
+      "lba": 33,
+      "bytes": 16384,
+      "blocks": 32,
+      "chunks": 4,
+      "busy": 0,
+      "st": 0,
+      "source": "synthesized",
+      "synthesized": true
+    },
+    {
+      "seq": 26,
+      "t0_us": 78222621,
+      "dur_us": 3815,
+      "gap_us": 237124,
+      "op": 40,
+      "lba": 65,
+      "bytes": 4096,
+      "blocks": 8,
+      "chunks": 1,
+      "busy": 0,
+      "st": 0,
+      "source": "synthesized",
+      "synthesized": true
+    },
+    {
+      "seq": 27,
+      "t0_us": 78261924,
+      "dur_us": 3881,
+      "gap_us": 35488,
+      "op": 40,
+      "lba": 73,
+      "bytes": 4096,
+      "blocks": 8,
+      "chunks": 1,
+      "busy": 0,
+      "st": 0,
+      "source": "synthesized",
+      "synthesized": true
+    }
+  ],
+  "bands": {
+    "root_lba33": true,
+    "Favoriten_cl2_lba65": true,
+    "Menue_cl3_lba73": true
+  }
+}

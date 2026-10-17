@@ -1,0 +1,11 @@
+{
+  "definition": "stream.underruns counts silence-fill BYTES while stream.active, not audio dropout events",
+  "fw": "esp32.pidrive src/core/StreamBuffer.h readAt(): else { if (active_) underruns_++; out[i]=silence; }",
+  "facts": "HU-Technical-Facts R25/R27 use underruns Δ as byte budget for live window",
+  "feld_bayern": {
+    "underruns": 732404,
+    "fav1_fileBytes": 524288,
+    "ratio": 1.397,
+    "interpretation": "not 732k dropouts; lifetime/session silence-byte counter during active stream overshoots"
+  }
+}
