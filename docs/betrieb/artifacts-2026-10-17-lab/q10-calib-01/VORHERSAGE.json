@@ -1,0 +1,36 @@
+{
+  "claim": "Each SG_IO READ10 (lba,blocks) appears as one ESP MessCapture op=40 with same lba/blocks",
+  "plan": [
+    {
+      "tag": "r512",
+      "lba": 300,
+      "blocks": 1,
+      "bytes": 512
+    },
+    {
+      "tag": "r4k",
+      "lba": 0,
+      "blocks": 8,
+      "bytes": 4096
+    },
+    {
+      "tag": "r16k",
+      "lba": 100,
+      "blocks": 32,
+      "bytes": 16384
+    },
+    {
+      "tag": "r64k",
+      "lba": 200,
+      "blocks": 128,
+      "bytes": 65536
+    },
+    {
+      "tag": "r120k",
+      "lba": 400,
+      "blocks": 240,
+      "bytes": 122880
+    }
+  ],
+  "reject_if": "ESP hist differs from requested, or ESP \u0394bytes == 0 while host got data"
+}

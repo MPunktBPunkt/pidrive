@@ -1,0 +1,14 @@
+{
+  "phase": "id3",
+  "stallMaxMs": 0,
+  "predict": "Head READ returns ID3 if stall allows; starts_id3 True; underruns stay 0 for first id3Len",
+  "measure": [
+    "stall.retries",
+    "stall.waitMsMax",
+    "stall.timeouts",
+    "stall.botResets",
+    "http_alive",
+    "host wall_ms",
+    "esp \u0394bytes"
+  ]
+}

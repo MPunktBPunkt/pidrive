@@ -1,9 +1,10 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-10-16 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 15.10.), hu-probe S0 0.2.17 / S2 0.2.23, Offline-P0, PiDrive-Feld s1–s6 und F0, Lab 13.–16.10., technology-audit 0.7.1.
+**Stand:** 2026-10-17 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 15.10.), hu-probe S0 0.2.17 / S2 0.2.23, Offline-P0, PiDrive-Feld s1–s6 und F0, Lab 13.–17.10., technology-audit 0.7.1.
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** (projektübergreifende Rechnung aus vorhandenen Daten, noch nicht direkt gemessen) · [D] Desk · [H] Hypothese · [?] offen.
 
-Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind keine NBT-Werte.
+Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind keine NBT-Werte.  
+**Lab-MSC-Wahrheit (17.10.):** nur SG_IO/O_DIRECT + ESP-Capture — siehe [`METHODIK-MSC-WAHRHEIT.md`](../betrieb/artifacts-2026-10-17-lab/METHODIK-MSC-WAHRHEIT.md).
 
 ---
 
@@ -13,8 +14,8 @@ Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind k
 |---|-----------|--------|------------------|-------------------|
 | A1 | „Burst-39“ ist **eine komplette Datei**, keine HU-Konstante | [A] stark | `hu-probe/firmware/src/msc/demo_fat.bin`: `TRACK1..3.MP3` je **158 208 B**. Offline-P0: reine Bursts **158 208 B** in ~170 ms. 39 Events = READ10 **240** Blöcke (30 × 4096) + READ10 **69** Blöcke (8 × 4096 + 2560). Erklärt auch die seltenen `n=2560`-Events und `blocks=69` | Eager-EOF (R2) ist damit auf einem **zweiten, unabhängigen Medium** bestätigt. `eager_eof` in hu-probe kann von INFERENCE auf [S] steigen |
 | A2 | Maximale READ10-Transferlänge der NBT = **240 Blöcke (120 KiB)** | **[S]** | hu-probe S2 + **Feld 16.10. MessCapture** (`feld-512kib-predict-01`): nie >240; häufig 240 | Lese-, Resume- und Prefetch-Muster in **CBW-Einheiten zu 120 KiB** planen und auswerten, nicht in 4-KiB-Callbacks |
-| A3 | Die ~20 s Menüträgheit unter Stall (R35) entsteht durch **ein** gebremstes 240-Block-Kommando | [A] stark | BOT kennt nur ein offenes Kommando (E6). 122 880 B bei Live-Rate 6,0 KB/s (48 kbit/s) ≈ **20,5 s**; Lab-Pacing 734–1021 ms je 4 KiB ⇒ 22–31 s je CBW. FAT/DIR-Reads des Menüs warten so lange hinter dem offenen READ10 | Menü-Freeze ist kein HU-Fehler, sondern Folge von Stall-Länge pro CBW. Abhilfe: Vorlauf ≥ 1 CBW, höhere Bitrate oder BUSY nur, wenn Vorlauf < CBW-Länge |
-| A4 | Untere Grenze NBT-Timeout **pro READ10 ≥ ~20 s** | [A] bedingt | E7/s6: ~65 s Audio bis EOF eines 512-KiB-Slots unter BUSY ohne Abbruch ≈ 3–4 gebremste 240-Block-CBWs à ~20 s. **Feld 16.10.:** 240-Block-CBWs im Play/Full-File bestätigt; Timeout-Grenze selbst nicht neu gemessen | Bei 48 kbit/s liegt ein CBW bereits an dieser Grenze. Gesamtgrenze bleibt Q1 |
+| A3 | Stall kann Menü sichtbar blockieren; **Ursache = genau ein 240-CBW @48 kbit/s ≈20,5 s** ist Inference | Phänomen [B] / Ursache **[A]** | Rechnung 120 KiB×8/48 kbit/s ≈ **20,5 s** stimmt. R35/E6 stützen BOT-QD=1. **Direktmessung** der Freeze-Dauer vs. Stall-Leiter steht aus (`lab_stall_phase_ladder.py`) | Stall-Leiter Menü-Phase; Abhilfe weiter: Vorlauf ≥ 1 CBW, höhere Bitrate, BUSY nur bei Vorlauf < CBW |
+| A4 | Untere Grenze NBT-Timeout **pro READ10 ≥ ~20 s** | [A] bedingt | E7/s6: ~65 s **kumuliert** bis EOF ≠ Timeout eines einzelnen READ10. Feld 16.10.: 240-CBW bestätigt; Einzel-Timeout nicht gemessen | Stall-Leiter Audio-Phase 0…15 s (FW-Limit), danach Feld |
 | A7 | Full-File-Read eines **512 KiB**-Slots = **`240,240,32,240,240,32`** (Summe 1024), **nicht** `8+4×240+56` | **[S]** | Feld MessCapture 16.10. mehrfach: BOB LED, Gelb, Tip Bayern (`mess-cmds-*-{bob-led,gelb,TIP-BAYERN}.json`). Vorhersage `8+56` widerlegt | Prefetch/EOF-Planung an 240/32-Muster; keine Annahme eines 8er-Intros für diesen Slot |
 | A5 | Prefetch-Vorlauf ~15 s ist mit hu-probe-Pausen vereinbar | [H] | Track 158 208 B bei 48 kbit/s = **26,4 s**. 26,4 s − 15 s = 11,4 s ≈ Inter-Burst-Pause p50 **10,2 s** (n=18, gemischte Sessions) | R21 nicht hochstufen; Bestätigung mit Markern und LBA-Folge |
 | A6 | Ein Info/Xing-Header ist für Eager-Read nicht nötig | [A] schwach | Demo-Tracks ohne erkennbaren Info/Xing-Tag werden ebenso komplett gelesen wie PiDrive-Slots mit LAME-Info | Info-Tag weiter für Dauer/Fortschrittsbalken prüfen, nicht für das Leseverhalten |
@@ -55,10 +56,10 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | Max. READ10-Transfer | 240 Blöcke = 120 KiB | **[S]** | A2 (Feld 16.10.) | L, U | P1 | bestätigt; weitere Phasen optional |
 | Lesetakt ohne/mit ESP-Play | 3,74–3,78 ms / ~5 ms je 4 KiB | [B] | R15 | L | — | — |
 | BUSY-Toleranz kumuliert | ≥ ~65 s bis EOF | [B] | E7, R29 | L | — | — |
-| Timeout je READ10 | ≥ ~20 s (bedingt) | [A] | A4 | L | **P0** | Lab-Leiter Stall pro CBW 10/20/30/45 s am NBT, CBW-Länge mitloggen |
+| Timeout je READ10 | ≥ ~20 s (bedingt) | [A] | A4 | L | **P0** | Lab-Leiter 0/1/2/5/10/15 s (`lab_stall_phase_ladder.py`), dann NBT; nicht E7-65 s kumuliert verwechseln |
 | Timeout ohne Datenfluss (Inaktivität) | unbekannt | [?] | Q1 | L | P1 | Retry-Pausen ohne Daten |
 | Reaktion bei Timeout | unbekannt (Reset? Skip? Remount?) | [?] | — | S | P1 | gezielt überschreiten, Status + Ohr |
-| Menülatenz unter Stall | ~20 s, erklärt durch ein offenes CBW | [B] Phänomen / [A] Ursache | R35, A3 | U | P1 | Stall mit Vorlauf ≥ 120 KiB vs. ohne vergleichen |
+| Menülatenz unter Stall | ~20 s beobachtet; Ursache 240-CBW Inference | [B] Phänomen / [A] Ursache | R35, A3 | U | P1 | Stall-Leiter Menü-Phase + Vorlauf ≥ 120 KiB A/B |
 | Benötigter Live-Vorlauf ohne UI-Freeze | ≥ 1 CBW = 120 KiB (≈ 20 s @48k, 7,7 s @128k) | [A] | A2, A3 | L, U | **P0** | Ring-/PSRAM-Größe prüfen, Lab-Messung |
 
 ### 2.3 Dateisystem und Medium
@@ -102,7 +103,7 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 
 | Parameter | Wert | Status | Quelle | Benötigt für | Prio | Wie ermitteln |
 |-----------|------|--------|--------|--------------|------|---------------|
-| ID3v2 am Dateianfang + APIC JPEG | funktioniert | [B] | M1 | C | — | — |
+| ID3v2 am Dateianfang + APIC JPEG | funktioniert | [B] | M1; Lab 17.10. SG_IO: sticky **3200 B**, PDSQ@3204 (`id3-chain-…`) | C | — | — |
 | Funktionierendes Cover | JPEG 320×320, ≤ 8 KiB | [B] | M2 | C | — | — |
 | Maximale ID3-/Covergröße | unbekannt | [?] | — | C | P2 | 16/32/64 KiB APIC |
 | Cover-Update ohne neuen Kopf-Read | nicht möglich (nur beim Kopf-Read) | [S] | R28 | C | P1 | Titelwechsel im Live-Strom messen |

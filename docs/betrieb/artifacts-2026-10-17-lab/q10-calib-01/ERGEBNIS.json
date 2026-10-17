@@ -1,0 +1,132 @@
+{
+  "esp_delta_bytes": 209408,
+  "esp_read10_n": 10,
+  "esp_blocks_hist": {
+    "1": 2,
+    "8": 2,
+    "32": 2,
+    "128": 2,
+    "240": 2
+  },
+  "matches": [
+    {
+      "tag": "r512",
+      "lba": 300,
+      "req_blocks": 1,
+      "esp_blocks": 1,
+      "match": true,
+      "esp_bytes": 512
+    },
+    {
+      "tag": "r4k",
+      "lba": 0,
+      "req_blocks": 8,
+      "esp_blocks": 8,
+      "match": true,
+      "esp_bytes": 4096
+    },
+    {
+      "tag": "r16k",
+      "lba": 100,
+      "req_blocks": 32,
+      "esp_blocks": 32,
+      "match": true,
+      "esp_bytes": 16384
+    },
+    {
+      "tag": "r64k",
+      "lba": 200,
+      "req_blocks": 128,
+      "esp_blocks": 128,
+      "match": true,
+      "esp_bytes": 65536
+    },
+    {
+      "tag": "r120k",
+      "lba": 400,
+      "req_blocks": 240,
+      "esp_blocks": 240,
+      "match": true,
+      "esp_bytes": 122880
+    }
+  ],
+  "all_match": true,
+  "method": "SG_IO on /dev/sg0 + MessCapture ram_local",
+  "note": "Host read()/dd is NOT valid for Q10; page-cache can show data with ESP \u0394bytes=0.",
+  "host_rows": [
+    {
+      "lba": 300,
+      "blocks": 1,
+      "bytes_req": 512,
+      "got": 512,
+      "status": 0,
+      "host": 0,
+      "drv": 0,
+      "resid": 0,
+      "dur_ms": 1,
+      "wall_ms": 1.15,
+      "sense_hex": "",
+      "tag": "r512"
+    },
+    {
+      "lba": 0,
+      "blocks": 8,
+      "bytes_req": 4096,
+      "got": 4096,
+      "status": 0,
+      "host": 0,
+      "drv": 0,
+      "resid": 0,
+      "dur_ms": 4,
+      "wall_ms": 4.97,
+      "sense_hex": "",
+      "tag": "r4k"
+    },
+    {
+      "lba": 100,
+      "blocks": 32,
+      "bytes_req": 16384,
+      "got": 16384,
+      "status": 0,
+      "host": 0,
+      "drv": 0,
+      "resid": 0,
+      "dur_ms": 27,
+      "wall_ms": 27.24,
+      "sense_hex": "",
+      "tag": "r16k"
+    },
+    {
+      "lba": 200,
+      "blocks": 128,
+      "bytes_req": 65536,
+      "got": 65536,
+      "status": 0,
+      "host": 0,
+      "drv": 0,
+      "resid": 0,
+      "dur_ms": 76,
+      "wall_ms": 76.1,
+      "sense_hex": "",
+      "tag": "r64k"
+    },
+    {
+      "lba": 400,
+      "blocks": 240,
+      "bytes_req": 122880,
+      "got": 122880,
+      "status": 0,
+      "host": 0,
+      "drv": 0,
+      "resid": 0,
+      "dur_ms": 119,
+      "wall_ms": 119.38,
+      "sense_hex": "",
+      "tag": "r120k"
+    }
+  ],
+  "stop": {
+    "ok": true
+  },
+  "version": "0.4.52-dev"
+}

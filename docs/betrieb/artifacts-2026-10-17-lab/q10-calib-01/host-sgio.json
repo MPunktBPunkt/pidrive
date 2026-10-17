@@ -1,0 +1,72 @@
+[
+  {
+    "lba": 300,
+    "blocks": 1,
+    "bytes_req": 512,
+    "got": 512,
+    "status": 0,
+    "host": 0,
+    "drv": 0,
+    "resid": 0,
+    "dur_ms": 1,
+    "wall_ms": 1.15,
+    "sense_hex": "",
+    "tag": "r512"
+  },
+  {
+    "lba": 0,
+    "blocks": 8,
+    "bytes_req": 4096,
+    "got": 4096,
+    "status": 0,
+    "host": 0,
+    "drv": 0,
+    "resid": 0,
+    "dur_ms": 4,
+    "wall_ms": 4.97,
+    "sense_hex": "",
+    "tag": "r4k"
+  },
+  {
+    "lba": 100,
+    "blocks": 32,
+    "bytes_req": 16384,
+    "got": 16384,
+    "status": 0,
+    "host": 0,
+    "drv": 0,
+    "resid": 0,
+    "dur_ms": 27,
+    "wall_ms": 27.24,
+    "sense_hex": "",
+    "tag": "r16k"
+  },
+  {
+    "lba": 200,
+    "blocks": 128,
+    "bytes_req": 65536,
+    "got": 65536,
+    "status": 0,
+    "host": 0,
+    "drv": 0,
+    "resid": 0,
+    "dur_ms": 76,
+    "wall_ms": 76.1,
+    "sense_hex": "",
+    "tag": "r64k"
+  },
+  {
+    "lba": 400,
+    "blocks": 240,
+    "bytes_req": 122880,
+    "got": 122880,
+    "status": 0,
+    "host": 0,
+    "drv": 0,
+    "resid": 0,
+    "dur_ms": 119,
+    "wall_ms": 119.38,
+    "sense_hex": "",
+    "tag": "r120k"
+  }
+]

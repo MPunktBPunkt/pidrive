@@ -1,0 +1,95 @@
+{
+  "n": 9,
+  "rows": [
+    {
+      "phase": "menu",
+      "ms": 0,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 5.13,
+      "starts_id3": false,
+      "error": null
+    },
+    {
+      "phase": "menu",
+      "ms": 1000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 4.97,
+      "starts_id3": false,
+      "error": null
+    },
+    {
+      "phase": "menu",
+      "ms": 2000,
+      "d_bytes": 4096,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 4.86,
+      "starts_id3": false,
+      "error": null
+    },
+    {
+      "phase": "id3",
+      "ms": 0,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.39,
+      "starts_id3": true,
+      "error": null
+    },
+    {
+      "phase": "id3",
+      "ms": 1000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.21,
+      "starts_id3": true,
+      "error": null
+    },
+    {
+      "phase": "id3",
+      "ms": 2000,
+      "d_bytes": 8192,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 31.13,
+      "starts_id3": true,
+      "error": null
+    },
+    {
+      "phase": "audio",
+      "ms": 0,
+      "d_bytes": 122880,
+      "d_retries": 0,
+      "d_timeouts": 0,
+      "wall_ms": 189.25,
+      "starts_id3": false,
+      "error": null
+    },
+    {
+      "phase": "audio",
+      "ms": 1000,
+      "d_bytes": 40960,
+      "d_retries": 3935,
+      "d_timeouts": 7,
+      "wall_ms": 8180.87,
+      "starts_id3": false,
+      "error": null
+    },
+    {
+      "phase": "audio",
+      "ms": 2000,
+      "d_bytes": 28672,
+      "d_retries": 4172,
+      "d_timeouts": 4,
+      "wall_ms": 8587.08,
+      "starts_id3": false,
+      "error": null
+    }
+  ]
+}
