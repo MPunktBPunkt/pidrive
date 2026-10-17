@@ -1,0 +1,43 @@
+{
+  "mark": "OTG an 12:10",
+  "polls": 107,
+  "ok": 107,
+  "resets": [
+    "software"
+  ],
+  "leds": [
+    "otg",
+    "uart"
+  ],
+  "first_otg": "12:11:26",
+  "last": {
+    "ts": 1792231952.8383954,
+    "t": "12:12:32",
+    "ok": true,
+    "version": "0.4.53-dev",
+    "resetReason": "software",
+    "resetReasonCode": 3,
+    "uptime": "2min 22s",
+    "uptimeMs": 142616,
+    "otgUp": true,
+    "usbEnumerated": true,
+    "hubOk": true,
+    "mscReady": true,
+    "plugged": true,
+    "suspended": false,
+    "led": "otg",
+    "wifiRssi": -77,
+    "freeHeap": 72872,
+    "pumpTcpUp": true,
+    "playingUid": "",
+    "playingName": "",
+    "stream_active": false,
+    "readCount": 339,
+    "bytesRead": 1374720,
+    "bytesFile": 1260032,
+    "bytesDir": 57344,
+    "lastReadLba": 18521,
+    "stallEnable": false,
+    "serial": null
+  }
+}
