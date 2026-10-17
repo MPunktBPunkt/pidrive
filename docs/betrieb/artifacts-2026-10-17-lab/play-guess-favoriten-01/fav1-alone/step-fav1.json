@@ -1,0 +1,25 @@
+{
+  "uid": "fav1",
+  "path": "FAVORITEN/02.MP3",
+  "lba0": 16465,
+  "host": {
+    "lba": 16465,
+    "blocks": 16,
+    "bytes_req": 8192,
+    "got": 8192,
+    "status": 0,
+    "host": 0,
+    "drv": 0,
+    "resid": 0,
+    "dur_ms": 30,
+    "wall_ms": 29.73,
+    "sense_hex": "",
+    "first16": "49443304000000000022545353450000",
+    "starts_id3": true
+  },
+  "guess_before": 2,
+  "guess_after": 3,
+  "guess_delta": 1,
+  "playingUid": "fav1",
+  "stall_armed": true
+}

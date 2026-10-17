@@ -1,0 +1,58 @@
+{
+  "fw": "0.4.53-dev",
+  "method": "SG_IO Head 16 blocks @ slot.lba0 (METHODIK)",
+  "rows": [
+    {
+      "uid": "fav0",
+      "path": "FAVORITEN/01.MP3",
+      "lba0": 81,
+      "host": {
+        "lba": 81,
+        "blocks": 16,
+        "bytes_req": 8192,
+        "got": 8192,
+        "status": 0,
+        "host": 0,
+        "drv": 0,
+        "resid": 0,
+        "dur_ms": 30,
+        "wall_ms": 29.97,
+        "sense_hex": "",
+        "first16": "49443304000000000022545353450000",
+        "starts_id3": true
+      },
+      "guess_before": 1,
+      "guess_after": 2,
+      "guess_delta": 1,
+      "playingUid": "fav0",
+      "stall_armed": true
+    },
+    {
+      "uid": "fav1",
+      "path": "FAVORITEN/02.MP3",
+      "lba0": 16465,
+      "host": {
+        "lba": 16465,
+        "blocks": 16,
+        "bytes_req": 8192,
+        "got": 8192,
+        "status": 0,
+        "host": 0,
+        "drv": 0,
+        "resid": 0,
+        "dur_ms": 29,
+        "wall_ms": 29.37,
+        "sense_hex": "",
+        "first16": "49443304000000000022545353450000",
+        "starts_id3": true
+      },
+      "guess_before": 2,
+      "guess_after": 2,
+      "guess_delta": 0,
+      "playingUid": "",
+      "stall_armed": true
+    }
+  ],
+  "any_guess": true,
+  "field_note": "Bayern LIVE had playGuessCount=0 \u2014 lab must still arm via Head-READ before Stall scope=1"
+}
