@@ -1,0 +1,19 @@
+{
+  "version": "0.4.53-dev",
+  "otgUp": false,
+  "resetReason": "power_on",
+  "uptime": "1min 6s",
+  "usbSerial": "PD0305",
+  "bpbVolumeId": 1346634033,
+  "bpbVolumeIdOverride": 0,
+  "volumeLabel": "PD0305",
+  "rootLabel": "PD0305",
+  "remountGen": 305,
+  "productRevision": "0305",
+  "paths": [
+    "FAVORITEN/01.MP3",
+    "FAVORITEN/02.MP3",
+    "FAVORITEN/03.MP3",
+    "MENUE/04.MP3"
+  ]
+}

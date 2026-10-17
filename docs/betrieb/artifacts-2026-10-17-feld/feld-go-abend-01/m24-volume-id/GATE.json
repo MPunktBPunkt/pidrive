@@ -1,0 +1,11 @@
+{
+  "volume_id_changed": true,
+  "serial_unchanged": "PD0305",
+  "new_vid": 1792252297,
+  "operator": [
+    "OTG stecken",
+    "NBT: erscheinen Favoriten/Menue als Ordner?",
+    "falls flach: Ansicht 'Ordner' vs 'Alle Titel' pr\u00fcfen",
+    "resetReason/uptime notieren; UART wenn m\u00f6glich"
+  ]
+}

@@ -19,11 +19,11 @@
 
 | ID | Maßnahme | Prio | Wo | Status |
 |----|----------|------|-----|--------|
-| M20 | Klasse-A-Repro 3–5× auf 0.4.53 + **UART** + uptime/resetReason/plugCount | **P0** | Feld | ☐ |
-| M21 | Bei Repro: Ton-Dauer stoppen (Soll ~8 s ohne Stall / länger mit) | P0 | Feld | ☐ |
-| M22 | Play-Guess-Pfad prüfen (`playGuessCount` / Head-READ) **vor** Stall-Leiter | P0 | Feld (+Lab) | Lab ☑ `play-guess-favoriten-01` (fav0/fav1 Head → Δguess); Feld ☐ |
-| M23 | Stall-Leiter am NBT auf fav1 nur wenn M20 grün **und** M22 Guess greift | P0 | Feld | ☐ wartet |
-| M24 | Ordner: Feld **nur BPB-Volume-ID** rotieren (Serial gleich) — Cache-Hypothese (Grok) | P1 | Feld | Lab-Prep ☑ + Script `tools/feld_m24_volume_id.py` + Rehearsal ☑; Auto ☐ |
+| M20 | Klasse-A-Repro 3–5× auf 0.4.53 + **UART** + uptime/resetReason/plugCount | **P0** | Feld | ☑ Abend n≥3 Klasse A + Ton; UART ☐; danach wieder Panic (`feld-go-abend-01`) |
+| M21 | Bei Repro: Ton-Dauer stoppen (Soll ~8 s ohne Stall / länger mit) | P0 | Feld | ☑ ~6–7 s ×3; Ring voll ≈8,2 s (`liveAvailMs=8192`) |
+| M22 | Play-Guess-Pfad prüfen (`playGuessCount` / Head-READ) **vor** Stall-Leiter | P0 | Feld (+Lab) | Lab ☑; Feld ☑/☐ sporadisch (`msPlugToPlayGuess` ~17–22 s), nach Panic oft 0 |
+| M23 | Stall-Leiter am NBT auf fav1 nur wenn M20 grün **und** M22 Guess greift | P0 | Feld | ☐ wartet (Guess labil) |
+| M24 | Ordner: Feld **nur BPB-Volume-ID** rotieren (Serial gleich) — Cache-Hypothese (Grok) | P1 | Feld | ☑ Gate VID; Ordner unter Mediensuche → Hypothese allein **geschwächt** |
 | M25 | Ordner: alternativ Serial/RemountGen bump (Identity) als A/B zu M24 | P1 | Feld | ☐ |
 | M26 | underruns in Telemetrie-Doku als **Bytezähler** markieren (Status-API/Docs) | P1 | Lab/Docs | ☑ Notiz |
 | M27 | hostAbsCursor > fileEnd im Erfolgslauf — Cursor-Modell kurz dokumentieren | P1 | Lab | ☐ |

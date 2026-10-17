@@ -1,42 +1,39 @@
-# Übergabe · 2026-10-17 Feld (Tri-Review GPT/Mistral/**Claude** + Lab-Triage)
+# Übergabe · 2026-10-17 Feld (Abend nach Tri-Review)
 
-**Repo:** `MPunktBPunkt/pidrive` · **HEAD:** nach diesem Commit auf `main`  
-**FW Feld:** `0.4.53-dev` · **Lab:** `.88` same  
-**Kanone:** [`MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md`](MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md) · [`feld-ota-053/`](feld-ota-053/) · Lab [`../artifacts-2026-10-17-lab/claude-triage-lab-01/`](../artifacts-2026-10-17-lab/claude-triage-lab-01/)
+**Repo:** `MPunktBPunkt/pidrive` · **FW Feld:** `0.4.53-dev` · Stall aus  
+**Kanone:** [`MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md`](MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md) · Abend [`feld-go-abend-01/`](feld-go-abend-01/) · Morgen [`feld-ota-053/`](feld-ota-053/)
 
 ## Ein Satz
 
-Klasse-A + Bayern LIVE (n=1) bleibt der Fortschritt — Claude korrigiert die Überinterpretation (Callback≠HU-Architektur, Stall nicht „erstmals“, underruns=Bytes, Reset dazwischen); **neues P0 = Repro+UART+Play-Guess**, Ordner-Test = Volume-ID-only (Lab vorbereitet).
+M20 Klasse-A + ~6–7 s Ton (n≥3) und Favoriten unter Mediensuche sind der Abend-Fortschritt; danach Panic/Prefetch-Stuck ohne stabilen Play-Guess — Stall-Leiter weiter blockiert; M24 Volume-ID-only als Ordner-Fix geschwächt.
 
-## Claude vs GPT/Mistral (entschieden)
+## Abend-Ergebnisse (kurz)
 
-| Thema | Entscheidung |
-|-------|----------------|
-| Live „4 KiB @ 5 ms“ als HU-Architektur | **Ablehnen** (E5/R15 Callback; E11 = CBW) |
-| fav1-LBA beweist Favoriten | **Nein allein** — aber mess: **DIR 65+73 gelesen** ✓ |
-| Erster Stall am NBT | **Nein** (R29 s6); Play-Guess vor Stall (R30) |
-| `software`→`power_on` | **Replug** (`plugCount=2`) — UART/Q11 |
-| underruns 732k | **Bytezähler** Stille (FW + R25/R27), ≈1,4×fav1 |
-| Ordner fehlend | Hypothese **NBT-Index/BPB-ID**; Lab: Volume-ID-Rotation ✓ |
+| ID | Status |
+|----|--------|
+| M20 | ☑ PASS n≥3 (danach wieder Weiß/Panic) |
+| M21 | ☑ ~6–7 s; Ring voll ≈8,2 s (`liveAvailMs=8192` @ 49 KiB) |
+| M22 | ☑/☐ greift sporadisch (`msPlugToPlayGuess` ~17–22 s); nach Panic oft 0 |
+| M24 | ☑ Gate VID; Ordner-Hypothese allein **geschwächt** |
+| M23 | ☐ wartet auf stabile Guess |
+| UART | ☐ nicht erfasst |
 
-## Lab erledigt (während Operator unterwegs)
+## Claude-Korrekturen (unverändert gültig)
 
-- Stall-Enable false erzwungen
-- `fatVolumeId` 1346634188 → **1358003479**, Serial PD0489 gehalten; SG_IO BPB vid match
-- DIR-Hits + underruns-Semantik dokumentiert
+Callback≠HU-Architektur; underruns=Bytes; Stall nicht „erstmals“; Play-Guess vor Stall.
 
 ## Auftrag (Priorität)
 
-1. **M20** 3–5× Klasse-A auf 0.4.53 + UART + Ton-Dauer (M21)
-2. **M22** Play-Guess muss greifen, bevor Stall
-3. **M24** optional: nur Volume-ID ändern → Ordner-UI?
-4. **M23** Stall-Leiter fav1 (0…15 s) erst nach M20+M22
-5. Nicht: Layout umbauen, Panic „gefixt“, Callback als CBW verkaufen
+1. UART bei Weiß (Q11)
+2. M22 Play-Guess unter Feld-Last stabilisieren — **dann** M23 Stall-Leiter fav1
+3. Optional M25 Serial/RemountGen A/B vs M24
+4. Nicht: Panic „gefixt“, Layout umbauen, Stall ohne Guess, Replug-Sturm nach erstem Ton
 
 ## Artefakte
 
 ```
-feld-ota-053/          OTA, OTG-Poll, flat mess, Bayern LIVE
-claude-triage-lab-01/  Volume-ID, DIR-Hits, underruns-note, ERGEBNIS
+feld-ota-053/          OTA + erster Bayern LIVE (Mittag)
+feld-go-abend-01/      M20/M21/M24 + Panic-Stuck + ERGEBNIS
+claude-triage-lab-01/  Lab Volume-ID / DIR / underruns
 MASSNAHMEN-NACH-TRI-REVIEW-2026-10-17.md
 ```
