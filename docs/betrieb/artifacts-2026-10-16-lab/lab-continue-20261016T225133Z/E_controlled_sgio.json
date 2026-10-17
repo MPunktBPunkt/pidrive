@@ -1,0 +1,32 @@
+{
+  "case": "E_controlled_sgio",
+  "action": {
+    "sgio": {
+      "raw_out": "",
+      "err": "cmd=(ctypes.c_ubyte*len(cdb)).from_buffer_copy(cdb); sb=(ctypes.c_ubyte*32)(); h=H(interface_id=ord('S'),dxfer_direction=-3,cmd_len=len(cdb),mx_sb_len=32,dxfer_len=n,dxferp=ctypes.addressof(buf),cmdp=ctypes.addressof(cmd),sbp=ctypes.addressof(sb),timeout=8000); fcntl.ioctl(fd,SG_IO,h); return dict(status=h.status,host=h.host_status,drv=h.driver_status,resid=h.resid,dur_ms=h.duration,got=n-h.resid)\\nfd=os.open('/dev/sg0',os.O_RDWR); out=[]\\nfor tag,lba,nb in [('r512',300,1),('r4k',0,8),('r16k',100,32),('r64k',200,128),('r120k',400,240)]:\\n t=time.time(); x=r10(fd,lba,nb); x.update(tag=tag,lba=lba,blocks=nb,wall_ms=round((time.time()-t)*1000,2)); out.append(x); time.sleep(0.08)\\nos.close(fd); print(json.dumps(out))\\n\n     ^\nSyntaxError: unexpected character after line continuation character\n",
+      "rc": 1
+    },
+    "rc": 1
+  },
+  "stop": {
+    "http": 200,
+    "endReason": "E_controlled_sgio",
+    "complete": true,
+    "error": null
+  },
+  "summary": {
+    "n_cmds": 4,
+    "read10_n": 0,
+    "blocks_hist": {},
+    "lbas": [],
+    "bytes_total": 0
+  },
+  "mess_meta": {
+    "cmds": 4,
+    "captureActive": false,
+    "mode": "ram_local",
+    "healthy": true,
+    "overflow": 0,
+    "usbDetachN": 2
+  }
+}

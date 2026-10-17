@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "run_id": "overnight-20261016T224312Z",
+  "pass": true,
+  "hard_stop": null,
+  "cells_completed": 5,
+  "cells_requested": [
+    "soft-usb",
+    "media-hide",
+    "serial",
+    "label",
+    "volume-id"
+  ],
+  "outcomes": {
+    "soft-usb": "E",
+    "media-hide": "B",
+    "serial": "B",
+    "label": "C",
+    "volume-id": "C"
+  },
+  "dry_run": false,
+  "finished": {
+    "wall": "2026-10-16T22:43:48.178+00:00",
+    "mono_s": 35.741851,
+    "esp_uptime_ms": 42927574,
+    "esp_uptime_start_ms": 42892452
+  }
+}

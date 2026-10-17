@@ -1,0 +1,65 @@
+{
+  "case": "D_remount_plus_mount_ls",
+  "action": {
+    "sit": {
+      "ok": true,
+      "name": "media_remount",
+      "usbAttached": true,
+      "otgPlugged": true,
+      "mediaPresented": false,
+      "streamActive": false,
+      "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+    },
+    "pause": true,
+    "nudge": {
+      "rc": 0,
+      "out": "mount: /mnt/pd: permission denied.\n       dmesg(1) may have more information after failed mount system call.\nmount: /mnt/pd: permission denied.\n       dmesg(1) may have more information after failed mount system call.\ntotal 8\ndrwxr-xr-x 2 root root 4096 Oct 17 00:53 .\ndrwxr-xr-x 3 root root 4096 Oct 17 00:53 ..\nMOUNT_DONE",
+      "err": ""
+    }
+  },
+  "stop": {
+    "http": 200,
+    "endReason": "D_remount_plus_mount_ls",
+    "complete": true,
+    "error": null
+  },
+  "summary": {
+    "n_cmds": 64,
+    "read10_n": 63,
+    "blocks_hist": {
+      "8": 45,
+      "24": 2,
+      "48": 2,
+      "120": 2,
+      "232": 2,
+      "16": 2,
+      "1": 8
+    },
+    "lbas": [
+      31776,
+      31816,
+      29680,
+      4096,
+      30720,
+      32,
+      64,
+      128,
+      256,
+      512,
+      1024,
+      2048,
+      8192,
+      40,
+      24
+    ],
+    "bytes_total": 638976
+  },
+  "mess_meta": {
+    "cmds": 175,
+    "captureActive": false,
+    "mode": "ram_local",
+    "healthy": true,
+    "overflow": 0,
+    "usbDetachN": 2
+  }
+}

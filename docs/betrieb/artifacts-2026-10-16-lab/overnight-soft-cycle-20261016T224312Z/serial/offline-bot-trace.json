@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "run_id": "overnight-20261016T224312Z",
+  "cell": "serial",
+  "capture_mode": "ram_local",
+  "command_count": 4,
+  "first_seq": 1,
+  "last_seq": 4,
+  "pages": [
+    {
+      "page": 1,
+      "after": 0,
+      "commands": 4,
+      "next_after": 4,
+      "has_more": null
+    },
+    {
+      "page": 2,
+      "after": 4,
+      "commands": 0,
+      "next_after": 4,
+      "has_more": null
+    }
+  ],
+  "commands": [
+    {
+      "seq": 1,
+      "t0_us": 4252519987,
+      "dur_us": 0,
+      "gap_us": 0,
+      "op": 255,
+      "lba": 0,
+      "bytes": 0,
+      "blocks": 0,
+      "chunks": 0,
+      "busy": 0,
+      "st": 2,
+      "source": "marker",
+      "synthesized": false,
+      "tag": "overnight-2"
+    },
+    {
+      "seq": 2,
+      "t0_us": 4255035775,
+      "dur_us": 155968,
+      "gap_us": 0,
+      "op": 40,
+      "lba": 0,
+      "bytes": 122880,
+      "blocks": 240,
+      "chunks": 30,
+      "busy": 0,
+      "st": 0,
+      "source": "synthesized",
+      "synthesized": true
+    },
+    {
+      "seq": 3,
+      "t0_us": 4255192126,
+      "dur_us": 7751,
+      "gap_us": 383,
+      "op": 40,
+      "lba": 240,
+      "bytes": 8192,
+      "blocks": 16,
+      "chunks": 2,
+      "busy": 0,
+      "st": 0,
+      "source": "synthesized",
+      "synthesized": true
+    },
+    {
+      "seq": 4,
+      "t0_us": 4259558726,
+      "dur_us": 0,
+      "gap_us": 0,
+      "op": 255,
+      "lba": 0,
+      "bytes": 0,
+      "blocks": 0,
+      "chunks": 0,
+      "busy": 0,
+      "st": 2,
+      "source": "marker",
+      "synthesized": false,
+      "tag": "overnight-2"
+    }
+  ],
+  "capture_health": {
+    "ok": true,
+    "complete": true,
+    "overflow": 0,
+    "cmdCapture": true,
+    "mode": "ram_local",
+    "expected_mode": "ram_local"
+  }
+}

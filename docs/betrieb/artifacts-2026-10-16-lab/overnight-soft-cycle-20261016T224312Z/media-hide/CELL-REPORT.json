@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "run_id": "overnight-20261016T224312Z",
+  "cell": "media-hide",
+  "operation": {
+    "endpoint": "/api/lab/remount",
+    "body": {
+      "keepIdentity": true,
+      "volumeLabel": "PD0461XXXX5",
+      "fatVolumeId": 1346634189
+    },
+    "hardware": false
+  },
+  "operation_error": null,
+  "capture_mode": "ram_local",
+  "capture_health": {
+    "ok": true,
+    "complete": true,
+    "overflow": 0,
+    "cmdCapture": true,
+    "mode": "ram_local",
+    "expected_mode": "ram_local"
+  },
+  "capture_artifact": "offline-bot-trace.json",
+  "capture_commands": 64,
+  "capture_pages": 2,
+  "episodes": {
+    "A": {
+      "meaning": "before-soft-cycle",
+      "identity": {
+        "usbSerial": "PD0483",
+        "productRevision": "0483",
+        "bpbVolumeId": 1346634189,
+        "bpbLabel": "PD0461XXXX5",
+        "rootLabel": "PD0461XXXX5"
+      }
+    },
+    "B": {
+      "meaning": "after-soft-cycle",
+      "identity": {
+        "usbSerial": "PD0483",
+        "productRevision": "0483",
+        "bpbVolumeId": 1346634189,
+        "bpbLabel": "PD0461XXXX5",
+        "rootLabel": "PD0461XXXX5"
+      }
+    }
+  },
+  "quiet_gate": {
+    "ok": true,
+    "stream_active": false,
+    "phase": "quiet"
+  },
+  "panic_gate": {
+    "ok": true,
+    "panic_reason": null,
+    "uptime_rollback": false,
+    "reset_reason_changed": false,
+    "before_uptime_ms": 42899596,
+    "after_uptime_ms": 42906071
+  },
+  "freeze_gate": {
+    "ok": true,
+    "stall_enabled": false
+  },
+  "identity_gate": {
+    "ok": true,
+    "before": {
+      "usbSerial": "PD0483",
+      "productRevision": "0483",
+      "bpbVolumeId": 1346634189,
+      "bpbLabel": "PD0461XXXX5",
+      "rootLabel": "PD0461XXXX5"
+    },
+    "after": {
+      "usbSerial": "PD0483",
+      "productRevision": "0483",
+      "bpbVolumeId": 1346634189,
+      "bpbLabel": "PD0461XXXX5",
+      "rootLabel": "PD0461XXXX5"
+    },
+    "changed_fields": [],
+    "expected_changed_fields": []
+  },
+  "outcome": {
+    "code": "B",
+    "name": "mid-body-read",
+    "evidence": {
+      "read_delta": 369,
+      "slot_bytes_delta": 950272,
+      "max_seq_before": 188416,
+      "max_seq_after": 188416,
+      "playing_uid": "fav0",
+      "stream_active": false,
+      "live": false
+    }
+  },
+  "valid": true,
+  "hard_stop": null,
+  "finished": {
+    "wall": "2026-10-16T22:43:26.715+00:00",
+    "mono_s": 14.278411,
+    "esp_uptime_ms": 42906071,
+    "esp_uptime_start_ms": 42892452
+  }
+}

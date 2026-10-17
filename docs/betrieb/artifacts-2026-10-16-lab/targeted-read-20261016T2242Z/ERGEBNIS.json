@@ -1,0 +1,8 @@
+{
+  "verdict": "targeted_host_read_ok",
+  "method": "POST /api/lab/mess ram_local + dd if=/dev/sda from CT100",
+  "esp": "192.168.178.88",
+  "host": "CT100 /dev/sda USB_MEDIA 16M",
+  "read10_n": 13,
+  "note": "op=40 READ10; Linux readahead expands dd windows; LBA hits 0 / 4096 / 16000"
+}

@@ -1,0 +1,10 @@
+{
+  "host_head_starts_id3": false,
+  "host_id3_len_of": 0,
+  "id3Len_fw": 3200,
+  "bytes_pulled": 0,
+  "pdsq_at": -1,
+  "esp_saw_read": true,
+  "first16": null,
+  "capture_read10_n": 1
+}

@@ -1,0 +1,409 @@
+{
+  "table": [
+    {
+      "case": "A_soft_cycle_alone",
+      "read10_n": 44,
+      "blocks_hist": {
+        "1": 10,
+        "8": 29,
+        "24": 1,
+        "48": 1,
+        "120": 1,
+        "232": 1,
+        "16": 1
+      },
+      "bytes_total": 349184
+    },
+    {
+      "case": "B_media_remount_alone",
+      "read10_n": 0,
+      "blocks_hist": {},
+      "bytes_total": 0
+    },
+    {
+      "case": "C_cycle_plus_rereadpt",
+      "read10_n": 44,
+      "blocks_hist": {
+        "1": 10,
+        "8": 29,
+        "24": 1,
+        "48": 1,
+        "120": 1,
+        "232": 1,
+        "16": 1
+      },
+      "bytes_total": 349184
+    },
+    {
+      "case": "D_remount_plus_mount_ls",
+      "read10_n": 63,
+      "blocks_hist": {
+        "8": 45,
+        "24": 2,
+        "48": 2,
+        "120": 2,
+        "232": 2,
+        "16": 2,
+        "1": 8
+      },
+      "bytes_total": 638976
+    },
+    {
+      "case": "E_controlled_sgio",
+      "read10_n": 0,
+      "blocks_hist": {},
+      "bytes_total": 0
+    },
+    {
+      "case": "F_cycle_pread_no_dd",
+      "read10_n": 48,
+      "blocks_hist": {
+        "1": 10,
+        "8": 29,
+        "24": 1,
+        "48": 1,
+        "120": 1,
+        "232": 1,
+        "16": 1,
+        "240": 2,
+        "64": 1,
+        "32": 1
+      },
+      "bytes_total": 644096
+    }
+  ],
+  "results": [
+    {
+      "case": "A_soft_cycle_alone",
+      "action": {
+        "sit": {
+          "ok": true,
+          "name": "usb_cycle",
+          "usbAttached": false,
+          "otgPlugged": true,
+          "mediaPresented": true,
+          "streamActive": false,
+          "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+        },
+        "nudge": "none"
+      },
+      "stop": {
+        "http": 200,
+        "endReason": "A_soft_cycle_alone",
+        "complete": true,
+        "error": null
+      },
+      "summary": {
+        "n_cmds": 48,
+        "read10_n": 44,
+        "blocks_hist": {
+          "1": 10,
+          "8": 29,
+          "24": 1,
+          "48": 1,
+          "120": 1,
+          "232": 1,
+          "16": 1
+        },
+        "lbas": [
+          0,
+          0,
+          0,
+          32640,
+          32752,
+          8,
+          32760,
+          32761,
+          32762,
+          32763,
+          32764,
+          32765,
+          32766,
+          32767,
+          32504
+        ],
+        "bytes_total": 349184
+      },
+      "mess_meta": {
+        "cmds": 48,
+        "captureActive": false,
+        "mode": "ram_local",
+        "healthy": true,
+        "overflow": 0,
+        "usbDetachN": 1
+      }
+    },
+    {
+      "case": "B_media_remount_alone",
+      "action": {
+        "sit": {
+          "ok": true,
+          "name": "media_remount",
+          "usbAttached": true,
+          "otgPlugged": true,
+          "mediaPresented": false,
+          "streamActive": false,
+          "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+        },
+        "nudge": "none"
+      },
+      "stop": {
+        "http": 200,
+        "endReason": "B_media_remount_alone",
+        "complete": true,
+        "error": null
+      },
+      "summary": {
+        "n_cmds": 4,
+        "read10_n": 0,
+        "blocks_hist": {},
+        "lbas": [],
+        "bytes_total": 0
+      },
+      "mess_meta": {
+        "cmds": 4,
+        "captureActive": false,
+        "mode": "ram_local",
+        "healthy": true,
+        "overflow": 0,
+        "usbDetachN": 1
+      }
+    },
+    {
+      "case": "C_cycle_plus_rereadpt",
+      "action": {
+        "sit": {
+          "ok": true,
+          "name": "usb_cycle",
+          "usbAttached": false,
+          "otgPlugged": true,
+          "mediaPresented": true,
+          "streamActive": false,
+          "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+        },
+        "pause": true,
+        "nudge": {
+          "rc": 0,
+          "out": "REREADPT_OK",
+          "err": "blockdev: ioctl error on BLKRRPART: Permission denied"
+        }
+      },
+      "stop": {
+        "http": 200,
+        "endReason": "C_cycle_plus_rereadpt",
+        "complete": true,
+        "error": null
+      },
+      "summary": {
+        "n_cmds": 48,
+        "read10_n": 44,
+        "blocks_hist": {
+          "1": 10,
+          "8": 29,
+          "24": 1,
+          "48": 1,
+          "120": 1,
+          "232": 1,
+          "16": 1
+        },
+        "lbas": [
+          0,
+          0,
+          0,
+          32640,
+          32752,
+          8,
+          32760,
+          32761,
+          32762,
+          32763,
+          32764,
+          32765,
+          32766,
+          32767,
+          32504
+        ],
+        "bytes_total": 349184
+      },
+      "mess_meta": {
+        "cmds": 48,
+        "captureActive": false,
+        "mode": "ram_local",
+        "healthy": true,
+        "overflow": 0,
+        "usbDetachN": 2
+      }
+    },
+    {
+      "case": "D_remount_plus_mount_ls",
+      "action": {
+        "sit": {
+          "ok": true,
+          "name": "media_remount",
+          "usbAttached": true,
+          "otgPlugged": true,
+          "mediaPresented": false,
+          "streamActive": false,
+          "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+        },
+        "pause": true,
+        "nudge": {
+          "rc": 0,
+          "out": "mount: /mnt/pd: permission denied.\n       dmesg(1) may have more information after failed mount system call.\nmount: /mnt/pd: permission denied.\n       dmesg(1) may have more information after failed mount system call.\ntotal 8\ndrwxr-xr-x 2 root root 4096 Oct 17 00:53 .\ndrwxr-xr-x 3 root root 4096 Oct 17 00:53 ..\nMOUNT_DONE",
+          "err": ""
+        }
+      },
+      "stop": {
+        "http": 200,
+        "endReason": "D_remount_plus_mount_ls",
+        "complete": true,
+        "error": null
+      },
+      "summary": {
+        "n_cmds": 64,
+        "read10_n": 63,
+        "blocks_hist": {
+          "8": 45,
+          "24": 2,
+          "48": 2,
+          "120": 2,
+          "232": 2,
+          "16": 2,
+          "1": 8
+        },
+        "lbas": [
+          31776,
+          31816,
+          29680,
+          4096,
+          30720,
+          32,
+          64,
+          128,
+          256,
+          512,
+          1024,
+          2048,
+          8192,
+          40,
+          24
+        ],
+        "bytes_total": 638976
+      },
+      "mess_meta": {
+        "cmds": 175,
+        "captureActive": false,
+        "mode": "ram_local",
+        "healthy": true,
+        "overflow": 0,
+        "usbDetachN": 2
+      }
+    },
+    {
+      "case": "E_controlled_sgio",
+      "action": {
+        "sgio": {
+          "raw_out": "",
+          "err": "cmd=(ctypes.c_ubyte*len(cdb)).from_buffer_copy(cdb); sb=(ctypes.c_ubyte*32)(); h=H(interface_id=ord('S'),dxfer_direction=-3,cmd_len=len(cdb),mx_sb_len=32,dxfer_len=n,dxferp=ctypes.addressof(buf),cmdp=ctypes.addressof(cmd),sbp=ctypes.addressof(sb),timeout=8000); fcntl.ioctl(fd,SG_IO,h); return dict(status=h.status,host=h.host_status,drv=h.driver_status,resid=h.resid,dur_ms=h.duration,got=n-h.resid)\\nfd=os.open('/dev/sg0',os.O_RDWR); out=[]\\nfor tag,lba,nb in [('r512',300,1),('r4k',0,8),('r16k',100,32),('r64k',200,128),('r120k',400,240)]:\\n t=time.time(); x=r10(fd,lba,nb); x.update(tag=tag,lba=lba,blocks=nb,wall_ms=round((time.time()-t)*1000,2)); out.append(x); time.sleep(0.08)\\nos.close(fd); print(json.dumps(out))\\n\n     ^\nSyntaxError: unexpected character after line continuation character\n",
+          "rc": 1
+        },
+        "rc": 1
+      },
+      "stop": {
+        "http": 200,
+        "endReason": "E_controlled_sgio",
+        "complete": true,
+        "error": null
+      },
+      "summary": {
+        "n_cmds": 4,
+        "read10_n": 0,
+        "blocks_hist": {},
+        "lbas": [],
+        "bytes_total": 0
+      },
+      "mess_meta": {
+        "cmds": 4,
+        "captureActive": false,
+        "mode": "ram_local",
+        "healthy": true,
+        "overflow": 0,
+        "usbDetachN": 2
+      }
+    },
+    {
+      "case": "F_cycle_pread_no_dd",
+      "action": {
+        "sit": {
+          "ok": true,
+          "name": "usb_cycle",
+          "usbAttached": false,
+          "otgPlugged": true,
+          "mediaPresented": true,
+          "streamActive": false,
+          "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+        },
+        "pause": true,
+        "nudge": {
+          "rc": 0,
+          "out": "b0 65536\nb4k 32768\nb16k 16384",
+          "err": ""
+        }
+      },
+      "stop": {
+        "http": 200,
+        "endReason": "F_cycle_pread_no_dd",
+        "complete": true,
+        "error": null
+      },
+      "summary": {
+        "n_cmds": 52,
+        "read10_n": 48,
+        "blocks_hist": {
+          "1": 10,
+          "8": 29,
+          "24": 1,
+          "48": 1,
+          "120": 1,
+          "232": 1,
+          "16": 1,
+          "240": 2,
+          "64": 1,
+          "32": 1
+        },
+        "lbas": [
+          0,
+          0,
+          0,
+          32640,
+          32752,
+          8,
+          32760,
+          32761,
+          32762,
+          32763,
+          32764,
+          32765,
+          32766,
+          32767,
+          32504
+        ],
+        "bytes_total": 644096
+      },
+      "mess_meta": {
+        "cmds": 52,
+        "captureActive": false,
+        "mode": "ram_local",
+        "healthy": true,
+        "overflow": 0,
+        "usbDetachN": 3
+      }
+    }
+  ],
+  "sgio_host": [],
+  "notes": [
+    "A/B = provoke without host nudge",
+    "C/D/F = no dd; rereadpt / mount+ls / os.pread",
+    "E = controlled SG_IO sizes (Q10 calib)"
+  ]
+}

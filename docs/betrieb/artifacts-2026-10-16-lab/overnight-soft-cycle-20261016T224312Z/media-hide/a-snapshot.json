@@ -1,0 +1,1101 @@
+{
+  "schema_version": 1,
+  "run_id": "overnight-20261016T224312Z",
+  "wall": "2026-10-16T22:43:19.581+00:00",
+  "mono_s": 7.144578,
+  "esp_uptime_ms": 42899596,
+  "esp_uptime_start_ms": 42892452,
+  "episode": "A",
+  "status": {
+    "ok": true,
+    "version": "0.4.52-dev",
+    "fwType": "pidrive",
+    "name": "PiDrive-Lab",
+    "ip": "192.168.178.88",
+    "softApSsid": "pidrive-29339C",
+    "softApIp": "192.168.4.1",
+    "softApPass": "pidrive12",
+    "mac": "68B6B329339C",
+    "uptime": "11h 54min",
+    "uptimeMs": 42899596,
+    "resetReason": "software",
+    "resetReasonCode": 3,
+    "freeHeap": 75420,
+    "wifiRssi": -37,
+    "hubOk": true,
+    "usbEnumerated": true,
+    "otgUp": true,
+    "otgSuspended": false,
+    "uartUp": false,
+    "uartState": "idle",
+    "mscReady": true,
+    "pumpUp": false,
+    "pumpTcp": true,
+    "pumpTcpPort": 9090,
+    "pumpTcpUp": false,
+    "pumpTcpPeer": "",
+    "liveAvailBytes": 0,
+    "liveAvailMs": 0,
+    "bufferTargetMs": 5000,
+    "playingUid": "",
+    "playingName": "",
+    "menuRev": 1,
+    "menuCount": 4,
+    "cover": {
+      "src": "",
+      "path": "",
+      "try": "",
+      "folder": "assets/usb-msc-covers/",
+      "default": "default.jpg"
+    },
+    "labMode": true,
+    "chipModel": "ESP32-S3",
+    "led": "otg",
+    "msc": {
+      "ready": true,
+      "plugged": true,
+      "suspended": false,
+      "readCount": 94,
+      "writeCount": 0,
+      "writeReject": 0,
+      "lastReadLba": 504,
+      "bytesRead": 349184,
+      "bytesMeta": 111616,
+      "bytesBoot": 5120,
+      "bytesFat": 16384,
+      "bytesDir": 24576,
+      "bytesFile": 237568,
+      "prefetchHits": 58,
+      "playRejectCount": 58,
+      "playGuessCount": 0,
+      "streamSlot": -1,
+      "streamBytes": 0,
+      "silenceBytes": [
+        237568,
+        0,
+        0
+      ],
+      "preWarmHostBytes": 0,
+      "preWarmUid": "",
+      "bodySeed": {
+        "active": false,
+        "slot": -1,
+        "tag": "",
+        "fromOff": 348160,
+        "bytesServed": 0
+      },
+      "coldBodyBurstCount": 27,
+      "readOverflow": 0,
+      "readsEmit": 0,
+      "fatMode": "static",
+      "phase": "quiet",
+      "mediaPresented": true,
+      "remountGen": 483,
+      "usbSerial": "PD0483",
+      "productRevision": "0483",
+      "bpbVolumeId": 1346634189,
+      "bpbVolumeIdOverride": 1346634189,
+      "bpbLabel": "PD0461XXXX5",
+      "rootLabel": "PD0461XXXX5",
+      "volumeLabel": "PD0461XXXX5",
+      "volumeLabelOverride": "PD0461XXXX5",
+      "mediaWaitMs": 0,
+      "playDetect": {
+        "plugWindowMs": 500,
+        "minSeqBytes": 6000,
+        "navMinSeqBytes": 4096,
+        "headLbaSlop": 12,
+        "cooldownMs": 5000,
+        "prefetchLbaSlop": 2
+      },
+      "selectionBarrier": {
+        "enabled": false,
+        "active": false,
+        "slot": -1,
+        "maxMs": 1200,
+        "audioLeadBytes": 8192,
+        "waitMs": 0,
+        "busy": 0,
+        "ready": 0,
+        "timeouts": 0,
+        "kills": 0
+      },
+      "stall": {
+        "enable": false,
+        "scope": 1,
+        "timer": 0,
+        "maxMs": 1000,
+        "chunkBytes": 4096,
+        "retryMs": 2,
+        "leadBytes": 0,
+        "underrunCursorHold": false,
+        "armed": false,
+        "skipNotArmed": 0,
+        "cmds": 0,
+        "retries": 0,
+        "partials": 0,
+        "partialBytes": 0,
+        "timeouts": 0,
+        "waitMsMax": 0,
+        "waitMsLast": 0,
+        "waitMsSum": 0,
+        "waitHist": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "xfer": {
+        "n512": 10,
+        "n2k": 0,
+        "n4k": 84,
+        "n8kPlus": 0
+      },
+      "host": {
+        "inquiry": 1,
+        "capacity": 2,
+        "tur": 11,
+        "turNotReady": 0,
+        "prevent": 2,
+        "otherScsi": 0,
+        "startStop": 0,
+        "lastOpcode": 30,
+        "msToInquiry": 1063,
+        "msToCapacity": 1064,
+        "msToTur": 1064,
+        "hint": "hu-like"
+      },
+      "stream": {
+        "active": false,
+        "uid": "",
+        "size": 0,
+        "cap": 49152,
+        "absBase": 0,
+        "absEnd": 0,
+        "underruns": 0,
+        "id3Len": 0,
+        "headResyncs": 0,
+        "cursorArmed": false,
+        "hostAbsCursor": 0,
+        "hostExpectFileOff": 0,
+        "liveAvailBytes": 0,
+        "liveAvailMs": 0,
+        "hasCover": false
+      },
+      "msSincePlug": 5784,
+      "msSinceChange": 5784,
+      "msPlugToFirstRead": 1064,
+      "msPlugToPlayGuess": 0,
+      "plugCount": 20,
+      "unplugCount": 19,
+      "transportEpoch": 28,
+      "botResetObservable": false,
+      "sectorCount": 32768,
+      "imageBytes": 262144,
+      "dataStartLba": 65,
+      "slots": 4,
+      "port": "otg",
+      "role": "car-host",
+      "slotMap": [
+        {
+          "i": 0,
+          "uid": "fav0",
+          "name": "Rock Antenne",
+          "path": "STATIONS/01ROCK.MP3",
+          "kind": "station",
+          "lba0": 81,
+          "lba1": 16464,
+          "startCluster": 4,
+          "fileBytes": 8388608,
+          "active": true,
+          "bytes": 237568,
+          "fromHead": 1,
+          "midFile": 57,
+          "maxSeq": 188416,
+          "lastAgeMs": 4319
+        },
+        {
+          "i": 1,
+          "uid": "fav1",
+          "name": "Rock Antenne Bayern",
+          "path": "STATIONS/02ANTENN.MP3",
+          "kind": "station",
+          "lba0": 16465,
+          "lba1": 17488,
+          "startCluster": 2052,
+          "fileBytes": 524288,
+          "active": true,
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "maxSeq": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "i": 2,
+          "uid": "fav2",
+          "name": "Radio BOB!",
+          "path": "STATIONS/03SWR3.MP3",
+          "kind": "station",
+          "lba0": 17489,
+          "lba1": 18512,
+          "startCluster": 2180,
+          "fileBytes": 524288,
+          "active": true,
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "maxSeq": 0,
+          "lastAgeMs": 0
+        },
+        {
+          "i": 3,
+          "uid": "pump:page_next",
+          "name": "Menue",
+          "path": "SETTINGS/ABOUT.MP3",
+          "kind": "action",
+          "lba0": 18513,
+          "lba1": 18525,
+          "startCluster": 2308,
+          "fileBytes": 6656,
+          "active": true,
+          "bytes": 0,
+          "fromHead": 0,
+          "midFile": 0,
+          "maxSeq": 0,
+          "lastAgeMs": 0
+        }
+      ]
+    },
+    "mess": {
+      "enabled": true,
+      "usbAttached": true,
+      "usbDetachN": 19,
+      "usbAttachN": 19,
+      "cmds": 47,
+      "drops": 0,
+      "chunks": 94,
+      "ring": 47,
+      "capacity": 512,
+      "mode": "ram_local",
+      "captureActive": false,
+      "startSeq": 1,
+      "endSeq": 46,
+      "overflow": 0,
+      "drop": 0,
+      "complete": true,
+      "endReason": "cell_end",
+      "oldestSeq": 1,
+      "newestSeq": 47,
+      "emitSeq": 47,
+      "emitDrops": 0,
+      "activeCmd": false,
+      "healthy": true,
+      "clock": "probe-int64-us",
+      "port": "esp-capture-port",
+      "controlOwner": "app",
+      "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+      "build": "mess"
+    },
+    "mscTrace": [
+      {
+        "ms": 42895289,
+        "gap": 0,
+        "lba": 0,
+        "n": 512,
+        "kind": "boot",
+        "tag": "BOOT"
+      },
+      {
+        "ms": 42895307,
+        "gap": 18,
+        "lba": 0,
+        "n": 512,
+        "kind": "boot",
+        "tag": "BOOT"
+      },
+      {
+        "ms": 42895319,
+        "gap": 12,
+        "lba": 0,
+        "n": 4096,
+        "kind": "boot",
+        "tag": "BOOT"
+      },
+      {
+        "ms": 42895326,
+        "gap": 7,
+        "lba": 32640,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895330,
+        "gap": 4,
+        "lba": 32752,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895335,
+        "gap": 5,
+        "lba": 8,
+        "n": 4096,
+        "kind": "fat",
+        "tag": "FAT0"
+      },
+      {
+        "ms": 42895339,
+        "gap": 4,
+        "lba": 32760,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895340,
+        "gap": 1,
+        "lba": 32761,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895340,
+        "gap": 0,
+        "lba": 32762,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895341,
+        "gap": 1,
+        "lba": 32763,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895342,
+        "gap": 1,
+        "lba": 32764,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895342,
+        "gap": 0,
+        "lba": 32765,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895343,
+        "gap": 1,
+        "lba": 32766,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895344,
+        "gap": 1,
+        "lba": 32767,
+        "n": 512,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895345,
+        "gap": 1,
+        "lba": 32504,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895349,
+        "gap": 4,
+        "lba": 32704,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895353,
+        "gap": 4,
+        "lba": 32512,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895357,
+        "gap": 4,
+        "lba": 32368,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895361,
+        "gap": 4,
+        "lba": 32176,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895365,
+        "gap": 4,
+        "lba": 32088,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895369,
+        "gap": 4,
+        "lba": 32032,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895373,
+        "gap": 4,
+        "lba": 31856,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895377,
+        "gap": 4,
+        "lba": 31792,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895381,
+        "gap": 4,
+        "lba": 31776,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895385,
+        "gap": 4,
+        "lba": 31816,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895389,
+        "gap": 4,
+        "lba": 29680,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895393,
+        "gap": 4,
+        "lba": 4096,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895407,
+        "gap": 14,
+        "lba": 30720,
+        "n": 4096,
+        "kind": "meta",
+        "tag": "META"
+      },
+      {
+        "ms": 42895412,
+        "gap": 5,
+        "lba": 32,
+        "n": 4096,
+        "kind": "fat",
+        "tag": "FAT1"
+      },
+      {
+        "ms": 42895416,
+        "gap": 4,
+        "lba": 64,
+        "n": 4096,
+        "kind": "dir",
+        "tag": "ROOT"
+      },
+      {
+        "ms": 42895421,
+        "gap": 5,
+        "lba": 128,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895425,
+        "gap": 4,
+        "lba": 256,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895429,
+        "gap": 4,
+        "lba": 512,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895433,
+        "gap": 4,
+        "lba": 1024,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895437,
+        "gap": 4,
+        "lba": 2048,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895441,
+        "gap": 4,
+        "lba": 8192,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895445,
+        "gap": 4,
+        "lba": 40,
+        "n": 4096,
+        "kind": "dir",
+        "tag": "ROOT"
+      },
+      {
+        "ms": 42895449,
+        "gap": 4,
+        "lba": 48,
+        "n": 4096,
+        "kind": "dir",
+        "tag": "ROOT"
+      },
+      {
+        "ms": 42895453,
+        "gap": 4,
+        "lba": 56,
+        "n": 4096,
+        "kind": "dir",
+        "tag": "ROOT"
+      },
+      {
+        "ms": 42895459,
+        "gap": 6,
+        "lba": 24,
+        "n": 4096,
+        "kind": "fat",
+        "tag": "FAT1"
+      },
+      {
+        "ms": 42895474,
+        "gap": 15,
+        "lba": 120,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895478,
+        "gap": 4,
+        "lba": 16,
+        "n": 4096,
+        "kind": "fat",
+        "tag": "FAT0"
+      },
+      {
+        "ms": 42895483,
+        "gap": 5,
+        "lba": 72,
+        "n": 4096,
+        "kind": "dir",
+        "tag": "DIR"
+      },
+      {
+        "ms": 42895487,
+        "gap": 4,
+        "lba": 80,
+        "n": 4096,
+        "kind": "dir",
+        "tag": "DIR"
+      },
+      {
+        "ms": 42895491,
+        "gap": 4,
+        "lba": 88,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895495,
+        "gap": 4,
+        "lba": 96,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895499,
+        "gap": 4,
+        "lba": 104,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895503,
+        "gap": 4,
+        "lba": 112,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895507,
+        "gap": 4,
+        "lba": 136,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895511,
+        "gap": 4,
+        "lba": 144,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895515,
+        "gap": 4,
+        "lba": 152,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895519,
+        "gap": 4,
+        "lba": 160,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895523,
+        "gap": 4,
+        "lba": 168,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895528,
+        "gap": 5,
+        "lba": 176,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895532,
+        "gap": 4,
+        "lba": 184,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895536,
+        "gap": 4,
+        "lba": 192,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895540,
+        "gap": 4,
+        "lba": 200,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895544,
+        "gap": 4,
+        "lba": 208,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895548,
+        "gap": 4,
+        "lba": 216,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895552,
+        "gap": 4,
+        "lba": 224,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895556,
+        "gap": 4,
+        "lba": 232,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895560,
+        "gap": 4,
+        "lba": 240,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895564,
+        "gap": 4,
+        "lba": 248,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895568,
+        "gap": 4,
+        "lba": 264,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895572,
+        "gap": 4,
+        "lba": 272,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895576,
+        "gap": 4,
+        "lba": 280,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895580,
+        "gap": 4,
+        "lba": 288,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895584,
+        "gap": 4,
+        "lba": 296,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895588,
+        "gap": 4,
+        "lba": 304,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895592,
+        "gap": 4,
+        "lba": 312,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895596,
+        "gap": 4,
+        "lba": 320,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895600,
+        "gap": 4,
+        "lba": 328,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895604,
+        "gap": 4,
+        "lba": 336,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895608,
+        "gap": 4,
+        "lba": 344,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895612,
+        "gap": 4,
+        "lba": 352,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895616,
+        "gap": 4,
+        "lba": 360,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895620,
+        "gap": 4,
+        "lba": 368,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895625,
+        "gap": 5,
+        "lba": 376,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895629,
+        "gap": 4,
+        "lba": 384,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895633,
+        "gap": 4,
+        "lba": 392,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895637,
+        "gap": 4,
+        "lba": 400,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895641,
+        "gap": 4,
+        "lba": 408,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895645,
+        "gap": 4,
+        "lba": 416,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895650,
+        "gap": 5,
+        "lba": 424,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895654,
+        "gap": 4,
+        "lba": 432,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895659,
+        "gap": 5,
+        "lba": 440,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895663,
+        "gap": 4,
+        "lba": 448,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895667,
+        "gap": 4,
+        "lba": 456,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895671,
+        "gap": 4,
+        "lba": 464,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895675,
+        "gap": 4,
+        "lba": 472,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895679,
+        "gap": 4,
+        "lba": 480,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895683,
+        "gap": 4,
+        "lba": 488,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895687,
+        "gap": 4,
+        "lba": 496,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      },
+      {
+        "ms": 42895691,
+        "gap": 4,
+        "lba": 504,
+        "n": 4096,
+        "kind": "file",
+        "tag": "Rock Antenn"
+      }
+    ],
+    "uart": {
+      "linkUp": false,
+      "state": "idle",
+      "rxBytes": 0,
+      "lastRxMs": 0,
+      "msSinceChange": 42899350,
+      "msSinceRx": 0,
+      "changeCount": 0,
+      "sense": "serial-activity",
+      "idleMs": 4000,
+      "note": "kein Plug-Sensor — up=Traffic, quiet=Kabel ok/still, idle=nie Traffic"
+    },
+    "ports": {
+      "otg": {
+        "label": "AUTO",
+        "role": "car-host",
+        "up": true,
+        "suspended": false,
+        "msSinceChange": 5789,
+        "plugCount": 20,
+        "unplugCount": 19,
+        "softUsbAttached": true,
+        "sense": "tinyusb-mount"
+      },
+      "uart": {
+        "label": "PI",
+        "role": "uart-bridge",
+        "up": false,
+        "state": "idle",
+        "msSinceChange": 42899351,
+        "msSinceRx": 0,
+        "rxBytes": 0,
+        "sense": "serial-activity"
+      },
+      "pumpTcp": {
+        "label": "PUMP-TCP",
+        "role": "wlan-bridge",
+        "port": 9090,
+        "listening": true,
+        "up": false,
+        "peer": "",
+        "sense": "tcp-client"
+      }
+    }
+  }
+}

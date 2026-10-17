@@ -1,0 +1,2 @@
+{"event":"run.start","esp":"http://192.168.178.88","interval_s":480,"deadline":"2026-10-17T05:00:00+00:00","started":"2026-10-16T22:45:10+00:00","method":"usb_cycle keepIdentity + CT100 dd READ + ram_local capture"}
+{"event":"round.ok","n":1,"read10_n":50,"hard_stop":null}

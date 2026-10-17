@@ -1,0 +1,116 @@
+{
+  "mark": "after_prep",
+  "ts": 1792219991.1073976,
+  "version": "0.4.52-dev",
+  "playingUid": "",
+  "phase": "quiet",
+  "usbSerial": "PD0485",
+  "slotMap": [
+    {
+      "i": 0,
+      "uid": "fav0",
+      "name": "Rock Antenne",
+      "path": "STATIONS/01ROCK.MP3",
+      "kind": "station",
+      "lba0": 81,
+      "lba1": 16464,
+      "startCluster": 4,
+      "fileBytes": 8388608,
+      "active": true,
+      "bytes": 487424,
+      "fromHead": 2,
+      "midFile": 117,
+      "maxSeq": 200704,
+      "lastAgeMs": 28786104
+    },
+    {
+      "i": 1,
+      "uid": "fav1",
+      "name": "Rock Antenne Bayern",
+      "path": "STATIONS/02ANTENN.MP3",
+      "kind": "station",
+      "lba0": 16465,
+      "lba1": 17488,
+      "startCluster": 2052,
+      "fileBytes": 524288,
+      "active": true,
+      "bytes": 0,
+      "fromHead": 0,
+      "midFile": 0,
+      "maxSeq": 0,
+      "lastAgeMs": 0
+    },
+    {
+      "i": 2,
+      "uid": "fav2",
+      "name": "Radio BOB!",
+      "path": "STATIONS/03SWR3.MP3",
+      "kind": "station",
+      "lba0": 17489,
+      "lba1": 18512,
+      "startCluster": 2180,
+      "fileBytes": 524288,
+      "active": true,
+      "bytes": 0,
+      "fromHead": 0,
+      "midFile": 0,
+      "maxSeq": 0,
+      "lastAgeMs": 0
+    },
+    {
+      "i": 3,
+      "uid": "pump:page_next",
+      "name": "Menue",
+      "path": "SETTINGS/ABOUT.MP3",
+      "kind": "action",
+      "lba0": 18513,
+      "lba1": 18525,
+      "startCluster": 2308,
+      "fileBytes": 6656,
+      "active": true,
+      "bytes": 0,
+      "fromHead": 0,
+      "midFile": 0,
+      "maxSeq": 0,
+      "lastAgeMs": 0
+    }
+  ],
+  "stall_enable": false,
+  "stall_armed": false,
+  "id3Len": 0,
+  "stream_active": false,
+  "cursorArmed": false,
+  "absBase": 0,
+  "absEnd": 0,
+  "hostAbs": 0,
+  "menu": [
+    {
+      "path": "STATIONS/01.MP3",
+      "name": "Rock Antenne",
+      "uid": "fav0",
+      "kind": "station",
+      "playing": false
+    },
+    {
+      "path": "STATIONS/02.MP3",
+      "name": "Rock Antenne Bayern",
+      "uid": "fav1",
+      "kind": "station",
+      "playing": false
+    },
+    {
+      "path": "STATIONS/03.MP3",
+      "name": "Radio BOB!",
+      "uid": "fav2",
+      "kind": "station",
+      "playing": false
+    },
+    {
+      "path": "STATIONS/04.MP3",
+      "name": "Menue",
+      "uid": "pump:page_next",
+      "kind": "action",
+      "playing": false
+    }
+  ]
+}

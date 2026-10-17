@@ -1,0 +1,36 @@
+{
+  "case": "B_media_remount_alone",
+  "action": {
+    "sit": {
+      "ok": true,
+      "name": "media_remount",
+      "usbAttached": true,
+      "otgPlugged": true,
+      "mediaPresented": false,
+      "streamActive": false,
+      "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+    },
+    "nudge": "none"
+  },
+  "stop": {
+    "http": 200,
+    "endReason": "B_media_remount_alone",
+    "complete": true,
+    "error": null
+  },
+  "summary": {
+    "n_cmds": 4,
+    "read10_n": 0,
+    "blocks_hist": {},
+    "lbas": [],
+    "bytes_total": 0
+  },
+  "mess_meta": {
+    "cmds": 4,
+    "captureActive": false,
+    "mode": "ram_local",
+    "healthy": true,
+    "overflow": 0,
+    "usbDetachN": 1
+  }
+}

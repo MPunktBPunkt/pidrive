@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "method": "pump ID3+audio \u2192 SG_IO READ10 head (bypass page cache)",
+  "stall_enable": false,
+  "menu_items": [
+    [
+      "fav0",
+      "Rock Antenne"
+    ],
+    [
+      "fav1",
+      "Rock Antenne Bayern"
+    ],
+    [
+      "fav2",
+      "Radio BOB!"
+    ],
+    [
+      "pump:page_next",
+      "Menue"
+    ]
+  ],
+  "id3Len_fw": 3200,
+  "host_head_starts_id3": true,
+  "host_id3_len_of": 3200,
+  "pdsq_at": 3204,
+  "first16": "49443303000000001876544954320000",
+  "fav0_lba0": 81,
+  "esp": {
+    "dBytes": 8192,
+    "dReads": 2,
+    "playingUid": "fav0",
+    "hostAbs": 4992,
+    "underruns": 0,
+    "cursorArmed": true
+  },
+  "capture_read10_n": 64,
+  "sgio": {
+    "status_line": "STATUS 0 RESID 0",
+    "hex": "49443303000000001876544954320000",
+    "id3": true,
+    "pdsq": 3204
+  },
+  "lesson": "os.read(/dev/sda) was page-cached (ESP saw 0). SG_IO/O_DIRECT required for real MSC path."
+}

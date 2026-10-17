@@ -1,0 +1,60 @@
+{
+  "case": "A_soft_cycle_alone",
+  "action": {
+    "sit": {
+      "ok": true,
+      "name": "usb_cycle",
+      "usbAttached": false,
+      "otgPlugged": true,
+      "mediaPresented": true,
+      "streamActive": false,
+      "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+    },
+    "nudge": "none"
+  },
+  "stop": {
+    "http": 200,
+    "endReason": "A_soft_cycle_alone",
+    "complete": true,
+    "error": null
+  },
+  "summary": {
+    "n_cmds": 48,
+    "read10_n": 44,
+    "blocks_hist": {
+      "1": 10,
+      "8": 29,
+      "24": 1,
+      "48": 1,
+      "120": 1,
+      "232": 1,
+      "16": 1
+    },
+    "lbas": [
+      0,
+      0,
+      0,
+      32640,
+      32752,
+      8,
+      32760,
+      32761,
+      32762,
+      32763,
+      32764,
+      32765,
+      32766,
+      32767,
+      32504
+    ],
+    "bytes_total": 349184
+  },
+  "mess_meta": {
+    "cmds": 48,
+    "captureActive": false,
+    "mode": "ram_local",
+    "healthy": true,
+    "overflow": 0,
+    "usbDetachN": 1
+  }
+}

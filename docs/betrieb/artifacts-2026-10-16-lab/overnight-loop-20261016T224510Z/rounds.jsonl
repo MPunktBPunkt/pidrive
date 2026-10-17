@@ -1,0 +1,1 @@
+{"n":1,"wall":"2026-10-16T22:45:15+00:00","dur_s":4.62,"sit_ok":true,"host":{"rc":0,"out":"OK","err":""},"read10_n":50,"cmds":53,"mess_cmds":53,"mess_complete":true,"usb_detach_n":20,"ser":"PD0484","phase":"scan","uptime_ms":43015498,"hard_stop":null,"lbAs":[0,0,0,32640,32752,8,32760,32761]}
