@@ -48,7 +48,7 @@ File-Body Reads
 | **M33** | Q vs S **reproduzierbar** machen (Zustandstabelle oben; mind. je 1 saubere Episode mit Label) | **P1** | Feld | ☐ |
 | **M34** | Reset-Isolation **nach** Storm-Capture: A kein Reset · B ESP-RST · C Soft-Detach/OTG · D HU-Power-Cycle — jeweils: verschwindet S? bleibt Guess-Verhalten? | **P1** | Feld | ☐ |
 | **M35** | Guess-Verteilung `msPlugToPlayGuess` **n≥10**; Storm-Guess-Auslöser-Klasse (welche Read-Klasse unmittelbar vor Guess?) | **P1** | Feld | ☐ |
-| **M36** | Dashboard/Alert: Q/S-Label + Invariante `reads−rej` nur als Plausibilität, nie als Alarm | **P2** | Lab/Tools | ☐ |
+| **M36** | Dashboard/Alert: Q/S-Label + Invariante `reads−rej` nur als Plausibilität, nie als Alarm | **P2** | Lab/Tools | ☑ Lab · `feld_status_poll --qs` + `alerts[]` in qs.json · Alert nur `storm_enter`/`storm_guess` |
 | **M37** | hostAbs-Overshoot nach Tonfenster dokumentieren (Messfakt M27) — Cursor über EOF ≠ Play-Intent | **P2** | Lab/Docs | ☐ (= M27 erweitern) |
 | M22′ | M22 bleibt: Guess-Pfad vor Stall; Zusatz: Storm ≠ Blockade (Guess-im-Storm belegt) | — | — | läuft |
 | M23 | Stall-Leiter **weiter blockiert** bis M30+M35 grün und Guess greift | — | Feld | ☐ |

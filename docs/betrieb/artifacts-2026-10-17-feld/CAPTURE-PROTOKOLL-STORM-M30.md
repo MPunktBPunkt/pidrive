@@ -61,17 +61,19 @@ Ende  mess dump · poll stop · uart stop · qs-classify · status-Snapshot
 | **Normal** | Guess + Stream + Ohr, File-Body zielgerichtet |
 | **nie** | Alarm nur auf reads/rej (Invariante 31/32 = Quiet-Plateau) |
 
-Klassifikator: `python3 tools/feld_qs_classify.py --poll <jsonl>`
+Klassifikator: `python3 tools/feld_qs_classify.py --poll <jsonl>`  
+Live-Dashboard (M36): `python3 tools/feld_status_poll.py … --qs` — ALERT nur bei `storm_enter` / INFO `storm_guess`; `reads−rej` nur als `(plaus)`.
 
 ## Lab-Prep (ohne NBT)
 
-Auf `.88` (mess-fw): Soft-USB-Cycle + Poll v2 + MessCapture **`--storm`** (Timeout-only) + M31/M32.
+Auf `.88` (mess-fw): Soft-USB-Cycle + Poll v2 + MessCapture **`--storm`** (Timeout-only) + M31/M32 + M36 `--qs`.
 
 ```bash
 bash tools/feld_storm_session.sh --esp http://192.168.178.88 \
   --out docs/betrieb/artifacts-2026-10-18-lab/lab-storm-capture-prep/session-storm-m32 \
   --sit usb_cycle --seconds 30 --mark lab_storm_m32
 # → poll.jsonl (schema 2) · arm.json · mess-cmds.json · qs.json · band.json · SUMMARY.json
+#    poll.print.log enthält Live-Q/S-Zeilen; SUMMARY.alert_n aus qs.alerts
 ```
 
 **Wichtig:** normales `arm` stoppt bei `play_cleared` (~1 s) — für Storm-Fenster immer `--storm`.

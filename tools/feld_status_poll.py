@@ -14,12 +14,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA_VERSION = 2
+
+# tools/ on path for live Q/S (M36)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 def http_json(url: str, timeout: float = 4.0) -> dict:
@@ -125,6 +129,17 @@ def main() -> int:
     ap.add_argument("--seconds", type=float, default=90.0)
     ap.add_argument("--print", action="store_true", dest="do_print")
     ap.add_argument(
+        "--qs",
+        action="store_true",
+        help="M36 live Q/S dashboard + ALERT on storm_enter (never on reads−rej)",
+    )
+    ap.add_argument(
+        "--qs-window-s",
+        type=float,
+        default=5.0,
+        help="rate window for live --qs classify (default 5)",
+    )
+    ap.add_argument(
         "--append",
         action="store_true",
         help="append to existing JSONL instead of overwriting (field multi-segment)",
@@ -135,8 +150,15 @@ def main() -> int:
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
 
+    qs_mod = None
+    qs_hist: list[dict] = []
+    qs_prev_label: str | None = None
+    if args.qs:
+        import feld_qs_classify as qs_mod  # noqa: WPS433
+
     t_end = time.monotonic() + max(0.0, args.seconds)
     n = 0
+    n_alert = 0
     mode = "a" if args.append else "w"
     with out.open(mode, encoding="utf-8") as f:
         while time.monotonic() < t_end:
@@ -156,7 +178,53 @@ def main() -> int:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
             f.flush()
             n += 1
-            if args.do_print:
+            if args.qs and qs_mod is not None and "error" not in row:
+                ax = qs_mod.axes_from_row(row)
+                qs_hist.append(ax)
+                # trim history to ~2× window
+                while len(qs_hist) > 2 and isinstance(qs_hist[0].get("mono_s"), (int, float)):
+                    if float(ax["mono_s"]) - float(qs_hist[0]["mono_s"]) > args.qs_window_s * 2:
+                        qs_hist.pop(0)
+                    else:
+                        break
+                d_bf = d_pref = d_mid = None
+                j_ref = None
+                for k in range(len(qs_hist) - 1):
+                    dt_k = float(ax["mono_s"]) - float(qs_hist[k]["mono_s"])
+                    if dt_k >= args.qs_window_s:
+                        j_ref = k  # last k with dt>=window ≈ closest to window
+                if j_ref is not None:
+                    dt = float(ax["mono_s"]) - float(qs_hist[j_ref]["mono_s"])
+                    if dt > 0.2:
+
+                        def _rate(key: str, j0: int = j_ref) -> float | None:
+                            a = ax.get(key)
+                            b = qs_hist[j0].get(key)
+                            if a is None or b is None:
+                                return None
+                            return (qs_mod._i(a) - qs_mod._i(b)) / dt
+
+                        d_bf = _rate("bytesFile")
+                        d_pref = _rate("prefetchHits")
+                        d_mid = _rate("midFile_sum")
+                lab = qs_mod.classify_snapshot(
+                    ax, d_bf_per_s=d_bf, d_pref_per_s=d_pref, d_mid_per_s=d_mid
+                )
+                lab["d_bytesFile_per_s"] = d_bf
+                lab["d_prefetch_per_s"] = d_pref
+                lab["d_mid_per_s"] = d_mid
+                inv = ax.get("reads_minus_rej")
+                inv_ok = inv in (31, 32) if inv is not None else None
+                print(qs_mod.format_dashboard_line(lab, inv_ok=inv_ok), flush=True)
+                for a in qs_mod.alerts_for_sample(lab, prev_label=qs_prev_label):
+                    n_alert += 1
+                    print(
+                        f"*** {a['severity']} {a['kind']} ***",
+                        a.get("reasons"),
+                        flush=True,
+                    )
+                qs_prev_label = lab["label"]
+            elif args.do_print:
                 if "error" in row:
                     print(row["wall_iso"], "ERR", row["error"], flush=True)
                 else:
@@ -188,7 +256,8 @@ def main() -> int:
             if sleep > 0:
                 time.sleep(sleep)
 
-    print(f"DONE n={n} out={out}", flush=True)
+    extra = f" alerts={n_alert}" if args.qs else ""
+    print(f"DONE n={n}{extra} out={out}", flush=True)
     return 0
 
 

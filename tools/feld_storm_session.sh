@@ -98,7 +98,13 @@ for name in ("qs.json", "band.json"):
     if name == "qs.json":
         summary["qs_counts"] = d.get("label_counts")
         summary["guess_events"] = len(d.get("guess_events") or [])
+        summary["alerts"] = [
+            {"kind": a.get("kind"), "severity": a.get("severity"), "wall_iso": a.get("wall_iso")}
+            for a in (d.get("alerts") or [])
+        ]
+        summary["alert_n"] = len(d.get("alerts") or [])
         summary["invariant_ok"] = d.get("invariant_ok")
+        summary["invariant_note"] = d.get("invariant_note")
         summary["schema_note"] = (d.get("gaps") or {}).get("schema_note")
     else:
         summary["band"] = {
@@ -127,10 +133,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "== poll v2 → $OUT/poll.jsonl (${SECONDS_POLL}s @ ${INTERVAL}s) =="
+echo "== poll v2+qs → $OUT/poll.jsonl (${SECONDS_POLL}s @ ${INTERVAL}s) =="
 python3 tools/feld_status_poll.py --esp "$ESP" \
   --out "$OUT/poll.jsonl" --interval "$INTERVAL" --seconds "$SECONDS_POLL" \
-  --run-id "$(basename "$OUT")" --print \
+  --run-id "$(basename "$OUT")" --qs \
   >"$OUT/poll.print.log" 2>&1 &
 POLL_PID=$!
 

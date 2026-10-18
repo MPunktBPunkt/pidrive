@@ -1,0 +1,141 @@
+sit usb_cycle ok=True
+t=  0.1 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  0.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  1.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  1.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  1.9 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  2.4 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  2.9 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  3.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  4.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  4.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  5.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  5.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  6.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  6.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  7.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  7.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  8.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  8.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  9.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t=  9.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 10.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 10.6 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 11.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 11.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 12.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 12.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 13.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 13.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 14.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 14.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 15.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 15.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 15.9 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 16.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 17.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 17.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 18.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 18.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 19.1 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 19.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 20.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 20.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 21.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 21.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 22.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 22.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 23.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 23.6 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 24.0 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 24.5 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+t= 24.9 [storm] play='' stream=False host=36864 abs=12288 und=24576 (+0)
+wrote docs/betrieb/artifacts-2026-10-18-lab/lab-storm-capture-prep/session-m36-storm/arm.json
+{
+  "ok": true,
+  "stop_reason": "timeout",
+  "elapsed_s": 25.46,
+  "seen_play": false,
+  "baseline_und": 24576,
+  "sit": {
+    "ok": true,
+    "name": "usb_cycle",
+    "usbAttached": false,
+    "otgPlugged": true,
+    "mediaPresented": true,
+    "streamActive": false,
+    "note": "soft_usb\u2260VBUS; media_remount\u2260usb_cycle"
+  },
+  "stop": {
+    "ok": true,
+    "mess": {
+      "enabled": true,
+      "usbAttached": true,
+      "usbDetachN": 5,
+      "usbAttachN": 6,
+      "cmds": 48,
+      "drops": 0,
+      "chunks": 94,
+      "ring": 48,
+      "capacity": 512,
+      "mode": "ram_local",
+      "captureActive": false,
+      "startSeq": 1,
+      "endSeq": 47,
+      "overflow": 0,
+      "drop": 0,
+      "complete": true,
+      "endReason": "timeout",
+      "oldestSeq": 1,
+      "newestSeq": 48,
+      "emitSeq": 47,
+      "emitDrops": 0,
+      "activeCmd": false,
+      "healthy": true,
+      "clock": "probe-int64-us",
+      "port": "esp-capture-port",
+      "controlOwner": "app",
+      "vbusNote": "soft_usb=D+_pullup_not_VBUS",
+      "build": "mess",
+      "wifiOff": false,
+      "wifiOffPending": false
+    }
+  },
+  "cmdCapture": true,
+  "n_cmds": 48,
+  "q10": {
+    "n": 44,
+    "blocks_mode": 8,
+    "blocks_hist": {
+      "1": 10,
+      "8": 29,
+      "16": 1,
+      "24": 1,
+      "48": 1,
+      "120": 1,
+      "232": 1
+    },
+    "blocks_8_share": 0.659,
+    "blocks_240_share": 0.0,
+    "field_cbw_blocks": [
+      8,
+      240
+    ],
+    "field_modes_seen": [
+      8
+    ],
+    "matches_field_cbw": true,
+    "bytes_p50": 4096.0,
+    "dur_us_p50": 3852.0,
+    "gap_us_p50": 273.0,
+    "gap_us_p95": 11034.0,
+    "all_4kib": false,
+    "epistemic": "blocks=CBW/command size (mess-fw); not TinyUSB 4 KiB callback chunks. Do not treat all_4kib=false as lab failure when 240 is present.",
+    "head_gaps_ms": [
+      13.35,
+      17.87,
+      10.96,
+      11.03
+    ]
+  }
+}

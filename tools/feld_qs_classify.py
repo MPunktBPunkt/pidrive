@@ -241,15 +241,110 @@ def classify_poll(
         }
     )
 
+    # M36: alerts from Q/S axes only — never from reads−rej alone
+    alerts: list[dict[str, Any]] = []
+    prev_label: str | None = None
+    for lab in labeled:
+        for a in alerts_for_sample(lab, prev_label=prev_label):
+            alerts.append(a)
+        prev_label = lab["label"]
+    for ge in guess_events:
+        if ge.get("label_at") == "S":
+            # Δguess while already in storm (enter-with-guess already covered above)
+            if not any(
+                a.get("kind") == "storm_guess" and a.get("wall_iso") == ge.get("wall_iso")
+                for a in alerts
+            ):
+                alerts.append(
+                    {
+                        "kind": "storm_guess",
+                        "severity": "INFO",
+                        "wall_iso": ge.get("wall_iso"),
+                        "label": "S",
+                        "guess": ge.get("guess"),
+                        "reasons": ge.get("reasons"),
+                    }
+                )
+
     return {
         "gaps": gaps,
         "label_counts": counts,
         "episodes": episodes,
         "guess_events": guess_events,
+        "alerts": alerts,
         "reads_minus_rej_unique": inv_vals,
         "invariant_ok": set(inv_vals).issubset({31, 32}) if inv_vals else None,
+        "invariant_note": (
+            "reads−rej is plausibility only (Quiet-Plateau ∈{31,32}); never an alarm"
+        ),
         "samples": labeled[:: max(1, len(labeled) // 12)][:12],
     }
+
+
+def alerts_for_sample(
+    lab: dict[str, Any],
+    *,
+    prev_label: str | None = None,
+) -> list[dict[str, Any]]:
+    """M36 alert policy: Storm enter / Storm sticky. Never alert on reads−rej."""
+    out: list[dict[str, Any]] = []
+    label = lab.get("label")
+    ax = lab.get("axes") or {}
+    wall = ax.get("wall_iso")
+    reasons = list(lab.get("reasons") or [])
+    # Explicitly ignore invariant for alerting
+    _ = ax.get("reads_minus_rej")
+
+    if label == "S" and prev_label != "S":
+        out.append(
+            {
+                "kind": "storm_enter",
+                "severity": "ALERT",
+                "wall_iso": wall,
+                "label": label,
+                "reasons": reasons,
+                "axes_hint": {
+                    "prefetchHits": ax.get("prefetchHits"),
+                    "midFile_sum": ax.get("midFile_sum"),
+                    "d_bytesFile_per_s": lab.get("d_bytesFile_per_s"),
+                },
+            }
+        )
+        # Guess already present at storm enter (M35 signal) — one INFO, not sticky
+        if _i(ax.get("guess")) > 0:
+            out.append(
+                {
+                    "kind": "storm_guess",
+                    "severity": "INFO",
+                    "wall_iso": wall,
+                    "label": label,
+                    "guess": ax.get("guess"),
+                    "reasons": reasons,
+                }
+            )
+    return out
+
+
+def format_dashboard_line(lab: dict[str, Any], *, inv_ok: bool | None = None) -> str:
+    """One-line operator dashboard (M36)."""
+    ax = lab.get("axes") or {}
+    label = lab.get("label") or "?"
+    mid = ax.get("midFile_sum")
+    pref = ax.get("prefetchHits")
+    bf = ax.get("bytesFile")
+    guess = ax.get("guess")
+    inv = ax.get("reads_minus_rej")
+    inv_s = f"inv={inv}"
+    if inv_ok is False:
+        inv_s += "(plaus≠31/32)"
+    elif inv is not None:
+        inv_s += "(plaus)"
+    d_bf = lab.get("d_bytesFile_per_s")
+    d_bf_s = f"Δbf={d_bf:.0f}/s" if isinstance(d_bf, (int, float)) else "Δbf=-"
+    return (
+        f"{ax.get('wall_iso') or '-'}  {label:16s}  "
+        f"pref={pref} mid={mid} bf={bf} {d_bf_s} guess={guess}  {inv_s}"
+    )
 
 
 def status_file_to_row(path: Path) -> dict:
@@ -296,7 +391,32 @@ def self_test() -> int:
         d_bf_per_s=100_000.0,
     )
     assert s2["label"] == "S", s2
-    print("self-test OK", {"Q": q["label"], "S": s["label"], "S_rate": s2["label"]})
+
+    # M36: Quiet-Plateau must NOT raise alert despite reads−rej
+    q_alerts = alerts_for_sample(q, prev_label=None)
+    assert q_alerts == [], q_alerts
+    s_alerts = alerts_for_sample(s, prev_label="Q")
+    assert any(a["kind"] == "storm_enter" for a in s_alerts), s_alerts
+    # sticky S: no repeat storm_enter
+    sticky = alerts_for_sample(s, prev_label="S")
+    assert not any(a["kind"] == "storm_enter" for a in sticky), sticky
+    # guess-in-storm INFO
+    s_g = classify_snapshot(axes_from_row({**storm, "guess": 1}), d_bf_per_s=200_000.0)
+    g_alerts = alerts_for_sample(s_g, prev_label="Q")
+    assert any(a["kind"] == "storm_guess" for a in g_alerts), g_alerts
+    line = format_dashboard_line(q)
+    assert "Q" in line and "plaus" in line, line
+
+    print(
+        "self-test OK",
+        {
+            "Q": q["label"],
+            "S": s["label"],
+            "S_rate": s2["label"],
+            "m36_storm_enter": True,
+            "m36_no_quiet_alert": True,
+        },
+    )
     return 0
 
 

@@ -1,11 +1,11 @@
 # Lab · Storm-Capture Prep · 2026-10-18
 
 **ESP:** `.88` · FW `0.4.53-dev` · mess-fw  
-**Bezug:** Tooling-Audit Storm-Capture (technology-audit `035cb72`) · M30–M32
+**Bezug:** Tooling-Audit Storm-Capture (technology-audit `035cb72`) · M30–M32 · M36
 
 ## Urteil
 
-P0-Pipeline (Poll v2 + MessCapture `--storm` + Q/S + Band-Report) ist lab-grün. Kein Fremd-FW nötig. BMW-Storm bleibt Feld.
+P0-Pipeline (Poll v2 + MessCapture `--storm` + Q/S + Band-Report) ist lab-grün. M36 Live-Dashboard (`--qs`) lab-grün: keine False-Alerts auf Lab-`inv≠31/32`. BMW-Storm bleibt Feld.
 
 ## Qualitätslage Abend 17.10.
 
@@ -25,6 +25,8 @@ Baseline `poll-replug-1757` (nur ΔbytesFile): S-Episoden 17:58:07–19 / 17:58:
 |---------|----------|
 | `session-dryrun/` | frühes `arm` → `play_cleared` ~1 s (zu kurz für Storm) |
 | **`session-storm-m32/`** | `--storm` → **timeout 30.5 s**, 48 cmds, schema 2, band `storm_hint=true` (file_body 77 %), qs=Q (Lab-Quiet, kein NBT-Storm) |
+| `session-m36-qs/` | Live `--qs` 12 s · nach Fenster Q · **alerts=0** trotz `inv=36` (Plaus ≠ Alarm) |
+| **`session-m36-storm/`** | Harness mit `--qs` · SUMMARY `alert_n=0` · band wie M32 · qs überwiegend Q |
 
 `SUMMARY.json` der M32-Session:
 
@@ -40,6 +42,7 @@ Baseline `poll-replug-1757` (nur ΔbytesFile): S-Episoden 17:58:07–19 / 17:58:
 | M30 Session | `tools/feld_storm_session.sh` + `mess_hu_capture arm --storm` | ☑ |
 | M31 Q/S | `tools/feld_qs_classify.py` + poll schema v2 | ☑ |
 | M32 LBA→Band | `tools/mess_band_report.py` (arm.json + dump) | ☑ |
+| M36 Dashboard | `feld_status_poll --qs` · `alerts[]` / `storm_enter` | ☑ |
 
 ## Feld-Kommando
 

@@ -29,11 +29,12 @@ M20/M21 reproduzierbar (~6–7 s Ton, Ring ≈8,2 s); danach Prefetch-Livelo
 
 ## Auftrag (Prio) — siehe M30+
 
-1. **M30 P0:** UART als Gate + Storm-Capture in **einer** Session (nicht UART allein)
-2. **M31/M32:** Q/S-Klassifikator (pref/midFile/bytesFile/Ohr) + LBA/Read-Klasse während S
-3. **M33/M34:** Q vs S reproduzierbar → Reset-Isolation A–D auf gefangenem Storm
-4. **M35:** `msPlugToPlayGuess` n≥10 + Storm-Guess-Auslöser-Klasse
-5. Optional M25, dann erst M23 Stall — **kein** 167/136- oder Transport-Tuning
+1. **M30 P0:** UART als Gate + Storm-Capture in **einer** Session (nicht UART allein) — Lab-Harness ☑; **Feld offen**
+2. **M31/M32:** Q/S + Band — Lab ☑; Feld anwenden
+3. **M36:** Live `--qs` Dashboard — Lab ☑ (`alert_n=0` trotz Lab-inv≠31/32)
+4. **M33/M34:** Q vs S reproduzierbar → Reset-Isolation A–D auf gefangenem Storm
+5. **M35:** `msPlugToPlayGuess` n≥10 + Storm-Guess-Auslöser-Klasse
+6. Optional M25, dann erst M23 Stall — **kein** 167/136- oder Transport-Tuning
 
 ## Nicht tun
 
