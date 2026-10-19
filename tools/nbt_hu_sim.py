@@ -21,7 +21,16 @@ Field-fit scenarios (s1-morgen 07.10., HU-Facts R15–R21):
                           (120 KiB = field CBW blocks=240; 4 KiB = blocks=8). Pace --period-ms
                           5.1 per 4 KiB equivalent; M2 identity + dump analysis
                           [--dump-slot: <out>/slot-<uid>.bin for ffmpeg / listening on a PC]
-  --offline               SG-only BENCH when ESP HTTP is down (static L3 LBAs)
+  --hu-model nbt_evo_2026_10
+                          HU model from hu-probe field data 2026-10-19: TUR every 2.239 s
+                          (phase-locked), mount signature (32 TUR, 11 READ10 incl. 24/8),
+                          resume read after 0.25 s, cyclic next-track reads in 240-block atoms
+                          (--next-rule lead_before_end|delay_after_start), tail-first on wrap,
+                          media-loss reaction TUR(1) -> REQUEST_SENSE -> PREVENT_ALLOW
+  --replay-huprobe <events.jsonl|analysis.json> [--huprobe-map abs|file]
+                          replay a real HU command sequence recorded by hu-probe
+                          (abs is exact for the hu-probe preset pidrive_l3)
+  --offline               SG-only BENCH/NBTEVO/HUPROBE when ESP HTTP is down (static L3 LBAs)
   --producer-burst F      producer burst factor (default 1.45 for --live, 1.0 for REPLUG)
   --cmd-timeout-ms N      SG_IO timeout per command (default 5000)
 Every read goes to <out>/reads.jsonl (off, lba, n, klass, dur_ms, wall_ms, seq0/seq1).
@@ -107,13 +116,35 @@ def load_profile(path: Path) -> dict:
 
 
 def read_sg(sg_fd: int, lba: int, nbytes: int, timeout_ms: int = 5000) -> tuple[bytes, dict]:
-    import ctypes
-    import fcntl
-
     if nbytes % SECTOR:
         raise ValueError(f"SG size must be sector-multiple, got {nbytes}")
     nsec = nbytes // SECTOR
     cmd = struct.pack(">BBIBHB", 0x28, 0, lba & 0xFFFFFFFF, 0, nsec & 0xFFFF, 0)
+    data, meta = scsi_sg(sg_fd, cmd, nbytes, timeout_ms)
+    meta["cdb_lba"] = lba
+    meta["cdb_blocks"] = nsec
+    if meta["status"] not in (0,):
+        raise OSError(f"SG_IO status={meta['status']} host={meta['host_status']} drv={meta['driver_status']}")
+    return data, meta
+
+
+# Non-read CDBs of the NBT Evo command set (HU-probe 2026-10-19: mount signature, media loss).
+CDB = {
+    "tur": bytes(6),
+    "request_sense": bytes([0x03, 0, 0, 0, 18, 0]),
+    "inquiry": bytes([0x12, 0, 0, 0, 36, 0]),
+    "mode_sense6": bytes([0x1A, 0, 0x3F, 0, 192, 0]),
+    "prevent_allow": bytes([0x1E, 0, 0, 0, 0, 0]),
+    "read_capacity10": bytes([0x25] + [0] * 9),
+}
+CDB_DXFER = {"tur": 0, "request_sense": 18, "inquiry": 36, "mode_sense6": 192,
+             "prevent_allow": 0, "read_capacity10": 8}
+
+
+def scsi_sg(sg_fd: int, cmd: bytes, nbytes: int, timeout_ms: int = 5000) -> tuple[bytes, dict]:
+    """One SG_IO command; nbytes=0 means no data phase. Does not raise on CHECK CONDITION."""
+    import ctypes
+    import fcntl
 
     class SgIoHdr(ctypes.Structure):
         _fields_ = [
@@ -141,17 +172,18 @@ def read_sg(sg_fd: int, lba: int, nbytes: int, timeout_ms: int = 5000) -> tuple[
             ("info", ctypes.c_uint),
         ]
 
+    SG_DXFER_NONE = -1
     SG_DXFER_FROM_DEV = -3
-    dxfer_arr = (ctypes.c_ubyte * nbytes)()
+    dxfer_arr = (ctypes.c_ubyte * max(1, nbytes))()
     cmd_buf = (ctypes.c_ubyte * len(cmd)).from_buffer_copy(cmd)
     sb_arr = (ctypes.c_ubyte * 32)()
     hdr = SgIoHdr()
     hdr.interface_id = ord("S")
-    hdr.dxfer_direction = SG_DXFER_FROM_DEV
+    hdr.dxfer_direction = SG_DXFER_FROM_DEV if nbytes else SG_DXFER_NONE
     hdr.cmd_len = len(cmd)
     hdr.mx_sb_len = 32
     hdr.dxfer_len = nbytes
-    hdr.dxferp = ctypes.addressof(dxfer_arr)
+    hdr.dxferp = ctypes.addressof(dxfer_arr) if nbytes else None
     hdr.cmdp = ctypes.addressof(cmd_buf)
     hdr.sbp = ctypes.addressof(sb_arr)
     hdr.timeout = timeout_ms
@@ -162,8 +194,6 @@ def read_sg(sg_fd: int, lba: int, nbytes: int, timeout_ms: int = 5000) -> tuple[
         # command, not TinyUSB callback boundaries on the device.
         "cdb_hex": cmd.hex(),
         "opcode": cmd[0],
-        "cdb_lba": lba,
-        "cdb_blocks": nsec,
         "dxfer_len": nbytes,
         "status": hdr.status,
         "host_status": hdr.host_status,
@@ -172,9 +202,7 @@ def read_sg(sg_fd: int, lba: int, nbytes: int, timeout_ms: int = 5000) -> tuple[
         "resid": hdr.resid,
         "sense_hex": sense.hex(),
     }
-    if hdr.status not in (0,):
-        raise OSError(f"SG_IO status={hdr.status} host={hdr.host_status} drv={hdr.driver_status}")
-    return bytes(dxfer_arr), meta
+    return bytes(dxfer_arr[:nbytes]), meta
 
 
 # --- Classifier + virtual ear -----------------------------------------------
@@ -727,6 +755,24 @@ class HuSim:
             wall_ms=meta.get("wall_ms"),
         )
         return blob
+
+    def scsi(self, op: str) -> dict:
+        """Non-read command of the NBT command set; returns status/sense (no exception on
+        CHECK CONDITION). PREVENT_ALLOW needs a writable sg or CAP_SYS_RAWIO, else skipped."""
+        t0 = time.monotonic()
+        try:
+            data, meta = scsi_sg(self.sg_fd, CDB[op], CDB_DXFER[op], self.cmd_timeout_ms)
+        except OSError as e:
+            res = {"op": op, "status": None, "err": f"{type(e).__name__}: {e}"}
+            self._log(op="scsi", scsi=op, err=res["err"])
+            return res
+        res = {"op": op, "status": meta["status"], "sense_hex": meta["sense_hex"],
+               "wall_ms": round((time.monotonic() - t0) * 1000.0, 3)}
+        if op == "read_capacity10" and len(data) >= 8:
+            res["last_lba"], res["block"] = struct.unpack(">II", data[:8])
+        self._log(op="scsi", scsi=op, status=meta["status"], sense_hex=meta["sense_hex"],
+                  wall_ms=res["wall_ms"])
+        return res
 
     def _timed_read(self, lba: int, n: int) -> tuple[bytes, dict]:
         self._pace_before()
@@ -1828,6 +1874,334 @@ def run_g5(producer: RealisticProducer, duration_s: float = 70.0) -> dict:
     return checks
 
 
+# --- HU model nbt_evo_2026_10 (HU-probe field data 2026-10-14..19) ----------
+#
+# Values: hu-probe docs/feld/2026-10-19-unabhaengige-auswertung.md (P-TUR, P-MOUNT,
+# P-MREAD, P-RESUME, P-NEXT, P-SEL, P-TAIL, P-ATOM, P-LOSS). The next-track rule and
+# the big-file read pattern are INFERRED/HYPOTHESIS until SEQ-DUR / SEQ-SIZE.
+
+NBT_EVO_2026_10: dict[str, Any] = {
+    "tur_period_s": 2.239,
+    "mount_turs": 32,
+    "mount_burst_turs": 15,
+    "mount_burst_s": 0.29,
+    # base: abs = absolute LBA, fat = first FAT sector, root = first root-dir sector
+    "mount_reads": [["abs", 0, 8], ["abs", 0, 8], ["abs", 24, 8], ["abs", 0, 8], ["abs", 0, 1],
+                    ["fat", 0, 3], ["root", 0, 2], ["fat", 0, 1], ["fat", 1, 1], ["fat", 2, 5],
+                    ["abs", 24, 8]],
+    "mount_cmds": {"read_capacity10": 3, "mode_sense6": 6, "prevent_allow": 7},
+    "resume_delay_s": 0.25,
+    "read_atom_blocks": 240,
+    "next_rule": "lead_before_end",
+    "next_lead_s": 15.0,
+    "next_delay_s": 12.5,
+    "select_latency_s": 1.8,
+    "autoplay_latency_s": 0.2,
+    "tail_then_head_on_wrap": True,
+    "big_file_threshold": 1024 * 1024,
+    "big_file_head_bytes": SELECT_HEAD_RUN,
+    "bitrate_bps": 48000,
+    "id3_len": 3044,
+}
+
+
+def hu_model_params(name: str, profile: dict, overrides: dict | None = None) -> dict:
+    if name != "nbt_evo_2026_10":
+        raise SystemExit(f"unknown --hu-model {name}")
+    p = dict(NBT_EVO_2026_10)
+    p.update(((profile.get("hu_model") or {}).get(name)) or {})
+    p.update({k: v for k, v in (overrides or {}).items() if v is not None})
+    return p
+
+
+def fat_geometry(boot: bytes) -> dict:
+    """fat/root start LBAs from a FAT12/16 boot sector (mount read 0/8)."""
+    reserved = struct.unpack_from("<H", boot, 14)[0] or 1
+    fats = boot[16] or 2
+    fatsz = struct.unpack_from("<H", boot, 22)[0] or 1
+    root_entries = struct.unpack_from("<H", boot, 17)[0]
+    root = reserved + fats * fatsz
+    return {"fat": reserved, "root": root, "data": root + (root_entries * 32 + 511) // 512}
+
+
+def mount_read_lbas(spec: list, geo: dict) -> list[tuple[int, int]]:
+    out = []
+    for base, off, blocks in spec:
+        b = 0 if base == "abs" else int(geo[base])
+        out.append((b + int(off), int(blocks)))
+    return out
+
+
+def next_fire_after_start(play_s: float, p: dict) -> float:
+    if p["next_rule"] == "delay_after_start":
+        return min(play_s, float(p["next_delay_s"]))
+    return max(0.0, play_s - float(p["next_lead_s"]))
+
+
+class TurClock:
+    """Phase-locked TUR timer (P-TUR): a late TUR fires once, the grid does not shift."""
+
+    def __init__(self, hu: HuSim, period_s: float):
+        self.hu = hu
+        self.period = period_s
+        self.next: float | None = None
+        self.times: list[float] = []
+        self.loss: list[dict] = []
+
+    def start(self, t: float) -> None:
+        self.next = t + self.period
+
+    def fire(self) -> dict:
+        r = self.hu.scsi("tur")
+        self.times.append(time.monotonic())
+        if r.get("status") not in (0, None):
+            # P-LOSS: TUR(1) -> REQUEST_SENSE -> PREVENT_ALLOW(1)
+            rs = self.hu.scsi("request_sense")
+            pa = self.hu.scsi("prevent_allow")
+            self.loss.append({"t": self.times[-1], "tur": r.get("status"),
+                              "sense": rs.get("sense_hex") or rs.get("status"),
+                              "prevent": pa.get("status")})
+        return r
+
+    def tick(self) -> None:
+        if self.next is None:
+            return
+        now = time.monotonic()
+        if now >= self.next:
+            self.fire()
+            while self.next <= time.monotonic():
+                self.next += self.period
+
+    def wait_until(self, t: float) -> None:
+        while True:
+            self.tick()
+            now = time.monotonic()
+            if now >= t:
+                return
+            nxt = self.next if self.next is not None else t
+            time.sleep(max(0.0, min(0.05, t - now, nxt - now)))
+
+    def intervals(self) -> list[float]:
+        return [b - a for a, b in zip(self.times, self.times[1:])]
+
+
+def nbt_read_file(hu: HuSim, clock: TurClock, uid: str, p: dict, tail_first: bool = False) -> dict:
+    """Whole-file read in 240-block atoms (P-ATOM); tail_first = remainder chunk at EOF first
+    (P-TAIL, 249/69 then 9/240 on 309 blocks). Files > big_file_threshold: head only (HYPOTHESIS)."""
+    size = hu.slots[uid].size
+    atom = int(p["read_atom_blocks"]) * SECTOR
+    limit = size if size <= int(p["big_file_threshold"]) else min(size, int(p["big_file_head_bytes"]))
+    t0 = time.monotonic()
+    total = 0
+    order = []
+    if tail_first and limit == size and size > atom:
+        rem = size % atom or atom
+        hu.read_n(uid, size - rem, rem)
+        total += rem
+        order.append([size - rem, rem])
+        limit = size - rem
+        clock.tick()
+    off = 0
+    while off < limit:
+        n = min(atom, limit - off)
+        blob = hu.read_n(uid, off, n)
+        if not blob:
+            break
+        order.append([off, len(blob)])
+        off += len(blob)
+        total += len(blob)
+        clock.tick()
+    return {"uid": uid, "bytes": total, "tail_first": tail_first, "t0": t0,
+            "chunks": order[:4], "chunk_count": len(order), "dt_s": round(time.monotonic() - t0, 3)}
+
+
+def run_nbt_evo(hu: HuSim, out: Path, p: dict, order: list[str], plays: int) -> dict:
+    """Mount signature, resume read, cyclic next-track reads on the model clock."""
+    clock = TurClock(hu, float(p["tur_period_s"]))
+    t0 = time.monotonic()
+    log: list[dict] = []
+    hu.scsi("inquiry")
+    cap = hu.scsi("read_capacity10")
+    burst_n = int(p["mount_burst_turs"])
+    for i in range(burst_n):
+        clock.fire()
+        time.sleep(float(p["mount_burst_s"]) / max(1, burst_n))
+    clock.start(time.monotonic())
+    extra = dict(p["mount_cmds"])
+    extra["read_capacity10"] = max(0, int(extra.get("read_capacity10", 0)) - 1)
+    pending = [op for op, n in extra.items() for _ in range(int(n))]
+    boot = hu.read_raw(0, 8 * SECTOR, tag="mount")
+    geo = fat_geometry(boot)
+    reads = mount_read_lbas(p["mount_reads"], geo)
+    for k, (lba, blocks) in enumerate(reads):
+        if k > 0:
+            hu.read_raw(lba, blocks * SECTOR, tag="mount")
+        if pending:
+            hu.scsi(pending.pop(0))
+        clock.tick()
+    while pending:
+        hu.scsi(pending.pop(0))
+    turs_mount = len(clock.times)
+    while len(clock.times) < int(p["mount_turs"]):
+        clock.wait_until(clock.next or time.monotonic())
+    t_mount_end = time.monotonic()
+    log.append({"ev": "mount_end", "t_s": round(t_mount_end - t0, 3), "turs": len(clock.times),
+                "turs_before_reads_done": turs_mount, "geometry": geo})
+
+    clock.wait_until(t_mount_end + float(p["resume_delay_s"]))
+    first = nbt_read_file(hu, clock, order[0], p)
+    log.append({"ev": "resume_read", "t_s": round(first["t0"] - t0, 3), **{k: v for k, v in first.items() if k != "t0"}})
+    t_play0 = time.monotonic()
+    rate = float(p["bitrate_bps"]) / 8.0
+    for k in range(plays):
+        cur = order[k % len(order)]
+        nxt_i = (k + 1) % len(order)
+        nxt = order[nxt_i]
+        play_s = max(1.0, (hu.slots[cur].size - int(p["id3_len"])) / rate)
+        clock.wait_until(t_play0 + next_fire_after_start(play_s, p))
+        wrap = nxt_i == 0 and bool(p["tail_then_head_on_wrap"])
+        r = nbt_read_file(hu, clock, nxt, p, tail_first=wrap)
+        lag = r["t0"] - t_play0
+        log.append({"ev": "next_track_read", "playing": cur, "next": nxt,
+                    "lag_after_start_s": round(lag, 3), "lead_before_end_s": round(play_s - lag, 3),
+                    "play_s": round(play_s, 2), **{kk: vv for kk, vv in r.items() if kk != "t0"}})
+        clock.wait_until(t_play0 + play_s)
+        t_play0 += play_s
+    iv = clock.intervals()
+    idle = [x for x in iv if x >= 0.5]
+    res = {
+        "model": "nbt_evo_2026_10",
+        "params": {k: v for k, v in p.items() if k != "mount_reads"},
+        "mount_reads": [f"{a}/{b}" for a, b in reads],
+        "capacity": cap,
+        "log": log,
+        "tur": {"count": len(clock.times), "idle_n": len(idle),
+                "idle_median_s": round(sorted(idle)[len(idle) // 2], 4) if idle else None},
+        "media_loss": clock.loss,
+        "duration_s": round(time.monotonic() - t0, 2),
+    }
+    res["tur_ok"] = bool(idle) and abs(res["tur"]["idle_median_s"] - float(p["tur_period_s"])) < 0.1
+    res["pass"] = bool(res["tur_ok"] and not clock.loss)
+    (out / "nbt_evo_run.json").write_text(json.dumps(res, indent=2))
+    return res
+
+
+# --- HU-probe replay (events.jsonl or analysis.json from hu-probe tools) -----
+
+
+def load_huprobe(path: Path) -> tuple[list[dict], dict]:
+    """Rows {t_s, op, lba, blocks} and media info (variant, files with extents)."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if path.suffix == ".json":
+        doc = json.loads(text)
+        return list(doc.get("replay") or []), dict(doc.get("media") or {})
+    rows: list[dict] = []
+    files: list[dict] = []
+    variant = "demo_v1"
+    for line in text.splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if e.get("ev") == "media_layout":
+            files.append({k: e.get(k) for k in ("node", "path", "dir", "size", "extents")})
+            variant = e.get("variant") or variant
+        if e.get("ev") != "bot_cbw" or e.get("origin") == "post_finalize":
+            continue
+        scsi = e.get("scsi") or {}
+        t = e.get("capture_t_us", e.get("t_us"))
+        if t is None:
+            continue
+        rows.append({"t_us": int(t), "seq": e.get("seq", 0), "op": scsi.get("opcode"),
+                     "lba": scsi.get("lba"), "blocks": scsi.get("blocks")})
+    rows.sort(key=lambda r: (r["t_us"], r["seq"]))
+    t0 = rows[0]["t_us"] if rows else 0
+    for r in rows:
+        r["t_s"] = (r.pop("t_us") - t0) / 1e6
+    return rows, {"variant": variant, "files": files}
+
+
+def huprobe_lba_mapper(media: dict, mode: str, slots: dict[str, SlotInfo],
+                       slot_map: dict[str, str]) -> Callable[[int], int | None]:
+    """abs: probe LBA = PiDrive LBA (exact for preset pidrive_l3). file: probe file block ->
+    same block in the mapped PiDrive slot; FS metadata reads stay absolute."""
+    if mode == "abs":
+        return lambda lba: lba
+    ext: list[tuple[int, int, str, int]] = []
+    files = [f for f in media.get("files") or [] if not f.get("dir") and f.get("extents")]
+    by_lba = sorted(slots.values(), key=lambda s: s.lba0)
+    for i, f in enumerate(files):
+        uid = slot_map.get(str(f.get("path", "")).lstrip("/")) or (by_lba[i].uid if i < len(by_lba) else None)
+        if not uid:
+            continue
+        blk = 0
+        for lba, n in f["extents"]:
+            ext.append((int(lba), int(n), uid, blk))
+            blk += int(n)
+    if not ext:
+        raise SystemExit("--huprobe-map file needs media extents (analysis.json or media_layout events)")
+
+    def mapper(lba: int) -> int | None:
+        for s, n, uid, blk0 in ext:
+            if s <= lba < s + n:
+                slot = slots[uid]
+                tgt = slot.lba0 + blk0 + (lba - s)
+                return tgt if tgt <= slot.lba1 else None
+        return lba
+    return mapper
+
+
+def run_huprobe_replay(hu: HuSim, out: Path, rows: list[dict], media: dict, mode: str,
+                       slot_map: dict[str, str], speed: float = 1.0) -> dict:
+    """Replays a real HU command sequence (hu-probe) against the PiDrive gadget on the
+    recorded time base. Unknown ops are skipped and counted."""
+    if not rows:
+        return {"pass": False, "err": "no rows"}
+    cap = hu.scsi("read_capacity10")
+    last_lba = cap.get("last_lba")
+    mapper = huprobe_lba_mapper(media, mode, hu.slots, slot_map)
+    t0 = time.monotonic()
+    counts: dict[str, int] = {}
+    skipped: dict[str, int] = {}
+    out_of_range = 0
+    tur_fail = 0
+    max_late = 0.0
+    for r in rows:
+        due = t0 + float(r["t_s"]) / speed
+        now = time.monotonic()
+        if due > now:
+            time.sleep(due - now)
+        else:
+            max_late = max(max_late, now - due)
+        op = r.get("op")
+        if op == "read10" and r.get("lba") is not None:
+            tgt = mapper(int(r["lba"]))
+            n = int(r.get("blocks") or 0) * SECTOR
+            if tgt is None or n <= 0 or (last_lba is not None and tgt + n // SECTOR - 1 > last_lba):
+                out_of_range += 1
+                continue
+            hu.read_raw(tgt, n, tag=f"huprobe:{r['lba']}")
+        elif op in CDB:
+            res = hu.scsi(op)
+            if op == "tur" and res.get("status") not in (0, None):
+                tur_fail += 1
+        else:
+            skipped[str(op)] = skipped.get(str(op), 0) + 1
+            continue
+        counts[op] = counts.get(op, 0) + 1
+    res = {
+        "rows": len(rows), "executed": counts, "skipped": skipped,
+        "out_of_range_reads": out_of_range, "tur_fail": tur_fail,
+        "field_span_s": round(float(rows[-1]["t_s"]), 2),
+        "replay_s": round(time.monotonic() - t0, 2), "max_late_s": round(max_late, 3),
+        "map": mode, "media_variant": media.get("variant"),
+        "timing": hu.timing_report(),
+    }
+    res["pass"] = out_of_range == 0 and tur_fail == 0 and max_late < 1.0
+    (out / "huprobe_replay.json").write_text(json.dumps(res, indent=2))
+    return res
+
+
 def self_test() -> int:
     # classifier
     assert classify_block(b"ID3" + b"\x00" * 100) == "ID3"
@@ -1888,6 +2262,26 @@ def self_test() -> int:
     assert ev["undDelta"] == sil_n and ev["expect_undDelta"] == sil_n, ev
     assert ev["identity_diff"] == 0 and ev["identity_ok"] and ev["und_ok"] and ev["cross_in_window"]
     assert 471000 < sil_n < 472500  # field s3 range (R25/R27)
+    # nbt_evo_2026_10: mount reads on demo_v1 geometry reproduce the field signature
+    boot = bytearray(512)
+    struct.pack_into("<H", boot, 14, 1)
+    boot[16] = 2
+    struct.pack_into("<H", boot, 17, 32)
+    struct.pack_into("<H", boot, 22, 3)
+    geo = fat_geometry(bytes(boot))
+    assert geo == {"fat": 1, "root": 7, "data": 9}, geo
+    sig = ",".join(f"{a}/{b}" for a, b in mount_read_lbas(NBT_EVO_2026_10["mount_reads"], geo))
+    assert sig == "0/8,0/8,24/8,0/8,0/1,1/3,7/2,1/1,2/1,3/5,24/8", sig
+    p = hu_model_params("nbt_evo_2026_10", {})
+    assert next_fire_after_start(26.5, p) == 11.5
+    assert next_fire_after_start(26.5, {**p, "next_rule": "delay_after_start"}) == 12.5
+    # hu-probe replay: file mapping TRACK1 block 240 -> fav0 lba0 + 240
+    slots = {"fav0": SlotInfo("fav0", 81, 16464, 16384 * 512), "fav1": SlotInfo("fav1", 16465, 17488, 1024 * 512)}
+    media = {"files": [{"node": 0, "path": "/TRACK1.MP3", "extents": [[9, 309]]},
+                       {"node": 1, "path": "/TRACK2.MP3", "extents": [[318, 309]]}]}
+    m = huprobe_lba_mapper(media, "file", slots, {})
+    assert m(249) == 81 + 240 and m(318) == 16465 and m(7) == 7
+    assert huprobe_lba_mapper(media, "abs", slots, {})(249) == 249
     print("self-test PASS")
     return 0
 
@@ -1949,13 +2343,30 @@ def main() -> int:
     ap.add_argument("--replug-bps", type=int, default=6000,
                     help="REPLUG: bytes/s for live_s_at_bps (48k→6000, 32k→4000, 24k→3000)")
     ap.add_argument("--dump-slot", action="store_true", help="REPLUG: save the read slot as .bin")
+    ap.add_argument("--hu-model", default="", choices=("", "nbt_evo_2026_10"),
+                    help="NBTEVO: TUR 2.239 s, mount signature, resume, cyclic next-track reads "
+                         "(hu-probe 2026-10-19); params overridable in profile hu_model.<name>")
+    ap.add_argument("--hu-order", default="", help="NBTEVO: track uids in play order (default: slots by LBA)")
+    ap.add_argument("--hu-plays", type=int, default=3, help="NBTEVO: tracks to play through")
+    ap.add_argument("--next-rule", default=None, choices=("lead_before_end", "delay_after_start"),
+                    help="NBTEVO: next-track trigger (INFERRED until hu-probe SEQ-DUR)")
+    ap.add_argument("--next-lead-s", type=float, default=None, help="NBTEVO: lead before end (11–18 s field)")
+    ap.add_argument("--next-delay-s", type=float, default=None, help="NBTEVO: delay after start (9–16 s field)")
+    ap.add_argument("--replay-huprobe", default="",
+                    help="HUPROBE: replay hu-probe events.jsonl or derived/analysis.json against the gadget")
+    ap.add_argument("--huprobe-map", default="abs", choices=("abs", "file"),
+                    help="HUPROBE: abs = same LBAs (exact for media pidrive_l3); file = probe file block "
+                         "-> same block in the mapped slot")
+    ap.add_argument("--huprobe-slots", default="",
+                    help="HUPROBE file map, e.g. TRACK1.MP3=fav0,TRACK2.MP3=fav1 (default: order by LBA)")
     args = ap.parse_args()
 
     if args.self_test:
         return self_test()
 
-    if not args.golden:
-        ap.error("need --golden or --self-test")
+    extra_goldens = (["NBTEVO"] if args.hu_model else []) + (["HUPROBE"] if args.replay_huprobe else [])
+    if not args.golden and not extra_goldens:
+        ap.error("need --golden, --hu-model, --replay-huprobe or --self-test")
 
     esp = args.esp.rstrip("/")
     profile = load_profile(Path(args.profile))
@@ -1965,11 +2376,12 @@ def main() -> int:
     )
     out.mkdir(parents=True, exist_ok=True)
 
-    goldens = [g.strip().upper() for g in args.golden.split(",")]
+    goldens = [g.strip().upper() for g in args.golden.split(",") if g.strip()]
     if "ALL" in goldens:
         goldens = ["G1", "G2", "G3", "G4", "G5"]
+    goldens += [g for g in extra_goldens if g not in goldens]
 
-    offline_ok = {"BENCH"}
+    offline_ok = {"BENCH", "NBTEVO", "HUPROBE"}
     if args.offline:
         bad = [g for g in goldens if g not in offline_ok]
         if bad:
@@ -2041,7 +2453,7 @@ def main() -> int:
             hu.load_slots_l3()
         else:
             # BENCH-only: skip remount (C1/C2/C3) — remount storms starve Wi-Fi under MSC load
-            need_rm = not (set(goldens) <= {"BENCH"})
+            need_rm = not (set(goldens) <= {"BENCH", "NBTEVO", "HUPROBE"})
             pump = prep_lab(esp, args.esp_ip, None, remount=need_rm)
             hu.open()
             hu.refresh_slots(esp)
@@ -2139,6 +2551,26 @@ def main() -> int:
             fresh()
             rows = load_msc_reads(Path(args.replay), args.replay_ms_from, args.replay_ms_to)
             report["results"]["REPLAY"] = run_replay(hu, esp, out, rows, args.replay_speed)
+
+        if "NBTEVO" in goldens:
+            # Mount signature only makes sense on a fresh attach.
+            fresh(remount=True)
+            params = hu_model_params(args.hu_model, profile, {
+                "next_rule": args.next_rule, "next_lead_s": args.next_lead_s,
+                "next_delay_s": args.next_delay_s})
+            order = [u.strip() for u in args.hu_order.split(",") if u.strip()] or \
+                [s.uid for s in sorted(hu.slots.values(), key=lambda s: s.lba0)]
+            missing = [u for u in order if u not in hu.slots]
+            if missing:
+                ap.error(f"--hu-order: unknown slots {missing}; have {sorted(hu.slots)}")
+            report["results"]["NBTEVO"] = run_nbt_evo(hu, out, params, order, args.hu_plays)
+
+        if "HUPROBE" in goldens:
+            fresh(remount=True)
+            rows, media = load_huprobe(Path(args.replay_huprobe))
+            smap = dict(kv.split("=", 1) for kv in args.huprobe_slots.split(",") if "=" in kv)
+            report["results"]["HUPROBE"] = run_huprobe_replay(
+                hu, out, rows, media, args.huprobe_map, smap, args.replay_speed)
 
         if "REPLUG" in goldens:
             fresh()

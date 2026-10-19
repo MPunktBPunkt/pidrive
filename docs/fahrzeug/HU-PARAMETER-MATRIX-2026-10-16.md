@@ -1,6 +1,6 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-10-17 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 15.10.), hu-probe S0 0.2.17 / S2 0.2.23, Offline-P0, PiDrive-Feld s1–s6 und F0, Lab 13.–17.10., technology-audit 0.7.1.
+**Stand:** 2026-10-19 (TUR-Periode korrigiert, Mount-Signatur/Resume/Auswahllatenz/tail_then_head/Media-Loss neu aus [hu-probe unabhängige Auswertung](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md); Lab-Profil `tools/profiles/nbt_evo_lab_2026-10-19.json`) · 2026-10-17 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 15.10.), hu-probe S0 0.2.17 / S2 0.2.23, Offline-P0, PiDrive-Feld s1–s6 und F0, Lab 13.–17.10., technology-audit 0.7.1.
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** (projektübergreifende Rechnung aus vorhandenen Daten, noch nicht direkt gemessen) · [D] Desk · [H] Hypothese · [?] offen.
 
 Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind keine NBT-Werte.  
@@ -37,7 +37,10 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | Plug → INQUIRY / erster READ | ~997 ms / ~1004–1046 ms | [B] | E1, Offline-P0 | S | — | — |
 | SCSI-Kommandomix | TUR ≫ READ10, PREVENT, MODE_SENSE6, READ_CAPACITY, INQUIRY | [B] | E2 | S | — | — |
 | MODE_SENSE6 je READ_CAPACITY | 2,0 | [B] | E2 | S | — | — |
-| TUR-Rate | ~0,8–1/s idle; Session-weit ~2 Hz | [S] | E3 | S | P2 | Fensterraten je Phase |
+| TUR-Periode (Leerlauf) | **2,239 s** (p10/p90 2238/2239 ms, n = 382), phasenstarr; „~0,8–1/s“ REJECTED | **[B]** (korr. 19.10.) | E3, hu-probe P-TUR | S | P2 | — (Lebenszeichen für Storm-/Hänger-Erkennung M30–M36 nutzen) |
+| Mount-Signatur | 32 TUR (≈ 15 Burst in ≤ 0,29 s), INQUIRY 1, READ_CAPACITY 3, MODE_SENSE6 6, PREVENT 7, 11 READ10 `0/8,0/8,24/8,0/8,0/1,1/3,7/2,1/1,2/1,3/5,24/8` | **[B]** | E12 | S | — | Lab: `nbt_hu_sim.py --hu-model nbt_evo_2026_10` |
+| Mount-Read LBA 24/8 | zweimal pro Mount; Zweck unbekannt | [S]/[?] | E13 | S, L | P2 | hu-probe `tail_probe` (SEQ-STRUCT) |
+| Media-Loss-Reaktion | TUR(1) → REQUEST_SENSE → PREVENT_ALLOW(1) | **[B]** | E17 | S | — | — |
 | Schreibzugriffe | keine | [B] | E4 | S | — | — |
 | Queue-Tiefe | 1 (BOT) | [B] | E6 | L, U | — | — |
 | Physisches Detach → Attach | 2,3–6,0 s | [B] | E8 | S | — | — |
@@ -56,11 +59,11 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | Max. READ10-Transfer | 240 Blöcke = 120 KiB | **[S]** | A2 (Feld 16.10.) | L, U | P1 | bestätigt; weitere Phasen optional |
 | Lesetakt ohne/mit ESP-Play | 3,74–3,78 ms / ~5 ms je 4 KiB | [B] | R15 | L | — | — |
 | BUSY-Toleranz kumuliert | ≥ ~65 s bis EOF | [B] | E7, R29 | L | — | — |
-| Timeout je READ10 | ≥ ~20 s (bedingt) | [A] | A4 | L | **P0** | Lab-Leiter 0/1/2/5/10/15 s (`lab_stall_phase_ladder.py`), dann NBT; nicht E7-65 s kumuliert verwechseln |
+| Timeout je READ10 | ≥ ~20 s (bedingt) | [A] | A4 | L | **P0** | Lab-Leiter 0/1/2/5/10/15 s (`lab_stall_phase_ladder.py`), dann NBT; nicht E7-65 s kumuliert verwechseln. Am NBT: hu-probe `seq_stall` Schritte 1–7 (2…120 s, `read_stalls.timeout_lower/upper_s`) |
 | Timeout ohne Datenfluss (Inaktivität) | unbekannt | [?] | Q1 | L | P1 | Retry-Pausen ohne Daten |
-| Reaktion bei Timeout | unbekannt (Reset? Skip? Remount?) | [?] | — | S | P1 | gezielt überschreiten, Status + Ohr |
-| Menülatenz unter Stall | ~20 s beobachtet; Ursache 240-CBW Inference | [B] Phänomen / [A] Ursache | R35, A3 | U | P1 | Stall-Leiter Menü-Phase + Vorlauf ≥ 120 KiB A/B |
-| Benötigter Live-Vorlauf ohne UI-Freeze | ≥ 1 CBW = 120 KiB (≈ 20 s @48k, 7,7 s @128k) | [A] | A2, A3 | L, U | **P0** | Ring-/PSRAM-Größe prüfen, Lab-Messung |
+| Reaktion bei Timeout | unbekannt (Reset? Skip? Remount?) | [?] | — | S | P1 | gezielt überschreiten, Status + Ohr; hu-probe `seq_stall` 5–7 zeichnet Folgekommandos (Reset/Remount/TUR) auf |
+| Menülatenz unter Stall | ~20 s beobachtet; Ursache 240-CBW Inference | [B] Phänomen / [A] Ursache | R35, A3 | U | P1 | Stall-Leiter Menü-Phase + Vorlauf ≥ 120 KiB A/B; hu-probe `seq_stall` 8 (FAT/DIR gebremst) und 9–11 (Live-Tempo 32/128/320k) |
+| Benötigter Live-Vorlauf ohne UI-Freeze | ≥ 1 CBW = 120 KiB (≈ 20 s @48k, 7,7 s @128k) | [A] | A2, A3 | L, U | **P0** | Ring-/PSRAM-Größe prüfen, Lab-Messung; hu-probe `seq_stall` 9–11 |
 
 ### 2.3 Dateisystem und Medium
 
@@ -81,7 +84,12 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 |-----------|------|--------|--------|--------------|------|---------------|
 | Gewählte Datei wird bis EOF gelesen | ja, ~1 MB/s | [B] (+[A] A1) | R2 | L | — | — |
 | Abwahl bricht Lesen ab | ja | [S] | R3 | L | — | — |
-| Nächste Datei vorlesen | komplett, ~15 s vor Wiedergabeende | [B]/[S] | R4, R21 | L | P1 | Marker + LBA (A5) |
+| Nächste Datei vorlesen | komplett, ~15 s vor Wiedergabeende; hu-probe: 11–18 s vor Ende = 9–16 s nach Start (26,5-s-Tracks, n ≈ 10), zyklisch T3 → T1 | [B]/[S], Regel [A] | R4, R21, hu-probe P-NEXT | L | P1 | hu-probe `SEQ-DUR` (10/26/60/180 s) trennt „Vorlauf vor Ende“ von „Verzögerung nach Start“ |
+| Resume-Read nach Mount | zuletzt gespielter Track 0,2–0,3 s nach Mount-Ende | [S] | E14 | L | P1 | Resume-Slot innerhalb 250 ms bereitstellen |
+| Auswahllatenz | manuell 1,7–1,9 s, Autoplay ≈ 0,2 s (Marker → READ10) | [S] | E15 | U, L | P2 | hu-probe Automarker + BOOT-Marker |
+| tail_then_head | T1 als Folgetrack 8/9 Ende zuerst; sonst Kopf zuerst | [S]/[?] Ursache | E16 | L, C | P2 | hu-probe `tail_probe`, `hdr_variants` |
+| Lesemuster großer Dateien (1/4/8 MiB) | unbekannt (158 KiB: ein Burst) | [?] | A2, hu-probe P-ATOM | L | **P1** | hu-probe `SEQ-SIZE` mit `pidrive_l3` |
+| Cache-Schlüssel (Inhalt / LBA / Identität) | unbekannt; M3 „Prefetch geschwächt“ nur HYPOTHESIS | [?] | hu-probe K4 | L | **P1** | hu-probe `SEQ-CACHE` (cache_a/cache_b/ident_b) |
 | Cache-Hit ohne Reads | ja | [B] | R9 | L | — | — |
 | Non-live-Slots werden vorab gecacht (Stille) | ja, 98,9 % von 8 MiB | [B] | R32 | L | — | — |
 | Cache überlebt ESP-RST | nein | [B] | R13 | L | — | — |

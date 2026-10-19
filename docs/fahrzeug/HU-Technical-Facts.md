@@ -1,6 +1,6 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-10-15 (hu-probe BMW S0/S2 Feld-Audit: READ10-CBW blocks, ms6/cap=2, Gap-Messgröße; Prefetch/Eager/Cache weiter INFERENCE; technology-audit 0.7.1 HU-A1…A11; Menü-~20 s / Tür-Re-Read; Community Label+Serial vs. Feld R23/R34) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` / `hu-probe` (USB-MSC Full-Speed, virtuelles FAT)
+**Stand:** 2026-10-19 (hu-probe unabhängige Auswertung: TUR-Leerlauf 2,239 s statt ~1/s, Mount-Signatur, LBA 24/8, Resume, Auswahllatenz, tail_then_head, Media-Loss-Reaktion = E3 korrigiert, E12–E17 neu) · 2026-10-15 (hu-probe BMW S0/S2 Feld-Audit: READ10-CBW blocks, ms6/cap=2, Gap-Messgröße; Prefetch/Eager/Cache weiter INFERENCE; technology-audit 0.7.1 HU-A1…A11; Menü-~20 s / Tür-Re-Read; Community Label+Serial vs. Feld R23/R34) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` / `hu-probe` (USB-MSC Full-Speed, virtuelles FAT)
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.
 
 **Scope:** Belegte Plattform = **diese** NBT Evo am MSC-Port. Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr.
@@ -19,13 +19,13 @@ Begleitdokumente: [`../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-B
 
 ## 1. Gesamtbild in einem Satz
 
-Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien: Sie liest eine gewählte Datei **so schnell der Bus erlaubt bis zum Ende**, liest die **nächste Datei rund 15 s vor Track-Ende vor** (R21), spielt **aus ihrem Cache** und fordert erst beim nächsten Track wieder Daten an.
+Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien: Sie liest eine gewählte Datei **so schnell der Bus erlaubt bis zum Ende**, liest die **nächste Datei rund 15 s vor Track-Ende vor** (R21; hu-probe 19.10.: 11–18 s vor Ende bzw. 9–16 s nach Start, Regel offen bis SEQ-DUR), spielt **aus ihrem Cache** und fordert erst beim nächsten Track wieder Daten an.
 
 ```mermaid
 flowchart LR
   Plug["USB Plug"] --> Enum["Enumeration: INQUIRY, CAPACITY, TUR"]
   Enum --> Scan["Scan: FAT, Dirs, Datei-Heads, Body-Prefetch"]
-  Scan --> Wait["Leerlauf, TUR ca. 1/s"]
+  Scan --> Wait["Leerlauf, TUR alle 2,239 s"]
   Wait --> Sel["Nutzer waehlt Track"]
   Sel --> Cached{"Datei im Cache?"}
   Cached -->|ja| PlayCache["Wiedergabe aus Cache, keine Reads"]
@@ -44,7 +44,7 @@ flowchart LR
 |---|------|--------|--------------|
 | E1 | INQUIRY ca. 1 s nach Plug | [B] | `msToInquiry=997`, `msPlugToFirstRead=1004` (`status-0758-bayern-1.json`); identisch 01.10. (`msToInquiry` ≈ 1000) |
 | E2 | Kommandomix | [B] | PiDrive: `inquiry=1`, `capacity=3`, `prevent=7`, `startStop=0`, `otherScsi=0`; Firmware-Fingerprint `hint=hu-like`. **hu-probe:** `tur` ≫ `read10`, dazu `prevent_allow`, `mode_sense6`, `read_capacity10`, `inquiry`. **MODE_SENSE6 / READ_CAPACITY = 2,0** (S2 Kern 60/30; auch vor Stall-Fix) = Host-Muster, kein Stall-Indiz (`EVID-HUPROBE-2026-10-15-005`). [`bmw-s0-0.2.11`](../../../hu-probe/docs/feld/2026-10-14-bmw-s0-0.2.11-auswertung.md), Audit S0/S2 |
-| E3 | TEST UNIT READY periodisch | [S] | `tur=73` bei ~93 s Uptime → ca. 0,8/s; 01.10.: `tur=101` in ~160 s; Golden ≈ 1/s. hu-probe Session-TUR-Hz p50 ~2,06 (Fenster ≠ idle-Profil; `EVID-HUPROBE-2026-10-15-012`) |
+| E3 | TEST UNIT READY periodisch, **Leerlauf-Periode 2,239 s**, phasenstarr | **[B]** (korr. 19.10.) | hu-probe: alle TUR-Abstände außerhalb von Mount-Bursts, 19 BMW-Sessions, **n = 382**: p10/Median/p90 = **2238/2239/2239 ms**. Der Timer läuft über Reads hinweg weiter, unabhängig von der Leseaktivität. **REJECTED:** „~0,8/s“, „Golden ≈ 1/s“ (Mittel über Uptime inkl. Mount-Bursts und Pausen) und Session-TUR-Hz ~2,06 als Leerlauf-Rate (`EVID-HUPROBE-2026-10-15-012` war ein Fenstermittel). [`unabhängige Auswertung`](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md) P-TUR |
 | E4 | Keine Schreibzugriffe | [B] | `writeCount=0`, `writeReject=0` in allen Snapshots; Golden `writes_expected: false`; hu-probe S0/S2: keine Writes in ausgewerteten CBWs (`001`/`003`) |
 | E5 | Transfergröße **Event-/Callback-Ebene** fast ausschließlich 4 KiB | [B] Event | `xfer: n512=3, n2k=0, n4k=1536, n8kPlus=0` (07:58); `n4k=2293` (st-55). hu-probe File-n=4096 dominant (S0/S2). **Callbacks ≠ CBW:** TinyUSB-Puffer 4096 B → `n8kPlus` bauartbedingt 0; ein READ(10) kann viele Re-Entries erzeugen. CDB-Größe = E11 / Q10. Ablesbar: `n512=3` → 512-B-Callbacks; größere Datenphasen werden in 4-KiB-Chunks zerlegt |
 | E6 | Queue-Tiefe 1, ein Kommando nach dem anderen | **[B]** protokollbedingt | Bulk-Only Transport: CBW → Daten → CSW, erst danach das nächste CBW (kein Pipelining). `mscTrace`: Abstand 3–5 ms, keine überlappenden Kommandos. LBAs innerhalb eines Segments monoton, **zwischen Segmenten nicht** (R16). Folge fürs Bremsen: Während ein READ wartet, kommt **kein** TEST UNIT READY (E3). QD-max p50=1 hu-probe `INFERRED` (Wire `UNKNOWN`, `012`) |
@@ -53,6 +53,14 @@ flowchart LR
 | E9 | Kurze Verweildauer → kein DATA / keine Reads | **[B]** Muster / [?] Ursache | BMW S0 0.2.2: Fenster ~3,8 s → BOOT+FAT+ROOT ohne DATA; mehrere Plugs ~4,7–7,5 s ohne Read-Events. Inference: Dwell-Zeit für DATA/Playback nötig. Eager-EOF/Prefetch auf 256/512‑KiB-Demo **nicht** revalidiert |
 | E10 | Replug-Scan-Grundmuster (kleines Medium) | **[B]** 256 KiB-Demo | 6/8 nicht-leerer Fenster: **22 Reads / 65 536 B** = BOOT+FAT+ROOT+DATA. Fenster 7 dichter Mehrfach-Scan (Instrument-/Drain-Artefakt in 0.2.2). Nicht auf große PiDrive-Slots übertragen |
 | E11 | READ10-**CBW**-Blockzahl oft **8** und **240** | **[B]** hu-probe S2 | Device-Stack CBW (nicht Wire): häufig `blocks=8` (=4096 B) und `blocks=240` (=122 880 B → typ. 30×4096 `read`-Events); Events/READ10 ≈ **5,29**. Event-n=4096 = Stack-Chunk **und/oder** CBW-Größe — nicht blind „HU immer 4 KiB“. `EVID-HUPROBE-2026-10-15-004`. Gate **HU-A10** teilweise belegt. Report [`2026-10-15-hu-probe-bmw-s0s2-field`](../../../technology-audit/docs/reports/2026-10-15-hu-probe-bmw-s0s2-field.md) |
+| E12 | Mount-Signatur | **[B]** hu-probe | Jeder BMW-Mount: INQUIRY ×1, READ_CAPACITY10 ×3, MODE_SENSE6 ×6, PREVENT_ALLOW ×7, genau **32 TUR** (davon ≈ 15 als Burst in 0,05–0,29 s) und **11 READ10** in fester Folge `0/8, 0/8, 24/8, 0/8, 0/1, 1/3, 7/2, 1/1, 2/1, 3/5, 24/8` (LBAs auf dem hu-probe-Demo-Image: FAT 1–6, Root 7–8). Variante: `3/5` → `3/1 + 4/4` (Sessions 195657, 2363). P-MOUNT/P-MREAD |
+| E13 | LBA 24/8 wird pro Mount zweimal gelesen | [S] Messung / [?] Zweck | Auf dem Demo-Image liegt LBA 24 mitten in TRACK1. Festes Probe-Offset oder Cache-Fenster ist offen; Test mit hu-probe-Medium `tail_probe` (Datenbereich verschoben). P-LBA24 |
+| E14 | Resume-Read nach Mount | [S] | Der zuletzt gespielte Track wird **0,2–0,3 s** nach Ende der Mount-Signatur gelesen (S0/S2). Passt zu R24 (Replug liest aktuellen Titel ab 0). P-RESUME |
+| E15 | Auswahllatenz Marker → READ10 | [S] | Manuelle Wahl **1,7–1,9 s** (`171815`, `2280`), Autoplay-Sprung ≈ **0,2 s** (`200036`). Marker teils nachgezogen, daher [S]. P-SEL |
+| E16 | tail_then_head | [S] Muster / [?] Ursache | T1 als Folgetrack wird in **8 von 9** Fällen Ende zuerst gelesen (`249/69`, dann `9/240`); T2/T3 und T1 als Erst-Read immer Kopf zuerst. Verdacht: Wechselwirkung mit dem Mount-Read 24/8 oder Tag-Suche am Dateiende; Test mit `tail_probe` und `hdr_variants`. P-TAIL |
+| E17 | Media-Loss-Reaktion | **[B]** | Nach `NOT READY / MEDIUM NOT PRESENT` (hu-probe `hideMedia`): `TUR status=1 → REQUEST_SENSE → PREVENT_ALLOW status=1` (`20261019-075344`, Tags 131–146). Früher fälschlich als „Enum-Grammatik“ gelesen. P-LOSS |
+
+Quelle E12–E17: [hu-probe unabhängige Auswertung 2026-10-19](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md). Lab-Modell: `tools/nbt_hu_sim.py --hu-model nbt_evo_2026_10`, Profil `tools/profiles/nbt_evo_lab_2026-10-19.json`.
 
 ---
 

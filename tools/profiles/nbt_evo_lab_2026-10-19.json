@@ -1,0 +1,124 @@
+{
+  "source": "hu-probe unabhaengige Auswertung BMW NBT Evo 2026-10-19 (26 BMW-Sessions, FW 0.2.11-0.2.30) + Lab-Profil 2026-10-15",
+  "generated": "2026-10-19",
+  "model": "nbt_evo_2026_10",
+  "supersedes": "tools/profiles/nbt_evo_lab_2026-10-15.json",
+  "pin": {
+    "hu_probe_doc": "docs/feld/2026-10-19-unabhaengige-auswertung.md",
+    "audit": "hu-probe-bmw-s0s2-field-2026",
+    "evidence": [
+      "EVID-HUPROBE-2026-10-19-001",
+      "EVID-HUPROBE-2026-10-19-002",
+      "EVID-HUPROBE-2026-10-19-003",
+      "EVID-HUPROBE-2026-10-19-004",
+      "EVID-HUPROBE-2026-10-19-005",
+      "EVID-HUPROBE-2026-10-19-006",
+      "EVID-HUPROBE-2026-10-19-007",
+      "EVID-HUPROBE-2026-10-19-008",
+      "EVID-HUPROBE-2026-10-19-009",
+      "EVID-HUPROBE-2026-10-19-010"
+    ]
+  },
+  "read": {
+    "event_n_bytes_mode": 4096,
+    "event_n_note": "TinyUSB/application callback chunk — not CDB length",
+    "cbw_blocks_common": [8, 240],
+    "cbw_bytes_common": [4096, 122880],
+    "read_atom_blocks": 240,
+    "read_atom_note": "FACT for 158 KiB files (one burst, 240 blocks per CBW + remainder); open for >= 1 MiB (hu-probe SEQ-SIZE)",
+    "gap_ms_target": 4,
+    "gap_ms_target_note": "ms-quantized lab convenience; not HU scheduler FACT",
+    "queue_depth": 1,
+    "writes_expected": false
+  },
+  "tur": {
+    "idle_period_ms": 2239,
+    "idle_p10_ms": 2238,
+    "idle_p90_ms": 2239,
+    "n": 382,
+    "phase_locked": true,
+    "class": "FACT",
+    "rejected": ["~1 TUR/s", "0.8-1/s idle", "Golden ~1/s", "session tur_hz 2.06 as idle rate"]
+  },
+  "mount": {
+    "class": "FACT",
+    "commands": {"inquiry": 1, "read_capacity10": 3, "mode_sense6": 6, "prevent_allow": 7, "tur": 32},
+    "tur_burst": {"count_approx": 15, "span_s": [0.05, 0.29]},
+    "read10_sequence": "0/8,0/8,24/8,0/8,0/1,1/3,7/2,1/1,2/1,3/5,24/8",
+    "read10_variant": "3/5 -> 3/1 + 4/4 (sessions 195657, 2363)",
+    "read10_note": "LBAs on hu-probe demo_v1 (FAT 1-6, root 7-8); sim maps 1/3,1/1,2/1,3/5 to FAT start and 7/2 to root start",
+    "lba24_8": {"class": "MEASURED", "purpose": "UNKNOWN", "note": "read twice per mount, inside TRACK1 on demo_v1; fixed offset vs. cache window open (hu-probe tail_probe)"}
+  },
+  "playback": {
+    "resume_read_after_mount_s": [0.2, 0.3],
+    "next_track_read": {
+      "class": "MEASURED (timing) / INFERRED (rule)",
+      "after_start_s": [9, 16],
+      "before_end_s": [11, 18],
+      "track_dur_s": 26.5,
+      "n_approx": 10,
+      "order": "cyclic T(n) -> T(n+1), T3 -> T1",
+      "rule_open": "lead_before_end vs delay_after_start — decided by hu-probe SEQ-DUR"
+    },
+    "selection_latency_s": {"manual": [1.7, 1.9], "autoplay": 0.2, "class": "MEASURED"},
+    "tail_then_head": {
+      "class": "MEASURED / cause UNKNOWN",
+      "cases": "8 of 9 (T1 as next track: 249/69 then 9/240)",
+      "head_first": "T2/T3 and T1 as first read"
+    }
+  },
+  "media_loss": {
+    "class": "FACT",
+    "sequence": ["TUR status=1", "REQUEST_SENSE", "PREVENT_ALLOW status=1"],
+    "session": "20261019-075344",
+    "note": "HU reaction to NOT READY / MEDIUM NOT PRESENT — previously misread as enumeration grammar"
+  },
+  "hu_model": {
+    "nbt_evo_2026_10": {
+      "tur_period_s": 2.239,
+      "mount_turs": 32,
+      "mount_burst_turs": 15,
+      "mount_burst_s": 0.29,
+      "resume_delay_s": 0.25,
+      "read_atom_blocks": 240,
+      "next_rule": "lead_before_end",
+      "next_lead_s": 15.0,
+      "next_delay_s": 12.5,
+      "select_latency_s": 1.8,
+      "autoplay_latency_s": 0.2,
+      "tail_then_head_on_wrap": true,
+      "big_file_threshold": 1048576,
+      "big_file_head_bytes": 368640,
+      "bitrate_bps": 48000,
+      "id3_len": 3044
+    }
+  },
+  "lab_debian_reference": {
+    "tur_idle_s": 2.0,
+    "read_sizes_blocks": [32, 64, 128, 240],
+    "class": "MEASURED",
+    "note": "Linux host behaviour, not a HU proxy"
+  },
+  "pidrive_firmware_hints": {
+    "status": "Empfehlung, Umsetzung erst nach hu-probe S1/SEQ-SIZE",
+    "items": [
+      "TUR-Takt 2,239 s als Lebenszeichen der HU nutzen (Storm-/Haenger-Erkennung M30-M36)",
+      "Resume-Slot innerhalb 250 ms nach Mount-Ende bereitstellen",
+      "Folge-Slot etwa 9 s nach Trackstart fertig haben"
+    ]
+  },
+  "semantics_still_inference": [
+    "next_track_rule",
+    "cache_key (content vs. lba vs. identity)",
+    "big_file_read_pattern (>= 1 MiB)",
+    "tail_then_head cause",
+    "lba24_8 purpose"
+  ],
+  "lab_guidance": [
+    "python3 tools/nbt_hu_sim.py --hu-model nbt_evo_2026_10 --profile tools/profiles/nbt_evo_lab_2026-10-19.json --sg /dev/sg0",
+    "Regel-Varianten: --next-rule delay_after_start --next-delay-s 12.5 gegen lead_before_end --next-lead-s 15",
+    "Echte HU-Folgen: --replay-huprobe <session>/derived/analysis.json (hu-probe tools/analyze_session.py); --huprobe-map abs nur fuer Medium pidrive_l3",
+    "Gilt nur fuer BMW NBT Evo, nicht fuer Mazda"
+  ],
+  "inherits_geometry_from": "tools/profiles/nbt_evo_2026-10-06.json"
+}
