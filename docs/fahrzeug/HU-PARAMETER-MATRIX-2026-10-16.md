@@ -1,6 +1,6 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-10-19 (TUR-Periode korrigiert, Mount-Signatur/Resume/Auswahllatenz/tail_then_head/Media-Loss neu aus [hu-probe unabhängige Auswertung](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md); Lab-Profil `tools/profiles/nbt_evo_lab_2026-10-19.json`) · 2026-10-17 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 15.10.), hu-probe S0 0.2.17 / S2 0.2.23, Offline-P0, PiDrive-Feld s1–s6 und F0, Lab 13.–17.10., technology-audit 0.7.1.
+**Stand:** 2026-10-20 (A8 Lesefenster, A9 TUR-Blindfenster, A5 als Fenster-Nachladen umgedeutet, „Nächste Datei vorlesen“ 9–18 s als Resume-Artefakt erkannt, tail_then_head als LBA-Rückwärtssprung; aus [hu-probe Feld 20.10. Abschnitt 7](../../../hu-probe/docs/feld/2026-10-20-bmw-free-offline-0.2.40.md)) · 2026-10-19 (TUR-Periode korrigiert, Mount-Signatur/Resume/Auswahllatenz/tail_then_head/Media-Loss neu aus [hu-probe unabhängige Auswertung](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md); Lab-Profil `tools/profiles/nbt_evo_lab_2026-10-19.json`) · 2026-10-17 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 15.10.), hu-probe S0 0.2.17 / S2 0.2.23, Offline-P0, PiDrive-Feld s1–s6 und F0, Lab 13.–17.10., technology-audit 0.7.1.
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** (projektübergreifende Rechnung aus vorhandenen Daten, noch nicht direkt gemessen) · [D] Desk · [H] Hypothese · [?] offen.
 
 Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind keine NBT-Werte.  
@@ -17,8 +17,10 @@ Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind k
 | A3 | Stall kann Menü sichtbar blockieren; **Ursache = genau ein 240-CBW @48 kbit/s ≈20,5 s** ist Inference | Phänomen [B] / Ursache **[A]** | Rechnung 120 KiB×8/48 kbit/s ≈ **20,5 s** stimmt. R35/E6 stützen BOT-QD=1. **Direktmessung** der Freeze-Dauer vs. Stall-Leiter steht aus (`lab_stall_phase_ladder.py`) | Stall-Leiter Menü-Phase; Abhilfe weiter: Vorlauf ≥ 1 CBW, höhere Bitrate, BUSY nur bei Vorlauf < CBW |
 | A4 | Untere Grenze NBT-Timeout **pro READ10 ≥ ~20 s** | [A] bedingt | E7/s6: ~65 s **kumuliert** bis EOF ≠ Timeout eines einzelnen READ10. Feld 16.10.: 240-CBW bestätigt; Einzel-Timeout nicht gemessen | Stall-Leiter Audio-Phase 0…15 s (FW-Limit), danach Feld |
 | A7 | Full-File-Read eines **512 KiB**-Slots = **`240,240,32,240,240,32`** (Summe 1024), **nicht** `8+4×240+56` | **[S]** | Feld MessCapture 16.10. mehrfach: BOB LED, Gelb, Tip Bayern (`mess-cmds-*-{bob-led,gelb,TIP-BAYERN}.json`). Vorhersage `8+56` widerlegt | Prefetch/EOF-Planung an 240/32-Muster; keine Annahme eines 8er-Intros für diesen Slot |
-| A5 | Prefetch-Vorlauf ~15 s ist mit hu-probe-Pausen vereinbar | [H] | Track 158 208 B bei 48 kbit/s = **26,4 s**. 26,4 s − 15 s = 11,4 s ≈ Inter-Burst-Pause p50 **10,2 s** (n=18, gemischte Sessions) | R21 nicht hochstufen; Bestätigung mit Markern und LBA-Folge |
+| A5 | ~~Prefetch-Vorlauf ~15 s ist mit hu-probe-Pausen vereinbar~~ **umgedeutet 20.10.:** R21 „~15 s“ ist eher das Nachladen des nächsten 256-KiB-Fensters (A8) | [H] | Die 10,2-s-Pausen waren Restlaufzeit nach Resume mitten im Track, kein Vorlauf. hu-probe 20.10. (`demo_v1`, 158 KiB): kein Datei-Read im Leerlauf, nächster Track erst am Trackwechsel. 256 KiB @128 kbit/s = **16,4 s** ≈ R21 | R21 nicht als Vorlauf modellieren; mit `size_1_4_8` prüfen, ob große Dateien alle ~16,4 s ein Fenster nachladen |
 | A6 | Ein Info/Xing-Header ist für Eager-Read nicht nötig | [A] schwach | Demo-Tracks ohne erkennbaren Info/Xing-Tag werden ebenso komplett gelesen wie PiDrive-Slots mit LAME-Info | Info-Tag weiter für Dauer/Fortschrittsbalken prüfen, nicht für das Leseverhalten |
+| A8 | HU liest in **Fenstern bis 512 Blöcke (256 KiB)**, geteilt in CBWs bis 240 Blöcke | [H] | A7 = 2 × (240+240+32) = 2 × 512; hu-probe `demo_v1` (309 Blöcke) = 240+69 = ein am Dateiende abgeschnittenes Fenster. Bei 128 kbit/s reicht ein Fenster 16,4 s, bei 48 kbit/s 43,7 s | Ring/Vorlauf in Fenster-Einheiten planen; nächste Fensteranforderung als Zeitpunkt für Live-Nachschub nutzen. Prüfung: hu-probe `size_1_4_8` (Vorhersage `240,240,32` je Fenster) |
+| A9 | Medienwechsel wird nur am **TUR-Tick** erkannt; Blindfenster bis **2,24 s** | [S] | hu-probe 20.10.: TUR-Timer frei laufend (2238,79 ms ± 0,01), Phase durch Reads nicht verschoben. `media_hide` → erste fehlschlagende TUR 1,239 / 0,394 / 2,182 s, jeweils auf dem alten Raster | Hebel: kurzer Hide/Show zwischen zwei Ticks bleibt ohne Remount unbemerkt. Risiko: veralteter HU-Cache. Nur gezielt nutzen und messen |
 
 **Feld-Ergebnis MessCapture 0.4.52 (16.10., NBT `.89`):** Ein Full-File-Read eines 512-KiB-Slots zerfällt in **`240 + 240 + 32 + 240 + 240 + 32`** (nicht `8 + 4×240 + 56`). LIVE-Ohr nur kurz (~5–6 s) nach Klasse-A-OTG; Panic/weiße LED bleibt Blocker. Details: `docs/betrieb/artifacts-2026-10-16-feld/feld-512kib-predict-01/ERGEBNIS.md`.  
 **Offen:** R16-Resume (kleines Kommando → 240er) weiter bestätigen; Ton↔READ-Korrelation im ~5 s-Fenster.
@@ -37,10 +39,11 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | Plug → INQUIRY / erster READ | ~997 ms / ~1004–1046 ms | [B] | E1, Offline-P0 | S | — | — |
 | SCSI-Kommandomix | TUR ≫ READ10, PREVENT, MODE_SENSE6, READ_CAPACITY, INQUIRY | [B] | E2 | S | — | — |
 | MODE_SENSE6 je READ_CAPACITY | 2,0 | [B] | E2 | S | — | — |
-| TUR-Periode (Leerlauf) | **2,239 s** (p10/p90 2238/2239 ms, n = 382), phasenstarr; „~0,8–1/s“ REJECTED | **[B]** (korr. 19.10.) | E3, hu-probe P-TUR | S | P2 | — (Lebenszeichen für Storm-/Hänger-Erkennung M30–M36 nutzen) |
+| TUR-Periode (Leerlauf) | **2,239 s** (2238,79 ms ± 0,01, freilaufender Timer), phasenstarr; „~0,8–1/s“ REJECTED | **[B]** (korr. 19.10., präz. 20.10.) | E3, hu-probe P-TUR | S | P2 | — (Lebenszeichen für Storm-/Hänger-Erkennung M30–M36 nutzen; Blindfenster A9) |
+| Plug → erster Audio-Read (hu-probe) | 1,513 / 1,518 s ab set_address (SET_CONFIG → GET_MAX_LUN ≈ 996 ms, → mount_done 408–429 ms, → Read 70–86 ms) | [B] n = 2 | hu-probe 20.10. | S, L | — | — |
 | Mount-Signatur | 32 TUR (≈ 15 Burst in ≤ 0,29 s), INQUIRY 1, READ_CAPACITY 3, MODE_SENSE6 6, PREVENT 7, 11 READ10 `0/8,0/8,24/8,0/8,0/1,1/3,7/2,1/1,2/1,3/5,24/8` | **[B]** | E12 | S | — | Lab: `nbt_hu_sim.py --hu-model nbt_evo_2026_10` |
-| Mount-Read LBA 24/8 | zweimal pro Mount; Zweck unbekannt | [S]/[?] | E13 | S, L | P2 | hu-probe `tail_probe` (SEQ-STRUCT) |
-| Media-Loss-Reaktion | TUR(1) → REQUEST_SENSE → PREVENT_ALLOW(1) | **[B]** | E17 | S | — | — |
+| Mount-Read LBA 24/8 | zweimal pro Mount; vermutlich Dateisystem-Probe (Linux-libblkid liest ebenfalls 0, 24, 8, 32 …) | [S]/[A] Zweck | E13, hu-probe 20.10. | S, L | P2 | hu-probe `tail_probe` (SEQ-STRUCT) |
+| Media-Loss-Reaktion | TUR(1) → REQUEST_SENSE → PREVENT_ALLOW(1); Burst 11–12 TUR/RS-Paare + 1 PREVENT in ~180–220 ms, danach altes TUR-Raster | **[B]** | E17, hu-probe 20.10. | S | — | — |
 | Schreibzugriffe | keine | [B] | E4 | S | — | — |
 | Queue-Tiefe | 1 (BOT) | [B] | E6 | L, U | — | — |
 | Physisches Detach → Attach | 2,3–6,0 s | [B] | E8 | S | — | — |
@@ -84,11 +87,11 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 |-----------|------|--------|--------|--------------|------|---------------|
 | Gewählte Datei wird bis EOF gelesen | ja, ~1 MB/s | [B] (+[A] A1) | R2 | L | — | — |
 | Abwahl bricht Lesen ab | ja | [S] | R3 | L | — | — |
-| Nächste Datei vorlesen | komplett, ~15 s vor Wiedergabeende; hu-probe: 11–18 s vor Ende = 9–16 s nach Start (26,5-s-Tracks, n ≈ 10), zyklisch T3 → T1 | [B]/[S], Regel [A] | R4, R21, hu-probe P-NEXT | L | P1 | hu-probe `SEQ-DUR` (10/26/60/180 s) trennt „Vorlauf vor Ende“ von „Verzögerung nach Start“ |
-| Resume-Read nach Mount | zuletzt gespielter Track 0,2–0,3 s nach Mount-Ende | [S] | E14 | L | P1 | Resume-Slot innerhalb 250 ms bereitstellen |
+| Nächste Datei vorlesen | PiDrive: komplett, ~15 s vor Wiedergabeende (R4, R21). hu-probe 20.10. (`demo_v1`, 158 KiB): **kein** Vorlesen, nächster Track erst am Trackwechsel; die früheren 9–18 s waren Restlaufzeit nach Resume | [S] PiDrive / [B] hu-probe kleines Medium; Regel [?] | R4, R21, hu-probe 20.10. | L | P1 | hu-probe `size_1_4_8` + `dur_mix`: Fenster-Nachladen (A8) vs. Vorlauf vor Ende |
+| Resume-Read nach Mount | zuletzt gespielter Track 0,2–0,3 s nach Mount-Ende; Wiedergabe **an der Aussteckstelle** fortgesetzt (Operator 20.10., n = 1), volles Atom ab Block 0 gelesen | [S] | E14, hu-probe 20.10. | L | P1 | Resume-Slot innerhalb 250 ms bereitstellen |
 | Auswahllatenz | manuell 1,7–1,9 s, Autoplay ≈ 0,2 s (Marker → READ10) | [S] | E15 | U, L | P2 | hu-probe Automarker + BOOT-Marker |
-| tail_then_head | T1 als Folgetrack 8/9 Ende zuerst; sonst Kopf zuerst | [S]/[?] Ursache | E16 | L, C | P2 | hu-probe `tail_probe`, `hdr_variants` |
-| Lesemuster großer Dateien (1/4/8 MiB) | unbekannt (158 KiB: ein Burst) | [?] | A2, hu-probe P-ATOM | L | **P1** | hu-probe `SEQ-SIZE` mit `pidrive_l3` |
+| tail_then_head | Ende zuerst nur bei LBA-Rückwärtssprung (5/5 bei T3 → T1); sonst Kopf zuerst. Vermutung: HU bedient den CBW, der der letzten LBA am nächsten liegt | [S] Muster / [A] Ursache | E16, hu-probe 20.10. | L, C | P2 | hu-probe Rückwärtssprung T2 → T1 / T3 → T2 (Vorhersage: Ende zuerst) |
+| Lesemuster großer Dateien (1/4/8 MiB) | unbekannt (158 KiB: ein Burst = ein Fenster); Vorhersage A8 | [?] | A2, A8, hu-probe P-ATOM | L | **P1** | hu-probe `size_1_4_8` (`SEQ-SIZE`) |
 | Cache-Schlüssel (Inhalt / LBA / Identität) | unbekannt; M3 „Prefetch geschwächt“ nur HYPOTHESIS | [?] | hu-probe K4 | L | **P1** | hu-probe `SEQ-CACHE` (cache_a/cache_b/ident_b) |
 | Cache-Hit ohne Reads | ja | [B] | R9 | L | — | — |
 | Non-live-Slots werden vorab gecacht (Stille) | ja, 98,9 % von 8 MiB | [B] | R32 | L | — | — |
@@ -134,4 +137,4 @@ Die P0-Zeilen hängen zusammen:
 3. **Timeout pro READ10 + nötiger Vorlauf:** entscheidet, wie lange BUSY pro 240-Block-CBW gehalten werden darf und ob ein Ring ≥ 120 KiB oder eine höhere Bitrate nötig ist.
 4. **Große Datei (D1–D3):** erst danach, sonst läuft die Leiter in dieselben Cache-/Resume-Effekte.
 
-A2 (240-Max) und A7 (512‑KiB Full-File `4×240+2×32`) sind am NBT mit MessCapture 16.10. bestätigt bzw. gegen die alte `8+56`-Vorhersage entschieden. A1/A3/A4/A5/A6 bleiben abgeleitet; Timeout- und Ton↔READ-Feinheiten offen.
+A2 (240-Max) und A7 (512‑KiB Full-File `4×240+2×32`) sind am NBT mit MessCapture 16.10. bestätigt bzw. gegen die alte `8+56`-Vorhersage entschieden. A1/A3/A4/A5/A6 bleiben abgeleitet; Timeout- und Ton↔READ-Feinheiten offen. A8 (Fenster) entscheidet sich mit der hu-probe-Größenleiter ([Feldplan 21.10.](../../../hu-probe/docs/feld/2026-10-21-feldplan-groessenleiter.md)).
