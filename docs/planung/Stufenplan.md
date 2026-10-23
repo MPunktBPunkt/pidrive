@@ -13,7 +13,7 @@
 
 1. Die HU liest die gewählte Datei mit ~0,7–1 MB/s bis EOF oder Abwahl, cacht sie und spielt aus dem Cache.
 2. Der ESP liefert bei fehlenden Live-Daten Stille und zählt den Host-Cursor trotzdem weiter (`StreamBuffer::readAt`). Damit wird live Gelieferte nie mehr erreicht.
-3. Hebel ist deshalb **Rückstau im MSC-Read-Pfad** (Stall), nicht Ringgröße, Prefill oder PSRAM.
+3. Hebel bleibt **Rückstau im MSC-Read-Pfad** (Stall). PSRAM ist ab 0.4.54 aktiv (Ring 160 KiB / Option b vorbereitet) — ersetzt Stall nicht und heilt kein USB↔WiFi-Coex.
 4. TinyUSB unterstützt Stall ohne Blockade: Rückgabe 0 heißt „nochmal fragen“, eine Teilantwort in 512-B-Schritten ist möglich (Spike).
 5. F1 praktisch **inkrementell [S]**; formal Video-Timing offen. **Feld s3:** P überlebt Remount **trotz neuer Serial** — „kein Ton“ oft = Resume in leerem Ringbereich; „von vorn“ = Kurzton. Stall muss P≠0. Offen: exakte P-Identität (nicht Serial allein), Q1, F1-Formal.
 
@@ -471,7 +471,7 @@ s3 hat gezeigt: Nach OTG-Remount liest die HU den aktuellen Titel **ab 0 komplet
 | Option | Mechanik | Zahlen @48k | Dauerstrom? | Go |
 |--------|----------|-------------|-------------|----|
 | **a) Stall** (Stufe 3.3) | READ10 im Live-Slot erst beantworten, wenn `absEnd` den Host-Cursor deckt | 4 KiB-Read wartet ≈ 0,68 s; 512 KiB = 87 s Lesedauer | **ja**, falls HU-Timeout (R1) > 0,7 s je Read | FW |
-| **b) Zeitversatz + Dateikette** | Slot erst „freigeben“, wenn 512 KiB Vergangenheit im PSRAM liegen; dann Remount/Next-Track | 512 KiB = 87 s Vorlauf; Lücke beim Wechsel ~6 s (R7 HU-Facts) | quasi, mit Lücken | FW + PSRAM-Größe klären |
+| **b) Zeitversatz + Dateikette** | Slot erst „freigeben“, wenn 512 KiB Vergangenheit im PSRAM liegen; dann Remount/Next-Track | 512 KiB = 87 s Vorlauf; Lücke beim Wechsel ~6 s (R7 HU-Facts) | quasi, mit Lücken | HW+Build: PSRAM **an** ab esp32.pidrive 0.4.54 (Ring 160 KiB); Producer-Zeitversatz-Logik noch offen — [`ESP32-S3-BOARD`](../referenz/ESP32-S3-BOARD.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22`](MASSNAHMEN-HU-PROBE-2026-10-22.md) |
 | **c) Ring größer** | `kCapacity` 48 KiB → 160 KiB (SRAM) | Fenster 8,2 s → 27 s | nein | FW (klein) |
 | **d) Bitrate runter** | Bridge `--bitrate 32k` / `24k` | Fenster 12,3 s / 16,4 s | nein — **Modelltest ohne FW** | Pi |
 
@@ -495,7 +495,7 @@ Reihenfolge: d) in s4 als Modellbeweis (Fensterlänge skaliert mit 1/Bitrate), d
 | **R10** | **HU liest außer der Reihe und weit voraus** (Segmente bis 968 KiB um die Wiedergabeposition, erster Lauf 360 KiB ≈ 61 s bei 48k). Zählender Cursor vergibt Live-Bytes an falsche Offsets; Vorauslesen cacht Stille. Feld s2: oft Resume trotz UI-Tap (R23/P) | 3.2 feste Zuordnung + T3-Abnahme (`abs0−off` const); Lab C4/C6; Feld Q8. **Stall-Go erst nach F1-Formalgo, P-Quelle und T3** |
 | R11 | Lesetakt 5,1 statt 4,0 ms, sobald der ESP Play erkennt (Ursache unbekannt) | Lab C2 |
 | **R12** | **Tap startet den Stream erst durch den Read selbst** (Play-Detect → `audio_start` → Ring+ID3 leer). Tap-Burst bekommt nie Bild/Ton (s3) | Stall (a) oder Vorab-Producer je Slot |
-| R13 | `StreamBuffer::push` (loop-Task) und `readAt` (USB-Task) ohne Lock | Code-Review 08.10.; Lab-Stresstest |
+| R13 | `StreamBuffer::push` (loop) vs `readAt` (USB-Task) | **erledigt 0.4.54** — gemeinsamer `portMUX` um Ring/Cursor/ID3; Pump weiter FreeRTOS-Mutex (kein Critical um WiFi TCP) |
 
 ## Was bewusst nicht passiert
 - Kein weiteres Prefill- oder Ringgrößen-Tuning ohne Stall.

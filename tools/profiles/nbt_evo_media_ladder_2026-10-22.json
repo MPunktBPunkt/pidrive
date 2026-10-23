@@ -1,0 +1,67 @@
+{
+  "source": "hu-probe Media-Leiter 2026-10-22 + free Offline 0.2.40 + PSRAM audit 2026-10-21",
+  "generated": "2026-10-22",
+  "model": "nbt_evo_host_grammar",
+  "pin": {
+    "hu_probe": "8234982",
+    "fw": "0.3.17",
+    "audits": [
+      "hu-probe-media-ladder-2026-10-22",
+      "hu-probe-psram-board-free-2026-10-21"
+    ],
+    "profile": "hu-probe/profiles/bmw_nbt_evo.json",
+    "reports": [
+      "technology-audit/docs/reports/2026-10-22-hu-probe-media-ladder.md",
+      "technology-audit/docs/reports/2026-10-21-hu-probe-psram-board-free.md"
+    ]
+  },
+  "read": {
+    "event_n_bytes_mode": 4096,
+    "event_n_note": "TinyUSB callback chunk — not CDB length",
+    "cbw_blocks_common": [8, 240],
+    "cbw_blocks_scan_head": [32, 128],
+    "cbw_blocks_scan_head_sum": 160,
+    "scan_head_bytes": 81920,
+    "cbw_bytes_common": [4096, 122880],
+    "track_atom_blocks": [240, 69],
+    "track_atom_bytes": 158208,
+    "queue_depth": 1,
+    "writes_expected": false
+  },
+  "timing": {
+    "tur_idle_period_ms": 2238.78,
+    "tur_idle_p10_p90_ms": [2238, 2239],
+    "tur_idle_class": "FACT",
+    "plug_to_first_audio_read_s": 1.51,
+    "prefetch_lead_demo_v1_s": 0,
+    "prefetch_lead_larger_media_s": "VARIABLE",
+    "prefetch_lead_note": "demo_v1 Lead=0 FACT; ~8s on id3_cover is VARIABLE not a profile constant"
+  },
+  "host_phases": {
+    "model": "Enum → FS → Dir-Walk → File-Head(32+128) → optional Tail/Bulk Prefetch → Cache-only Play",
+    "browse_ui": "directory_8.3",
+    "player_ui": "id3_from_head",
+    "elevator": "STRONG",
+    "tail_prefetch_structure": "160_blocks_at_file_off_160"
+  },
+  "pidrive_contract": {
+    "directory_fat": "stable",
+    "file_head_min_bytes": 81920,
+    "file_head_note": "valid ID3/MP3/size/FAT; typically served as 32+128 READ10",
+    "small_files": "often fully consumed during scan",
+    "large_body": "may be generated later under size/EOF consistency",
+    "rejected": [
+      "directory_structure_only",
+      "prefetch_lead_15s_on_demo_v1",
+      "tur_approx_1hz_as_idle_constant",
+      "next_track_9_18s_as_prefetch"
+    ]
+  },
+  "inherits_transport_from": "tools/profiles/nbt_evo_lab_2026-10-15.json",
+  "lab_guidance": [
+    "Score scan head as 32+128 (=160), not directory-only",
+    "Separate scan window from prefetch stats (analyzer B47)",
+    "Do not encode Lead=8s or Lead=15s as FACT constants",
+    "PSRAM enable is for rings/diag — not coex cure"
+  ]
+}

@@ -119,6 +119,7 @@ ESP nur am BMW-USB; PUMP über **WLAN**. Sinnvoll, wenn Pi und Armlehnen-USB wei
 - DevKit mit **zwei USB-Buchsen** (OTG + UART-Bridge) bevorzugt für V1.
 - Bus-Power vom BMW-USB prüfen (Strombudget vs. S3 + Antenne WiFi); sonst 5 V parallel.
 - Kein ESP32 Classic für dieses Repo (kein OTG).
+- **Ist-Board Feld/Lab:** ESP32-S3-DevKitC-1 **N8R2** (8 MiB Flash, 2 MiB PSRAM physisch, Build derzeit ohne PSRAM) — Details: [`../referenz/ESP32-S3-BOARD.md`](../referenz/ESP32-S3-BOARD.md).
 
 ---
 

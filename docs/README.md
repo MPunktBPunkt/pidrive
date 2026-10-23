@@ -1,13 +1,12 @@
 # PiDrive — Dokumentationsindex
 
-**Stand:** 2026-10-04 · MSC-Entscheidungspfad aktuell
+**Stand:** 2026-10-22 · MSC Host-Grammatik (Media-Leiter) + PSRAM/Debug in esp32.pidrive 0.4.54
 
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
-**USB-MSC / BMW (aktuell):** **[`betrieb/MSC-AKTUELL.md`](betrieb/MSC-AKTUELL.md)** — Lesereihenfolge, Stand, Belegkette.  
-Darunter: Übergabe [`betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md`](betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) · Plan Rev.5 [`betrieb/PLAN-NACH-M3-AE-2026-10-03.md`](betrieb/PLAN-NACH-M3-AE-2026-10-03.md).  
-Historischer Feld-Log: [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · Leitauftrag (älterer Track): [auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md](auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md).
+**USB-MSC / BMW (aktuell):** **[`betrieb/MSC-AKTUELL.md`](betrieb/MSC-AKTUELL.md)** · Maßnahmen [`planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Matrix [`fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) · Facts [`fahrzeug/HU-Technical-Facts.md`](fahrzeug/HU-Technical-Facts.md).  
+Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `technology-audit` (Evidence).
 ---
 
 ## Dokumente
@@ -33,7 +32,10 @@ Historischer Feld-Log: [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELD
 | [betrieb/FRISCH-INSTALL.md](betrieb/FRISCH-INSTALL.md) | Soft-Smoke vs HW; Proxmox Bookworm-CT | Betrieb, Entwickler | 2026-09-24 |
 | [betrieb/LAB-MENU-WLAN.md](betrieb/LAB-MENU-WLAN.md) | Dev: Pi `/menu` + ESP SoftAP/STA ohne Auto | Betrieb, Entwickler | 2026-09-25 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
-| [betrieb/MSC-AKTUELL.md](betrieb/MSC-AKTUELL.md) | **MSC Einstieg:** Stand, Lesereihenfolge, Belegkette | Entwickler, nächste KI | 2026-10-04 |
+| [betrieb/MSC-AKTUELL.md](betrieb/MSC-AKTUELL.md) | **MSC Einstieg:** Stand, Lesereihenfolge, Ampel | Entwickler, nächste KI | 2026-10-22 |
+| [planung/MASSNAHMEN-HU-PROBE-2026-10-22.md](planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) | hu-probe/Audit → PiDrive Maßnahmen (PSRAM, Grammar, Debug) | Entwickler | 2026-10-22 |
+| [fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) | HU-Parametermatrix (Head-160, TUR, Vertrag) | Entwickler, Feld | 2026-10-22 |
+| [fahrzeug/HU-Technical-Facts.md](fahrzeug/HU-Technical-Facts.md) | Normative HU-Fakten [B]/[S]/[H]/[?] | Entwickler | 2026-10-22 |
 | [betrieb/PLAN-NACH-M3-AE-2026-10-03.md](betrieb/PLAN-NACH-M3-AE-2026-10-03.md) | Plan Rev.5 nach Trace-Korrektur | Entwickler | 2026-10-04 |
 | [betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md](betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) | Übergabe P0/Q3a → P1 Feld | Entwickler, nächste KI | 2026-10-04 |
 | [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | USB-MSC Feld-/Lab-Log (historisch lang) | Referenz | 2026-09-30 |
@@ -53,6 +55,7 @@ Historischer Feld-Log: [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELD
 | [referenz/WELLE-CLI.md](referenz/WELLE-CLI.md) | welle-cli Optionen, HTTP, Kanäle | Entwickler | 2026-04-21 |
 | [referenz/rtl2832u Stick](referenz/rtl2832u%20Stick) | Fasizi/RTL2832U+R820T2: HF/DSP/Kalibrierung (Langreferenz) | Entwickler, RF | 2026-09-25 |
 | [referenz/FM-AM-RTL-REVIEW-2026-09-25.md](referenz/FM-AM-RTL-REVIEW-2026-09-25.md) | Abgleich Stick-Doku ↔ PiDrive FM/AM: umgesetzt / verbessern / zu aufwendig | Entwickler, RF | 2026-09-25 |
+| [referenz/ESP32-S3-BOARD.md](referenz/ESP32-S3-BOARD.md) | DevKitC-1 **N8R2**: 8 MiB Flash, 2 MiB PSRAM (**Build an** ab 0.4.54) | Entwickler, ESP/USB | 2026-10-22 |
 | [ABNAHMEN.md](ABNAHMEN.md) | Abnahmeprotokolle / HW-Messungen | Entwickler, QA | 2026-09-15 |
 | [menue/MENU-ERGONOMIE.md](menue/MENU-ERGONOMIE.md) | Skip-Only-Tastendrücke | Entwickler | v0.11.127 |
 | [../tests/idrive/README.md](../tests/idrive/README.md) | iDrive-Event-Skripte (M6) | Entwickler, QA | v0.11.127 |

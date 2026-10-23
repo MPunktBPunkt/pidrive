@@ -158,7 +158,7 @@ sequenceDiagram
 | Option | Idee | Aufwand / Risiko | Erwartung |
 |---|---|---|---|
 | a) Stall (= Busy-Retry, siehe Teil V) | Callback im Live-Slot erst beantworten, wenn Daten da sind (`return 0` + 2 ms Pause, Teilantworten in 512-B-Schritten) | mittel; Risiko HU-Zeitlimit **je Kommando** (R1): 0,68 s bei 4-KiB-Kommandos, 10,9 s bei 64-KiB-Kommandos | Echter Dauerstrom, wenn HU geduldig ist. F1-Stick zeigte inkrementelles Abspielen. |
-| b) Zeitversatz + Datei-Kette | Slot mit 512 KiB echter Vergangenheit füllen (≈ 87 s @48k), periodisch Remount/nächste Datei | hoch; braucht PSRAM (Board devkitc-1, im Code ungenutzt) | Je Remount ~87 s Ton, Lücke beim Wechsel. |
+| b) Zeitversatz + Datei-Kette | Slot mit 512 KiB echter Vergangenheit füllen (≈ 87 s @48k), periodisch Remount/nächste Datei | hoch; braucht PSRAM (DevKitC-1 **N8R2** = 2 MiB physisch, Build derzeit aus — [`ESP32-S3-BOARD`](../../referenz/ESP32-S3-BOARD.md)) | Je Remount ~87 s Ton, Lücke beim Wechsel. |
 | c) Ring größer | kCapacity 48 KiB → z. B. 160 KiB (SRAM-Grenze) | klein | Nur längeres Fenster (~27 s), kein Dauerstrom. |
 | d) Bitrate runter (ohne FW) | Bridge `--bitrate 32k/24k` | keiner | Fenster 12,3 s bzw. 16,4 s bei gleicher Ringgröße — **Test des Modells in s4**. |
 
@@ -338,7 +338,7 @@ Wann überholt der Cursor? ID3 + Live ≈ 52,6 KB = **13 Callbacks**: Callback 1
 | 15 | Datei = 8,2 s live + 79,2 s Stille, P > 8,2 s → nur Stille | **richtig** | M2; Prüfung P < 8 s in s4 (S2) |
 | 16 | 5–6 s gegen 8,2 s nicht vorschnell als Decoder-Flush verbuchen | **richtig** | bleibt Hypothese; Marker-Test s4 S7 + PC-Abspielen der Slot-Datei (Lab) |
 | 17 | Zeitlimit-Leiter 1 … 90 s | **sinnvoll, aber anders skalieren** | relevant ist die Wartezeit **je Kommando**: Leiter 0,1 / 0,25 / 0,5 / 0,7 / 1 / 2 / 5 / 11 s reicht (Stufenplan Stufe 5) |
-| 18 | PSRAM-Zeitversatz unabhängig vom HU-Zeitlimit | **richtig** | Option b; PSRAM-Größe offen |
+| 18 | PSRAM-Zeitversatz unabhängig vom HU-Zeitlimit | **richtig** | Option b; PSRAM = 2 MiB N8R2, Build aus ([`ESP32-S3-BOARD`](../../referenz/ESP32-S3-BOARD.md)) |
 
 ## V. Begriffe (mit Bedeutung bei uns)
 
@@ -375,7 +375,7 @@ Wann überholt der Cursor? ID3 + Live ≈ 52,6 KB = **13 Callbacks**: Callback 1
 | 3 | 8,2 s gerechnet gegen 5–6 s gehört | trennt Ring/MSC von Decoder/Formatwechsel | s4 S1/S5/S6/S7 + Lab: Slot per `overlay_read` lesen und am PC abspielen | nein |
 | 4 | `id3Len` exakt | schließt die Mengenbilanz ohne Spanne | s4-Poll (`id3Len` jetzt mitgeloggt) | nein |
 | 5 | Herkunft der 19-ms-Pause | zeigt, ob die HU den Kopf erst prüft | Sniffer (Abstand CSW → nächstes CBW) | nein |
-| 6 | PSRAM-Größe | Voraussetzung für Option b | Modulaufdruck (s4 Vorbereitung) | nein |
+| 6 | PSRAM-Größe | Voraussetzung für Option b | **geklärt 2026-10-19:** N8R2 = 2 MiB physisch, Build aus → [`ESP32-S3-BOARD`](../../referenz/ESP32-S3-BOARD.md) | nein |
 | 7 | Liest die HU beim Bremsen weiter oder springt sie? | Dauerstrom setzt voraus, dass sie geduldig sequentiell weiterliest | erst nach 2 möglich | ja |
 
 ## VII. Schluss
