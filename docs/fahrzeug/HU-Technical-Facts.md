@@ -1,6 +1,6 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-11-06 (nachgezogen: Heimfahrt 22.10. R46–R52; Identity/Detach 23.10. R37–R45; Größenleiter 27.10. Q16 offen/Instrument-Fail; Analyzer-Feldmatrix 06.11. E18/F15/I6–I7; Connected Desk C-D1…C-D8 Abend) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.36+ / Analyzer-Gadget 0.0.52  
+**Stand:** 2026-11-06 (nachgezogen: Heimfahrt 22.10. R46–R52; Identity/Detach 23.10. R37–R45; Größenleiter 27.10. Q16; Analyzer 06.11. E18/F15; Connected Desk C-D1…C-D12 inkl. Audit PR #34) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.36+ / Analyzer-Gadget 0.0.52  
 **Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) · [`identity-multireview`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/2026-10-27-GO-groessenleiter.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.
 
@@ -330,10 +330,13 @@ Desk-Stack (BimmerGestalt / AAIdrive) — Detail: [`CONNECTED-AAIDRIVE-STACK-202
 | C-D7 | RHMI-Layouts an Cert-SHA256 gebunden; freie XML **REJECTED** | **[D]** | |
 | C-D8 | AM-Icon/Placeholder ≠ volle RHMI-Init | **[D]** | |
 | C-D9 | Gates G1…G5: hu-probe misst G1 (+teilweise G2 AOA); BCL/Etch/SAS/RHMI außerhalb | **[D]** Mapping | I-303A = nur G1 |
+| C-D10 | **Zwei Phone-Pfade:** AAIdrive = Etch-Client; CarAPI → Connected führt `sas_*` stellvertretend (ContentProvider-Cert) | **[D]** | Audit PR #34 / EVID-SAS-026–028 |
+| C-D11 | Connected-Apps-Pfad Cleartext („Nothing is encrypted“) — SAS/Etch in BCL DATA ohne TLS | **[D]** Doc | FX-G3-01; hilft nicht bei absent Bulk |
+| C-D12 | AIDL `createSecurityContext`/`loadAppCert` ≠ Mermaid `initSecurityContext`/`loadApplicationCert`; AAIdrive `MainService` gated auf Security connected | **[D]** | EVID-SAS-029/030 |
 | C-Q1 | F20: 6NR / Apps-Checkbox aktiv? | **[?]** | ohne das Pfad C tot |
-| C-Q2 | FIELD-CONNECTED-REAL-01: Phone+MyBMW+AAIdrive ∥ Analyzer USB | **[?]** geplant | Divergenz vs. Direct-ESP |
+| C-Q2 | FIELD-CONNECTED-REAL-01 / FX-G3-01: Phone+Tunnel ∥ Analyzer; `sas_*` einmal sichtbar | **[?]** geplant | AAIdrive **oder** CarAPI-Korrelation |
 
-**REJECTED (MSC↔Connected):** „AOA erkannt / Bulk ⇒ Connected-App offen.“ · „ESP-AOA = Phone-Connected-Rolle.“
+**REJECTED (MSC↔Connected):** „AOA erkannt / Bulk ⇒ Connected-App offen.“ · „ESP-AOA = Phone-Connected-Rolle.“ · „Jede Connected-App ist direkter Etch-Client.“
 
 ---
 

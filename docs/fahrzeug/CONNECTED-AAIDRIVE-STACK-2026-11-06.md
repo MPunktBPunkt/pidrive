@@ -1,6 +1,6 @@
 # Connected Apps / AAIdrive — Stack-Abgleich (Pfad C)
 
-**Stand:** 2026-11-06 (Abend: SAS-Formel, SECURITY_SERVICE-Korrektur, G1–G5, AM)  
+**Stand:** 2026-11-06 (Abend²: technology-audit PR #34 — CarAPI-Proxy, Cleartext, AIDL/MainService)  
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
 **Verwandt:** [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md) · [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE.md`](BMW-AVRCP-PROBE.md)
@@ -18,6 +18,8 @@ Wichtige Nuancen aus den Primärquellen (nicht in jeder Kurzfassung enthalten):
 | „Eigene XML-Menüs“ | Layouts sind an das **Auth-Zertifikat gehasht (SHA256-Whitelist)**. Freie Widget-XML scheitert; Flexibilität über `rhmi_setProperty` + Datenmodels auf **freigegebenen** Layouts. |
 | Tunnel | Connected/MyBMW stellt BCL-Tunnel + localhost-TCP; AAIdrive = Etch-Client. BclCarLink ersetzt nur den Link, **nicht** Security. |
 | SecurityService | Classic Connected **≤5.1** exportierte `.SECURITY_SERVICE` Binder. **≥5.1 / MyBMW:** Export **weg** — moderne Signierung **UNKNOWN**. „MyBMW liefert signChallenge“ als Default **REJECTED**. |
+| CarAPI vs AAIdrive | **Zwei Phone-Pfade:** AAIdrive/Kit = eigener Etch-Client; CarAPI (Spotify u. a.) → Connected führt `sas_*` **stellvertretend** (ContentProvider-Cert). |
+| Cleartext | Analysis: Connected-Apps-Pfad „Nothing is encrypted.“ → SAS/Etch in BCL DATA im Klartext dissectierbar, sobald Tunnel sichtbar (FX-G3-01). |
 | Voraussetzung Auto | Apps-Unterstützung: **6NR** und/oder ConnectedDrive-Apps / Apps-Checkbox (ID5+); Mini: SA6NM. Ohne das kein Pfad C. |
 | Audio | Connected steuert Fokus/UI; Ton oft weiter über **BT A2DP** (bes. ab Android Oreo: USB-AOA-Audio für ältere MY eingeschränkt). |
 | Zukunft | Connected-Apps-Protokoll auf **Live Cockpit / ID7+** deprecatet (Android Auto statt Remote-Apps). Für NBT Evo relevant, für neue HUs nicht. |
@@ -66,6 +68,7 @@ HU: Etch / BMWRemoting
 - Multiplex mehrerer logischer Verbindungen über einen seriellen/USB-Kanal (Connection-IDs).
 - Darauf sitzen u. a. Etch-Streams; Handshake/Watchdog laut Analyse vorhanden.
 - Wireshark-Lua / Etch-Debug-Hashes: aus dem hufman-Writeup.
+- **Cleartext [D]:** Analysis `analysis-approach.md` — „Nothing is encrypted.“ SAS/Etch/RHMI in BCL-DATA sind bei sichtbarem Tunnel **nicht** TLS-geschützt (Desk). Erhöht Wert von Feld **FX-G3-01**; ersetzt keine Sichtbarkeit, wenn Bulk/BCL absent bleibt. Audit: [`bmw-connected-sas-auth-2026-11-06`](../../../technology-audit/audits/bmw-connected-sas-auth-2026-11-06/) (`EVID-SAS-025`).
 
 ### 3.3 Apache Etch (BMWRemoting)
 
@@ -101,13 +104,27 @@ response = RSA-MD5-Signatur( challenge XOR MD5(LE uint32(2)) )
 
 **REJECTED (aktueller Default):** „MyBMW exportiert SECURITY_SERVICE und liefert signChallenge.“
 
+**AIDL vs. Mermaid-Namen [D]** (`EVID-SAS-029`): Analysis-Mermaid nennt `initSecurityContext` / `loadApplicationCert`; rekonstruiertes AIDL + Kit nutzen `createSecurityContext` / `loadAppCert`. **Binder-Wahrheit = AIDL/Code.**
+
+**Zwei Phone-Pfade für SAS auf dem Wire** (technology-audit PR #34 / `EVID-SAS-026`–`028`):
+
+| Pfad | Wer spricht Etch / `sas_*`? | Phone-Korrelation |
+|------|----------------------------|-------------------|
+| **AAIdrive / Kit** | App = Etch-Client; ruft Security, dann `sas_*` selbst | AAIdrive Logcat + Security |
+| **CarAPI** (Spotify u. a.) | App liefert Cert via **ContentProvider** (CN=App-ID); **Connected** merged Certs und führt `sas_certificate`/`sas_login` **stellvertretend**; App **kein** direkter Etch-Proxy-Client (Intent-RPC) | Connected-Prozess, nicht App-Etch |
+| Radio/Multimedia-CarAPI | Connected startet laut Doc nur bei **Bluetooth**-Verbindung | USB-only ggf. kein Start |
+
+Wire-Tunnel (BCL/Etch) kann in beiden Fällen dieselben `sas_*` zeigen; Logcat-Strategie muss den Pfad kennen.
+
+**AAIdrive MainService-Gate [D]** (`EVID-SAS-030`): Apps starten Etch-Auth erst wenn iDrive+Security connected (`securityAccess.isConnected()` / `MainService` combinedCallback). Fehlendes Security → kein Login-Versuch.
+
 ### 3.5 App-Registration / Connection Intent
 
-Quelle: [app-behavior](https://bimmergestalt.github.io/BMWConnectedAnalysis/app-behavior/) **[D]**.
+Quelle: [app-behavior](https://bimmergestalt.github.io/BMWConnectedAnalysis/app-behavior/) · [carapi](https://bimmergestalt.github.io/BMWConnectedAnalysis/carapi/) **[D]**.
 
 - `CONNECTED_APP_INSTALLED` → App antwortet `ACTION_CAR_APPLICATION_REGISTERING` (ID, Titel, Icon, Connect/Disconnect-Actions).
 - Nach BCL: `ACTION_CAR_ACCESSORY_ATTACHED` (`EXTRA_HOST=127.0.0.1`, `EXTRA_PORT`, `instance_id`, …).
-- CarAPI-Connect kann `security_service` mitliefern — bei modernem MyBMW oft **nicht** mehr als Binder nutzbar (3.4).
+- CarAPI-Connect kann `security_service` mitliefern — bei modernem MyBMW oft **nicht** mehr als Binder nutzbar (3.4); SAS läuft dann ohnehin in Connected (Proxy-Pfad).
 
 ### 3.6 RHMI
 
@@ -158,7 +175,8 @@ Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identi
 |------------|--------|
 | **Connected Classic (≤5.1)** | Tunnel + **exportierter** `SECURITY_SERVICE` Binder |
 | **Connected ≥5.1 / MyBMW** | Tunnel-Provider; Security-Export **weg** — Signierweg **[?]** |
-| **AAIdrive** | CarAPI-App: Registration → localhost Etch → SAS/RHMI/… |
+| **AAIdrive** | Eigener Etch-Client: Registration → localhost Etch → `sas_*` selbst → RHMI/… |
+| **CarAPI-Apps** (Spotify…) | ContentProvider-Cert; Connected führt `sas_*` stellvertretend (kein direkter Etch-Client) |
 | **IDriveConnectKit** | Etch-IDL + RHMI-Helper-Library |
 | **IDriveConnectAddons** | Extra-RHMI-Apps / CDS-Consumer |
 | **BclCarLink** | Optionaler BCL-Link; ersetzt Security **nicht** |
@@ -199,6 +217,8 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
 | C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Produktentscheid |
 | C7 | FIELD-CONNECTED-REAL-01: Phone+MyBMW+AAIdrive parallel Analyzer USB-Capture | Divergenzpunkt vs. Direct-ESP AOA |
+| C8 | **FX-G3-01:** eine F20-Session mit sichtbarer `sas_certificate`/Challenge/`sas_login` (Etch-Trace **oder** korrelierte Logs+Tunnel) | Cleartext-Claim macht Decode möglich; Bulk/BCL muss sichtbar sein |
+| C9 | Optional parallel CarAPI-App (Spotify): SAS in Connected, anderer Phone-Call-Graph | gleicher Wire-Tunnel, andere Logcat-Korrelation |
 
 ---
 
@@ -208,12 +228,14 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 |----|--------|-------|
 | S1 | [hufman — BMW Connected Apps Protocol](https://hufman.github.io/stories/bmwconnectedapps) | Primär: BCL, Etch, SAS, RHMI-Whitelist, Fake Car |
 | S2 | [BMWConnectedAnalysis](https://bimmergestalt.github.io/BMWConnectedAnalysis/) | Themenseiten (BCL, Etch, RHMI, CDS, Auth, …) |
-| S3 | [BimmerGestalt/AAIdrive](https://github.com/BimmerGestalt/AAIdrive) | Produkt/Features, Voraussetzungen 6NR, ID5 Cover, BT-Apps |
-| S4 | [IDriveConnectKit](https://github.com/BimmerGestalt/IDriveConnectKit) | Etch-IDL + RHMI-Parsing |
-| S5 | [IDriveConnectAddons](https://github.com/BimmerGestalt/IDriveConnectAddons) | Beispiel-RHMI-Apps / CDS |
-| S6 | [BclCarLink](https://github.com/BimmerGestalt/BclCarLink) | Experimenteller BCL-Link; Security-Abhängigkeit bleibt (nicht „MyBMW Binder forever“) |
 | S2a | [Authentication](https://bimmergestalt.github.io/BMWConnectedAnalysis/authentication/) | SAS-Formel, APP_AUTH/APP, SECURITY_SERVICE bis 5.1 |
-| S2b | [app-behavior](https://bimmergestalt.github.io/BMWConnectedAnalysis/app-behavior/) | Registration, ACCESSORY_ATTACHED, CarAPI Intent |
+| S2b | [app-behavior](https://bimmergestalt.github.io/BMWConnectedAnalysis/app-behavior/) | Registration, ACCESSORY_ATTACHED |
+| S2c | [carapi](https://bimmergestalt.github.io/BMWConnectedAnalysis/carapi/) | Proxy-`sas_*`, ContentProvider-Cert |
+| S3 | [BimmerGestalt/AAIdrive](https://github.com/BimmerGestalt/AAIdrive) | Produkt/Features, MainService-Gate, 6NR |
+| S4 | [IDriveConnectKit](https://github.com/BimmerGestalt/IDriveConnectKit) | Etch-IDL + RHMI-Parsing + AIDL |
+| S5 | [IDriveConnectAddons](https://github.com/BimmerGestalt/IDriveConnectAddons) | Beispiel-RHMI-Apps / CDS |
+| S6 | [BclCarLink](https://github.com/BimmerGestalt/BclCarLink) | Experimenteller BCL-Link; Security-Abhängigkeit bleibt |
+| S8 | technology-audit [`bmw-connected-sas-auth-2026-11-06`](../../../technology-audit/audits/bmw-connected-sas-auth-2026-11-06/) (PR [#34](https://github.com/MPunktBPunkt/technology-audit/pull/34)) | Desk-Audit + Follow-up CarAPI/Cleartext/AIDL |
 | S7 | [Bimmer Gestalt Übersicht](https://bimmergestalt.github.io/) | Projektlandkarte |
 
 Abruf: 2026-11-06. Foren (Bimmerfest etc.) liefern Nutzer-Anekdoten zu Cover/Connected; der **Protokoll-Stack** kommt aus S1–S6.
