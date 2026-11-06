@@ -1,6 +1,6 @@
 # Connected Apps / AAIdrive — Stack-Abgleich (Pfad C)
 
-**Stand:** 2026-11-06  
+**Stand:** 2026-11-06 (Abend: SAS-Formel, SECURITY_SERVICE-Korrektur, G1–G5, AM)  
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
 **Verwandt:** [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md) · [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE.md`](BMW-AVRCP-PROBE.md)
@@ -16,7 +16,8 @@ Wichtige Nuancen aus den Primärquellen (nicht in jeder Kurzfassung enthalten):
 | Punkt | Korrektur / Schärfung |
 |-------|------------------------|
 | „Eigene XML-Menüs“ | Layouts sind an das **Auth-Zertifikat gehasht (SHA256-Whitelist)**. Freie Widget-XML scheitert; Flexibilität über `rhmi_setProperty` + Datenmodels auf **freigegebenen** Layouts. |
-| Tunnel | Connected/MyBMW stellt den BCL-Tunnel + Security-Modul; AAIdrive hängt als Etch-Client am **localhost-TCP-Proxy**. BclCarLink ersetzt nur den Link-Aufbau, **nicht** die Security-Abhängigkeit. |
+| Tunnel | Connected/MyBMW stellt BCL-Tunnel + localhost-TCP; AAIdrive = Etch-Client. BclCarLink ersetzt nur den Link, **nicht** Security. |
+| SecurityService | Classic Connected **≤5.1** exportierte `.SECURITY_SERVICE` Binder. **≥5.1 / MyBMW:** Export **weg** — moderne Signierung **UNKNOWN**. „MyBMW liefert signChallenge“ als Default **REJECTED**. |
 | Voraussetzung Auto | Apps-Unterstützung: **6NR** und/oder ConnectedDrive-Apps / Apps-Checkbox (ID5+); Mini: SA6NM. Ohne das kein Pfad C. |
 | Audio | Connected steuert Fokus/UI; Ton oft weiter über **BT A2DP** (bes. ab Android Oreo: USB-AOA-Audio für ältere MY eingeschränkt). |
 | Zukunft | Connected-Apps-Protokoll auf **Live Cockpit / ID7+** deprecatet (Android Auto statt Remote-Apps). Für NBT Evo relevant, für neue HUs nicht. |
@@ -27,23 +28,27 @@ Wichtige Nuancen aus den Primärquellen (nicht in jeder Kurzfassung enthalten):
 ## 2. Architektur (verifiziert)
 
 ```
-Phone-App (AAIdrive / Spotify / …)
-        │  TCP localhost (Intent + fester Port)
+Phone: BMW Connected / MyBMW
+        │  USB-AOA und/oder BT-SPP
+        │  BCL knock + handshake  →  Multiplex zur HU
+        │  broadcast ACTION_CAR_ACCESSORY_ATTACHED
+        │       extras: EXTRA_HOST=127.0.0.1, EXTRA_PORT, instance_id, …
         ▼
-BMW Connected / MyBMW  ── SecurityService (Challenge/Nonce, JNI)
-        │
-        │  BCL Multiplex (USB AOA und/oder BT-SPP; BT-Apps ab ~2017)
+Phone: AAIdrive / Spotify / CarAPI-App
+        │  Registration: CONNECTED_APP_INSTALLED ↔ ACTION_CAR_APPLICATION_REGISTERING
+        │  TCP localhost → Etch über Connected-Tunnel
         ▼
-HU NBT / NBT Evo
-        │
-        └── pro BCL-Stream: Apache Etch RPC (Magic 0xDEADBEEF)
-                 ├── SAS   Auth (BMW-CA-Zertifikat + Nonce-Signatur)
-                 ├── RHMI  Remote-HMI (Layout/Resources, Models, Events)
-                 ├── AV    Audio-Kontext / Entertainment-Quelle
-                 └── CDS   Car Data Service (Live-Fahrzeugdaten)
+HU: Etch / BMWRemoting
+        ├── SAS   Auth (P7B → Challenge → Signatur → sas_login)
+        ├── AM    Application Manager (Icon/Placeholder ≠ volle RHMI-Init)
+        ├── RHMI  Layout/Resources (SHA256-Whitelist aus Cert)
+        ├── AV    Audio-Kontext / Entertainment-Quelle
+        └── CDS   Car Data Service
 ```
 
 **Nicht** Teil dieses Stacks: AVRCP Cover Art (BIP), generisches A2DP-Metadaten-Push als Cover-Pfad, USB-MSC.
+
+**Rolle ESP/hu-probe vs. Phone:** Ein Direct-`18D1:2D00`-DUT emuliert nur USB-Accessory-Identity — **nicht** den Connected-Peer (BCL-Knock, TCP-Tunnel, Etch, SAS). Das sind unterschiedliche Rollen.
 
 ---
 
@@ -68,40 +73,95 @@ HU NBT / NBT Evo
 - IDL rekonstruiert in **IDriveConnectKit** (Proxy-Objekte für Apps).
 - Dienste u. a.: `sas_*`, `rhmi_*`, AV, CDS, Version/Info.
 
-### 3.4 SAS (Auth)
+### 3.4 SAS (Auth) — Authentication ≠ Authorization
 
-- PKCS7-Zertifikat, von BMW-CA signiert; Nonce-Challenge, Signaturantwort.
-- Zertifikate aus offiziellen APKs / ContentProvidern extrahierbar; Permissions/Asset-Whitelist im Zertifikat.
-- Ohne gültiges Cert + Challenge-Antwort: kein RHMI-App-Slot.
+Quelle: [Authentication](https://bimmergestalt.github.io/BMWConnectedAnalysis/authentication/) **[D]**.
 
-### 3.5 RHMI
+1. `sas_certificate(P7B)` → HU liefert Challenge `byte[16]`
+2. Client signiert → `sas_login(byte[512])`
+
+**Challenge-Formel** (Android / Cert mit `SAS.CertificateType`):
+
+```
+response = RSA-MD5-Signatur( challenge XOR MD5(LE uint32(2)) )
+         = RSA-MD5-Signatur( challenge XOR MD5("\x02\x00\x00\x00") )
+```
+
+Ältere iOS-Certs ohne `SAS.CertificateType`: kein XOR; Challenge direkt signieren.
+
+**Zwei Certs im P7B:** `APP_AUTH` (Signatur-Pubkey) + `APP` (Permissions `AVS`/`CDS`/`RHMI`/`Make`, `SAS.Digests.*` SHA256-Whitelist). HU: `CRHMIAuthPermHandler::verifyResource` in `libhmiremoting.so`. `Make`-Check ggf. via Coding `ENTWICKLER_MENUE=aktiv` abschaltbar.
+
+**Signing-Backend**
+
+| Stand | Status |
+|-------|--------|
+| Connected ≤5.1: exportierter Binder `.SECURITY_SERVICE` / `CarSecurityService.signChallenge` | **[D]** |
+| Connected ≥5.1 / MyBMW: Service **nicht** mehr exportiert | **[D]** |
+| Interner Signierweg modernes MyBMW | **[?]** |
+
+**REJECTED (aktueller Default):** „MyBMW exportiert SECURITY_SERVICE und liefert signChallenge.“
+
+### 3.5 App-Registration / Connection Intent
+
+Quelle: [app-behavior](https://bimmergestalt.github.io/BMWConnectedAnalysis/app-behavior/) **[D]**.
+
+- `CONNECTED_APP_INSTALLED` → App antwortet `ACTION_CAR_APPLICATION_REGISTERING` (ID, Titel, Icon, Connect/Disconnect-Actions).
+- Nach BCL: `ACTION_CAR_ACCESSORY_ATTACHED` (`EXTRA_HOST=127.0.0.1`, `EXTRA_PORT`, `instance_id`, …).
+- CarAPI-Connect kann `security_service` mitliefern — bei modernem MyBMW oft **nicht** mehr als Binder nutzbar (3.4).
+
+### 3.6 RHMI
 
 - App sendet u. a. `rhmi_setResource` (XML-Widget-Layout + Zip: Grafik/Texte), dann `rhmi_setData` / `rhmi_setProperty`, Events über `rhmi_addActionEventHandler` → `rhmi_onActionEvent`.
 - HU rendert **native** iDrive-Widgets; Controller-Events gehen zurück an die Phone-App.
 - **Whitelist:** geänderte Layouts/Assets werden abgelehnt, wenn SHA256 nicht zum Cert passt → AAIdrive „leiht“ typischerweise **offizielle Layout-/Icon-Slots** (z. B. Audioplayer/Spotify/News-ähnlich) und füllt Models.
+- **REJECTED:** „AAIdrive kann beliebige eigene XML-Menüs laden.“
 
-### 3.6 AV + Cover
+### 3.7 AV + Cover
 
 - MusicAppMode: Audio-Kontext anfordern, Hardware-Buttons, Resume.
 - ID5+: „global coverart“ im Homescreen / Multimedia-Panel — über **RHMI/Connected**, nicht AVRCP-BIP.
 - Praktischer Nutzerpfad: Quelle **App** (Spotify/Audioplayer) wählen, nicht „Bluetooth“.
 
-### 3.7 CDS
+### 3.8 CDS
 
 - Live-Daten für Anzeigen/Addons (Geschwindigkeit, Multimedia-Status, …).
 - IDriveConnectAddons: z. B. Scrobbler liest Multimedia-Metadaten (BT/USB; Radio oft nicht).
 
+### 3.9 Application Manager (AM)
+
+- `am_registerApp()` kann ein **Icon/Placeholder** in der HU zeigen, bevor die volle RHMI-App initialisiert ist.
+- Nutzerwahl → `am_onAppEvent()` → RHMI-Init.
+- **REJECTED:** „Icon sichtbar ⇒ RHMI vollständig initialisiert.“
+
 ---
 
-## 4. AAIdrive vs. Connected — Rollen
+## 4. Gate-Referenz (Desk) vs. hu-probe-Messfläche
+
+Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identity misst nur den USB-/AOA-Einstieg:
+
+| Gate | Inhalt | hu-probe / Analyzer |
+|------|--------|---------------------|
+| **G1** | USB Identity / Enumeration | **ja** (I-303A, MSC vs Vendor-only) |
+| **G2** | Transport: AOA/BT + **BCL knock/handshake** | AOA-Callback teilweise; BCL-Wire **nein** |
+| **G3** | App-Tunnel: localhost TCP → BCL→Etch | **nein** (Phone-Seite) |
+| **G4** | SAS Authentication (Cert + Challenge) | **nein** (Keys) |
+| **G5** | Authorization/Use: AM / RHMI / AV / CDS | **nein** |
+
+**INFERENCE (nicht FACT am F20):** Reconnect-Loop bei Direct-`18D1:2D00` (Zubehör-UI, kein Bulk/BCL auf Messschicht) *kann* fehlenden Connected-Peer (G2 BCL+) bedeuten.  
+**UNKNOWN:** ob genau das der F20-Grund ist. Cross-Ref: hu-probe [GATES-Connected](../../../hu-probe/docs/GATES-Connected.md).
+
+---
+
+## 5. AAIdrive vs. Connected — Rollen
 
 | Komponente | Rolle |
 |------------|--------|
-| **MyBMW / Connected** | Tunnel-Provider + Security-Modul; Apps-Checkbox / Connection Assistant |
-| **AAIdrive** | Unoffizielle Connected App(s): Notifications, Music-Browser, Nav-Hooks, optional Maps/Mirror (Addons) |
+| **Connected Classic (≤5.1)** | Tunnel + **exportierter** `SECURITY_SERVICE` Binder |
+| **Connected ≥5.1 / MyBMW** | Tunnel-Provider; Security-Export **weg** — Signierweg **[?]** |
+| **AAIdrive** | CarAPI-App: Registration → localhost Etch → SAS/RHMI/… |
 | **IDriveConnectKit** | Etch-IDL + RHMI-Helper-Library |
 | **IDriveConnectAddons** | Extra-RHMI-Apps / CDS-Consumer |
-| **BclCarLink** | Optionaler BCL-Link; ersetzt MyBMW-Security **nicht** |
+| **BclCarLink** | Optionaler BCL-Link; ersetzt Security **nicht** |
 
 AAIdrive-README (Kernaussage): *„without any modifications or hacks“* am Auto — Nutzung der **offiziellen Connected-Apps-Technologie** mit extrahierten Certs/Ressourcen. Das ist **kein HU-Root**, aber auch **kein** BMW-SDK-Lizenzprodukt.
 
@@ -109,7 +169,7 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 
 ---
 
-## 5. Einordnung für PiDrive (A / B / C)
+## 6. Einordnung für PiDrive (A / B / C)
 
 | Pfad | Mechanismus | Menü / Cover | PiDrive |
 |------|-------------|--------------|---------|
@@ -127,20 +187,22 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 
 ---
 
-## 6. Offene Punkte für die Connected-Forschung
+## 7. Offene Punkte für die Connected-Forschung
 
 | ID | Frage | Hinweis |
 |----|-------|---------|
 | C1 | Hat der F20 Apps (6NR / Checkbox)? | Ohne das kein Feldtest Pfad C |
 | C2 | MyBMW vs. Connected Classic vs. BclCarLink am Fahrzeug | Tunnel-Stabilität |
+| C2b | Wie signiert **aktuelles** MyBMW Challenges ohne exportierten SECURITY_SERVICE? | Analysis: alternative method UNKNOWN |
 | C3 | Welches Cert/Layout nutzt AAIdrive MusicAppMode (ID5)? | Cover-Fähigkeit |
 | C4 | Audio-Fokus AV vs. paralleler Pi-A2DP | Konflikt / Ducking |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
 | C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Produktentscheid |
+| C7 | FIELD-CONNECTED-REAL-01: Phone+MyBMW+AAIdrive parallel Analyzer USB-Capture | Divergenzpunkt vs. Direct-ESP AOA |
 
 ---
 
-## 7. Quellen
+## 8. Quellen
 
 | ID | Quelle | Rolle |
 |----|--------|-------|
@@ -149,7 +211,9 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | S3 | [BimmerGestalt/AAIdrive](https://github.com/BimmerGestalt/AAIdrive) | Produkt/Features, Voraussetzungen 6NR, ID5 Cover, BT-Apps |
 | S4 | [IDriveConnectKit](https://github.com/BimmerGestalt/IDriveConnectKit) | Etch-IDL + RHMI-Parsing |
 | S5 | [IDriveConnectAddons](https://github.com/BimmerGestalt/IDriveConnectAddons) | Beispiel-RHMI-Apps / CDS |
-| S6 | [BclCarLink](https://github.com/BimmerGestalt/BclCarLink) | Experimenteller BCL-Link; Security bleibt bei MyBMW |
+| S6 | [BclCarLink](https://github.com/BimmerGestalt/BclCarLink) | Experimenteller BCL-Link; Security-Abhängigkeit bleibt (nicht „MyBMW Binder forever“) |
+| S2a | [Authentication](https://bimmergestalt.github.io/BMWConnectedAnalysis/authentication/) | SAS-Formel, APP_AUTH/APP, SECURITY_SERVICE bis 5.1 |
+| S2b | [app-behavior](https://bimmergestalt.github.io/BMWConnectedAnalysis/app-behavior/) | Registration, ACCESSORY_ATTACHED, CarAPI Intent |
 | S7 | [Bimmer Gestalt Übersicht](https://bimmergestalt.github.io/) | Projektlandkarte |
 
 Abruf: 2026-11-06. Foren (Bimmerfest etc.) liefern Nutzer-Anekdoten zu Cover/Connected; der **Protokoll-Stack** kommt aus S1–S6.

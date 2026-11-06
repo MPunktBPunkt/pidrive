@@ -1,10 +1,10 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-11-06 (nachgezogen: Heimfahrt 22.10. R46–R52; Identity/Detach 23.10. R37–R45; Größenleiter 27.10. Q16 offen/Instrument-Fail; Analyzer-Feldmatrix 06.11. E18/F15/I6–I7) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.21+ / Analyzer-Gadget 0.0.52  
+**Stand:** 2026-11-06 (nachgezogen: Heimfahrt 22.10. R46–R52; Identity/Detach 23.10. R37–R45; Größenleiter 27.10. Q16 offen/Instrument-Fail; Analyzer-Feldmatrix 06.11. E18/F15/I6–I7; Connected Desk C-D1…C-D8 Abend) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.36+ / Analyzer-Gadget 0.0.52  
 **Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) · [`identity-multireview`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/2026-10-27-GO-groessenleiter.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.
 
-**Scope:** Belegte Plattform = **diese** NBT Evo am **USB-MSC**-Port. Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. AOA/Connected nur als **Abgrenzung** (E18/F15), nicht als Connected-Protokoll-FACTS. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr. Analyzer-Host-Stimulus ≠ echte NBT.
+**Scope:** Belegte Plattform = **diese** NBT Evo am **USB-MSC**-Port. Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. AOA/Connected: **Abgrenzung** Feld (E18/F15) + **Desk-[D]** in §11 — keine stillen MSC↔Connected-Transfers. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr. Analyzer-Host-Stimulus ≠ echte NBT.
 
 | Status | Bedeutung |
 |--------|-----------|
@@ -312,7 +312,32 @@ Diese Punkte beschreiben die **Messkette**, nicht die NBT:
 
 ---
 
-## 10. Pflegeregel
+## 10. Connected / AOA — Abgrenzung und Desk-[D] (nicht MSC-Wire)
+
+**Feld an dieser HU (MSC/Analyzer):** E18/F15 — `303a:1001`+MSC → P-MOUNT; AOA-Counter 0; kein Media-UI ohne FAT.  
+**hu-probe Direct-`18D1:2D00`:** Zubehör-UI + Reconnect-Loop; 51/52/53 und Bulk auf Callback-Schicht absent — siehe hu-probe Feld 2026-10-30 (nicht hier als MSC-[B] führen).
+
+Desk-Stack (BimmerGestalt / AAIdrive) — Detail: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md). Kurzindex:
+
+| # | Fakt | Status | Grenze |
+|---|------|--------|--------|
+| C-D1 | Lifecycle: Connected baut USB/BT + **BCL knock/handshake**, dann `ACTION_CAR_ACCESSORY_ATTACHED` → App TCP localhost → Etch → SAS | **[D]** | nicht am F20-Wire gemessen |
+| C-D2 | Direct-ESP AOA-Identity ≠ Connected-Peer (kein BCL/Etch/SAS) | **[D]** Rolle / Feld-Reconnect nur **[H]** | H-Reconnect = INFERENCE |
+| C-D3 | SAS: `sas_certificate` → Challenge 16 B → `sas_login(512)`; Android: Challenge XOR MD5(LE 2) dann RSA-MD5 | **[D]** | Analysis Authentication |
+| C-D4 | P7B: `APP_AUTH` (Signatur) + `APP` (Permissions/`SAS.Digests.*`); HU `verifyResource` | **[D]** | Auth ≠ Authorization |
+| C-D5 | Connected ≤5.1 exportierte `.SECURITY_SERVICE`; **≥5.1 / MyBMW nicht** | **[D]** | moderne Signierung **[?]** |
+| C-D6 | „MyBMW liefert signChallenge via exportiertem Binder“ als aktueller Default | **REJECTED** | historisch Classic ok |
+| C-D7 | RHMI-Layouts an Cert-SHA256 gebunden; freie XML **REJECTED** | **[D]** | |
+| C-D8 | AM-Icon/Placeholder ≠ volle RHMI-Init | **[D]** | |
+| C-D9 | Gates G1…G5: hu-probe misst G1 (+teilweise G2 AOA); BCL/Etch/SAS/RHMI außerhalb | **[D]** Mapping | I-303A = nur G1 |
+| C-Q1 | F20: 6NR / Apps-Checkbox aktiv? | **[?]** | ohne das Pfad C tot |
+| C-Q2 | FIELD-CONNECTED-REAL-01: Phone+MyBMW+AAIdrive ∥ Analyzer USB | **[?]** geplant | Divergenz vs. Direct-ESP |
+
+**REJECTED (MSC↔Connected):** „AOA erkannt / Bulk ⇒ Connected-App offen.“ · „ESP-AOA = Phone-Connected-Rolle.“
+
+---
+
+## 11. Pflegeregel
 
 - Neue Feldbefunde mit Datum, FW-Version, Geometrie (`kReadyDetail`) und Quelle eintragen.
 - Status nur auf **[B]** heben, wenn Rohdaten (Status-JSON, Correlate-Watch, Bridge-Log, hu-probe Session, Analyzer-Evidence) verlinkt sind. Evidence-IDs aus technology-audit-Audits mitführen, wenn vorhanden.
@@ -320,4 +345,4 @@ Diese Punkte beschreiben die **Messkette**, nicht die NBT:
 - `mscTrace.tag` kann abgeschnitten sein (z. B. `Rock Antenn`) und ist kein eindeutiger Slotschlüssel. Datei/Slot aus LBA-Bereich plus `slotMap` zuordnen.
 - Community-/SIB-Muster, Lab-Debian-Gaps und Analyzer-Host-Stimulus nicht still zu NBT-[B] machen. Host-Scope: nur diese NBT Evo.
 - Event-/Callback-Größe (`xfer`, `n=4096`) und READ10-CBW-`blocks` getrennt führen (E5 vs. E11). Prefetch-Lead/Cache aus PiDrive nicht automatisch als hu-probe-FACT lesen; Eager-EOF/Track-Atom seit Abend-Offline 18.10. **[B]**; Heimfahrt Remount/Eager seit 22.10. **[B]/[S]**. Offline-Timing nur über `capture_t_us`, nie `replay_t_us`.
-- AOA/Connected-Apps-Fakten gehören nicht still in diesen MSC-Katalog (nur Abgrenzung E18/F15); Pfad C: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md).
+- AOA/Connected-Apps: Feld nur Abgrenzung E18/F15; Desk-[D] nur in **§10** und [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) — nie still als MSC-[B].
