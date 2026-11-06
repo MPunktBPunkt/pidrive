@@ -1,10 +1,11 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-11-06 (nachgezogen: Heimfahrt 22.10. R46–R52; Identity/Detach 23.10. R37–R45; Größenleiter 27.10. Q16; Analyzer 06.11. E18/F15; Connected Desk C-D1…C-D12 inkl. Audit PR #34) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.36+ / Analyzer-Gadget 0.0.52  
+**Stand:** 2026-11-07 (Narrative: [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md); Facts-Körper 06.11.: Heimfahrt R46–R52; Identity/Detach R37–R45; Größenleiter Q16; Analyzer E18/F15; Connected Desk C-D1…C-D12) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.36+ / Analyzer-Gadget 0.0.52  
 **Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) · [`identity-multireview`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/2026-10-27-GO-groessenleiter.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
-**Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.
+**Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.  
+**Narrative Lesefassung (TOC + Quellen + GPT-Abgleich):** [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) — dieses Dokument bleibt die normative Claim-Tabelle.
 
-**Scope:** Belegte Plattform = **diese** NBT Evo am **USB-MSC**-Port. Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. AOA/Connected: **Abgrenzung** Feld (E18/F15) + **Desk-[D]** in §11 — keine stillen MSC↔Connected-Transfers. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr. Analyzer-Host-Stimulus ≠ echte NBT.
+**Scope:** Belegte Plattform = **diese** NBT Evo. Zwei getrennte Ebenen: **Storage Plane** (USB-MSC, §§1–9) und **Control Plane** (AOA/Connected, §10 + [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md)). Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. AOA/Connected: **Abgrenzung** Feld (E18/F15) + **Desk-[D]** in §10 — keine stillen MSC↔Connected-Transfers. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr. Analyzer-Host-Stimulus ≠ echte NBT.
 
 | Status | Bedeutung |
 |--------|-----------|
@@ -20,7 +21,9 @@ Begleitdokumente: [`../betrieb/MSC-AKTUELL.md`](../betrieb/MSC-AKTUELL.md) · [`
 
 ## 1. Gesamtbild in einem Satz
 
-Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien, hält aber **mindestens drei getrennte Zustände**: (1) **Navigator/Playlist-Position**, (2) **Browse-/Titel-/Bibliotheks-Cache**, (3) **Audio-Body-Cache**. USB-Cycle, FS-Re-Enum und Resume sind **nicht dasselbe Ereignis**; Remount ist **kein** Cold Start (R46). Fresh-Scan liest Dateiköpfe als **32+128+EOF-Probe** (≈80 KiB Head; EOF-Blöcke größenabhängig); nach bekanntem Zustand reicht oft FS-Enum + Vollatom am Resume-Track. Lesen läuft in **drei Modi** (R47): Head/Selection, Eager Body (~90–99 %), Neighbor/LBA-Interleave — Eager ≠ Play Intent (R50). Idle: **TUR ~2239 ms**. Prefetch-Lead **kontextabhängig** (R49; ~7 s situativ bis 140–240 s — „8 s“ als Konstante **REJECTED**). Größenleiter ≫158 KiB (Q16) weiter **offen** (27.10. Capture-Body verloren).
+**Zwei-Plane (Kurz):** Storage = aggressiver USB-MSC-Host mit Media-Cache (Feld stark belegt). Control = Connected Apps (BCL→Etch→SAS→RHMI/CDS/AV; Desk-[D], F20-Wire offen). Details: [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md).
+
+**Storage Plane:** Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien, hält aber **mindestens drei getrennte Zustände**: (1) **Navigator/Playlist-Position**, (2) **Browse-/Titel-/Bibliotheks-Cache**, (3) **Audio-Body-Cache**. USB-Cycle, FS-Re-Enum und Resume sind **nicht dasselbe Ereignis**; Remount ist **kein** Cold Start (R46). Fresh-Scan liest Dateiköpfe als **32+128+EOF-Probe** (≈80 KiB Head; EOF-Blöcke größenabhängig); nach bekanntem Zustand reicht oft FS-Enum + Vollatom am Resume-Track. Lesen läuft in **drei Modi** (R47): Head/Selection, Eager Body (~90–99 %), Neighbor/LBA-Interleave — Eager ≠ Play Intent (R50). Idle: **TUR ~2239 ms**. Prefetch-Lead **kontextabhängig** (R49; ~7 s situativ bis 140–240 s — „8 s“/„15 s“ als Konstante **REJECTED**). Callback-Reads oft 4 KiB (E5); CBW-`blocks` häufig **8 und 240** (E11) — nicht „HU immer 4 KiB“. Größenleiter ≫158 KiB (Q16) weiter **offen** (27.10. Capture-Body verloren).
 
 ```mermaid
 flowchart LR
@@ -312,12 +315,14 @@ Diese Punkte beschreiben die **Messkette**, nicht die NBT:
 
 ---
 
-## 10. Connected / AOA — Abgrenzung und Desk-[D] (nicht MSC-Wire)
+## 10. Connected / AOA — Control Plane (Abgrenzung und Desk-[D], nicht MSC-Wire)
+
+**Einordnung:** Control Plane ≠ Storage Plane. Narrative: [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) §§3/5. Desk-Stack: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md).
 
 **Feld an dieser HU (MSC/Analyzer):** E18/F15 — `303a:1001`+MSC → P-MOUNT; AOA-Counter 0; kein Media-UI ohne FAT.  
-**hu-probe Direct-`18D1:2D00`:** Zubehör-UI + Reconnect-Loop; 51/52/53 und Bulk auf Callback-Schicht absent — siehe hu-probe Feld 2026-10-30 (nicht hier als MSC-[B] führen).
+**hu-probe Direct-`18D1:2D00`:** Zubehör-UI + Reconnect-Loop; 51/52/53 und Bulk auf Callback-Schicht absent — siehe hu-probe Feld 2026-10-30 (nicht hier als MSC-[B] führen). AOA-Identity ≠ BCL ≠ Etch ≠ SAS ≠ RHMI/AV (C-D2/C-D9).
 
-Desk-Stack (BimmerGestalt / AAIdrive) — Detail: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md). Kurzindex:
+Desk-Stack (BimmerGestalt / AAIdrive) — Kurzindex:
 
 | # | Fakt | Status | Grenze |
 |---|------|--------|--------|
@@ -349,3 +354,4 @@ Desk-Stack (BimmerGestalt / AAIdrive) — Detail: [`CONNECTED-AAIDRIVE-STACK-202
 - Community-/SIB-Muster, Lab-Debian-Gaps und Analyzer-Host-Stimulus nicht still zu NBT-[B] machen. Host-Scope: nur diese NBT Evo.
 - Event-/Callback-Größe (`xfer`, `n=4096`) und READ10-CBW-`blocks` getrennt führen (E5 vs. E11). Prefetch-Lead/Cache aus PiDrive nicht automatisch als hu-probe-FACT lesen; Eager-EOF/Track-Atom seit Abend-Offline 18.10. **[B]**; Heimfahrt Remount/Eager seit 22.10. **[B]/[S]**. Offline-Timing nur über `capture_t_us`, nie `replay_t_us`.
 - AOA/Connected-Apps: Feld nur Abgrenzung E18/F15; Desk-[D] nur in **§10** und [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) — nie still als MSC-[B].
+- Narrative Modelltexte und GPT-/KI-Zusammenfassungen gehören nach [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) (inkl. Korrekturabschnitt); neue Messclaims zuerst hier mit Artefakt-Link.
