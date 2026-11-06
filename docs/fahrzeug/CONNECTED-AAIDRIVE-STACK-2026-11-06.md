@@ -216,9 +216,9 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | C4 | Audio-Fokus AV vs. paralleler Pi-A2DP | Konflikt / Ducking |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
 | C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Produktentscheid |
-| C7 | FIELD-CONNECTED-REAL-01: Phone+MyBMW+AAIdrive parallel Analyzer USB-Capture | Divergenzpunkt vs. Direct-ESP AOA |
-| C8 | **FX-G3-01:** eine F20-Session mit sichtbarer `sas_certificate`/Challenge/`sas_login` (Etch-Trace **oder** korrelierte Logs+Tunnel) | Cleartext-Claim macht Decode möglich; Bulk/BCL muss sichtbar sein |
-| C9 | Optional parallel CarAPI-App (Spotify): SAS in Connected, anderer Phone-Call-Graph | gleicher Wire-Tunnel, andere Logcat-Korrelation |
+| C7 | **P1 FIELD-CONNECTED-REAL-01** (nach P0 I-303A): Phone+MyBMW+AAIdrive ∥ Analyzer ∥ HU-Notiz ∥ ESP-Vergleich | Plan: [hu-probe field-connected-real-01](../../../hu-probe/docs/feld/2026-11-06-field-connected-real-01.md) |
+| C8 | **P2 FX-G3-01:** `sas_certificate`/Challenge/`sas_login` in einer Session | Cleartext-Claim; braucht sichtbaren Bulk/BCL |
+| C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Logcat |
 
 ---
 

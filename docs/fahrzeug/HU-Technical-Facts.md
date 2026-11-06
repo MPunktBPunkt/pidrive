@@ -334,7 +334,7 @@ Desk-Stack (BimmerGestalt / AAIdrive) — Detail: [`CONNECTED-AAIDRIVE-STACK-202
 | C-D11 | Connected-Apps-Pfad Cleartext („Nothing is encrypted“) — SAS/Etch in BCL DATA ohne TLS | **[D]** Doc | FX-G3-01; hilft nicht bei absent Bulk |
 | C-D12 | AIDL `createSecurityContext`/`loadAppCert` ≠ Mermaid `initSecurityContext`/`loadApplicationCert`; AAIdrive `MainService` gated auf Security connected | **[D]** | EVID-SAS-029/030 |
 | C-Q1 | F20: 6NR / Apps-Checkbox aktiv? | **[?]** | ohne das Pfad C tot |
-| C-Q2 | FIELD-CONNECTED-REAL-01 / FX-G3-01: Phone+Tunnel ∥ Analyzer; `sas_*` einmal sichtbar | **[?]** geplant | AAIdrive **oder** CarAPI-Korrelation |
+| C-Q2 | **P1** FIELD-CONNECTED-REAL-01 / **P2** FX-G3-01: Phone∥Analyzer∥HU; `sas_*` korreliert | **[?]** geplant | [Plan](../../../hu-probe/docs/feld/2026-11-06-field-connected-real-01.md); nach I-303A (G1) |
 
 **REJECTED (MSC↔Connected):** „AOA erkannt / Bulk ⇒ Connected-App offen.“ · „ESP-AOA = Phone-Connected-Rolle.“ · „Jede Connected-App ist direkter Etch-Client.“
 
