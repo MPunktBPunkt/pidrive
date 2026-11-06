@@ -1,10 +1,10 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-10-23 (Identity/Remount + Detach/Browse: Serial/Label/Vol **kein** Resume-Key; Soft-Remount wirkungslos; kurzer Cycle = FS-Enum **ohne** Datei-Head-Scan; Fresh = **32+128+6** EOF; Drei Schichten Navigator≠Browse≠Body; Detach ≤30 s / ESP-RST / OTG ~99 s → Resume — Fresh ≠ Zeit-Timeout) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.54+ / `hu-probe` 0.3.19  
-**Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`identity-multireview`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md)  
+**Stand:** 2026-11-06 (nachgezogen: Heimfahrt 22.10. R46–R52; Identity/Detach 23.10. R37–R45; Größenleiter 27.10. Q16 offen/Instrument-Fail; Analyzer-Feldmatrix 06.11. E18/F15/I6–I7) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.21+ / Analyzer-Gadget 0.0.52  
+**Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) · [`identity-multireview`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/2026-10-27-GO-groessenleiter.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.
 
-**Scope:** Belegte Plattform = **diese** NBT Evo am MSC-Port. Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr.
+**Scope:** Belegte Plattform = **diese** NBT Evo am **USB-MSC**-Port. Keine gemessenen Fakten zu CAN, MOST, CarPlay, Android Auto oder HU-WLAN/Ethernet-APIs. AOA/Connected nur als **Abgrenzung** (E18/F15), nicht als Connected-Protokoll-FACTS. Andere BMW-Generationen = kein stiller Transfer. Lab-AV ≠ Feld-Ohr. Analyzer-Host-Stimulus ≠ echte NBT.
 
 | Status | Bedeutung |
 |--------|-----------|
@@ -14,35 +14,35 @@
 | **[H]** Hypothese | plausibel, noch nicht gemessen |
 | **[?]** offen | unbekannt, Test nötig |
 
-Begleitdokumente: [`../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md`](../betrieb/artifacts-2026-10-06-feld/ANALYSE-HU-FILE-CACHE-BACKPRESSURE-2026-10-06.md) · [`../betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md`](../betrieb/artifacts-2026-10-06-lab/KONZEPT-HU-SIM-NBT-2026-10-06.md) · [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · Audit: [`bmw-nbt-evo` Sheet](../../../technology-audit/technologies/bmw-nbt-evo/SHEET.md) · [`pidrive-2026-bmw-hu` Evidence](../../../technology-audit/audits/pidrive-2026-bmw-hu/evidence.md) · [`hu-probe-bmw-s0s2-field-2026`](../../../technology-audit/audits/hu-probe-bmw-s0s2-field-2026/) · Report [`2026-10-15-hu-probe-bmw-s0s2-field`](../../../technology-audit/docs/reports/2026-10-15-hu-probe-bmw-s0s2-field.md) · Application C [`bmw-nbt-evo.md`](../../../technology-audit/projects/pidrive/applications/bmw-nbt-evo.md) · Foreign-Desk: [`bmw-nbt-media-index`](../../../technology-audit/audits/bmw-nbt-media-index-2026-foreign/evidence.md) · [`usb-bot-observation`](../../../technology-audit/audits/usb-bot-observation-2026-foreign/evidence.md) · hu-probe: [`bmw-s0-0.2.11`](../../../hu-probe/docs/feld/2026-10-14-bmw-s0-0.2.11-auswertung.md) · [`bmw-s0-0.2.2`](../../../hu-probe/docs/feld/2026-10-14-bmw-s0-auswertung.md) · Pin `@5dbec43` · [`profile`](../../../hu-probe/profiles/bmw_nbt_evo.json) (P1c noch offen)
+Begleitdokumente: [`../betrieb/MSC-AKTUELL.md`](../betrieb/MSC-AKTUELL.md) · [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) · Audit-Reports: [`media-ladder`](../../../technology-audit/docs/reports/2026-10-22-hu-probe-media-ladder.md) · [`heimfahrt`](../../../technology-audit/docs/reports/2026-10-22-hu-probe-heimfahrt.md) · [`abend-offline`](../../../technology-audit/docs/reports/2026-10-18-hu-probe-bmw-s2-abend-offline.md) · Audits: [`hu-probe-heimfahrt-2026-10-22`](../../../technology-audit/audits/hu-probe-heimfahrt-2026-10-22/) · [`hu-probe-media-ladder-2026-10-22`](../../../technology-audit/audits/hu-probe-media-ladder-2026-10-22/) · [`esp32-usb-analyzer-2026-field-host-matrix`](../../../technology-audit/audits/esp32-usb-analyzer-2026-field-host-matrix/) · [`pidrive-2026-bmw-hu`](../../../technology-audit/audits/pidrive-2026-bmw-hu/evidence.md) · Foreign-Desk: [`bmw-nbt-media-index`](../../../technology-audit/audits/bmw-nbt-media-index-2026-foreign/evidence.md) · [`usb-bot-observation`](../../../technology-audit/audits/usb-bot-observation-2026-foreign/evidence.md) · hu-probe Profil [`bmw_nbt_evo.json`](../../../hu-probe/profiles/bmw_nbt_evo.json)
 
 ---
 
 ## 1. Gesamtbild in einem Satz
 
-Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien, hält aber **mindestens drei getrennte Zustände**: (1) **Navigator/Playlist-Position**, (2) **Browse-/Titel-/Bibliotheks-Cache**, (3) **Audio-Body-Cache**. USB-Cycle, FS-Re-Enum und Resume sind **nicht dasselbe Ereignis**. Fresh-Scan liest Dateiköpfe als **32+128+EOF-Probe** (≈80 KiB Head; EOF-Blöcke größenabhängig, z. B. 6 @ ~158 KiB / 2 @ ~120 KiB); nach bekanntem Zustand reicht oft FS-Enum + Vollatom am Resume-Track. Idle: **TUR ~2239 ms**. Prefetch-Lead medien-/pfadabhängig (VARIABLE; ~7,8 s body_rest nach Fresh auf ~158 KiB-SynthFat — relativ, Audible offen).
+Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien, hält aber **mindestens drei getrennte Zustände**: (1) **Navigator/Playlist-Position**, (2) **Browse-/Titel-/Bibliotheks-Cache**, (3) **Audio-Body-Cache**. USB-Cycle, FS-Re-Enum und Resume sind **nicht dasselbe Ereignis**; Remount ist **kein** Cold Start (R46). Fresh-Scan liest Dateiköpfe als **32+128+EOF-Probe** (≈80 KiB Head; EOF-Blöcke größenabhängig); nach bekanntem Zustand reicht oft FS-Enum + Vollatom am Resume-Track. Lesen läuft in **drei Modi** (R47): Head/Selection, Eager Body (~90–99 %), Neighbor/LBA-Interleave — Eager ≠ Play Intent (R50). Idle: **TUR ~2239 ms**. Prefetch-Lead **kontextabhängig** (R49; ~7 s situativ bis 140–240 s — „8 s“ als Konstante **REJECTED**). Größenleiter ≫158 KiB (Q16) weiter **offen** (27.10. Capture-Body verloren).
 
 ```mermaid
 flowchart LR
   Plug["USB Plug / Cycle / Reconnect"] --> Enum["SCSI + FS-Enum"]
   Enum --> Path{Zustand bekannt?}
-  Path -->|Fresh / Cold| Scan["Datei-Scan 32+128+6 je File head-first"]
-  Path -->|Cycle + bekannt| Res["kein Datei-Head-Scan / keine EOF-6"]
-  Scan --> BodyR["body_rest Prefetch Lead variabel"]
+  Path -->|Fresh / Cold| Scan["Datei-Scan 32+128+EOF je File"]
+  Path -->|Cycle/Remount + bekannt| Res["Kontextaufnahme / kein Bibliotheks-Fresh"]
+  Scan --> Modes["Head / Eager Body / Neighbor-Interleave"]
   Res --> Atom["Resume-Atom oft tail70 then head240"]
-  BodyR --> Wait["Idle TUR 2238.78 ms"]
+  Modes --> Wait["Idle TUR 2238.78 ms"]
   Atom --> Wait
   Wait --> Sel["Nutzer / Autoplay"]
   Sel --> Nav["Navigator-Position"]
   Sel --> Browse{"Browse-Cache Hit?"}
   Browse -->|ja| UI["Liste ohne Neu-Read"]
   Browse -->|nein| DirRead["Dir/Heads erneut"]
-  Nav --> Play{"Body-Cache?"}
+  Nav --> Play{"Body-Cache / Intent?"}
   Play -->|Hit| PlayCache["Wiedergabe ohne Body-Read"]
-  Play -->|Miss| Eager["Atom / Eager-Read"]
+  Play -->|Miss| Eager["Atom / Eager-Read ≠ Audible"]
 ```
 
-**PiDrive-Vertrag:** stabiles Directory/FAT + gültiger Dateikopf (~80 KiB + konsistente Size/EOF); Body darf dynamisch entstehen. Browse-UI aus Dir (8.3), Player-ID3 aus Head. **Nicht annehmen:** Remount ⇒ Position weg; Serial/Label/Vol ⇒ Resume-Key; Soft-Remount (NOT READY) ⇒ HU-Reset; „länger weg“ ≤~99 s ⇒ Fresh.
+**PiDrive-Vertrag:** stabiles Directory/FAT + gültiger Dateikopf (~80 KiB + konsistente Size/EOF); Body darf dynamisch entstehen; Neighbor-Eager/Partial erwarten. Browse-UI aus Dir (8.3), Player-ID3 aus Head. **Nicht annehmen:** Remount ⇒ Cold Start / Position weg; Serial/Label/Vol ⇒ Resume-Key; Soft-Remount (NOT READY) ⇒ HU-Reset; „länger weg“ ≤~99 s ⇒ Fresh; großer Read ⇒ hörbares Play; Prefetch-Lead = 8/15 s.
 
 ---
 
@@ -67,8 +67,9 @@ flowchart LR
 | E15 | Auswahllatenz Marker → READ10 | [S] | Manuelle Wahl **1,7–1,9 s** (`171815`, `2280`), Autoplay-Sprung ≈ **0,2 s** (`200036`). Marker teils nachgezogen, daher [S]. P-SEL |
 | E16 | tail_then_head | **[B]** Morphologie (R41) / Ursache [H] | T1 als Folgetrack oft Ende zuerst (`249/69`→`9/240`); Erst-Mounts head-first. **23.10.:** nach Cycle/Resume = Resume-Korrelat `tail70→head240` (R41), nicht „nach jedem Mount“. P-TAIL |
 | E17 | Media-Loss-Reaktion | **[B]** | Nach `NOT READY / MEDIUM NOT PRESENT` (hu-probe `hideMedia`): `TUR status=1 → REQUEST_SENSE → PREVENT_ALLOW status=1` (`20261019-075344`, Tags 131–146). **23.10.:** Soft-Remount/NOT READY ≠ HU-Reset / Fresh (R37). P-LOSS |
+| E18 | Analyzer-MSC-Gadget am NBT (zweites Instrument) | **[B]** Feld 06.11. | usb-analyzer Device `.89` **0.0.52**, Identity `303a:1001`, Pattern `lab_sector_v1` (512×512 B): HU **mountet** als Storage; Class-Hook CBW: TUR / MODE_SENSE6 / PREVENT_ALLOW / READ_CAPACITY10 / READ10 (`transfer_length` oft **8**); Soft-Reenum → Remount + mehr READs; `writeOps=0`; `aoa51/52/53=0` trotz AOA-respond. **Kein** Media-/Zubehör-UI ohne FAT/Media (F15). Unabhängig von hu-probe TinyUSB-Tap. [`Feldmatrix`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · Evidence [`bmw_hu/`](../../../usb-analyzer/docs/evidence/field_host_matrix_2026-11-06/bmw_hu/) |
 
-Quelle E12–E17: [hu-probe unabhängige Auswertung 2026-10-19](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md). Lab-Modell: `tools/nbt_hu_sim.py --hu-model nbt_evo_2026_10`, Profil `tools/profiles/nbt_evo_lab_2026-10-19.json`.
+Quelle E12–E17: [hu-probe unabhängige Auswertung 2026-10-19](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md). Lab-Modell: `tools/nbt_hu_sim.py --hu-model nbt_evo_2026_10`, Profil `tools/profiles/nbt_evo_lab_2026-10-19.json`. E18: Analyzer-Feldmatrix 2026-11-06.
 
 ---
 
@@ -85,6 +86,7 @@ Quelle E12–E17: [hu-probe unabhängige Auswertung 2026-10-19](../../../hu-prob
 | F7 | Diese HU zeigt beim Abspielen nur einen **Fortschrittsbalken**, keinen Sekundenzähler | [B] | s1-morgen `f1-events.jsonl` 07:46:43 |
 | F8 | Autoplay-Reihenfolge BOB → Bayern → Rock (`fav2 → fav1 → fav0`) | [B] | s1-morgen, mehrfach |
 | F9 | USB-Hub an dieser HU: weder Stick noch ESP über den getesteten Hub erkannt (Protokoll: USB-1.1 geplant; Abend: USB-2-Hub) | [B] | F1-Abend 07.10. [`F1-ERGEBNIS.md`](../betrieb/artifacts-2026-10-07-feld/feld-s2-prep/s2-20261007-172123/F1-ERGEBNIS.md) — Full-Speed-Erzwingen über Hub entfällt als Werkzeug |
+| F15 | Mount/SCSI ohne sichtbares Media-UI | **[B]** Operator+Wire | Analyzer `lab_sector_v1` / Pattern-Stick: P-MOUNT + READs, aber **kein** erkennbares Medium/Zubehör auf dem HU-Display. Sichtbare Medienliste braucht echtes **FAT + Mediendateien** (z. B. pidrive/hu-probe SynthFat). Abgrenzung: MSC-Identity `303a:1001` ≠ AOA/Connected-Pfad (E18). |
 
 ### 3.1 Persistente NBT-Medienartefakte aus Foreign-Desk-Audits
 
@@ -157,11 +159,18 @@ Messungen am Fahrzeug:
 | R43 | ESP-RST und physisches OTG (~30 s bzw. **~99 s** + Zündung aus/ein) → Resume, kein Fresh | **[S]** Operator · **STRONG** gesamt | Navigator/Playlist-Position überlebt; die drei Mechanismen (Detach/RST/OTG) sind **nicht** vollständig unabhängig isoliert (RST enthält Detach, OTG enthält Zündung). Obergrenze getestet: ~99 s. |
 | R44 | „Fresh = Zeit-Timeout seit Disconnect“ | **REJECTED** (≤ 99 s) | Soft-Detach ≤30 s + RST + OTG~99 s erlauben Resume. Echter Fresh-Trigger **UNKNOWN** (Kandidaten: HU-Kaltstart, Media-TTL ≫99 s, voller Schlaf-/Zündungszyklus). |
 | R45 | Drei HU-Schichten: Navigator/Playlist ≠ Browse-/Titel-Cache ≠ Audio-Body | **[B]** Wire folders_30 + Identity | **folders_30 Wire:** vor Cycle Browse = Body-Rest `160/72`; nach Cycle FS-Enum + Dir-Reads, erster Datei-Atom = Resume-Track (ALBUM3/T08 `0/234`), weitere Browse-Titel wieder Vollatom — Cache flush, Position bleibt. Identity: Cycle ohne Fresh-`32+128+EOF`. Alte Lesart „Remount → Cache weg → Resume weg“ **falsch**. [`detach-browse` §4.3](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md) |
+| R46 | Remount ≠ Cold Start | **[B]** STRONG Heimfahrt | Trip `#22` 2. Mount @~595,7 s mit **395xxx-LBA-Probe** (Semantik UNKNOWN, Q18); danach Kontext MIX/M01, nicht Medium-Datei 1. `#23` Remount @~448,5 s → Resume nahe **ROCK/R04**. Passt zu R38/R43 (Cycle/OTG → Resume). [`heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) · Audit [`hu-probe-heimfahrt-2026-10-22`](../../../technology-audit/audits/hu-probe-heimfahrt-2026-10-22/) |
+| R47 | Drei Read-Modi: Head/Selection · Eager Body · Neighbor/Interleave | **[B]** Heimfahrt | **A** Head: Einstieg oft `0/240` (+ `240/240`, `480/32`). **B** Eager Body: ~93–99 % File-Coverage, Bulk **240**, ~1 MiB/s (`#23` C01–C04, R01/R02). **C** Scheduler-Interleave: mehrere LBA-Regionen/Dateien verzahnt (R04-Sprünge; CHARTS H01↔H05). |
+| R48 | Globaler Elevator **SUPERSEDED** | **[B]** Korrektur | Media-Leiter `tail_then_head` = lokales Nearest-LBA (**STRONG**, bleibt). Heimfahrt: kein global strikt aufwärts — **LBA-Scheduler** priorisiert Regionen und wechselt. |
+| R49 | Prefetch-Lead kontextabhängig | **[B]** · Konstante **REJECTED** | MIX `#22` ~7,2–7,7 s situationsgebunden; ROCK/CLASSIC `#23` **140–237 s**. Verwirft Lead=8 s und Lead=15 s als Profil-Konstante (ergänzt R21 / Matrix A5). |
+| R50 | Eager Body ≠ Play Intent | **[S]** STRONG / Audible offen | `#23`: C01–C04 fast vollständig hintereinander, Atom-Abstände teils **~4 ms**, ohne Audible-Beweis. Großer Read beweist keine Decode-/Hör-Session → GATE-01 bleibt P0. |
+| R51 | Kurzer BUSY ohne Host-Reset | **[B]** Heimfahrt | `#23` R04: 16 Blöcke BUSY ~**1,6 s**, abandoned, danach normal weiter — Backpressure; passt zu E7/R29 (längere Stall-Toleranz), hier Kurzfenster. |
+| R52 | 4‑KiB-Takt / Bulk 240 / TUR auf großer Fahrt | **[B]** Heimfahrt verstärkt | `#23` File-Gap p50 **3,896 ms** (n≈10 k); READ10 Bulk **240**; Idle TUR **2,2388 s** — konsistent mit E3/E11/R15, jetzt auch unter `drive_home`/`drive_mix`. |
 | R26 | Replug-Lesemuster des aktuellen Titels: **1 Callback (Kopf, 4 KiB), ~19 ms Pause, 127 Callbacks im 5-ms-Takt**, gesamt **651–665 ms** (788–805 KB/s). 6-ms-Abstände unregelmäßig, kein 16er-Raster. Ohne laufenden Stream (nach ESP-Reboot) 3,75 ms je Callback, keine 19-ms-Pause | **[B]** Muster / [?] Ursache der 19 ms | s3 6/6 Replugs (`trace.jsonl`, `gap`); Taps 17–18 ms; Reboot-Plug 07:54:50 3 ms. Bestätigt R15 (Takt hängt am ESP-Zustand). Callback-Raster ≠ zwingend CBW-Größe (E11: oft 8 **oder** 240) |
 | R18 | 51 Blöcke (208.896 B) von fav0 werden in der Rampe nach RST nie gelesen | [B] Zahl / [?] Ursache | s1-morgen: Summe 4× exakt **8.179.712** B; welche Blöcke → LBA-Trace (`msc.reads`) |
 | R19 | Autoplay-Wechsel: Rampe pausiert nach ~4 MiB für 2–3 s, angetippte Auswahl nicht | [S] | s1-morgen Boot 0 (bei 4.194.304 B, 07:44:12–14), Boot 1 (3.985.408 B, 07:49:43–44) |
 | R20 | Wiederanlauf nach RST: aktueller Titel in ≤ 3 s komplett neu gelesen (ein Lauf), dazu **8 verstreute 4-KiB-Reads** auf fav0 (`maxSeq` 4096); gesamt `rc=167` | [B] | s1-morgen 4/4 bei 512-KiB-Titel; bei Rock als aktuellem Titel startet direkt die Rampe (2/2) |
-| R21 | Next-Track-Prefetch hängt an der **Wiedergabezeit**: ~15 s vor Wiedergabe-Ende, nicht direkt nach Read-EOF | [S] PiDrive · [H] hu-probe Lead | s1-morgen: Bayern 07:48:10 vs. BOB-Ende 07:48:25; Rock 07:49:38 vs. Bayern-Ende ~07:49:52; Ausreißer Boot 0 ~7 s. Nach Rock-Read-EOF nie Prefetch. **hu-probe Abend:** Hold-2 → T3-Atom im Buffer (`212635`) = Prefetch-Ahead-Kandidat, Diskriminierung offen (Marker + `capture_t_us`); T2-Band live 318–622, offline offen. Semantik ohne formalen Marker-Lauf weiter nicht hochstufen (`EVID-HUPROBE-2026-10-15-010`, GATE-01) |
+| R21 | Next-Track-Prefetch / Lead | **[B]** Struktur · Lead **VARIABLE** · 8/15 s **REJECTED** | PiDrive s1-morgen: teils ~15 s vor Wiedergabe-Ende (Ausreißer ~7 s) — nicht verallgemeinern. **Media-Leiter 22.10.:** Tail-Prefetch-Struktur (z. B. 160@off160) FACT; Lead ≈7,5–8 s nur VARIABLE ohne Audible. **Heimfahrt 22.10.:** MIX situativ ~7,2–7,7 s; ROCK/CLASSIC oft **140–240 s** Vorlauf → „8 s HU-Parameter“ **REJECTED** (R49). Abend Hold-2→T3 weiter Prefetch-Kandidat ohne Marker (`GATE-01`). |
 | R22 | Scan nach Plug: erster Lese-Burst ab LBA 0 ist **1.374.720 B** (3× identisch), danach ein Burst von 176.128 B auf einem Datei-Kopf | [B] | `msc.reads` p1-run-a/-b ms 217113–218891, m3seq Ep. 6 ms 148817; 176.128 B: p1 ab LBA 17377, m3seq Ep. 9 ab LBA 18161. Lab-Signatur für C7 |
 
 ### 5.2 Log-Beleg: Burst bei leerem Ring (07:58, Correlate-Watch)
@@ -278,11 +287,12 @@ Mit Stille-bei-Miss sind pro Auswahl höchstens **Ringinhalt beim Arm + R_prod �
 | Q12 | Warum lehnte Play-Detect den Bayern-Tap 07:55:20 ab (43 Reads, `rej` +43, `guess` 0)? | Lab: Tap-Muster ab Resume-P (R16) ~40 s nach ESP-Reboot nachstellen (`nbt_hu_sim.py --golden GW`), `playMinSeqBytes` / Kopf-Regel prüfen; Feld: `playingUid` nach jedem Tap notieren (s4) |
 | Q13 | Ist das stumme `fav0` in s6 primär vorab gecachte non-live Stille, Mid-File-Play ohne Arm oder beides? | S6 im Lab nachstellen: `fav1` live, `fav0` vollständig non-live vorlesen, danach `fav0` wählen. Auswahl klassifizieren: **kein Read** = cache-hit-like; **Mid-Read** = station-intent Mid-Play nötig; **Head-Read** = Play-Detect/S7-Gate korrigieren. Startgate **HU-A1** / Intent **HU-A4** — Method [`nbt-cache-eviction-play-intent`](../../../technology-audit/methods/nbt-cache-eviction-play-intent.md) |
 | Q14 | Was bricht Resume-P / erzwingt Fresh? | **Identity Serial/Label/Vol:** REJECTED (Q3/R34). **Zeit seit Disconnect ≤99 s / Soft-Detach / ESP-RST / OTG+Zündung:** kein Fresh (R42–R44). **Offen:** echter Fresh-Trigger (Kaltstart, TTL≫99 s, Schlafzyklus); Resume-Key Content vs. Deskriptor (C1–C8 Rest). Auswertung künftig über M18 (EOF-6 ja/nein, R40). Gate **HU-A2** nur noch für C6–C8 / Content — **nicht** Serial/Label/Vol wiederholen. |
-| Q16 | Verhalten bei Dateien ≫ 158 KiB (Größenleiter)? | **P0 PiDrive:** ~158 KiB (Kontrolle) / 1 MiB / 4 MiB / 16 MiB CBR; je Fresh + Cycle+Resume; READ10-Offsets, EOF, Body-Nachladen, Cache-Hit/Miss. Alle starken Read-FACTs bisher an ~158‑KiB-Dateien (R39). |
+| Q16 | Verhalten bei Dateien ≫ 158 KiB (Größenleiter)? | **weiter offen (P0).** Plan/Presets `size_158`…`size_16m` + `seq_size_ladder` (hu-probe ≥0.3.21): [`Feldplan`](../../../hu-probe/docs/feld/2026-10-24-feldplan-groessenleiter-p0.md) · [`GO 27.10.`](../../../hu-probe/docs/feld/2026-10-27-GO-groessenleiter.md). **27.10. Schritt 1:** Operator-Play OK, Soft-Cycle/Magenta-Fix OK — aber Collector bekam nur Hide-Poll (READ10=0); **RAM-Capture-Body verloren** → kein Mess-PASS ([`schritt1`](../../../hu-probe/docs/feld/2026-10-27-schritt1-auswertung.md)). Play-Slot-MiB / Fenster vs. Eager unverändert unbekannt. |
 | Q17 | Browse-Cache-Flush vs. Navigator nach Cycle am Wire? | **[B] beantwortet (R45):** folders_30 `165220` — nach Cycle Dir-Re-Read + Vollatome der browsed Tracks, erster Atom = Resume-Titel; kein Fresh-Bibliotheks-Scan. Artefakt: `hu-probe/.../20261023-detach-browse/20261023-165220_bmw_free`. |
+| Q18 | Semantik der Remount-Positionsprobe (395xxx-LBA)? | Heimfahrt `#22` 2. Mount liest u. a. **395136/8, 395248/8** … — positionsbezogen, aber Mapping (Cache-Index? Datei-Offset? Medium-Layout?) **UNKNOWN**. Nachziehen mit bekanntem Image + LBA-Map. |
 | Q15 | Was erklärt die ~20 s Menüphase unter Stall? | Phänomen R35; Gate **HU-A8**. Code schließt FAT/DIR-BUSY aus — Ursache weiter offen |
 
-Audit-Gates (**HU-A1…A11** in [`pidrive-2026-bmw-hu/README`](../../../technology-audit/audits/pidrive-2026-bmw-hu/README.md)): Reihenfolge A1 → A4 → A2 → …; **A10** (READ10-Größe) durch hu-probe S2 teilweise belegt (E11/Q10) — Histogramm je Phase + Wire offen; A7 bedarfsgetrieben; A5 (AV) zuletzt. Exit #6 Feld-Ohr (Sender/Menü) bleibt getrennt vom Busy-Pacing-Tonfenster. **Track-Atom / Eager-EOF (Burst→Atom):** Abend-Offline 18.10. auf **[B]** gehoben (E11/R2); Prefetch-Lead/Cache-Semantik weiter nicht hochstufen bis Marker-Lauf (`009`/`010`, GATE-01).
+Audit-Gates (**HU-A1…A11** in [`pidrive-2026-bmw-hu/README`](../../../technology-audit/audits/pidrive-2026-bmw-hu/README.md)): Reihenfolge A1 → A4 → A2 → …; **A10** (READ10-Größe) durch hu-probe S2 teilweise belegt (E11/Q10) — Histogramm je Phase + Wire offen; A7 bedarfsgetrieben; A5 (AV) zuletzt. Exit #6 Feld-Ohr (Sender/Menü) bleibt getrennt vom Busy-Pacing-Tonfenster. **Track-Atom / Eager-EOF:** Abend-Offline 18.10. **[B]** (E11/R2). **Heimfahrt:** Remount/Eager/Neighbor **[B]/[S]** (R46–R52); Prefetch-Lead-Konstante **REJECTED**. Offene P0: **Audible/Play-Intent (GATE-01)**, **Q16 Größenleiter**, **Q18 395xxx**.
 
 ---
 
@@ -293,18 +303,21 @@ Diese Punkte beschreiben die **Messkette**, nicht die NBT:
 | # | Fakt | Status | Beleg |
 |---|------|--------|-------|
 | I1 | Unter anhaltenden Host-Reads kann ESP-WiFi in ~3–5 s sterben; MSC bleibt nutzbar; Auto-Recovery ~30–100 s (hu-probe ≥0.2.11) | **[B]** Device | [`wifi-death-0.2.11`](../../../hu-probe/docs/feld/2026-10-14-wifi-death-0.2.11.md) — Telemetrie-Lücken nicht als HU-Abort lesen |
-| I2 | BOT-CBW/CSW aus TinyUSB-Tap = Device-Stack, **nicht** Wire; GATE-01 Wire weiter offen | **[D]/[?]** | hu-probe `GATES.md`; Peer-Review Abend 14.10.; E11/Q10 sind Stack-CBW-Claims |
-| I3 | `read.gap_us` aus MSC-Callback belastbar; Event-`t_us`-Monotonie war in 0.2.11 teils gebrochen (BOT-Drain vs. Capture-Stamp) | **[B]** Instrument | [`review-abend-triage`](../../../hu-probe/docs/feld/2026-10-14-review-abend-triage.md); Pace weiter über `gap_us`, nicht `t_us`-Monotonie |
+| I2 | BOT-CBW/CSW aus TinyUSB-Tap = Device-Stack, **nicht** Wire; GATE-01 Wire weiter offen | **[D]/[?]** | hu-probe `GATES.md`; E11/Q10 sind Stack-CBW-Claims. Analyzer Class-Hook (E18) = zweite Device-Ebene, ebenfalls nicht PHY-Wire |
+| I3 | `read.gap_us` aus MSC-Callback belastbar; Event-`t_us`-Monotonie war in 0.2.11 teils gebrochen (BOT-Drain vs. Capture-Stamp) | **[B]** Instrument | [`review-abend-triage`](../../../hu-probe/docs/feld/2026-10-14-review-abend-triage.md); Pace über `gap_us`; Heimfahrt/Offline nur `capture_t_us` |
 | I4 | MODE_SENSE6→`ep_stall` vor FW **0.2.18** = Instrument-Artefakt, **nicht** HU-Recovery | **[B]** Instrument / Claim HU-Recovery **REJECTED** | Offline-P0: 70/84 Stalls same-`t_us` wie ms6; nach Pad S2 `ep_stall=0`, ms6/cap=2,0 bleibt (`EVID-HUPROBE-2026-10-15-005`/`006`) |
-| I5 | Burst „immer 39“ File-Reads | Profil-Konstante **REJECTED**; Demo-Atom-Erklärung **[B]** | Gap-Split p50=39, Histogramm auch 62–78 (`EVID-HUPROBE-2026-10-15-009`) — nicht als allgemeine Konstante. **Abend 18.10.:** bei vollständiger Demo-Datei (158 208 B) ist 39 = 30+9 Callbacks des Atoms 240+69 — Dateigrößen-Folge, keine Magie |
+| I5 | Burst „immer 39“ File-Reads | Profil-Konstante **REJECTED**; Demo-Atom-Erklärung **[B]** | Gap-Split p50=39, Histogramm auch 62–78 (`EVID-HUPROBE-2026-10-15-009`). **Abend 18.10.:** 39 = 30+9 Callbacks des Atoms 240+69 |
+| I6 | usb-analyzer `bmw-hu-stimulus` × pidrive: Host↔DUT byte-exact | **[B]** Lab Instrument | Lab 02.11.: Stimulus-Reads = DUT-`bytesRead` (z. B. 31× / 109 056 B). Entschärft „blind vs. HU schweigt“ für L1/SCSI. **Not claimed:** echte NBT. [`Cross-Check`](../betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md) |
+| I7 | Capture-Upload / Persistenz kann Messkampagnen killen | **[B]** Instrument | Größenleiter 27.10.: Live-Reads während Play, Collector nur Hide-Poll → Q16 ohne HU-Daten. Soft-Cycle heilt Magenta/`NEED_RESET` ab hu-probe **0.3.21** (Device-Fix) |
 
 ---
 
 ## 10. Pflegeregel
 
 - Neue Feldbefunde mit Datum, FW-Version, Geometrie (`kReadyDetail`) und Quelle eintragen.
-- Status nur auf **[B]** heben, wenn Rohdaten (Status-JSON, Correlate-Watch, Bridge-Log, hu-probe Session) verlinkt sind. Evidence-IDs aus [`pidrive-2026-bmw-hu/evidence`](../../../technology-audit/audits/pidrive-2026-bmw-hu/evidence.md) bzw. [`hu-probe-bmw-s0s2-field-2026/evidence`](../../../technology-audit/audits/hu-probe-bmw-s0s2-field-2026/evidence.md) mitführen, wenn vorhanden.
+- Status nur auf **[B]** heben, wenn Rohdaten (Status-JSON, Correlate-Watch, Bridge-Log, hu-probe Session, Analyzer-Evidence) verlinkt sind. Evidence-IDs aus technology-audit-Audits mitführen, wenn vorhanden.
 - Zählerwerte aus verschiedenen Snapshots nicht mischen. `liveBytes = streamBytes − underruns` ist nach einem Senderwechsel ungültig, solange `streamBytesServed_` nicht in `startStream()` zurückgesetzt wird.
 - `mscTrace.tag` kann abgeschnitten sein (z. B. `Rock Antenn`) und ist kein eindeutiger Slotschlüssel. Datei/Slot aus LBA-Bereich plus `slotMap` zuordnen.
-- Community-/SIB-Muster und Lab-Debian-Gaps nicht still zu NBT-[B] machen. Host-Scope: nur diese NBT Evo.
-- Event-/Callback-Größe (`xfer`, `n=4096`) und READ10-CBW-`blocks` getrennt führen (E5 vs. E11). Prefetch-Lead/Cache aus PiDrive nicht automatisch als hu-probe-FACT lesen; Eager-EOF/Track-Atom ist seit Abend-Offline 18.10. geräteübergreifend **[B]** (E11/R2). Offline-Timing nur über `capture_t_us`, nie `replay_t_us`.
+- Community-/SIB-Muster, Lab-Debian-Gaps und Analyzer-Host-Stimulus nicht still zu NBT-[B] machen. Host-Scope: nur diese NBT Evo.
+- Event-/Callback-Größe (`xfer`, `n=4096`) und READ10-CBW-`blocks` getrennt führen (E5 vs. E11). Prefetch-Lead/Cache aus PiDrive nicht automatisch als hu-probe-FACT lesen; Eager-EOF/Track-Atom seit Abend-Offline 18.10. **[B]**; Heimfahrt Remount/Eager seit 22.10. **[B]/[S]**. Offline-Timing nur über `capture_t_us`, nie `replay_t_us`.
+- AOA/Connected-Apps-Fakten gehören nicht still in diesen MSC-Katalog (nur Abgrenzung E18/F15); Pfad C: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md).

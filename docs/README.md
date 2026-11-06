@@ -1,12 +1,12 @@
 # PiDrive — Dokumentationsindex
 
-**Stand:** 2026-10-22 · MSC Host-Grammatik (Media-Leiter) + PSRAM/Debug in esp32.pidrive 0.4.54
+**Stand:** 2026-11-06 · HU-Facts nach Heimfahrt/Identity/Analyzer; MSC FULLMENU + Größenleiter offen
 
 Zentraler Einstieg für alle Projekt-Dokumente. Neue Dokumente werden **hier** eingetragen —
 nicht im Repo-Wurzelverzeichnis (Ausnahme: [`../README.md`](../README.md)).
 
-**USB-MSC / BMW (aktuell):** **[`betrieb/MSC-AKTUELL.md`](betrieb/MSC-AKTUELL.md)** · Maßnahmen [`planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Matrix [`fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) · Facts [`fahrzeug/HU-Technical-Facts.md`](fahrzeug/HU-Technical-Facts.md).  
-Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `technology-audit` (Evidence).
+**USB-MSC / BMW (aktuell):** **[`betrieb/MSC-AKTUELL.md`](betrieb/MSC-AKTUELL.md)** · Maßnahmen [`planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · Matrix [`fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) · Facts [`fahrzeug/HU-Technical-Facts.md`](fahrzeug/HU-Technical-Facts.md).  
+Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `usb-analyzer` · `technology-audit` (Evidence).
 ---
 
 ## Dokumente
@@ -32,10 +32,12 @@ Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `
 | [betrieb/FRISCH-INSTALL.md](betrieb/FRISCH-INSTALL.md) | Soft-Smoke vs HW; Proxmox Bookworm-CT | Betrieb, Entwickler | 2026-09-24 |
 | [betrieb/LAB-MENU-WLAN.md](betrieb/LAB-MENU-WLAN.md) | Dev: Pi `/menu` + ESP SoftAP/STA ohne Auto | Betrieb, Entwickler | 2026-09-25 |
 | [betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md](betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) | Lab: Stick-Listing leer während Live-Stream | Betrieb, ESP/USB | 2026-09-18 |
-| [betrieb/MSC-AKTUELL.md](betrieb/MSC-AKTUELL.md) | **MSC Einstieg:** Stand, Lesereihenfolge, Ampel | Entwickler, nächste KI | 2026-10-22 |
+| [betrieb/MSC-AKTUELL.md](betrieb/MSC-AKTUELL.md) | **MSC Einstieg:** Stand, Lesereihenfolge, Ampel | Entwickler, nächste KI | 2026-11-06 |
+| [betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md](betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md) | Verweis Lab USB-Gadget Cross-Check | Entwickler | 2026-11-02 |
 | [planung/MASSNAHMEN-HU-PROBE-2026-10-22.md](planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) | hu-probe/Audit → PiDrive Maßnahmen (PSRAM, Grammar, Debug) | Entwickler | 2026-10-22 |
-| [fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) | HU-Parametermatrix (Head-160, TUR, Vertrag) | Entwickler, Feld | 2026-10-22 |
-| [fahrzeug/HU-Technical-Facts.md](fahrzeug/HU-Technical-Facts.md) | Normative HU-Fakten [B]/[S]/[H]/[?] | Entwickler | 2026-10-22 |
+| [planung/MASSNAHMEN-HU-PROBE-2026-10-23.md](planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) | Identity/Detach → FULLMENU / D+-Cycle | Entwickler | 2026-10-23 |
+| [fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) | HU-Parametermatrix (Head-160, TUR, Vertrag) | Entwickler, Feld | 2026-11-06 |
+| [fahrzeug/HU-Technical-Facts.md](fahrzeug/HU-Technical-Facts.md) | Normative HU-Fakten [B]/[S]/[H]/[?] | Entwickler | 2026-11-06 |
 | [betrieb/PLAN-NACH-M3-AE-2026-10-03.md](betrieb/PLAN-NACH-M3-AE-2026-10-03.md) | Plan Rev.5 nach Trace-Korrektur | Entwickler | 2026-10-04 |
 | [betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md](betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) | Übergabe P0/Q3a → P1 Feld | Entwickler, nächste KI | 2026-10-04 |
 | [betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md](betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | USB-MSC Feld-/Lab-Log (historisch lang) | Referenz | 2026-09-30 |
@@ -49,6 +51,7 @@ Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `
 | [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe | Entwickler | 2026-09-16 |
 | [fahrzeug/FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md](fahrzeug/FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md) | Foren-Auswertung AVRCP/Cover/MSC-Quellen | Entwickler | 2026-11-06 |
 | [fahrzeug/CONNECTED-AAIDRIVE-STACK-2026-11-06.md](fahrzeug/CONNECTED-AAIDRIVE-STACK-2026-11-06.md) | Connected/AAIdrive Stack (Pfad C) | Entwickler | 2026-11-06 |
+| [planung/MENUESTRUKTUR-MSC.md](planung/MENUESTRUKTUR-MSC.md) | Finales MSC-Menü-Zielbild (Baum, Cycle, Stall) | Planung | 2026-10-24 |
 | [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | Idee — USB-MSC-Menü / on-the-fly-MP3 | Planung | 2026-09-17 |
 | [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC + Entscheidungsstand | Planung | 2026-09-30 |
 | [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → esp32.pidrive / PUMP | Planung | 2026-09-18 |

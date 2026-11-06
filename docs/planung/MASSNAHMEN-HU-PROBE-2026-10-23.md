@@ -7,7 +7,7 @@
 - Reviews GPT / Grok / Mistral (Konsens 23.10.)  
 - Vortag: [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](MASSNAHMEN-HU-PROBE-2026-10-22.md)
 
-**Umsetzung hier:** Docs (`HU-Technical-Facts` Stand 23.10.). Firmware-Schnitt nur indirekt (Vertrag/Architektur), kein neuer `esp32.pidrive`-Code in diesem Paket.
+**Umsetzung:** Docs + Firmware `esp32.pidrive` **0.4.56-dev** (FULLMENU Dir + Soft-D+-Cycle-Reread).
 
 ---
 
@@ -58,7 +58,7 @@ Browse vs Play    → getrennte Caches; Browse-Miss nach Cycle möglich bei erha
 
 | Datei | Änderung |
 |-------|----------|
-| [`fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | Stand 23.10.; §1 Drei-Schichten; E8; R13/R34 geschärft; **R37–R45**; Q3/Q14; **Q16/Q17** |
+| [`fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | Stand **06.11.**: R37–R45 (23.10.) + Heimfahrt **R46–R52** + Analyzer **E18/F15/I6–I7**; Q3/Q14/Q16–Q18 |
 | dieses Dokument | Maßnahmen + Prioritäten |
 
 Optional nachziehen (nicht blockierend): Parameter-Matrix / MSC-AKTUELL Kurzverweis auf 23.10.
@@ -117,3 +117,22 @@ Nicht über Identity. Stimuli: HU-Kaltstart / Media-Abwesenheit gestaffelt ≫99
 ## 6. Schlussfolgerung für PiDrive
 
 Die Identitätsfrage (sichtbare USB-/FAT-IDs) ist für Resume praktisch geschlossen. Architekturentscheidungen hängen jetzt an **Body-Verhalten großer Dateien** und daran, **was Fresh wirklich auslöst** — nicht an weiteren Serial/Label/Vol-Experimenten.
+
+### Betriebsmodell (umgesetzt 0.4.55 → 0.4.56)
+
+```text
+Komplettes Menü  = Dir zeigt das ganze Niveau (≤32 Dateien à 160 KiB) — kein Soft-Paging
+Datei-Köpfe      = ~80 KiB gültig (Slot 160 KiB)
+Bodies           = dynamisch (Silence / Live-Overlay); Cycle/Auswahl → Neu-Read
+Host-Reread      = Soft D+ Cycle, Identity keep
+Soft-Remount     = Lab-API only
+```
+
+| Änderung | Vorher | Nachher |
+|----------|--------|---------|
+| Menü-Reread | Soft-Remount | D+-Cycle (0.4.55) |
+| Sichtbare Einträge | ≤4 + Mehr… | ≤32 Full-Dir (0.4.56) |
+| Geometrie | Legacy 2 MiB / 512 KiB×3 | FAT16 8 MiB / 160 KiB×32 |
+| Bridge | Soft-Paging | `FULL_MENU=True` |
+
+Feld-Smoke Lab `.88`: `huContract.fullMenu=true`, `menu_set` 8 Stationen + Stop → `msc.cycle`, `/api/menu` count=9.

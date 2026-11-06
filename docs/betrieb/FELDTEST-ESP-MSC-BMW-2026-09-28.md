@@ -238,20 +238,22 @@ D) Navigation
 
 ### 3.10 Zielbild v1 (Review-Konsens 2026-09-30) — *BMW-robustes MSC-Menü*
 
-Reviews (Folge-Runde) bestätigen A/B und schärfen das **lieferbare** v1 — kein neuer Architekturpfad:
+> **Historisch / Interim.** Soft-Paging (≤4 + Mehr…) ist abgelöst (FULLMENU ab 0.4.56). **Aktuelles finales Zielbild:** [`planung/MENUESTRUKTUR-MSC.md`](../planung/MENUESTRUKTUR-MSC.md) (2026-10-24). Unverändert gültig aus v1: feste Geometrie, Semantik per Snapshot, keine Vollbibliothek auf dem Stick, Hochvolatiles nicht über MSC.
 
-| Regel | Inhalt |
-|-------|--------|
-| Geometrie | fest (Slots/FAT); Semantik nur per Snapshot/`menu_set` |
-| Sichtbar | ≤4 Slots, Soft-Paging (`PAGE_CONTENT=3` + Nav) |
-| Tiefe | bevorzugt 2–3 Ebenen; kein voller PiDrive-Dateibaum |
-| Root-Beispiel | Favoriten · Quellen · Stop · Mehr… |
-| Dynamik | FM/DAB/Suche nur als **feste Slots + Paging**, nicht frei mutierende Listen |
-| Namen | kurz, FAT-sicher, Reihenfolge möglichst stabil |
-| HU-Update | neue Namen oft erst nach **OTG-Replug / Serial-Bump** — Produktverhalten, nicht nur Lab-Workaround |
-| Nicht über MSC | hochvolatile Detailzustände, WebUI-only-Bereiche |
+Reviews (Folge-Runde) bestätigten A/B und schärften das **damals lieferbare** v1 — kein neuer Architekturpfad:
 
-**Lesart zu §3.9:** Hierarchie bleibt Konzept-Ziel; **v1 = bewusst reduziertes Snapshot-/Slot-Modell** (Code ist schon so). Volle PiDrive-Spiegelung ist verworfen. Folge: Baustelle A schließen → Menü-Export an v1 halten → B messgetrieben.
+| Regel | Inhalt | Status 2026-10 |
+|-------|--------|----------------|
+| Geometrie | fest (Slots/FAT); Semantik nur per Snapshot/`menu_set` | **weiter gültig** |
+| Sichtbar | ≤4 Slots, Soft-Paging (`PAGE_CONTENT=3` + Nav) | **interim** → FULLMENU ≤32 / Snapshot-Seiten |
+| Tiefe | bevorzugt 2–3 Ebenen; kein voller PiDrive-Dateibaum | **weiter gültig** (Ziel: 1–2) |
+| Root-Beispiel | Favoriten · Quellen · Stop · Mehr… | **ersetzt** durch Root-Anker + Quellordner + STEUER |
+| Dynamik | FM/DAB/Suche nur als **feste Slots + Paging**, nicht frei mutierende Listen | **weiter gültig** (Paging = Snapshot + USB-Cycle) |
+| Namen | kurz, FAT-sicher, Reihenfolge möglichst stabil | **weiter gültig** |
+| HU-Update | neue Namen oft erst nach **OTG-Replug / Serial-Bump** | **präzisiert:** USB-Cycle (D+); Soft-Remount wirkungslos; Serial kein Resume-Key |
+| Nicht über MSC | hochvolatile Detailzustände, WebUI-only-Bereiche | **weiter gültig** |
+
+**Lesart zu §3.9:** Hierarchie bleibt Konzept-Ziel; v1 war bewusst reduziertes Snapshot-/Slot-Modell. Volle PiDrive-Spiegelung bleibt verworfen. Normativ jetzt: [MENUESTRUKTUR-MSC](../planung/MENUESTRUKTUR-MSC.md).
 
 Externe Vorbilder: [§17](#17-vergleichsprojekte-extern) · Abweichungsanalyse: [§17.6](#176-warum-pidrive-anders-wehtut-grok).
 

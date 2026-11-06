@@ -1,7 +1,7 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-10-23 (Identity/Detach in Facts R37–R45) · 2026-10-22 · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), hu-probe free Offline **0.2.40**, Media-Leiter **0.3.17**, PSRAM-Audit 21.10., Abend-Offline 18.10., PiDrive-Feld s1–s6/F0, technology-audit Media-Leiter + 0.7.1.  
-**Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Profil [`../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json`](../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json)
+**Stand:** 2026-11-06 (Facts R37–R52 / E18; Heimfahrt + Analyzer-Feldmatrix) · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
+**Maßnahmen:** [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Profil [`../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json`](../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json)
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** · [D] Desk · [H] Hypothese · [?] offen.
 
 Device-Stack-Messungen sind keine Wire-Messungen. Lab-Werte (Debian-Host) sind keine NBT-Werte.  
@@ -105,8 +105,12 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | Eviction-Strategie (Q4c) | unbekannt | [?] | Q4c | L | P1 | Sequenz, dann frühe Datei |
 | Wiedergabeposition P persistiert | ja, auch über Medienwechsel | [S] | R23 | L | — | — |
 | P bricht bei Serial + Root-Label + Name | nein | [S] | R34 (`HU-Technical-Facts`, S3/S4/F1 — nicht Feld 16.10.) | L | — | — |
-| Soft-Remount (NOT READY) als HU-Reset | wirkungslos | **[B]** | R37, E17; A16 Blindfenster | L | — | echten USB-Cycle nutzen |
-| P/Cache-Bruch durch BPB-Volume-ID | unbekannt | [?] | Q3/Q14, F0 B3 | L | **P0** | F0 B3 isoliert (Lab-Tooling 18/18 grün) |
+| Soft-Remount (NOT READY) als HU-Reset | wirkungslos | **[B]** | R37, E17; A16 Blindfenster | L | — | Menü-Reread = D+-Cycle (FW ≥0.4.55); Soft-Hide nur Lab |
+| Remount = Cold Start | nein | **[B]** | R46 Heimfahrt | L | — | Kontext/395xxx-Probe möglich (Q18) |
+| Eager Body = Play Intent | nein | **[S]** | R50 | L | P0 | Audible-GATE |
+| Prefetch-Lead Konstante 8/15 s | REJECTED | **[B]** | R49, A5 | L | — | Lead VARIABLE |
+| Analyzer-MSC ohne FAT → Media-UI | nein (silent mount) | **[B]** | E18/F15 | U | — | Content-Image nötig |
+| P/Cache-Bruch durch BPB-Volume-ID | unbekannt | [?] | Q3/Q14, F0 B3 | L | P1 | Serial/Label/Vol REJECTED (R34); Rest niedrige Prio |
 | P/Cache-Bruch durch BPB+Root-Label | unbekannt | [?] | F0 B2 | L | **P0** | F0 B2 isoliert |
 | P/Cache-Bruch durch Serial + Product-Revision allein | unbekannt | [?] | F0 B1 | L | **P0** | F0 B1 isoliert |
 | P/Cache-Bruch durch Größe, Pfad, Startcluster | unbekannt | [?] | Q14 | L | P1 | eigene Builds nach F0 |
@@ -138,7 +142,7 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 Die P0-Zeilen hängen zusammen:
 
 1. **Stabile Episoden:** Panic/Brownout beim OTG-Stecken beseitigen, sonst ist jede Identity-Messung ungültig.
-2. **Identity Serial/Label/Vol:** als Resume-Key **REJECTED** (23.10., Facts R34). Weitere Serien gestoppt; Fokus Größenleiter + Fresh-Trigger.
+2. **Identity Serial/Label/Vol:** als Resume-Key **REJECTED** (23.10., Facts R34). Weitere Serien gestoppt; Fokus Größenleiter-Retest (Q16), Audible/Play-Intent, Fresh-Trigger.
 3. **Timeout pro READ10 + nötiger Vorlauf:** entscheidet, wie lange BUSY pro 240-Block-CBW gehalten werden darf und ob ein Ring ≥ 120 KiB oder eine höhere Bitrate nötig ist.
 4. **Große Datei (D1–D3):** erst danach, sonst läuft die Leiter in dieselben Cache-/Resume-Effekte.
 
