@@ -142,13 +142,13 @@ Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 |---|---|---|
 | CIC (bis 2012) | 1.0–1.3 | keine Metadaten |
 | NBT (2013–2015) | 1.3 | Metadaten, kein Cover |
-| **NBT Evo ID5 (2016+)** | **1.4** | **Cover teilweise, Browsing rudimentär** |
-| NBT Evo ID6 (2017+) | 1.4 (partiell 1.5) | abhängig von SW-Stand |
+| **NBT Evo ID5 (2016+)** | **1.4** | Metadaten ja; **kein zuverlässiges BT-Cover über AVRCP**; Browsing am F20 nicht beobachtet |
+| NBT Evo ID6 (2017+) | 1.4 (partiell 1.5) | abhängig von SW-Stand; AVRCP 1.6 Cover Art (BIP) oft problematisch |
 
 **BMW 118d F20 2017 = NBT Evo ID5/ID6 → AVRCP 1.4**
 
 Für PiDrive bedeutet das: wir müssen AVRCP 1.4-kompatibel antworten.  
-AVRCP 1.6-Features (Browsing über OBEX) werden ignoriert oder führen zu Fehlern.
+AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details und Quellen: [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md).
 
 ### 3.2 AVRCP Pass-Through Kommandos (BMW sendet → PiDrive empfängt)
 
@@ -524,14 +524,19 @@ PiDrive mpris2.py
 **Längen-Limits (Code):** `xesam:title`/`artist`/`album` werden auf **64 Zeichen**
 gekürzt, `xesam:genre` auf **32 Zeichen** (`update_metadata()` in `mpris2.py`).
 
-**Cover-Art (`mpris:artUrl`):** Vorgesehen ist ein Icon vom Pi-Webserver
-(`http://<ip>:8080/cover/<quelle>`). ⚠️ **Achtung — Code-Stand v0.11.122:**
-`update_metadata()` referenziert `art_url`, deklariert den Parameter aber **nicht** und
-nutzt zudem `**{{…}}` (Set- statt Dict-Literal). Die Aufrufer (`update()`,
-`announce_wifi_ip()`) übergeben `art_url=…`, wodurch der Aufruf mit `TypeError`
-fehlschlägt. Da `main_core` `mpris2.update()` in `try/except: pass` kapselt, werden die
-Display-Metadaten **still verworfen**. → Vor dem Fahrzeug-Feldtest fixen
-(siehe Hinweis am Dokumentende).
+**Cover-Art (`mpris:artUrl`):** Für **NBT Evo über Bluetooth** kein Produktziel —
+die HU zeigt BT-Cover zuverlässig nur über iAP/Connected/USB, nicht über AVRCP-BIP
+([`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md)).
+Sichtbares Cover = **USB-MSC + ID3 APIC**. Intern vorgesehene Webserver-Icons
+(`http://<ip>:8080/cover/<quelle>`) ändern das HU-BT-Display nicht.
+
+⚠️ **Achtung — Code-Stand v0.11.122:** `update_metadata()` referenziert `art_url`,
+deklariert den Parameter aber **nicht** und nutzt zudem `**{{…}}` (Set- statt
+Dict-Literal). Die Aufrufer (`update()`, `announce_wifi_ip()`) übergeben `art_url=…`,
+wodurch der Aufruf mit `TypeError` fehlschlägt. Da `main_core` `mpris2.update()` in
+`try/except: pass` kapselt, werden die Display-Metadaten **still verworfen**.
+→ Vor dem Fahrzeug-Feldtest fixen (siehe Hinweis am Dokumentende); Cover-URL ist
+davon unabhängig für BMW-BT irrelevant.
 
 ### 7.4 Rate-Limiting
 
@@ -768,8 +773,8 @@ Pairing (SSP-Zahl), Geräteliste und Now Playing (Spotify + Webradio):
 | SW-Stand | AVRCP-Verhalten | Bekannte Eigenheit |
 |---|---|---|
 | < 2016 | 1.3 | keine Metadaten-Aktualisierung |
-| 2016–2017 (ID5) | 1.4 | Cover Art cache-buggy |
-| 2017+ (ID6) | 1.4 partiell 1.5 | stabilere Metadaten |
+| 2016–2017 (ID5) | 1.4 | BT-Cover über AVRCP unzuverlässig (iAP/USB separat) |
+| 2017+ (ID6) | 1.4 partiell 1.5 | stabilere Metadaten; AVRCP 1.6 Cover Art oft problematisch |
 
 SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 

@@ -47,6 +47,7 @@ Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `
 | [fahrzeug/BMW-BT-FELDTEST-2026-09-16.md](fahrzeug/BMW-BT-FELDTEST-2026-09-16.md) | Erster BT-/iDrive-Feldtest | Betrieb, QA | 2026-09-16 |
 | [fahrzeug/BMW-ERSTER-TEST-2026-09-16.md](fahrzeug/BMW-ERSTER-TEST-2026-09-16.md) | Erster erfolgreicher Connect BMW 38304 | Abnahme / Entwickler | 2026-09-16 |
 | [fahrzeug/BMW-AVRCP-PROBE.md](fahrzeug/BMW-AVRCP-PROBE.md) | AVRCP-Browsing-Probe | Entwickler | 2026-09-16 |
+| [fahrzeug/FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md](fahrzeug/FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md) | Foren-Auswertung AVRCP/Cover/MSC-Quellen | Entwickler | 2026-11-06 |
 | [planung/IDEE-USB-MSC-MENUE.md](planung/IDEE-USB-MSC-MENUE.md) | Idee — USB-MSC-Menü / on-the-fly-MP3 | Planung | 2026-09-17 |
 | [planung/KONZEPT-USB-MSC.md](planung/KONZEPT-USB-MSC.md) | Konzept — Architektur USB-MSC + Entscheidungsstand | Planung | 2026-09-30 |
 | [planung/PFAD-ESP32-PIDRIVE.md](planung/PFAD-ESP32-PIDRIVE.md) | Pfad → esp32.pidrive / PUMP | Planung | 2026-09-18 |
