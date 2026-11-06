@@ -5,7 +5,7 @@
 **Scope:** Öffentliche Foren + angrenzende Open-Source-/Fachquellen zu Lücken, die PiDrive messtechnisch bearbeitet (AVRCP/MPRIS-Metadaten, Cover, USB-MSC-Host).  
 **Ergebnis in einem Satz:** Nutzbare Signale liegen fast nur im **AVRCP-/Cover-/Metadaten**-Bereich; zum **USB-MSC-Host-Timing** der NBT Evo gibt es öffentlich praktisch nichts Vergleichbares zu den PiDrive-/hu-probe-Messungen.
 
-Verwandt: [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE.md`](BMW-AVRCP-PROBE.md) · [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · [`ABNAHMEN.md`](../ABNAHMEN.md)
+Verwandt: [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE.md`](BMW-AVRCP-PROBE.md) · [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · [`ABNAHMEN.md`](../ABNAHMEN.md) · **Pfad C:** [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md)
 
 ---
 
@@ -18,6 +18,7 @@ Verwandt: [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE.md`](BMW-AVRCP-PROBE
 | Coding-Bits `ENT_BTAS_*` | Viele Coding-Threads | **Niedrig–mittel** — nur Fahrzeugkonfiguration prüfen |
 | Pi + BMW Media-Bridges (BMWpyPod) | Ein Repo, andere Architektur (6FL/iPod-Serial) | **Gering** — kein NBT-Evo-AVRCP-Target-Pfad |
 | USB-MSC Host (READ10, Bursts, Timeouts) | Keine vergleichbaren Threads | **Keiner** — PiDrive bleibt Quelle der Wahrheit |
+| Connected Apps / AAIdrive (Pfad C) | hufman + AAIdrive-Repos: BCL→Etch→RHMI | **Hoch für Connected-Forschung** — siehe [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) |
 | Android-Auto / SSH auf HU | Vorhanden, angrenzend | **Irrelevant** für aktuelle MSC/AVRCP-Lücken |
 
 ---

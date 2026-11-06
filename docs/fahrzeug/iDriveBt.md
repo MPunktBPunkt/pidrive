@@ -148,7 +148,7 @@ Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 **BMW 118d F20 2017 = NBT Evo ID5/ID6 → AVRCP 1.4**
 
 Für PiDrive bedeutet das: wir müssen AVRCP 1.4-kompatibel antworten.  
-AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details und Quellen: [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md).
+AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details: [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md). Reiche Menüs/Cover über den **Connected-Apps-Stack** (BCL→Etch→RHMI, z. B. AAIdrive) = **Pfad C**, parallel zu A2DP/AVRCP — Stack-Abgleich: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md).
 
 ### 3.2 AVRCP Pass-Through Kommandos (BMW sendet → PiDrive empfängt)
 
