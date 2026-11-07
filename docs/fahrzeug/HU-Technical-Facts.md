@@ -21,7 +21,7 @@ Begleitdokumente: [`../betrieb/MSC-AKTUELL.md`](../betrieb/MSC-AKTUELL.md) · [`
 
 ## 1. Gesamtbild in einem Satz
 
-**Zwei-Plane (Kurz):** Storage = aggressiver USB-MSC-Host mit Media-Cache (Feld stark belegt). Control = Connected Apps (BCL→Etch→SAS→RHMI/CDS/AV; Desk-[D], F20-Wire offen). Details: [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md).
+**Zwei-Plane (Kurz):** Storage = aggressiver USB-MSC-Host mit ≥3 Zuständen (Navigator ≠ Browse ≠ Body), großen READ10 (CBW oft 8/240), hoher Stall-Toleranz (Feld stark belegt). Control = Connected Apps **G1–G4** (BCL→Etch→SAS; danach RHMI/CDS/AV — keine Gate-ID G5; Desk-[D], F20-Wire offen). Details: [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md).
 
 **Storage Plane:** Die NBT-Evo-HU behandelt USB-Medien wie eine Festplatte mit fertigen Dateien, hält aber **mindestens drei getrennte Zustände**: (1) **Navigator/Playlist-Position**, (2) **Browse-/Titel-/Bibliotheks-Cache**, (3) **Audio-Body-Cache**. USB-Cycle, FS-Re-Enum und Resume sind **nicht dasselbe Ereignis**; Remount ist **kein** Cold Start (R46). Fresh-Scan liest Dateiköpfe als **32+128+EOF-Probe** (≈80 KiB Head; EOF-Blöcke größenabhängig); nach bekanntem Zustand reicht oft FS-Enum + Vollatom am Resume-Track. Lesen läuft in **drei Modi** (R47): Head/Selection, Eager Body (~90–99 %), Neighbor/LBA-Interleave — Eager ≠ Play Intent (R50). Idle: **TUR ~2239 ms**. Prefetch-Lead **kontextabhängig** (R49; ~7 s situativ bis 140–240 s — „8 s“/„15 s“ als Konstante **REJECTED**). Callback-Reads oft 4 KiB (E5); CBW-`blocks` häufig **8 und 240** (E11) — nicht „HU immer 4 KiB“. Größenleiter ≫158 KiB (Q16) weiter **offen** (27.10. Capture-Body verloren).
 
@@ -334,7 +334,7 @@ Desk-Stack (BimmerGestalt / AAIdrive) — Kurzindex:
 | C-D6 | „MyBMW liefert signChallenge via exportiertem Binder“ als aktueller Default | **REJECTED** | historisch Classic ok |
 | C-D7 | RHMI-Layouts an Cert-SHA256 gebunden; freie XML **REJECTED** | **[D]** | |
 | C-D8 | AM-Icon/Placeholder ≠ volle RHMI-Init | **[D]** | |
-| C-D9 | Gates G1…G5: hu-probe misst G1 (+teilweise G2 AOA); BCL/Etch/SAS/RHMI außerhalb | **[D]** Mapping | I-303A = nur G1 |
+| C-D9 | Gates **G1…G4** (hu-probe `a68ef3b`); RHMI/CDS/AV = Nutzung **nach** G4, keine Gate-ID G5. hu-probe misst G1 (+teilweise G2 AOA); BCL/Etch/SAS/RHMI außerhalb | **[D]** Mapping | I-303A = nur G1 |
 | C-D10 | **Zwei Phone-Pfade:** AAIdrive = Etch-Client; CarAPI → Connected führt `sas_*` stellvertretend (ContentProvider-Cert) | **[D]** | Audit PR #34 / EVID-SAS-026–028 |
 | C-D11 | Connected-Apps-Pfad Cleartext („Nothing is encrypted“) — SAS/Etch in BCL DATA ohne TLS | **[D]** Doc | FX-G3-01; hilft nicht bei absent Bulk |
 | C-D12 | AIDL `createSecurityContext`/`loadAppCert` ≠ Mermaid `initSecurityContext`/`loadApplicationCert`; AAIdrive `MainService` gated auf Security connected | **[D]** | EVID-SAS-029/030 |

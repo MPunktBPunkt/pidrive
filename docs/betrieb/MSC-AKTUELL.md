@@ -40,7 +40,9 @@ Dies ist der **Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 | Zuletzt-ID3 über Boot | **grün** ab 0.4.60 — SPIFFS `/zuletzt.id3`, MSC-Head idle; `lab_zuletzt_id3_persist` |
 | Fresh als Betriebsmodus | **nicht nötig** — P1 nur Mess-Trigger |
 | Remount ≠ Cold Start / Eager≠Play (Heimfahrt) | **grün** R46–R50 |
-| Prefetch-Lead 8/15 s Konstante | **rot** — REJECTED (R49) |
+| Prefetch-Lead 8/15 s Konstante | **rot** — REJECTED (R49); Lead kontextabhängig |
+| Stall-Toleranz (BUSY) | **grün** E7/R29/R51 — Arbeitsgrundlage Backpressure; Q1 nur Rest |
+| CBW ≠ Callback (240 vs 4 KiB) | **grün** E5/E11 — Timing an CBW-Datenphase |
 | Analyzer-MSC mountet an NBT (kein UI ohne FAT) | **grün** E18/F15 |
 | Größenleiter ≫158 KiB | **gelb** — Q16 Mess-Retest (27.10. Fail) |
 | Audible / Play-Intent GATE-01 | **gelb** — P0 |

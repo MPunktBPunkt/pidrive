@@ -37,7 +37,7 @@ Sibling-Repos: `esphub/esp32.pidrive` (Gadget-FW) · `hu-probe` (Messsonde) · `
 | [planung/MASSNAHMEN-HU-PROBE-2026-10-22.md](planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) | hu-probe/Audit → PiDrive Maßnahmen (PSRAM, Grammar, Debug) | Entwickler | 2026-10-22 |
 | [planung/MASSNAHMEN-HU-PROBE-2026-10-23.md](planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) | Identity/Detach → FULLMENU / D+-Cycle | Entwickler | 2026-10-23 |
 | [fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md](fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) | HU-Parametermatrix (Head-160, TUR, Vertrag) | Entwickler, Feld | 2026-11-06 |
-| [fahrzeug/HU-BESCHREIBUNG.md](fahrzeug/HU-BESCHREIBUNG.md) | HU-Modellbericht: Zwei-Plane, TOC, Quellen, GPT-Abgleich | Entwickler, Planung | 2026-11-07 |
+| [fahrzeug/HU-BESCHREIBUNG.md](fahrzeug/HU-BESCHREIBUNG.md) | HU-Modellbericht: Zwei-Plane, CBW≠Callback, Stall-FACT, G1–G4, GPT-Korrektur | Entwickler, Planung | 2026-11-07 |
 | [fahrzeug/HU-Technical-Facts.md](fahrzeug/HU-Technical-Facts.md) | Normative HU-Fakten [B]/[S]/[H]/[?] | Entwickler | 2026-11-07 |
 | [betrieb/PLAN-NACH-M3-AE-2026-10-03.md](betrieb/PLAN-NACH-M3-AE-2026-10-03.md) | Plan Rev.5 nach Trace-Korrektur | Entwickler | 2026-10-04 |
 | [betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md](betrieb/artifacts-2026-10-04-lab/GESAMTBERICHT-UEBERGABE-P0-Q3A-2026-10-04.md) | Übergabe P0/Q3a → P1 Feld | Entwickler, nächste KI | 2026-10-04 |

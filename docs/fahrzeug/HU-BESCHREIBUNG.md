@@ -1,18 +1,18 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-07  
+**Stand:** 2026-11-07 (Korrektur gegen Facts: Prefetch/Stall/CBW/Cache/Gates)  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX-2026-10-16.md`](HU-PARAMETER-MATRIX-2026-10-16.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md)
 
-Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDrive: Lesetext mit Inhaltsverzeichnis und Quellen, nicht der Faktenkatalog. Messwerte, IDs (E/R/F/Q/C-D) und Rohbelege bleiben in den Facts; hier steht das Modell.
+Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDrive: Lesetext mit Inhaltsverzeichnis und Quellen, nicht der Faktenkatalog. Messwerte, IDs (E/R/F/Q/C-D) und Rohbelege bleiben in den Facts; hier steht das Modell. Frühere GPT-Fließtexte (inkl. Erstfassung dieses Berichts) sind **Architektur-Skizze, nicht zitierfähige Faktenreferenz** — siehe §6.
 
 ---
 
 ## Inhaltsverzeichnis
 
 1. [Zweck und Lesart](#1-zweck-und-lesart)
-2. [Gesamturteil in einem Absatz](#2-gesamturteil-in-einem-absatz)
+2. [Gesamturteil](#2-gesamturteil)
 3. [Zwei-Plane-Architektur](#3-zwei-plane-architektur)
 4. [Storage Plane — USB-MSC-Host](#4-storage-plane--usb-msc-host)
    - 4.1 Enumeration und SCSI
@@ -23,11 +23,11 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
    - 4.6 Prefetch und Nachbar-Eager
    - 4.7 Stall-Toleranz und Timingproblem
 5. [Control Plane — Connected Apps](#5-control-plane--connected-apps)
-   - 5.1 Gates G1–G5
+   - 5.1 Gates G1–G4 (+ Nutzung danach)
    - 5.2 AOA ≠ Connected App
    - 5.3 Feldstand an dieser HU
    - 5.4 SAS, RHMI, CDS, AV
-6. [Abgleich der GPT-Zusammenfassung (2026-11-07)](#6-abgleich-der-gpt-zusammenfassung-2026-11-07)
+6. [Korrektur der GPT-Zusammenfassung (2026-11-07)](#6-korrektur-der-gpt-zusammenfassung-2026-11-07)
 7. [PiDrive-Strategien A / B / C](#7-pidrive-strategien-a--b--c)
 8. [Offene P0/P1-Fragen](#8-offene-p0p1-fragen)
 9. [Quellenverzeichnis](#9-quellenverzeichnis)
@@ -48,9 +48,13 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
 
 ---
 
-## 2. Gesamturteil in einem Absatz
+## 2. Gesamturteil
 
-Die BMW NBT-Evo-HU im F20 ist **kein** einfacher USB-Audio-Player, der Bytes synchron zur Decoderuhr anfordert. Am USB-MSC-Port verhält sie sich wie ein **aggressiver, dateiorientierter Mass-Storage-Host** mit eigener Medien-/Filesystem-Logik, Read-Ahead, lokalem Body-Cache, Resume-State und kontextabhängigem Prefetch. Parallel dazu besitzt die Plattform eine **separate Connected-App-/Control-Plane** (AOA oder BT → BCL → Etch → SAS → RHMI/CDS/AV) — architektonisch belegt über Desk und Fremdprojekte, am eigenen F20-Wire aber noch **nicht** durchgehend bewiesen. Für PiDrive heißt das: Storage Plane = Golden Path mit Timingproblem; Control Plane = strategische Option mit eigenen Gates.
+**Storage Plane:** Die BMW NBT-Evo-HU ist ein aggressiver, dateiorientierter USB-MSC-Host mit mehrstufigem Zustand/Cache, großen READ10-Transfers und nachweislich hoher Toleranz gegenüber USB-Backpressure. Sie konsumiert nicht einfach kontinuierlich Audio, sondern fordert Daten in kontextabhängigen Leseoperationen an und kann daraus lokal weiter abspielen.
+
+**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette, deren Transport und höhere Protokollschichten getrennt vom Storage Plane betrachtet werden müssen (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM als Nutzerebene). Desk-[D] stark, F20-Wire noch nicht durchgehend bewiesen.
+
+Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = strategische Option mit Gates G1–G4. **I-303A** bleibt unberührt — Storage-Plane-Korrekturen ändern nichts an dem, was G1 auf der USB-Leitung sichtbar macht.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -63,15 +67,16 @@ Die BMW NBT-Evo-HU im F20 ist **kein** einfacher USB-Audio-Player, der Bytes syn
 │  │ SCSI / BOT           │   │ USB AOA / BT            │  │
 │  │ FAT12 / FAT16        │   │       │                 │  │
 │  │ Media Scanner        │   │       ▼                 │  │
-│  │ Read-Ahead           │   │      BCL                │  │
-│  │ Media Cache          │   │       │                 │  │
-│  │ Resume / Prefetch    │   │       ▼                 │  │
-│  │        │             │   │      Etch               │  │
-│  │        ▼             │   │       │                 │  │
-│  │     Decoder          │   │       ▼                 │  │
-│  │        │             │   │      SAS                │  │
-│  │        ▼             │   │   ┌───┼────┬────┐       │  │
-│  │      AUDIO           │   │  RHMI CDS  AV  AM       │  │
+│  │ Read-Ahead           │   │  G2 BCL (+ Transport)   │  │
+│  │ Navigator / Position │   │       │                 │  │
+│  │ Browse-/Lib-Cache    │   │       ▼                 │  │
+│  │ Audio-Body-Cache     │   │  G3 Etch-Tunnel         │  │
+│  │        │             │   │       │                 │  │
+│  │        ▼             │   │       ▼                 │  │
+│  │     Decoder          │   │  G4 SAS                 │  │
+│  │        │             │   │       │                 │  │
+│  │        ▼             │   │       ▼ danach          │  │
+│  │      AUDIO           │   │  RHMI / CDS / AV / AM   │  │
 │  └──────────────────────┘   └─────────────────────────┘  │
 │                                                          │
 │        SEHR GUT BELEGT              TEILWEISE BELEGT     │
@@ -101,14 +106,28 @@ Die Trennung ist keine Dokumentationskosmetik. MSC und Connected-App-Pfade haben
 
 Nach dem Einstecken folgt klassische Mass-Storage-Kommunikation: INQUIRY, CAPACITY, PREVENT, MODE_SENSE, periodisches TEST UNIT READY, **keine Writes** (E1–E4, E12). Idle-TUR ist phasenstarr **≈ 2239 ms** (E3) — nicht „~1/s“.
 
-Wichtig für Instrumentierung:
+Wichtig für Instrumentierung — **zwei Ebenen, nicht vermengen** (E5 vs. E11):
 
 - **Event-/Callback-Ebene:** oft 4 KiB Chunks (TinyUSB-Puffer) → `n8kPlus` bauartbedingt 0 (E5).
-- **CBW-Ebene:** READ10-`blocks` häufig **8** *und* **240** (~122 KiB Datenphase); Demo-Track-Atom **240+69** (E11, Q10).
+- **CBW-/READ10-Ebene:** Blockzahlen häufig **8** und **240**; Demo-Track-Atom **240+69** (E11, Q10).
+- `240 × 512 B = 122 880 B` ≈ **~30 × 4-KiB-Callbacks** pro offenem Kommando.
 
-Die GPT-Kurzfassung „immer nur 4 KiB Transfers“ ist deshalb **nur auf Callback-Ebene** richtig. Für Stall-/Timeout-Modelle muss die **offene CBW-Datenphase** mitgedacht werden (Q1).
+```
+HU
+  │
+  │ READ10, z.B. blocks=240
+  ▼
+~122 KiB Datenphase
+  │
+  ├─ 4 KiB callback
+  ├─ 4 KiB callback
+  ├─ ...
+  └─ ~30 callbacks
+```
 
-Queue-Tiefe effektiv **1** (BOT: CBW → Daten → CSW) — die HU ist kein paralleler Multi-Outstanding-Client (E6).
+Aus `n8kPlus = 0` darf man **nicht** „die HU liest immer 4 KiB“ ableiten. Das Timing-Modell von PiDrive orientiert sich an der **offenen CBW-Datenphase**, nicht am einzelnen Callback. Innerhalb dieser Phase kann PiDrive BUSY/Backpressure liefern, ohne dass die HU zwangsläufig sofort abbricht.
+
+Queue-Tiefe effektiv **1** ist **protokollbedingt** (BOT: CBW → Daten → CSW) — kein paralleler Multi-Outstanding-Client. Caveat aus Facts E6: Wire-QD-max weiter **UNKNOWN**, hu-probe-Wert `INFERRED` — kein bedingungsloses Wire-FACT.
 
 ### 4.2 Dateisystem und Medienliste
 
@@ -154,11 +173,20 @@ Gegenüber 48 kbit/s Audio (~6 KiB/s) liest die HU grob **zwei Größenordnungen
 
 ### 4.4 Drei Zustände, nicht einer
 
-Facts R45/R46: Remount/Cycle ist **kein** Cold Start. Mindestens drei getrennte Zustände:
+Facts R45/R46: Remount/Cycle ist **kein** Cold Start. „Ein Media Cache“ ist zu grob — mindestens drei getrennte HU-Zustände mit unterschiedlichem Invalidierungsverhalten:
 
-1. **Navigator / Playlist-Position** (überlebt Cycle/OTG/RST oft)
-2. **Browse- / Titel- / Bibliotheks-Cache** (wird bei Cycle oft neu gelesen)
-3. **Audio-Body-Cache** (kann weg sein, während Position bleibt)
+```
+HU
+├── Navigator / Playlist-Position
+│     └── kann über bestimmte Resets/Cycles erhalten bleiben
+├── Browse / Library Cache
+│     └── bei Cycle oft geflusht; Position bleibt
+└── Audio Body Cache
+      └── kann bei ESP-RST verloren gehen → Body wird erneut gelesen;
+          Position oft trotzdem erhalten
+```
+
+Damit wird verständlich, dass **Resume-Position und USB-Leseverlauf zwei verschiedene Zustände** sind (R34, Q3; R24).
 
 Serial / Root-Label / Volume-ID sind als Resume-Key **REJECTED** (R34). Soft-Remount (NOT READY) resetet die HU praktisch **nicht** (R37).
 
@@ -174,11 +202,11 @@ Bei Resume an Position **P** liest die HU nicht strikt „ab P vorwärts wie ein
 
 ### 4.6 Prefetch und Nachbar-Eager
 
-Next-Track-Prefetch **existiert** (R4, R21). Die Lead-Zeit ist aber **kontextabhängig** (R49):
+Next-Track-Prefetch **existiert** (R4, R21). Die Lead-Zeit ist **kontextabhängig** (R49) — **kein fixer Lead**:
 
-- situativ ~7 s
-- auf längeren Fahrten teils **140–240 s** Vorlauf
-- Konstanten „8 s“ / „15 s“ als HU-Parameter: **REJECTED**
+- situativ ~7,2–7,7 s (MIX / Heimfahrt)
+- in ROCK/CLASSIC-Sessions oft **140–240 s** Vorlauf
+- Konstanten „8 s“ / „15 s“ als allgemeine Regel: **REJECTED** (auch frühere [S]-Lesart ~15 s + Ausreißer ~7 s ist veraltet)
 
 Drei Read-Modi (R47): Head/Selection · Eager Body (~90–99 %) · Neighbor/LBA-Interleave. **Eager ≠ hörbares Play** (R50) — großer Read beweist keine Audible-Session (GATE-01 offen).
 
@@ -186,34 +214,48 @@ Body-Reads können **vor** Head-Reads kommen (R8) — asynchroner Scanner/Prefet
 
 ### 4.7 Stall-Toleranz und Timingproblem
 
-PiDrive will idealerweise Live-Audio liefern; die HU will Dateien in Zehntelsekunden bis Sekunden einsaugen.
+PiDrive will idealerweise Live-Audio liefern; die HU will Dateien in großen READ10-Phasen einsaugen. Stall-Toleranz ist **Feld-FACT**, kein „komplettes Unknown“:
 
 | Größe | Richtwert | Status |
 |-------|-----------|--------|
 | 512 KiB lesen | ≈ 0,6 s | **[B]** |
 | Audio 48 kbit/s | ≈ 6 KiB/s | Rechnung |
 | Ringfenster ohne Stall | ≈ 6–9 s | **[B]/[S]** (R25, §6.3 Facts) |
-| Stall-on bis EOF (512 KiB) | ≈ 65 s Musik+ID3 | **[B]** (E7, R29) |
+| Stall-on bis EOF (512 KiB) | ≈ 65 s Musik+ID3; BUSY-Retries über Minuten | **[B]** (E7, R29) |
+| Kurz-BUSY ohne Host-Reset | 16 Blöcke ~1,6 s, danach normal weiter | **[B]** (R51) |
 
-**REJECTED:** „Kleiner Ring = harte Dauerstrom-Grenze.“ Mit BUSY-Pacing akzeptiert NBT Retries über Minuten. Offen bleibt das genaue Timeout-Modell (Gesamtdauer vs. Inaktivität; große CBW-240-Phasen) — Q1.
+**REJECTED:** „Kleiner Ring = harte Dauerstrom-Grenze.“ Die HU ist nachweislich **stallexzessiv tolerant** — das Fenster ist größer als die frühere 100-ms-/300-ms-/3-s-Unsicherheitserzählung. Die gemessene BUSY-Toleranz ist eine **reale Designressource** für Backpressure: PiDrive muss nicht zwingend innerhalb jedes 4-KiB-Callbacks „fertig“ sein.
 
-Konsequenz: PiDrive muss die **Read-Requests** so bedienen, dass die HU das Medium weiter für einen normalen Stick hält — nicht „Audio tropfenweise nach Decoderuhr“.
+**Q1 Rest** (nicht „Q1 komplett offen“): Gesamtdauer pro Kommando vs. datenlose Inaktivität; dabei CBW-Blockzahl mitdenken (`blocks=240` → Retry hängt an ~122 KiB Datenphase, nicht an 4 KiB). Keine scheinpräzise Millisekunden-Grenze, solange blocks × Datenphase × Idle nicht systematisch vermessen sind. **Q16** (Größenleiter) bleibt bewusst offen (27.10. Capture-Body verloren).
+
+Konsequenz: PiDrive muss die **Read-Requests** so bedienen, dass die HU-Illusion eines normalen MSC-Sticks erhalten bleibt — nicht „Audio tropfenweise nach Decoderuhr“.
 
 ---
 
 ## 5. Control Plane — Connected Apps
 
-### 5.1 Gates G1–G5
+### 5.1 Gates G1–G4 (+ Nutzung danach)
+
+Verbindliches Referenzmodell (hu-probe `a68ef3b` / Vier-Gate-Commit): **G1–G4**. RHMI/CDS/AV/AM sind **Nutzerebene nach G4**, keine konkurrierende Gate-Nummer **G5**.
+
+```
+G1  USB Identity / Class
+G2  AOA / BT Transport + BCL
+G3  Phone → localhost TCP → BCL → Etch
+G4  SAS Authentication
+    │
+    └── danach: RHMI / CDS / AV / AM
+```
 
 | Gate | Inhalt | Messstand F20 |
 |------|--------|---------------|
-| G1 | USB Identity / Class | teilweise **[B]** (MSC; AOA-Identity-Versuche) |
-| G2 | AOA/BT + BCL Knock/Handshake | AOA-Beobachtung partiell; **BCL-Wire offen** |
+| G1 | USB Identity / Class | teilweise **[B]** (MSC; AOA-Identity-Versuche); **I-303A** |
+| G2 | AOA/BT Transport + BCL | AOA-Beobachtung partiell; **BCL-Wire offen** |
 | G3 | Phone localhost TCP → BCL → Etch | nicht am Wire |
 | G4 | SAS Authentication | Desk-[D]; Feld offen |
-| G5 | RHMI / CDS / AV / AM | Desk-[D]; Feld offen |
+| *(danach)* | RHMI / CDS / AV / AM | Desk-[D]; Feld offen — **keine Gate-ID G5** |
 
-Detail und Primärquellen: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md).
+Detail und Primärquellen: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) · hu-probe [`GATES-Connected.md`](../../../hu-probe/docs/GATES-Connected.md).
 
 ### 5.2 AOA ≠ Connected App
 
@@ -238,25 +280,22 @@ Voraussetzung Fahrzeug: Apps/6NR bzw. ConnectedDrive-Apps — sonst ist Pfad C t
 
 ---
 
-## 6. Abgleich der GPT-Zusammenfassung (2026-11-07)
+## 6. Korrektur der GPT-Zusammenfassung (2026-11-07)
 
-Die GPT-Langfassung (Storage + Control) ist **im Kern korrekt** und deckt sich mit Facts + Connected-Stack. Folgende Stellen müssen beim Weiterverwenden korrigiert bzw. geschärft werden:
+Gegenprüfung gegen [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 2026-11-06+, R46–R52, E18/F15): Das **Zwei-Plane-Modell** und der PiDrive-Vertrag („kein Audio-Player, sondern dateiorientierter MSC-Host mit Cache“) sind korrekt. Die alte Storage-Plane-Erzählung ist als Architektur-Skizze brauchbar, aber **nicht als Faktenreferenz zitierfähig**. Vier konkrete Fehler und zwei kleinere Punkte:
 
-| GPT-Aussage | Bewertung | Korrektur |
-|-------------|-----------|-----------|
-| Transfers „praktisch ausschließlich 4 KiB“, keine 8-KiB+-Transfers | **teilweise falsch** | Callbacks oft 4 KiB; CBW oft **8 und 240** Blöcke (E5/E11) |
-| Prefetch „~15 s vor Ende“, Ausreißer ~7 s → [S] | **veraltet** | Prefetch-Lead **kontextabhängig**; 8/15-s-Konstante **REJECTED** (R21/R49) |
-| Q1 Stall komplett unbekannt | **zu schwach** | Akzeptanz ~65 s mit Retries **[B]**; Modell (Dauer vs. Idle; CBW-240) offen |
-| „ein lokaler Cache“ | **zu grob** | Mindestens **drei** Zustände: Navigator ≠ Browse ≠ Body (R45) |
-| Remount ⇒ Cache weg ⇒ Position weg | **falsch** (falls so gelesen) | Remount ≠ Cold Start (R46); Position oft ja, Body neu |
-| „HU-Cursor = Audio-Cursor“ | richtig **REJECTED** | R16/R24/R33 |
-| Storage = aggressiver MSC-Host | **richtig** | Kernmodell bestätigt |
-| Control Plane fehlte in Facts weitgehend | **historisch**; jetzt §10 + Connected-Doc | weiterhin Desk-dominant |
-| AOA Identity ≠ BCL ≠ Etch ≠ SAS | **richtig** | C-D2/C-D9 |
-| Zwei Produkte Storage vs Connected | **richtig** | siehe §7 |
-| Analyzer schließt EP0/Bus-Blindstelle | **richtig als Motivation** | Class-Hook ≠ PHY-Wire (I2) |
+| # | GPT-Aussage | Bewertung | Korrektur (Facts) |
+|---|-------------|-----------|-------------------|
+| 1 | Prefetch „~15 s vor Ende“, Ausreißer ~7 s → [S] | **veraltet / REJECTED** | Lead **kontextabhängig** (R49/R21): situativ ~7,2–7,7 s; ROCK/CLASSIC **140–240 s**. „8 s“ und „15 s“ als Konstante **REJECTED** |
+| 2 | Stall-Toleranz / Q1 „komplett offen“ (100 ms / 300 ms / 3 s?) | **falsch dargestellt** | Stall **Feld-FACT**: E7/R29 (BUSY über Minuten, ~65 s bis EOF); R51 (~1,6 s BUSY ohne Reset). Q1 nur noch Rest: Dauer vs. Idle + CBW-Größe |
+| 3 | „HU immer 4 KiB“, seriell = FACT | **vermengt Ebenen** | Callback 4 KiB (E5) ≠ CBW oft **8/240** (E11). Track-Atom `240+69`. Timing = CBW-Sicht |
+| 4 | „ein Media Cache“ | **zu grob** | ≥3 Zustände (R45): Navigator/Position ≠ Browse/Lib ≠ Audio-Body; unterschiedliches Invalidierungsverhalten |
+| — | Gate **G5** (RHMI/CDS/AV) | **konkurrierendes Modell** | Referenz = **G1–G4**; RHMI/… = Nutzung **nach** G4 (`a68ef3b`) |
+| — | Queue-Tiefe 1 als bedingungsloses FACT | **zu hart** | protokollbedingt **[B]**; Wire QD-max **UNKNOWN** / `INFERRED` (E6) |
 
-**Gesamtnote:** Brauchbare Architektur-Erzählung; vor Normierung immer gegen Facts-IDs prüfen — besonders Transfergröße, Prefetch-Lead und Cache-Schichten.
+**Richtig wiedergegeben** in der GPT-Fassung u. a.: R16 (nichtlineare Reads), R24 (Abspielposition ≠ Lesereihenfolge), R5 (keine Reads während Wiedergabe), ~9-s-Tonfenster-Konsequenz, Zwei-Plane-Epistemik.
+
+**Praktische Konsequenz:** Backpressure-Planung geht von **gemessener hoher Stall-Toleranz** (E7/R29/R51) aus, mit Q1-Rest und Q16 als offenen Flanken — nicht von „Q1 = komplettes Unknown“. Storage-Korrekturen berühren **I-303A / G1** nicht.
 
 ---
 
@@ -268,7 +307,7 @@ Die GPT-Langfassung (Storage + Control) ist **im Kern korrekt** und deckt sich m
 | **B** | Storage Plane / USB-MSC | Golden Path + Messung | Cover, HU-USB-UI, gut vermessen | Live vs. Eager-Read-Ahead |
 | **C** | Control Plane / Connected | Forschung | native RHMI/AV-Nähe | Gates, Certs, 6NR, Wire offen |
 
-Für Variante B bleibt die Leitfrage: Reads so bedienen (Stall/Backpressure, gültige Heads, FULLMENU-Vertrag), dass Cache/Prefetch der HU **stick-kompatibel** bleiben. Decoder-Experimente ohne Q1/Q16/GATE-01 lösen das Timingproblem nicht.
+Für Variante B bleibt die Leitfrage: Reads so bedienen (Stall/Backpressure über CBW-Datenphasen, gültige Heads, FULLMENU-Vertrag), dass Cache/Prefetch der HU **stick-kompatibel** bleiben. Arbeitsgrundlage = hohe Stall-Toleranz; Decoder-Experimente ohne Q1-Rest/Q16/GATE-01 lösen das Timingproblem nicht.
 
 Hybrid denkbar (Ton über A/B, UI über C) — zwei Geräte/Stacks, hoher Aufwand.
 
@@ -340,3 +379,5 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 - Neue Feld-[B]-Claims zuerst in **HU-Technical-Facts**, dann Kurzübernahme hier.
 - Desk-Claims nie still zu Storage-[B] hochstufen.
 - Bei Widerspruch gilt die Facts-Tabelle mit verlinktem Artefakt.
+- GPT-/KI-Fließtexte nie still als Facts zitieren — Abweichungen in §6 nachziehen.
+- Control-Plane-Gates: nur **G1–G4**; RHMI/CDS/AV ohne Gate-ID G5.

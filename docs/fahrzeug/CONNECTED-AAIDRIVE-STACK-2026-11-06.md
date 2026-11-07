@@ -162,10 +162,10 @@ Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identi
 | **G2** | Transport: AOA/BT + **BCL knock/handshake** | AOA-Callback teilweise; BCL-Wire **nein** |
 | **G3** | App-Tunnel: localhost TCP → BCL→Etch | **nein** (Phone-Seite) |
 | **G4** | SAS Authentication (Cert + Challenge) | **nein** (Keys) |
-| **G5** | Authorization/Use: AM / RHMI / AV / CDS | **nein** |
+| *(danach)* | Nutzung: AM / RHMI / AV / CDS | **nein** — **keine Gate-ID G5** (hu-probe `a68ef3b`: G1–G4) |
 
 **INFERENCE (nicht FACT am F20):** Reconnect-Loop bei Direct-`18D1:2D00` (Zubehör-UI, kein Bulk/BCL auf Messschicht) *kann* fehlenden Connected-Peer (G2 BCL+) bedeuten.  
-**UNKNOWN:** ob genau das der F20-Grund ist. Cross-Ref: hu-probe [GATES-Connected](../../../hu-probe/docs/GATES-Connected.md).
+**UNKNOWN:** ob genau das der F20-Grund ist. Cross-Ref: hu-probe [GATES-Connected](../../../hu-probe/docs/GATES-Connected.md) · narrative [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) §5.1.
 
 ---
 
