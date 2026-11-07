@@ -168,7 +168,7 @@ Keine Aussage „NBT liest live“ aus `readCount` allein.
 
 1. ~~`.89` OTA 0.4.42~~ → **done** 2026-10-03.  
 2. ~~Auto-M3-statisch~~ → **A_then_E** ([`artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md`](artifacts-2026-10-03-m3/AUTO-M3-FELD-2026-10-03.md)).  
-3. **Als Nächstes:** M3seq — [`PLAN-NACH-M3-AE-2026-10-03.md`](PLAN-NACH-M3-AE-2026-10-03.md).  
+3. **Als Nächstes:** M3seq — [`PLAN-NACH-M3-AE-2026-10-03.md`](../archiv/betrieb/PLAN-NACH-M3-AE-2026-10-03.md).  
 4. Optional: Decoder-Test PDMK; Feld-BPB-Reverify.
 
 ---

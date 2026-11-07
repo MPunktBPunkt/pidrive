@@ -1,7 +1,7 @@
 # Analyse: Wie der Ton als Stream auf die HU kommen kann · 2026-10-08
 
 Grundlage: [`ANALYSE-S3-TONFENSTER-2026-10-08.md`](ANALYSE-S3-TONFENSTER-2026-10-08.md) (Teil 2: M1/M2), [`HU-Technical-Facts.md`](../../fahrzeug/HU-Technical-Facts.md), [SPIKE-TINYUSB-READ10](../artifacts-2026-10-06-lab/SPIKE-TINYUSB-READ10-2026-10-06.md), [Lab C1–C7](../artifacts-2026-10-07-lab/C1-C7-ERGEBNIS.md).
-Folgedokumente: [`AUFTRAG-LAB-REALITAET-2026-10-08.md`](AUFTRAG-LAB-REALITAET-2026-10-08.md) · [`STALL-BUILD-SPEC-2026-10-08.md`](../../planung/STALL-BUILD-SPEC-2026-10-08.md)
+Folgedokumente: [`AUFTRAG-LAB-REALITAET-2026-10-08.md`](AUFTRAG-LAB-REALITAET-2026-10-08.md) · [`STALL-BUILD-SPEC-2026-10-08.md`](../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md)
 
 ## 1. Prüfung der zweiten GPT-Zusammenfassung
 
@@ -119,7 +119,7 @@ Folge: Für **heutige** Tests (Fenster messen) niedrige Bitrate; für **Bremsen*
 
 ### 4.3 Nur mit FW-Go
 
-Alle Stall-Stellschrauben, Ringgröße, Stille-Format, Cursor-Verhalten bei Underrun, Slot-Geometrie — als **Laufzeit-Felder** spezifiziert in [`STALL-BUILD-SPEC-2026-10-08.md`](../../planung/STALL-BUILD-SPEC-2026-10-08.md), damit ein einziger Flash viele Feldvarianten erlaubt.
+Alle Stall-Stellschrauben, Ringgröße, Stille-Format, Cursor-Verhalten bei Underrun, Slot-Geometrie — als **Laufzeit-Felder** spezifiziert in [`STALL-BUILD-SPEC-2026-10-08.md`](../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md), damit ein einziger Flash viele Feldvarianten erlaubt.
 
 ## 5. Empfohlene Reihenfolge
 

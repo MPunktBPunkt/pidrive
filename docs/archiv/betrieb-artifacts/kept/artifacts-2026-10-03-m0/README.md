@@ -2,7 +2,7 @@
 
 **ESP:** `.88` · Bridge Pi `.105` · Host Proxmox `.108`  
 **Tool:** `tools/m0_lab_mount_sweep.py`  
-**Auftrag:** [`../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
+**Auftrag:** [`../../archiv/auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../../archiv/auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
 
 ## Ergebnis
 

@@ -1,7 +1,7 @@
 # B7 — Checkliste (M1; L0 nur Lab)
 
 **FW Auto:** `0.4.36-dev` · **Tool:** `tools/feld_150s_slot_pass.py`  
-**Aufträge:** [AUFTRAG-B7-HU-REREAD.md](../auftraege/AUFTRAG-B7-HU-REREAD.md) · [AUFTRAG-MSC-HOST-READ-NACHWEIS.md](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)
+**Aufträge:** [AUFTRAG-B7-HU-REREAD.md](../archiv/auftraege/AUFTRAG-B7-HU-REREAD.md) · [AUFTRAG-MSC-HOST-READ-NACHWEIS.md](../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)
 
 ## Vor dem Auto
 

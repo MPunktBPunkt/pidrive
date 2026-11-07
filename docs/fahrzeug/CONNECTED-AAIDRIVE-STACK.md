@@ -3,7 +3,7 @@
 **Stand:** 2026-11-06 (Abend²: technology-audit PR #34 — CarAPI-Proxy, Cleartext, AIDL/MainService)  
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
-**Verwandt:** [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md) · [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE.md`](BMW-AVRCP-PROBE.md)
+**Verwandt:** [`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md) · [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE`](../archiv/fahrzeug/BMW-AVRCP-PROBE.md) (Archiv) · Instrument: [`hu-probe GATES-Connected`](../../../hu-probe/docs/GATES-Connected.md)
 
 ---
 
@@ -72,7 +72,7 @@ HU: Etch / BMWRemoting
 
 ### 3.3 Apache Etch (BMWRemoting)
 
-- RPC mit Magic `0xDEADBEEF`.
+- RPC; Wire = Symbol-Hashes (`.ewh`). Magic `0xDEADBEEF` als Sync-/Wire-Annahme: **UNKNOWN / not attested** (hu-probe C1a: kein DEADBEEF-Resync) — Desk-Lore, nicht NBT-FACT.
 - IDL rekonstruiert in **IDriveConnectKit** (Proxy-Objekte für Apps).
 - Dienste u. a.: `sas_*`, `rhmi_*`, AV, CDS, Version/Info.
 
@@ -216,7 +216,7 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | C4 | Audio-Fokus AV vs. paralleler Pi-A2DP | Konflikt / Ducking |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
 | C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Produktentscheid |
-| C7 | **P1 FIELD-CONNECTED-REAL-01** (nach P0 I-303A): Phone+MyBMW+AAIdrive ∥ Analyzer ∥ HU-Notiz ∥ ESP-Vergleich | Plan: [hu-probe field-connected-real-01](../../../hu-probe/docs/feld/2026-11-06-field-connected-real-01.md) |
+| C7 | **P1 FIELD-CONNECTED-REAL-01** (nach P0 I-303A): Phone+MyBMW+AAIdrive ∥ Analyzer ∥ HU-Notiz ∥ ESP-Vergleich | Plan: [hu-probe field-connected-real-01](../../../hu-probe/docs/feld/FIELD-CONNECTED-REAL-01.md) |
 | C8 | **P2 FX-G3-01:** `sas_certificate`/Challenge/`sas_login` in einer Session | Cleartext-Claim; braucht sichtbaren Bulk/BCL |
 | C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Logcat |
 

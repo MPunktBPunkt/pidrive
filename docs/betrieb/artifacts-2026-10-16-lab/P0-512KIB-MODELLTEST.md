@@ -21,7 +21,7 @@ READ10-Sequenz ≈  8  +  4×240  +  56
 | LIVE-Ohr | selten ~5–6 s nach OTG ohne Weiß |
 | Panic / weiße LED | häufig, Episode tot |
 
-**Matrix:** Ableitung **A7** + A2→[S] in `docs/fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`.  
+**Matrix:** Ableitung **A7** + A2→[S] in `docs/fahrzeug/HU-PARAMETER-MATRIX.md`.  
 **Noch nicht:** Blind-Commit in `HU-Technical-Facts.md` ohne Review (A7 ist Matrix-[S]).
 
 ## Setup (historisch)

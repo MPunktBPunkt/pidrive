@@ -3,7 +3,7 @@
 **Stand:** 2026-11-07 (Korrektur gegen Facts: Prefetch/Stall/CBW/Cache/Gates)  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
-**Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX-2026-10-16.md`](HU-PARAMETER-MATRIX-2026-10-16.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md)
+**Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
 
 Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDrive: Lesetext mit Inhaltsverzeichnis und Quellen, nicht der Faktenkatalog. Messwerte, IDs (E/R/F/Q/C-D) und Rohbelege bleiben in den Facts; hier steht das Modell. Frühere GPT-Fließtexte (inkl. Erstfassung dieses Berichts) sind **Architektur-Skizze, nicht zitierfähige Faktenreferenz** — siehe §6.
 
@@ -40,8 +40,8 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
 |----------|--------|
 | **dieses** | Lesemodell, Architektur, Strategie, TOC + Quellen |
 | [`HU-Technical-Facts.md`](HU-Technical-Facts.md) | Normative Claim-Tabelle mit Belegstatus |
-| [`HU-PARAMETER-MATRIX-2026-10-16.md`](HU-PARAMETER-MATRIX-2026-10-16.md) | Parameter × Status × nächster Test |
-| [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) | Desk-Stack Connected/AAIdrive |
+| [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) | Parameter × Status × nächster Test |
+| [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md) | Desk-Stack Connected/AAIdrive |
 | [`../betrieb/MSC-AKTUELL.md`](../betrieb/MSC-AKTUELL.md) | Operativer MSC-Einstieg / Ampel |
 
 **Scope-Regel:** Alles mit Status **[B]/[S]** gilt nur für **diese** NBT Evo am gemessenen USB-Pfad, sofern nicht ausdrücklich Desk-[D] markiert. Andere BMW-Generationen und Lab-Stimulus-Hosts sind kein stiller Transfer.
@@ -255,7 +255,7 @@ G4  SAS Authentication
 | G4 | SAS Authentication | Desk-[D]; Feld offen |
 | *(danach)* | RHMI / CDS / AV / AM | Desk-[D]; Feld offen — **keine Gate-ID G5** |
 
-Detail und Primärquellen: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) · hu-probe [`GATES-Connected.md`](../../../hu-probe/docs/GATES-Connected.md).
+Detail und Primärquellen: [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md) · hu-probe [`GATES-Connected.md`](../../../hu-probe/docs/GATES-Connected.md).
 
 ### 5.2 AOA ≠ Connected App
 
@@ -335,20 +335,20 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | ID | Dokument | Inhalt |
 |----|----------|--------|
 | N1 | [`HU-Technical-Facts.md`](HU-Technical-Facts.md) | Claim-Tabelle E/R/F/M/D/Q/C-D/I |
-| N2 | [`HU-PARAMETER-MATRIX-2026-10-16.md`](HU-PARAMETER-MATRIX-2026-10-16.md) | Parameter-Ops |
-| N3 | [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md) | Connected Desk-Abgleich |
+| N2 | [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) | Parameter-Ops |
+| N3 | [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md) | Connected Desk-Abgleich |
 | N4 | [`../betrieb/MSC-AKTUELL.md`](../betrieb/MSC-AKTUELL.md) | MSC-Ampel / Lesereihenfolge |
-| N5 | [`../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) | Maßnahmen nach Identity/Detach |
-| N6 | [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | Früher Feld-/Lab-Log |
+| N5 | [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) | Maßnahmen nach Identity/Detach |
+| N6 | [`../archiv/betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../archiv/betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) | Früher Feld-/Lab-Log |
 
 ### 9.2 Feld- und Lab-Berichte (Auswahl)
 
 | ID | Quelle | Thema |
 |----|--------|-------|
-| Fld1 | hu-probe [`heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) | Remount, Eager, Prefetch-Lead |
-| Fld2 | hu-probe [`identity-multireview`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md) | Serial/Label/Vol REJECTED |
-| Fld3 | hu-probe [`detach-browse`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md) | Drei Schichten, Soft-Remount |
-| Fld4 | hu-probe [`unabhängige Auswertung`](../../../hu-probe/docs/feld/2026-10-19-unabhaengige-auswertung.md) | TUR, Mount-Signatur |
+| Fld1 | hu-probe [`heimfahrt`](../../../hu-probe/docs/feld/MSC-HEIMFAHRT.md) | Remount, Eager, Prefetch-Lead |
+| Fld2 | hu-probe [`identity-multireview`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/MSC-IDENTITY-REMOUNT.md) | Serial/Label/Vol REJECTED |
+| Fld3 | hu-probe [`detach-browse`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-detach-browse.md) | Drei Schichten, Soft-Remount |
+| Fld4 | hu-probe [`unabhängige Auswertung`](../../../hu-probe/docs/feld/MSC-TUR-MOUNT-FACTS.md) | TUR, Mount-Signatur |
 | Fld5 | Analyzer [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) | E18/F15 |
 | Fld6 | PiDrive [`ANALYSE-S3-TONFENSTER`](../betrieb/artifacts-2026-10-08-feld/ANALYSE-S3-TONFENSTER-2026-10-08.md) | Replug, Ring, Cover |
 | Fld7 | PiDrive [`ERGEBNIS-S6`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md) | Stall-on ~65 s |

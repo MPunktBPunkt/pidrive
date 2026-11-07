@@ -5,7 +5,7 @@
 
 **Commit-Basis (historisch 10-03):** `3364878`  
 **Quellen:** GPT-Übergabebericht + Claude-Rohdatenhinweise + Mistral-Nachtrag (Chat 2026-10-03)  
-**Folgeaufträge (älterer Track):** [`../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) · [`../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
+**Folgeaufträge (älterer Track):** [`../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md`](../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) · [`../archiv/auftraege/AUFTRAG-M0-MESSINTEGRITAET.md`](../archiv/auftraege/AUFTRAG-M0-MESSINTEGRITAET.md)
 
 ---
 

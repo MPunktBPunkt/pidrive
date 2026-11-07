@@ -38,7 +38,7 @@ Airband AM: eigene Karte (Freq / Start / Presets / ±25 kHz / **Suchen** / **D
 Presets: `pidrive/config/airband_stations.json` (lokal anpassbar).
 CLI: `pidrivectl scanner airband scan` · `monitor start|stop|status` · `ch N` · `list`.
 
-Review-Maßnahmen: [`../architektur/SCANNER-REVIEW-MASSNAHMEN.md`](../architektur/SCANNER-REVIEW-MASSNAHMEN.md)
+Review-Maßnahmen: [`../archiv/architektur/SCANNER-REVIEW-MASSNAHMEN.md`](../archiv/architektur/SCANNER-REVIEW-MASSNAHMEN.md)
 (Airband Phase 1–4 erledigt; optional offen: persistenter IQ-Streamer).
 
 ## Settings (`config/settings.json`)

@@ -107,5 +107,5 @@ Status: `stall.enable=false`, Serial `PD0229`.
 ## Verweise
 
 - Lab PC-E7: [`../../artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md`](../../artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md)  
-- Maßnahmen: [`../../../planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md`](../../../planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md)  
-- Stall-Spec: [`../../../planung/STALL-BUILD-SPEC-2026-10-08.md`](../../../planung/STALL-BUILD-SPEC-2026-10-08.md)
+- Maßnahmen: [`../../../archiv/planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md`](../../../archiv/planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md)  
+- Stall-Spec: [`../../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md`](../../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md)

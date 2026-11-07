@@ -3,7 +3,7 @@
 **Datum:** 2026-09-25  
 **PiDrive-Stand:** v0.11.167 (lokal; PPM-UI/Live-Status)  
 **Bezugsdokument:** [`rtl2832u Stick`](./rtl2832u%20Stick) (Fasizi ELA0065 / RTL2832U + R820T2, GPT-Entwicklerdoku)  
-**Ergänzende Messungen:** [`../betrieb/UKW-GAIN-SCAN-2026-09-19.md`](../betrieb/UKW-GAIN-SCAN-2026-09-19.md), Antennenvergleich 2026-09-22  
+**Ergänzende Messungen:** [`../archiv/betrieb/UKW-GAIN-SCAN-2026-09-19.md`](../archiv/betrieb/UKW-GAIN-SCAN-2026-09-19.md), Antennenvergleich 2026-09-22  
 
 ## 1. Ziel
 
@@ -44,7 +44,7 @@ Kein Auftrag zur Implementierung — Entscheidungsgrundlage.
 | `pidrive/web/templates/rf-tools.html` | PPM setzen / Auto-Kalibrierung mit Live-Status |
 | `pidrive/web/templates/index.html` (Player) | Airband/FM Live-Tune-Steuerung (über Cmds) |
 | `install.sh` | `rtl-sdr`, `usbutils`, DVB-Blacklist (`dvb_usb_rtl28xxu` …) |
-| `docs/betrieb/UKW-GAIN-SCAN-2026-09-19.md` | Praxis-Gain 20–30 dB, Übersteuerung bei 40+ |
+| `docs/archiv/betrieb/UKW-GAIN-SCAN-2026-09-19.md` | Praxis-Gain 20–30 dB, Übersteuerung bei 40+ |
 | `docs/referenz/rtl2832u Stick` | Referenzprofile WBFM/Airband, DSP-Pipelines, Kalibrierebenen |
 
 **Nicht** als vollständige Code-Review gelesen (nur Randbezug): `dab_scan.py`, `dab.py`, Pump/ESP, Bluetooth.

@@ -43,4 +43,4 @@ cd ~/pidrive/docs/betrieb/artifacts-2026-10-12-feld/feld-s6-prep
 | K5 | Reboots/Serial zählen | — |
 | E7 | OTA 0.4.48 + Stall-Leiter | **Go + A** |
 
-Kontext: [`MASSNAHMEN-E7`](../../../planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md) · Lab [`E7-Leiter`](../../artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md) · s5 [`ERGEBNIS-S5`](../../artifacts-2026-10-08-feld/feld-s5-prep/s5-20261011-184623/ERGEBNIS-S5.md)
+Kontext: [`MASSNAHMEN-E7`](../../../archiv/planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md) · Lab [`E7-Leiter`](../../artifacts-2026-10-12-lab/lab-e7-ladder/ERGEBNIS.md) · s5 [`ERGEBNIS-S5`](../../artifacts-2026-10-08-feld/feld-s5-prep/s5-20261011-184623/ERGEBNIS-S5.md)

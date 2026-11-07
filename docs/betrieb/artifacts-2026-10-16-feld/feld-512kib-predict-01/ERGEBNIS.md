@@ -4,7 +4,7 @@
 **stallEnable:** false · Capture-Mode: `ram_local`  
 **Operator:** Martin · Desktop-Beobachtung parallel · ~16:04–16:33 · **Feldende:** ESP aus
 
-**Bezug:** Lab-Prep `../../artifacts-2026-10-16-lab/P0-512KIB-MODELLTEST.md` · Matrix Derived `docs/fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`
+**Bezug:** Lab-Prep `../../artifacts-2026-10-16-lab/P0-512KIB-MODELLTEST.md` · Matrix Derived `docs/fahrzeug/HU-PARAMETER-MATRIX.md`
 
 ---
 

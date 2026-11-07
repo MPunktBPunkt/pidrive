@@ -1,7 +1,7 @@
 # MSC-Menüstruktur — finales Zielbild
 
 **Status:** Normativ (Zielbild) · **Stand:** 2026-10-24  
-**Bezug:** [MSC-AKTUELL](../betrieb/MSC-AKTUELL.md) · [HU-Technical-Facts](../fahrzeug/HU-Technical-Facts.md) (R37–R45) · [Maßnahmen 23.10.](MASSNAHMEN-HU-PROBE-2026-10-23.md) · Interim v1: [FELDTEST §3.10](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)
+**Bezug:** [MSC-AKTUELL](../betrieb/MSC-AKTUELL.md) · [HU-Technical-Facts](../fahrzeug/HU-Technical-Facts.md) (R37–R45) · [Maßnahmen 23.10.](MASSNAHMEN-MSC-FULLMENU.md) · Interim v1: [FELDTEST §3.10](../archiv/betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü)
 
 Kein Firmware-Auftrag. Play-Slot-MiB final erst nach Größenleiter (P0).
 
@@ -109,4 +109,4 @@ Nicht-bereit **ohne** Tip: Slot darf in der Liste stehen (Silence + ID3) oder er
 - Stall als allgemeiner Menü-Lock  
 - Soft-Paging (≤4 + Mehr…) als Produktmodell — abgelöst durch FULLMENU + Snapshot-Seiten  
 
-**Historisch:** [FELDTEST §3.10](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü) = Interim v1 (Soft-Paging, ≤4 Slots). Dieses Dokument ersetzt es als Zielbild.
+**Historisch:** [FELDTEST §3.10](../archiv/betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md#310-zielbild-v1-review-konsens-2026-09-30--bmw-robustes-msc-menü) = Interim v1 (Soft-Paging, ≤4 Slots). Dieses Dokument ersetzt es als Zielbild.

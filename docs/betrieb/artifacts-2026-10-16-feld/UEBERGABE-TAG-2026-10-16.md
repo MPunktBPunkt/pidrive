@@ -62,7 +62,7 @@ Siehe auch: [`../artifacts-2026-10-16-lab/lab-soft-cycle-052/PRIORITAET-SHIFT.md
 | `tools/soft_cycle_orchestrator.py` | Quiet-Gate erlaubt `play`/`scan` ohne Stream |
 | `docs/betrieb/artifacts-2026-10-16-lab/` | Soft-Cycle + P0-Prep |
 | `docs/betrieb/artifacts-2026-10-16-feld/` | P0-Feld + dieses Übergabe-Dokument |
-| `docs/fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md` | Feld-Nachtrag zur 512‑KiB-Sequenz |
+| `docs/fahrzeug/HU-PARAMETER-MATRIX.md` | Feld-Nachtrag zur 512‑KiB-Sequenz |
 
 **Hinweis:** Soft-USB `armSoftUsbKeepIdentity` liegt in **esp32.pidrive** (separates Repo) — dort ggf. separat committen/pushen.
 

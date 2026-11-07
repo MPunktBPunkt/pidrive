@@ -2,7 +2,7 @@
 
 **Stand:** 2026-11-07 — HU-Beschreibung ergänzt; Facts (Heimfahrt R46–R52, Analyzer E18/F15); Größenleiter Q16 weiter offen (27.10. Capture-Fail); Lab PiDrive **0.4.60+**  
 **Phase:** Soft-Paging abgelöst; Soft-Remount **REJECTED**; Prefetch-Lead-Konstante **REJECTED**; Eager ≠ Play; **P0 = Audible + Größenleiter-Retest**  
-**Feld / Audits:** [`GO Größenleiter`](../../../hu-probe/docs/feld/2026-10-27-GO-groessenleiter.md) · [`Heimfahrt`](../../../hu-probe/docs/feld/2026-10-22-gesamtbericht-heimfahrt.md) · [`Analyzer-Feldmatrix`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check`](2026-11-02-esp-usb-analyzer-crosscheck.md)
+**Feld / Audits:** [`GO Größenleiter`](../../../hu-probe/docs/feld/MSC-GROESSENLEITER-GO.md) · [`Heimfahrt`](../../../hu-probe/docs/feld/MSC-HEIMFAHRT.md) · [`Analyzer-Feldmatrix`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check`](2026-11-02-esp-usb-analyzer-crosscheck.md)
 
 Dies ist der **Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 
@@ -13,11 +13,11 @@ Dies ist der **Einstieg**, wenn du wissen willst, wo wir stehen und warum.
 | # | Dokument | Rolle |
 |---|----------|--------|
 | 0 | [`planung/MENUESTRUKTUR-MSC.md`](../planung/MENUESTRUKTUR-MSC.md) | **Finales MSC-Menü-Zielbild** (Baum, Cycle, Stall) |
-| 1 | [`planung/MASSNAHMEN-HU-PROBE-2026-10-23.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-23.md) | Maßnahmen-Schnitt 23.10. + FW 0.4.55 |
-| 2 | [`planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) | Vortag: Media-Leiter / PSRAM |
+| 1 | [`planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) | Maßnahmen-Schnitt 23.10. + FW 0.4.55 |
+| 2a | [`archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) | Archiv: Vortag Media-Leiter / PSRAM |
 | 3 | [`fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | Normative HU-Fakten (R37–R52, E18) |
-| 3a | [`fahrzeug/HU-BESCHREIBUNG.md`](../fahrzeug/HU-BESCHREIBUNG.md) | Narrative Zwei-Plane-Beschreibung + Quellen |
-| 4 | [`fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](../fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) | Ops-Matrix |
+| 3a | [`fahrzeug/HU-BESCHREIBUNG.md`](../fahrzeug/HU-BESCHREIBUNG.md) · [`fahrzeug/README`](../fahrzeug/README.md) | Narrative Zwei-Plane + Lesereihenfolge |
+| 4 | [`fahrzeug/HU-PARAMETER-MATRIX.md`](../fahrzeug/HU-PARAMETER-MATRIX.md) | Ops-Matrix |
 | 5 | [`planung/Stufenplan.md`](../planung/Stufenplan.md) | Stufen 0–6 / Stall-Hebel |
 | 6 | [`referenz/ESP32-S3-BOARD.md`](../referenz/ESP32-S3-BOARD.md) | N8R2, **PSRAM an** |
 

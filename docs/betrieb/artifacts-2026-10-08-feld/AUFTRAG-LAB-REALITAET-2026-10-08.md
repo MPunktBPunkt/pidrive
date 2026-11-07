@@ -116,4 +116,4 @@ Schritt 2 mit `--bitrate 32k` und `--bitrate 96k` (dazu `--target-bps` = Bitrate
 
 ## 5. Ergebnis ablegen
 
-`docs/betrieb/artifacts-2026-10-08-lab/ERGEBNIS-LAB-REALITAET.md`: Tabelle Sollwerte ↔ Ist je Kommandogröße, Trace-Muster je Größe, gezählte Töne PC je Bitrate, Abweichungen. Bei PASS der 4-KiB-Variante ist `--golden REPLUG` die Lab-Referenz für den Stall-Build ([`STALL-BUILD-SPEC`](../../planung/STALL-BUILD-SPEC-2026-10-08.md)).
+`docs/betrieb/artifacts-2026-10-08-lab/ERGEBNIS-LAB-REALITAET.md`: Tabelle Sollwerte ↔ Ist je Kommandogröße, Trace-Muster je Größe, gezählte Töne PC je Bitrate, Abweichungen. Bei PASS der 4-KiB-Variante ist `--golden REPLUG` die Lab-Referenz für den Stall-Build ([`STALL-BUILD-SPEC`](../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md)).

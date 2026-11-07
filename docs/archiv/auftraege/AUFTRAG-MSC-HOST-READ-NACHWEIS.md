@@ -2,11 +2,11 @@
 
 **Stand:** 2026-10-03 · aktiv (**Rev. 4** — GPT-Übergabe + Mistral-Nachtrag)  
 **Anlass:** Multi-KI-Konsens; L0 zeigt: Lesevolumen skaliert mit Angebot → **kein fixes Cache-Plateau**  
-**Feldbericht:** [`../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10–§11.12  
-**Übergabe:** [`../betrieb/UEBERGABE-MSC-BEWERTUNG-2026-10-03.md`](../betrieb/UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)  
+**Feldbericht:** [`../archiv/betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md`](../archiv/betrieb/FELDTEST-ESP-MSC-BMW-2026-09-28.md) §11.10–§11.12  
+**Übergabe:** [`../archiv/betrieb/UEBERGABE-MSC-BEWERTUNG-2026-10-03.md`](../archiv/betrieb/UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)  
 **M0:** [`AUFTRAG-M0-MESSINTEGRITAET.md`](AUFTRAG-M0-MESSINTEGRITAET.md)  
 **Teilauftrag B7:** [`AUFTRAG-B7-HU-REREAD.md`](AUFTRAG-B7-HU-REREAD.md)  
-**Ring/BT-Papier:** [`../betrieb/POST-1110-RING-BT-NOTES.md`](../betrieb/POST-1110-RING-BT-NOTES.md)
+**Ring/BT-Papier:** [`../archiv/betrieb/POST-1110-RING-BT-NOTES.md`](../archiv/betrieb/POST-1110-RING-BT-NOTES.md)
 
 **Feld-Stand 2026-10-03:**  
 - **M1 B7-A** = Baseline kleine Ist-Geometrie (Cache-only im Pass; kein Beweis „NBT liest nie nach“).  

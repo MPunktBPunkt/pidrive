@@ -4,7 +4,7 @@
   "model": "nbt_evo_2026_10",
   "supersedes": "tools/profiles/nbt_evo_lab_2026-10-15.json",
   "pin": {
-    "hu_probe_doc": "docs/feld/2026-10-19-unabhaengige-auswertung.md",
+    "hu_probe_doc": "docs/feld/MSC-TUR-MOUNT-FACTS.md",
     "audit": "hu-probe-bmw-s0s2-field-2026",
     "evidence": [
       "EVID-HUPROBE-2026-10-19-001",

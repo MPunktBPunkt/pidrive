@@ -5,7 +5,7 @@
 
 Der ausführliche Bug-/Messbericht liegt im ESP-Repo:
 
-→ **[esp32.pidrive `docs/lab/2026-11-02-lab-usb-analyzer-crosscheck.md`](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/lab/2026-11-02-lab-usb-analyzer-crosscheck.md)**
+→ **[esp32.pidrive `docs/lab/USB-ANALYZER-CROSSCHECK.md`](https://github.com/MPunktBPunkt/esp32.pidrive/blob/main/docs/lab/USB-ANALYZER-CROSSCHECK.md)**
 
 ## Kurz für PiDrive-Betrieb
 
@@ -18,4 +18,4 @@ Der ausführliche Bug-/Messbericht liegt im ESP-Repo:
 
 **Nicht claimed:** echte NBT-Evo-FACTS aus diesem Lab-Lauf.
 
-Gegenstück AOA/MSC-Sonde: [hu-probe Bericht](https://github.com/MPunktBPunkt/hu-probe/blob/main/docs/feld/2026-11-02-lab-usb-analyzer-crosscheck.md).
+Gegenstück AOA/MSC-Sonde: [hu-probe Bericht](https://github.com/MPunktBPunkt/hu-probe/blob/main/docs/feld/USB-ANALYZER-CROSSCHECK.md).

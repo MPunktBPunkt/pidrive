@@ -32,7 +32,7 @@ Dokument: [`docs/architektur/RUNTIME_FLOWS.md`](../architektur/RUNTIME_FLOWS.md)
 | **I.4** Doppel-Tipp `cat:0` → „Jetzt läuft“ | ⚠️ veraltet | „Jetzt läuft“-Ordner entfällt; `cat:0` öffnet **Root-Kind 0 = Favoriten** |
 | **ESP / USB-MSC / PUMP** | ❌ fehlt | Kein Flow in RUNTIME_FLOWS/ARCHITECTURE — Code + Units existieren (`usb_pump_client`, `pidrive_pump*`, `audio_usb_gadget`) |
 
-**Fazit Flussdiagramm:** Das „klassische“ PiDrive-Diagramm (BT/AVRCP/Menü/Radio) ist **noch die richtige Debugging-Landkarte**. Für den aktuellen Auto-Pfad (ESP-Gadget) ist es **unvollständig** — dort gilt ergänzend [`USB-MSC-STREAM-LISTING-2026-09-18.md`](USB-MSC-STREAM-LISTING-2026-09-18.md) und [`../planung/PFAD-ESP32-PIDRIVE.md`](../planung/PFAD-ESP32-PIDRIVE.md).
+**Fazit Flussdiagramm:** Das „klassische“ PiDrive-Diagramm (BT/AVRCP/Menü/Radio) ist **noch die richtige Debugging-Landkarte**. Für den aktuellen Auto-Pfad (ESP-Gadget) ist es **unvollständig** — dort gilt ergänzend [`USB-MSC-STREAM-LISTING-2026-09-18.md`](USB-MSC-STREAM-LISTING-2026-09-18.md) und [`../archiv/planung/PFAD-ESP32-PIDRIVE.md`](../archiv/planung/PFAD-ESP32-PIDRIVE.md).
 
 Zustandsmaschine ([`ZUSTANDSMASCHINE.md`](../architektur/ZUSTANDSMASCHINE.md), v0.11.143) ist aktueller und deckt `play_gen` ab — das passt zum Code.
 

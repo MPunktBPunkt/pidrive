@@ -10,7 +10,7 @@
 - [`feld-512kib-predict-01/ERGEBNIS.md`](feld-512kib-predict-01/ERGEBNIS.md)
 - [`../artifacts-2026-10-16-lab/lab-soft-cycle-052/ERGEBNIS.md`](../artifacts-2026-10-16-lab/lab-soft-cycle-052/ERGEBNIS.md)
 - [`../artifacts-2026-10-16-lab/lab-soft-cycle-052/PRIORITAET-SHIFT.md`](../artifacts-2026-10-16-lab/lab-soft-cycle-052/PRIORITAET-SHIFT.md)
-- [`docs/fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](../../fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md)
+- [`docs/fahrzeug/HU-PARAMETER-MATRIX.md`](../../fahrzeug/HU-PARAMETER-MATRIX.md)
 - Quiet-Gate: `tools/soft_cycle_orchestrator.py`
 
 **Externe Reviews (Konsens, hier verdichtet):** Mistral · GPT · Grok — methodisch einig; Abweichungen unten markiert.

@@ -92,7 +92,7 @@ Damit ist GPT-Formulierung „BUSY bremst FAT/Directory“ als **Code-Claim REJE
 ### P1 — S7 Startup-Usability (vor Größenleiter im Feld)
 
 4. **S7-A:** Stall an; Timing mit `tools/lab_s7_startup_poll.py`.  
-5. **S7-B:** ✅ in **0.4.49-dev** — Lab `.88` grün ([startup](../../artifacts-2026-10-12-lab/lab-s7-startup/ERGEBNIS.md), [stream-before-guess](../../artifacts-2026-10-12-lab/lab-s7-stream-before-guess/ERGEBNIS.md)); Feld-Go offen. Siehe [`S7-D-LEITER-SPEC`](../../../planung/S7-D-LEITER-SPEC-2026-10-12.md).  
+5. **S7-B:** ✅ in **0.4.49-dev** — Lab `.88` grün ([startup](../../artifacts-2026-10-12-lab/lab-s7-startup/ERGEBNIS.md), [stream-before-guess](../../artifacts-2026-10-12-lab/lab-s7-stream-before-guess/ERGEBNIS.md)); Feld-Go offen. Siehe [`S7-D-LEITER-SPEC`](../../../archiv/planung/S7-D-LEITER-SPEC-2026-10-12.md).  
  
 6. Dokumentiere 20 s als Usability-FACT, nicht als „NBT mountet 20 s“.
 
@@ -134,6 +134,6 @@ Wenn D-E7 scheitert → Option B priorisieren.
 ## 6. Verweise
 
 - [`feld-s6-prep/ERGEBNIS-S6.md`](feld-s6-prep/ERGEBNIS-S6.md)  
-- [`../../../planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md`](../../../planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md)  
-- [`../../../planung/STALL-BUILD-SPEC-2026-10-08.md`](../../../planung/STALL-BUILD-SPEC-2026-10-08.md)  
+- [`../../../archiv/planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md`](../../../archiv/planung/MASSNAHMEN-E7-AUDIT-ABGLEICH-2026-10-12.md)  
+- [`../../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md`](../../../archiv/planung/STALL-BUILD-SPEC-2026-10-08.md)  
 - Stall-Implementierung: `esp32.pidrive` `UsbMscGadget::onRead` / `onReadLiveStall`

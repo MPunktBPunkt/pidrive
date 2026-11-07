@@ -74,7 +74,7 @@ Stream-Ring: bei PSRAM **160 KiB** (sonst Fallback 48 KiB DRAM) — siehe `S
 
 | Thema | Wo |
 |-------|----|
-| Maßnahmen-Schnitt | [`planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](../planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) |
+| Maßnahmen-Schnitt | [`archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) |
 | PSRAM-Audit | [`technology-audit/…/2026-10-21-hu-probe-psram-board-free.md`](../../../technology-audit/docs/reports/2026-10-21-hu-probe-psram-board-free.md) |
-| Parametermatrix | [`fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](../fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) |
+| Parametermatrix | [`fahrzeug/HU-PARAMETER-MATRIX.md`](../fahrzeug/HU-PARAMETER-MATRIX.md) |
 | Schaltplan Dual-USB | [Espressif SCH DevKitC-1 v1.1](https://dl.espressif.com/dl/schematics/SCH_ESP32-S3-DevKitC-1_V1.1_20220413.pdf) |

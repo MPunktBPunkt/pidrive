@@ -29,4 +29,4 @@ Liest die BMW NBT während Wiedergabe kontinuierlich Live-MSC-Daten?
 
 ## Fazit
 
-MSC-Menü/ID3/Cover bleiben sinnvoll. Dauer-Live über MSC-Readahead ist für A2 **nicht** belegt. Nächster Schritt: [`AUFTRAG-B7-HU-REREAD.md`](../../auftraege/AUFTRAG-B7-HU-REREAD.md). Eigenes Probe-FW-Repo: **verworfen** (Lab-APIs + Harness reichen).
+MSC-Menü/ID3/Cover bleiben sinnvoll. Dauer-Live über MSC-Readahead ist für A2 **nicht** belegt. Nächster Schritt: [`AUFTRAG-B7-HU-REREAD.md`](../../archiv/auftraege/AUFTRAG-B7-HU-REREAD.md). Eigenes Probe-FW-Repo: **verworfen** (Lab-APIs + Harness reichen).

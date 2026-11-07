@@ -519,8 +519,8 @@ python3 ~/pump_bridge.py --transport tcp --host 192.168.4.1
 curl -s http://192.168.4.1/api/status   # SoftAP, oder STA-IP des ESP
 ```
 
-Lab-Protokoll: [`USB-MSC-STREAM-LISTING-2026-09-18.md`](../betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) ·
-Pfad: [`PFAD-ESP32-PIDRIVE.md`](../planung/PFAD-ESP32-PIDRIVE.md) ·
+Lab-Protokoll: [`USB-MSC-STREAM-LISTING-2026-09-18.md`](../archiv/betrieb/USB-MSC-STREAM-LISTING-2026-09-18.md) ·
+Pfad: [`PFAD-ESP32-PIDRIVE.md`](../archiv/planung/PFAD-ESP32-PIDRIVE.md) ·
 WLAN: [`LAB-MENU-WLAN.md`](../betrieb/LAB-MENU-WLAN.md).
 
 ---

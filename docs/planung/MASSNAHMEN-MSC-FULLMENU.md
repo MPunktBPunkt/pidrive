@@ -1,11 +1,11 @@
 # Maßnahmen aus hu-probe Feld 23.10. → PiDrive
 
 **Quellen (hu-probe main @ ~34b1e64, FW 0.3.19):**  
-- [`2026-10-23-gesamtbericht-identity-remount-multireview.md`](../../../hu-probe/docs/feld/2026-10-23-gesamtbericht-identity-remount-multireview.md)  
-- [`2026-10-23-wire-nachtrag-074319-074455.md`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-074319-074455.md)  
-- [`2026-10-23-wire-nachtrag-detach-browse.md`](../../../hu-probe/docs/feld/2026-10-23-wire-nachtrag-detach-browse.md)  
+- [`MSC-IDENTITY-REMOUNT.md`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/MSC-IDENTITY-REMOUNT.md)  
+- [`2026-10-23-wire-nachtrag-074319-074455.md`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-074319-074455.md)  
+- [`2026-10-23-wire-nachtrag-detach-browse.md`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-detach-browse.md)  
 - Reviews GPT / Grok / Mistral (Konsens 23.10.)  
-- Vortag: [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](MASSNAHMEN-HU-PROBE-2026-10-22.md)
+- Vortag: [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md)
 
 **Umsetzung:** Docs + Firmware `esp32.pidrive` **0.4.56-dev** (FULLMENU Dir + Soft-D+-Cycle-Reread).
 

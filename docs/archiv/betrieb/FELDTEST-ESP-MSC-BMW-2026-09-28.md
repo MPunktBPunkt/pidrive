@@ -13,8 +13,8 @@
 | HU | BMW NBT Evo (USB-Host), Host-Hint ESP: `hu-like` |
 | PUMP-Link Produkt | **offen** — SoftAP \| STA \| UART festlegen (§15.0); Feldtest ideal SoftAP/UART |
 | Repos | `pidrive` (Doku/Bridge-Scripts) · `esp32.pidrive` (FW **0.4.39** + `pump_bridge.py`) · Hub-Binaries `iobroker.esp-hub/firmware/` |
-| Leitauftrag | [`AUFTRAG-MSC-HOST-READ-NACHWEIS`](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) **Rev. 4** · M0 [`AUFTRAG-M0-MESSINTEGRITAET`](../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md) · [`UEBERGABE-MSC-BEWERTUNG-2026-10-03`](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md) |
-| Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
+| Leitauftrag | [`AUFTRAG-MSC-HOST-READ-NACHWEIS`](../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) **Rev. 4** · M0 [`AUFTRAG-M0-MESSINTEGRITAET`](../archiv/auftraege/AUFTRAG-M0-MESSINTEGRITAET.md) · [`UEBERGABE-MSC-BEWERTUNG-2026-10-03`](UEBERGABE-MSC-BEWERTUNG-2026-10-03.md) |
+| Auftrag | [AUFTRAG-ESP-PLAY-DETECTION](../archiv/auftraege/AUFTRAG-ESP-PLAY-DETECTION.md) |
 | Multi-Review | [§18 Konsens Claude/GPT/Gemini/Grok](#18-multi-review-konsens-2026-09-28-abend) |
 | Idee / Warum | [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) |
 | Konzept (Soll) | [KONZEPT-USB-MSC](../planung/KONZEPT-USB-MSC.md) |
@@ -850,7 +850,7 @@ Artefakte: [`artifacts-2026-10-02-morgen/`](artifacts-2026-10-02-morgen/).
 
 1. ~~Lab-Gegenprobe Guard~~ — **PASS** §11.9  
 2. ~~**60‑s-Feldtest** je UID (§15.3)~~ — **done** §11.10 → **Burst+Cache**  
-3. **Leitauftrag** [AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md): M0 Telemetrie → **B7-A/B/C** → bei Bedarf Geometrie **L0** + L-Leiter → erst dann Ring/Remount/BT  
+3. **Leitauftrag** [AUFTRAG-MSC-HOST-READ-NACHWEIS](../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md): M0 Telemetrie → **B7-A/B/C** → bei Bedarf Geometrie **L0** + L-Leiter → erst dann Ring/Remount/BT  
 4. Burst-Replay (512 KiB/~0,6 s Trace) im Lab nur noch zur HU-Burst-Charakterisierung  
 5. Präfill / größerer Ring **nachrangig** (hilft Lab-`live_ratio`, nicht dem Feld-Cache; Überordnung M4)
 
@@ -890,9 +890,9 @@ curl -s http://192.168.178.89/api/status | tee /tmp/esp89-status-$(date +%H%M%S)
 
 **Artefakte:** [`artifacts-2026-10-02-60s/`](artifacts-2026-10-02-60s/) · [`SESSION-1548-VERDICT.md`](artifacts-2026-10-02-60s/SESSION-1548-VERDICT.md).
 
-**Probe-FW:** Idee eines **eigenen** Analyse-Repos **verworfen** — Lab-APIs (`/api/lab/remount|play|overlay_read`, Play-Detect via `/api/config`) und NBT-Replay-Harness decken das ab; BMW-Nachlesen bleibt Auto-exklusiv (B7). Siehe [`docs/auftraege/AUFTRAG-B7-HU-REREAD.md`](../auftraege/AUFTRAG-B7-HU-REREAD.md).
+**Probe-FW:** Idee eines **eigenen** Analyse-Repos **verworfen** — Lab-APIs (`/api/lab/remount|play|overlay_read`, Play-Detect via `/api/config`) und NBT-Replay-Harness decken das ab; BMW-Nachlesen bleibt Auto-exklusiv (B7). Siehe [`docs/archiv/auftraege/AUFTRAG-B7-HU-REREAD.md`](../archiv/auftraege/AUFTRAG-B7-HU-REREAD.md).
 
-**Folge:** Dauer-Live über MSC-Readahead **nicht** als Feld-A2 führen. Nächster Schritt: Zählersemantik (done) → **B7-A/B/C** ([AUFTRAG-B7](../auftraege/AUFTRAG-B7-HU-REREAD.md)) → bei fehlender Nachlese **nicht** sofort BT, sondern Geometrie/L-Leiter ([AUFTRAG-MSC-HOST-READ-NACHWEIS](../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). BT-Audio bleibt parallele NBT-Quelle / Fallback nach Plateau-Gate.
+**Folge:** Dauer-Live über MSC-Readahead **nicht** als Feld-A2 führen. Nächster Schritt: Zählersemantik (done) → **B7-A/B/C** ([AUFTRAG-B7](../archiv/auftraege/AUFTRAG-B7-HU-REREAD.md)) → bei fehlender Nachlese **nicht** sofort BT, sondern Geometrie/L-Leiter ([AUFTRAG-MSC-HOST-READ-NACHWEIS](../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md)). BT-Audio bleibt parallele NBT-Quelle / Fallback nach Plateau-Gate.
 
 ### 11.11 Feld B7 2026-10-03 — 150 s + Autoplay-Cache (PD0028/PD0029)
 
@@ -1220,7 +1220,7 @@ Konsens: Baustelle A richtig getroffen; B bewusst unangetastet = methodisch korr
 - [IDEE-USB-MSC-MENUE](../planung/IDEE-USB-MSC-MENUE.md) — Warum USB-MSC (AVRCP-Lücke, Dension)  
 - [KONZEPT-USB-MSC](../planung/KONZEPT-USB-MSC.md) — Architektur, PUMP, FAT-MVP, Designregeln  
 - [RUNTIME_FLOWS](../architektur/RUNTIME_FLOWS.md) — Laufzeitpfad `usb_gadget`  
-- [AUFTRAG-ESP-PLAY-DETECTION](../auftraege/AUFTRAG-ESP-PLAY-DETECTION.md)  
+- [AUFTRAG-ESP-PLAY-DETECTION](../archiv/auftraege/AUFTRAG-ESP-PLAY-DETECTION.md)  
 - [USB-MSC-STREAM-LISTING-2026-09-18](USB-MSC-STREAM-LISTING-2026-09-18.md)  
 - [LAB-MENU-WLAN](LAB-MENU-WLAN.md)  
 - esp32.pidrive: `docs/planung/PLAY-DETECTION.md`, `PUMP.md`, `COVER-ID3.md`, `STATE.md`  

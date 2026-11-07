@@ -471,7 +471,7 @@ s3 hat gezeigt: Nach OTG-Remount liest die HU den aktuellen Titel **ab 0 komplet
 | Option | Mechanik | Zahlen @48k | Dauerstrom? | Go |
 |--------|----------|-------------|-------------|----|
 | **a) Stall** (Stufe 3.3) | READ10 im Live-Slot erst beantworten, wenn `absEnd` den Host-Cursor deckt | 4 KiB-Read wartet ≈ 0,68 s; 512 KiB = 87 s Lesedauer | **ja**, falls HU-Timeout (R1) > 0,7 s je Read | FW |
-| **b) Zeitversatz + Dateikette** | Slot erst „freigeben“, wenn 512 KiB Vergangenheit im PSRAM liegen; dann Remount/Next-Track | 512 KiB = 87 s Vorlauf; Lücke beim Wechsel ~6 s (R7 HU-Facts) | quasi, mit Lücken | HW+Build: PSRAM **an** ab esp32.pidrive 0.4.54 (Ring 160 KiB); Producer-Zeitversatz-Logik noch offen — [`ESP32-S3-BOARD`](../referenz/ESP32-S3-BOARD.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22`](MASSNAHMEN-HU-PROBE-2026-10-22.md) |
+| **b) Zeitversatz + Dateikette** | Slot erst „freigeben“, wenn 512 KiB Vergangenheit im PSRAM liegen; dann Remount/Next-Track | 512 KiB = 87 s Vorlauf; Lücke beim Wechsel ~6 s (R7 HU-Facts) | quasi, mit Lücken | HW+Build: PSRAM **an** ab esp32.pidrive 0.4.54 (Ring 160 KiB); Producer-Zeitversatz-Logik noch offen — [`ESP32-S3-BOARD`](../referenz/ESP32-S3-BOARD.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) |
 | **c) Ring größer** | `kCapacity` 48 KiB → 160 KiB (SRAM) | Fenster 8,2 s → 27 s | nein | FW (klein) |
 | **d) Bitrate runter** | Bridge `--bitrate 32k` / `24k` | Fenster 12,3 s / 16,4 s | nein — **Modelltest ohne FW** | Pi |
 

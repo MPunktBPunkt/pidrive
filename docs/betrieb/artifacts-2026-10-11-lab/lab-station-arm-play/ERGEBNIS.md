@@ -1,7 +1,7 @@
 # Lab · Station Play/Stop-Untermenü · 2026-10-11
 
 **ESP:** `.88` · FW **0.4.46-dev** Freeze · Host `.187` · Bridge `--station-submenu fav2` @32k  
-**Spec:** [`STATION-PLAY-STOP-MENU-SPEC-2026-10-11.md`](../../../planung/STATION-PLAY-STOP-MENU-SPEC-2026-10-11.md)
+**Spec:** [`STATION-PLAY-STOP-MENU-SPEC-2026-10-11.md`](../../../archiv/planung/STATION-PLAY-STOP-MENU-SPEC-2026-10-11.md)
 
 ## Ein Satz
 

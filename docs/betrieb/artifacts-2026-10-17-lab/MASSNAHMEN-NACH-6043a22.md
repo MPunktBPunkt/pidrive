@@ -26,7 +26,7 @@ Transport/Phasen (Menü→ID3→Audio) und Messmethode (SG_IO vs. Page-Cache) si
 | M3 | Lab-Stall-Leiter Menü→ID3→Audio (0…15 s) | P0 | ☑ Full **`stall-ladder-full-01`** | `tools/lab_stall_phase_ladder.py` |
 | M4 | QD=1-Probe (240er offen halten) | P0 | ☑ Audio: nur LBA 88, keine 2nd LBA | Capture in Full-Leiter |
 | M5 | Overnight-Loop als **Smoke** markieren (n=1) | P0 Doku | ☑ | `overnight-loop-…/SMOKE.md` |
-| M6 | Matrix: A3 Ursache nur Inference; ID3 Lab-Fakt; Methodik | P0 Doku | ☑ | `HU-PARAMETER-MATRIX-2026-10-16.md` |
+| M6 | Matrix: A3 Ursache nur Inference; ID3 Lab-Fakt; Methodik | P0 Doku | ☑ | `HU-PARAMETER-MATRIX.md` |
 | M7 | B4: Lab-`pread` 64er **nicht** als HU-Geometrie | P0 Doku | ☑ | diese Datei §3 |
 | M8 | Panic/OTG UART+resetReason+VBUS A/B | P0 Feld | ☐ braucht Fahrzeug | Checkliste unten |
 | M9 | F0 Identity/Cache isoliert | P1 | ☐ nach M8 | Serial / Vol-ID / Label |

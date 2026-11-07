@@ -5,8 +5,8 @@
 **Hardware:** ESP Lab `192.168.178.88` · Bridge-Pi `192.168.178.105` · USB-Host Proxmox `192.168.178.108` (`/dev/sda`, `/dev/sg0`)
 
 **Leitaufträge:**  
-[`AUFTRAG-MSC-HOST-READ-NACHWEIS`](../../auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) Rev.4 ·  
-[`AUFTRAG-M0-MESSINTEGRITAET`](../../auftraege/AUFTRAG-M0-MESSINTEGRITAET.md) ·  
+[`AUFTRAG-MSC-HOST-READ-NACHWEIS`](../../archiv/auftraege/AUFTRAG-MSC-HOST-READ-NACHWEIS.md) Rev.4 ·  
+[`AUFTRAG-M0-MESSINTEGRITAET`](../../archiv/auftraege/AUFTRAG-M0-MESSINTEGRITAET.md) ·  
 [`UEBERGABE-MSC-BEWERTUNG-2026-10-03`](../UEBERGABE-MSC-BEWERTUNG-2026-10-03.md)
 
 ---

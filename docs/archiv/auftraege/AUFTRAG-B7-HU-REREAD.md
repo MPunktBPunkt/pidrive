@@ -27,7 +27,7 @@ Bestehende Lab-APIs + NBT-Harness reichen. BMW-Cache-Fragen = Auto-exklusiv.
 
 ## Vorbereitung — Auto bleibt 0.4.36 für M1
 
-Checkliste: [`../betrieb/B7-MORGEN-CHECKLISTE.md`](../betrieb/B7-MORGEN-CHECKLISTE.md)
+Checkliste: [`../archiv/betrieb/B7-MORGEN-CHECKLISTE.md`](../archiv/betrieb/B7-MORGEN-CHECKLISTE.md)
 
 | Item | Status |
 |------|--------|

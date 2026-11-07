@@ -62,7 +62,7 @@ Feld-Check nach Flash: `/api/status` → `hw.psram.build_enabled=true`, `psramSi
 
 | Datei | Änderung |
 |-------|----------|
-| [`fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md`](../fahrzeug/HU-PARAMETER-MATRIX-2026-10-16.md) | Media-Leiter FACTs, Rejects, PSRAM an |
+| [`fahrzeug/HU-PARAMETER-MATRIX.md`](../fahrzeug/HU-PARAMETER-MATRIX.md) | Media-Leiter FACTs, Rejects, PSRAM an |
 | [`fahrzeug/HU-Technical-Facts.md`](../fahrzeug/HU-Technical-Facts.md) | Phasenmodell, Head-160, TUR idle, Vertrag |
 | [`referenz/ESP32-S3-BOARD.md`](../referenz/ESP32-S3-BOARD.md) | PSRAM Build an |
 | [`betrieb/MSC-AKTUELL.md`](../betrieb/MSC-AKTUELL.md) | Einstieg auf 22.10. Stand |

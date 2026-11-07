@@ -148,7 +148,7 @@ Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 **BMW 118d F20 2017 = NBT Evo ID5/ID6 → AVRCP 1.4**
 
 Für PiDrive bedeutet das: wir müssen AVRCP 1.4-kompatibel antworten.  
-AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details: [`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md). Reiche Menüs/Cover über den **Connected-Apps-Stack** (BCL→Etch→RHMI, z. B. AAIdrive) = **Pfad C**, parallel zu A2DP/AVRCP — Stack-Abgleich: [`CONNECTED-AAIDRIVE-STACK-2026-11-06.md`](CONNECTED-AAIDRIVE-STACK-2026-11-06.md).
+AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details: [`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md). Reiche Menüs/Cover über den **Connected-Apps-Stack** (BCL→Etch→RHMI, z. B. AAIdrive) = **Pfad C**, parallel zu A2DP/AVRCP — Stack-Abgleich: [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md).
 
 ### 3.2 AVRCP Pass-Through Kommandos (BMW sendet → PiDrive empfängt)
 
@@ -526,7 +526,7 @@ gekürzt, `xesam:genre` auf **32 Zeichen** (`update_metadata()` in `mpris2.py`).
 
 **Cover-Art (`mpris:artUrl`):** Für **NBT Evo über Bluetooth** kein Produktziel —
 die HU zeigt BT-Cover zuverlässig nur über iAP/Connected/USB, nicht über AVRCP-BIP
-([`FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md`](FORUM-RESEARCH-AVRCP-COVER-MSC-2026-11-06.md)).
+([`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md)).
 Sichtbares Cover = **USB-MSC + ID3 APIC**. Intern vorgesehene Webserver-Icons
 (`http://<ip>:8080/cover/<quelle>`) ändern das HU-BT-Display nicht.
 
@@ -566,7 +566,7 @@ PiDrive-Implementierung:
 9. PiDrive: avrcp_trigger.py erkennt Connected-Event
 ```
 
-**Feldtest 2026-09-16:** Fahrzeugname `BMW 38304`, Zahlenvergleich `376726`, Bestätigung OK im iDrive. PiDrive-Agent `DisplayYesNo` muss `Request confirmation` mit `yes` beantworten. Fotos: [`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md).
+**Feldtest 2026-09-16:** Fahrzeugname `BMW 38304`, Zahlenvergleich `376726`, Bestätigung OK im iDrive. PiDrive-Agent `DisplayYesNo` muss `Request confirmation` mit `yes` beantworten. Fotos: [`../archiv/fahrzeug/BMW-BT-FELDTEST-2026-09-16.md`](../archiv/fahrzeug/BMW-BT-FELDTEST-2026-09-16.md).
 
 ### 8.2 PiDrive Pairing-Befehle
 
@@ -764,7 +764,7 @@ Das Fahrzeug listet **PiDrive** und **PiDrive Menü**. Letzteres entspricht dem 
 ### Erster Feldtest im Fahrzeug (2026-09-16)
 
 Pairing (SSP-Zahl), Geräteliste und Now Playing (Spotify + Webradio):  
-[`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md)
+[`../archiv/fahrzeug/BMW-BT-FELDTEST-2026-09-16.md`](../archiv/fahrzeug/BMW-BT-FELDTEST-2026-09-16.md)
 
 ---
 
@@ -787,7 +787,7 @@ SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 | **`mpris:artUrl` / Cover-Art** — `update_metadata()` referenziert `art_url` ohne Parameter + `**{{…}}` (Set statt Dict) → `TypeError`, in `main_core` still verschluckt | `mpris2.py` | 🔴 fixen: `art_url=""`-Parameter ergänzen, `{{…}}` → `{…}` |
 | Zwei BMW-Empfangspfade mit **unterschiedlichem** Mapping (`avrcp_trigger.py` kontextabhängig vs. `mpris2.py` fest) | `mpris2.py`, `integration/avrcp_trigger.py` | 🟡 im Auto verifizieren, welcher Pfad bedient wird |
 | `monitor_bluetoothctl()` vorhanden, aber deaktiviert (CPU-Fix) | `integration/avrcp_trigger.py` | ℹ️ bewusst, nur dbus-monitor aktiv |
-| WirePlumber A2DP / DAB-Antenne / AVRCP-Tasten | — | 🟡 Tasten und Menü auf CID noch offen; Pairing + Now Playing 2026-09-16 bestätigt ([`BMW-BT-FELDTEST-2026-09-16.md`](BMW-BT-FELDTEST-2026-09-16.md)) |
+| WirePlumber A2DP / DAB-Antenne / AVRCP-Tasten | — | 🟡 Tasten und Menü auf CID noch offen; Pairing + Now Playing 2026-09-16 bestätigt ([`../archiv/fahrzeug/BMW-BT-FELDTEST-2026-09-16.md`](../archiv/fahrzeug/BMW-BT-FELDTEST-2026-09-16.md)) |
 
 ---
 

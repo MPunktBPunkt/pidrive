@@ -179,5 +179,5 @@ Zusatz Phone: MP3 öffnen ohne `play.guess` → nur Testton.
 
 - Firmware/Code: [`esp32.pidrive`](https://github.com/MPunktBPunkt/esp32.pidrive) — `src/msc/UsbMscGadget.*`, `tools/pump_bridge.py`
 - Konzept: [`docs/planung/KONZEPT-USB-MSC.md`](../planung/KONZEPT-USB-MSC.md)
-- Pfad: [`docs/planung/PFAD-ESP32-PIDRIVE.md`](../planung/PFAD-ESP32-PIDRIVE.md)
+- Pfad: [`docs/archiv/planung/PFAD-ESP32-PIDRIVE.md`](../archiv/planung/PFAD-ESP32-PIDRIVE.md)
 - Betrieb allgemein: [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)
