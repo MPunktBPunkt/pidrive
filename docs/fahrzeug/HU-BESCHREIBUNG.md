@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-07 (Korrektur gegen Facts: Prefetch/Stall/CBW/Cache/Gates)  
+**Stand:** 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions mit Instrument-Gültigkeitsprüfung: neues Lesemodell §4.6, Artefakte R51/Q18 entfernt, Folgen für PiDrive §7)  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
@@ -22,13 +22,14 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
    - 4.5 Lesereihenfolge ≠ Abspielposition
    - 4.6 Prefetch und Nachbar-Eager
    - 4.7 Stall-Toleranz und Timingproblem
+   - 4.8 Messbasis und Gültigkeit
 5. [Control Plane — Connected Apps](#5-control-plane--connected-apps)
    - 5.1 Gates G1–G4 (+ Nutzung danach)
    - 5.2 AOA ≠ Connected App
    - 5.3 Feldstand an dieser HU
    - 5.4 SAS, RHMI, CDS, AV
-6. [Korrektur der GPT-Zusammenfassung (2026-11-07)](#6-korrektur-der-gpt-zusammenfassung-2026-11-07)
-7. [PiDrive-Strategien A / B / C](#7-pidrive-strategien-a--b--c)
+6. [Korrekturen (GPT-Fassung 07.11., Nachrechnung 11.11.)](#6-korrekturen-gpt-fassung-0711-nachrechnung-1111)
+7. [PiDrive-Strategien und Folgen für Variante B](#7-pidrive-strategien-und-folgen-für-variante-b)
 8. [Offene P0/P1-Fragen](#8-offene-p0p1-fragen)
 9. [Quellenverzeichnis](#9-quellenverzeichnis)
 
@@ -50,7 +51,7 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
 
 ## 2. Gesamturteil
 
-**Storage Plane:** Die BMW NBT-Evo-HU ist ein aggressiver, dateiorientierter USB-MSC-Host mit mehrstufigem Zustand/Cache, großen READ10-Transfers und nachweislich hoher Toleranz gegenüber USB-Backpressure. Sie konsumiert nicht einfach kontinuierlich Audio, sondern fordert Daten in kontextabhängigen Leseoperationen an und kann daraus lokal weiter abspielen.
+**Storage Plane:** Die BMW NBT-Evo-HU ist ein aggressiver, dateiorientierter USB-MSC-Host mit mehrstufigem Zustand/Cache, großen READ10-Transfers und nachweislich hoher Toleranz gegenüber USB-Backpressure. Sie konsumiert nicht einfach kontinuierlich Audio, sondern fordert Daten in kontextabhängigen Leseoperationen an und kann daraus lokal weiter abspielen. Konkret (Heimfahrt nachgerechnet, R53–R58): Ein Titel, der zu spielen beginnt, wird **vollständig** mit ~1 MB/s gelesen (bis 7,2 MB belegt, keine Obergrenze sichtbar); der Folgetitel wird ~7–8 s vor Ende angelesen; nach einem Mount wird der Resume-Titel ab Kopf und ab Position gelesen; teils werden mehrere Folgetitel am Stück vorgelesen, und der Cache hält das minutenlang.
 
 **Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette, deren Transport und höhere Protokollschichten getrennt vom Storage Plane betrachtet werden müssen (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM als Nutzerebene). Desk-[D] stark, F20-Wire noch nicht durchgehend bewiesen.
 
@@ -146,7 +147,7 @@ USB einstecken
 Enumeration / SCSI
      │
      ▼
-Dateisystem-Scan (Fresh: 32+128+EOF-Probe je Datei)
+Dateisystem-Scan (Fresh: 160 Blöcke + EOF-Probe je Datei, größenunabhängig)
      │
      ▼
 HU-interne Schicht
@@ -155,18 +156,22 @@ HU-interne Schicht
      └── Audio-Body-Cache
               │
               ├── Hit  → Wiedergabe ohne Body-Reads
-              └── Miss → Eager Body (oft bis EOF) → Cache → Decoder
+              └── Miss → Eager Body (ganze Datei) → Cache → Decoder
 ```
 
 Kernfakten:
 
 | Aussage | Status | Ref |
 |---------|--------|-----|
-| Gewählte / vorgelesene Datei oft bis EOF | **[B]** | R2 |
+| Spielende / gewählte Datei wird komplett gelesen, bis 7,2 MB ohne Grenze | **[B]** | R2, R53 |
 | Leserate nahe USB-FS (~1 MB/s / ~4 ms je 4 KiB Callback) | **[B]** | R1, R15 |
 | Nach Vorlesen lange keine Reads bei laufender Wiedergabe | **[B]** | R5 (≥150 s) |
 | Cache-Hit → keine Body-Reads | **[B]** | R9 |
 | Next-Track / Neighbor wird vorgelesen | **[B]/[S]** | R4, R21, R47 |
+| Mehrere Folgetitel am Stück vorgelesen (≈31 MB in 70 s), auch in Unterordnern | **[S]** | R57 |
+| Body-Cache hält Daten ≥ 400–655 s, auch über weitere Reads | **[S]** | R56 |
+| Fresh-Scan liest 160 Blöcke + EOF-Probe pro Datei, unabhängig von der Größe | **[S]** | R58 |
+| Autoplay wechselt im Takt der Dateidauer, loopt im Ordner; 32–320 kbit/s gelesen | **[S]** | R59, R60 |
 | USB und Audio entkoppelt (Cache dazwischen) | **[B]/[S]** | R5, R24, R33 |
 
 Gegenüber 48 kbit/s Audio (~6 KiB/s) liest die HU grob **zwei Größenordnungen schneller**. Deshalb wirkt sie wie ein Festplattenbenutzer, nicht wie ein Just-in-Time-Player.
@@ -196,21 +201,35 @@ Bei Resume an Position **P** liest die HU nicht strikt „ab P vorwärts wie ein
 
 - Out-of-order Muster mit Vor-/Rückwärtssegmenten (R16)
 - Nach OTG-Remount: kompletter Titel ab Offset 0, Wiedergabe weiter bei P (R24)
+- Große Dateien nach Mount: Kopf **0–3840 Blöcke (1,875 MiB)** verschränkt mit **P → EOF**; der Mittelteil folgt erst, wenn die Wiedergabe dort ankommt (R55; `#23` R04: Mitte 3840–7464 erst nach ~400 s)
 - UI-Tap liest Umgebung von P, Remount-Read oft head-first Vollatom
 
 **Abspielposition ≠ Lesereihenfolge** ist damit ein Architekturfakt (R23, R24, R33).
 
 ### 4.6 Prefetch und Nachbar-Eager
 
-Next-Track-Prefetch **existiert** (R4, R21). Die Lead-Zeit ist **kontextabhängig** (R49) — **kein fixer Lead**:
+Nachgerechnet aus den drei Instrument-gültigen Heimfahrt-Sessions (`#22`–`#24`, 0.3.17 Stored-Replay) und den Media-Leiter-Sessions vom 22.10. (§4.8). Vier Lesemuster:
 
-- situativ ~7,2–7,7 s (MIX / Heimfahrt)
-- in ROCK/CLASSIC-Sessions oft **140–240 s** Vorlauf
-- Konstanten „8 s“ / „15 s“ als allgemeine Regel: **REJECTED** (auch frühere [S]-Lesart ~15 s + Ausreißer ~7 s ist veraltet)
+| Muster | Was die HU liest | Wann | Ref |
+|--------|------------------|------|-----|
+| **Spielstart / Auswahl** | ganze Datei, 0,9–1,05 MB/s (z. B. 7,2 MB in 9,6–10,9 s) | sofort | R53 |
+| **Natürlicher Autoplay-Wechsel** | Kopf des Folgetitels (768 KiB bei bekanntem Medium, ~1,3 MiB nach Fresh-Scan), Rest beim Wechsel in einem Zug | Kopf **7,2–8 s vor Ende** (n=6) | R54 |
+| **Resume nach Mount** | Kopf 0–3840 Blöcke ∥ Resume-Position → EOF; Mitte später | beim Mount | R55 |
+| **Ketten-Prefetch** | mehrere Folgetitel komplett Rücken an Rücken (≈31 MB in 70 s, Abstand ~4 ms) | nach Remount/Ordnerwechsel; Auslöser [?] | R57 |
 
-Drei Read-Modi (R47): Head/Selection · Eager Body (~90–99 %) · Neighbor/LBA-Interleave. **Eager ≠ hörbares Play** (R50) — großer Read beweist keine Audible-Session (GATE-01 offen).
+```
+Titel N spielt (ganz im Cache)                 Titel N+1
+|=================================|            |==========================|
+                          7–8 s vor Ende:
+                          Kopf N+1 lesen -----> [Kopf]
+                                Wechsel: Rest -> [Kopf|=====Rest=========]
+```
 
-Body-Reads können **vor** Head-Reads kommen (R8) — asynchroner Scanner/Prefetcher.
+- Der Lead ist **kontextabhängig** (R49): ~7–8 s ist der Normalfall beim natürlichen Wechsel, aber keine universelle Konstante (kleine Demo-Dateien: Read erst beim Wechsel bzw. ~1,9 s vorher). „15 s“ ist **REJECTED**. Die früher genannten **140–240 s** in ROCK/CLASSIC waren formal berechnet; dort lief eine Kette (R57), kein Vorlauf vor dem Ende eines laufenden Titels.
+- Das **512-Block-Fenster** (Matrix A15) gilt für reale Dateien nicht: keine Plateau-Grenze bis 7,2 MB. ≥ 8 MiB ist ungemessen.
+- Drei Read-Modi (R47): Head/Selection · Eager Body (**100 %**) · Neighbor/LBA-Interleave. **Eager ≠ hörbares Play** (R50) — großer Read beweist keine Audible-Session (GATE-01 offen).
+- Body-Reads können **vor** Head-Reads kommen (R8) — asynchroner Scanner/Prefetcher.
+- Cache: Daten bleiben minutenlang; beim Ordner-Loop M03→M01 wurde nur die verdrängte Mitte von M01 neu gelesen (R56). Autoplay loopt im Ordner (R60).
 
 ### 4.7 Stall-Toleranz und Timingproblem
 
@@ -222,13 +241,29 @@ PiDrive will idealerweise Live-Audio liefern; die HU will Dateien in großen REA
 | Audio 48 kbit/s | ≈ 6 KiB/s | Rechnung |
 | Ringfenster ohne Stall | ≈ 6–9 s | **[B]/[S]** (R25, §6.3 Facts) |
 | Stall-on bis EOF (512 KiB) | ≈ 65 s Musik+ID3; BUSY-Retries über Minuten | **[B]** (E7, R29) |
-| Kurz-BUSY ohne Host-Reset | 16 Blöcke ~1,6 s, danach normal weiter | **[B]** (R51) |
+| Längste reale Haltezeit eines Kommandos (Heimfahrt, ohne BUSY-Stimulus) | < 0,3 s | **[B]** (§4.8; frühere R51 „1,6 s BUSY“ = Auswertungsartefakt) |
 
 **REJECTED:** „Kleiner Ring = harte Dauerstrom-Grenze.“ Die HU ist nachweislich **stallexzessiv tolerant** — das Fenster ist größer als die frühere 100-ms-/300-ms-/3-s-Unsicherheitserzählung. Die gemessene BUSY-Toleranz ist eine **reale Designressource** für Backpressure: PiDrive muss nicht zwingend innerhalb jedes 4-KiB-Callbacks „fertig“ sein.
 
-**Q1 Rest** (nicht „Q1 komplett offen“): Gesamtdauer pro Kommando vs. datenlose Inaktivität; dabei CBW-Blockzahl mitdenken (`blocks=240` → Retry hängt an ~122 KiB Datenphase, nicht an 4 KiB). Keine scheinpräzise Millisekunden-Grenze, solange blocks × Datenphase × Idle nicht systematisch vermessen sind. **Q16** (Größenleiter) bleibt bewusst offen (27.10. Capture-Body verloren).
+**Q1 Rest** (nicht „Q1 komplett offen“): Gesamtdauer pro Kommando vs. datenlose Inaktivität; dabei CBW-Blockzahl mitdenken (`blocks=240` → Retry hängt an ~122 KiB Datenphase, nicht an 4 KiB). Keine scheinpräzise Millisekunden-Grenze, solange blocks × Datenphase × Idle nicht systematisch vermessen sind. **Q16** ist für 2–7,2 MB durch die nachgerechnete Heimfahrt beantwortet (§4.6); offen bleiben ≥ 8 MiB und vor allem, ob BUSY-Pacing über die **ganze Datei** (Minuten, nicht 512 KiB) trägt. Die Größenleiter-Feldläufe 27.10. und 11.11. lieferten keine HU-Read-Daten (Instrument, §4.8).
 
 Konsequenz: PiDrive muss die **Read-Requests** so bedienen, dass die HU-Illusion eines normalen MSC-Sticks erhalten bleibt — nicht „Audio tropfenweise nach Decoderuhr“.
+
+Das verschärft sich durch §4.6: Die HU fordert beim Spielstart die **ganze Datei** an. Ein Live-Slot muss deshalb über seine gesamte Länge gepaced werden; was PiDrive zum Lesezeitpunkt noch nicht hat und trotzdem liefert, landet als Stille im HU-Cache und wird abgespielt.
+
+### 4.8 Messbasis und Gültigkeit
+
+Alle hu-probe-BMW-Sessions wurden am 11.11. nachgerechnet: CBW/CSW-Paarung in Stream-Reihenfolge, DATA-Summe je READ10, lückenlose `capture_seq`, Zeitmonotonie, Verlauf des Ringverlust-Zählers und `origin`. Ergebnis (Detail Facts §9.1):
+
+| Sessions | Ergebnis |
+|----------|----------|
+| Heimfahrt `#22`–`#24` (0.3.17 Stored-Replay) | **gültig**, verlustfrei — nach Entfernen der `post_finalize`-Events (Upload-Phase, I9) |
+| Media-Leiter 22.10. (`080353`…`081152`, `61434`), 20.10. free, S0/S2 | gültig |
+| 22.10. `081410` (drive_mix live) | ~990 BOT-Records verloren (I11): nur Reihenfolge, keine Coverage |
+| 11.11. free (0.3.38) | gültig für Ops |
+| Größenleiter 27.10., 11.11. ×2, Lab `065150` | **ungültig** (Hide-Poll nach Capture-Ende bzw. Replay-Deadlock 0.3.21–0.3.38, I7/I8) |
+
+Dabei fielen drei Fehlinterpretationen auf: der „~1,6-s-BUSY ohne Reset“ (R51) war ein Fehler in `analyze_session.py` (Tag-Wiederverwendung nach Remount, I10; korrigiert); der „zweite Mount in `#22` mit 395xxx-LBA-Probe“ (Q18) bestand aus `post_finalize`-Events; die 93–99-%-Coverage stammte aus Episoden ohne Kopf-Atom. Die hu-probe-Sicht bleibt durch TinyUSB/DWC2 begrenzt (keine NAK/Token/Wire-Zeiten, I13); 0.3.40 erweitert die Detektion, ist aber weder kompiliert noch feldgetestet.
 
 ---
 
@@ -280,14 +315,14 @@ Voraussetzung Fahrzeug: Apps/6NR bzw. ConnectedDrive-Apps — sonst ist Pfad C t
 
 ---
 
-## 6. Korrektur der GPT-Zusammenfassung (2026-11-07)
+## 6. Korrekturen (GPT-Fassung 07.11., Nachrechnung 11.11.)
 
 Gegenprüfung gegen [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 2026-11-06+, R46–R52, E18/F15): Das **Zwei-Plane-Modell** und der PiDrive-Vertrag („kein Audio-Player, sondern dateiorientierter MSC-Host mit Cache“) sind korrekt. Die alte Storage-Plane-Erzählung ist als Architektur-Skizze brauchbar, aber **nicht als Faktenreferenz zitierfähig**. Vier konkrete Fehler und zwei kleinere Punkte:
 
 | # | GPT-Aussage | Bewertung | Korrektur (Facts) |
 |---|-------------|-----------|-------------------|
-| 1 | Prefetch „~15 s vor Ende“, Ausreißer ~7 s → [S] | **veraltet / REJECTED** | Lead **kontextabhängig** (R49/R21): situativ ~7,2–7,7 s; ROCK/CLASSIC **140–240 s**. „8 s“ und „15 s“ als Konstante **REJECTED** |
-| 2 | Stall-Toleranz / Q1 „komplett offen“ (100 ms / 300 ms / 3 s?) | **falsch dargestellt** | Stall **Feld-FACT**: E7/R29 (BUSY über Minuten, ~65 s bis EOF); R51 (~1,6 s BUSY ohne Reset). Q1 nur noch Rest: Dauer vs. Idle + CBW-Größe |
+| 1 | Prefetch „~15 s vor Ende“, Ausreißer ~7 s → [S] | **veraltet / REJECTED** | Lead **kontextabhängig** (R49/R54): natürlicher Wechsel ~7,2–8 s (n=6); „15 s“ **REJECTED**; „140–240 s“ war formal (Kette R57) |
+| 2 | Stall-Toleranz / Q1 „komplett offen“ (100 ms / 300 ms / 3 s?) | **falsch dargestellt** | Stall **Feld-FACT**: E7/R29 (BUSY über Minuten, ~65 s bis EOF). Q1 nur noch Rest: Dauer vs. Idle + CBW-Größe, Pacing über ganze Datei. (R51 am 11.11. als Artefakt zurückgezogen) |
 | 3 | „HU immer 4 KiB“, seriell = FACT | **vermengt Ebenen** | Callback 4 KiB (E5) ≠ CBW oft **8/240** (E11). Track-Atom `240+69`. Timing = CBW-Sicht |
 | 4 | „ein Media Cache“ | **zu grob** | ≥3 Zustände (R45): Navigator/Position ≠ Browse/Lib ≠ Audio-Body; unterschiedliches Invalidierungsverhalten |
 | — | Gate **G5** (RHMI/CDS/AV) | **konkurrierendes Modell** | Referenz = **G1–G4**; RHMI/… = Nutzung **nach** G4 (`a68ef3b`) |
@@ -295,11 +330,24 @@ Gegenprüfung gegen [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 2026
 
 **Richtig wiedergegeben** in der GPT-Fassung u. a.: R16 (nichtlineare Reads), R24 (Abspielposition ≠ Lesereihenfolge), R5 (keine Reads während Wiedergabe), ~9-s-Tonfenster-Konsequenz, Zwei-Plane-Epistemik.
 
-**Praktische Konsequenz:** Backpressure-Planung geht von **gemessener hoher Stall-Toleranz** (E7/R29/R51) aus, mit Q1-Rest und Q16 als offenen Flanken — nicht von „Q1 = komplettes Unknown“. Storage-Korrekturen berühren **I-303A / G1** nicht.
+**Praktische Konsequenz:** Backpressure-Planung geht von **gemessener hoher Stall-Toleranz** (E7/R29) aus, mit Q1-Rest und Q16 als offenen Flanken — nicht von „Q1 = komplettes Unknown“. Storage-Korrekturen berühren **I-303A / G1** nicht.
+
+**Korrekturen aus der Nachrechnung 11.11.** (eigene frühere Auswertungen, nicht GPT):
+
+| Bisher | Jetzt | Grund |
+|--------|-------|-------|
+| R51: Kurz-BUSY 1,6 s ohne Reset **[B]** | **REJECTED** | Tag-Bug in `analyze_session.py` (I10) |
+| Q18: 395xxx-LBA-Probe beim 2. Mount `#22` | **geschlossen, Artefakt**; `#22` hatte einen Mount | `post_finalize`-Events (I9) |
+| R46 belegt durch `#22` und `#23` | nur `#23` | dito |
+| R47: Eager 93–99 % | **100 %** | Episoden ohne Kopf-Atom gezählt |
+| R49: ROCK/CLASSIC 140–240 s Lead | formal; Kette R57 | Rechnung Dauer − Abstand |
+| Matrix A15: Lesefenster 512 Blöcke | **widerlegt** bis 7,2 MB | R53 |
+| Größenleiter 27.10./11.11. „Capture verloren“ | **ungültig** (Hide-Poll / Replay-Deadlock) | I7/I8 |
+| 22.10. drive_mix live Coverage (z. B. J01 76 %) | nicht verwendbar | Ringverlust (I11) |
 
 ---
 
-## 7. PiDrive-Strategien A / B / C
+## 7. PiDrive-Strategien und Folgen für Variante B
 
 | Variante | Pfad | Stand | Stärke | Risiko |
 |----------|------|-------|--------|--------|
@@ -307,7 +355,17 @@ Gegenprüfung gegen [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 2026
 | **B** | Storage Plane / USB-MSC | Golden Path + Messung | Cover, HU-USB-UI, gut vermessen | Live vs. Eager-Read-Ahead |
 | **C** | Control Plane / Connected | Forschung | native RHMI/AV-Nähe | Gates, Certs, 6NR, Wire offen |
 
-Für Variante B bleibt die Leitfrage: Reads so bedienen (Stall/Backpressure über CBW-Datenphasen, gültige Heads, FULLMENU-Vertrag), dass Cache/Prefetch der HU **stick-kompatibel** bleiben. Arbeitsgrundlage = hohe Stall-Toleranz; Decoder-Experimente ohne Q1-Rest/Q16/GATE-01 lösen das Timingproblem nicht.
+Für Variante B bleibt die Leitfrage: Reads so bedienen (Stall/Backpressure über CBW-Datenphasen, gültige Heads, FULLMENU-Vertrag), dass Cache/Prefetch der HU **stick-kompatibel** bleiben. Arbeitsgrundlage = hohe Stall-Toleranz; Decoder-Experimente ohne Q1-Rest/GATE-01 lösen das Timingproblem nicht.
+
+**Folgen des Lesemodells (§4.6) für PiDrive** — abgeleitet, nicht einzeln im Feld getestet:
+
+1. **Live-Slot über die ganze Länge pacen.** Die HU liest beim Spielstart die ganze Datei mit ~1 MB/s (R53). Ein Ringfenster am Kopf reicht nicht; jeder noch nicht erzeugte Block muss per BUSY/NOT READY verzögert werden. Belegt ist Pacing bisher nur für 512 KiB (~65 s, S6). Das ist der wichtigste offene Test (Q1-Rest).
+2. **Slotgröße.** Bis 7,2 MB liest die HU vollständig; ≥ 8 MiB ist ungemessen (S6: 8-MiB-Rock oft stumm, R32).
+3. **Nachbarn sind nie „nur Liste“.** 7–8 s vor Ende wird der Kopf des Folgetitels gelesen (R54), teils eine ganze Kette inklusive Unterordner (R57), und Autoplay loopt im Ordner (R60). Jede Nachbardatei muss jederzeit gültigen Inhalt liefern oder selbst hinter Pacing stehen.
+4. **Resume nach Mount.** Die HU liest Kopf 1,875 MiB + gespeicherte Position → EOF (R55). Ein Live-Slot muss mit beliebiger Resume-Position umgehen können.
+5. **Cache verhindert Aktualisierung.** Daten bleiben minutenlang (R56), ein Cache-Hit erzeugt keinen Read (R9). Neuer Inhalt braucht eine neue Datei/LBA oder einen Cycle (R45 leert den Browse-/Body-Cache, die Position bleibt).
+6. **Steuerdateien (Tap als Befehl).** Dateien ≤ 160 Blöcke (80 KiB) liegen nach dem Fresh-Scan schon komplett im Cache → ein Tap erzeugt keinen Read (R58). Ein erkennbarer Befehl braucht Reads jenseits Block 160. Prefetch, Kette und Ordner-Loop lesen Steuerdateien auch ohne Tap (Read ≠ Absicht, R50). Nach dem ersten Lesen wirkt eine Steuerdatei bis zum nächsten Cycle nicht erneut (R9/R45).
+7. **Identität und Betrieb.** Der HU-Gerätename kommt aus USB-iProduct (F16); hu-probe im Auto nur mit Profil `bmw`, nicht `lab_debian` (Soft-Detach, I12). Vendor-only- und Phone-like-Identitäten meldet die HU als „nicht unterstützt“ (Facts §10).
 
 Hybrid denkbar (Ton über A/B, UI über C) — zwei Geräte/Stacks, hoher Aufwand.
 
@@ -318,11 +376,13 @@ Hybrid denkbar (Ton über A/B, UI über C) — zwei Geräte/Stacks, hoher Aufwan
 | Priorität | ID | Frage |
 |-----------|-----|--------|
 | P0 | GATE-01 | Audible / Play-Intent vs. Eager-Read |
-| P0 | Q16 | Größenleiter ≫158 KiB (27.10. Capture verloren) |
-| P0 | Q1 (Rest) | Timeout-Modell Dauer vs. Inaktivität; CBW-240 |
-| P1 | Q4a–c | Cache-Größe / Multi-File / Eviction |
-| P1 | Q18 | Semantik 395xxx-LBA-Probe beim Remount |
+| P0 | Q1 (Rest) | BUSY-Pacing über eine **ganze** Datei ≥ 4 MiB mit Ohr; Dauer vs. Inaktivität; CBW-240 |
+| P0 | Q16 (Rest) | Einzeldatei ≥ 8 MiB (8/16 MiB mit hörbaren Markern); 2–7,2 MB beantwortet (R53) |
+| P1 | Q19 | Wann Kette statt Kopf-Vorlauf; Autoplay über Ordnergrenzen |
+| P1 | Q4a–c | Cache-Größe / Multi-File / Eviction (Hinweise R56/R57) |
+| P1 | F17 | `cache_place` am 10.11. ohne Dateien |
 | P1 | C-Q1/C-Q2 | 6NR/Apps; FIELD-CONNECTED-REAL-01 / FX-G3-01 |
+| — | Q18 | **geschlossen** (Artefakt, §6) |
 
 Vollkatalog: Facts §8 und Connected-Stack §7.
 
@@ -352,6 +412,9 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | Fld5 | Analyzer [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) | E18/F15 |
 | Fld6 | PiDrive [`ANALYSE-S3-TONFENSTER`](../betrieb/artifacts-2026-10-08-feld/ANALYSE-S3-TONFENSTER-2026-10-08.md) | Replug, Ring, Cover |
 | Fld7 | PiDrive [`ERGEBNIS-S6`](../betrieb/artifacts-2026-10-12-feld/feld-s6-prep/ERGEBNIS-S6.md) | Stall-on ~65 s |
+| Fld8 | hu-probe [`FELD-2026-11-11 Größenleiter`](../../../hu-probe/docs/feld/FELD-2026-11-11-MSC-GROESSENLEITER.md) | Lauf ungültig (Replay-Deadlock), Ops |
+| Fld9 | hu-probe [`FELD-2026-11-10`](../../../hu-probe/docs/feld/FELD-2026-11-10-I303A-REVAL-MSC.md) | iProduct-Name, Soft-Detach, `cache_place` |
+| Fld10 | hu-probe [`C1-STAND`](../../../hu-probe/docs/feld/C1-STAND.md) | Feld-Identitäten (nicht unterstützt / Zubehör) |
 
 ### 9.3 Audits / Evidence
 
@@ -379,5 +442,6 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 - Neue Feld-[B]-Claims zuerst in **HU-Technical-Facts**, dann Kurzübernahme hier.
 - Desk-Claims nie still zu Storage-[B] hochstufen.
 - Bei Widerspruch gilt die Facts-Tabelle mit verlinktem Artefakt.
+- hu-probe-Sessions nur nach `origin`-Filter (`post_finalize` ≠ Trip) und Stream-Vollständigkeitsprüfung als [B] verwenden (Facts §9.1).
 - GPT-/KI-Fließtexte nie still als Facts zitieren — Abweichungen in §6 nachziehen.
 - Control-Plane-Gates: nur **G1–G4**; RHMI/CDS/AV ohne Gate-ID G5.
