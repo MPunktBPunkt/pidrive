@@ -179,7 +179,18 @@ Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identi
 | **CarAPI-Apps** (Spotify…) | ContentProvider-Cert; Connected führt `sas_*` stellvertretend (kein direkter Etch-Client) |
 | **IDriveConnectKit** | Etch-IDL + RHMI-Helper-Library |
 | **IDriveConnectAddons** | Extra-RHMI-Apps / CDS-Consumer |
-| **BclCarLink** | Optionaler BCL-Link; ersetzt Security **nicht** |
+| **BclCarLink** | Optionaler BCL-Link (**RFCOMM-Client**); ersetzt Security **nicht** |
+
+**Wer öffnet RFCOMM? (2026-11-12, Desk + Lab)**
+
+| Komponente | RFCOMM/SPP | Etch/`sas_*` |
+|------------|------------|--------------|
+| Connected / MyBMW | Tunnel-Owner (Doc: BT und/oder USB) | oft stellvertretend (CarAPI) oder Tunnel-only |
+| **BclCarLink** | **öffnet** Client-Socket auf SPP `00001101` (A2DP nur Hint) | stellt localhost-Proxy; Security bleibt extern |
+| **AAIdrive / Addons** | **nein** — warten auf `ACTION_CAR_ACCESSORY_ATTACHED` + Security | ja (eigener Etch-Client) |
+| bt-analyzer Dummy-HU + MyBMW/AAIdrive | Lab: A2DP ja, **kein RFCOMM** (`NO_RFCOMM`) | kein Tunnel → kein Etch |
+
+Konsequenz: AAIdrive/MyBMW allein gegen Dummy-HU ist **kein** valider BCL-Transport-Test. Siehe [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.1–10.4.
 
 AAIdrive-README (Kernaussage): *„without any modifications or hacks“* am Auto — Nutzung der **offiziellen Connected-Apps-Technologie** mit extrahierten Certs/Ressourcen. Das ist **kein HU-Root**, aber auch **kein** BMW-SDK-Lizenzprodukt.
 
