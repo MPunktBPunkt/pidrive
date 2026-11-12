@@ -423,14 +423,20 @@ Sheet [`bmw-bcl`](../../../technology-audit/technologies/bmw-bcl/SHEET.md) · Ha
 | C-D13 | BCL-Header 8 B BE: `cmd/src/dest/dataLen` + Payload | **[D]** | EVID-BG-001; kein F20-Wire |
 | C-D14 | Dest **0x0FA4**=Etch, **0x1389**/5001=Watchdog | **[D]** | EVID-BG-002/007; EVID-BCLRF-004 |
 | C-D15 | Session: Init **4 B** `12 34 56 78` → HU-HANDSHAKE(version, instanceId, bufferSize) → bei version>3 SELECTPROTO(3)+KNOCK → MUX | **[D]** | EVID-BG-003–006; Init = `decodeHex("12345678")` = 4 B, nicht ASCII-8 |
-| C-D16 | Watchdog-Ping `0x13371337` alle **5 s**, Timeout **20 s** | **[D]** | EVID-BCLRF-004; HU-Pong-Layout **[?]** |
-| C-D17 | Phone-App öffnet RFCOMM als **Client** auf SPP UUID `00001101-…` (`createRfcommSocketToServiceRecord`) | **[D]** | EVID-BCLRF-001/002; `SDP_BCL` ≠ proprietäre UUID |
-| C-D18 | HU = SDP-Provider / RFCOMM-**Server** | **[D]** INFERENCE | EVID-BCLRF-003 — bis B1/B2 am Auto |
-| C-D19 | A2DP-Connected ist nur **Discovery-Hint** in BclCarLink (`hasBCL` via SPP in cached UUIDs); Transport bleibt RFCOMM | **[D]** | EVID-BCLRF-005; A2DP≠BCL **REJECTED** |
+| C-D16 | Watchdog: Client sendet alle **5 s** Request `13 37 13 37` auf dest **5001**; **20 s** ohne Antwortaktivität → Shutdown | **[D]** | EVID-BCLRF-004 / `WatchdogProtocol.kt`@7cfd959. **Pong-Bytes der HU = UNKNOWN** — Listener zählt jedes empfangene Byte (`write(Int)`), validiert **nicht** `13371337` |
+| C-D17 | Phone-App öffnet RFCOMM als **Client** auf SPP UUID `00001101-…` (`createRfcommSocketToServiceRecord`) | **[D]** | EVID-BCLRF-001/002; `SDP_BCL` ≠ proprietäre UUID. Channel kommt aus SDP-Lookup, **nicht** hardcoded |
+| C-D18 | HU = SDP-Provider / RFCOMM-**Server** | **[D]** INFERENCE | EVID-BCLRF-003 — bis B1/B2 am Auto. Getrennt messen: SDP-Endpoint ≠ SABM-Initiator ≠ BCL-Initiator |
+| C-D19 | A2DP-Connected ist nur **Discovery-/Eligibility-Hint** in BclCarLink (`hasBCL` via SPP); Transport bleibt RFCOMM | **[D]** | EVID-BCLRF-005; A2DP≠BCL **REJECTED** |
 | C-D20 | Doc nennt USB/ENET als BCL-Träger; BclCarLink-Code nur BT-RFCOMM | **Contradiction / HYPOTHESIS** | EVID-BG-020/026 — **kein** REJECTED; Auto+AOA können auflösen |
 | C-D21 | AAIdrive/Addons starten Etch erst nach Tunnel (**ATTACHED**) + Security connected | **[D]** | EVID-BG-011/027; EVID-SAS-030 |
-| C-D22 | Simulator = Etch-Server :4006 + SAS-Stub — Referenz **nach** BCL, nicht Ersatz für Dummy-SDP/RFCOMM | **[D]** | EVID-BG-016 |
+| C-D22 | Simulator = Etch-Server :4006 + SAS-Stub — Referenz **nach** BCL (Layer E / B0.8), nicht Ersatz für Dummy-SDP/RFCOMM oder A6 | **[D]** | EVID-BG-016; Simulator-Login ≠ Crypto-FACT |
 | C-D23 | Dissector kennt AppTypes A4A/TouchCommand/Carplay/AndroidAuto | **[D]** | EVID-BG-019; Capture-Filter-Hinweis, kein F20-FACT |
+| C-D24 | **OPEN dest 5001** nach ACTIVE = Bootstrap (Watchdog zuerst); **OPEN dest 4004** erst wenn lokaler Consumer TCP `:4007` verbindet | **[D]** | `BclMultiplexer.openProtocols` / `EtchProxyService`@7cfd959. Fehlen von OPEN 4004 ohne AAIdrive/Consumer ≠ Fail |
+| C-D25 | `ACTION_CAR_ACCESSORY_ATTACHED` kommt **nach** lokalem Proxy listen (BCL ACTIVE → :4007 → Intent → Etch-Consumer) | **[D]** | `EtchProxyService.announceProxy` |
+| C-D26 | BCL `ACTIVE` = Handshake (+ ggf. SelectProto/Knock) ok — **nicht** Watchdog/Etch/SAS/RHMI | **[D]** | `BclClientTransport.connect` State-Machine |
+| C-D27 | BclCarLink `BclOutputStream`@7cfd959: (1) `write(Int)` → `ByteArray(b)` = Array der **Länge** b, nicht 1 Byte; (2) `write(buf,off,len)` → `sliceArray(off until len)` statt `off until off+len` | **[D]** Code-Defect | Fremdcode; Bootstrap oft mit Full-Arrays → meist OK. Risiko für Etch-Proxy / Partial Writes (B0.7/B0.8). **Kein Patch in unseren Repos** — Upstream; nicht als Gold-Wire werten |
+| C-D28 | Welche Phone-Komponente am F20 den RFCOMM-Link öffnet (MyBMW vs. andere) | **[?]** | BclCarLink = experimenteller Owner (FACT-Client); offizielle App = Doc-INFERENCE bis Wire |
+| C-D29 | HANDSHAKE liefert Fingerprints `version` / `instanceId` / `bufferSize`; Code: version>3 → SELECTPROTO(3)+KNOCK; Kommentar „version 4 has an unknown watchdog behavior“ | **[D]** | `BclClientTransport`@7cfd959 — B3-Gate: Branch an **version** prüfen |
 
 ### 10.3 Eigenes Lab (bt-analyzer) — TEST, nicht HU-Wire
 
@@ -453,21 +459,21 @@ Erwartungstabelle = Desk-Soll; Ist = erst Auto-Messung. **Kein Channel-5-Annehme
 | Stufe | Soll (Desk-Pin) | Ist (Stand 2026-11-12) | Nächste Aktion |
 |-------|-----------------|------------------------|----------------|
 | **A6** | `.87`↔HU ACL / Pairing | **[?]** | Car-Runbook: Pair + btmon |
-| **B1 SDP** | irgend ein RFCOMM-Data-Service; UUID/Name/Kanal **X** | **[?]** | `bcl_sdp_probe` → `CANDIDATE*` / `NONE` / `IAP2_ONLY` |
-| **B2 RFCOMM** | wer SABM; Richtung; erste Nutzdaten | **[?]** | nur nach B1; filter RFCOMM |
-| **B3 BCL** | `12 34 56 78` → HANDSHAKE → ggf. SELECTPROTO/KNOCK; Dest 4004/5001; **version** messen | **[?]** | erst nach B2-Payload |
-| **B4 App** | ATTACHED→Etch→`sas_*` / AppTypes | **[?]** | AAIdrive **oder** Addons korrelieren — nicht als RFCOMM-Opener missbrauchen |
-| Lab RFCOMM-Client | BclCarLink-Gate | Synth PASS; External MyBMW/AAI **NO_RFCOMM** | optional: B0.7 mit **BclCarLink** als Peer, nicht AAIdrive |
+| **B1 SDP** | RFCOMM-Data-Service; UUID/Name/Kanal **X**; Zustände A–D | **[?]** | `bcl_sdp_probe`; einzelnes NONE ≠ final |
+| **B2.1–2.3** | SDP-Endpoint · SABM/UA · first payload / INIT-Richtung | **[?]** | getrennt; kein Lab-TX |
+| **B3 BCL** | INIT → HANDSHAKE → **version**-Branch → OPEN **5001**; OPEN **4004** nur mit Consumer | **[?]** | nach B2.3; C-D24/C-D29 |
+| **E / B4** | Capture Y: ATTACHED → :4007 → OPEN 4004 → Etch | **[?]** | AAIdrive als Consumer, nicht Opener |
+| Lab T/B | Dummy SDP/RFCOMM + BclCarLink Differential | Synth/Dummy PASS; AAI **NO_RFCOMM** | B0.7 BclCarLink; C-D27 beachten |
+| Lab E | Simulator :4006 | nicht gelaufen | B0.8 — stark für Layer E, nicht A6 |
 
-**Maßnahmen (priorisiert):**
+**Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md):
 
-1. **P0 Feld:** A6 + B1 am F20 laut [`bt-analyzer/docs/CAR_A6_B1.md`](../../../bt-analyzer/docs/CAR_A6_B1.md) — einzige Messung, die C-D18/C-D20 und „HU hat SPP?“ entscheidet.
-2. **P0 Epistemik:** In Lab/Feld **RFCOMM-Opener** (Connected/BclCarLink) vs **Etch-Consumer** (AAIdrive/Addons) getrennt protokollieren; AAIdrive allein ≠ BCL-Transport-Test.
-3. **P1 Lab:** External-B0.7 wiederholen nur mit **BclCarLink** (oder instrumentiertem Connected) gegen Dummy-HU; Evidence gegen C-L5 schärfen.
-4. **P1 Lab-Referenz:** Simulator(-kt) als Verhaltensreferenz **nach** Handshake (Etch/SAS-Stub), parallel zum RFCOMM-Dummy — nicht vermischen.
-5. **P1 Capture-Katalog:** Bei erstem echten BCL-Capture Dissector-AppTypes (C-D23) + Handshake-**version** (C-D15) + Watchdog-Timing (C-D16) als Pflichtfelder.
-6. **P2 Rückfluss:** Lab-Evidence (`C-L*`) in technology-audit Application `esp32-bt-analyzer/bmw-bcl` und Sheet `field_evidence` nur als LAB führen — F20 bleibt R0 bis B1+.
-7. **Nicht tun:** Channel 5 als BMW-Soll; USB/ENET-BCL als REJECTED markieren; MSC-FACTS mit Connected überschreiben; Relay (B3-Code) vor B2-Bytes.
+1. **P0 Feld:** A6 + B1 **zustandsweise (A–D)** + B2-Split (SDP / SABM / first payload) am F20 — einzige Wire-Entscheidung für C-D18/C-D20.
+2. **P0 Epistemik:** Layer **T / B / E** trennen. BclCarLink = FACT-RFCOMM-Client; MyBMW-Opener = **UNKNOWN**. AAIdrive = Etch-Consumer (kann OPEN **4004** triggern, öffnet kein RFCOMM). `OPEN 4004` ≠ Bootstrap-Pflicht; Watchdog-Pong-Bytes = UNKNOWN.
+3. **P1 Lab:** **B0.7** BclCarLink↔Dummy (Differential, version 3+4). **B0.8** BclCarLink↔**Simulator** :4006 (Etch/SAS-Stub) — Simulator hilft **stark** für Layer E, **nicht** für A6.
+4. **P1 Capture:** X = Transport only; Y = + AAIdrive. Pflichtfelder: channel X, SABM-Richtung, `12 34 56 78`, HANDSHAKE **version**/instanceId/bufferSize, OPEN 5001; AppTypes nur Filter.
+5. **P2:** Lab-Evidence nur LAB; `field_evidence` erst nach B1+. BclCarLink OutputStream-Bugs nicht als Gold-Wire werten.
+6. **Nicht tun:** AAIdrive-alone vs Dummy; Channel 5 als Soll; USB/ENET-BCL REJECTED; MSC↔Connected vermischen; Relay vor first BCL payload; Doc-Overbuild vor A6.
 
 ---
 
