@@ -475,7 +475,7 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 | C-L7 | 13.11. ~23:01: OnePlus→Dummy ch6 BCL live; AAIdrive „verbunden mit BMW“ | **[B]** Lab positiv | `LAB_PHONE_BCL_20261113T2201Z` + `_DECODE`: INIT→HU-HS v3/iid=1/buf=0x8000→**SELECTPROTO(2)**→OPEN 5001→OPEN 4004/`deadbeef`/PKCS7 (myBMW+TouchCommand); **WD≈2,5 s** (Desk 5 s veraltet); Phone sendet **kein** HANDSHAKE |
 | C-L8 | Lesson: REJECTED-Verdict Ursache≠Symptom trennen | **[B]** Methodik | „kein RFCOMM“ (C-L4) war Symptom; Ursache = Peer-Eligibility. Audit-Regel für künftige Lab-Negativ |
 | C-L9 | BclCarLink@7cfd959 ≠ OnePlus-Wire-Client (SELECTPROTO/WD) | **[B]** Lab vs Desk | `BCL_BIMMER_VS_WIRE_20261113`: nach HS v3 Wire SELECTPROTO(**2**); Desk sendet bei v3 **kein** SP; WD Wire≈2,5 s vs Desk 5 s; Session≈38 s ohne Pong vs Desk-TO 20 s. KNOCK/HANGUP absent. Pin-Drift-AAIdrive **unproven** — Wire primär |
-| C-L10 | Dummy-CoD steuert Phone-Erst-PDU: Computer-CoD → DEADBEEF+UUID-Probe; **`0x340408`** → BCL INIT | **[B]** Lab | `LAB_EVENING_COD_GATE_20261113T2342Z` (22× Probe / 3× BCL); L3 observe-only gleiches Probe-Muster. BclCarLink kennt diese Probe nicht |
+| C-L10 | Dummy-CoD (+ACL-Reconnect) steuert Phone-Erst-PDU: Computer → DEADBEEF+UUID; **`0x340408`** → INIT/HS | **[B]** Lab | A/B mit Bounce `LAB_COD_AB_BOUNCE_20261113T2355Z`; ohne Bounce sticky. A2DP-Transport blieb `idle` bei BCL — ~38 s-EOF ≠ A2DP-Drop (CLOSE 5001 ohne Pong). BclCarLink kennt CoD/Probe nicht |
 
 **Lesart C-L4/C-L5/C-L7/C-L10:** AAIdrive/MyBMW öffnen RFCOMM+BCL nur bei Eligibility: SPP `0x1101` + **CoD auto-ähnlich (`0x340408`)** + A2DP + HANDSHAKE-Antwort. Sonst: DEADBEEF+UUID-Probe (~9 s), kein INIT. `instanceId` 12–14 = HU→Phone (Dummy sandte 1).
 
