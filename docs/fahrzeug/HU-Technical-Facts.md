@@ -422,7 +422,7 @@ Sheet [`bmw-bcl`](../../../technology-audit/technologies/bmw-bcl/SHEET.md) · Ha
 |---|------|--------|--------------|
 | C-D13 | BCL-Header 8 B BE: `cmd/src/dest/dataLen` + Payload | **[D]** | EVID-BG-001; kein F20-Wire |
 | C-D14 | Dest **0x0FA4**=Etch, **0x1389**/5001=Watchdog | **[D]** | EVID-BG-002/007; EVID-BCLRF-004 |
-| C-D15 | Session: Init **4 B** `12 34 56 78` → HU-HANDSHAKE(version, instanceId, bufferSize) → bei version>3 SELECTPROTO(3)+KNOCK → MUX | **[D]** | EVID-BG-003–006; Init = `decodeHex("12345678")` = 4 B, nicht ASCII-8 |
+| C-D15 | Session: Init **4 B** `12 34 56 78` → HU-HANDSHAKE(version, instanceId, bufferSize) → bei version>3 SELECTPROTO(3)+KNOCK → MUX | **[D]** Desk · Lab-Wire weicht ab | EVID-BG-003–006; **C-L7:** nach HS v3 sendet Phone trotzdem SELECTPROTO(**2**), kein KNOCK gesehen — Desk-Branch unvollständig für AAIdrive-Stack |
 | C-D16 | Watchdog: Client sendet alle **5 s** Request `13 37 13 37` auf dest **5001**; **20 s** ohne Antwortaktivität → Shutdown | **[D]** | EVID-BCLRF-004 / `WatchdogProtocol.kt`@7cfd959. **Pong-Bytes der HU = UNKNOWN** — Listener zählt jedes empfangene Byte (`write(Int)`), validiert **nicht** `13371337` |
 | C-D17 | Phone-App öffnet RFCOMM als **Client** auf SPP UUID `00001101-…` (`createRfcommSocketToServiceRecord`) | **[D]** | EVID-BCLRF-001/002; gilt für **BclCarLink**, nicht automatisch für MyBMW/F20. Am F20: erster `0x1101`-Record = ch **6** (C-BT2). B2-A: Transport auf ch6 **akzeptiert**, Payload/BCL weiter offen |
 | C-D18 | HU = SDP-Provider / RFCOMM-**Server** (BclCarLink-Ableitung) | **[D]** / F20 Transport **[B]** | EVID-BCLRF-003. F20: HU **UA** auf unseren SABM ch5/6 (C-BT10); HU öffnet unseren SPP in state A **nicht** (C-BT11). BCL-Initiator / first UIH weiter **UNKNOWN**. Spannung Secondary nicht glätten |
@@ -469,12 +469,13 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 | C-L1 | Synth BCL-Framer (HANDSHAKE/DATA/UNKNOWN + sticky PayloadTooLarge) | **[B]** Lab | `LAB_BCL_SYNTH_STREAM_*` |
 | C-L2 | Synth-BCL-Bytes über RFCOMM + HCI-TCP | **[B]** Lab | `LAB_BCL_SYNTH_STREAM_20261112T060654Z` |
 | C-L3 | Dummy-HU SDP: SPP `0x1101` / Name „BMW Connected“ / ch.**5** → `CANDIDATE_STRONG` | **[B]** Lab | `LAB_BCL_DUMMY_HU_SDP_*` — **ch.5 = Lab only**, nicht BMW-Erwartung |
-| C-L4 | External Phone (OnePlus) + MyBMW + AAIdrive gegen Dummy-HU `.131`: A2DP+SPP-Gate erfüllt, **kein RFCOMM** | **[B]** Lab negativ | `LAB_BCL_DUMMY_HU_A2DP_20261112T172006Z` `NO_RFCOMM` |
-| C-L5 | „AAIdrive/MyBMW öffnen BclCarLink-artigen SPP zum Dummy“ | **REJECTED** (für diese Apps/Setup) | folgt aus C-L4 + C-D17/C-D21: falscher Peer für RFCOMM |
+| C-L4 | External Phone (OnePlus) + MyBMW + AAIdrive gegen frühen Dummy: A2DP+SPP, **kein RFCOMM** | **[B]** Lab negativ (damals) | `LAB_BCL_DUMMY_HU_A2DP_20261112T172006Z` `NO_RFCOMM` — **Symptom**, nicht Architektur |
+| C-L5 | „AAIdrive öffnet nie RFCOMM / ist nur Etch-Consumer“ | **REJECTED** (als Architektur-Claim) | widerlegt durch C-L7; C-L4 = Eligibility-Gate (Peer nicht car-/HANDSHAKE-fähig genug), nicht „App öffnet nicht“ |
 | C-L6 | 13.11. Abend früh: OnePlus vs Dummy ohne stabilen HANDSHAKE-Pfad | **[B]** Lab negativ | `LAB_BMW_SIM_*` — damals kein Inbound |
-| C-L7 | 13.11. ~23:01: OnePlus→Dummy ch6 BCL: INIT→HANDSHAKE→SELECTPROTO/OPEN 4004/Etch `deadbeef`/PKCS7/Watchdog; AAIdrive „verbunden mit BMW“ | **[B]** Lab positiv | `LAB_PHONE_BCL_20261113T2201Z` — Phone = RFCOMM+BCL-Client; Dummy ≠ F20 |
+| C-L7 | 13.11. ~23:01: OnePlus→Dummy ch6 BCL live; AAIdrive „verbunden mit BMW“ | **[B]** Lab positiv | `LAB_PHONE_BCL_20261113T2201Z` + `_DECODE`: INIT→HU-HS v3/iid=1/buf=0x8000→**SELECTPROTO(2)**→OPEN 5001→OPEN 4004/`deadbeef`/PKCS7 (myBMW+TouchCommand); **WD≈2,5 s** (Desk 5 s veraltet); Phone sendet **kein** HANDSHAKE |
+| C-L8 | Lesson: REJECTED-Verdict Ursache≠Symptom trennen | **[B]** Methodik | „kein RFCOMM“ (C-L4) war Symptom; Ursache = Peer-Eligibility. Audit-Regel für künftige Lab-Negativ |
 
-**Lesart C-L4/C-L5:** kein Widerspruch zum Desk-Stack. Dummy bot SDP+A2DP korrekt an; **AAIdrive ist Etch-Client**, nicht RFCOMM-Opener. Ohne Connected/MyBMW-Tunnel **oder BclCarLink** als Link-Owner entsteht kein SABM — UI „kein Verbindungsversuch“ in AAIdrive ist erwartet.
+**Lesart C-L4/C-L5/C-L7:** AAIdrive/MyBMW **können** RFCOMM+BCL öffnen, sobald der Peer SPP `0x1101` + car-ähnliche Identität + HANDSHAKE-Antwort liefert. Früheres NO_RFCOMM = Gate, nicht „Etch-only“. `instanceId` 12–14 bleibt **HU→Phone**-Feldfrage (Dummy sendete 1).
 
 ### 10.4 Soll-/Ist für A6→B3 (Feld F20) und Maßnahmen
 
@@ -489,18 +490,18 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 | **B2-B** | HU initiiert → `.87` SPP-Server **observe-only** | **[B]** negativ unter Control | C-BT11: 180 s kein Inbound; negativ ≠ kein BCL |
 | **B3 BCL** | INIT → HANDSHAKE → **version**-Branch → OPEN **5001**; OPEN **4004** nur mit Consumer | **[?]** | erst nach B2 BCL-Klassifikation; C-D24/C-D29 |
 | **E / B4** | Capture Y: ATTACHED → :4007 → OPEN 4004 → Etch | **[?]** | AAIdrive als Consumer, nicht Opener |
-| Lab T/B | Dummy SDP/RFCOMM + BclCarLink Differential | Synth/Dummy PASS; AAI **NO_RFCOMM** | B0.7; **B2-B observe-only mode**; C-D27 |
-| Lab E | Simulator :4006 | nicht gelaufen | B0.8 — stark für Layer E, nicht A6 |
+| Lab T/B | Dummy SDP/RFCOMM + Phone-Client | Synth/Dummy PASS; **C-L7 Phone BCL PASS** | Baseline eingefroren; Orakel L1–L8 nach Feld |
+| Lab E | Simulator :4006 / Etch-Gateway | nicht gelaufen | nach Feld; Cert-Push ohne SAS bereits gesehen |
 | Secondary | HU-SPP / Contention / Owner | C-S1…C-S7 | bleibt Secondary — kein F20-[B] |
 
-**Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md) · Methodik: [`BCL_RFCOMM_TWO_MODE_20261113.md`](../../../bt-analyzer/docs/analysis/BCL_RFCOMM_TWO_MODE_20261113.md):
+**Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md) · Decode: [`LAB_PHONE_BCL_20261113T2201Z_DECODE.md`](../../../bt-analyzer/docs/evidence/LAB_PHONE_BCL_20261113T2201Z_DECODE.md):
 
-1. **P0 Feld:** ~~B2 state A (Apps off)~~ → erledigt C-BT10/11. **Als Nächstes state C** (MyBMW ON, HFP weiter OFF): B1-SDP-Delta + B2-A ch6/5 + B2-B. Dann optional D (+AAIdrive). Engpass = **Trigger × Endpoint** (ch5 `deca-fade` ≠ ch6 `0x1101`). Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md) · Evidence [`FIELD_B2_20261113T154728Z.md`](../../../bt-analyzer/docs/evidence/FIELD_B2_20261113T154728Z.md).
-2. **P0 Epistemik:** Layer **T / B / E** trennen. UA ≠ BCL. B2-B negativ nur für getesteten Service/State. A2DP/AVRCP ≠ BCL-Trigger. Hypothesen H-A…H-F → [`MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md). Secondary C-S* ≠ F20-[B].
-3. **P1 Lab:** F20-SDP-Spiegel `lab_bcl_dummy_hu_f20_sdp.py`; **B0.7** BclCarLink↔Dummy; **B0.8** Simulator :4006; Phone-HCI-Snoop nur Differential (kein State-C-Ersatz).
-4. **P1 Capture:** X = Transport only; Y = + AAIdrive. Pflichtfelder: channel X, SABM-Richtung, DLCI, first UIH, `12 34 56 78`, HANDSHAKE **version**/instanceId/bufferSize, OPEN 5001; AppTypes nur Filter.
-5. **P2:** Lab-Evidence nur LAB; Secondary nur C-S*; `field_evidence` erst nach B1+. BclCarLink OutputStream-Bugs nicht als Gold-Wire werten.
-6. **Nicht tun:** AAIdrive-alone vs Dummy; Lab-Channel 5 als Soll (HU-Kanal 5 ist `deca-fade`, nicht `0x1101`); Initiator voraussetzen; B2-A-Negativ = „kein BCL“; BCL-TX in B2-B; B2 mit aktivem HFP-AG; USB/ENET-BCL REJECTED; MSC↔Connected vermischen; Relay vor klassifiziertem BCL; Secondary still zu [B].
+1. **P0 Feld (nächster Auto-Lauf):** OnePlus **HCI-Snoop** ↔ F20-HU (+ `.87` btmon Beobachter, nicht im Datenpfad). Ziel: INIT / HU-HANDSHAKE / **version·instanceId·bufferSize** / SELECTPROTO / OPEN 5001/4004 am echten Kanal. Parallel state C + `b2a-tx` nur falls Snoop unklar. Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md).
+2. **P0 Epistemik:** Layer **T / B / E** trennen. B2-A observe-only leer ≠ kein BCL (Phone muss TX). C-L5-Lektion: Negativ = Ursache vs. Symptom. WD-Erwartungstabelle = **2,5 s Lab**, nicht blind Desk 5 s.
+3. **P1 Lab (ohne Auto):** Retry/Timeout-Matrix + Dummy-Antwortvarianten (L2–L8) gegen eingefrorene Baseline; Modus A/B/C (BCL-only vs +Etch) für Connected-Trigger; Dummy-`instanceId` variieren. **Nicht:** multi-`0x1101` auf einem BlueZ-Adapter; keine blinden ch7–10-Knocks; kein B3-Inject.
+4. **P1 Capture-Pflichtfelder:** channel X, SABM-Richtung, `12 34 56 78`, HANDSHAKE fields, SELECTPROTO payload, OPEN 5001, OPEN 4004, WD-Intervall.
+5. **P2:** AAIdrive vs MyBMW getrennt; Etch-Gateway/SAS-Stub; BclCarLink Differential.
+6. **Nicht tun:** ch5 als BCL; generische neue Dummies; Desk-SELECTPROTO(3)/WD-5 s als Wire-FACT ohne Messung; B2-A-Negativ = „kein BCL“.
 
 ### 10.5 Bluetooth-Feld F20 — HU-SDP, A2DP, AVRCP, HFP (A6-Capture)
 
