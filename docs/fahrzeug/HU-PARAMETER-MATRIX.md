@@ -1,6 +1,6 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions → Facts R53–R60, I8–I13; A15 widerlegt, A17–A24 neu) · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
+**Stand:** 2026-11-13 (neu §2.7 Bluetooth aus dem ersten BT-Feld-Capture, Facts §10.5); davor 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions → Facts R53–R60, I8–I13; A15 widerlegt, A17–A24 neu) · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
 **Maßnahmen:** [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Profil [`../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json`](../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json)
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** · [D] Desk · [H] Hypothese · [?] offen.
 
@@ -160,6 +160,31 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | `18D1:2D00` direkt | Zubehör-UI + Reconnect-Loop | **[B]** | Facts §10 C-F3 | S | — | — |
 | hu-probe-Profil im Auto | `bmw`; `lab_debian` startet soft-detached | **[B]** | I12 | S | — | — |
 | Preset `cache_place` am 10.11. ohne Dateien | Ursache offen | [?] | F17 | U | P1 | Preset-Diff 0.3.17 ↔ 0.3.36 |
+
+### 2.7 Bluetooth (Variante A: A2DP/AVRCP/HFP, SDP)
+
+Ein Feld-Capture 13.11. (A6, BlueZ/PipeWire auf `.108` als Phone, HU ohne Phone-App) — Facts §10.5. Prio bezogen auf Variante A bzw. Control Plane.
+
+| Parameter | Wert | Status | Quelle | Benötigt für | Prio | Wie ermitteln |
+|-----------|------|--------|--------|--------------|------|---------------|
+| HU-Adresse / Class | `D4:36:39:CF:E1:B5`, `0x340408`, Name „BMW 38304“, Modul ALPS | **[B]** | C-BT1 | S | — | — |
+| Pairing | Numeric Comparison (SSP), Agent bestätigt | **[B]** | C-BT3 | S | — | — |
+| Profile der HU | A2DP-Sink 1.3 · AVRCP-CT 1.5 (kein TG) · HFP-HF 1.6 · MAP-MNS 1.2 · OPP · PnP | **[B]** | C-BT1 | L, U | — | — |
+| RFCOMM-Kanäle der HU | 1 MAP-MNS · 2 HFP · 5 `deca-fade` · 6–10 SPP `0x1101` · 11 OPP | **[B]** | C-BT1 | S (Control) | — | — |
+| RFCOMM-Initiative der HU (Leerlauf) | nur HFP; keine Daten-Kanäle | [S] | C-BT8 | S (Control) | **P0** | B2-B Hold 300 s mit MyBMW OFF/ON |
+| Ziel-Kanal Android-SPP-Client | ch 6 (erster `0x1101`-Record) | [H] | C-BT2 | S (Control) | **P0** | B2-A: `.87` → ch 6 und ch 5 |
+| SBC-Fähigkeiten | alle Modi, 44,1 + 48 kHz, Blöcke 4–16, Subbänder 4/8, Bitpool 2..53 | **[B]** | C-BT4 | L | — | — |
+| AAC | MPEG-2/4 LC, 44,1 + 48 kHz, mono/stereo, VBR | **[B]** angeboten / [?] hörbar | C-BT4 | L | P1 | AAC-Source auf PiDrive, Ohr + Coex |
+| Content Protection / Delay Report | SCMS-T + Delay Reporting an jeder SEP | **[B]** | C-BT4 | L | P2 | Wirkung von Delay Report auf Lippen-/UI-Sync |
+| Gewählte Konfiguration BlueZ-Default | SBC 48 kHz Joint Stereo 16/8, Bitpool 53 | **[B]** | C-BT5 | L | P1 | Sample-Rate fest 44,1 kHz konfigurieren und vergleichen |
+| Bitrate SBC-53 | ≈ 357 kbit/s @48 kHz / ≈ 328 kbit/s @44,1 kHz | Rechnung | C-BT5 | L | **P1** | gegen Coex-Budget ESP (~41–45 kB/s HCI) prüfen |
+| AVRCP-Events, die die HU anfragt | `01 02 03 04 05(1 s) 06 07 09 0a 0b 0c`; abgelehnte 6× neu, dann Aufgabe | **[B]** | C-BT6 | U | P1 | TG mit allen Events anbieten |
+| Metadaten-Abfrage | GetElementAttributes je Attribut einzeln, IDs 1–7 | **[B]** | C-BT6 | U | — | — |
+| Browsing | genutzt (GetFolderItems Media-Player-Liste, ERTM) | **[B]** | C-BT6 | U | P1 | Antwort mit gültigem Player + Now-Playing |
+| Pass-through | PLAY, FORWARD, BACKWARD (Lenkrad/iDrive) | **[B]** | C-BT6 | U | — | weitere Tasten (PAUSE/STOP) bei Bedarf |
+| Absolute Volume | nicht beobachtet | [?] | C-BT6 | U | P2 | mit TG-Feature „Volume“ und Lautstärke am iDrive |
+| HFP mit AG ohne Telefonie | SLC bricht an `AT+CHLD=?` ab, Reconnect alle 20–35 s | **[B]** | C-BT7 | S | **P1** | HFP-AG aus (`lab_hfp_stack.py hfp-off`) oder `+CHLD` beantworten |
+| Wer nutzt ch 5 (`deca-fade`) | unbekannt | [?] | C-BT9 | S (Control) | P1 | Phone-HCI-Snoop mit MyBMW; B2-A ch 5 |
 
 ---
 

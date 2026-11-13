@@ -1,7 +1,8 @@
 # iDrive Bluetooth — Technische Referenz für PiDrive
 
 **BMW 118d F20/F21 LCI 2017 · NBT Evo · PiDrive v0.11.122**  
-Erstellt auf Basis von Quellcode-Analyse, BlueZ-Dokumentation und Felderfahrung.
+Erstellt auf Basis von Quellcode-Analyse, BlueZ-Dokumentation und Felderfahrung.  
+**Stand 2026-11-13:** HU-Verhalten (SDP, Codecs, AVRCP, HFP) erstmals per HCI-Capture gemessen — BT-Analyzer A6 mit BlueZ/PipeWire als „Phone“, nicht PiDrive selbst. Markierung **[gemessen]** = aus diesem Capture ([`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.5, C-BT1–C-BT9); widerlegte frühere Annahmen sind durchgestrichen.
 
 > **Audio-Stack-Hinweis (ab v0.11.96):** PiDrive nutzt **PipeWire im System-Mode**
 > (mit WirePlumber + pipewire-pulse), nicht mehr klassisches PulseAudio. Das ändert
@@ -50,7 +51,7 @@ PiDrive verhält sich gegenüber dem BMW iDrive **identisch wie ein Smartphone**
 │                                     │
 │  ├── A2DP Sink     (empfängt Audio) │
 │  ├── AVRCP Controller (sendet Cmds) │
-│  └── HFP Controller (Telefonie)     │
+│  └── HFP Hands-Free (Telefonie)     │
 └──────────────┬──────────────────────┘
                │
                ▼ intern (MOST / BT Audio Bus)
@@ -85,12 +86,14 @@ Prüfen: `hciconfig hci0 version` — zeigt Chip-Version.
 
 | Profil | Version | PiDrive-Rolle | BMW-Rolle | Priorität |
 |---|---|---|---|---|
-| **A2DP** | 1.3 | Source | Sink | 🔴 Pflicht |
-| **AVRCP** | 1.4 | Target | Controller | 🔴 Pflicht |
+| **A2DP** | HU-Sink 1.3 [gemessen] | Source | Sink | 🔴 Pflicht |
+| **AVRCP** | HU-CT **1.5** [gemessen] (~~1.4~~) | Target | Controller (kein Target-Record) | 🔴 Pflicht |
 | **MPRIS2** | — | Target (D-Bus) | — | 🔴 intern |
-| HFP | 1.7 | (nicht genutzt) | Gateway | 🟡 optional |
-| PBAP | 1.1 | (nicht genutzt) | Client | ⬜ irrelevant |
-| MAP | — | (nicht genutzt) | Client | ⬜ irrelevant |
+| HFP | HU-HF **1.6** [gemessen] (~~1.7~~) | (nicht genutzt — AG abschalten, §9.4) | **Hands-Free** (~~Gateway~~) | 🟡 optional |
+| PBAP | 1.1 | (nicht genutzt) | Client (kein Record in der HU-SDP, Rolle Client braucht keinen) | ⬜ irrelevant |
+| MAP | HU-MNS 1.2 [gemessen] | (nicht genutzt) | Client | ⬜ irrelevant |
+| OPP | [gemessen] | (nicht genutzt) | Server | ⬜ irrelevant |
+| SPP / BMW-Daten | ch 5 `deca-fade`, ch 6–10 SPP [gemessen] | (nicht genutzt) | Server; Connected-/BCL-Kandidat | ⬜ Pfad C |
 
 PiDrive implementiert **nur A2DP Source + AVRCP Target** — bewusst schlank.
 
@@ -109,6 +112,21 @@ Ohne `0x110A` kein Audiostreaming. Ohne `0x110C` keine Tastensteuerung.
 
 Prüfen: `sdptool browse <BMW-MAC>` oder `sdptool browse local`
 
+**[gemessen] SDP der HU** (`D4:36:39:CF:E1:B5`, „BMW 38304“, Provider `ALPS_*`):
+
+| RFCOMM / PSM | Dienst |
+|---|---|
+| ch 1 | MAP-MNS 1.2 |
+| ch 2 | HFP Hands-Free 1.6 (`ALPS_HFM`) |
+| ch 5 | „SPP Server 0“, UUID `00000000-deca-fade-deca-deafdecacaff` |
+| ch 6–10 | „SPP Server 1–5“, SPP `0x1101` |
+| ch 11 | OPP |
+| PSM 25 | A2DP Sink 1.3 |
+| PSM 23 | AVRCP Controller 1.5 |
+| — | PnP |
+
+Die HU fragt die SDP der Gegenstelle vor jedem HFP-Aufbau erneut ab (5× in ~65 s).
+
 ### 2.3 A2DP Codec-Verhandlung
 
 Beim Verbindungsaufbau verhandeln BMW und BlueZ den Audio-Codec:
@@ -116,7 +134,8 @@ Beim Verbindungsaufbau verhandeln BMW und BlueZ den Audio-Codec:
 | Codec | UUID | BMW F20 2017 | PiDrive | Empfehlung |
 |---|---|---|---|---|
 | **SBC** | `0x00000000` | ✅ mandatory | ✅ immer | **primär verwenden** |
-| AAC | `0x00000002` | ⚠ SW-abhängig | ⚠ optional | instabil auf alten SW |
+| AAC | `0x00000002` | ✅ angeboten [gemessen] (MPEG-2/4 LC, 44,1/48 kHz, VBR) | ⚠ optional | hörbar ungetestet |
+| MPEG-1,2 (MP3) | `0x00000001` | ✅ angeboten [gemessen] | ❌ nein | — |
 | aptX | `0x0000004F` | ❌ nein | ❌ nein | — |
 | LDAC | — | ❌ nein | ❌ nein | — |
 
@@ -132,6 +151,8 @@ Allocation Method: Loudness
 Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 ```
 
+**[gemessen]** Die HU bietet SBC mit allen Modi, 44,1 und 48 kHz, Blöcken 4–16, Subbändern 4/8, Loudness/SNR und **Bitpool 2..53** an; jede SEP zusätzlich mit **SCMS-T** und **Delay Reporting**. BlueZ (Default-Konfiguration) wählte **48 kHz** Joint Stereo 16/8 Loudness, Bitpool 53 → ~357 kbps. Wer den Funkkanal schonen will, fixiert 44,1 kHz.
+
 ---
 
 ## 3. AVRCP im Detail
@@ -145,9 +166,11 @@ Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 | **NBT Evo ID5 (2016+)** | **1.4** | Metadaten ja; **kein zuverlässiges BT-Cover über AVRCP**; Browsing am F20 nicht beobachtet |
 | NBT Evo ID6 (2017+) | 1.4 (partiell 1.5) | abhängig von SW-Stand; AVRCP 1.6 Cover Art (BIP) oft problematisch |
 
-**BMW 118d F20 2017 = NBT Evo ID5/ID6 → AVRCP 1.4**
+~~**BMW 118d F20 2017 = NBT Evo ID5/ID6 → AVRCP 1.4**~~
 
-Für PiDrive bedeutet das: wir müssen AVRCP 1.4-kompatibel antworten.  
+**[gemessen] Dieser F20:** SDP-Record AVRCP **Controller 1.5**; die HU öffnet den **Browsing-Kanal** (PSM `0x1B`, ERTM) und fragt `GetFolderItems` (Media-Player-Liste) ab. „Browsing am F20 nicht beobachtet“ ist damit überholt. Cover Art (BIP, 1.6) bietet die HU nicht an.
+
+Für PiDrive bedeutet das: AVRCP 1.4-kompatibel antworten reicht für Tasten und Metadaten; Browsing-Anfragen kommen trotzdem und sollten gültig beantwortet werden (§9.1).  
 AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details: [`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md). Reiche Menüs/Cover über den **Connected-Apps-Stack** (BCL→Etch→RHMI, z. B. AAIdrive) = **Pfad C**, parallel zu A2DP/AVRCP — Stack-Abgleich: [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md).
 
 ### 3.2 AVRCP Pass-Through Kommandos (BMW sendet → PiDrive empfängt)
@@ -165,6 +188,8 @@ Methoden/-Signale (`Next`, `Previous`, `Play`, `Pause`, `Stop`, …).
 | ⏮ (Prev) | `0x4C` | BACKWARD | `Previous` | `previous` |
 | 🔊+ | `0x41` | VOLUME_UP | (Volume) | `volumeup` |
 | 🔊− | `0x42` | VOLUME_DOWN | (Volume) | `volumedown` |
+
+**[gemessen]** Im A6-Capture kamen von der HU PLAY (1×), FORWARD (4×) und BACKWARD (2×); PAUSE/STOP/VOLUME wurden in diesem Termin nicht gedrückt bzw. nicht gesendet.
 
 > **Wichtig — zweistufiges Mapping:** Die Spalte *PiDrive-Event* ist nur das
 > **Zwischen-Event** (siehe `integration/avrcp_trigger.py`). Der tatsächlich in
@@ -193,9 +218,16 @@ BMW registriert via `REGISTER_NOTIFICATION` Command:
 | Playback Status Changed | `0x01` | Play/Pause/Stop korrekt senden |
 | Track Changed | `0x02` | trackid bei Quellwechsel ändern |
 | Track Reached End | `0x03` | für Radio nicht relevant |
-| Playback Position | `0x05` | wir senden 0 (Live-Stream) |
+| Track Reached Start | `0x04` | [gemessen] angefragt |
+| Playback Position | `0x05` | wir senden 0 (Live-Stream); [gemessen] Intervall **1 s** |
+| Battery Status | `0x06` | [gemessen] angefragt |
+| System Status | `0x07` | [gemessen] angefragt |
+| Now Playing Content Changed | `0x09` | [gemessen] angefragt |
 | Available Players Changed | `0x0A` | bei Reconnect relevant |
 | Addressed Player Changed | `0x0B` | bei Player-Wechsel |
+| UIDs Changed | `0x0C` | [gemessen] angefragt (Browsing) |
+
+**[gemessen]** Die HU registriert genau diese elf Events. BlueZ ohne passenden Player lehnte `05 06 07 09 0C` ab; die HU wiederholt jede Ablehnung 6× im Abstand ~100 ms und gibt dann auf — die Events bleiben für die Sitzung aus.
 
 **Kritisch:** BMW erwartet bei jedem Wechsel (Quelle, Sender, Titel) ein `TrackChanged (0x02)` Event.  
 PiDrive implementiert das über `mpris:trackid`-Änderung + kurzes `Stopped`-Signal.
@@ -217,6 +249,8 @@ PiDrive → AVRCP GetElementAttributes Response
   via MPRIS2 Metadata D-Bus Property
 ```
 
+**[gemessen]** Die HU fragt **je Request genau ein Attribut** ab, IDs 1–7 (also auch `0x05` Total Tracks und `0x06` Playing Time), im Capture zwei Runden = 14 Requests. Dazu `GetPlayStatus`, `ListPlayerApplicationSettingAttributes` und `GetCurrentPlayerApplicationSettingValue`.
+
 BMW zeigt je nach Display-Version:
 - **Zeile 1:** `xesam:title` (Titel / Sendername)
 - **Zeile 2:** `xesam:artist` (Interpret / Frequenz)
@@ -229,6 +263,8 @@ AVRCP 1.4 unterstützt Absolute Volume Control. BMW kann versuchen, die Lautstä
 **Bekanntes Problem:** Absolute Volume führt auf NBT Evo zu asynchronen Sprüngen und Konflikten mit der internen Lautstärkeregelung.
 
 PiDrive-Verhalten: `Volume: 1.0` in MPRIS2 (fixiert), keine Absolute-Volume-Änderungen zurückschreiben. BMW regelt die Lautstärke intern über seinen DSP.
+
+**[gemessen]** Im A6-Capture kein `SetAbsoluteVolume` und keine Registrierung von Event `0x0D` (Volume Changed), bei unserem Target-Record AVRCP 1.6, Features `0x5f`.
 
 ---
 
@@ -622,7 +658,9 @@ rfkill unblock bluetooth
 | Metadaten frieren ein | Notification Overflow | Rate-Limiting 300ms |
 | Lautstärke springt | Absolute Volume Konflikt | Volume auf 1.0 fixiert |
 | Keine Genre-Anzeige | fehlender `xesam:genre` | seit v0.11.96 implementiert |
-| BMW ignoriert Metadaten | AVRCP 1.4 Browsing-Request | nur Legacy Metadata, kein Browsing |
+| BMW ignoriert Metadaten | Browsing-Request der HU [gemessen: `GetFolderItems` Player-Liste] bekommt Fehler/leere Liste | Legacy Metadata liefern; MPRIS-Player registrieren, damit BlueZ eine gültige Player-Liste meldet |
+| Position/Batterie/Player-Wechsel fehlen | Events `05 06 07 09 0C` abgelehnt → HU gibt nach 6 Versuchen auf [gemessen] | Player mit Position/Status anbieten |
+| Reconnect-Schleife alle 20–35 s | HFP-SLC bricht an `AT+CHLD=?` ab [gemessen] | HFP-AG nicht anbieten (§9.4) |
 | Connect bricht nach 30s ab | Link Supervision Timeout | A2DP-Stream kontinuierlich halten |
 
 ### 9.2 BlueZ-spezifische Probleme
@@ -651,6 +689,17 @@ PiDrive implementiert diese Profile **nicht**.
 
 Folge: BMW zeigt ggf. Warnhinweise wie "Kein Telefonbuch gefunden". Das ist **kein Fehler**.  
 Die Audiostreaming- und Steuerfunktionen sind davon unabhängig.
+
+**[gemessen] HFP-Falle:** WirePlumber/PipeWire registriert standardmäßig einen HFP-**AG** (Record HFP 1.9, wideband). Die HU (Hands-Free) baut dann selbst den Service Level Connection auf: `AT+BRSF=255` → `+BRSF: 3680` (kein Three-Way-Bit) → `AT+BAC=1,2` → `CIND`/`CMER` → `AT+CHLD=?` → `ERROR` → HU trennt RFCOMM und versucht es nach 20–35 s erneut. Für einen reinen Audio-Player den AG abschalten, z. B. WirePlumber 0.5:
+
+```
+# /etc/wireplumber/wireplumber.conf.d/51-no-hfp.conf
+monitor.bluez.properties = {
+  bluez5.roles = [ a2dp_sink a2dp_source ]
+}
+```
+
+Für PiDrive (A2DP-Source) reicht `a2dp_source`. Die ungewöhnliche `CHLD`-Abfrage trotz fehlendem Three-Way-Bit ist HU-Verhalten; ob ein echtes Phone das mit `+CHLD: (0,1,2,3)` beantwortet, ist hier nicht gemessen.
 
 ---
 
@@ -775,6 +824,7 @@ Pairing (SSP-Zahl), Geräteliste und Now Playing (Spotify + Webradio):
 | < 2016 | 1.3 | keine Metadaten-Aktualisierung |
 | 2016–2017 (ID5) | 1.4 | BT-Cover über AVRCP unzuverlässig (iAP/USB separat) |
 | 2017+ (ID6) | 1.4 partiell 1.5 | stabilere Metadaten; AVRCP 1.6 Cover Art oft problematisch |
+| **dieser F20 (2017), gemessen 13.11.2026** | **CT 1.5, Browsing genutzt** | SW-Stand nicht ausgelesen; HU-Modul ALPS (Provider-Strings) |
 
 SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 
@@ -792,4 +842,4 @@ SW-Stand prüfen: iDrive → Einstellungen → Fahrzeuginfo → SW-Versionen.
 ---
 
 *Aktualisiert für PiDrive v0.11.122 — BMW 118d F20/F21 LCI 2017 · NBT Evo · BlueZ 5.x · PipeWire System-Mode*  
-*Quellen: PiDrive-Quellcode (`integration/avrcp_trigger.py`, `mpris2.py`, `modules/bluetooth/*`), Bluetooth SIG AVRCP 1.4 Spec, PiDrive-Feldbeobachtungen*
+*Quellen: PiDrive-Quellcode (`integration/avrcp_trigger.py`, `mpris2.py`, `modules/bluetooth/*`), Bluetooth SIG AVRCP 1.4 Spec, PiDrive-Feldbeobachtungen, BT-Analyzer-Capture A6 13.11.2026 ([`FIELD_B1_FROM_A6_20261113T062824Z.md`](../../../bt-analyzer/docs/evidence/FIELD_B1_FROM_A6_20261113T062824Z.md), [`HFP_SLC_A6_20261113.md`](../../../bt-analyzer/docs/analysis/HFP_SLC_A6_20261113.md))*

@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions mit Instrument-Gültigkeitsprüfung: neues Lesemodell §4.6, Artefakte R51/Q18 entfernt, Folgen für PiDrive §7)  
+**Stand:** 2026-11-13 (erster Bluetooth-Feld-Capture gegen die HU dekodiert: HU-SDP, A2DP, AVRCP 1.5 mit Browsing, HFP-Abbruch → §5.3/§5.5, Variante A §7); davor 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions mit Instrument-Gültigkeitsprüfung: neues Lesemodell §4.6, Artefakte R51/Q18 entfernt, Folgen für PiDrive §7)  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
@@ -28,6 +28,7 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
    - 5.2 AOA ≠ Connected App
    - 5.3 Feldstand an dieser HU
    - 5.4 SAS, RHMI, CDS, AV
+   - 5.5 Bluetooth-Medienpfad (A2DP/AVRCP/HFP)
 6. [Korrekturen (GPT-Fassung 07.11., Nachrechnung 11.11.)](#6-korrekturen-gpt-fassung-0711-nachrechnung-1111)
 7. [PiDrive-Strategien und Folgen für Variante B](#7-pidrive-strategien-und-folgen-für-variante-b)
 8. [Offene P0/P1-Fragen](#8-offene-p0p1-fragen)
@@ -53,7 +54,7 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
 
 **Storage Plane:** Die BMW NBT-Evo-HU ist ein aggressiver, dateiorientierter USB-MSC-Host mit mehrstufigem Zustand/Cache, großen READ10-Transfers und nachweislich hoher Toleranz gegenüber USB-Backpressure. Sie konsumiert nicht einfach kontinuierlich Audio, sondern fordert Daten in kontextabhängigen Leseoperationen an und kann daraus lokal weiter abspielen. Konkret (Heimfahrt nachgerechnet, R53–R58): Ein Titel, der zu spielen beginnt, wird **vollständig** mit ~1 MB/s gelesen (bis 7,2 MB belegt, keine Obergrenze sichtbar); der Folgetitel wird ~7–8 s vor Ende angelesen; nach einem Mount wird der Resume-Titel ab Kopf und ab Position gelesen; teils werden mehrere Folgetitel am Stück vorgelesen, und der Cache hält das minutenlang.
 
-**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette, deren Transport und höhere Protokollschichten getrennt vom Storage Plane betrachtet werden müssen (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM als Nutzerebene). Desk-[D] stark, F20-Wire noch nicht durchgehend bewiesen.
+**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette, deren Transport und höhere Protokollschichten getrennt vom Storage Plane betrachtet werden müssen (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM als Nutzerebene). Desk-[D] stark, F20-Wire noch nicht durchgehend bewiesen. Seit 13.11. ist die Bluetooth-Seite der HU vermessen (SDP, Codecs, AVRCP, HFP; §5.5); ob die HU darüber BCL spricht, ist weiter offen.
 
 Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = strategische Option mit Gates G1–G4. **I-303A** bleibt unberührt — Storage-Plane-Korrekturen ändern nichts an dem, was G1 auf der USB-Leitung sichtbar macht.
 
@@ -93,7 +94,8 @@ Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = 
 | Ebene | Transport | Stack (kurz) | Evidenz an dieser HU |
 |-------|-----------|--------------|----------------------|
 | **Storage Plane** | USB MSC | SCSI/BOT → FAT → Scanner → Cache → Decoder | **[B]/[S]** Feld/Lab (Facts E/R/F) |
-| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | **[D]** Desk; Feld nur G1 (+ partielle AOA-Beobachtung) |
+| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | **[D]** Desk; Feld nur G1 (+ partielle AOA-Beobachtung); BT-SDP **[B]** (C-BT1), BCL über BT **[?]** |
+| **BT-Medienpfad** (Variante A) | BT Classic | A2DP-Sink · AVRCP-CT 1.5 + Browsing · HFP-HF 1.6 | **[B]** ein Feld-Capture (Facts §10.5) |
 
 Die Trennung ist keine Dokumentationskosmetik. MSC und Connected-App-Pfade haben **unterschiedliche USB-Identitäten, Zustandsmaschinen und Messinstrumente**. hu-probe führt deshalb getrennte Boot-Modi (`msc` vs. `aoa_*`); Analyzer-Feld bestätigt: MSC-Identity mountet Storage, ohne dass daraus Connected folgt (Facts E18/F15, C-D9).
 
@@ -301,6 +303,7 @@ Android Open Accessory (z. B. Already-Accessory `18D1:2D00`) ist nur ein **USB-Z
 - Direct-ESP `18D1:2D00`: Zubehör-UI / Reconnect-Loop; kein verwertbarer Bulk-RX; 51/52/53 auf Callback-Schicht absent (Facts §10; Inference, kein abschließender „AOA unsupported“-Beweis).
 - Analyzer MSC `303a:1001`: mountet Storage; `aoa51/52/53=0` trotz AOA-respond (E18).
 - **Kein** durchgehender F20-BCL/Etch/SAS-Wire-Capture.
+- BT-Analyzer 13.11. (`.87` als Phone, A6): Pairing, HU-SDP und A2DP/AVRCP/HFP gemessen (C-BT1–C-BT8). Die HU bietet sechs RFCOMM-Datendienste an: Kanal 5 mit eigener BMW-UUID `…deca-fade…` und Kanäle 6–10 als SPP. Im Leerlauf ohne Phone-App öffnete die HU **keinen** davon (C-BT8). Ein Android-Client à la BclCarLink würde Kanal **6** treffen (C-BT2, Hypothese). Nächster Schritt B2-A: `.87` öffnet Kanal 6 und 5 und hört zu.
 
 ### 5.4 SAS, RHMI, CDS, AV
 
@@ -312,6 +315,16 @@ Nach Desk (BimmerGestalt / AAIdrive):
 - **AV:** Entertainment-Kontext; ob Audio-Payload über Etch/BCL läuft oder nur Fokus + BT/A2DP: **UNKNOWN**. AAIdrive selbst verweist auf BT-Audio bei eingeschränktem AOA2-Audio.
 
 Voraussetzung Fahrzeug: Apps/6NR bzw. ConnectedDrive-Apps — sonst ist Pfad C tot (C-Q1).
+
+### 5.5 Bluetooth-Medienpfad (A2DP/AVRCP/HFP)
+
+Gemessen am 13.11. mit BlueZ/PipeWire auf `.108` als Gegenstelle (Facts §10.5, ein Termin, HU ohne Phone-App):
+
+- **Profile der HU:** A2DP-Sink 1.3, AVRCP-**Controller 1.5** (kein Target), HFP-**Hands-Free** 1.6, MAP-Client (MNS), OPP, PnP, dazu die sechs RFCOMM-Datendienste aus §5.3. Module und Strings stammen von ALPS.
+- **Audio:** Die HU bietet SBC (Bitpool bis 53), AAC und MP3 an, jeweils mit SCMS-T und Delay Reporting. BlueZ hat SBC mit **48 kHz** gewählt. SBC-53 bei 48 kHz braucht ~357 kbit/s, bei 44,1 kHz ~328 kbit/s.
+- **Metadaten:** Die HU fragt Titelattribute 1–7 **einzeln** ab, meldet elf Notification-Events an (Track, Status, Position im 1-s-Takt, Batterie u. a.) und öffnet den **Browsing**-Kanal. Die frühere Annahme „F20 = AVRCP 1.4 ohne Browsing“ ist für diese HU widerlegt.
+- **Bedienung:** Lenkrad/iDrive kommen als AVRCP-Pass-through PLAY / FORWARD / BACKWARD an. Absolute Lautstärke wurde nicht genutzt.
+- **HFP:** Die HU baut nach dem Pairing selbst HFP auf, scheitert an `AT+CHLD=?` gegen unseren AG ohne Telefonie, trennt und versucht es alle 20–35 s neu (C-BT7). Für reine Medien-Messungen stört das; Fix im Lab: HFP-AG in WirePlumber abschalten.
 
 ---
 
@@ -351,7 +364,7 @@ Gegenprüfung gegen [`HU-Technical-Facts.md`](HU-Technical-Facts.md) (Stand 2026
 
 | Variante | Pfad | Stand | Stärke | Risiko |
 |----------|------|-------|--------|--------|
-| **A** | BT A2DP + AVRCP | aktiv | stabiler Ton/Metadaten-Grundpfad | Cover/UI limitiert |
+| **A** | BT A2DP + AVRCP | aktiv | stabiler Ton/Metadaten-Grundpfad; HU nutzt AVRCP 1.5 inkl. Browsing, AAC angeboten (§5.5) | Cover/UI limitiert; HFP-Reconnect-Schleife ohne Telefonie-AG; SBC-53 @ 48 kHz am Coex-Limit |
 | **B** | Storage Plane / USB-MSC | Golden Path + Messung | Cover, HU-USB-UI, gut vermessen | Live vs. Eager-Read-Ahead |
 | **C** | Control Plane / Connected | Forschung | native RHMI/AV-Nähe | Gates, Certs, 6NR, Wire offen |
 
@@ -366,6 +379,13 @@ Für Variante B bleibt die Leitfrage: Reads so bedienen (Stall/Backpressure übe
 5. **Cache verhindert Aktualisierung.** Daten bleiben minutenlang (R56), ein Cache-Hit erzeugt keinen Read (R9). Neuer Inhalt braucht eine neue Datei/LBA oder einen Cycle (R45 leert den Browse-/Body-Cache, die Position bleibt).
 6. **Steuerdateien (Tap als Befehl).** Dateien ≤ 160 Blöcke (80 KiB) liegen nach dem Fresh-Scan schon komplett im Cache → ein Tap erzeugt keinen Read (R58). Ein erkennbarer Befehl braucht Reads jenseits Block 160. Prefetch, Kette und Ordner-Loop lesen Steuerdateien auch ohne Tap (Read ≠ Absicht, R50). Nach dem ersten Lesen wirkt eine Steuerdatei bis zum nächsten Cycle nicht erneut (R9/R45).
 7. **Identität und Betrieb.** Der HU-Gerätename kommt aus USB-iProduct (F16); hu-probe im Auto nur mit Profil `bmw`, nicht `lab_debian` (Soft-Detach, I12). Vendor-only- und Phone-like-Identitäten meldet die HU als „nicht unterstützt“ (Facts §10).
+
+**Folgen der BT-Messung (§5.5) für Variante A** — abgeleitet, nicht im Feld getestet:
+
+1. **AVRCP-Target vollständig bedienen.** Die HU fragt Events `05 06 07 09 0c` an und gibt nach sechs Ablehnungen auf. Wer Position, Batterie oder Player-Wechsel anzeigen will, muss diese Events annehmen.
+2. **Browsing ist ein echter Pfad.** Die HU fragt die Player-Liste über Browsing ab; eine leere bzw. fehlerhafte Antwort ist heute Standard bei BlueZ ohne MPRIS-Player.
+3. **Codec.** AAC wird angeboten; SBC-53 @ 48 kHz liegt über dem bisher gemessenen Coex-Budget. 44,1 kHz oder AAC sind Kandidaten — offen, was die HU hörbar besser verarbeitet.
+4. **HFP.** Ohne Telefonie-Funktion den HFP-AG nicht anbieten (oder vollständig mit `+CHLD` beantworten), sonst reconnectet die HU dauerhaft.
 
 Hybrid denkbar (Ton über A/B, UI über C) — zwei Geräte/Stacks, hoher Aufwand.
 
@@ -382,6 +402,9 @@ Hybrid denkbar (Ton über A/B, UI über C) — zwei Geräte/Stacks, hoher Aufwan
 | P1 | Q4a–c | Cache-Größe / Multi-File / Eviction (Hinweise R56/R57) |
 | P1 | F17 | `cache_place` am 10.11. ohne Dateien |
 | P1 | C-Q1/C-Q2 | 6NR/Apps; FIELD-CONNECTED-REAL-01 / FX-G3-01 |
+| P0 | B2-A/B2-B | BT-RFCOMM zur HU: Kanal 6 (SPP) und 5 (`deca-fade`) öffnen bzw. HU-Initiative abwarten; vorher HFP-AG aus (Facts §10.4) |
+| P1 | C-BT9 | Wer nutzt HU-Kanal 5 (`deca-fade`)? Phone-HCI-Snoop mit MyBMW |
+| P1 | BT-Codec | AAC vs. SBC-44,1 hörbar und im Coex-Budget |
 | — | Q18 | **geschlossen** (Artefakt, §6) |
 
 Vollkatalog: Facts §8 und Connected-Stack §7.
@@ -415,6 +438,8 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | Fld8 | hu-probe [`FELD-2026-11-11 Größenleiter`](../../../hu-probe/docs/feld/FELD-2026-11-11-MSC-GROESSENLEITER.md) | Lauf ungültig (Replay-Deadlock), Ops |
 | Fld9 | hu-probe [`FELD-2026-11-10`](../../../hu-probe/docs/feld/FELD-2026-11-10-I303A-REVAL-MSC.md) | iProduct-Name, Soft-Detach, `cache_place` |
 | Fld10 | hu-probe [`C1-STAND`](../../../hu-probe/docs/feld/C1-STAND.md) | Feld-Identitäten (nicht unterstützt / Zubehör) |
+| Fld11 | bt-analyzer [`FIELD_B1_FROM_A6_20261113T062824Z`](../../../bt-analyzer/docs/evidence/FIELD_B1_FROM_A6_20261113T062824Z.md) | HU-SDP, A2DP, AVRCP, HFP (C-BT1–C-BT8) |
+| Fld12 | bt-analyzer [`HFP_SLC_A6_20261113`](../../../bt-analyzer/docs/analysis/HFP_SLC_A6_20261113.md) | HFP-SLC-Abbruch an `AT+CHLD=?` |
 
 ### 9.3 Audits / Evidence
 
@@ -425,6 +450,7 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | A3 | [`hu-probe-bmw-s2-abend-offline-2026-10-18`](../../../hu-probe/audits/hu-probe-bmw-s2-abend-offline-2026-10-18/) |
 | A4 | [`esp32-usb-analyzer-2026-field-host-matrix`](../../../technology-audit/audits/esp32-usb-analyzer-2026-field-host-matrix/) |
 | A5 | [`bmw-connected-sas-auth-2026-11-06`](../../../technology-audit/audits/bmw-connected-sas-auth-2026-11-06/) |
+| A6 | technology-audit [`esp32-bt-analyzer/bmw-nbt-evo`](../../../technology-audit/projects/esp32-bt-analyzer/applications/bmw-nbt-evo.md) |
 
 ### 9.4 Fremd / Desk (Control Plane)
 
@@ -436,6 +462,7 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | D4 | [IDriveConnectKit](https://github.com/BimmerGestalt/IDriveConnectKit) | Etch-IDL |
 | D5 | hu-probe [`GATES-Connected.md`](../../../hu-probe/docs/GATES-Connected.md) | Gate-Mapping |
 | D6 | hu-probe [`CONNECTED-APP.md`](../../../hu-probe/docs/CONNECTED-APP.md) | Connected-Messpfad |
+| D7 | lokaler BimmerGestalt-Download 13.11. (`Bimmer/`, Manifest `MANIFEST_2026-11-13.json`) | Code-Stand für Desk-Pins; `logcat.crash` = C-S8 |
 
 ### 9.5 Pflege
 
