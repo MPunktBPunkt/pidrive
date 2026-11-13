@@ -481,7 +481,7 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 | Stufe | Soll (Desk-Pin) | Ist (Stand 2026-11-13) | Nächste Aktion |
 |-------|-----------------|------------------------|----------------|
 | **A6** | `.87`↔HU ACL / Pairing | **[B]** FIELD PASS | `FIELD_A6_HU_20261113T062824Z` (BMW 38304 / SPP UUID gesehen) |
-| **B1 SDP** | RFCOMM-Data-Service; UUID/Name/Kanal **X**; Zustände A–D | **[B]** state A/B (C-BT1) · C/D **[?]** | aus A6-Capture dekodiert; C/D nur bei aktiver Phone-App wiederholen |
+| **B1-SDP** | RFCOMM-Data-Dienste; UUID/Name/Kanal **X**; Zustände A–D | **PASS / MEASURED** state A/B (C-BT1) · C/D **[?]** | SDP-Angebot gemessen — **nicht** „BCL-Transport bewiesen“. C/D nur bei aktiver Phone-App |
 | **HFP** (Störgröße) | — | **[B]** SLC-Abbruch (C-BT7) | vor B2: `lab_hfp_stack.py hfp-off --apply` |
 | **B2-A** | Phone/ESP initiiert RFCOMM → HU | **[?]** | `.87` → HU-Kanal **6** und **5**; SABM/UA/DM, UIH der HU; negativ ≠ BCL absent |
 | **B2-B** | HU initiiert → `.87` SPP-Server **observe-only** | **[?]** | kein BCL-TX vor Klassifikation; negativ ≠ kein BCL |
@@ -493,7 +493,7 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 
 **Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md) · Methodik: [`BCL_RFCOMM_TWO_MODE_20261113.md`](../../../bt-analyzer/docs/analysis/BCL_RFCOMM_TWO_MODE_20261113.md):
 
-1. **P0 Feld:** HFP-AG auf `.108` aus → **B2-A** (Kanal 6, Kanal 5) **und B2-B** am F20 — Wire-Entscheidung für C-D18/C-D30/C-D20. B1 state A/B erledigt (C-BT1). B2-Control: MyBMW/AAIdrive OFF. Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md).
+1. **P0 Feld:** HFP-AG auf `.108` aus → **B2-A** (Kanal 6, Kanal 5) **und B2-B** am F20 — Wire-Entscheidung für C-D18/C-D30/C-D20. **B1-SDP** state A/B = PASS/MEASURED (C-BT1); BCL-Nutzung dieser Kanäle weiter offen. B2-Control: MyBMW/AAIdrive OFF. Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md).
 2. **P0 Epistemik:** Layer **T / B / E** trennen. BclCarLink = FACT-RFCOMM-Client (Desk); F20-Initiator = **UNKNOWN**. AAIdrive = Etch-Consumer. Secondary C-S* ≠ F20-[B]. `OPEN 4004` ≠ Bootstrap-Pflicht; Watchdog-Pong-Bytes = UNKNOWN. `12 34 56 78` allein = Kandidat.
 3. **P1 Lab:** **B2-B observe-only** auf ProfileManager; **B0.7** BclCarLink↔Dummy (version 3+4); **B0.8** Simulator :4006; optional Phone-HCI-Snoop als Differential.
 4. **P1 Capture:** X = Transport only; Y = + AAIdrive. Pflichtfelder: channel X, SABM-Richtung, DLCI, first UIH, `12 34 56 78`, HANDSHAKE **version**/instanceId/bufferSize, OPEN 5001; AppTypes nur Filter.
