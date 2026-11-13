@@ -476,7 +476,8 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 | C-L8 | Lesson: REJECTED-Verdict Ursache≠Symptom trennen | **[B]** Methodik | „kein RFCOMM“ (C-L4) war Symptom; Ursache = Peer-Eligibility. Audit-Regel für künftige Lab-Negativ |
 | C-L9 | BclCarLink@7cfd959 ≠ OnePlus-Wire-Client (SELECTPROTO/WD) | **[B]** Lab vs Desk | `BCL_BIMMER_VS_WIRE_20261113`: nach HS v3 Wire SELECTPROTO(**2**); Desk sendet bei v3 **kein** SP; WD Wire≈2,5 s vs Desk 5 s. KNOCK/HANGUP absent. Pin-Drift-AAIdrive **unproven** — Wire primär |
 | C-L10 | Dummy-CoD (+ACL-Reconnect) steuert Phone-Erst-PDU: Computer → DEADBEEF+UUID; **`0x340408`** → INIT/HS | **[B]** Lab | A/B mit Bounce `LAB_COD_AB_BOUNCE_20261113T2355Z`; ohne Bounce sticky. A2DP-Transport blieb `idle` bei BCL. BclCarLink kennt CoD/Probe nicht |
-| C-L11 | Phone-WD ohne HU-Pong → CLOSE 5001 @~38 s; mit Dummy-`--echo-watchdog` Session ≥96 s ohne CLOSE | **[B]** Lab | `LAB_WD_PONG_20261114T0001Z` vs LAB_A2DP_CORR (CLOSE@38094 ms). Bestätigt C-L10-Lesart: EOF ≠ A2DP-Drop |
+| C-L11 | Phone-WD ohne HU-Pong → CLOSE 5001 @~38 s; mit Dummy-`--echo-watchdog` Session Minuten ohne CLOSE | **[B]** Lab | `LAB_WD_PONG_*` (final ~171 s/288 Pings bis agent_stop; mid ≥136 s). EOF ≠ A2DP-Drop |
+| C-L12 | WD-Policy-Tooling; Matrix abgebrochen (ACL-Bounce zerstört Phone-UI) | **[B]** partial | `--wd-pong-max/skip/payload`; B_BADPAY partial (`00000000` 13×) — Payload-Check **unproven**. EOD `LAB_EOD_20261114T0030Z` |
 
 **Lesart C-L4/C-L5/C-L7/C-L10/C-L11:** AAIdrive/MyBMW öffnen RFCOMM+BCL nur bei Eligibility: SPP `0x1101` + **CoD auto-ähnlich (`0x340408`)** + A2DP + HANDSHAKE-Antwort. Sonst: DEADBEEF+UUID-Probe (~9 s), kein INIT. Nach ACTIVE: WD ~2,5 s — ohne HU-Pong CLOSE 5001 @~38 s (C-L11). `instanceId` 12–14 = HU→Phone (Dummy sandte 1).
 
