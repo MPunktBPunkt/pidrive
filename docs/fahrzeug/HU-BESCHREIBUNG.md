@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-13 (erster Bluetooth-Feld-Capture gegen die HU dekodiert: HU-SDP, A2DP, AVRCP 1.5 mit Browsing, HFP-Abbruch → §5.3/§5.5, Variante A §7); davor 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions mit Instrument-Gültigkeitsprüfung: neues Lesemodell §4.6, Artefakte R51/Q18 entfernt, Folgen für PiDrive §7)  
+**Stand:** 2026-11-14 (BT-Lab Phone↔Dummy BCL: Facts C-L7…C-L12 / EOD; F20-BCL weiter offen). Davor 2026-11-13 (erster BT-Feld-Capture: HU-SDP, A2DP, AVRCP 1.5, HFP → §5.3/§5.5, Variante A §7); 2026-11-11 (hu-probe-Nachrechnung §4.6, R51/Q18 entfernt)  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
