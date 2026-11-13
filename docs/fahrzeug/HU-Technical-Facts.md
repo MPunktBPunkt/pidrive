@@ -471,6 +471,7 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 | C-L3 | Dummy-HU SDP: SPP `0x1101` / Name „BMW Connected“ / ch.**5** → `CANDIDATE_STRONG` | **[B]** Lab | `LAB_BCL_DUMMY_HU_SDP_*` — **ch.5 = Lab only**, nicht BMW-Erwartung |
 | C-L4 | External Phone (OnePlus) + MyBMW + AAIdrive gegen Dummy-HU `.131`: A2DP+SPP-Gate erfüllt, **kein RFCOMM** | **[B]** Lab negativ | `LAB_BCL_DUMMY_HU_A2DP_20261112T172006Z` `NO_RFCOMM` |
 | C-L5 | „AAIdrive/MyBMW öffnen BclCarLink-artigen SPP zum Dummy“ | **REJECTED** (für diese Apps/Setup) | folgt aus C-L4 + C-D17/C-D21: falscher Peer für RFCOMM |
+| C-L6 | 13.11. Abend: OnePlus + MyBMW/AAIdrive vs Dummy ch6 HANDSHAKE-ready + ch5 `deca-fade` + CoD/Name BMW-like | **[B]** Lab negativ | `LAB_BMW_SIM_20261113T181344Z` — erneut kein Inbound-RFCOMM; AAIdrive-„verbunden“ bleibt AOA-Pfad (30.10.) |
 
 **Lesart C-L4/C-L5:** kein Widerspruch zum Desk-Stack. Dummy bot SDP+A2DP korrekt an; **AAIdrive ist Etch-Client**, nicht RFCOMM-Opener. Ohne Connected/MyBMW-Tunnel **oder BclCarLink** als Link-Owner entsteht kein SABM — UI „kein Verbindungsversuch“ in AAIdrive ist erwartet.
 
@@ -493,9 +494,9 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 
 **Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md) · Methodik: [`BCL_RFCOMM_TWO_MODE_20261113.md`](../../../bt-analyzer/docs/analysis/BCL_RFCOMM_TWO_MODE_20261113.md):
 
-1. **P0 Feld:** ~~B2 state A (Apps off)~~ → erledigt C-BT10/11. **Als Nächstes state C** (MyBMW ON, HFP weiter OFF): B1-SDP-Delta + B2-A ch6/5 + B2-B. Dann optional D (+AAIdrive). Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md) · Evidence [`FIELD_B2_20261113T154728Z.md`](../../../bt-analyzer/docs/evidence/FIELD_B2_20261113T154728Z.md).
-2. **P0 Epistemik:** Layer **T / B / E** trennen. Accept auf ch5/6 ≠ BCL. F20-Initiator für BCL weiter **UNKNOWN**. Secondary C-S* ≠ F20-[B]. `12 34 56 78` allein = Kandidat.
-3. **P1 Lab:** **B0.7** BclCarLink↔Dummy; **B0.8** Simulator :4006; Phone-HCI-Snoop Differential; AVRCP-Metadata nur mit aktivem A2DP-Stream testen.
+1. **P0 Feld:** ~~B2 state A (Apps off)~~ → erledigt C-BT10/11. **Als Nächstes state C** (MyBMW ON, HFP weiter OFF): B1-SDP-Delta + B2-A ch6/5 + B2-B. Dann optional D (+AAIdrive). Engpass = **Trigger × Endpoint** (ch5 `deca-fade` ≠ ch6 `0x1101`). Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md) · Evidence [`FIELD_B2_20261113T154728Z.md`](../../../bt-analyzer/docs/evidence/FIELD_B2_20261113T154728Z.md).
+2. **P0 Epistemik:** Layer **T / B / E** trennen. UA ≠ BCL. B2-B negativ nur für getesteten Service/State. A2DP/AVRCP ≠ BCL-Trigger. Hypothesen H-A…H-F → [`MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md). Secondary C-S* ≠ F20-[B].
+3. **P1 Lab:** F20-SDP-Spiegel `lab_bcl_dummy_hu_f20_sdp.py`; **B0.7** BclCarLink↔Dummy; **B0.8** Simulator :4006; Phone-HCI-Snoop nur Differential (kein State-C-Ersatz).
 4. **P1 Capture:** X = Transport only; Y = + AAIdrive. Pflichtfelder: channel X, SABM-Richtung, DLCI, first UIH, `12 34 56 78`, HANDSHAKE **version**/instanceId/bufferSize, OPEN 5001; AppTypes nur Filter.
 5. **P2:** Lab-Evidence nur LAB; Secondary nur C-S*; `field_evidence` erst nach B1+. BclCarLink OutputStream-Bugs nicht als Gold-Wire werten.
 6. **Nicht tun:** AAIdrive-alone vs Dummy; Lab-Channel 5 als Soll (HU-Kanal 5 ist `deca-fade`, nicht `0x1101`); Initiator voraussetzen; B2-A-Negativ = „kein BCL“; BCL-TX in B2-B; B2 mit aktivem HFP-AG; USB/ENET-BCL REJECTED; MSC↔Connected vermischen; Relay vor klassifiziertem BCL; Secondary still zu [B].
@@ -509,7 +510,7 @@ Quelle: `.87` (`C8:C9:A3:CB:37:96`, spielt „Smartphone“) ↔ HU `D4:36:39:CF
 | # | Claim | Status | Beleg / Grenze |
 |---|-------|--------|----------------|
 | C-BT1 | HU-SDP: ch 1 MAP-MNS (MAP 1.2), ch 2 HFP-HF 1.6 (`ALPS_HFM`), ch 5 „SPP Server 0“ UUID `00000000-deca-fade-deca-deafdecacaff`, ch 6–10 „SPP Server 1–5“ SPP `0x1101`, ch 11 OPP; PSM 25 A2DP-Sink 1.3; PSM 23 AVRCP-CT 1.5; PnP. Provider-Strings `ALPS_*` | **[B]** | SDP-Antworten byte-genau dekodiert. Kein AVRCP-TG-Record |
-| C-BT2 | Android `createRfcommSocketToServiceRecord(0x1101)` (BclCarLink) träfe den ersten passenden Record = **ch 6**, nicht ch 5 | **[H]** | aus C-BT1 + Android-Record-Matching; prüft B2-A ch 6 |
+| C-BT2 | Android `createRfcommSocketToServiceRecord(0x1101)` (BclCarLink) träfe den ersten passenden Record = **ch 6**, nicht ch 5 | **[H]** | C-BT1 + Record-Matching; B2-A ch6 UA stützt Transport; Lab-Spiegel ch6 browsebar (`LAB_F20_SDP_MIRROR_*`) |
 | C-BT3 | Pairing per Numeric Comparison; HU fragt unser SDP vor jedem HFP-Aufbau neu ab | **[B]** | `FIELD_A6_*_pair_events.jsonl`; 5 SDP-Verbindungen der HU |
 | C-BT4 | A2DP-Sink-SEPs: SBC (alle Modi, 44,1 + 48 kHz, Blöcke 4–16, Subbänder 4/8, **Bitpool 2..53**), AAC (MPEG-2/4 LC, 44,1 + 48 kHz, mono/stereo, VBR), MPEG-1,2; jede SEP mit **SCMS-T** und **Delay Reporting** | **[B]** | GET_ALL_CAPABILITIES. AAC-Bitrate-Feld = 128 (unplausibel klein, vermutlich „keine Angabe“) |
 | C-BT5 | BlueZ wählt gegenüber der HU SBC **48 kHz** Joint Stereo, 16/8, Loudness, Bitpool 2..53; HU sendet START ~11 s nach OPEN | **[B]** | SET_CONFIGURATION / START. Keine Media-Pakete im Capture (kein Player aktiv) |
