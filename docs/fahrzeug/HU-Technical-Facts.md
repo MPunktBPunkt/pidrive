@@ -1,6 +1,6 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-11-13 Abend (BT: **B2-A/B2-B Feld** `FIELD_B2_20261113T154728Z` — ch5/6 accept+empty, B2-B kein Inbound, HFP-off wirksam, BCL weiter UNKNOWN; nachmittags B1-SDP aus A6 + §10.5 C-BT1–9; vormittags A6 PASS · Secondary NBT-AAD; Narrative [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md)) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.38 (Feld), 0.3.40 (Code, ungetestet) / Analyzer-Gadget 0.0.52 / `esp32.bt-analyzer` hci-agent 0.3.19  
+**Stand:** 2026-11-14 ~00:30 (BT-Lab: **C-L7…C-L12** — OnePlus↔Dummy BCL live, CoD-Gate `0x340408`, WD≈2,5 s / Pong hält Session, Phone-Sim noch Desk≠Wire; EOD [`LAB_EOD_20261114T0030Z`](../../../bt-analyzer/docs/evidence/LAB_EOD_20261114T0030Z.md). **F20-Feld BCL weiter UNKNOWN** — B2-A/B `FIELD_B2_20261113T154728Z` leer. SDP/A2DP §10.5 C-BT1–9. Narrative [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md)) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.38 (Feld), 0.3.40 (Code, ungetestet) / Analyzer-Gadget 0.0.52 / `esp32.bt-analyzer` hci-agent 0.3.19  
 **Maßnahmen:** [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/MSC-HEIMFAHRT.md) · [`identity-multireview`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/MSC-IDENTITY-REMOUNT.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/MSC-GROESSENLEITER-GO.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../archiv/betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.  
 **Narrative Lesefassung (TOC + Quellen + GPT-Abgleich):** [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) — dieses Dokument bleibt die normative Claim-Tabelle.
@@ -437,7 +437,7 @@ Sheet [`bmw-bcl`](../../../technology-audit/technologies/bmw-bcl/SHEET.md) · Ha
 | C-D27 | BclCarLink `BclOutputStream`@7cfd959: (1) `write(Int)` → `ByteArray(b)` = Array der **Länge** b, nicht 1 Byte; (2) `write(buf,off,len)` → `sliceArray(off until len)` statt `off until off+len` | **[D]** Code-Defect | Fremdcode; Bootstrap oft mit Full-Arrays → meist OK. Risiko für Etch-Proxy / Partial Writes (B0.7/B0.8). **Kein Patch in unseren Repos** — Upstream; nicht als Gold-Wire werten. Im ZIP-Stand `main` vom 13.11. **unverändert** (`BclOutputStream.kt:7/20`) |
 | C-D28 | Welche Phone-Komponente am F20 den RFCOMM-Link öffnet (MyBMW vs. andere) | **[?]** | BclCarLink = experimenteller Owner (FACT-Client); offizielle App = Doc-INFERENCE bis Wire |
 | C-D29 | HANDSHAKE liefert Fingerprints `version` / `instanceId` / `bufferSize`; Code: version>3 → SELECTPROTO(3)+KNOCK; Kommentar „version 4 has an unknown watchdog behavior“ | **[D]** | `BclClientTransport`@7cfd959 — B3-Gate: Branch an **version** prüfen |
-| C-D30 | F20 RFCOMM-Initiator und BCL-Wire (first UIH / HANDSHAKE, …) | **[?]** | B2-A: wir öffnen ch6/ch5, HU **UA**; kein Payload. B2-B: HU öffnet unseren SPP nicht (Control: Apps/HFP off). BCL weiter UNKNOWN — negativ ≠ „kein BCL“ |
+| C-D30 | F20 RFCOMM-Initiator und BCL-Wire (first UIH / HANDSHAKE, …) | **[?]** Feld · Lab **[B]** Dummy | B2-A/B am F20: kein BCL-Payload. **Lab C-L7+:** Phone→Dummy Wire bekannt. F20-HU-Antworten weiter UNKNOWN bis Phone-HCI-Snoop |
 
 ### 10.2b Secondary Evidence — NBT-Evo-Familie (nicht F20-[B])
 
@@ -492,7 +492,7 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 | **HFP** (Störgröße) | — | **[B]** SLC-Abbruch (C-BT7) | vor B2: `lab_hfp_stack.py hfp-off --apply` |
 | **B2-A** | Phone/ESP initiiert RFCOMM → HU | **[B]** accept ch6+ch5; Payload/BCL **[?]** | `FIELD_B2_*` / C-BT10: UA, empty; negativ ≠ BCL absent |
 | **B2-B** | HU initiiert → `.87` SPP-Server **observe-only** | **[B]** negativ unter Control | C-BT11: 180 s kein Inbound; negativ ≠ kein BCL |
-| **B3 BCL** | INIT → HANDSHAKE → **version**-Branch → OPEN **5001**; OPEN **4004** nur mit Consumer | **[?]** | erst nach B2 BCL-Klassifikation; C-D24/C-D29 |
+| **B3 BCL** | INIT → HANDSHAKE → SELECTPROTO → OPEN **5001**/WD → OPEN **4004** | **[B]** Lab Phone→Dummy · **[?]** F20 | Lab C-L7/C-L11; F20-HU-Seite offen (P0 Snoop) |
 | **E / B4** | Capture Y: ATTACHED → :4007 → OPEN 4004 → Etch | **[?]** | AAIdrive als Consumer, nicht Opener |
 | Lab T/B | Dummy SDP/RFCOMM + Phone-Client | Synth/Dummy PASS; **C-L7 Phone BCL PASS** | Baseline eingefroren; Orakel L1–L8 nach Feld |
 | Lab E | Simulator :4006 / Etch-Gateway | nicht gelaufen | nach Feld; Cert-Push ohne SAS bereits gesehen |
@@ -502,7 +502,7 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 
 1. **P0 Feld (nächster Auto-Lauf):** OnePlus **HCI-Snoop** ↔ F20-HU (+ `.87` btmon Beobachter, nicht im Datenpfad). Ziel: INIT / HU-HANDSHAKE / **version·instanceId·bufferSize** / SELECTPROTO / OPEN 5001/4004 am echten Kanal. Parallel state C + `b2a-tx` nur falls Snoop unklar. Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md).
 2. **P0 Epistemik:** Layer **T / B / E** trennen. B2-A observe-only leer ≠ kein BCL (Phone muss TX). C-L5-Lektion: Negativ = Ursache vs. Symptom. WD-Erwartungstabelle = **2,5 s Lab**, nicht blind Desk 5 s.
-3. **P1 Lab (ohne Auto):** Retry/Timeout-Matrix + Dummy-Antwortvarianten (L2–L8) gegen eingefrorene Baseline; Modus A/B/C (BCL-only vs +Etch) für Connected-Trigger; Dummy-`instanceId` variieren. **Nicht:** multi-`0x1101` auf einem BlueZ-Adapter; keine blinden ch7–10-Knocks; kein B3-Inject.
+3. **P1 Lab (ohne Auto):** C-L12 WD sanft zu Ende; CoD pinnen; **wire-faithful** `PhoneClientSession` (SP(2)/WD2.5/kein KNOCK) bevor Phone→F20-Sim. Dummy-`instanceId` variieren. **Nicht:** ACL-Bounce-Sturm; multi-`0x1101`; Desk-SP(3) als Wire.
 4. **P1 Capture-Pflichtfelder:** channel X, SABM-Richtung, `12 34 56 78`, HANDSHAKE fields, SELECTPROTO payload, OPEN 5001, OPEN 4004, WD-Intervall.
 5. **P2:** AAIdrive vs MyBMW getrennt; Etch-Gateway/SAS-Stub; BclCarLink Differential.
 6. **Nicht tun:** ch5 als BCL; generische neue Dummies; Desk-SELECTPROTO(3)/WD-5 s als Wire-FACT ohne Messung; B2-A-Negativ = „kein BCL“.
