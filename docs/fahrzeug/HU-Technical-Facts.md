@@ -471,7 +471,8 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 | C-L3 | Dummy-HU SDP: SPP `0x1101` / Name „BMW Connected“ / ch.**5** → `CANDIDATE_STRONG` | **[B]** Lab | `LAB_BCL_DUMMY_HU_SDP_*` — **ch.5 = Lab only**, nicht BMW-Erwartung |
 | C-L4 | External Phone (OnePlus) + MyBMW + AAIdrive gegen Dummy-HU `.131`: A2DP+SPP-Gate erfüllt, **kein RFCOMM** | **[B]** Lab negativ | `LAB_BCL_DUMMY_HU_A2DP_20261112T172006Z` `NO_RFCOMM` |
 | C-L5 | „AAIdrive/MyBMW öffnen BclCarLink-artigen SPP zum Dummy“ | **REJECTED** (für diese Apps/Setup) | folgt aus C-L4 + C-D17/C-D21: falscher Peer für RFCOMM |
-| C-L6 | 13.11. Abend: OnePlus + MyBMW/AAIdrive vs Dummy ch6 HANDSHAKE-ready + ch5 `deca-fade` + CoD/Name BMW-like | **[B]** Lab negativ | `LAB_BMW_SIM_20261113T181344Z` — erneut kein Inbound-RFCOMM; AAIdrive-„verbunden“ bleibt AOA-Pfad (30.10.) |
+| C-L6 | 13.11. Abend früh: OnePlus vs Dummy ohne stabilen HANDSHAKE-Pfad | **[B]** Lab negativ | `LAB_BMW_SIM_*` — damals kein Inbound |
+| C-L7 | 13.11. ~23:01: OnePlus→Dummy ch6 BCL: INIT→HANDSHAKE→SELECTPROTO/OPEN 4004/Etch `deadbeef`/PKCS7/Watchdog; AAIdrive „verbunden mit BMW“ | **[B]** Lab positiv | `LAB_PHONE_BCL_20261113T2201Z` — Phone = RFCOMM+BCL-Client; Dummy ≠ F20 |
 
 **Lesart C-L4/C-L5:** kein Widerspruch zum Desk-Stack. Dummy bot SDP+A2DP korrekt an; **AAIdrive ist Etch-Client**, nicht RFCOMM-Opener. Ohne Connected/MyBMW-Tunnel **oder BclCarLink** als Link-Owner entsteht kein SABM — UI „kein Verbindungsversuch“ in AAIdrive ist erwartet.
 
