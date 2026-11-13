@@ -1,6 +1,6 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-11-12 (Connected/BT Desk-Nachzug: BimmerGestalt-Matrix + BclCarLink RFCOMM-Rollen + bt-analyzer Lab `NO_RFCOMM`; davor 11.11.: Nachrechnung hu-probe-BMW-Sessions → R53–R60, I8–I13, §9.1; Korrekturen R46/R47/R49/R51/Q18; Größenleiter 11.11. ungültig; Narrative: [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md); Facts-Körper 06.11.: Heimfahrt R46–R52; Identity/Detach R37–R45; Analyzer E18/F15; Connected Desk C-D1…C-D12) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.38 (Feld), 0.3.40 (Code, ungetestet) / Analyzer-Gadget 0.0.52 / `esp32.bt-analyzer` hci-agent 0.3.19  
+**Stand:** 2026-11-13 (BT: A6 FIELD PASS · Secondary NBT-AAD `4f70751` · F20 RFCOMM-Initiator **UNKNOWN** · B2-A/B2-B Two-Mode; davor 12.11.: Connected/BT Desk-Nachzug BimmerGestalt + Lab `NO_RFCOMM`; 11.11.: hu-probe R53–R60 / Narrative [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md); Facts-Körper 06.11. MSC/Connected Desk) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.38 (Feld), 0.3.40 (Code, ungetestet) / Analyzer-Gadget 0.0.52 / `esp32.bt-analyzer` hci-agent 0.3.19  
 **Maßnahmen:** [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/MSC-HEIMFAHRT.md) · [`identity-multireview`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/MSC-IDENTITY-REMOUNT.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/MSC-GROESSENLEITER-GO.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../archiv/betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.  
 **Narrative Lesefassung (TOC + Quellen + GPT-Abgleich):** [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) — dieses Dokument bleibt die normative Claim-Tabelle.
@@ -387,7 +387,7 @@ Desk-Stack (BimmerGestalt / AAIdrive) — Kurzindex:
 
 ### 10.1 Connected-App-Quellenmatrix (Desk-[D], BimmerGestalt)
 
-Audit: [`bimmergestalt-idrive-2026-foreign`](../../../technology-audit/audits/bimmergestalt-idrive-2026-foreign/) · Inventar [`INVENTORY`](../../../technology-audit/projects/bimmergestalt-idrive-refs/INVENTORY.md) · RFCOMM-Delta [`bmw-bcl-rfcomm-role-2026-desk`](../../../technology-audit/audits/bmw-bcl-rfcomm-role-2026-desk/). Pins Stand Org-Audit 2026-10-28 (+ RFCOMM 2026-11-12).
+Audit: [`bimmergestalt-idrive-2026-foreign`](../../../technology-audit/audits/bimmergestalt-idrive-2026-foreign/) · Inventar [`INVENTORY`](../../../technology-audit/projects/bimmergestalt-idrive-refs/INVENTORY.md) · RFCOMM-Delta [`bmw-bcl-rfcomm-role-2026-desk`](../../../technology-audit/audits/bmw-bcl-rfcomm-role-2026-desk/) · Secondary [`supra-idrive6-android-auto-2026-secondary`](../../../technology-audit/audits/supra-idrive6-android-auto-2026-secondary/) (`technology-audit@4f70751`, upstream pin `ac9a292`). Pins Stand Org-Audit 2026-10-28 (+ RFCOMM 2026-11-12 / Secondary 2026-11-13).
 
 | Quelle | Pin | Prio | Was sie für uns löst | Was sie **nicht** löst |
 |--------|-----|------|----------------------|------------------------|
@@ -424,12 +424,12 @@ Sheet [`bmw-bcl`](../../../technology-audit/technologies/bmw-bcl/SHEET.md) · Ha
 | C-D14 | Dest **0x0FA4**=Etch, **0x1389**/5001=Watchdog | **[D]** | EVID-BG-002/007; EVID-BCLRF-004 |
 | C-D15 | Session: Init **4 B** `12 34 56 78` → HU-HANDSHAKE(version, instanceId, bufferSize) → bei version>3 SELECTPROTO(3)+KNOCK → MUX | **[D]** | EVID-BG-003–006; Init = `decodeHex("12345678")` = 4 B, nicht ASCII-8 |
 | C-D16 | Watchdog: Client sendet alle **5 s** Request `13 37 13 37` auf dest **5001**; **20 s** ohne Antwortaktivität → Shutdown | **[D]** | EVID-BCLRF-004 / `WatchdogProtocol.kt`@7cfd959. **Pong-Bytes der HU = UNKNOWN** — Listener zählt jedes empfangene Byte (`write(Int)`), validiert **nicht** `13371337` |
-| C-D17 | Phone-App öffnet RFCOMM als **Client** auf SPP UUID `00001101-…` (`createRfcommSocketToServiceRecord`) | **[D]** | EVID-BCLRF-001/002; `SDP_BCL` ≠ proprietäre UUID. Channel kommt aus SDP-Lookup, **nicht** hardcoded |
-| C-D18 | HU = SDP-Provider / RFCOMM-**Server** | **[D]** INFERENCE | EVID-BCLRF-003 — bis B1/B2 am Auto. Getrennt messen: SDP-Endpoint ≠ SABM-Initiator ≠ BCL-Initiator |
+| C-D17 | Phone-App öffnet RFCOMM als **Client** auf SPP UUID `00001101-…` (`createRfcommSocketToServiceRecord`) | **[D]** | EVID-BCLRF-001/002; gilt für **BclCarLink**, nicht automatisch für MyBMW/F20. Channel aus SDP-Lookup, **nicht** hardcoded |
+| C-D18 | HU = SDP-Provider / RFCOMM-**Server** (BclCarLink-Ableitung) | **[D]** INFERENCE | EVID-BCLRF-003. **F20 SABM-Initiator = UNKNOWN** bis B2-A **und** B2-B. Spannung zu Secondary „HU öffnet Apps-Link“ **nicht glätten**. Getrennt: SDP-Endpoint ≠ SABM-Initiator ≠ BCL-Initiator ≠ Etch-Consumer |
 | C-D19 | A2DP-Connected ist nur **Discovery-/Eligibility-Hint** in BclCarLink (`hasBCL` via SPP); Transport bleibt RFCOMM | **[D]** | EVID-BCLRF-005; A2DP≠BCL **REJECTED** |
 | C-D20 | Doc nennt USB/ENET als BCL-Träger; BclCarLink-Code nur BT-RFCOMM | **Contradiction / HYPOTHESIS** | EVID-BG-020/026 — **kein** REJECTED; Auto+AOA können auflösen |
 | C-D21 | AAIdrive/Addons starten Etch erst nach Tunnel (**ATTACHED**) + Security connected | **[D]** | EVID-BG-011/027; EVID-SAS-030 |
-| C-D22 | Simulator = Etch-Server :4006 + SAS-Stub — Referenz **nach** BCL (Layer E / B0.8), nicht Ersatz für Dummy-SDP/RFCOMM oder A6 | **[D]** | EVID-BG-016; Simulator-Login ≠ Crypto-FACT |
+| C-D22 | Simulator-kt = Etch-Server :4006 + SAS-Stub + RHMI/teilweise CDS — **kein** BT/RFCOMM/BCL; Layer E / B0.8 only, nicht Ersatz für B1/B2 oder Dummy-HU | **[D]** | EVID-BG-016; bt-analyzer `SIMULATOR_KT_AND_ANALYZER_SCOPE_20261113.md`; Simulator-Login ≠ Crypto-FACT |
 | C-D23 | Dissector kennt AppTypes A4A/TouchCommand/Carplay/AndroidAuto | **[D]** | EVID-BG-019; Capture-Filter-Hinweis, kein F20-FACT |
 | C-D24 | **OPEN dest 5001** nach ACTIVE = Bootstrap (Watchdog zuerst); **OPEN dest 4004** erst wenn lokaler Consumer TCP `:4007` verbindet | **[D]** | `BclMultiplexer.openProtocols` / `EtchProxyService`@7cfd959. Fehlen von OPEN 4004 ohne AAIdrive/Consumer ≠ Fail |
 | C-D25 | `ACTION_CAR_ACCESSORY_ATTACHED` kommt **nach** lokalem Proxy listen (BCL ACTIVE → :4007 → Intent → Etch-Consumer) | **[D]** | `EtchProxyService.announceProxy` |
@@ -437,6 +437,27 @@ Sheet [`bmw-bcl`](../../../technology-audit/technologies/bmw-bcl/SHEET.md) · Ha
 | C-D27 | BclCarLink `BclOutputStream`@7cfd959: (1) `write(Int)` → `ByteArray(b)` = Array der **Länge** b, nicht 1 Byte; (2) `write(buf,off,len)` → `sliceArray(off until len)` statt `off until off+len` | **[D]** Code-Defect | Fremdcode; Bootstrap oft mit Full-Arrays → meist OK. Risiko für Etch-Proxy / Partial Writes (B0.7/B0.8). **Kein Patch in unseren Repos** — Upstream; nicht als Gold-Wire werten |
 | C-D28 | Welche Phone-Komponente am F20 den RFCOMM-Link öffnet (MyBMW vs. andere) | **[?]** | BclCarLink = experimenteller Owner (FACT-Client); offizielle App = Doc-INFERENCE bis Wire |
 | C-D29 | HANDSHAKE liefert Fingerprints `version` / `instanceId` / `bufferSize`; Code: version>3 → SELECTPROTO(3)+KNOCK; Kommentar „version 4 has an unknown watchdog behavior“ | **[D]** | `BclClientTransport`@7cfd959 — B3-Gate: Branch an **version** prüfen |
+| C-D30 | F20 RFCOMM-Initiator und BCL-Wire (Kanal X, SABM/UA, first UIH, HANDSHAKE, …) | **[?]** | A6 ACL **MEASURED**; alles darüber UNKNOWN. Negatives Phone-Connect (B2-A) ≠ negativer BCL-Befund |
+
+### 10.2b Secondary Evidence — NBT-Evo-Familie (nicht F20-[B])
+
+Quelle: [`supra-idrive6-android-auto-2026-secondary`](../../../technology-audit/audits/supra-idrive6-android-auto-2026-secondary/) · `EVID-SUPRA-2026-11-13-*` · Pin upstream `Sq00ky/…@ac9a292`.
+
+```text
+SECONDARY EVIDENCE · NBT-EVO FAMILY · F20-RELEVANZ: plausibel, nicht bewiesen
+```
+
+| # | Claim | Status | Grenze |
+|---|-------|--------|--------|
+| C-S1 | HU-Seite nutzt SPP; `/dev/btspp0` ist relevanter Serial-Endpunkt | Secondary FACT | EVID-SUPRA-001/002 — kein F20-SDP/Kanal-X |
+| C-S2 | BMW Apps / MyBMW / Connected können SPP-/BCL-Pfad belegen bzw. konkurrieren | Secondary FACT/INFERENCE | EVID-SUPRA-003/007 |
+| C-S3 | MyBMW kann mit anderen SPP-Nutzern (z. B. nbt-aad) konkurrieren | Secondary FACT | EVID-SUPRA-003 |
+| C-S4 | AAIdrive ist nicht zwingend BT-Transport-Owner; kann bestehenden BCL-/Etch-Tunnel als Consumer nutzen | Secondary + Desk | EVID-SUPRA-006/008 · C-D21 · Lab C-L4 |
+| C-S5 | HU kann BMW-BCL-/Etch-Verkehr an Protokollmerkmalen erkennen (`looksLikeBmwBcl`, u. a. `12 34 56 78`) | Secondary FACT (Heuristik) | EVID-SUPRA-005 — Framing bleibt Desk CROSSREF |
+| C-S6 | Richtungsunterscheidung Android-Auto- vs. BMW-Apps-Pfade; AA ≠ BclCarLink-BCL | Secondary | Native AA UUID getrennt; EVID-SUPRA UNKNOWN-Tabelle |
+| C-S7 | „HU öffnet MyBMW-Link“ (nbt-aad) vs. Phone-Client (BclCarLink) | **Spannung** | beide Source-FACTS; F20-Initiator = C-D30 **UNKNOWN** |
+
+**Pflege:** C-S* dürfen **nicht** still zu F20-[B] werden. Messbedingung B1/B2: MyBMW/AAIdrive während Baseline-SDP/RFCOMM deaktivieren (Contention-Kontrolle = Versuchsbedingung).
 
 ### 10.3 Eigenes Lab (bt-analyzer) — TEST, nicht HU-Wire
 
@@ -454,26 +475,28 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 
 ### 10.4 Soll-/Ist für A6→B3 (Feld F20) und Maßnahmen
 
-Erwartungstabelle = Desk-Soll; Ist = erst Auto-Messung. **Kein Channel-5-Annehmen.**
+Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Kein Initiator voraussetzen.**
 
-| Stufe | Soll (Desk-Pin) | Ist (Stand 2026-11-12) | Nächste Aktion |
+| Stufe | Soll (Desk-Pin) | Ist (Stand 2026-11-13) | Nächste Aktion |
 |-------|-----------------|------------------------|----------------|
-| **A6** | `.87`↔HU ACL / Pairing | **[?]** | Car-Runbook: Pair + btmon |
+| **A6** | `.87`↔HU ACL / Pairing | **[B]** FIELD PASS | `FIELD_A6_HU_20261113T062824Z` (BMW 38304 / SPP UUID gesehen) |
 | **B1 SDP** | RFCOMM-Data-Service; UUID/Name/Kanal **X**; Zustände A–D | **[?]** | `bcl_sdp_probe`; einzelnes NONE ≠ final |
-| **B2.1–2.3** | SDP-Endpoint · SABM/UA · first payload / INIT-Richtung | **[?]** | getrennt; kein Lab-TX |
-| **B3 BCL** | INIT → HANDSHAKE → **version**-Branch → OPEN **5001**; OPEN **4004** nur mit Consumer | **[?]** | nach B2.3; C-D24/C-D29 |
+| **B2-A** | Phone/ESP initiiert RFCOMM → HU | **[?]** | SABM von `.87`; negativ ≠ BCL absent |
+| **B2-B** | HU initiiert → `.87` SPP-Server **observe-only** | **[?]** | kein BCL-TX vor Klassifikation; negativ ≠ kein BCL |
+| **B3 BCL** | INIT → HANDSHAKE → **version**-Branch → OPEN **5001**; OPEN **4004** nur mit Consumer | **[?]** | erst nach B2 BCL-Klassifikation; C-D24/C-D29 |
 | **E / B4** | Capture Y: ATTACHED → :4007 → OPEN 4004 → Etch | **[?]** | AAIdrive als Consumer, nicht Opener |
-| Lab T/B | Dummy SDP/RFCOMM + BclCarLink Differential | Synth/Dummy PASS; AAI **NO_RFCOMM** | B0.7 BclCarLink; C-D27 beachten |
+| Lab T/B | Dummy SDP/RFCOMM + BclCarLink Differential | Synth/Dummy PASS; AAI **NO_RFCOMM** | B0.7; **B2-B observe-only mode**; C-D27 |
 | Lab E | Simulator :4006 | nicht gelaufen | B0.8 — stark für Layer E, nicht A6 |
+| Secondary | HU-SPP / Contention / Owner | C-S1…C-S7 | bleibt Secondary — kein F20-[B] |
 
-**Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md):
+**Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md) · Methodik: [`BCL_RFCOMM_TWO_MODE_20261113.md`](../../../bt-analyzer/docs/analysis/BCL_RFCOMM_TWO_MODE_20261113.md):
 
-1. **P0 Feld:** A6 + B1 **zustandsweise (A–D)** + B2-Split (SDP / SABM / first payload) am F20 — einzige Wire-Entscheidung für C-D18/C-D20.
-2. **P0 Epistemik:** Layer **T / B / E** trennen. BclCarLink = FACT-RFCOMM-Client; MyBMW-Opener = **UNKNOWN**. AAIdrive = Etch-Consumer (kann OPEN **4004** triggern, öffnet kein RFCOMM). `OPEN 4004` ≠ Bootstrap-Pflicht; Watchdog-Pong-Bytes = UNKNOWN.
-3. **P1 Lab:** **B0.7** BclCarLink↔Dummy (Differential, version 3+4). **B0.8** BclCarLink↔**Simulator** :4006 (Etch/SAS-Stub) — Simulator hilft **stark** für Layer E, **nicht** für A6.
-4. **P1 Capture:** X = Transport only; Y = + AAIdrive. Pflichtfelder: channel X, SABM-Richtung, `12 34 56 78`, HANDSHAKE **version**/instanceId/bufferSize, OPEN 5001; AppTypes nur Filter.
-5. **P2:** Lab-Evidence nur LAB; `field_evidence` erst nach B1+. BclCarLink OutputStream-Bugs nicht als Gold-Wire werten.
-6. **Nicht tun:** AAIdrive-alone vs Dummy; Channel 5 als Soll; USB/ENET-BCL REJECTED; MSC↔Connected vermischen; Relay vor first BCL payload; Doc-Overbuild vor A6.
+1. **P0 Feld:** B1 **zustandsweise (A–D)** + **B2-A und B2-B** am F20 — Wire-Entscheidung für C-D18/C-D30/C-D20. B2-Control: MyBMW/AAIdrive OFF.
+2. **P0 Epistemik:** Layer **T / B / E** trennen. BclCarLink = FACT-RFCOMM-Client (Desk); F20-Initiator = **UNKNOWN**. AAIdrive = Etch-Consumer. Secondary C-S* ≠ F20-[B]. `OPEN 4004` ≠ Bootstrap-Pflicht; Watchdog-Pong-Bytes = UNKNOWN. `12 34 56 78` allein = Kandidat.
+3. **P1 Lab:** **B2-B observe-only** auf ProfileManager; **B0.7** BclCarLink↔Dummy (version 3+4); **B0.8** Simulator :4006; optional Phone-HCI-Snoop als Differential.
+4. **P1 Capture:** X = Transport only; Y = + AAIdrive. Pflichtfelder: channel X, SABM-Richtung, DLCI, first UIH, `12 34 56 78`, HANDSHAKE **version**/instanceId/bufferSize, OPEN 5001; AppTypes nur Filter.
+5. **P2:** Lab-Evidence nur LAB; Secondary nur C-S*; `field_evidence` erst nach B1+. BclCarLink OutputStream-Bugs nicht als Gold-Wire werten.
+6. **Nicht tun:** AAIdrive-alone vs Dummy; Channel 5 als Soll; Initiator voraussetzen; B2-A-Negativ = „kein BCL“; BCL-TX in B2-B; USB/ENET-BCL REJECTED; MSC↔Connected vermischen; Relay vor klassifiziertem BCL; Secondary still zu [B].
 
 ---
 
@@ -486,6 +509,7 @@ Erwartungstabelle = Desk-Soll; Ist = erst Auto-Messung. **Kein Channel-5-Annehme
 - Community-/SIB-Muster, Lab-Debian-Gaps und Analyzer-Host-Stimulus nicht still zu NBT-[B] machen. Host-Scope: nur diese NBT Evo.
 - Event-/Callback-Größe (`xfer`, `n=4096`) und READ10-CBW-`blocks` getrennt führen (E5 vs. E11). Prefetch-Lead/Cache aus PiDrive nicht automatisch als hu-probe-FACT lesen; Eager-EOF/Track-Atom seit Abend-Offline 18.10. **[B]**; Heimfahrt Remount/Eager seit 22.10. **[B]/[S]**. Offline-Timing nur über `capture_t_us`, nie `replay_t_us`.
 - hu-probe-Sessions vor jeder Auswertung nach `origin` filtern (`post_finalize` ≠ Trip) und die BOT-Vollständigkeit per Stream-Prüfung belegen (§9.1), bevor Coverage- oder Timing-Claims [B] werden. Ringverlust-Zähler (`bot_pending_overflow`) als Verlauf lesen, nicht als Absolutwert.
-- AOA/Connected-Apps: Feld nur Abgrenzung E18/F15; Desk-[D] in **§10** (inkl. 10.1–10.4) und [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md) — nie still als MSC-[B]. Lab-TEST (`C-L*`) ≠ F20-[B].
+- AOA/Connected-Apps: Feld nur Abgrenzung E18/F15; Desk-[D] in **§10** (inkl. 10.1–10.4) und [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md) — nie still als MSC-[B]. Lab-TEST (`C-L*`) ≠ F20-[B]. Secondary (`C-S*`) ≠ F20-[B].
 - RFCOMM-Opener (Connected/BclCarLink) und Etch-Consumer (AAIdrive/Addons) getrennt claimen — nie „App geöffnet“ als BCL-Transport-Beweis.
+- F20 RFCOMM-Initiator nicht aus Desk oder Secondary voraussetzen; B2-A und B2-B getrennt führen; negativer Phone-Connect ≠ negativer BCL-Befund.
 - Narrative Modelltexte und GPT-/KI-Zusammenfassungen gehören nach [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) (inkl. Korrekturabschnitt); neue Messclaims zuerst hier mit Artefakt-Link.

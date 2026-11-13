@@ -181,16 +181,17 @@ Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identi
 | **IDriveConnectAddons** | Extra-RHMI-Apps / CDS-Consumer |
 | **BclCarLink** | Optionaler BCL-Link (**RFCOMM-Client**); ersetzt Security **nicht** |
 
-**Wer öffnet RFCOMM? (2026-11-12, Desk + Lab)**
+**Wer öffnet RFCOMM? (2026-11-13, Desk + Lab + Secondary)**
 
 | Komponente | RFCOMM/SPP | Etch/`sas_*` |
 |------------|------------|--------------|
-| Connected / MyBMW | Tunnel-Owner (Doc: BT und/oder USB) | oft stellvertretend (CarAPI) oder Tunnel-only |
-| **BclCarLink** | **öffnet** Client-Socket auf SPP `00001101` (A2DP nur Hint) | stellt localhost-Proxy; Security bleibt extern |
-| **AAIdrive / Addons** | **nein** — warten auf `ACTION_CAR_ACCESSORY_ATTACHED` + Security | ja (eigener Etch-Client) |
+| Connected / MyBMW | Tunnel-Owner (Doc: BT und/oder USB); am **F20** SABM-Richtung **UNKNOWN** | oft stellvertretend (CarAPI) oder Tunnel-only |
+| **BclCarLink** | **öffnet** Client-Socket auf SPP `00001101` (A2DP nur Hint) — Desk-FACT für diese App | stellt localhost-Proxy; Security bleibt extern |
+| **AAIdrive / Addons** | **nein** — warten auf `ACTION_CAR_ACCESSORY_ATTACHED` + Security; Secondary: kann MyBMW-Tunnel mitnutzen | ja (eigener Etch-Client) |
+| nbt-aad (Secondary) | HU-SPP `/dev/btspp*`; „CAR öffnet MyBMW-Link“ vs. BclCarLink-Client = **Spannung** | nicht BCL-Companion-Pfad |
 | bt-analyzer Dummy-HU + MyBMW/AAIdrive | Lab: A2DP ja, **kein RFCOMM** (`NO_RFCOMM`) | kein Tunnel → kein Etch |
 
-Konsequenz: AAIdrive/MyBMW allein gegen Dummy-HU ist **kein** valider BCL-Transport-Test. Siehe [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.1–10.4.
+Konsequenz: AAIdrive/MyBMW allein gegen Dummy-HU ist **kein** valider BCL-Transport-Test. F20 braucht **B2-A und B2-B**. Siehe [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.1–10.4 · Secondary [`supra-idrive6-android-auto-2026-secondary`](../../../technology-audit/audits/supra-idrive6-android-auto-2026-secondary/).
 
 AAIdrive-README (Kernaussage): *„without any modifications or hacks“* am Auto — Nutzung der **offiziellen Connected-Apps-Technologie** mit extrahierten Certs/Ressourcen. Das ist **kein HU-Root**, aber auch **kein** BMW-SDK-Lizenzprodukt.
 
