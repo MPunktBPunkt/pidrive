@@ -1,6 +1,6 @@
 # HU Technical Facts — BMW NBT Evo als USB-Massenspeicher-Host
 
-**Stand:** 2026-11-14 ~10:00 (BT-Feld: OnePlus↔HU Logcat — SPP `0x1101`→SCN **6** OPEN FACT, HU auf ch6 **silent**; Evidence [`FIELD_PHONE_HU_LOGCAT_20261114T0924Z`](../../../bt-analyzer/docs/evidence/FIELD_PHONE_HU_LOGCAT_20261114T0924Z.md). Lab: **C-L7…C-L12**, EOD [`LAB_EOD_20261114T0030Z`](../../../bt-analyzer/docs/evidence/LAB_EOD_20261114T0030Z.md). **F20 BCL-Inhalt weiter UNKNOWN**. SDP/A2DP §10.5 C-BT1–20. Narrative [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md)) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.38 (Feld), 0.3.40 (Code, ungetestet) / Analyzer-Gadget 0.0.52 / `esp32.bt-analyzer` hci-agent 0.3.19  
+**Stand:** 2026-11-14 ~11:20 (BT-Feld: Logcat HU silent ch6; **B2-A-TX Matrix NEGATIVE** DM/refuse ch5–10 auch bei A2DP-OK — [`FIELD_B2A_TX_MATRIX_20261114`](../../../bt-analyzer/docs/evidence/FIELD_B2A_TX_MATRIX_20261114.md) / Muster [`FIELD_B2A_TX_PATTERNS_20261114`](../../../bt-analyzer/docs/analysis/FIELD_B2A_TX_PATTERNS_20261114.md). Lab parallel: Phone↔Dummy BCL PASS [`LAB_FIELDPREP_20261114T095848Z`](../../../bt-analyzer/docs/evidence/LAB_FIELDPREP_20261114T095848Z.md). **F20 BCL-Inhalt weiter UNKNOWN**. SDP/A2DP §10.5 C-BT1–22. Narrative [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md)) · **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo · **Gerät:** ESP32-S3 `esp32.pidrive` 0.4.60+ / `hu-probe` 0.3.38 (Feld), 0.3.40 (Code, ungetestet) / Analyzer-Gadget 0.0.52 / `esp32.bt-analyzer` hci-agent 0.3.19  
 **Maßnahmen:** [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · hu-probe: [`heimfahrt`](../../../hu-probe/docs/feld/MSC-HEIMFAHRT.md) · [`identity-multireview`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/MSC-IDENTITY-REMOUNT.md) · [`wire-074319/455`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-074319-074455.md) · [`detach-browse`](../../../hu-probe/docs/feld/archiv/2026-10-22-msc-kampagne/2026-10-23-wire-nachtrag-detach-browse.md) · [`Größenleiter GO`](../../../hu-probe/docs/feld/MSC-GROESSENLEITER-GO.md) · Analyzer: [`Feldmatrix 06.11.`](../../../usb-analyzer/docs/reports/2026-11-06-field-host-matrix.md) · [`Cross-Check 02.11.`](../archiv/betrieb/2026-11-02-esp-usb-analyzer-crosscheck.md)  
 **Zweck:** Sammlung dessen, was über das Verhalten der Head Unit (HU) am USB-Port **bekannt und belegt** ist. Jede Aussage trägt einen Belegstatus und eine Quelle. Neue Feldtests sollen hier nachgetragen werden.  
 **Narrative Lesefassung (TOC + Quellen + GPT-Abgleich):** [`HU-BESCHREIBUNG.md`](HU-BESCHREIBUNG.md) — dieses Dokument bleibt die normative Claim-Tabelle.
@@ -478,8 +478,9 @@ Upstream: [`esp32.bt-analyzer`](https://github.com/MPunktBPunkt/esp32.bt-analyze
 | C-L10 | Dummy-CoD (+ACL-Reconnect) steuert Phone-Erst-PDU: Computer → DEADBEEF+UUID; **`0x340408`** → INIT/HS | **[B]** Lab | A/B mit Bounce `LAB_COD_AB_BOUNCE_20261113T2355Z`; ohne Bounce sticky. A2DP-Transport blieb `idle` bei BCL. BclCarLink kennt CoD/Probe nicht |
 | C-L11 | Phone-WD ohne HU-Pong → CLOSE 5001 @~38 s; mit Dummy-`--echo-watchdog` Session Minuten ohne CLOSE | **[B]** Lab | `LAB_WD_PONG_*` (final ~171 s/288 Pings bis agent_stop; mid ≥136 s). EOF ≠ A2DP-Drop |
 | C-L12 | WD-Policy-Tooling; Matrix abgebrochen (ACL-Bounce zerstört Phone-UI) | **[B]** partial | `--wd-pong-max/skip/payload`; B_BADPAY partial (`00000000` 13×) — Payload-Check **unproven**. EOD `LAB_EOD_20261114T0030Z` |
+| C-L13 | 2026-11-14 Feld+Lab parallel: CoD-Drift `0x4c0104` → AAIdrive wartet / 0 RFCOMM; Pin `0x340408`+Alias+ACL-Bounce+App-Restart → BCL SP(2)+WD-Pong (AAIdrive grün). F20 B2-A-TX parallel DM | **[B]** Lab · F20 TX **[B]** negativ | `LAB_FIELDPREP_20261114T095848Z` + `FIELD_B2A_TX_*` |
 
-**Lesart C-L4/C-L5/C-L7/C-L10/C-L11:** AAIdrive/MyBMW öffnen RFCOMM+BCL nur bei Eligibility: SPP `0x1101` + **CoD auto-ähnlich (`0x340408`)** + A2DP + HANDSHAKE-Antwort. Sonst: DEADBEEF+UUID-Probe (~9 s), kein INIT. Nach ACTIVE: WD ~2,5 s — ohne HU-Pong CLOSE 5001 @~38 s (C-L11). `instanceId` 12–14 = HU→Phone (Dummy sandte 1).
+**Lesart C-L4/C-L5/C-L7/C-L10/C-L11/C-L13:** AAIdrive/MyBMW öffnen RFCOMM+BCL nur bei Eligibility: SPP `0x1101` + **CoD auto-ähnlich (`0x340408`)** + A2DP + HANDSHAKE-Antwort. Sonst: DEADBEEF+UUID-Probe (~9 s), kein INIT. Nach ACTIVE: WD ~2,5 s — ohne HU-Pong CLOSE 5001 @~38 s (C-L11). `instanceId` 12–14 = HU→Phone (Dummy sandte 1). F20: A2DP-OK allein öffnet Analyzer-SPP nicht (C-BT21/22).
 
 ### 10.4 Soll-/Ist für A6→B3 (Feld F20) und Maßnahmen
 
@@ -500,12 +501,12 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 
 **Maßnahmen (priorisiert)** — kanonisch: [`bt-analyzer/docs/MASSNAHMEN_BCL_A6.md`](../../../bt-analyzer/docs/MASSNAHMEN_BCL_A6.md) · Decode: [`LAB_PHONE_BCL_20261113T2201Z_DECODE.md`](../../../bt-analyzer/docs/evidence/LAB_PHONE_BCL_20261113T2201Z_DECODE.md):
 
-1. **P0 Feld (nächster Auto-Lauf):** OnePlus **HCI-Snoop** ↔ F20-HU (+ `.87` btmon Beobachter, nicht im Datenpfad). Ziel: INIT / HU-HANDSHAKE / **version·instanceId·bufferSize** / SELECTPROTO / OPEN 5001/4004 am echten Kanal. Parallel state C + `b2a-tx` nur falls Snoop unklar. Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md).
-2. **P0 Epistemik:** Layer **T / B / E** trennen. B2-A observe-only leer ≠ kein BCL (Phone muss TX). C-L5-Lektion: Negativ = Ursache vs. Symptom. WD-Erwartungstabelle = **2,5 s Lab**, nicht blind Desk 5 s.
-3. **P1 Lab (ohne Auto):** C-L12 WD sanft zu Ende; CoD pinnen; **wire-faithful** `PhoneClientSession` (SP(2)/WD2.5/kein KNOCK) bevor Phone→F20-Sim. Dummy-`instanceId` variieren. **Nicht:** ACL-Bounce-Sturm; multi-`0x1101`; Desk-SP(3) als Wire.
+1. **P0 Feld:** OnePlus **HCI-Snoop** ↔ F20-HU (Hex 4/56 B). `b2a-tx` nur **isoliert** (kein paralleles Phone↔HU-A2DP); HU-UI „verbunden“ allein unzureichend (C-BT21/22). Runbook [`CAR_FIELD_1H.md`](../../../bt-analyzer/docs/CAR_FIELD_1H.md) · Muster [`FIELD_B2A_TX_PATTERNS_20261114`](../../../bt-analyzer/docs/analysis/FIELD_B2A_TX_PATTERNS_20261114.md).
+2. **P0 Epistemik:** Layer **T / B / E** trennen. Observe-only leer ≠ kein BCL; TX-DM ≠ kein BCL (Phone öffnet ch6). WD = **2,5 s Lab**.
+3. **P1 Lab:** Silent-HU-Dummy; CoD pinnen; wire-faithful Phone-Client. **Nicht:** ACL-Bounce-Sturm; Desk-SP(3) als Wire-FACT.
 4. **P1 Capture-Pflichtfelder:** channel X, SABM-Richtung, `12 34 56 78`, HANDSHAKE fields, SELECTPROTO payload, OPEN 5001, OPEN 4004, WD-Intervall.
 5. **P2:** AAIdrive vs MyBMW getrennt; Etch-Gateway/SAS-Stub; BclCarLink Differential.
-6. **Nicht tun:** ch5 als BCL; generische neue Dummies; Desk-SELECTPROTO(3)/WD-5 s als Wire-FACT ohne Messung; B2-A-Negativ = „kein BCL“.
+6. **Nicht tun:** ch5 als BCL; Desk-SELECTPROTO(3)/WD-5 s als Wire-FACT; B2-A-TX-DM = „kein BCL“.
 
 ### 10.5 Bluetooth-Feld F20 — HU-SDP, A2DP, AVRCP, HFP (A6-Capture)
 
@@ -534,7 +535,9 @@ Quelle: `.87` (`C8:C9:A3:CB:37:96`, spielt „Smartphone“) ↔ HU `D4:36:39:CF
 | C-BT17 | HU auf SCN 6 / DLCI 13: **0** `PORT_DataInd` im gesamten Capture; alle 28 DataInd auf **dlci 8** (HFP `0x111f`) | **[B]** | Silent-HU ch6 in diesem State — schärfer als „Nutzdaten UNKNOWN“ |
 | C-BT18 | Phone TX auf ch6: **5× 56 B** + **24× 4 B**; Typ A (~10 s, 1×56 B) alterniert mit Typ B (15,0 s, 5×4 B @ **3,000 s**); Pause ~4 s | **[B]** Größen/Kadenz · Hex **[?]** | Inferenz zu Lab-INIT/WD möglich, kein `data_hex` |
 | C-BT19 | `is_carkit: true` 449× / `false` 0× während Auto-Log; HU CoD `0x340408`; Controller LMP 6 / Mfr `0x000D` / Sub `0x1b76` | **[B]** | Auto-Log only; Lab-`is_carkit` ohne Adresse nicht binden |
-| C-BT20 | Android UUID-Fetch `0x1101` trifft **nur** ersten HU-Record (= ch6); ch7–10 brauchen expliziten Kanal (B2-A-TX-Matrix) | **[B]** Ableitung | C-BT1 + C-BT15; P0 Matrix in `MASSNAHMEN_BCL_A6` / `CAR_FIELD_1H` |
+| C-BT20 | Android UUID-Fetch `0x1101` trifft **nur** ersten HU-Record (= ch6); ch7–10 brauchen expliziten Kanal (B2-A-TX-Matrix) | **[B]** Ableitung | C-BT1 + C-BT15 |
+| C-BT21 | B2-A-TX 2026-11-14: `.87`→HU ch **5–10** → Socket refuse; Wire Mux-UA dann DLC-SABM→**DM** (auch nach ≥15 s ACL und bei HU-UI „BT-Analyzer verbunden“ + A2DP) | **[B]** | [`FIELD_B2A_TX_MATRIX_20261114`](../../../bt-analyzer/docs/evidence/FIELD_B2A_TX_MATRIX_20261114.md); Contrast C-BT10 (observe-only UA+empty) |
+| C-BT22 | A2DP-/AVRCP-UI-Erfolg (Audio + „Titelinfo nicht unterstützt“) **≠** SPP-Accept für BCL-TX | **[B]** Muster | AUDIOOK-Lauf in Matrix; AVRCP-Metadaten-Lücke unseres Stacks, kein BCL-Claim |
 
 Korrigiert damit [`iDriveBt.md`](iDriveBt.md): „F20 = AVRCP 1.4“ → CT 1.5; „Browsing am F20 nicht beobachtet“ → Browsing genutzt; Bitpool 53 jetzt gemessen. PiDrive-Folgen: [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) §2.7.
 

@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-14 (OnePlus↔HU Logcat: SPP `0x1101`→SCN6 OPEN FACT, HU auf ch6 silent — C-BT15…20; F20-BCL-Bytes weiter offen). Davor Lab C-L7…C-L12 / EOD; 2026-11-13 A6/B1/B2; 2026-11-11 (hu-probe-Nachrechnung §4.6, R51/Q18 entfernt)  
+**Stand:** 2026-11-14 ~11:20 (Logcat silent ch6; B2-A-TX Matrix DM/refuse ch5–10 trotz A2DP-OK — C-BT21/22; Lab Dummy BCL PASS C-L13; F20-BCL-Bytes weiter offen). Davor C-BT15…20 / C-L7…C-L12; 2026-11-13 A6/B1/B2  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
@@ -304,7 +304,7 @@ Android Open Accessory (z. B. Already-Accessory `18D1:2D00`) ist nur ein **USB-Z
 - Analyzer MSC `303a:1001`: mountet Storage; `aoa51/52/53=0` trotz AOA-respond (E18).
 - **Kein** durchgehender F20-BCL/Etch/SAS-Wire-Capture.
 - BT-Analyzer 13.11. (`.87` als Phone, A6): Pairing, HU-SDP und A2DP/AVRCP/HFP gemessen (C-BT1–C-BT8). Die HU bietet sechs RFCOMM-Datendienste an: Kanal 5 mit eigener BMW-UUID `…deca-fade…` und Kanäle 6–10 als SPP. Im Leerlauf ohne Phone-App öffnete die HU **keinen** davon (C-BT8).
-- 14.11. OnePlus↔echte HU (Logcat): UID 10479 öffnet SPP `0x1101` → SDP **SCN 6** → RFCOMM OPEN (DLCI 13); 10× Erfolg nach 5× DM; Phone TX 56 B/4 B-Retry; HU auf ch6 **0 Bytes** RX (C-BT15–20). Nächster Schritt: B2-A-TX explizit ch6–10.
+- 14.11. OnePlus↔echte HU (Logcat): SPP SCN6 OPEN, HU silent ch6 (C-BT15–20). Vormittag: B2-A-TX ch5–10 → DM/refuse auch bei „BT-Analyzer verbunden“ (C-BT21/22); parallel Phone↔Dummy BCL + AAIdrive grün (C-L13). Nächster Schritt: Phone HCI-Snoop Hex; b2a-tx isoliert.
 
 ### 5.4 SAS, RHMI, CDS, AV
 
