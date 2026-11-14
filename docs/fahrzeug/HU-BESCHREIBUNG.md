@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-14 (BT-Lab Phone↔Dummy BCL: Facts C-L7…C-L12 / EOD; F20-BCL weiter offen). Davor 2026-11-13 (erster BT-Feld-Capture: HU-SDP, A2DP, AVRCP 1.5, HFP → §5.3/§5.5, Variante A §7); 2026-11-11 (hu-probe-Nachrechnung §4.6, R51/Q18 entfernt)  
+**Stand:** 2026-11-14 (OnePlus↔HU Logcat: SPP `0x1101`→SCN6 OPEN FACT, HU auf ch6 silent — C-BT15…20; F20-BCL-Bytes weiter offen). Davor Lab C-L7…C-L12 / EOD; 2026-11-13 A6/B1/B2; 2026-11-11 (hu-probe-Nachrechnung §4.6, R51/Q18 entfernt)  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
@@ -94,7 +94,7 @@ Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = 
 | Ebene | Transport | Stack (kurz) | Evidenz an dieser HU |
 |-------|-----------|--------------|----------------------|
 | **Storage Plane** | USB MSC | SCSI/BOT → FAT → Scanner → Cache → Decoder | **[B]/[S]** Feld/Lab (Facts E/R/F) |
-| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | **[D]** Desk; Feld nur G1 (+ partielle AOA-Beobachtung); BT-SDP **[B]** (C-BT1), BCL über BT **[?]** |
+| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | **[D]** Desk; Feld G1 + AOA partiell; BT-SDP **[B]** (C-BT1); SPP SCN6 OPEN **[B]** (C-BT15); BCL-Bytes **[?]** (HU silent ch6) |
 | **BT-Medienpfad** (Variante A) | BT Classic | A2DP-Sink · AVRCP-CT 1.5 + Browsing · HFP-HF 1.6 | **[B]** ein Feld-Capture (Facts §10.5) |
 
 Die Trennung ist keine Dokumentationskosmetik. MSC und Connected-App-Pfade haben **unterschiedliche USB-Identitäten, Zustandsmaschinen und Messinstrumente**. hu-probe führt deshalb getrennte Boot-Modi (`msc` vs. `aoa_*`); Analyzer-Feld bestätigt: MSC-Identity mountet Storage, ohne dass daraus Connected folgt (Facts E18/F15, C-D9).
@@ -303,7 +303,8 @@ Android Open Accessory (z. B. Already-Accessory `18D1:2D00`) ist nur ein **USB-Z
 - Direct-ESP `18D1:2D00`: Zubehör-UI / Reconnect-Loop; kein verwertbarer Bulk-RX; 51/52/53 auf Callback-Schicht absent (Facts §10; Inference, kein abschließender „AOA unsupported“-Beweis).
 - Analyzer MSC `303a:1001`: mountet Storage; `aoa51/52/53=0` trotz AOA-respond (E18).
 - **Kein** durchgehender F20-BCL/Etch/SAS-Wire-Capture.
-- BT-Analyzer 13.11. (`.87` als Phone, A6): Pairing, HU-SDP und A2DP/AVRCP/HFP gemessen (C-BT1–C-BT8). Die HU bietet sechs RFCOMM-Datendienste an: Kanal 5 mit eigener BMW-UUID `…deca-fade…` und Kanäle 6–10 als SPP. Im Leerlauf ohne Phone-App öffnete die HU **keinen** davon (C-BT8). Ein Android-Client à la BclCarLink würde Kanal **6** treffen (C-BT2, Hypothese). Nächster Schritt B2-A: `.87` öffnet Kanal 6 und 5 und hört zu.
+- BT-Analyzer 13.11. (`.87` als Phone, A6): Pairing, HU-SDP und A2DP/AVRCP/HFP gemessen (C-BT1–C-BT8). Die HU bietet sechs RFCOMM-Datendienste an: Kanal 5 mit eigener BMW-UUID `…deca-fade…` und Kanäle 6–10 als SPP. Im Leerlauf ohne Phone-App öffnete die HU **keinen** davon (C-BT8).
+- 14.11. OnePlus↔echte HU (Logcat): UID 10479 öffnet SPP `0x1101` → SDP **SCN 6** → RFCOMM OPEN (DLCI 13); 10× Erfolg nach 5× DM; Phone TX 56 B/4 B-Retry; HU auf ch6 **0 Bytes** RX (C-BT15–20). Nächster Schritt: B2-A-TX explizit ch6–10.
 
 ### 5.4 SAS, RHMI, CDS, AV
 
@@ -439,6 +440,7 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | Fld9 | hu-probe [`FELD-2026-11-10`](../../../hu-probe/docs/feld/FELD-2026-11-10-I303A-REVAL-MSC.md) | iProduct-Name, Soft-Detach, `cache_place` |
 | Fld10 | hu-probe [`C1-STAND`](../../../hu-probe/docs/feld/C1-STAND.md) | Feld-Identitäten (nicht unterstützt / Zubehör) |
 | Fld11 | bt-analyzer [`FIELD_B1_FROM_A6_20261113T062824Z`](../../../bt-analyzer/docs/evidence/FIELD_B1_FROM_A6_20261113T062824Z.md) | HU-SDP, A2DP, AVRCP, HFP (C-BT1–C-BT8) |
+| Fld12 | bt-analyzer [`FIELD_PHONE_HU_LOGCAT_20261114T0924Z`](../../../bt-analyzer/docs/evidence/FIELD_PHONE_HU_LOGCAT_20261114T0924Z.md) | Phone↔HU SPP SCN6 OPEN; HU silent ch6 (C-BT15–20) |
 | Fld12 | bt-analyzer [`HFP_SLC_A6_20261113`](../../../bt-analyzer/docs/analysis/HFP_SLC_A6_20261113.md) | HFP-SLC-Abbruch an `AT+CHLD=?` |
 
 ### 9.3 Audits / Evidence
