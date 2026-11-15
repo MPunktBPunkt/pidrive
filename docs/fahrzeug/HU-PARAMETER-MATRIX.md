@@ -1,6 +1,6 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-11-13 (neu §2.7 Bluetooth aus dem ersten BT-Feld-Capture, Facts §10.5); davor 2026-11-11 (Nachrechnung aller hu-probe-BMW-Sessions → Facts R53–R60, I8–I13; A15 widerlegt, A17–A24 neu) · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
+**Stand:** 2026-11-15 (§2.7 + BCL/CDS C-BT23–30); davor 2026-11-13 BT-A6; 2026-11-11 hu-probe-Nachrechnung · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
 **Maßnahmen:** [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Profil [`../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json`](../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json)
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** · [D] Desk · [H] Hypothese · [?] offen.
 
@@ -172,7 +172,11 @@ Ein Feld-Capture 13.11. (A6, BlueZ/PipeWire auf `.108` als Phone, HU ohne Phone-
 | Profile der HU | A2DP-Sink 1.3 · AVRCP-CT 1.5 (kein TG) · HFP-HF 1.6 · MAP-MNS 1.2 · OPP · PnP | **[B]** | C-BT1 | L, U | — | — |
 | RFCOMM-Kanäle der HU | 1 MAP-MNS · 2 HFP · 5 `deca-fade` · 6–10 SPP `0x1101` · 11 OPP | **[B]** | C-BT1 | S (Control) | — | — |
 | RFCOMM-Initiative der HU (Leerlauf) | nur HFP; keine Daten-Kanäle | [S] | C-BT8 | S (Control) | **P0** | B2-B Hold 300 s mit MyBMW OFF/ON |
-| Ziel-Kanal Android-SPP-Client | ch 6 (erster `0x1101`-Record) | [H] | C-BT2 | S (Control) | **P0** | B2-A: `.87` → ch 6 und ch 5 |
+| Ziel-Kanal Android-SPP-Client | ch 6 (erster `0x1101`); Failover ch 10 möglich | **[B]** | C-BT2/15/24 | S (Control) | — | SDP-Rolle ch10 noch [?] |
+| BCL HS (funktionierende Session) | v5 / iid=14 / buf=0x4000 | **[B]** | C-BT23 | S (Control) | — | — |
+| Etch/CDS HU→Phone | DATA→4004 + Property-Fragmente | **[B]** partial | C-BT25/26 | S (Control) | **P0** | btsnoop volle Bodies |
+| SAS Phone↔HU | Challenge/Login | [?] | C-BT28 | S (Control) | **P0** | btsnoop Session B |
+| Phone silent TX 4‑B @~3 s | INIT `12345678` (nicht WD) | **[B]** Lab | C-L14 | S (Control) | — | — |
 | SBC-Fähigkeiten | alle Modi, 44,1 + 48 kHz, Blöcke 4–16, Subbänder 4/8, Bitpool 2..53 | **[B]** | C-BT4 | L | — | — |
 | AAC | MPEG-2/4 LC, 44,1 + 48 kHz, mono/stereo, VBR | **[B]** angeboten / [?] hörbar | C-BT4 | L | P1 | AAC-Source auf PiDrive, Ohr + Coex |
 | Content Protection / Delay Report | SCMS-T + Delay Reporting an jeder SEP | **[B]** | C-BT4 | L | P2 | Wirkung von Delay Report auf Lippen-/UI-Sync |

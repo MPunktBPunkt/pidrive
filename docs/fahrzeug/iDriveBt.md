@@ -2,7 +2,7 @@
 
 **BMW 118d F20/F21 LCI 2017 · NBT Evo · PiDrive v0.11.122**  
 Erstellt auf Basis von Quellcode-Analyse, BlueZ-Dokumentation und Felderfahrung.  
-**Stand 2026-11-13:** HU-Verhalten (SDP, Codecs, AVRCP, HFP) erstmals per HCI-Capture gemessen — BT-Analyzer A6 mit BlueZ/PipeWire als „Phone“, nicht PiDrive selbst. Markierung **[gemessen]** = aus diesem Capture ([`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.5, C-BT1–C-BT9); widerlegte frühere Annahmen sind durchgestrichen.
+**Stand 2026-11-15:** SDP/A2DP/AVRCP/HFP aus A6-Capture (C-BT1–14). Connected/BCL: AAIdrive-Golden-Session bis CDS (C-BT23–30) — [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.5. Markierung **[gemessen]** = Rohdaten belegt; widerlegte Annahmen durchgestrichen.
 
 > **Audio-Stack-Hinweis (ab v0.11.96):** PiDrive nutzt **PipeWire im System-Mode**
 > (mit WirePlumber + pipewire-pulse), nicht mehr klassisches PulseAudio. Das ändert

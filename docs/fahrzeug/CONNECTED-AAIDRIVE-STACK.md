@@ -181,17 +181,17 @@ Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identi
 | **IDriveConnectAddons** | Extra-RHMI-Apps / CDS-Consumer |
 | **BclCarLink** | Optionaler BCL-Link (**RFCOMM-Client**); ersetzt Security **nicht** |
 
-**Wer öffnet RFCOMM? (2026-11-13, Desk + Lab + Secondary)**
+**Wer öffnet RFCOMM? (Stand 2026-11-15, Desk + Lab + F20-Feld)**
 
 | Komponente | RFCOMM/SPP | Etch/`sas_*` |
 |------------|------------|--------------|
-| Connected / MyBMW | Tunnel-Owner (Doc: BT und/oder USB); am **F20** SABM-Richtung **UNKNOWN** | oft stellvertretend (CarAPI) oder Tunnel-only |
-| **BclCarLink** | **öffnet** Client-Socket auf SPP `00001101` (A2DP nur Hint) — Desk-FACT für diese App | stellt localhost-Proxy; Security bleibt extern |
-| **AAIdrive / Addons** | **nein** — warten auf `ACTION_CAR_ACCESSORY_ATTACHED` + Security; Secondary: kann MyBMW-Tunnel mitnutzen | ja (eigener Etch-Client) |
-| nbt-aad (Secondary) | HU-SPP `/dev/btspp*`; „CAR öffnet MyBMW-Link“ vs. BclCarLink-Client = **Spannung** | nicht BCL-Companion-Pfad |
-| bt-analyzer Dummy-HU + MyBMW/AAIdrive | Lab: A2DP ja, **kein RFCOMM** (`NO_RFCOMM`) | kein Tunnel → kein Etch |
+| Connected / MyBMW | Tunnel-Owner; F20: UID **10479** öffnet Client auf `0x1101`→SCN6 (Failover SCN10) — **[B]** | Tunnel; SAS Wire **[?]** bis btsnoop |
+| **BclCarLink** | **öffnet** Client-Socket auf SPP `00001101` (A2DP nur Hint) — Desk-FACT | localhost-Proxy; Security extern |
+| **AAIdrive / Addons** | Etch-Consumer auf MyBMW-Tunnel; Secondary: kann Tunnel mitnutzen | ja — F20: CDS-Fragmente HU→Phone **[B]**; `sas_*` **[?]** |
+| nbt-aad (Secondary) | HU-SPP `/dev/btspp*` — Spannung vs. Phone-Client | nicht BCL-Companion-Pfad |
+| bt-analyzer Dummy-HU | Eligibility-abhängig (CoD/HS); Silent-HU sieht INIT `12345678` + 56‑B UUID-Blob | ohne HS: kein WD/Etch |
 
-Konsequenz: AAIdrive/MyBMW allein gegen Dummy-HU ist **kein** valider BCL-Transport-Test. F20 braucht **B2-A und B2-B**. Siehe [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.1–10.4 · Secondary [`supra-idrive6-android-auto-2026-secondary`](../../../technology-audit/audits/supra-idrive6-android-auto-2026-secondary/).
+Konsequenz: Eligibility (SPP+CoD+HS) bleibt Pflicht für Lab. F20 Golden Session belegt BCL→Etch→CDS HU→Phone; Phone→HU/SAS braucht **btsnoop**. Facts: [`HU-Technical-Facts.md`](HU-Technical-Facts.md) C-BT23–30 · Secondary [`supra-idrive6-android-auto-2026-secondary`](../../../technology-audit/audits/supra-idrive6-android-auto-2026-secondary/).
 
 AAIdrive-README (Kernaussage): *„without any modifications or hacks“* am Auto — Nutzung der **offiziellen Connected-Apps-Technologie** mit extrahierten Certs/Ressourcen. Das ist **kein HU-Root**, aber auch **kein** BMW-SDK-Lizenzprodukt.
 
@@ -229,8 +229,9 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
 | C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Produktentscheid |
 | C7 | **P1 FIELD-CONNECTED-REAL-01** (nach P0 I-303A): Phone+MyBMW+AAIdrive ∥ Analyzer ∥ HU-Notiz ∥ ESP-Vergleich | Plan: [hu-probe field-connected-real-01](../../../hu-probe/docs/feld/FIELD-CONNECTED-REAL-01.md) |
-| C8 | **P2 FX-G3-01:** `sas_certificate`/Challenge/`sas_login` in einer Session | Cleartext-Claim; braucht sichtbaren Bulk/BCL |
+| C8 | **P0:** `btsnoop_hci` der AAIdrive-Golden-Session — `sas_certificate`/Challenge/`sas_login` + volle 667‑B Bodies | Oplus-Logs reichen nicht (nur HU→App, Hex-Cap 32 B) |
 | C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Logcat |
+| C10 | DATAACK↔DATA-Paarung + Type-ID `0386*`→CDS-Methoden | aus btsnoop; BclCarLink `DataAck(8+len)` als Arbeitshypothese |
 
 ---
 

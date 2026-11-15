@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-14 ~11:20 (Logcat silent ch6; B2-A-TX Matrix DM/refuse ch5–10 trotz A2DP-OK — C-BT21/22; Lab Dummy BCL PASS C-L13; F20-BCL-Bytes weiter offen). Davor C-BT15…20 / C-L7…C-L12; 2026-11-13 A6/B1/B2  
+**Stand:** 2026-11-15 (AAIdrive Golden Session: BCL HS→DATA→4004→CDS-Fragmente **[B]** C-BT23–30; SAS/Phone→HU **[?]**; Silent-HU 4‑B=INIT C-L14). Davor C-BT15–22 / C-L7–C-L13; 2026-11-13 A6/B1/B2  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
@@ -54,7 +54,7 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
 
 **Storage Plane:** Die BMW NBT-Evo-HU ist ein aggressiver, dateiorientierter USB-MSC-Host mit mehrstufigem Zustand/Cache, großen READ10-Transfers und nachweislich hoher Toleranz gegenüber USB-Backpressure. Sie konsumiert nicht einfach kontinuierlich Audio, sondern fordert Daten in kontextabhängigen Leseoperationen an und kann daraus lokal weiter abspielen. Konkret (Heimfahrt nachgerechnet, R53–R58): Ein Titel, der zu spielen beginnt, wird **vollständig** mit ~1 MB/s gelesen (bis 7,2 MB belegt, keine Obergrenze sichtbar); der Folgetitel wird ~7–8 s vor Ende angelesen; nach einem Mount wird der Resume-Titel ab Kopf und ab Position gelesen; teils werden mehrere Folgetitel am Stück vorgelesen, und der Cache hält das minutenlang.
 
-**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette, deren Transport und höhere Protokollschichten getrennt vom Storage Plane betrachtet werden müssen (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM als Nutzerebene). Desk-[D] stark, F20-Wire noch nicht durchgehend bewiesen. Seit 13.11. ist die Bluetooth-Seite der HU vermessen (SDP, Codecs, AVRCP, HFP; §5.5); ob die HU darüber BCL spricht, ist weiter offen.
+**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM). Seit 15.11. ist am F20 der Pfad **BCL HS → Etch → CDS (HU→Phone)** feldbelegt (C-BT23–26); **SAS und Phone→HU** bleiben offen (btsnoop). BT-SDP/A2DP/AVRCP/HFP: §5.5 / C-BT1–22.
 
 Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = strategische Option mit Gates G1–G4. **I-303A** bleibt unberührt — Storage-Plane-Korrekturen ändern nichts an dem, was G1 auf der USB-Leitung sichtbar macht.
 
@@ -94,7 +94,7 @@ Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = 
 | Ebene | Transport | Stack (kurz) | Evidenz an dieser HU |
 |-------|-----------|--------------|----------------------|
 | **Storage Plane** | USB MSC | SCSI/BOT → FAT → Scanner → Cache → Decoder | **[B]/[S]** Feld/Lab (Facts E/R/F) |
-| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | **[D]** Desk; Feld G1 + AOA partiell; BT-SDP **[B]** (C-BT1); SPP SCN6 OPEN **[B]** (C-BT15); BCL-Bytes **[?]** (HU silent ch6) |
+| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | BT-SDP **[B]**; SPP/BCL HS+DATA→4004+CDS-Fragmente **[B]** (C-BT23–25); SAS **[?]**; AOA G1 partiell |
 | **BT-Medienpfad** (Variante A) | BT Classic | A2DP-Sink · AVRCP-CT 1.5 + Browsing · HFP-HF 1.6 | **[B]** ein Feld-Capture (Facts §10.5) |
 
 Die Trennung ist keine Dokumentationskosmetik. MSC und Connected-App-Pfade haben **unterschiedliche USB-Identitäten, Zustandsmaschinen und Messinstrumente**. hu-probe führt deshalb getrennte Boot-Modi (`msc` vs. `aoa_*`); Analyzer-Feld bestätigt: MSC-Identity mountet Storage, ohne dass daraus Connected folgt (Facts E18/F15, C-D9).
@@ -287,8 +287,8 @@ G4  SAS Authentication
 | Gate | Inhalt | Messstand F20 |
 |------|--------|---------------|
 | G1 | USB Identity / Class | teilweise **[B]** (MSC; AOA-Identity-Versuche); **I-303A** |
-| G2 | AOA/BT Transport + BCL | AOA-Beobachtung partiell; **BCL-Wire offen** |
-| G3 | Phone localhost TCP → BCL → Etch | nicht am Wire |
+| G2 | AOA/BT Transport + BCL | BT BCL HS+DATA→4004 **[B]** (C-BT23); AOA partiell |
+| G3 | Phone localhost TCP → BCL → Etch | Etch/CDS HU→Phone Fragmente **[B]**; Phone→HU/SAS **[?]** |
 | G4 | SAS Authentication | Desk-[D]; Feld offen |
 | *(danach)* | RHMI / CDS / AV / AM | Desk-[D]; Feld offen — **keine Gate-ID G5** |
 
@@ -302,7 +302,7 @@ Android Open Accessory (z. B. Already-Accessory `18D1:2D00`) ist nur ein **USB-Z
 
 - Direct-ESP `18D1:2D00`: Zubehör-UI / Reconnect-Loop; kein verwertbarer Bulk-RX; 51/52/53 auf Callback-Schicht absent (Facts §10; Inference, kein abschließender „AOA unsupported“-Beweis).
 - Analyzer MSC `303a:1001`: mountet Storage; `aoa51/52/53=0` trotz AOA-respond (E18).
-- **Kein** durchgehender F20-BCL/Etch/SAS-Wire-Capture.
+- F20 BCL/Etch/CDS HU→Phone **[B]** (2026-11-15); SAS + volle Bodies + Phone→HU brauchen btsnoop.
 - BT-Analyzer 13.11. (`.87` als Phone, A6): Pairing, HU-SDP und A2DP/AVRCP/HFP gemessen (C-BT1–C-BT8). Die HU bietet sechs RFCOMM-Datendienste an: Kanal 5 mit eigener BMW-UUID `…deca-fade…` und Kanäle 6–10 als SPP. Im Leerlauf ohne Phone-App öffnete die HU **keinen** davon (C-BT8).
 - 14.11. OnePlus↔echte HU (Logcat): SPP SCN6 OPEN, HU silent ch6 (C-BT15–20). Vormittag: B2-A-TX ch5–10 → DM/refuse auch bei „BT-Analyzer verbunden“ (C-BT21/22); parallel Phone↔Dummy BCL + AAIdrive grün (C-L13). Nächster Schritt: Phone HCI-Snoop Hex; b2a-tx isoliert.
 
