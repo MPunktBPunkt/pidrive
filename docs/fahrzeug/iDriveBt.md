@@ -2,7 +2,7 @@
 
 **BMW 118d F20/F21 LCI 2017 · NBT Evo · PiDrive v0.11.122**  
 Erstellt auf Basis von Quellcode-Analyse, BlueZ-Dokumentation und Felderfahrung.  
-**Stand 2026-11-15:** SDP/A2DP/AVRCP/HFP aus A6-Capture (C-BT1–14). Connected/BCL: AAIdrive-Golden-Session bis CDS (C-BT23–30) — [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.5. Markierung **[gemessen]** = Rohdaten belegt; widerlegte Annahmen durchgestrichen.
+**Stand 2026-11-16:** SDP/A2DP/AVRCP/HFP aus A6-Capture + OnePlus-12-Quervergleich (TI-Chip, Sniff-Subrating, OnePlus-SBC, AVRCP-Maske `0x004d`, HFP `AT+NREC=0`), Connected/BCL bis SAS-Challenge/RSA-4096-Login/`rhmi_getCapabilities`/AM/RHMI/CDS (`C-BT1`–`C-BT44`, [`HU-Technical-Facts.md`](HU-Technical-Facts.md) §10.5, [`DEEP_FORENSIC_ETCH_SAS_20261116.md`](../../../bt-analyzer/docs/analysis/DEEP_FORENSIC_ETCH_SAS_20261116.md)). Markierung **[gemessen]** = Rohdaten belegt; widerlegte Annahmen durchgestrichen.
 
 > **Audio-Stack-Hinweis (ab v0.11.96):** PiDrive nutzt **PipeWire im System-Mode**
 > (mit WirePlumber + pipewire-pulse), nicht mehr klassisches PulseAudio. Das ändert
@@ -93,7 +93,7 @@ Prüfen: `hciconfig hci0 version` — zeigt Chip-Version.
 | PBAP | 1.1 | (nicht genutzt) | Client (kein Record in der HU-SDP, Rolle Client braucht keinen) | ⬜ irrelevant |
 | MAP | HU-MNS 1.2 [gemessen] | (nicht genutzt) | Client | ⬜ irrelevant |
 | OPP | [gemessen] | (nicht genutzt) | Server | ⬜ irrelevant |
-| SPP / BMW-Daten | ch 5 `deca-fade`, ch 6–10 SPP [gemessen] | (nicht genutzt) | Server; Connected-/BCL-Kandidat | ⬜ Pfad C |
+| SPP / BMW-Daten | ch 5 `deca-fade` (**Apple iAP2**), ch 6–10 SPP `0x1101` [gemessen] | (nicht genutzt) | Server; **ch 6 = aktiver BCL/Etch/SAS-Kanal** (Failover ch 10) [gemessen] | ⬜ Pfad C |
 
 PiDrive implementiert **nur A2DP Source + AVRCP Target** — bewusst schlank.
 
@@ -112,17 +112,17 @@ Ohne `0x110A` kein Audiostreaming. Ohne `0x110C` keine Tastensteuerung.
 
 Prüfen: `sdptool browse <BMW-MAC>` oder `sdptool browse local`
 
-**[gemessen] SDP der HU** (`D4:36:39:CF:E1:B5`, „BMW 38304“, Provider `ALPS_*`):
+**[gemessen] SDP & Funk-Chip der HU** (`D4:36:39:CF:E1:B5`, „BMW 38304“, Provider `ALPS_*`, Funk-Controller **Texas Instruments BT 4.0** `LMP 0x06 / Mfr 0x000D / Sub 0x1B76`; HU ist ACL-Master und paget gebondete Geräte ~14,2 s nach BT-ON):
 
 | RFCOMM / PSM | Dienst |
 |---|---|
 | ch 1 | MAP-MNS 1.2 |
 | ch 2 | HFP Hands-Free 1.6 (`ALPS_HFM`) |
-| ch 5 | „SPP Server 0“, UUID `00000000-deca-fade-deca-deafdecacaff` |
-| ch 6–10 | „SPP Server 1–5“, SPP `0x1101` |
+| ch 5 | „SPP Server 0“, UUID `00000000-deca-fade-deca-deafdecacaff` (**Apple iAP2/MFi**, nicht Android/BCL) |
+| ch 6–10 | „SPP Server 1–5“, SPP `0x1101` (**ch 6 = primärer BMW-BCL-Server**, ch 10 = Failover) |
 | ch 11 | OPP |
-| PSM 25 | A2DP Sink 1.3 |
-| PSM 23 | AVRCP Controller 1.5 |
+| PSM 25 | A2DP Sink 1.3 (`seid=1` SBC, `seid=2` MP3, `seid=3` AAC; Delay Reporting `0x0102`) |
+| PSM 23 | AVRCP Controller 1.5 (SDP-Features **`0x004d`**: Browsing `true`, Cover Art `false`, AbsVol `false`) |
 | — | PnP |
 
 Die HU fragt die SDP der Gegenstelle vor jedem HFP-Aufbau erneut ab (5× in ~65 s).
@@ -151,7 +151,7 @@ Allocation Method: Loudness
 Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 ```
 
-**[gemessen]** Die HU bietet SBC mit allen Modi, 44,1 und 48 kHz, Blöcken 4–16, Subbändern 4/8, Loudness/SNR und **Bitpool 2..53** an; jede SEP zusätzlich mit **SCMS-T** und **Delay Reporting**. BlueZ (Default-Konfiguration) wählte **48 kHz** Joint Stereo 16/8 Loudness, Bitpool 53 → ~357 kbps. Wer den Funkkanal schonen will, fixiert 44,1 kHz.
+**[gemessen]** Die HU bietet SBC mit allen Modi, 44,1 und 48 kHz, Blöcken 4–16, Subbändern 4/8, Loudness/SNR und **Bitpool 2..53** an; jede SEP zusätzlich mit **SCMS-T** und **Delay Reporting** (`0x0102`). Beim echten Verbinden erzwingt die HU **kein SCMS-T** (`AudioSepHasContentProtection: not required`). BlueZ (Default) wählte **48 kHz** Joint Stereo 16/8 Loudness, Bitpool 53 → ~357 kbps. **Wichtig:** Selbst ein OnePlus 12 mit aktivem Hardware-AAC-Offload wählt gegenüber dieser F20-HU **SBC (`seid=1`, Bitpool 2..35, ~229 kbps)** statt AAC (`mandatory codec preferred`, C-BT42)! Wer den Funkkanal / Coex schonen will, bleibt bei **SBC 44,1 kHz** (ggf. Bitpool ≤ 35). Nach A2DP-Suspend schaltet der Link auf **Sniff Subrating (`max_latency = 0,75 s`)** (C-BT41).
 
 ---
 
@@ -168,7 +168,7 @@ Bitpool:          2-53 (Standard) → ~328 kbps bei 44.1 kHz Joint Stereo
 
 ~~**BMW 118d F20 2017 = NBT Evo ID5/ID6 → AVRCP 1.4**~~
 
-**[gemessen] Dieser F20:** SDP-Record AVRCP **Controller 1.5**; die HU öffnet den **Browsing-Kanal** (PSM `0x1B`, ERTM) und fragt `GetFolderItems` (Media-Player-Liste) ab. „Browsing am F20 nicht beobachtet“ ist damit überholt. Cover Art (BIP, 1.6) bietet die HU nicht an.
+**[gemessen] Dieser F20:** SDP-Record AVRCP **Controller 1.5** mit Feature-Bitmaske **`0x004d`** (`browse supported = true`, `cover art supported = false`, `absoluteVolume = false`); die HU öffnet den **Browsing-Kanal** (PSM `0x1B`, ERTM) und fragt `GetFolderItems` (Media-Player-Liste) ab. „Browsing am F20 nicht beobachtet“ ist damit überholt. Cover Art über BT-AVRCP (BIP, 1.6) unterstützt die HU nachweislich **nicht** — in ihrer eigenen `rhmi_getCapabilities`-Map meldet sie stattdessen `iva_ENT_USB_COVER_ART_IPOD` (C-BT36). Hinweis: Das OnePlus 12 registriert AVRCP TG 1.6 inkl. BIP-Server (`psm=0x1001`, `0x1d1`), ohne dass Metadaten/Tasten an dieser F20-HU brechen (C-BT43).
 
 Für PiDrive bedeutet das: AVRCP 1.4-kompatibel antworten reicht für Tasten und Metadaten; Browsing-Anfragen kommen trotzdem und sollten gültig beantwortet werden (§9.1).  
 AVRCP 1.6-Features (BIP Cover Art / OBEX) nicht anbieten — Nutzerberichte: Track-Info/Playback können mit AVRCP 1.6 am NBT Evo brechen. Cover über BT läuft bei BMW typisch über **iAP/Connected/USB** (`ENT_BTAS_IAP_COVERART`), nicht über `mpris:artUrl`. Details: [`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md). Reiche Menüs/Cover über den **Connected-Apps-Stack** (BCL→Etch→RHMI, z. B. AAIdrive) = **Pfad C**, parallel zu A2DP/AVRCP — Stack-Abgleich: [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md).
@@ -264,7 +264,7 @@ AVRCP 1.4 unterstützt Absolute Volume Control. BMW kann versuchen, die Lautstä
 
 PiDrive-Verhalten: `Volume: 1.0` in MPRIS2 (fixiert), keine Absolute-Volume-Änderungen zurückschreiben. BMW regelt die Lautstärke intern über seinen DSP.
 
-**[gemessen]** Im A6-Capture kein `SetAbsoluteVolume` und keine Registrierung von Event `0x0D` (Volume Changed), bei unserem Target-Record AVRCP 1.6, Features `0x5f`.
+**[gemessen]** Sowohl im A6-Capture (gegen BlueZ AVRCP 1.6 TG `0x5f`) als auch gegen das OnePlus 12 bestätigt: Die SDP-Maske `0x004d` der HU hat **kein** Cat-2-/Absolute-Volume-Bit (`abs_support: 0`, `absoluteVolume=false`, C-BT43) — diese F20-HU nutzt kein AVRCP Absolute Volume.
 
 ---
 
@@ -699,7 +699,7 @@ monitor.bluez.properties = {
 }
 ```
 
-Für PiDrive (A2DP-Source) reicht `a2dp_source`. Die ungewöhnliche `CHLD`-Abfrage trotz fehlendem Three-Way-Bit ist HU-Verhalten; ob ein echtes Phone das mit `+CHLD: (0,1,2,3)` beantwortet, ist hier nicht gemessen.
+Für PiDrive (A2DP-Source) reicht `a2dp_source`. Die ungewöhnliche `CHLD`-Abfrage trotz fehlendem Three-Way-Bit ist HU-Verhalten; **[gemessen gegen OnePlus 12, C-BT44]** beantwortet ein echtes Smartphone `AT+CHLD=?`, worauf die HU **mSBC** setzt, per **`AT+NREC=0`** das Telefon-Echo-Cancelling abschaltet (HU-DSP übernimmt), `AT+CLIP=1`, `AT+CGMI` (Hersteller), `AT+CGMM` (Modell), `AT+COPS` (Netz), `AT+CLCC`, `AT+CNUM` abfragt und danach alle **3,0 s** pollt.
 
 ---
 

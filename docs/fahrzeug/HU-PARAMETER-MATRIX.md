@@ -1,6 +1,6 @@
 # HU-Parametermatrix — BMW NBT Evo für den PiDrive-Betrieb
 
-**Stand:** 2026-11-15 (§2.7 + BCL/CDS C-BT23–30); davor 2026-11-13 BT-A6; 2026-11-11 hu-probe-Nachrechnung · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
+**Stand:** 2026-11-16 (Tiefenforensik §2.7: SAS 16-B-Challenge + 559-B-RSA-4096-Login + `rhmi_getCapabilities` 5306 B + WD-RTT + Sniff-Subrating + TI-Chip + AVRCP-DB `0x004d` + OnePlus-SBC + HFP `AT+NREC=0`, Facts C-BT31–44); davor 2026-11-15 BCL/CDS C-BT23–30; 2026-11-13 BT-A6; 2026-11-11 hu-probe-Nachrechnung · **Basis:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md), Media-Leiter **0.3.17**, Heimfahrt **0.3.17**, Identity **0.3.19**, Größenleiter-Versuch **0.3.21**, Analyzer-Feld **0.0.52**, Abend-Offline 18.10., PiDrive s1–s6/F0.  
 **Maßnahmen:** [`../planung/MASSNAHMEN-MSC-FULLMENU.md`](../planung/MASSNAHMEN-MSC-FULLMENU.md) · [`MASSNAHMEN-HU-PROBE-2026-10-22.md`](../archiv/planung/MASSNAHMEN-HU-PROBE-2026-10-22.md) · Profil [`../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json`](../../tools/profiles/nbt_evo_media_ladder_2026-10-22.json)
 **Status:** [B] bewiesen · [S] stark belegt · [A] **abgeleitet** · [D] Desk · [H] Hypothese · [?] offen.
 
@@ -122,7 +122,7 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | P bricht bei Serial + Root-Label + Name | nein | [S] | R34 (`HU-Technical-Facts`, S3/S4/F1 — nicht Feld 16.10.) | L | — | — |
 | Soft-Remount (NOT READY) als HU-Reset | wirkungslos | **[B]** | R37, E17; A16 Blindfenster | L | — | Menü-Reread = D+-Cycle (FW ≥0.4.55); Soft-Hide nur Lab |
 | Remount = Cold Start | nein | **[S]** | R46 (nur `#23`) | L | — | 395xxx-Probe war Artefakt (Q18 geschlossen) |
-| Eager Body = Play Intent | nein | **[S]** | R50 | L | P0 | Audible-GATE |
+| Eager Body = Play Intent | nein | **[S]** | R50, C-D33 | L | P0 | Audible-GATE — jetzt elektronisch über paralleles BT-CDS (`54: entertainment.multimedia`, `639: entertainment.md.statusPlayback`) messbar! |
 | Prefetch-Lead Konstante 8/15 s | REJECTED | **[B]** | R49, A5 | L | — | Lead VARIABLE |
 | Analyzer-MSC ohne FAT → Media-UI | nein (silent mount) | **[B]** | E18/F15 | U | — | Content-Image nötig |
 | P/Cache-Bruch durch BPB-Volume-ID | unbekannt | [?] | Q3/Q14, F0 B3 | L | P1 | Serial/Label/Vol REJECTED (R34); Rest niedrige Prio |
@@ -161,34 +161,35 @@ Spalte **Benötigt für**: L = Live-Ton, C = Cover/ID3, S = Stabilität, U = Bed
 | hu-probe-Profil im Auto | `bmw`; `lab_debian` startet soft-detached | **[B]** | I12 | S | — | — |
 | Preset `cache_place` am 10.11. ohne Dateien | Ursache offen | [?] | F17 | U | P1 | Preset-Diff 0.3.17 ↔ 0.3.36 |
 
-### 2.7 Bluetooth (Variante A: A2DP/AVRCP/HFP, SDP)
+### 2.7 Bluetooth (Variante A: A2DP/AVRCP/HFP, SDP + Control Plane BCL/Etch/SAS)
 
-Ein Feld-Capture 13.11. (A6, BlueZ/PipeWire auf `.108` als Phone, HU ohne Phone-App) — Facts §10.5. Prio bezogen auf Variante A bzw. Control Plane.
+Feld-Captures 13.–15.11. (`.87`/BlueZ + OnePlus 12) und Tiefenforensik 16.11. — Facts §10.5 (`C-BT1`–`C-BT44`). Prio bezogen auf Variante A bzw. Control Plane.
 
 | Parameter | Wert | Status | Quelle | Benötigt für | Prio | Wie ermitteln |
 |-----------|------|--------|--------|--------------|------|---------------|
-| HU-Adresse / Class | `D4:36:39:CF:E1:B5`, `0x340408`, Name „BMW 38304“, Modul ALPS | **[B]** | C-BT1 | S | — | — |
+| HU-Adresse / Class / Radio-Chip | `D4:36:39:CF:E1:B5`, CoD `0x340408`, Name „BMW 38304“, EIR-PnP **Alps `0x044E:0x3020` v`0xB39B`**, Chip **TI BT 4.0** (`0x06:0x000D:0x1B76`), LMP `fffe2dfedbff7b87` / ext `01…00` (**LE Host OFF**) | **[B]** | C-BT1, C-BT19, C-BT45 | S | — | — |
+| ACL-Rolle, LSTO & Encryption | HU erzwingt **Master** (lehnt Role Switch mit `0x21` ab), **`LSTO = 8000` Slots = `5,000 s`**, Page Scan `R1`, Key **128 Bit (16 B)**, AFH 30/79 aktiv | **[B]** | C-BT16, C-BT40, C-BT45 | S | — | Fremdgeräte beim Messen trennen |
+| Power-Mode / Sniff Subrating | SSR `max_latency = 0,75 s` konfiguriert, bei offenem `BTA_ID_JV`-RFCOMM bleibt Link aber im **Active Mode** (`BTM_block_sniff_mode_for`) | **[B]** | C-BT41, C-BT45 | S | — | — |
 | Pairing | Numeric Comparison (SSP), Agent bestätigt | **[B]** | C-BT3 | S | — | — |
-| Profile der HU | A2DP-Sink 1.3 · AVRCP-CT 1.5 (kein TG) · HFP-HF 1.6 · MAP-MNS 1.2 · OPP · PnP | **[B]** | C-BT1 | L, U | — | — |
-| RFCOMM-Kanäle der HU | 1 MAP-MNS · 2 HFP · 5 `deca-fade` · 6–10 SPP `0x1101` · 11 OPP | **[B]** | C-BT1 | S (Control) | — | — |
-| RFCOMM-Initiative der HU (Leerlauf) | nur HFP; keine Daten-Kanäle | [S] | C-BT8 | S (Control) | **P0** | B2-B Hold 300 s mit MyBMW OFF/ON |
-| Ziel-Kanal Android-SPP-Client | ch 6 (erster `0x1101`); Failover ch 10 möglich | **[B]** | C-BT2/15/24 | S (Control) | — | SDP-Rolle ch10 noch [?] |
-| BCL HS (funktionierende Session) | v5 / iid=14 / buf=0x4000 | **[B]** | C-BT23 | S (Control) | — | — |
-| Etch/CDS HU→Phone | DATA→4004 + Property-Fragmente | **[B]** partial | C-BT25/26 | S (Control) | **P0** | btsnoop volle Bodies |
-| SAS Phone↔HU | Challenge/Login | [?] | C-BT28 | S (Control) | **P0** | btsnoop Session B |
-| Phone silent TX 4‑B @~3 s | INIT `12345678` (nicht WD) | **[B]** Lab | C-L14 | S (Control) | — | — |
-| SBC-Fähigkeiten | alle Modi, 44,1 + 48 kHz, Blöcke 4–16, Subbänder 4/8, Bitpool 2..53 | **[B]** | C-BT4 | L | — | — |
-| AAC | MPEG-2/4 LC, 44,1 + 48 kHz, mono/stereo, VBR | **[B]** angeboten / [?] hörbar | C-BT4 | L | P1 | AAC-Source auf PiDrive, Ohr + Coex |
-| Content Protection / Delay Report | SCMS-T + Delay Reporting an jeder SEP | **[B]** | C-BT4 | L | P2 | Wirkung von Delay Report auf Lippen-/UI-Sync |
-| Gewählte Konfiguration BlueZ-Default | SBC 48 kHz Joint Stereo 16/8, Bitpool 53 | **[B]** | C-BT5 | L | P1 | Sample-Rate fest 44,1 kHz konfigurieren und vergleichen |
-| Bitrate SBC-53 | ≈ 357 kbit/s @48 kHz / ≈ 328 kbit/s @44,1 kHz | Rechnung | C-BT5 | L | **P1** | gegen Coex-Budget ESP (~41–45 kB/s HCI) prüfen |
-| AVRCP-Events, die die HU anfragt | `01 02 03 04 05(1 s) 06 07 09 0a 0b 0c`; abgelehnte 6× neu, dann Aufgabe | **[B]** | C-BT6 | U | P1 | TG mit allen Events anbieten |
+| Profile der HU | A2DP-Sink 1.3 · AVRCP-CT 1.5 (Features **`0x004d`**, kein TG) · HFP-HF 1.6 · MAP-MNS 1.2 · OPP · PnP | **[B]** | C-BT1, C-BT43 | L, U | — | — |
+| RFCOMM-Kanäle der HU | 1 MAP-MNS · 2 HFP · 5 `deca-fade` (**Apple iAP2**) · 6–10 SPP `0x1101` · 11 OPP | **[B]** | C-BT1, C-BT9 | S (Control) | — | ch 5 verworfen für Android/BCL |
+| RFCOMM-MTU (SPP SCN6) | HU→Phone **667 B**, Phone→HU **666 B** (Credit-Based, DLCI 12/13) | **[B]** | C-BT15, C-BT27, C-BT36 | S (Control) | — | — |
+| RFCOMM-Initiative der HU (Leerlauf) | nur HFP; keine SPP-Datenkanäle (180 s B2-B) | **[B]** | C-BT8, C-BT11 | S (Control) | — | — |
+| Ziel-Kanal Android-SPP-Client | **ch 6** (erster `0x1101`); Failover **ch 10** nach SCN6-DM bewiesen | **[B]** | C-BT2/15/24 | S (Control) | — | SDP-Rolle ch 10 optional per B1 |
+| BCL Handshake & Latenz | `INIT` `12345678` → **HS v5 / iid=14 / buf=`0x4000` (16 KiB)**; HU-RTT **20 ms** (S-B) bzw. **304–507 ms** (`.87`); MyBMW ~3,012 s = **3,000-s-App-Poll-Timer** | **[B]** | C-BT23, C-BT28, C-BT31 | S (Control) | — | — |
+| BCL Keepalive / Watchdog | `SP2` oder `SP4` + `OPEN 5001` + `13371337` @ ~2,5 s → Echo RTT p50 **159,5 ms**, p95 **350,9 ms**; `KNOCK` (56 B) **ohne** `DATAACK(56)` | **[B]** | C-BT29, C-BT31 | S (Control) | P2 | exakter HU-WD-Timeout noch [?] |
+| BCL Multiplex & Paketgröße | `Pair(src, dest)` **richtungsinvariant** (`src=10..19, dst=4004`); Phone fragmentiert @ **4000 B**, HU sendet **> 4000 B** (`plen=5306`) | **[B]** | C-D31, C-BT36, C-BT38 | S (Control) | — | — |
+| Content-Gate & SAS (G4) | `OPEN 4004` allein → `ACK 8` + Stille; Gate = **Etch-RPC `sas_certificate` → 16-B-Challenge (`_result_sas_certificate`) → 559-B-RSA-4096-`sas_login` (`MD5withRSA`) → `_result_sas_login` (~99 ms)** | **[B]** | C-BT32, C-BT34, C-BT35 | S (Control) | — | Lab-Test mit repariertem Stub (C-L16) |
+| Etch-Dienste auf F20 (`dest=4004`) | 9 Kanäle `src=10..19`: `rhmi_getCapabilities` (**5306 B**, inkl. `iva_ENT_USB_COVER_ART_IPOD`), `am_registerApp`, `rhmi_initialize`/`setData`/`setProperty`, `cds_onPropertyChangedEvent` (37×, volles Schema inkl. Sentinel `255.00`) | **[B]** | C-BT36, C-BT38, C-BT39 | U, C | P1 | B3-Relay für volle 5,3-KB-Map |
+| SBC-Fähigkeiten & Smartphone-Wahl | HU bietet SBC (2..53), MP3, AAC; **OnePlus 12 wählt SBC (`seid=1`, Bitpool 2..35)** trotz AAC-Offload; BlueZ-Default wählt SBC **48 kHz** Bitpool 53 | **[B]** | C-BT4, C-BT5, C-BT42 | L | **P1** | PiDrive: 44,1 kHz oder Bitpool ≤ 35 spart Coex-Budget |
+| AAC | MPEG-2/4 LC, 44,1 + 48 kHz, mono/stereo, VBR (`seid=3`) | **[B]** angeboten / [?] hörbar | C-BT4, C-BT42 | L | P2 | optional testen; Smartphone nutzt SBC |
+| Content Protection / Delay Report | Delay Reporting (`0x0102`) aktiv genutzt; **SCMS-T nicht erzwungen** (`not required`) | **[B]** | C-BT4, C-BT42 | L | — | — |
+| Bitrate SBC | ≈ 357 kbit/s @48 kHz BP53 · ≈ 328 kbit/s @44,1 kHz BP53 · ≈ 229 kbit/s @44,1 kHz BP35 | Rechnung | C-BT5, C-BT42 | L | **P1** | BP35 passt bequem unter ESP-Coex (~41–45 kB/s) |
+| AVRCP-Events, die die HU anfragt | `01 02 03 04 05(1 s) 06 07 09 0a 0b 0c`; abgelehnte 6× neu (~100 ms), dann Aufgabe | **[B]** | C-BT6 | U | P1 | TG mit allen Events anbieten |
 | Metadaten-Abfrage | GetElementAttributes je Attribut einzeln, IDs 1–7 | **[B]** | C-BT6 | U | — | — |
-| Browsing | genutzt (GetFolderItems Media-Player-Liste, ERTM) | **[B]** | C-BT6 | U | P1 | Antwort mit gültigem Player + Now-Playing |
-| Pass-through | PLAY, FORWARD, BACKWARD (Lenkrad/iDrive) | **[B]** | C-BT6 | U | — | weitere Tasten (PAUSE/STOP) bei Bedarf |
-| Absolute Volume | nicht beobachtet | [?] | C-BT6 | U | P2 | mit TG-Feature „Volume“ und Lautstärke am iDrive |
-| HFP mit AG ohne Telefonie | SLC bricht an `AT+CHLD=?` ab, Reconnect alle 20–35 s | **[B]** | C-BT7 | S | **P1** | HFP-AG aus (`lab_hfp_stack.py hfp-off`) oder `+CHLD` beantworten |
-| Wer nutzt ch 5 (`deca-fade`) | unbekannt | [?] | C-BT9 | S (Control) | P1 | Phone-HCI-Snoop mit MyBMW; B2-A ch 5 |
+| Browsing / Cover Art / Abs. Volume | SDP `0x004d`: **Browsing = `true`** (ERTM `GetFolderItems`), **Cover Art = `false`**, **Absolute Volume = `false` (`abs_support: 0`)**; TG 1.6 + BIP am Phone stört nicht | **[B]** | C-BT6, C-BT43 | U, C | P1 | gültige Player-Liste liefern; Cover über BT-AVRCP unmöglich |
+| Pass-through | PLAY (1×), FORWARD (6×), BACKWARD (7×) | **[B]** | C-BT6, C-BT14 | U | — | — |
+| HFP (AG ohne vs. mit Telefonie) | ohne Telefonie: Abbruch an `AT+CHLD=?`, Reconnect 20–35 s (mit `hfp-off` 0× `AT+`); echtes Phone: **mSBC**, **`AT+NREC=0`** (HU-DSP), `CGMI`/`CGMM`/`COPS`/`CNUM` + **3,0-s-Poll** | **[B]** | C-BT7, C-BT12, C-BT44 | S | — | HFP-AG auf PiDrive ausgeschaltet lassen |
 
 ---
 

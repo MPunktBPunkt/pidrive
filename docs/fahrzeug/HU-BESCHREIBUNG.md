@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-15 (AAIdrive Golden Session: BCL HS→DATA→4004→CDS-Fragmente **[B]** C-BT23–30; SAS/Phone→HU **[?]**; Silent-HU 4‑B=INIT C-L14). Davor C-BT15–22 / C-L7–C-L13; 2026-11-13 A6/B1/B2  
+**Stand:** 2026-11-16 (Tiefenforensik [`DEEP_FORENSIC_ETCH_SAS_20261116`](../../../bt-analyzer/docs/analysis/DEEP_FORENSIC_ETCH_SAS_20261116.md): Etch-sdbm-Hashes + `PORT_WriteDataCO`-Arithmetik lösen das 3-s-Fenster und alle F20-Etch-Header auf → **SAS Challenge 16 B + RSA-4096 Login 559 B + `_result_sas_login` + `rhmi_getCapabilities` 5306 B + AM + RHMI + CDS alle [B]**, C-BT31–44). Davor 2026-11-15 AAIdrive Golden Session C-BT23–30; 2026-11-14 C-BT15–22; 2026-11-13 A6/B1/B2  
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
 **Normative Tabellen:** [`HU-Technical-Facts.md`](HU-Technical-Facts.md) · **Ops-Matrix:** [`HU-PARAMETER-MATRIX.md`](HU-PARAMETER-MATRIX.md) · **Connected-Detail:** [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md)
@@ -54,9 +54,11 @@ Dieses Dokument ist die **narrative Gesamtbeschreibung** der Head Unit für PiDr
 
 **Storage Plane:** Die BMW NBT-Evo-HU ist ein aggressiver, dateiorientierter USB-MSC-Host mit mehrstufigem Zustand/Cache, großen READ10-Transfers und nachweislich hoher Toleranz gegenüber USB-Backpressure. Sie konsumiert nicht einfach kontinuierlich Audio, sondern fordert Daten in kontextabhängigen Leseoperationen an und kann daraus lokal weiter abspielen. Konkret (Heimfahrt nachgerechnet, R53–R58): Ein Titel, der zu spielen beginnt, wird **vollständig** mit ~1 MB/s gelesen (bis 7,2 MB belegt, keine Obergrenze sichtbar); der Folgetitel wird ~7–8 s vor Ende angelesen; nach einem Mount wird der Resume-Titel ab Kopf und ab Position gelesen; teils werden mehrere Folgetitel am Stück vorgelesen, und der Cache hält das minutenlang.
 
-**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette (AOA/BT → BCL → Etch → SAS; danach RHMI/CDS/AV/AM). Seit 15.11. ist am F20 der Pfad **BCL HS → Etch → CDS (HU→Phone)** feldbelegt (C-BT23–26); **SAS und Phone→HU** bleiben offen (btsnoop). BT-SDP/A2DP/AVRCP/HFP: §5.5 / C-BT1–22.
+**Control Plane:** Parallel existiert eine Connected-App-/Accessory-Kette (AOA/BT → BCL → Etch-Tunnel auf `dest=4004` → **SAS als Etch-RPC** → AM/RHMI/CDS/AV). Seit 16.11. ist diese Kette am F20 über Bluetooth **durchgängig von G2 bis nach G4 bewiesen** (C-BT23–40): BCL-Transport (`SCN 6`, Failover `SCN 10`, HS v5/iid14/`0x4000`, `SP2|SP4`, `KNOCK`, `OPEN 5001` + WD) läuft auch ohne MyBMW; `OPEN 4004` allein liefert nur `DATAACK(8)` und bleibt stumm (C-BT32), weil das Content-Gate ein **kryptographischer Etch-RPC-Handshake** ist (`sas_certificate` → 16-B-Challenge → 512-B-RSA-4096-`sas_login` → `_result_sas_login`, C-BT34/35). Danach fließen auf neun parallelen Subkanälen (`src=10..19`) `rhmi_getCapabilities` (5306 B = `7×667+645` RFCOMM-UIHs), `am_registerApp`, `rhmi_initialize`/`setData`/`setProperty` und `cds_onPropertyChangedEvent` (37×).
 
-Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = strategische Option mit Gates G1–G4. **I-303A** bleibt unberührt — Storage-Plane-Korrekturen ändern nichts an dem, was G1 auf der USB-Leitung sichtbar macht.
+**Gemeinsames Architekturmuster von USB und BT:** Auf beiden Pfaden trennt die NBT Evo strikt zwischen **Transport-Akzeptanz** und **semantischer Aktivierung** — auf USB heißt `READ10` nicht „hörbares Play“ (R50), auf Bluetooth heißt `OPEN 4004 → ACK 8` nicht „Content aktiv“ (C-BT32).
+
+Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = vermessene Referenzarchitektur, deren App-Schicht durch BMW-RSA-Zertifikate geschützt ist. **I-303A** bleibt unberührt — Storage-Plane-Korrekturen ändern nichts an dem, was G1 auf der USB-Leitung sichtbar macht.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -72,18 +74,18 @@ Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = 
 │  │ Read-Ahead           │   │  G2 BCL (+ Transport)   │  │
 │  │ Navigator / Position │   │       │                 │  │
 │  │ Browse-/Lib-Cache    │   │       ▼                 │  │
-│  │ Audio-Body-Cache     │   │  G3 Etch-Tunnel         │  │
+│  │ Audio-Body-Cache     │   │  G3 Etch-Tunnel (4004)  │  │
 │  │        │             │   │       │                 │  │
-│  │        ▼             │   │       ▼                 │  │
-│  │     Decoder          │   │  G4 SAS                 │  │
+│  │        ▼             │   │       ▼ (Etch-RPC)      │  │
+│  │     Decoder          │   │  G4 SAS (RSA-4096)      │  │
 │  │        │             │   │       │                 │  │
 │  │        ▼             │   │       ▼ danach          │  │
-│  │      AUDIO           │   │  RHMI / CDS / AV / AM   │  │
+│  │      AUDIO           │   │  AM / RHMI / CDS / AV   │  │
 │  └──────────────────────┘   └─────────────────────────┘  │
 │                                                          │
-│        SEHR GUT BELEGT              TEILWEISE BELEGT     │
-│        (Feld-[B]/[S])              (Desk-[D] + Lab;     │
-│                                      F20-Wire offen)     │
+│        SEHR GUT BELEGT              ÜBER BT BELEGT       │
+│        (Feld-[B]/[S])              (Feld-[B] C-BT23–40;  │
+│                                      USB-AOA G2 offen)   │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -287,10 +289,10 @@ G4  SAS Authentication
 | Gate | Inhalt | Messstand F20 |
 |------|--------|---------------|
 | G1 | USB Identity / Class | teilweise **[B]** (MSC; AOA-Identity-Versuche); **I-303A** |
-| G2 | AOA/BT Transport + BCL | BT BCL HS+DATA→4004 **[B]** (C-BT23); AOA partiell |
-| G3 | Phone localhost TCP → BCL → Etch | Etch/CDS HU→Phone Fragmente **[B]**; Phone→HU/SAS **[?]** |
-| G4 | SAS Authentication | Desk-[D]; Feld offen |
-| *(danach)* | RHMI / CDS / AV / AM | Desk-[D]; Feld offen — **keine Gate-ID G5** |
+| G2 | AOA/BT Transport + BCL | BT **[B]** (`SCN 6` / Failover `10`, HS v5/iid14/`0x4000`, `SP2\|SP4`, WD p50 159 ms; C-BT23/31); USB-AOA partiell |
+| G3 | Phone localhost `:4007` → BCL → Etch `dest=4004` | BT **[B]**: `OPEN 4004` → `ACK 8` (allein stumm, C-BT32); richtungsinvariantes `(src=10..19, dst=4004)`, HU-Frames bis `plen=5306` (C-BT36/38) |
+| G4 | SAS Authentication (**als Etch-RPC über G3**) | BT **[B]**: `_result_sas_certificate` (16-B-Challenge) + 559-B-RSA-4096-`sas_login` (`MD5withRSA`) + `_result_sas_login` (C-BT34/35) |
+| *(danach)* | AM / RHMI / CDS / AV | BT **[B]** für AM (`am_registerApp`), RHMI (`getCapabilities` 5306 B, `initialize`, `setData`, `setProperty`) und CDS (`onPropertyChangedEvent` 37×, `getPropertyAsync`) — **keine Gate-ID G5** |
 
 Detail und Primärquellen: [`CONNECTED-AAIDRIVE-STACK.md`](CONNECTED-AAIDRIVE-STACK.md) · hu-probe [`GATES-Connected.md`](../../../hu-probe/docs/GATES-Connected.md).
 
@@ -300,32 +302,32 @@ Android Open Accessory (z. B. Already-Accessory `18D1:2D00`) ist nur ein **USB-Z
 
 ### 5.3 Feldstand an dieser HU
 
-- Direct-ESP `18D1:2D00`: Zubehör-UI / Reconnect-Loop; kein verwertbarer Bulk-RX; 51/52/53 auf Callback-Schicht absent (Facts §10; Inference, kein abschließender „AOA unsupported“-Beweis).
+- Direct-ESP `18D1:2D00`: Zubehör-UI / Reconnect-Loop; kein verwertbarer Bulk-RX; 51/52/53 auf Callback-Schicht absent (Facts §10). **Erklärung aus `Bimmer/` (16.11., C-D32):** (a) Die HU startet `51→52→58→53` gegen ein **MTP-Gerät (`bInterfaceClass=0x06`, `_ENT_MTP_OFF=false`)**, während `aoa_phone_like` (`04E8:6860`) Vendor-only `0xFF` präsentierte; (b) am Smartphone öffnet nicht AAIdrive (`UsbStatus.kt` prüft nur `contains("BMW")` für die UI), sondern allein MyBMWs `UsbAccessoryLaunchActivity` den Accessory-FD — und nur bei exaktem Match auf `manufacturer="BMW Group"`, `model="BMW"|"MINI"` (`logcat.crash` Z. 34789–35232 → `127.0.0.1:4004`). Ob die USB-Buchse unseres F20 AOA-BCL anbietet, klärt ein Kurztest mit echtem OnePlus per USB bei ausgeschaltetem BT.
 - Analyzer MSC `303a:1001`: mountet Storage; `aoa51/52/53=0` trotz AOA-respond (E18).
-- F20 BCL/Etch/CDS HU→Phone **[B]** (2026-11-15); SAS + volle Bodies + Phone→HU brauchen btsnoop.
-- BT-Analyzer 13.11. (`.87` als Phone, A6): Pairing, HU-SDP und A2DP/AVRCP/HFP gemessen (C-BT1–C-BT8). Die HU bietet sechs RFCOMM-Datendienste an: Kanal 5 mit eigener BMW-UUID `…deca-fade…` und Kanäle 6–10 als SPP. Im Leerlauf ohne Phone-App öffnete die HU **keinen** davon (C-BT8).
-- 14.11. OnePlus↔echte HU (Logcat): SPP SCN6 OPEN, HU silent ch6 (C-BT15–20). Vormittag: B2-A-TX ch5–10 → DM/refuse auch bei „BT-Analyzer verbunden“ (C-BT21/22); parallel Phone↔Dummy BCL + AAIdrive grün (C-L13). Nächster Schritt: Phone HCI-Snoop Hex; b2a-tx isoliert.
+- **15./16.11. Durchbruch BT-Control-Plane (C-BT23–40):**
+  - **Transport ohne MyBMW:** `.87` erreicht auf `SCN 6` stabil `INIT → HS v5/iid14/0x4000 (RTT 0,3–0,5 s) → SP2|SP4 → KNOCK → OPEN 5001 → WD` (RTT zweistufig ~150–165 ms / ~240–360 ms wegen Sniff-Subrating, C-BT31/41). `KNOCK` erhält kein `DATAACK(56)` (C-BT29). `OPEN 4004` allein erhält `DATAACK(8)` und danach Stille (C-BT32).
+  - **3-s-Fenster & SAS aufgelöst:** In der echten MyBMW-Session S-B antwortet die HU auf das zweite `INIT` in **20 ms**; die ~3,012 s bis `DATAACK(10)` sind der feste **3,000-s-INIT-Poll-Timer** der App (C-BT28/37). Danach laufen `SP4+KNOCK+OPEN5001+WD`, `3× OPEN 4004`, `sas_certificate` (~6,8 KB PKCS7), **16-B-Challenge** (`_result_sas_certificate`), **559-B-`sas_login`** (512-B-RSA-4096) und **`_result_sas_login`** in **531 ms** durch (C-BT34/35/37).
+  - **667-B-Frames entflochten:** Die 667-B-UIH-Bursts sind die RFCOMM-Segmentierung (MTU 667) von `_result_rhmi_getCapabilities` (`plen=5306` = `7×667 + 645`, inkl. Flag `iva_ENT_USB_COVER_ART_IPOD` und `_ENT_MTP_OFF=false`), nicht CDS (C-BT27/36). CDS folgt als `cds_onPropertyChangedEvent` auf `src=11–14` (C-BT26/39).
 
-### 5.4 SAS, RHMI, CDS, AV
+### 5.4 SAS, RHMI, CDS, AV (Desk + F20-Feld)
 
-Nach Desk (BimmerGestalt / AAIdrive):
-
-- **SAS:** Cert → Challenge → Signatur → Login — Hard Stop ohne gültiges Material; Beobachtung gewünscht, keine Challenge-Fälschung als Ziel.
-- **RHMI:** native iDrive-Widgets; Layouts an Cert-SHA256 gebunden — freie XML **REJECTED**.
-- **CDS:** Fahrzeugdaten (Desk); Property-Verfügbarkeit am F20 ungemessen.
-- **AV:** Entertainment-Kontext; ob Audio-Payload über Etch/BCL läuft oder nur Fokus + BT/A2DP: **UNKNOWN**. AAIdrive selbst verweist auf BT-Audio bei eingeschränktem AOA2-Audio.
+- **SAS (Etch-RPC über `dest=4004`, C-D31 / C-BT34/35):** App sendet `sas_certificate(p7b)` → HU liefert 16-B-Challenge in `_result_sas_certificate` → App signiert per `MD5withRSA` (512 B RSA-4096; `APP_AUTH` mit vorgeschaltetem `MD5(02 00 00 00)`-XOR) und ruft `sas_login` → HU prüft in ~99 ms und bestätigt mit `_result_sas_login`. Ohne privaten BMW-Schlüssel kein Durchkommen — Beobachtung über transparentes B3-Relay möglich, Emulation einer fremden App nicht.
+- **AM & RHMI (C-BT36/38):** `rhmi_getCapabilities("", 255)` liefert eine ~5,3-KB-Capability-Map der HU; UI-Apps registrieren sich auf eigenen Kanälen (`src=14, 17–19`: `am_registerApp`, `rhmi_initialize`, `rhmi_setData`, `rhmi_setProperty`). Layouts bleiben an den Cert-SHA256 gebunden.
+- **CDS (C-BT39):** Die F20-HU exponiert das **vollständige generische CDS-Schema** (auch Hybrid-Größen wie `93: sensors.SOCBatteryHybrid` mit Invalid-Sentinel `255.00` am 118d-Diesel) und pusht live u. a. `50: engine.RPMSpeed`, `47: engine.info`, `engine.*`, `driving.*`, `navigation.*`.
+- **AV:** Entertainment-Kontext; Ton läuft bei Smartphone-Kopplung weiter über **BT A2DP (SBC)** (C-BT42).
 
 Voraussetzung Fahrzeug: Apps/6NR bzw. ConnectedDrive-Apps — sonst ist Pfad C tot (C-Q1).
 
 ### 5.5 Bluetooth-Medienpfad (A2DP/AVRCP/HFP)
 
-Gemessen am 13.11. mit BlueZ/PipeWire auf `.108` als Gegenstelle (Facts §10.5, ein Termin, HU ohne Phone-App):
+Gemessen am 13.11. gegen BlueZ/PipeWire (`.87`/`.108`) und am 14./15.11. gegen ein echtes Android-Flagship (OnePlus 12, Facts §10.5):
 
-- **Profile der HU:** A2DP-Sink 1.3, AVRCP-**Controller 1.5** (kein Target), HFP-**Hands-Free** 1.6, MAP-Client (MNS), OPP, PnP, dazu die sechs RFCOMM-Datendienste aus §5.3. Module und Strings stammen von ALPS.
-- **Audio:** Die HU bietet SBC (Bitpool bis 53), AAC und MP3 an, jeweils mit SCMS-T und Delay Reporting. BlueZ hat SBC mit **48 kHz** gewählt. SBC-53 bei 48 kHz braucht ~357 kbit/s, bei 44,1 kHz ~328 kbit/s.
-- **Metadaten:** Die HU fragt Titelattribute 1–7 **einzeln** ab, meldet elf Notification-Events an (Track, Status, Position im 1-s-Takt, Batterie u. a.) und öffnet den **Browsing**-Kanal. Die frühere Annahme „F20 = AVRCP 1.4 ohne Browsing“ ist für diese HU widerlegt.
-- **Bedienung:** Lenkrad/iDrive kommen als AVRCP-Pass-through PLAY / FORWARD / BACKWARD an. Absolute Lautstärke wurde nicht genutzt.
-- **HFP:** Die HU baut nach dem Pairing selbst HFP auf, scheitert an `AT+CHLD=?` gegen unseren AG ohne Telefonie, trennt und versucht es alle 20–35 s neu (C-BT7). Für reine Medien-Messungen stört das; Fix im Lab: HFP-AG in WirePlumber abschalten.
+- **Hardware & Link:** Funk-Chip im ALPS-Modul ist **Texas Instruments** (`0x06:0x000D:0x1B76`, BT 4.0, C-BT19). Die HU ist ACL-Master (paget gebondete Telefone in ~14 s nach BT-ON, C-BT40) und nutzt nach A2DP-Suspend **Sniff Subrating** (`max_latency = 0,75 s`, C-BT41).
+- **Profile der HU:** A2DP-Sink 1.3, AVRCP-**Controller 1.5** (SDP-Features **`0x004d`**: Browsing = `true`, Cover Art = `false`, Absolute Volume = `false`, C-BT43), HFP-**Hands-Free** 1.6, MAP-Client (MNS), OPP, PnP, dazu ch 5 (`deca-fade` = Apple iAP2, C-BT9) und ch 6–10 (`0x1101` SPP).
+- **Audio:** Die HU bietet `seid=1` SBC (Bitpool 2..53), `seid=2` MP3 und `seid=3` AAC an; SCMS-T wird beim Verbinden **nicht erzwungen** (`not required`, Delay Reporting aktiv, C-BT42). BlueZ wählte SBC **48 kHz** Bitpool 53 (~357 kbit/s); selbst das OnePlus 12 mit aktivem AAC-Offload wählt gegenüber dieser HU **SBC** (`mandatory codec preferred`, Bitpool 2..35, C-BT42).
+- **Metadaten & Browsing:** Die HU fragt Titelattribute 1–7 **einzeln** ab, registriert elf Notification-Events (abgelehnte 6× im 100-ms-Takt, dann Aufgabe) und nutzt **Browsing** (`GetFolderItems` Player-Liste). Ein angebotener AVRCP-1.6-BIP-Server am Telefon (`psm=0x1001`) stört die HU nicht (C-BT43).
+- **Bedienung:** Lenkrad/iDrive senden Pass-through PLAY / FORWARD / BACKWARD; Absolute Volume unterstützt die HU laut SDP-Maske `0x004d` nicht (`abs_support: 0`, C-BT43).
+- **HFP:** Gegen einen AG ohne Telefonie bricht die HU an `AT+CHLD=?` ab und reconnectet alle 20–35 s (C-BT7; Fix: HFP-AG abschalten, C-BT12). Gegen ein echtes Telefon aktiviert sie **mSBC**, schaltet per **`AT+NREC=0`** das Telefon-Echo-Cancelling zugunsten des Fahrzeug-DSP ab, liest Hersteller/Modell/Netz/Nummer (`CGMI`, `CGMM`, `COPS`, `CNUM`) und pollt im 3,0-s-Takt (C-BT44).
 
 ---
 
@@ -396,16 +398,15 @@ Hybrid denkbar (Ton über A/B, UI über C) — zwei Geräte/Stacks, hoher Aufwan
 
 | Priorität | ID | Frage |
 |-----------|-----|--------|
-| P0 | GATE-01 | Audible / Play-Intent vs. Eager-Read |
+| P0 | GATE-01 | Audible / Play-Intent vs. Eager-Read — **neuer Messweg (C-D33):** parallel über BT-Connected `CDS 54: entertainment.multimedia` + `639: entertainment.md.statusPlayback` abonnieren! |
 | P0 | Q1 (Rest) | BUSY-Pacing über eine **ganze** Datei ≥ 4 MiB mit Ohr; Dauer vs. Inaktivität; CBW-240 |
 | P0 | Q16 (Rest) | Einzeldatei ≥ 8 MiB (8/16 MiB mit hörbaren Markern); 2–7,2 MB beantwortet (R53) |
 | P1 | Q19 | Wann Kette statt Kopf-Vorlauf; Autoplay über Ordnergrenzen |
 | P1 | Q4a–c | Cache-Größe / Multi-File / Eviction (Hinweise R56/R57) |
 | P1 | F17 | `cache_place` am 10.11. ohne Dateien |
-| P1 | C-Q1/C-Q2 | 6NR/Apps; FIELD-CONNECTED-REAL-01 / FX-G3-01 |
-| P0 | B2-A/B2-B | BT-RFCOMM zur HU: Kanal 6 (SPP) und 5 (`deca-fade`) öffnen bzw. HU-Initiative abwarten; vorher HFP-AG aus (Facts §10.4) |
-| P1 | C-BT9 | Wer nutzt HU-Kanal 5 (`deca-fade`)? Phone-HCI-Snoop mit MyBMW |
-| P1 | BT-Codec | AAC vs. SBC-44,1 hörbar und im Coex-Budget |
+| P1 | C-Q1/C-Q2 | USB-AOA G2 am F20; B3 transparentes BT-RFCOMM-Relay (`.131`↔`.87`) für vollständige 5,3-KB-`rhmi_getCapabilities`-Map |
+| P1 | BT-Codec | SBC-44,1 kHz / Bitpool ≤ 35 (wie OnePlus) vs. AAC hörbar und im ESP-Coex-Budget |
+| — | B2-A/B2-B, C-BT9, SAS-Gate | **beantwortet** (SCN6 BCL [B], `deca-fade` = iAP2, SAS = Etch-RPC RSA-4096 [B]; §5.3–5.5) |
 | — | Q18 | **geschlossen** (Artefakt, §6) |
 
 Vollkatalog: Facts §8 und Connected-Stack §7.
@@ -441,7 +442,10 @@ Vollkatalog: Facts §8 und Connected-Stack §7.
 | Fld10 | hu-probe [`C1-STAND`](../../../hu-probe/docs/feld/C1-STAND.md) | Feld-Identitäten (nicht unterstützt / Zubehör) |
 | Fld11 | bt-analyzer [`FIELD_B1_FROM_A6_20261113T062824Z`](../../../bt-analyzer/docs/evidence/FIELD_B1_FROM_A6_20261113T062824Z.md) | HU-SDP, A2DP, AVRCP, HFP (C-BT1–C-BT8) |
 | Fld12 | bt-analyzer [`FIELD_PHONE_HU_LOGCAT_20261114T0924Z`](../../../bt-analyzer/docs/evidence/FIELD_PHONE_HU_LOGCAT_20261114T0924Z.md) | Phone↔HU SPP SCN6 OPEN; HU silent ch6 (C-BT15–20) |
-| Fld12 | bt-analyzer [`HFP_SLC_A6_20261113`](../../../bt-analyzer/docs/analysis/HFP_SLC_A6_20261113.md) | HFP-SLC-Abbruch an `AT+CHLD=?` |
+| Fld13 | bt-analyzer [`HFP_SLC_A6_20261113`](../../../bt-analyzer/docs/analysis/HFP_SLC_A6_20261113.md) | HFP-SLC-Abbruch an `AT+CHLD=?` |
+| Fld14 | bt-analyzer [`FIELD_VS_LAB_INSIGHTS_20261115`](../../../bt-analyzer/docs/evidence/FIELD_VS_LAB_INSIGHTS_20261115.md) | Analyzer→F20 BCL-Holds/Burst, WD-RTT, M48 (`KNOCK` ohne ACK56), `OPEN 4004` stumm |
+| Fld15 | bt-analyzer [`ONEPLUS_BT_FORENSIC_20261115`](../../../bt-analyzer/docs/analysis/ONEPLUS_BT_FORENSIC_20261115.md) | 8× OnePlus-BT-Logs vom 15.11. (SCN6, SCN10-Failover, Timings) |
+| Fld16 | bt-analyzer [`DEEP_FORENSIC_ETCH_SAS_20261116`](../../../bt-analyzer/docs/analysis/DEEP_FORENSIC_ETCH_SAS_20261116.md) | Etch-sdbm-Auflösung (SAS, RHMI, AM, CDS), 3-s-Timer-Beweis, Klassik-BT-Parameter |
 
 ### 9.3 Audits / Evidence
 

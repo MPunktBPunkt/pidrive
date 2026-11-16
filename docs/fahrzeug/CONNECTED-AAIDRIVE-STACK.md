@@ -1,6 +1,6 @@
 # Connected Apps / AAIdrive — Stack-Abgleich (Pfad C)
 
-**Stand:** 2026-11-06 (Abend²: technology-audit PR #34 — CarAPI-Proxy, Cleartext, AIDL/MainService)  
+**Stand:** 2026-11-16 (F20-Feldbeweis der kompletten BT-Connected-Kette inkl. SAS-Challenge 16 B + 559-B-RSA-4096-`sas_login` + `_result_sas_login` + `rhmi_getCapabilities` 5306 B + AM/RHMI/CDS — [`HU-Technical-Facts.md`](HU-Technical-Facts.md) `C-BT23`–`C-BT40`, [`DEEP_FORENSIC_ETCH_SAS_20261116.md`](../../../bt-analyzer/docs/analysis/DEEP_FORENSIC_ETCH_SAS_20261116.md)); davor 2026-11-06 (technology-audit PR #34)  
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
 **Verwandt:** [`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md) · [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE`](../archiv/fahrzeug/BMW-AVRCP-PROBE.md) (Archiv) · Instrument: [`hu-probe GATES-Connected`](../../../hu-probe/docs/GATES-Connected.md)
@@ -221,17 +221,17 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 
 | ID | Frage | Hinweis |
 |----|-------|---------|
-| C1 | Hat der F20 Apps (6NR / Checkbox)? | Ohne das kein Feldtest Pfad C |
-| C2 | MyBMW vs. Connected Classic vs. BclCarLink am Fahrzeug | Tunnel-Stabilität |
-| C2b | Wie signiert **aktuelles** MyBMW Challenges ohne exportierten SECURITY_SERVICE? | Analysis: alternative method UNKNOWN |
-| C3 | Welches Cert/Layout nutzt AAIdrive MusicAppMode (ID5)? | Cover-Fähigkeit |
-| C4 | Audio-Fokus AV vs. paralleler Pi-A2DP | Konflikt / Ducking |
+| C1 | ~~Hat der F20 Apps (6NR / Checkbox)?~~ | **JA, FELD-BEWIESEN (15./16.11.):** Connected/AAIdrive läuft über BT SPP `SCN 6` (Failover `SCN 10`) bis AM/RHMI/CDS (Facts C-BT23–39) |
+| C2 | MyBMW vs. Connected Classic vs. BclCarLink am Fahrzeug | MyBMW `uid=10479` stabil (~10 s ACL→Etch); Analyzer `.87` hält BCL-WD ohne MyBMW stabil (C-BT31) |
+| C2b | ~~Wie signiert **aktuelles** MyBMW Challenges ohne exportierten SECURITY_SERVICE?~~ | **BEWIESEN (`SecurityModuleManager.kt:69–100` + `src10..12_b0.pem`):** `createPackageContext("de.bmw.connected.mobile20.row", CONTEXT_IGNORE_SECURITY \| CONTEXT_INCLUDE_CODE)` lädt MyBMWs JNI-`SecurityModule`, das mit **`CN=a4a_app_BMWTouchCommand_Connection_00.00.10` (`APP_AUTH`, RSA-4096 → XOR-Variante!)** für jedes per `CertMangling.mergeBMWCert` beigepackte `APP`-Zertifikat signiert (C-BT46) |
+| C3 | Welches Cert/Layout nutzt AAIdrive MusicAppMode (ID5)? | HU meldet in `rhmi_getCapabilities` (5306 B) u. a. `iva_ENT_USB_COVER_ART_IPOD` und `_ENT_MTP_OFF=false` (C-BT36) |
+| C4 | Audio-Fokus AV vs. paralleler Pi-A2DP / USB-AOA-Audio | Über USB (`:4004`) fordert AAIdrive ab Android ≥8 **keinen** `av_requestConnection`-Kontext an, weil AOAv2-USB-Audio entfernt wurde (`MusicAppMode.kt:15–16, 74–88`); Ton läuft weiter über BT-A2DP oder USB-MSC |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
-| C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Produktentscheid |
-| C7 | **P1 FIELD-CONNECTED-REAL-01** (nach P0 I-303A): Phone+MyBMW+AAIdrive ∥ Analyzer ∥ HU-Notiz ∥ ESP-Vergleich | Plan: [hu-probe field-connected-real-01](../../../hu-probe/docs/feld/FIELD-CONNECTED-REAL-01.md) |
-| C8 | **P0:** `btsnoop_hci` der AAIdrive-Golden-Session — `sas_certificate`/Challenge/`sas_login` + volle 667‑B Bodies | Oplus-Logs reichen nicht (nur HU→App, Hex-Cap 32 B) |
-| C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Logcat |
-| C10 | DATAACK↔DATA-Paarung + Type-ID `0386*`→CDS-Methoden | aus btsnoop; BclCarLink `DataAck(8+len)` als Arbeitshypothese |
+| C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Ohne privaten BMW-RSA-Key ist `sas_login` nicht emulierbar (C-BT35) → Pfad C bleibt Phone-basiert |
+| C7 | **P1 FIELD-CONNECTED-REAL-01** (Kurztest USB-AOA am F20) | OnePlus mit **BT OFF** per USB an F20 → geht `127.0.0.1:4004` auf? Lab-30.10.-Bulk-Timeout ist durch `C-D32` (`"BMW Group"`/`"BMW"` statt `"BMW"`/`"NBT Evo"`) bereits aufgelöst |
+| C8 | ~~`sas_certificate`/Challenge/`sas_login` + Type-IDs~~ → **aufgelöst (16.11.)**; Rest: volle 5298-B-Capabilities-Map | per transparentem **B3-RFCOMM-Relay (`.131`↔`.87`)**, da OnePlus kein `btsnoop_hci` exportiert |
+| C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Subkanal (`src=10..19`) |
+| C10 | ~~DATAACK↔DATA-Paarung + Type-ID `0386*`→CDS-Methoden~~ | **BEWIESEN (16.11.):** sdbm-Seed-5381 löst 100 % der Header auf (`0xae0d3d69`=`cds_onPropertyChangedEvent`, `0xa6b0ffca`=`_result_sas_login`, `0x9c6372b8`=`_result_sas_certificate`, `0x19481364`=`_result_rhmi_getCapabilities`); `DATAACK=8+len` außer `KNOCK` (C-BT29/33) |
 
 ---
 
