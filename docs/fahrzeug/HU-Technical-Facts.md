@@ -572,6 +572,19 @@ Korrigiert damit [`iDriveBt.md`](iDriveBt.md): „F20 = AVRCP 1.4“ → CT 1.5;
 
 ---
 
+### 10.6 Bluetooth-Feld F20 — RHMI-Browse, YouTube & Screen-Mirror (A-Capture 2026-11-17) [B]
+
+Quelle: OnePlus-`bluetooth_*.log` vom 17.11. (`esp32.bt-analyzer/docs/analysis/DEEP_FORENSIC_RHMI_SCREENMIRROR_20261117.md`). Eigene deterministische Forensik.
+
+- **C-BT47 [B]:** Ein einziger Connect-Zyklus (`19188`) trägt **Spotify → YouTube → Screen-Mirror** nacheinander; aktive Media-Session Spotify 07:30:14–07:31:20, YouTube 07:31:32–07:32:15, dann BT OFF 07:32:48.
+- **C-BT48 [B]:** YouTube ist belegt — `com.google.android.youtube` als Session **und** als AAIdrive-`am_registerApp` (BCL 1123 B @07:31:08.69). Weitere feldbestätigte Register: Alexa (2409), notification.readout (1874), com.android.bluetooth (3255).
+- **C-BT49 [B]:** Die HU wies **zwei `rhmi_setData` mit `BMWRemoting.ServiceException`** ab (Typ-Hash `0x5A6F115C`, src17, 07:31:08.316 & 07:31:10.352) — direkt aus dem 32-Byte-Dump dekodiert. Entspricht dem Cover-/ImageID→0-Pfad.
+- **C-BT50 [B/STRONG]:** Screen-Mirror = ~216-KiB-Bildburst (324×666) nach dem 2. `onActionEvent` **während** YouTube-Wiedergabe (07:32:08); passend zum `io.bimmergestalt.idriveconnectaddons.screenmirror`-Provider.
+- **C-BT51 [B]:** Konkreter Song-/Videotitel aus dem Feldlog **nicht** rekonstruierbar (Handy = A2DP-Quelle: `metadata tags size: 0`, `null now playing list`, Platzhalter `NowPlayingId32`). Nur die Player-Identität ist beweisbar.
+- **C-L17 [TEST]:** Etch-Tiny-Int-Decode-Fix in `etch_codec.py` (`0x00–0x7F`/`0xC0–0xFF`) schaltet den vollen `setData`-Decode frei: Lab `LIVE_1741` → 40 Modelle, 0 Fehler, 80-Track-Timeline (vorher len-only). Host-Tests 122/122.
+
+---
+
 ## 11. Pflegeregel
 
 - Neue Feldbefunde mit Datum, FW-Version, Geometrie (`kReadyDetail`) und Quelle eintragen.
