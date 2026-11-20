@@ -1,6 +1,7 @@
 # Connected Apps / AAIdrive — Stack-Abgleich (Pfad C)
 
-**Stand:** 2026-11-16 (F20-Feldbeweis der kompletten BT-Connected-Kette inkl. SAS-Challenge 16 B + 559-B-RSA-4096-`sas_login` + `_result_sas_login` + `rhmi_getCapabilities` 5306 B + AM/RHMI/CDS — [`HU-Technical-Facts.md`](HU-Technical-Facts.md) `C-BT23`–`C-BT40`, [`DEEP_FORENSIC_ETCH_SAS_20261116.md`](../../../bt-analyzer/docs/analysis/DEEP_FORENSIC_ETCH_SAS_20261116.md)); davor 2026-11-06 (technology-audit PR #34)  
+**Stand:** 2026-11-20 (SAS-Crypto Wire FACT: Pad `0x02000000` + RSA-VERIFY 8/8 + CASE A closed — [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md), Facts C-D3/C-D34; Gate B F20 Credential-Kontext **OPEN**. Davor 2026-11-16: F20-Kette SAS→RHMI/AM/CDS [B] `C-BT23`–`C-BT51`; 2026-11-06 technology-audit PR #34)  
+
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
 **Verwandt:** [`FORUM-RESEARCH-AVRCP-COVER-MSC.md`](FORUM-RESEARCH-AVRCP-COVER-MSC.md) · [`iDriveBt.md`](iDriveBt.md) · [`BMW-AVRCP-PROBE`](../archiv/fahrzeug/BMW-AVRCP-PROBE.md) (Archiv) · Instrument: [`hu-probe GATES-Connected`](../../../hu-probe/docs/GATES-Connected.md)
@@ -17,7 +18,7 @@ Wichtige Nuancen aus den Primärquellen (nicht in jeder Kurzfassung enthalten):
 |-------|------------------------|
 | „Eigene XML-Menüs“ | Layouts sind an das **Auth-Zertifikat gehasht (SHA256-Whitelist)**. Freie Widget-XML scheitert; Flexibilität über `rhmi_setProperty` + Datenmodels auf **freigegebenen** Layouts. |
 | Tunnel | Connected/MyBMW stellt BCL-Tunnel + localhost-TCP; AAIdrive = Etch-Client. BclCarLink ersetzt nur den Link, **nicht** Security. |
-| SecurityService | Classic Connected **≤5.1** exportierte `.SECURITY_SERVICE` Binder. **≥5.1 / MyBMW:** Export **weg** — moderne Signierung **UNKNOWN**. „MyBMW liefert signChallenge“ als Default **REJECTED**. |
+| SecurityService | Classic Connected **≤5.1** exportierte `.SECURITY_SERVICE` Binder. **≥5.1 / MyBMW:** Export **weg** — Signierung lokal CASE A (`libaudio.so` / `EVP_PKEY_sign`, embedded PKCS#12) = **CLOSED**. „MyBMW liefert signChallenge via Binder“ als Default **REJECTED**. |
 | CarAPI vs AAIdrive | **Zwei Phone-Pfade:** AAIdrive/Kit = eigener Etch-Client; CarAPI (Spotify u. a.) → Connected führt `sas_*` **stellvertretend** (ContentProvider-Cert). |
 | Cleartext | Analysis: Connected-Apps-Pfad „Nothing is encrypted.“ → SAS/Etch in BCL DATA im Klartext dissectierbar, sobald Tunnel sichtbar (FX-G3-01). |
 | Voraussetzung Auto | Apps-Unterstützung: **6NR** und/oder ConnectedDrive-Apps / Apps-Checkbox (ID5+); Mini: SA6NM. Ohne das kein Pfad C. |
@@ -83,16 +84,19 @@ Quelle: [Authentication](https://bimmergestalt.github.io/BMWConnectedAnalysis/au
 1. `sas_certificate(P7B)` → HU liefert Challenge `byte[16]`
 2. Client signiert → `sas_login(byte[512])`
 
-**Challenge-Formel** (Android / Cert mit `SAS.CertificateType`):
+**Challenge-Formel** (Android / `SAS.CertificateType=APP_AUTH`) — Desk + **Wire FACT 2026-11-20**:
 
 ```
-response = RSA-MD5-Signatur( challenge XOR MD5(LE uint32(2)) )
-         = RSA-MD5-Signatur( challenge XOR MD5("\x02\x00\x00\x00") )
+pad    = MD5(0x02000000 as BE u32)     # = MD5("\x02\x00\x00\x00")
+xored  = challenge[16] XOR pad
+digest = MD5(xored)
+sig    = RSA-4096 PKCS#1 v1.5 DigestInfo-MD5(digest)   # 512 B
 ```
 
+X509-Serial des TouchCommand-Blatts (`0x0AA9`) als Pad-Input: **REJECTED** (Wire).  
 Ältere iOS-Certs ohne `SAS.CertificateType`: kein XOR; Challenge direkt signieren.
 
-**Zwei Certs im P7B:** `APP_AUTH` (Signatur-Pubkey) + `APP` (Permissions `AVS`/`CDS`/`RHMI`/`Make`, `SAS.Digests.*` SHA256-Whitelist). HU: `CRHMIAuthPermHandler::verifyResource` in `libhmiremoting.so`. `Make`-Check ggf. via Coding `ENTWICKLER_MENUE=aktiv` abschaltbar.
+**Zwei Certs im P7B:** `APP_AUTH` (Signatur-Pubkey, typ. `CN=a4a_app_BMWTouchCommand_Connection_00.00.10`) + `APP` (Permissions/`SAS.Digests.*`). HU: `verifyResource` in `libhmiremoting.so`.
 
 **Signing-Backend**
 
@@ -100,9 +104,11 @@ response = RSA-MD5-Signatur( challenge XOR MD5(LE uint32(2)) )
 |-------|--------|
 | Connected ≤5.1: exportierter Binder `.SECURITY_SERVICE` / `CarSecurityService.signChallenge` | **[D]** |
 | Connected ≥5.1 / MyBMW: Service **nicht** mehr exportiert | **[D]** |
-| Interner Signierweg modernes MyBMW | **[?]** |
+| Interner Signierweg modernes MyBMW (`AudioModule` → `libaudio.so` → `EVP_PKEY_sign`) | **[D]** CASE A **CLOSED** |
+| Wire: Signer-Pubkey = gesendetes APP_AUTH-Blatt | **[B]** Lab RSA-VERIFY 8/8 |
+| F20 akzeptiert unseren Credential-Kontext | **[?]** Gate B |
 
-**REJECTED (aktueller Default):** „MyBMW exportiert SECURITY_SERVICE und liefert signChallenge.“
+**REJECTED:** „MyBMW exportiert SECURITY_SERVICE und liefert signChallenge.“ · VIN→Key · PKCS#12-Unwrap als nächster Schritt.
 
 **AIDL vs. Mermaid-Namen [D]** (`EVID-SAS-029`): Analysis-Mermaid nennt `initSecurityContext` / `loadApplicationCert`; rekonstruiertes AIDL + Kit nutzen `createSecurityContext` / `loadAppCert`. **Binder-Wahrheit = AIDL/Code.**
 
@@ -185,7 +191,7 @@ Feinere Lesart der Connected-Kette (BimmerGestalt Lifecycle). hu-probe C1 Identi
 
 | Komponente | RFCOMM/SPP | Etch/`sas_*` |
 |------------|------------|--------------|
-| Connected / MyBMW | Tunnel-Owner; F20: UID **10479** öffnet Client auf `0x1101`→SCN6 (Failover SCN10) — **[B]** | Tunnel; SAS Wire **[?]** bis btsnoop |
+| Connected / MyBMW | Tunnel-Owner; F20: UID **10479** öffnet Client auf `0x1101`→SCN6 (Failover SCN10) — **[B]** | Tunnel; OEM-SAS Wire **[B]** (C-BT34/35); Crypto **[B]** Lab (C-D34); Gate B Credential **[?]** |
 | **BclCarLink** | **öffnet** Client-Socket auf SPP `00001101` (A2DP nur Hint) — Desk-FACT | localhost-Proxy; Security extern |
 | **AAIdrive / Addons** | Etch-Consumer auf MyBMW-Tunnel; Secondary: kann Tunnel mitnutzen | ja — F20: CDS-Fragmente HU→Phone **[B]**; `sas_*` **[?]** |
 | nbt-aad (Secondary) | HU-SPP `/dev/btspp*` — Spannung vs. Phone-Client | nicht BCL-Companion-Pfad |
@@ -223,11 +229,11 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 |----|-------|---------|
 | C1 | ~~Hat der F20 Apps (6NR / Checkbox)?~~ | **JA, FELD-BEWIESEN (15./16.11.):** Connected/AAIdrive läuft über BT SPP `SCN 6` (Failover `SCN 10`) bis AM/RHMI/CDS (Facts C-BT23–39) |
 | C2 | MyBMW vs. Connected Classic vs. BclCarLink am Fahrzeug | MyBMW `uid=10479` stabil (~10 s ACL→Etch); Analyzer `.87` hält BCL-WD ohne MyBMW stabil (C-BT31) |
-| C2b | ~~Wie signiert **aktuelles** MyBMW Challenges ohne exportierten SECURITY_SERVICE?~~ | **BEWIESEN (`SecurityModuleManager.kt:69–100` + `src10..12_b0.pem`):** `createPackageContext("de.bmw.connected.mobile20.row", CONTEXT_IGNORE_SECURITY \| CONTEXT_INCLUDE_CODE)` lädt MyBMWs JNI-`SecurityModule`, das mit **`CN=a4a_app_BMWTouchCommand_Connection_00.00.10` (`APP_AUTH`, RSA-4096 → XOR-Variante!)** für jedes per `CertMangling.mergeBMWCert` beigepackte `APP`-Zertifikat signiert (C-BT46) |
+| C2b | ~~Wie signiert **aktuelles** MyBMW Challenges ohne exportierten SECURITY_SERVICE?~~ | **BEWIESEN:** JNI `SecurityModule` → `libaudio.so` / `EVP_PKEY_sign` (CASE A); Wire: Pad `0x02000000` + RSA-VERIFY gegen TouchCommand APP_AUTH (C-D34, 8/8). PKCS#12↔Wire-Leaf weiter INFERENCE |
 | C3 | Welches Cert/Layout nutzt AAIdrive MusicAppMode (ID5)? | HU meldet in `rhmi_getCapabilities` (5306 B) u. a. `iva_ENT_USB_COVER_ART_IPOD` und `_ENT_MTP_OFF=false` (C-BT36) |
 | C4 | Audio-Fokus AV vs. paralleler Pi-A2DP / USB-AOA-Audio | Über USB (`:4004`) fordert AAIdrive ab Android ≥8 **keinen** `av_requestConnection`-Kontext an, weil AOAv2-USB-Audio entfernt wurde (`MusicAppMode.kt:15–16, 74–88`); Ton läuft weiter über BT-A2DP oder USB-MSC |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
-| C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Ohne privaten BMW-RSA-Key ist `sas_login` nicht emulierbar (C-BT35) → Pfad C bleibt Phone-basiert |
+| C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Formel CLOSED; Standalone-Signer ohne Key-Extract noch OPEN → bis Gate B + Signer: Pfad C weiter Phone/live MyBMW |
 | C7 | **P1 FIELD-CONNECTED-REAL-01** (Kurztest USB-AOA am F20) | OnePlus mit **BT OFF** per USB an F20 → geht `127.0.0.1:4004` auf? Lab-30.10.-Bulk-Timeout ist durch `C-D32` (`"BMW Group"`/`"BMW"` statt `"BMW"`/`"NBT Evo"`) bereits aufgelöst |
 | C8 | ~~`sas_certificate`/Challenge/`sas_login` + Type-IDs~~ → **aufgelöst (16.11.)**; Rest: volle 5298-B-Capabilities-Map | per transparentem **B3-RFCOMM-Relay (`.131`↔`.87`)**, da OnePlus kein `btsnoop_hci` exportiert |
 | C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Subkanal (`src=10..19`) |
