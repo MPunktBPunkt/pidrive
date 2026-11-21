@@ -1,6 +1,6 @@
 # Connected Apps / AAIdrive — Stack-Abgleich (Pfad C)
 
-**Stand:** 2026-11-20 (SAS-Crypto Wire FACT: Pad `0x02000000` + RSA-VERIFY 8/8 + CASE A closed — [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md), Facts C-D3/C-D34; Gate B F20 Credential-Kontext **OPEN**. Davor 2026-11-16: F20-Kette SAS→RHMI/AM/CDS [B] `C-BT23`–`C-BT51`; 2026-11-06 technology-audit PR #34)  
+**Stand:** 2026-11-21 — **Gate B FIELD CLOSED** (B3 Profile-Relay, live AAIdrive/MyBMW → F20 `sas_login` OK → RHMI/AM/CDS/AV; Media `Halestorm`/`Spotify` im Raw). Evidence: [`FIELD_B3_GATEB_20261121T112446Z`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/EVAL.md) · Addendum AM/RHMI: [`ADDENDUM_RHMI_AM_20261121`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/ADDENDUM_RHMI_AM_20261121.md) · Next: [`FIELD_GATE_B_CLOSED_NEXT_RHMI_TEMPLATE_20261121`](../../../bt-analyzer/docs/analysis/FIELD_GATE_B_CLOSED_NEXT_RHMI_TEMPLATE_20261121.md). Crypto: Pad `0x02000000` + Lab RSA-VERIFY 8/8 — [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md).  
 
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
@@ -106,7 +106,8 @@ X509-Serial des TouchCommand-Blatts (`0x0AA9`) als Pad-Input: **REJECTED** (Wire
 | Connected ≥5.1 / MyBMW: Service **nicht** mehr exportiert | **[D]** |
 | Interner Signierweg modernes MyBMW (`AudioModule` → `libaudio.so` → `EVP_PKEY_sign`) | **[D]** CASE A **CLOSED** |
 | Wire: Signer-Pubkey = gesendetes APP_AUTH-Blatt | **[B]** Lab RSA-VERIFY 8/8 |
-| F20 akzeptiert unseren Credential-Kontext | **[?]** Gate B |
+| F20 akzeptiert live MyBMW/AAIdrive APP_AUTH | **[B]** Gate B CLOSED 2026-11-21 (`FIELD_B3_GATEB_20261121T112446Z`) |
+| Standalone-Signer ohne MyBMW | **[?]** OPEN (nicht Gate-B-blocker) |
 
 **REJECTED:** „MyBMW exportiert SECURITY_SERVICE und liefert signChallenge.“ · VIN→Key · PKCS#12-Unwrap als nächster Schritt.
 
@@ -233,11 +234,31 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | C3 | Welches Cert/Layout nutzt AAIdrive MusicAppMode (ID5)? | HU meldet in `rhmi_getCapabilities` (5306 B) u. a. `iva_ENT_USB_COVER_ART_IPOD` und `_ENT_MTP_OFF=false` (C-BT36) |
 | C4 | Audio-Fokus AV vs. paralleler Pi-A2DP / USB-AOA-Audio | Über USB (`:4004`) fordert AAIdrive ab Android ≥8 **keinen** `av_requestConnection`-Kontext an, weil AOAv2-USB-Audio entfernt wurde (`MusicAppMode.kt:15–16, 74–88`); Ton läuft weiter über BT-A2DP oder USB-MSC |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
-| C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Formel CLOSED; Standalone-Signer ohne Key-Extract noch OPEN → bis Gate B + Signer: Pfad C weiter Phone/live MyBMW |
+| C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Gate B CLOSED → **Weg A:** AAIdrive-Session + eigene RHMI/PiDrive-Action. Standalone-Signer = später (Weg B) |
 | C7 | **P1 FIELD-CONNECTED-REAL-01** (Kurztest USB-AOA am F20) | OnePlus mit **BT OFF** per USB an F20 → geht `127.0.0.1:4004` auf? Lab-30.10.-Bulk-Timeout ist durch `C-D32` (`"BMW Group"`/`"BMW"` statt `"BMW"`/`"NBT Evo"`) bereits aufgelöst |
-| C8 | ~~`sas_certificate`/Challenge/`sas_login` + Type-IDs~~ → **aufgelöst (16.11.)**; Rest: volle 5298-B-Capabilities-Map | per transparentem **B3-RFCOMM-Relay (`.131`↔`.87`)**, da OnePlus kein `btsnoop_hci` exportiert |
-| C9 | Optional CarAPI parallel (Spotify): SAS in Connected | gleicher Wire, anderer Subkanal (`src=10..19`) |
+| C8 | ~~`sas_certificate`/Challenge/`sas_login` + Type-IDs~~ → **aufgelöst**; Gate B Accept **CLOSED 21.11.** | B3 Profile-Relay + live AAIdrive; Evidence `FIELD_B3_GATEB_20261121T112446Z` |
+| C9 | Spotify / Media vs AM | **FIELD:** Spotify ≠ `am_registerApp`; Media-UI = RHMI `me.hufman.androidautoidrive.music` (STRONG Handle 23). Nicht pauschal „nur AVRCP“. |
 | C10 | ~~DATAACK↔DATA-Paarung + Type-ID `0386*`→CDS-Methoden~~ | **BEWIESEN (16.11.):** sdbm-Seed-5381 löst 100 % der Header auf (`0xae0d3d69`=`cds_onPropertyChangedEvent`, `0xa6b0ffca`=`_result_sas_login`, `0x9c6372b8`=`_result_sas_certificate`, `0x19481364`=`_result_rhmi_getCapabilities`); `DATAACK=8+len` außer `KNOCK` (C-BT29/33) |
+| C11 | Music RHMI DESCRIPTION (92 085 B) → Model/Action-IDs | **OPEN Extraktion** — Fingerprint im Addendum; Blob noch nicht im Repo gefunden |
+| C12 | Eigenes PiDrive-Menü am echten F20 | **OPEN** — Weg A (AAIdrive-Session + Template) jetzt sinnvoll |
+
+---
+
+## 7b. Nach Gate B (2026-11-21) — PiDrive Weg A
+
+```
+AAIdrive-authentifizierte Session (Gate B ✓)
+        ↓
+RHMI Template = …androidautoidrive.music (bevorzugt)
+        ↓
+DESCRIPTION / Models / eine Action
+        ↓
+PiDrive Action Sink
+```
+
+Nicht zuerst: Screen Mirroring, Standalone-Signer, AOA.
+
+Hygiene: fünf `am_registerApp` ≠ fünf sichtbare Menüeinträge; Resource-Cache möglich (`checkResource=true` → kein Upload).
 
 ---
 

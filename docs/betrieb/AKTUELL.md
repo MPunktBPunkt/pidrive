@@ -2,6 +2,8 @@
 
 **Einstieg:** dieses Blatt · Detail-Ampel: [`MSC-AKTUELL.md`](MSC-AKTUELL.md)
 
+**Connected (2026-11-21):** Gate B am echten F20 **CLOSED** — live AAIdrive/MyBMW Auth + RHMI/AM/CDS/AV über B3-Relay. Nächster Connected-Schritt = **Music-RHMI-Template → PiDrive Action** (nicht erneut SAS). Details: [`../fahrzeug/CONNECTED-AAIDRIVE-STACK.md`](../fahrzeug/CONNECTED-AAIDRIVE-STACK.md).
+
 | Ebene | Dokument |
 |-------|----------|
 | **Ampel / Vertrag** | [MSC-AKTUELL.md](MSC-AKTUELL.md) |
