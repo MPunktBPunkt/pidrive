@@ -1,6 +1,6 @@
 # BMW F20 NBT Evo — HU-Beschreibung und Modellbericht
 
-**Stand:** 2026-11-20 (SAS-Crypto Wire FACT + Lab-Prep READY — Pad `0x02000000`, RSA-VERIFY 8/8, Gate B F20 offen: [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md), Facts C-D3/C-D34/C-L18). Davor 2026-11-16: Etch-sdbm + SAS/RHMI/AM/CDS [B], C-BT31–51; 2026-11-15 Golden Session C-BT23–30.  
+**Stand:** 2026-11-21 (Gate B FIELD CLOSED — live AAIdrive/MyBMW → F20 `sas_login` OK → RHMI/AM/CDS/AV; Evidence [`FIELD_B3_GATEB_20261121T112446Z`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/EVAL.md); Crypto Pad `0x02000000` + Lab RSA-VERIFY 8/8: [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md)). Davor 2026-11-20 Lab-Prep; 2026-11-16 Etch-sdbm + SAS/RHMI/AM/CDS [B]; 2026-11-15 Golden Session C-BT23–30.  
 
 **Fahrzeug:** BMW 118d F20 LCI (2017), NBT Evo  
 **Statusschema:** wie in [`HU-Technical-Facts.md`](HU-Technical-Facts.md) — **[B]** bewiesen · **[S]** stark belegt · **[D]** Desk · **[H]** Hypothese · **[?]** offen  
@@ -97,7 +97,7 @@ Für PiDrive: Storage = Golden Path mit Timing-/Backpressure-Problem; Control = 
 | Ebene | Transport | Stack (kurz) | Evidenz an dieser HU |
 |-------|-----------|--------------|----------------------|
 | **Storage Plane** | USB MSC | SCSI/BOT → FAT → Scanner → Cache → Decoder | **[B]/[S]** Feld/Lab (Facts E/R/F) |
-| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | BT-SDP **[B]**; SPP/BCL→SAS→RHMI/AM/CDS **[B]** OEM-Pfad (C-BT23–40); Crypto-Formel **[B]** Lab (C-D34); unser F20-Credential **[?]** Gate B; AOA G1 partiell |
+| **Control Plane** | USB AOA und/oder BT | Accessory → BCL → Etch → SAS → RHMI/CDS/AV/AM | BT-SDP **[B]**; SPP/BCL→SAS→RHMI/AM/CDS **[B]** OEM-Pfad (C-BT23–40); Crypto-Formel **[B]** Lab (C-D34); F20 Gate B Accept **[B]** 21.11. (`FIELD_B3_GATEB_…`); AOA G1 partiell |
 | **BT-Medienpfad** (Variante A) | BT Classic | A2DP-Sink · AVRCP-CT 1.5 + Browsing · HFP-HF 1.6 | **[B]** ein Feld-Capture (Facts §10.5) |
 
 Die Trennung ist keine Dokumentationskosmetik. MSC und Connected-App-Pfade haben **unterschiedliche USB-Identitäten, Zustandsmaschinen und Messinstrumente**. hu-probe führt deshalb getrennte Boot-Modi (`msc` vs. `aoa_*`); Analyzer-Feld bestätigt: MSC-Identity mountet Storage, ohne dass daraus Connected folgt (Facts E18/F15, C-D9).
@@ -312,7 +312,7 @@ Android Open Accessory (z. B. Already-Accessory `18D1:2D00`) ist nur ein **USB-Z
 
 ### 5.4 SAS, RHMI, CDS, AV (Desk + F20-Feld)
 
-- **SAS (Etch-RPC über `dest=4004`, C-D31 / C-D34 / C-BT34/35):** App sendet `sas_certificate(p7b)` → HU liefert 16-B-Challenge → Client: `pad=MD5(0x02000000)` → `challenge XOR pad` → `MD5` → RSA-4096 PKCS#1 v1.5 DigestInfo-MD5 → `sas_login` (512 B / Frame 559 B). Wire FACT (Lab): Signatur verifiziert gegen Public Key von `CN=a4a_app_BMWTouchCommand_Connection_00.00.10` (8/8); X509-Serial als Pad **REJECTED**. OEM-MyBMW-Session am F20 bis hinter SAS = FIELD FACT; **unser** reproduzierter Credential-Kontext am F20 = Gate B **OPEN**. Crypto-Formel ohne MyBMW nachrechenbar; Signierfähigkeit praktisch weiter über live MyBMW/SecurityModule bis Standalone existiert (kein Key-Extract).
+- **SAS (Etch-RPC über `dest=4004`, C-D31 / C-D34 / C-BT34/35):** App sendet `sas_certificate(p7b)` → HU liefert 16-B-Challenge → Client: `pad=MD5(0x02000000)` → `challenge XOR pad` → `MD5` → RSA-4096 PKCS#1 v1.5 DigestInfo-MD5 → `sas_login` (512 B / Frame 559 B). Wire FACT (Lab): Signatur verifiziert gegen Public Key von `CN=a4a_app_BMWTouchCommand_Connection_00.00.10` (8/8); X509-Serial als Pad **REJECTED**. **Gate B CLOSED 2026-11-21:** live MyBMW/AAIdrive APP_AUTH am echten F20 akzeptiert (B3 Profile-Relay) → danach AM/RHMI/CDS/AV. Offline RSA-VERIFY dieses Field-Captures = noch OPEN. Crypto-Formel ohne MyBMW nachrechenbar; Signierfähigkeit praktisch weiter über live MyBMW/SecurityModule bis Standalone existiert (kein Key-Extract). Nächster Connected-Schritt = Music-RHMI-Template → PiDrive (Weg A), nicht erneut SAS.
 - **AM & RHMI (C-BT36/38):** `rhmi_getCapabilities("", 255)` liefert eine ~5,3-KB-Capability-Map der HU; UI-Apps registrieren sich auf eigenen Kanälen (`src=14, 17–19`: `am_registerApp`, `rhmi_initialize`, `rhmi_setData`, `rhmi_setProperty`). Layouts bleiben an den Cert-SHA256 gebunden.
 - **CDS (C-BT39):** Die F20-HU exponiert das **vollständige generische CDS-Schema** (auch Hybrid-Größen wie `93: sensors.SOCBatteryHybrid` mit Invalid-Sentinel `255.00` am 118d-Diesel) und pusht live u. a. `50: engine.RPMSpeed`, `47: engine.info`, `engine.*`, `driving.*`, `navigation.*`.
 - **AV:** Entertainment-Kontext; Ton läuft bei Smartphone-Kopplung weiter über **BT A2DP (SBC)** (C-BT42).
