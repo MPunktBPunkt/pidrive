@@ -513,10 +513,12 @@ Erwartungstabelle = Desk-Soll; Ist = Auto-Messung. **Kein Channel-5-Annehmen. Ke
 **Maßnahmen (priorisiert, Stand 2026-11-21)** — Status: [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md) · Evidence: [`FIELD_B3_GATEB_20261121T112446Z`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/) · Next: [`FIELD_GATE_B_CLOSED_NEXT_RHMI_TEMPLATE_20261121`](../../../bt-analyzer/docs/analysis/FIELD_GATE_B_CLOSED_NEXT_RHMI_TEMPLATE_20261121.md):
 
 1. **P0 erledigt — Gate B CLOSED:** B3 Profile-Relay + live AAIdrive → F20 Accept + RHMI/AM/CDS/AV (C-BT52).
-2. **P0 jetzt — Audio-Grenze nach PLAY:** Dual-Plane Feld/Lab (BCL/Etch **und** A2DP/transport) um `P@0x315a6` (C-BT53). Etch PLAY ≠ Ton.
-3. **P1 — Music RHMI → PiDrive Weg A:** Handle-23 Spine (444–447/456/458/655, Actions 336/248, Events 660/661) + AV-Control-Stub; `playing` nicht als Audio-Beweis.
-4. **P2:** Track A→B Capture; Home Entry Object-ID (nachrangig).
-5. **Nicht tun:** Screen-Mirroring zuerst; Standalone-Signer vor Audio-Beweis; „TCP-Brücke zu langsam“ ohne Dual-Plane behaupten.
+2. **P0 jetzt — Audio Boundary:** Dual-Plane Feldlauf mit gemeinsamer monotonic Zeit: PLAY @`P@0x315a6` → erster Audio-Frame **oder** Absence-FACT ([`NEXT_AUDIO_BOUNDARY_PROOF`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/forensic/NEXT_AUDIO_BOUNDARY_PROOF.md)). Post-PLAY-4004-Bulk ≠ Audio.
+3. **P1 — Transport benennen** erst nach Nachweis (Kanal/Protokoll/Richtung/Paketform).
+4. **P2 — HU Audio-Backend / Fokus:** Transport vorhanden ≠ Lautsprecher.
+5. **P3 — Track A→B** (Audio-Reinit vs. nur Metadaten).
+6. **P4 — Home Entry Object-ID** (nicht Engpass für „UI sichtbar, kein Ton“).
+7. **PiDrive parallel:** Spine + AV-Control-Stub; `playing` ≠ Ton. **Nicht:** Screen-Mirroring / Standalone-Signer / „Bridge zu langsam“ ohne Dual-Plane.
 
 ### 10.5 Bluetooth-Feld F20 — HU-SDP, A2DP, AVRCP, HFP (A6-Capture)
 

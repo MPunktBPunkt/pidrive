@@ -267,8 +267,9 @@ PiDrive Action Sink / audible path (separate plane)
 
 1. PiDrive Music State muss mindestens liefern, was Wire belegt: provider/artist/title/cover/playlist/progress + Actions 336/248 + Events 661/660.
 2. `playing=true` aus Etch/`av_playerStateChanged` **nicht** mit „Ton läuft“ gleichsetzen.
-3. Nächster Feld-/Lab-Beweis: Dual-Plane (BCL/Etch **und** A2DP/transport); Transportnamen erst nach Nachweis.
-4. Home Entry Object-ID und Track A→B sind echte Gaps, aber **nachrangig** zur Audio-Grenze.
+3. Nächster Feld-/Lab-Beweis **locked:** [`NEXT_AUDIO_BOUNDARY_PROOF`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/forensic/NEXT_AUDIO_BOUNDARY_PROOF.md) — Dual-Plane + shared monotonic clock; T0…T6; erster Audio-Frame nach PLAY **oder** Absence.
+4. P0 Audio → P1 Transport benennen → P2 HU audible → P3 Track A→B → P4 Home Entry Object-ID.
+5. „Viel Traffic nach PLAY“ auf 4004 ist Control/RHMI-INFERENCE — kein Audio-Gegenbeweis und kein Audio-Beweis.
 
 Nicht zuerst: Screen Mirroring, Standalone-Signer, AOA.
 
