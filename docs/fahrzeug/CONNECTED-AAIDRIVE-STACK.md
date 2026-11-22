@@ -1,6 +1,8 @@
 # Connected Apps / AAIdrive — Stack-Abgleich (Pfad C)
 
-**Stand:** 2026-11-21 — **Gate B FIELD CLOSED** (B3 Profile-Relay, live AAIdrive/MyBMW → F20 `sas_login` OK → RHMI/AM/CDS/AV; Media `Halestorm`/`Spotify` im Raw). Evidence: [`FIELD_B3_GATEB_20261121T112446Z`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/EVAL.md) · Addendum AM/RHMI: [`ADDENDUM_RHMI_AM_20261121`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/ADDENDUM_RHMI_AM_20261121.md) · Next: [`FIELD_GATE_B_CLOSED_NEXT_RHMI_TEMPLATE_20261121`](../../../bt-analyzer/docs/analysis/FIELD_GATE_B_CLOSED_NEXT_RHMI_TEMPLATE_20261121.md). Crypto: Pad `0x02000000` + Lab RSA-VERIFY 8/8 — [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md).  
+**Stand:** 2026-11-22 — **Gate B FIELD CLOSED** + **E2E Music Timeline** (AUTH→…→PLAY).  
+PLAY-Control ist wire-verankert: **`av_playerStateChanged(PLAY)` @ `P@0x000315a6`**. Audible Audio / Audio-Transport = **NOT PROVEN** (HU zeigte Spotify/Artist/Title, kein Ton).  
+Evidence: [`FIELD_B3_GATEB_20261121T112446Z`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/EVAL.md) · E2E: [`F20_CONNECTED_MUSIC_END_TO_END_TIMELINE.md`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/forensic/F20_CONNECTED_MUSIC_END_TO_END_TIMELINE.md) · PLAY-Skim: [`PLAY_BOUNDARY_SKIM_20261122.md`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/forensic/PLAY_BOUNDARY_SKIM_20261122.md) · Addendum AM/RHMI: [`ADDENDUM_RHMI_AM_20261121`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/ADDENDUM_RHMI_AM_20261121.md). Crypto: Pad `0x02000000` + Lab RSA-VERIFY — [`SAS_STATUS_CRYPTO_CLOSED_20261120`](../../../bt-analyzer/docs/analysis/SAS_STATUS_CRYPTO_CLOSED_20261120.md).  
 
 **Scope:** Primärquellen zu BMW Connected Apps und AAIdrive gegen die Arbeitsannahme „AAIdrive = offizieller Connected-Kanal (Pfad C), nicht AVRCP/A2DP“.  
 **Fahrzeugbezug:** NBT / NBT Evo (PiDrive: F20 LCI 2017 = potenziell tauglich, sofern Apps/6NR bzw. ConnectedDrive-Apps aktiv).  
@@ -232,7 +234,8 @@ Projektstatus AAIdrive (Stand Quellen 2026-11): feature-complete / Maintenance; 
 | C2 | MyBMW vs. Connected Classic vs. BclCarLink am Fahrzeug | MyBMW `uid=10479` stabil (~10 s ACL→Etch); Analyzer `.87` hält BCL-WD ohne MyBMW stabil (C-BT31) |
 | C2b | ~~Wie signiert **aktuelles** MyBMW Challenges ohne exportierten SECURITY_SERVICE?~~ | **BEWIESEN:** JNI `SecurityModule` → `libaudio.so` / `EVP_PKEY_sign` (CASE A); Wire: Pad `0x02000000` + RSA-VERIFY gegen TouchCommand APP_AUTH (C-D34, 8/8). PKCS#12↔Wire-Leaf weiter INFERENCE |
 | C3 | Welches Cert/Layout nutzt AAIdrive MusicAppMode (ID5)? | HU meldet in `rhmi_getCapabilities` (5306 B) u. a. `iva_ENT_USB_COVER_ART_IPOD` und `_ENT_MTP_OFF=false` (C-BT36) |
-| C4 | Audio-Fokus AV vs. paralleler Pi-A2DP / USB-AOA-Audio | Über USB (`:4004`) fordert AAIdrive ab Android ≥8 **keinen** `av_requestConnection`-Kontext an, weil AOAv2-USB-Audio entfernt wurde (`MusicAppMode.kt:15–16, 74–88`); Ton läuft weiter über BT-A2DP oder USB-MSC |
+| C4 | Audio-Fokus AV vs. paralleler Pi-A2DP / USB-AOA-Audio | Über USB (`:4004`) fordert AAIdrive ab Android ≥8 **keinen** `av_requestConnection`-Kontext an, weil AOAv2-USB-Audio entfernt wurde (`MusicAppMode.kt:15–16, 74–88`); Ton läuft weiter über BT-A2DP oder USB-MSC. **B3 Field:** Etch `av_*` + PLAY @`P@0x315a6` OBSERVED, aber **kein** Audio-Transport in den BCL-Bins nachgewiesen → Dual-Plane-Capture Pflicht |
+| C4b | Was kommt nach Etch PLAY? | Offline-Skim: RHMI setData/661 + große 4004-Fragmente (RHMI-shaped). Audio = NOT PROVEN. Lab-NP-Spine ohne `av_*` ist unvollständig vs Field. **Priorität:** Audio-Grenze vor Track A→B / Home-Entry-Object |
 | C5 | 30-min Metadata-Freeze: nur Connected-UI oder auch AVRCP? | Getrennt messen |
 | C6 | Lohnt Pi-seitige Etch-Emulation vs. Phone+AAIdrive belassen? | Gate B CLOSED → **Weg A:** AAIdrive-Session + eigene RHMI/PiDrive-Action. Standalone-Signer = später (Weg B) |
 | C7 | **P1 FIELD-CONNECTED-REAL-01** (Kurztest USB-AOA am F20) | OnePlus mit **BT OFF** per USB an F20 → geht `127.0.0.1:4004` auf? Lab-30.10.-Bulk-Timeout ist durch `C-D32` (`"BMW Group"`/`"BMW"` statt `"BMW"`/`"NBT Evo"`) bereits aufgelöst |
@@ -251,10 +254,21 @@ AAIdrive-authentifizierte Session (Gate B ✓)
         ↓
 RHMI Template = …androidautoidrive.music (bevorzugt)
         ↓
-DESCRIPTION / Models / eine Action
+DESCRIPTION / Models / Action 336 (+ AV control plane)
         ↓
-PiDrive Action Sink
+Etch PLAY @ P@0x315a6   ← control FACT
+        ↓
+======== AUDIO ??? ========  ← NOT PROVEN (next proof)
+        ↓
+PiDrive Action Sink / audible path (separate plane)
 ```
+
+**Hinweise für Implementierung (noch kein Produktcode erzwingen):**
+
+1. PiDrive Music State muss mindestens liefern, was Wire belegt: provider/artist/title/cover/playlist/progress + Actions 336/248 + Events 661/660.
+2. `playing=true` aus Etch/`av_playerStateChanged` **nicht** mit „Ton läuft“ gleichsetzen.
+3. Nächster Feld-/Lab-Beweis: Dual-Plane (BCL/Etch **und** A2DP/transport); Transportnamen erst nach Nachweis.
+4. Home Entry Object-ID und Track A→B sind echte Gaps, aber **nachrangig** zur Audio-Grenze.
 
 Nicht zuerst: Screen Mirroring, Standalone-Signer, AOA.
 

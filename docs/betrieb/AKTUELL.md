@@ -2,7 +2,7 @@
 
 **Einstieg:** dieses Blatt · Detail-Ampel: [`MSC-AKTUELL.md`](MSC-AKTUELL.md)
 
-**Connected (2026-11-21):** Gate B am echten F20 **CLOSED** — live AAIdrive/MyBMW Auth + RHMI/AM/CDS/AV über B3-Relay. Nächster Connected-Schritt = **Music-RHMI-Template → PiDrive Action** (nicht erneut SAS). Details: [`../fahrzeug/CONNECTED-AAIDRIVE-STACK.md`](../fahrzeug/CONNECTED-AAIDRIVE-STACK.md).
+**Connected (2026-11-22):** Gate B **CLOSED** + E2E-Timeline bis Etch-**PLAY @ `P@0x000315a6`**. Music-UI FACT; **Audio-Transport NOT PROVEN** (kein Ton im Feld). Nächster Connected-Beweis = **Dual-Plane PLAY** (BCL + A2DP/transport), nicht zuerst Multi-Track/Home-Entry. Details: [`../fahrzeug/CONNECTED-AAIDRIVE-STACK.md`](../fahrzeug/CONNECTED-AAIDRIVE-STACK.md) · bt-analyzer [`PLAY_BOUNDARY_SKIM_20261122`](../../../bt-analyzer/docs/evidence/FIELD_B3_GATEB_20261121T112446Z/forensic/PLAY_BOUNDARY_SKIM_20261122.md).
 
 | Ebene | Dokument |
 |-------|----------|
